@@ -666,6 +666,8 @@ export const en = {
     leave: 'Leave',
     concede_prompt: 'Are you sure you want to concede and return to the lobby?',
     leave_spectate_prompt: 'Stop spectating and return to the lobby?',
+    eliminated_title: 'Eliminated',
+    eliminated_hint: 'You are out of this game. Keep watching, or leave to the lobby — you can join a new table while it finishes.',
     hold_priority_title: 'Hold priority when casting spells or activating abilities (or hold Ctrl/Cmd on click)',
     auto_mulligan: 'Auto-mulligan',
     smart_stops: 'Smart stops',

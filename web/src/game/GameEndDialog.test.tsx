@@ -2,13 +2,18 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, screen, fireEvent, cleanup } from '@testing-library/react'
 import GameEndDialog from './GameEndDialog'
 import { watchGame } from '../net/commands'
-import { setState } from '../state/state'
+import { setState, getState } from '../state/state'
 import { reset } from '../state/store'
 import { makeGameView, makePlayer } from '../__fixtures__/gameViews'
 
 vi.mock('../net/commands', async (importOriginal) => {
   const mod = await importOriginal<typeof import('../net/commands')>()
-  return { ...mod, watchGame: vi.fn().mockResolvedValue({ ok: true }) }
+  return {
+    ...mod,
+    watchGame: vi.fn().mockResolvedValue({ ok: true }),
+    sendPlayerAction: vi.fn().mockResolvedValue({ ok: true }),
+    quitMatch: vi.fn().mockResolvedValue({ ok: true }),
+  }
 })
 
 describe('GameEndDialog', () => {
@@ -168,6 +173,28 @@ describe('GameEndDialog', () => {
     const closeBtn = getByRole('button', { name: /Cerrar|Close/i })
     expect(closeBtn).toBeDefined()
     fireEvent.click(closeBtn)
+  })
+
+  it('offers leaving to the lobby when the match continues (Commander goes on without me)', async () => {
+    const { sendPlayerAction, quitMatch } = await import('../net/commands')
+    setState({
+      phase: 'game',
+      gameId: 'g-cont',
+      game: makeGameView({
+        players: [makePlayer({ playerId: 'p-hero', name: 'Hero', controlled: true })],
+      }),
+      gameEnd: {
+        won: false,
+        gameInfo: 'Hero lost the game',
+        matchInfo: 'Match continues',
+      },
+    })
+
+    render(<GameEndDialog />)
+    fireEvent.click(screen.getByRole('button', { name: /Volver al lobby/i }))
+    await vi.waitFor(() => expect(getState().phase).toBe('lobby'))
+    expect(sendPlayerAction).toHaveBeenCalledWith('CONCEDE', 'g-cont')
+    expect(quitMatch).toHaveBeenCalledWith('g-cont')
   })
 
   it('shows follow button when the table already has a newer game (B.10)', () => {

@@ -671,6 +671,8 @@ export const ja: TranslationSchema = {
     leave: '退出',
     concede_prompt: '投了してロビーに戻りますか？',
     leave_spectate_prompt: '観戦を終了してロビーに戻りますか？',
+    eliminated_title: 'Eliminated',
+    eliminated_hint: 'You are out of this game. Keep watching, or leave to the lobby — you can join a new table while it finishes.',
     hold_priority_title: '呪文や能力使用時に優先権を保持する',
     auto_mulligan: '自動マリガン',
     smart_stops: 'スマートストップ',

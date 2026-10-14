@@ -5,7 +5,7 @@ import { manaPaymentActions } from '../../game/manaPayment'
 import { serverAutoAnswerActions } from '../../game/autoAnswers'
 import { clonePhaseStops } from '../../game/phaseStops'
 import { getState, setState, addLog } from '../state'
-import { sniffDungeonEntry, enterTableChat, exitTableChat, armRollbackPending, disarmRollbackPending } from '../actions'
+import { sniffDungeonEntry, enterTableChat, exitTableChat, armRollbackPending, disarmRollbackPending, sniffElimination } from '../actions'
 import { ingestRollbackServerMessage } from '../rollbackVote'
 import { t as tStatic } from '../../i18n'
 import { saveActiveGame, clearActiveGame } from '../persistence'
@@ -82,7 +82,7 @@ export function handleStartGame(data: unknown, s: Snapshot): void {
   if (!d?.gameId || d.gameId !== s.gameId) {
     setState({ log: getState().log.filter((e) => (e.channel ?? 'system') !== 'game') })
   }
-  setState({ phase: 'game', watchingTable: null, stagingTableId: null, stagingIsTournament: false, gameId: d?.gameId ?? null, gameChatId: null, gameEnd: null, sideboardScreen: null, pendingSideboardScreen: null, rollbackPendingFor: null, rollbackPendingAt: null, rollbackVote: null })
+  setState({ phase: 'game', watchingTable: null, stagingTableId: null, stagingIsTournament: false, gameId: d?.gameId ?? null, gameChatId: null, gameEnd: null, sideboardScreen: null, pendingSideboardScreen: null, rollbackPendingFor: null, rollbackPendingAt: null, rollbackVote: null, elimination: null })
   addLog('partida', `${tStatic('lobby','start_match_btn')}${d?.tableName ? ` (${d.tableName})` : ''}`)
   if (isNewGame) {
     void cmds.joinGame(d!.gameId!)
@@ -102,6 +102,7 @@ export function handleGameUpdate(method: string, objectId: string | null, data: 
     if (waitingFor) setState({ waitingFor })
     addLog('partida', informMessage, objectId ?? undefined)
     sniffDungeonEntry(informMessage, objectId ?? s.gameId)
+    sniffElimination(informMessage, objectId ?? s.gameId)
     sniffRollbackAnnounce(informMessage, objectId ?? s.gameId)
   }
   if (embeddedGame) {
@@ -114,6 +115,7 @@ export function handleGameUpdate(method: string, objectId: string | null, data: 
     if (method === 'GAME_INIT') {
       if (objectId) rememberGameStart(objectId, embeddedGame)
       patch.gameEnd = null
+      patch.elimination = null
       patch.feedback = null
       patch.waitingFor = null
       if (objectId && !fresh.gameChatId) {
@@ -173,6 +175,7 @@ export function handleWatchGame(objectId: string | null): void {
       // El id de torneo resuelto (SHOW_TOURNAMENT) ya no hace falta: evita que al
       // volver del juego espectado el lobby reabra el cuadro solo.
       spectateTournament: null,
+      elimination: null,
       ...(switchingGame ? { game: null, gameEnd: null } : null),
     })
   }
@@ -190,6 +193,7 @@ export function handleGameInform(data: unknown, objectId: string | null): void {
   const msg = typeof d === 'string' ? d : d?.message
   if (msg) {
     sniffDungeonEntry(msg, objectId ?? getState().gameId)
+    sniffElimination(msg, objectId ?? getState().gameId)
     sniffRollbackAnnounce(msg, objectId ?? getState().gameId)
     addLog('partida', msg, objectId ?? undefined)
   }
@@ -218,6 +222,8 @@ export function sniffRollbackAnnounce(message: string, gameId: string | null | u
 }
 
 export function handleGameOver(data: unknown, objectId: string | null): void {
+  // Como en END_GAME_INFO: el fin de la partida abandonada no toca la nueva.
+  if (objectId && objectId !== getState().gameId) return
   const d = data as { gameId?: string; winnerName?: string; message?: string } | string | null
   const msg = typeof d === 'string' ? d : (d?.message ?? 'Fin de la partida')
   clearActiveGame()
@@ -247,7 +253,10 @@ function gameIdOf(d: { gameId?: string } | string | null): string | null {
   return typeof d === 'object' && d?.gameId ? d.gameId : null
 }
 
-export function handleEndGameInfo(data: unknown): void {
+export function handleEndGameInfo(data: unknown, objectId?: string | null): void {
+  // Salida temprana a otra mesa (Commander): el fin de la partida abandonada
+  // llega tarde y no debe tumbar la partida nueva en curso.
+  if (objectId && objectId !== getState().gameId) return
   const end = (data ?? {}) as GameEndInfo
   const matchOver = end.matchView?.endTime != null || /won the match/i.test(end.matchInfo ?? '')
   addLog('partida', matchOver ? (end.matchInfo ?? 'Fin del match') : (end.matchInfo ?? 'Fin de la partida'))
@@ -270,6 +279,7 @@ export function handleEndGameInfo(data: unknown): void {
       rollbackPendingAt: null,
       rollbackVote: null,
       resumingGameId: null,
+      elimination: null,
     })
   } else {
     setState({ gameEnd: end, rollbackVote: null })

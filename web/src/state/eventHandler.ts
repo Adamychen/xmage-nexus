@@ -43,7 +43,7 @@ export function handleMessage(msg: ProxyMessage) {
       break
     }
     case 'disconnected':
-      setState({ link: 'ok', linkAttempt: 0, phase: 'idle', connecting: false, game: null, gameId: null, gameChatId: null, tableChatId: null, tableChatTableId: null, tournamentChatId: null, tournamentChatTournamentId: null, playableIds: [], playableWindow: null, combat: null, feedback: null, lobby: null, roomChatId: null, sideboardScreen: null, pendingSideboardScreen: null, rollbackPendingFor: null, rollbackPendingAt: null, rollbackVote: null, resumingGameId: null, turnRecap: null, enteredThisTurn: {} })
+      setState({ link: 'ok', linkAttempt: 0, phase: 'idle', connecting: false, game: null, gameId: null, gameChatId: null, tableChatId: null, tableChatTableId: null, tournamentChatId: null, tournamentChatTournamentId: null, playableIds: [], playableWindow: null, combat: null, feedback: null, lobby: null, roomChatId: null, sideboardScreen: null, pendingSideboardScreen: null, rollbackPendingFor: null, rollbackPendingAt: null, rollbackVote: null, resumingGameId: null, turnRecap: null, enteredThisTurn: {}, elimination: null })
       break
     case 'info':
       addLog('servidor', msg.message)
@@ -248,7 +248,7 @@ function handleEvent(method: string, objectId: string | null, data: unknown, mes
       break
     }
     case 'END_GAME_INFO': {
-      handleEndGameInfo(data)
+      handleEndGameInfo(data, objectId)
       break
     }
     case 'SIDEBOARD': {

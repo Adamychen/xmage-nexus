@@ -668,6 +668,8 @@ export const ru: TranslationSchema = {
     leave: 'Выйти',
     concede_prompt: 'Вы уверены, что хотите сдаться и вернуться в лобби?',
     leave_spectate_prompt: 'Прекратить наблюдение и вернуться в лобби?',
+    eliminated_title: 'Eliminated',
+    eliminated_hint: 'You are out of this game. Keep watching, or leave to the lobby — you can join a new table while it finishes.',
     hold_priority_title: 'Удерживать приоритет при розыгрыше заклинаний',
     auto_mulligan: 'Авто-мулиган',
     smart_stops: 'Умные остановки',

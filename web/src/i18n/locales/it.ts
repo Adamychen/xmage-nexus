@@ -668,6 +668,8 @@ export const it: TranslationSchema = {
     leave: 'Esci',
     concede_prompt: 'Vuoi davvero concedere e tornare alla lobby?',
     leave_spectate_prompt: 'Interrompere la visualizzazione e tornare alla lobby?',
+    eliminated_title: 'Eliminato',
+    eliminated_hint: 'Sei fuori da questa partita. Resta a guardare oppure torna alla lobby: potrai unirti a un altro tavolo mentre questa finisce.',
     hold_priority_title: 'Mantieni la priorità lanciando magie o abilità',
     auto_mulligan: 'Auto-mulligan',
     smart_stops: 'Stop intelligenti',

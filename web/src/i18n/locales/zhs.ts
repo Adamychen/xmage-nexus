@@ -671,6 +671,8 @@ export const zhs: TranslationSchema = {
     leave: '退出',
     concede_prompt: '确定要认输并返回大厅吗？',
     leave_spectate_prompt: '停止观战并返回大厅吗？',
+    eliminated_title: 'Eliminated',
+    eliminated_hint: 'You are out of this game. Keep watching, or leave to the lobby — you can join a new table while it finishes.',
     hold_priority_title: '施放咒语或启动异能时保留优先权',
     auto_mulligan: '自动调度',
     smart_stops: '智能停止',

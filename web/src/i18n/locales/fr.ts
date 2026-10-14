@@ -668,6 +668,8 @@ export const fr: TranslationSchema = {
     leave: 'Quitter',
     concede_prompt: 'Voulez-vous vraiment concéder et retourner au salon ?',
     leave_spectate_prompt: 'Arrêter d’observer et retourner au salon ?',
+    eliminated_title: 'Éliminé',
+    eliminated_hint: 'Vous êtes éliminé de cette partie. Restez spectateur ou retournez au salon : vous pourrez rejoindre une nouvelle table pendant qu’elle se termine.',
     hold_priority_title: 'Conserver la priorité lors du lancement de sorts',
     auto_mulligan: 'Auto-mulligan',
     smart_stops: 'Arrêts intelligents',

@@ -668,6 +668,8 @@ export const es: TranslationSchema = {
     leave: 'Salir',
     concede_prompt: '¿Seguro que quieres conceder la partida y volver al lobby?',
     leave_spectate_prompt: '¿Dejar de espectar y volver al lobby?',
+    eliminated_title: 'Eliminado',
+    eliminated_hint: 'Estás fuera de esta partida. Puedes seguir mirando o salir al lobby: podrás unirte a otra mesa mientras esta termina.',
     hold_priority_title: 'Retener prioridad al lanzar hechizos o activar habilidades (o mantén Ctrl/Cmd al hacer clic)',
     auto_mulligan: 'Auto-mulligan',
     smart_stops: 'Paradas inteligentes',

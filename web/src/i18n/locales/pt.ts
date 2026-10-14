@@ -668,6 +668,8 @@ export const pt: TranslationSchema = {
     leave: 'Sair',
     concede_prompt: 'Deseja conceder e voltar ao lobby?',
     leave_spectate_prompt: 'Parar de assistir e voltar ao lobby?',
+    eliminated_title: 'Eliminado',
+    eliminated_hint: 'Estás fora deste jogo. Continua a assistir ou sai para o lobby: podes juntar-te a outra mesa enquanto este termina.',
     hold_priority_title: 'Reter prioridade ao conjurar mágicas ou habilidades',
     auto_mulligan: 'Auto-mulligan',
     smart_stops: 'Paradas inteligentes',

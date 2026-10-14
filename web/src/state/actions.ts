@@ -1,5 +1,6 @@
 import { getState, setState } from './state'
 import * as cmds from '../net/commands'
+import { cleanMageText } from '../game/gameEventParser'
 import type { ChatMessageEvent, DeckJson, GameView } from '../net/types'
 import { advanceProgress, dungeonProgressKey, findDungeonGraph, parseDungeonEntry } from '../game/dungeons'
 import { clonePhaseStops } from '../game/phaseStops'
@@ -51,6 +52,42 @@ export function sniffDungeonEntry(message: string, gameId: string | null) {
   const entry = parseDungeonEntry(message)
   if (!entry) return
   recordDungeonRoom(gameId, entry.player, entry.dungeon, entry.room)
+}
+
+/** Mensajes del servidor que sacan al jugador de la partida sin acabarla
+ *  (Commander): al perder por daño la vista no marca `hasLeft`, solo llega el
+ *  texto ("X has lost the game" / "X lost the game due to …" / "You…"). */
+const ELIMINATION_RE = /^(.*?)\s+(?:has lost the game|lost the game|has left the game|has conceded|wants to concede)\b/i
+const ELIMINATION_YOU_RE = /^you\s+(?:have\s+)?lost the game\b/i
+
+export function sniffElimination(message: string, gameId: string | null | undefined): void {
+  if (!gameId) return
+  const s = getState()
+  if (s.gameId !== gameId || s.elimination?.gameId === gameId) return
+  const me = s.game?.players?.find((p) => p.controlled)
+  if (!me) return
+  const text = cleanMageText(message)
+  if (ELIMINATION_YOU_RE.test(text)) {
+    setState({ elimination: { gameId, dismissed: false } })
+    return
+  }
+  const m = text.match(ELIMINATION_RE)
+  if (!m) return
+  const named = m[1].trim().toLowerCase()
+  const mine = me.name.trim().toLowerCase()
+  if (named && (named === mine || named === 'you' || named === 'tú')) {
+    setState({ elimination: { gameId, dismissed: false } })
+  }
+}
+
+/** "Seguir mirando": no volver a ofrecer salir en esta partida. */
+export function dismissElimination(): void {
+  const s = getState()
+  if (s.elimination) {
+    if (!s.elimination.dismissed) setState({ elimination: { ...s.elimination, dismissed: true } })
+  } else if (s.gameId) {
+    setState({ elimination: { gameId: s.gameId, dismissed: true } })
+  }
 }
 
 export function setMyDeck(deck: DeckJson | null) {
@@ -326,6 +363,7 @@ export function returnToLobby() {
     enteredThisTurn: {},
     sideboardScreen: null,
     pendingSideboardScreen: null,
+    elimination: null,
     error: null,
   })
 }

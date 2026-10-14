@@ -61,6 +61,13 @@ export interface PlayerMenuState {
   y: number
 }
 
+/** Elimination of the controlled player while a multiplayer game goes on
+ *  (Commander): offers staying as spectator or leaving to the lobby. */
+export interface EliminationState {
+  gameId: string
+  dismissed: boolean
+}
+
 export interface GameSlice {
   game: GameView | null
   gameId: string | null
@@ -99,6 +106,7 @@ export interface GameSlice {
   enteredThisTurn: Record<string, true>
   priorityRequest: GameView | null
   waitingFor: string | null
+  elimination: EliminationState | null
 }
 
 export const initialGame: GameSlice = {
@@ -128,5 +136,6 @@ export const initialGame: GameSlice = {
   enteredThisTurn: {},
   priorityRequest: null,
   waitingFor: null,
+  elimination: null,
   phaseStops: clonePhaseStops(DEFAULT_PHASE_STOPS),
 }

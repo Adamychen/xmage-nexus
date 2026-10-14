@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { makeGameView, makePlayer } from '../__fixtures__/gameViews'
 import { getState, setState } from './state'
-import { concedeGame, concedeMatch, returnToLobby, reset, clearGameEnd } from './store'
-import { handleEndGameInfo } from './events/game'
+import { concedeGame, concedeMatch, returnToLobby, reset, clearGameEnd, sniffElimination } from './store'
+import { handleEndGameInfo, handleGameOver } from './events/game'
 import { handleSideboard } from './events/sideboard'
 import * as cmds from '../net/commands'
 
@@ -90,5 +90,78 @@ describe('concedeGame', () => {
     handleSideboard({ deck: { name: 'Mi mazo', cards: {}, sideboard: {} }, currentTableId: 'table-1' }, getState())
     await vi.waitFor(() => expect(getState().sideboardScreen).not.toBeNull())
     expect(getState().pendingSideboardScreen).toBeNull()
+  })
+
+  it('ignora el END_GAME_INFO de la partida abandonada cuando ya estoy en otra (salí pronto del Commander)', () => {
+    setState({
+      phase: 'game',
+      gameId: 'game-new',
+      game: makeGameView({
+        players: [makePlayer({ playerId: 'p1', name: 'Me', controlled: true, isHuman: true })],
+      }),
+    })
+    handleEndGameInfo(
+      { matchInfo: 'Opp won the match!', gameInfo: 'Opp has won the game', won: false, matchView: { endTime: '2026-10-13T00:00:00Z' } },
+      'game-old',
+    )
+    expect(getState().phase).toBe('game')
+    expect(getState().gameId).toBe('game-new')
+    expect(getState().gameEnd).toBeNull()
+  })
+
+  it('ignora el GAME_OVER de la partida abandonada cuando ya estoy en otra', () => {
+    setState({
+      phase: 'game',
+      gameId: 'game-new',
+      game: makeGameView({
+        players: [makePlayer({ playerId: 'p1', name: 'Me', controlled: true, isHuman: true })],
+      }),
+    })
+    handleGameOver('Old game is over', 'game-old')
+    expect(getState().gameEnd).toBeNull()
+  })
+})
+
+describe('sniffElimination', () => {
+  beforeEach(() => {
+    reset()
+    setState({
+      phase: 'game',
+      gameId: 'game-1',
+      game: makeGameView({
+        players: [
+          makePlayer({ playerId: 'p1', name: 'Me', controlled: true, isHuman: true }),
+          makePlayer({ playerId: 'p2', name: 'Opp', controlled: false, isHuman: true }),
+        ],
+      }),
+    })
+  })
+
+  it('marca eliminado cuando el jugador controlado pierde la partida', () => {
+    sniffElimination('Me has lost the game', 'game-1')
+    expect(getState().elimination).toEqual({ gameId: 'game-1', dismissed: false })
+  })
+
+  it('marca eliminado con las formas "lost the game due to…" y "You…"', () => {
+    sniffElimination('Me lost the game due to having 0 or less life', 'game-1')
+    expect(getState().elimination).toEqual({ gameId: 'game-1', dismissed: false })
+    setState({ elimination: null })
+    sniffElimination('You have lost the game', 'game-1')
+    expect(getState().elimination).toEqual({ gameId: 'game-1', dismissed: false })
+  })
+
+  it('ignora la derrota de otro jugador', () => {
+    sniffElimination('Opp has lost the game', 'game-1')
+    expect(getState().elimination).toBeNull()
+  })
+
+  it('ignora mensajes de otra partida', () => {
+    sniffElimination('Me has lost the game', 'game-old')
+    expect(getState().elimination).toBeNull()
+  })
+
+  it('ignora texto que no es una derrota', () => {
+    sniffElimination('Me attacks Opp with Grizzly Bears', 'game-1')
+    expect(getState().elimination).toBeNull()
   })
 })

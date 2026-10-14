@@ -1,4 +1,4 @@
-import { returnToLobby, useStore, useGame, clearGameEnd } from '../state/store'
+import { concedeMatch, returnToLobby, useStore, useGame, clearGameEnd } from '../state/store'
 import { handleWatchGame } from '../state/events/game'
 import { findFollowGameId } from './spectatorFollow'
 import DialogShell from '../ui/DialogShell'
@@ -187,9 +187,14 @@ export default function GameEndDialog() {
               )}
             </>
           ) : (
-            <Button variant="primary" onClick={clearGameEnd}>
-              {t('common', 'close')}
-            </Button>
+            <>
+              <Button variant="subtle" onClick={() => void concedeMatch()}>
+                {t('game', 'return_to_lobby')}
+              </Button>
+              <Button variant="primary" onClick={clearGameEnd}>
+                {t('common', 'close')}
+              </Button>
+            </>
           )}
         </div>
     </DialogShell>

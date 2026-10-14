@@ -18,6 +18,7 @@ import { OPEN_SETUP_EVENT } from './setup/setupFlag'
 import { bootPlanFromStorage } from './setup/bootRestore'
 import GameScreen from './game/GameScreen'
 import GameEndDialog from './game/GameEndDialog'
+import EliminatedDialog from './game/EliminatedDialog'
 import ConfirmHost from './ui/ConfirmHost'
 import DraftScreen from './game/DraftScreen'
 import ConstructScreen from './game/ConstructScreen'
@@ -158,6 +159,7 @@ export default function App() {
       <DraftScreen />
       <ConstructScreen />
       <GameEndDialog />
+      <EliminatedDialog />
       <ConfirmHost />
       <DeckIssuesDialog />
       {__DEMO__ && <DemoTour />}

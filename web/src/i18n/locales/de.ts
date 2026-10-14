@@ -668,6 +668,8 @@ export const de: TranslationSchema = {
     leave: 'Verlassen',
     concede_prompt: 'Möchtest du aufgeben und zur Lobby zurückkehren?',
     leave_spectate_prompt: 'Zuschauen beenden und zur Lobby zurückkehren?',
+    eliminated_title: 'Ausgeschieden',
+    eliminated_hint: 'Du bist aus diesem Spiel ausgeschieden. Schau weiter zu oder kehre zur Lobby zurück — du kannst an einem neuen Tisch spielen, während dieses Spiel zu Ende geht.',
     hold_priority_title: 'Priorität beim Wirken von Zaubersprüchen halten',
     auto_mulligan: 'Auto-Mulligan',
     smart_stops: 'Intelligente Stopps',
