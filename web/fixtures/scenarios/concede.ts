@@ -1,6 +1,6 @@
 import { TABLE } from '../table-names'
 import { HumanGame } from './humanGame'
-import { GAME_ID, SIM_NAME } from '../humanGameConstants'
+import { SIM_NAME } from '../humanGameConstants'
 
 /**
  * Escenario mínimo para probar la acción CONCEDE del jugador humano:
@@ -26,8 +26,8 @@ export function concedeScenario(): ReturnType<HumanGame['scenario']> {
           conn.ok(requestId, action, {})
           conn.broadcast(
             'GAME_OVER',
-            { gameId: GAME_ID, winnerName: SIM_NAME, message: 'Mage Web conceded.' },
-            GAME_ID,
+            { gameId: game.gameId, winnerName: SIM_NAME, message: 'Mage Web conceded.' },
+            game.gameId,
           )
           conn.broadcast(
             'END_GAME_INFO',
@@ -37,7 +37,7 @@ export function concedeScenario(): ReturnType<HumanGame['scenario']> {
               wins: 0,
               loses: 2,
             },
-            GAME_ID,
+            game.gameId,
           )
           return
         }
