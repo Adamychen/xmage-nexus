@@ -685,7 +685,7 @@ export const es: TranslationSchema = {
     rewind_back_live: 'Volver al directo',
     rewind_save: 'Guardar replay',
     rewind_save_hint: 'Descarga los pasos guardados de esta partida como un fichero que puedes reabrir o compartir. Contiene los estados del tablero que viste, no tu lista de mazo.',
-    replay_badge: 'Replay',
+    replay_badge: 'Repetición',
     replay_close: 'Cerrar replay',
     replay_open: 'Abrir fichero de replay',
     replay_open_hint: 'Abre un fichero de replay guardado de una partida (.json o .json.gz). Se reproduce sin conexión a ningún servidor.',
