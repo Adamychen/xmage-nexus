@@ -14,9 +14,9 @@ Canonical references live elsewhere; this folder indexes them instead of duplica
 7. `docs/testing.md` — how to run and interpret the suite.
 8. `docs/user-manual.md` — how to play (for users, also useful for testers).
 9. `docs/deployment.md` — running the stack and publishing the dashboard.
-10. `docs/enhancements.md` — spec catalog of client-only feature ideas. Most of it is already built (deck tracker, mulligan evaluator, deep links, sample hand, printing selector, custom card images, playmats, EDHREC); the two that stay open are the draft pick helper and board rewind, listed in `ROADMAP.md` §4.2.
+10. `docs/enhancements.md` — open client-only feature specs (board rewind, draft pick helper). The full historic catalog is archived in `docs/history/enhancements-catalog.md`.
 11. `docs/lessons.md` — durable cross-cutting lessons worth re-reading before debugging.
-12. `docs/mcp-overview.md` — MCP server architecture, the 38 `mage_*` tools, and autonomous LLM gameplay guide.
+12. `mcp/README.md` — MCP server: gameplay loop, the 38 `mage_*` tools, and autonomous LLM play notes (archived long-form overview in `docs/history/mcp-overview.md`).
 
 ## Status docs (what is authoritative for what)
 
@@ -25,8 +25,8 @@ Canonical references live elsewhere; this folder indexes them instead of duplica
 | `ROADMAP.md` | Vision, current state, parity matrix and **the single live list of pending work** (§4) | Update §4 when something is finished or a new pending item appears; the closed phase plan is archived in `docs/history/roadmap-phases.md` |
 | `docs/lessons.md` | Durable cross-cutting lessons (one line each) | Add a line only when the lesson is reusable; the dated narrative lives in `git log` (no work log) |
 | `web/INTERACTION_COVERAGE.md` | Per-callback and per-mechanic coverage: implemented + tested + test ref + date | Update with every handler/interaction change; enforced by `callbackCoverage.test.ts` |
-| `docs/enhancements.md` | Spec catalog of client-only feature ideas, with per-idea status | Statuses verified against the code; pending items are summarized in `ROADMAP.md` §4.2 |
-| `docs/history/` | Closed plans (`plan4`–`plan7`), the archived phase plan (`roadmap-phases.md`), the closed lobby roadmap (`lobby_roadmap.md`) and QA evidence logs (`qa/`) | Historical, **not normative**. Current behavior is defined by code + `INTERACTION_COVERAGE.md` + recorded fixtures; what is still open lives in `ROADMAP.md` §4 |
+| `docs/enhancements.md` | Open client-only feature specs (board rewind, draft pick helper) | Statuses verified against the code; pending items are summarized in `ROADMAP.md` §4.2; the built/dropped catalog is archived in `docs/history/enhancements-catalog.md` |
+| `docs/history/` | The closed plan (`plan4`), the archived phase plan (`roadmap-phases.md`), the closed lobby roadmap (`lobby_roadmap.md`), the archived enhancement catalog (`enhancements-catalog.md`) and MCP overview (`mcp-overview.md`), and QA evidence logs (`qa/`) | Historical, **not normative**. Current behavior is defined by code + `INTERACTION_COVERAGE.md` + recorded fixtures; what is still open lives in `ROADMAP.md` §4 |
 | `site/content.json` | Dashboard copy (phases, features, guards) | Keep in sync with `ROADMAP.md` when phases change |
 
 ## Ports (do not change without updating `AGENTS.md`, `scripts/lib.mjs`, `docs/deployment.md`)

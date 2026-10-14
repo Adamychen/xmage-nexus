@@ -106,6 +106,12 @@ repetir:
 realmente puede decidir (su turno con jugables, asks, targets, maná). Desactívalo con
 `mage_auto_pass({enabled:false})` si quieres ver también las prioridades del rival.
 
+Tres ideas para agentes LLM (verificado en `test/realGame.test.ts`, partida completa vs SIM
+hasta `gameOver`): el estado compacto (`mage_game_state`) evita tragar los DTOs crudos
+(miles de líneas por evento: solo vidas, mano, board con stats/giradas/daño, stack y jugables);
+el auto-pass absorbe las decenas de prioridades vacías por turno; los prompts llegan
+normalizados (`select`, `boolean`, `combat`, `mana`, `order`, `integer`, `uuid`, `string`).
+
 **Multi-sesión**: `mage_connect({session:"a"})` crea una sesión nombrada (varias
 cuentas/partidas en un proceso MCP). Sin pin, las tools operan sobre la sesión
 **activa** (cámbiala con `mage_use_session`, lístalas con `mage_sessions`);

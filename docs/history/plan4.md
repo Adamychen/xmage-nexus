@@ -2,7 +2,7 @@
 
 > **PLAN CERRADO (2026-09-19)**: lo que quedaba abierto (V5–V7: evaluador 3,
 > pruebas con personas e instalación en máquinas limpias) pasa a la lista viva
-> única de `plan7.md` §4 (desde 2026-09-21, en `ROADMAP.md` §4).
+> única en `ROADMAP.md` §4.
 
 > ESTADO AL CREAR: rama `master`, último commit `7cafe4ab079`. Resync del draft
 > **sin commitear** (11 ficheros) + 3 PNG sueltos en la raíz. Documento **solo de
