@@ -11,6 +11,7 @@ import { fxDuration } from './fx'
 import { extractOwnedKeywords } from '../data/keywordExtractor'
 import { keywordDisplayName, keywordSummary } from '../data/keywordI18n'
 import { cardDesignations, pairedPartnerName, classLevelOf, evidenceCounts, protectorName, type Designation } from './designations'
+import { roomDoorKey, roomSidesLabel } from '../game/rooms'
 import CardIcons from './CardIcons'
 import { basePtValue, ptTrend } from './ptTrend'
 import Icon from '../ui/Icon'
@@ -247,6 +248,14 @@ export default function CardSlot({
   }, [card.rules, (card as unknown as { abilities?: unknown }).abilities, card.name])
 
   const designations = useMemo(() => cardDesignations(card.rules), [card.rules])
+  // Duskmourn Room doors never travel in the DTO; the unlocked sides are
+  // sniffed from the server chat (`sniffRoomDoor`), keyed by card name.
+  const roomSides = useStore((s) => {
+    const rawSubs = (card as CardView).subTypes
+    const subs = Array.isArray(rawSubs) ? rawSubs : []
+    if (!subs.some((x) => String(x).toLowerCase() === 'room') || !s.gameId) return ''
+    return roomSidesLabel(s.roomDoors[roomDoorKey(s.gameId, cardName(card))])
+  })
   const pairPartner = useMemo(() => pairedPartnerName(card.rules), [card.rules])
   const classLevel = useMemo(() => classLevelOf(card.rules), [card.rules])
   const evidence = useMemo(() => evidenceCounts(card.rules), [card.rules])
@@ -546,7 +555,7 @@ const showPtBadge =
 
       <CardIcons icons={card.cardIcons} />
 
-      {designations.length > 0 && (
+      {(designations.length > 0 || roomSides !== '') && (
         <div className="designation-badges">
           {designations.map((d) => {
             const texts = designationTexts(d)
@@ -556,6 +565,11 @@ const showPtBadge =
               </span>
             )
           })}
+          {roomSides !== '' && (
+            <span className="designation-badge is-room" title={t('board', 'designation_room_title', { sides: roomSides })}>
+              {roomSides}
+            </span>
+          )}
         </div>
       )}
 

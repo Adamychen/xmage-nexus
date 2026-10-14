@@ -1670,6 +1670,7 @@ export const it: TranslationSchema = {
     designation_prepared_title: 'Preparato: questo permanente ha la designazione preparato',
     designation_protector: 'Protettore',
     designation_protector_title: 'Protetto da {name}',
+    designation_room_title: 'Porte sbloccate ({sides})',
     turn_order_label: 'Ordine di turno',
     turn_active_badge: 'Attivo',
     turn_active_suffix: ' — turno attivo',

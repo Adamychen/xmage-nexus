@@ -1675,6 +1675,7 @@ export const ja: TranslationSchema = {
     designation_prepared_title: '準備済み：このパーマネントは準備の指定を持っている',
     designation_protector: '保護者',
     designation_protector_title: '{name}に保護されている',
+    designation_room_title: '解錠済みのドア ({sides})',
     turn_order_label: '手番順',
     turn_active_badge: '手番',
     turn_active_suffix: ' — 手番',

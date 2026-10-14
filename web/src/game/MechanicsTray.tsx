@@ -17,6 +17,7 @@ import {
   type DungeonGraph,
 } from './dungeons'
 import { dayNightStateOf, type DayNightState } from '../board/dayNight'
+import { speedLevelKey } from './speed'
 import './MechanicsTray.css'
 
 interface MechanicsTrayProps {
@@ -71,6 +72,7 @@ export default function MechanicsTray({ onHoverCard }: MechanicsTrayProps) {
   const game = useStore((s) => s.game)
   const gameId = useStore((s) => s.gameId)
   const progress = useStore((s) => s.dungeonProgress)
+  const speedLevels = useStore((s) => s.speedLevels)
   const [activeTab, setActiveTab] = useState<string>('auto')
   const [tokenImages, setTokenImages] = useState<Record<string, string>>({})
 
@@ -419,11 +421,15 @@ export default function MechanicsTray({ onHoverCard }: MechanicsTrayProps) {
               <p>{t('game', 'mechanics_speed_title')}</p>
             </div>
             <div className="speed-players-list">
-              {speedPlayers.map((p) => (
-                <div key={p.playerId} className="speed-player-row">
-                  <span><Icon name="gauge" size={12} /> {p.name} {p.controlled ? `(${t('game', 'you')})` : ''}</span>
-                </div>
-              ))}
+              {speedPlayers.map((p) => {
+                const level = gameId ? speedLevels[speedLevelKey(gameId, p.name)] : undefined
+                return (
+                  <div key={p.playerId} className="speed-player-row">
+                    <span><Icon name="gauge" size={12} /> {p.name} {p.controlled ? `(${t('game', 'you')})` : ''}</span>
+                    {level != null && <span className="badge-speed-level">{t('game', 'mechanics_speed_title')} {level}</span>}
+                  </div>
+                )
+              })}
             </div>
           </div>
         )}

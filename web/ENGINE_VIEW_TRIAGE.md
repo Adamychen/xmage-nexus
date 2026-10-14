@@ -48,7 +48,7 @@ Reparto actual: `accepted` 27 · `parser-artifact` 8 · `bookkeeping` 54 · `dup
 | PermanentView | `harnessed` | nulo | rendered | la línea "{this} is harnessed" llega en rules y se parsea | `web/src/board/designations.ts:44` |
 | PermanentView | `indirectPhase` | nulo | bookkeeping | faseo indirecto interno; phasedIn ya se emite | — |
 | PermanentView | `info` | nulo | duplicado | sus líneas se funden en CardView.rules | — |
-| PermanentView | `leftHalfUnlocked` | bajo | accepted | Room (Duskmourn); el motor solo lo informa por chat (PermanentImpl.java:2336-2364) y el desktop tampoco lo lee | — |
+| PermanentView | `leftHalfUnlocked` | bajo | accepted | Room (Duskmourn); el motor solo lo informa por chat (PermanentImpl.java:2336-2364) y el desktop tampoco lo lee; el web lo lee de ahí (`game/rooms.ts`, badge en `CardSlot`) | `web/src/board/CardSlot.tsx:253` |
 | PermanentView | `legendRuleApplies` | nulo | bookkeeping | excepción a la regla de legendarias; afecta al motor, no al render | — |
 | PermanentView | `loyaltyActivationsAvailable` | bajo | accepted | el server ya filtra las habilidades de planeswalker jugables (canPlayObjects) | — |
 | PermanentView | `manaCost` | nulo | duplicado | el coste llega en CardView.manaCostLeftStr/manaCostRightStr/manaValue | — |
@@ -72,9 +72,9 @@ Reparto actual: `accepted` 27 · `parser-artifact` 8 · `bookkeeping` 54 · `dup
 | PermanentView | `protectorId` | nulo | rendered | la línea "Protected by ..." llega en rules y se parsea | `web/src/board/designations.ts:47` |
 | PermanentView | `prototyped` | nulo | bookkeeping | el server ya aplica las características prototipo; el flag no se muestra | — |
 | PermanentView | `renowned` | nulo | rendered | la línea "{this} is renowned" llega en rules y se parsea | `web/src/board/designations.ts:36` |
-| PermanentView | `rightHalfUnlocked` | bajo | accepted | Room (Duskmourn); el motor solo lo informa por chat (PermanentImpl.java:2336-2364) y el desktop tampoco lo lee | — |
+| PermanentView | `rightHalfUnlocked` | bajo | accepted | Room (Duskmourn); el motor solo lo informa por chat (PermanentImpl.java:2336-2364) y el desktop tampoco lo lee; el web lo lee de ahí (`game/rooms.ts`, badge en `CardSlot`) | `web/src/board/CardSlot.tsx:253` |
 | PermanentView | `ringBearerFlag` | nulo | rendered | el portador llega en cardIcons (RINGBEARER) y se busca por el campo | `web/src/game/MechanicsTray.tsx:61` |
-| PermanentView | `roomWasUnlockedOnCast` | bajo | accepted | Room (Duskmourn); el motor solo lo informa por chat (PermanentImpl.java:2336-2364) y el desktop tampoco lo lee | — |
+| PermanentView | `roomWasUnlockedOnCast` | bajo | accepted | Room (Duskmourn); el motor solo lo informa por chat (PermanentImpl.java:2336-2364) y el desktop tampoco lo lee; el web lo lee de ahí (`game/rooms.ts`, badge en `CardSlot`) | `web/src/board/CardSlot.tsx:253` |
 | PermanentView | `secondSideCard` | nulo | duplicado | la otra cara llega en CardView.secondCardFace | — |
 | PermanentView | `solved` | nulo | rendered | la línea "Case is solved" llega en rules y se parsea | `web/src/board/designations.ts:43` |
 | PermanentView | `sourceObject` | nulo | parser-artifact | campo de la inner class MarkedDamageInfo (PermanentImpl.java:55-66), no de PermanentImpl | — |
@@ -131,7 +131,7 @@ Reparto actual: `accepted` 27 · `parser-artifact` 8 · `bookkeeping` 54 · `dup
 | PlayerView | `range` | bajo | accepted | rango de influencia multijugador; no se muestra | — |
 | PlayerView | `reachedNextTurnAfterLeaving` | nulo | bookkeeping | marca interna para reincorporación a la partida | — |
 | PlayerView | `skippedAtLeastOnce` | nulo | bookkeeping | marca interna de turnos saltados | — |
-| PlayerView | `speed` | medio | accepted | nivel 1-4 no emitido por upstream; la presencia llega vía designationNames y se pinta | `web/src/game/PlayerInfoBar.tsx:201` |
+| PlayerView | `speed` | medio | accepted | nivel 1-4 no emitido por upstream; la presencia llega vía designationNames y se pinta, y el nivel se lee del chat (`'s speed is now/increased/decreased to N`, `game/speed.ts`) en tray + badge | `web/src/game/PlayerInfoBar.tsx:201` |
 | PlayerView | `status` | nulo | parser-artifact | campo de la inner class ApprovingObjectResult (PlayerImpl.java:1506-1514) | — |
 | PlayerView | `storedBookmark` | nulo | duplicado | statesSavedSize | — |
 | PlayerView | `timerTimeout` | nulo | duplicado | los badges de timer se derivan de timerActive/priorityTimeLeftSecs | — |

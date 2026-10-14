@@ -3,6 +3,8 @@ import * as cmds from '../net/commands'
 import { cleanMageText } from '../game/gameEventParser'
 import type { ChatMessageEvent, DeckJson, GameView } from '../net/types'
 import { advanceProgress, dungeonProgressKey, findDungeonGraph, parseDungeonEntry } from '../game/dungeons'
+import { parseRoomDoor, roomDoorKey, mergeRoomDoor } from '../game/rooms'
+import { parseSpeedLevel, speedLevelKey } from '../game/speed'
 import { clonePhaseStops } from '../game/phaseStops'
 import { meaningfulPlayables } from '../game/smartStops'
 import { manaPaymentActions } from '../game/manaPayment'
@@ -52,6 +54,25 @@ export function sniffDungeonEntry(message: string, gameId: string | null) {
   const entry = parseDungeonEntry(message)
   if (!entry) return
   recordDungeonRoom(gameId, entry.player, entry.dungeon, entry.room)
+}
+
+/** Sniff server speed-level broadcasts (`PlayerImpl.initSpeed/increaseSpeed/decreaseSpeed`). */
+export function sniffSpeedLevel(message: string, gameId: string | null) {
+  if (!gameId) return
+  const hit = parseSpeedLevel(message)
+  if (!hit) return
+  const key = speedLevelKey(gameId, hit.player)
+  if (getState().speedLevels[key] === hit.level) return
+  setState({ speedLevels: { ...getState().speedLevels, [key]: hit.level } })
+}
+
+/** Sniff server Room-door broadcasts (`PermanentImpl.unlockDoor`). */
+export function sniffRoomDoor(message: string, gameId: string | null) {
+  if (!gameId) return
+  const hit = parseRoomDoor(message)
+  if (!hit) return
+  const key = roomDoorKey(gameId, hit.card)
+  setState({ roomDoors: { ...getState().roomDoors, [key]: mergeRoomDoor(getState().roomDoors[key], hit.side) } })
 }
 
 /** Mensajes del servidor que sacan al jugador de la partida sin acabarla

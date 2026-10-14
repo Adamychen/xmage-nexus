@@ -244,6 +244,38 @@ describe('CardSlot', () => {
     expect(badge?.getAttribute('title')).toContain('Grizzly Bears')
   })
 
+  it('renders a room-door badge from sniffed unlock broadcasts', () => {
+    const card = {
+      id: 'r1',
+      name: 'Dollhouse of Horrors',
+      cardTypes: ['Enchantment'],
+      subTypes: ['Room'],
+    } as unknown as PermanentView
+    setState({ gameId: 'g-room', roomDoors: {} })
+    const { container, rerender } = render(<CardSlot card={card} />)
+    expect(container.querySelector('.designation-badge.is-room')).toBeNull()
+    act(() => {
+      setState({ roomDoors: { 'g-room‖dollhouse of horrors': { left: true, right: false } } })
+    })
+    rerender(<CardSlot card={card} />)
+    const badge = container.querySelector('.designation-badge.is-room')
+    expect(badge).not.toBeNull()
+    expect(badge?.textContent).toBe('L')
+    expect(badge?.getAttribute('title')).toContain('L')
+  })
+
+  it('renders no room-door badge on non-Room cards with a colliding name', () => {
+    const card = {
+      id: 'r2',
+      name: 'Dollhouse of Horrors',
+      cardTypes: ['Enchantment'],
+      subTypes: ['Saga'],
+    } as unknown as PermanentView
+    setState({ gameId: 'g-room', roomDoors: { 'g-room‖dollhouse of horrors': { left: true, right: true } } })
+    const { container } = render(<CardSlot card={card} />)
+    expect(container.querySelector('.designation-badge.is-room')).toBeNull()
+  })
+
   it('expone data-attrs de fidelidad (P2): P/T, girado, contadores y daño', () => {
     const card = {
       id: 'fid1',

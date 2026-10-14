@@ -5,7 +5,7 @@ import { manaPaymentActions } from '../../game/manaPayment'
 import { serverAutoAnswerActions } from '../../game/autoAnswers'
 import { clonePhaseStops } from '../../game/phaseStops'
 import { getState, setState, addLog } from '../state'
-import { sniffDungeonEntry, enterTableChat, exitTableChat, armRollbackPending, disarmRollbackPending, sniffElimination } from '../actions'
+import { sniffDungeonEntry, sniffSpeedLevel, sniffRoomDoor, enterTableChat, exitTableChat, armRollbackPending, disarmRollbackPending, sniffElimination } from '../actions'
 import { ingestRollbackServerMessage } from '../rollbackVote'
 import { t as tStatic } from '../../i18n'
 import { saveActiveGame, clearActiveGame } from '../persistence'
@@ -102,6 +102,8 @@ export function handleGameUpdate(method: string, objectId: string | null, data: 
     if (waitingFor) setState({ waitingFor })
     addLog('partida', informMessage, objectId ?? undefined)
     sniffDungeonEntry(informMessage, objectId ?? s.gameId)
+    sniffSpeedLevel(informMessage, objectId ?? s.gameId)
+    sniffRoomDoor(informMessage, objectId ?? s.gameId)
     sniffElimination(informMessage, objectId ?? s.gameId)
     sniffRollbackAnnounce(informMessage, objectId ?? s.gameId)
   }
@@ -193,6 +195,8 @@ export function handleGameInform(data: unknown, objectId: string | null): void {
   const msg = typeof d === 'string' ? d : d?.message
   if (msg) {
     sniffDungeonEntry(msg, objectId ?? getState().gameId)
+    sniffSpeedLevel(msg, objectId ?? getState().gameId)
+    sniffRoomDoor(msg, objectId ?? getState().gameId)
     sniffElimination(msg, objectId ?? getState().gameId)
     sniffRollbackAnnounce(msg, objectId ?? getState().gameId)
     addLog('partida', msg, objectId ?? undefined)

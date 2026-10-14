@@ -13,6 +13,7 @@ import Icon from '../ui/Icon'
 import { clickableProps } from '../ui/clickable'
 import RankBadge from '../lobby/RankBadge'
 import { playerRankRating } from '../lobby/ranking'
+import { speedLevelKey } from './speed'
 import './PlayerInfoBar.css'
 import type { CommandEntry } from './commandItems'
 
@@ -277,6 +278,11 @@ export default function PlayerInfoBar({
   const nonDayNightDesignations = (player.designationNames ?? []).filter(
     (d) => !d.toLowerCase().includes('day') && !d.toLowerCase().includes('night')
   )
+  // Speed 1-4 never travels in the DTO; the level is sniffed from the server
+  // chat broadcasts (`sniffSpeedLevel`) when the engine announces it.
+  const gameIdForSpeed = useStore((s) => s.gameId)
+  const speedLevels = useStore((s) => s.speedLevels)
+  const speedLevel = gameIdForSpeed ? speedLevels[speedLevelKey(gameIdForSpeed, player.name)] : undefined
 
   const handleMouseEnter = (card: CardView, e: React.MouseEvent) => {
     if (onHover) {
@@ -466,15 +472,17 @@ export default function PlayerInfoBar({
 
           {nonDayNightDesignations.map((d) => {
             const details = getDesignationDetails(d)
+            const level = d.toLowerCase().includes('speed') ? speedLevel : undefined
             return (
               <span
                 key={d}
                 className="badge badge-designation interactive-badge"
-                title={details.title}
+                title={level != null ? `${details.title} ${level}` : details.title}
                 onMouseEnter={(e) => handleMouseEnter(details.card, e)}
                 onMouseLeave={handleMouseLeave}
               >
                 <Icon name={details.icon} size={12} />
+                {level != null && <span className="badge-sub-level">{level}</span>}
               </span>
             )
           })}

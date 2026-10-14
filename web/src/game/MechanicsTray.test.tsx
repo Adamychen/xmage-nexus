@@ -1,7 +1,7 @@
 import { cleanup, fireEvent, render } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import MechanicsTray, { findRingBearer } from './MechanicsTray'
-import { setState, sniffDungeonEntry } from '../state/store'
+import { setState, sniffDungeonEntry, sniffRoomDoor, sniffSpeedLevel } from '../state/store'
 import { getState } from '../state/state'
 import theRingFrame from '../../fixtures/recorded/the-ring.json'
 import type { GameView, PlayerView } from '../net/types'
@@ -246,6 +246,33 @@ describe('MechanicsTray', () => {
     expect(getState().dungeonProgress['g-opp‖rival‖tomb']).toEqual(['Sandfall Cell'])
     sniffDungeonEntry('Rival draws a card.', 'g-opp')
     expect(getState().dungeonProgress['g-opp‖rival‖tomb']).toEqual(['Sandfall Cell'])
+  })
+
+  it('tracks speed levels from server broadcasts and shows them per player', () => {
+    setState({ gameId: 'g-speed', speedLevels: {} })
+    sniffSpeedLevel("<font color='#FF0000'>Rival</font>'s speed is now 1.", 'g-speed')
+    expect(getState().speedLevels['g-speed‖rival']).toBe(1)
+    sniffSpeedLevel("Rival's speed has increased to 3.", 'g-speed')
+    expect(getState().speedLevels['g-speed‖rival']).toBe(3)
+    sniffSpeedLevel('Rival draws a card.', 'g-speed')
+    expect(getState().speedLevels['g-speed‖rival']).toBe(3)
+    setState({
+      game: {
+        players: [
+          { playerId: 'p1', name: 'Rival', controlled: false, designationNames: ['Speed'] } as unknown as PlayerView,
+        ],
+      } as unknown as GameView,
+    })
+    const { container } = render(<MechanicsTray />)
+    expect(container.querySelector('.speed-player-row .badge-speed-level')?.textContent).toContain('3')
+  })
+
+  it('tracks room doors from server unlock broadcasts', () => {
+    setState({ gameId: 'g-room', roomDoors: {} })
+    sniffRoomDoor('Bob unlocked the left door of Dollhouse of Horrors.', 'g-room')
+    expect(getState().roomDoors['g-room‖dollhouse of horrors']).toEqual({ left: true, right: false })
+    sniffRoomDoor('Bob unlocked the right door of Dollhouse of Horrors (source: Torch the Tower).', 'g-room')
+    expect(getState().roomDoors['g-room‖dollhouse of horrors']).toEqual({ left: true, right: true })
   })
 
   it('moves the marker along the tracked venture path', () => {

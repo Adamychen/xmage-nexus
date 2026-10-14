@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from 'vitest'
 import { render, fireEvent } from '@testing-library/react'
 import PlayerInfoBar from './PlayerInfoBar'
 import type { PlayerView } from '../net/types'
+import { setState } from '../state/store'
 
 import { makePermanent, makePlayer } from '../__fixtures__/gameViews'
 
@@ -140,6 +141,23 @@ describe('PlayerInfoBar', () => {
         expect.any(Object),
       )
     }
+  })
+
+  it('shows the sniffed speed level on the Speed badge', () => {
+    const speedy: PlayerView = {
+      ...basePlayer,
+      name: 'Alice',
+      designationNames: ['Speed'],
+    }
+    setState({ gameId: 'g-speed', speedLevels: { 'g-speed‖alice': 3 } })
+    const { container } = render(<PlayerInfoBar player={speedy} side="my" />)
+    const badges = container.querySelectorAll('.badge-designation')
+    expect(badges.length).toBe(1)
+    expect(badges[0].querySelector('.badge-sub-level')?.textContent).toBe('3')
+    expect(badges[0].getAttribute('title')).toContain('3')
+    setState({ gameId: 'g-speed', speedLevels: {} })
+    const { container: plain } = render(<PlayerInfoBar player={speedy} side="my" />)
+    expect(plain.querySelector('.badge-sub-level')).toBeNull()
   })
 
   it('renders Citys Blessing and Speed with custom icons and token previews', () => {

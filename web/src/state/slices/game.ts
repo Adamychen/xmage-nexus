@@ -102,6 +102,10 @@ export interface GameSlice {
   phaseStops: PhaseStops
   /** Dungeon room progress by `dungeonProgressKey(gameId, dungeon)` (visit order). */
   dungeonProgress: Record<string, string[]>
+  /** Speed level 1-4 by `speedLevelKey(gameId, player)` (chat sniff, engine field not in DTO). */
+  speedLevels: Record<string, number>
+  /** Unlocked Room doors by `roomDoorKey(gameId, cardName)` (chat sniff, engine fields not in DTO). */
+  roomDoors: Record<string, { left: boolean; right: boolean }>
   turnRecap: TurnRecap | null
   enteredThisTurn: Record<string, true>
   priorityRequest: GameView | null
@@ -132,6 +136,8 @@ export const initialGame: GameSlice = {
   playerMenu: null,
   inspectedCard: null,
   dungeonProgress: {},
+  speedLevels: {},
+  roomDoors: {},
   turnRecap: null,
   enteredThisTurn: {},
   priorityRequest: null,
