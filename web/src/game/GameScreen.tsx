@@ -475,13 +475,13 @@ export default function GameScreen() {
               ) : (
                 <GameBoard {...boardProps} focusedOpponentId={currentOpp?.playerId} />
               )}
-              {(settings.boardRewind || rewind.replay) && <RewindBar rewind={rewind} />}
               <LowLifeVignette game={game} />
               <TurnRecapStrip />
               <FeedbackOverlay />
               <ImpactOverlay />
               <GameDock
                 onPromptSlot={setPromptSlot}
+                rewind={(settings.boardRewind || rewind.replay) ? <RewindBar rewind={rewind} /> : null}
                 action={
                   <ActionButton
                     game={game}
