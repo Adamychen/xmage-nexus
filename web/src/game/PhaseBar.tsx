@@ -2,8 +2,9 @@ import type { TranslationSchema } from '../i18n/types'
 import { useCallback } from 'react'
 import * as cmds from '../net/commands'
 import { useStore } from '../state/store'
-import { setState } from '../state/state'
+import { getState, setState } from '../state/state'
 import { useTranslation } from '../i18n'
+import { serverPhaseStops } from './phaseStops'
 import './PhaseBar.css'
 
 interface StepDef {
@@ -62,7 +63,7 @@ export default function PhaseBar({ step }: { step: string }) {
       opponentTurn: { ...(phaseStops.opponentTurn ?? {}), [stopKey]: nextOpp },
     }
     setState({ phaseStops: next })
-    void cmds.updatePreferences(next)
+    void cmds.updatePreferences(serverPhaseStops(getState().settings.smartStops, next))
   }, [phaseStops])
 
   return (
@@ -103,7 +104,7 @@ export default function PhaseBar({ step }: { step: string }) {
                         opponentTurn: { ...(phaseStops.opponentTurn ?? {}), [s.stopKey]: !cur },
                       }
                       setState({ phaseStops: next })
-                      void cmds.updatePreferences(next)
+                      void cmds.updatePreferences(serverPhaseStops(getState().settings.smartStops, next))
                     }
                   }}
                 >

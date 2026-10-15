@@ -36,6 +36,10 @@ export function clonePhaseStops(stops: PhaseStops): PhaseStops {
   return { yourTurn: { ...stops.yourTurn }, opponentTurn: { ...stops.opponentTurn } }
 }
 
+export function serverPhaseStops(smartStops: boolean, stops: PhaseStops): PhaseStops {
+  return clonePhaseStops(smartStops ? DEFAULT_PHASE_STOPS : stops)
+}
+
 export function togglePhaseStop(stops: PhaseStops, turn: PhaseTurn, key: string): PhaseStops {
   const next = clonePhaseStops(stops)
   next[turn][key] = !next[turn][key]

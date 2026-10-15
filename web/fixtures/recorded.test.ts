@@ -97,6 +97,7 @@ type AssertKind =
   | 'hasWinEffect'
   | 'hasAttackBattle'
   | 'hasAlwaysAttack'
+  | 'hasLandDropWindow'
   | 'hasAttackCostPaid'
   | 'hasEchoUpkeepPaid'
   | 'hasPlot'
@@ -1021,6 +1022,11 @@ function runAssert(kind: AssertKind, gv: GameView): boolean {
         defended &&
         Object.keys(gv.stack ?? {}).length === 0
       )
+    }
+    case 'hasLandDropWindow': {
+      const hand = Object.keys(gv.myHand ?? {})
+      const objects = gv.canPlayObjects?.objects ?? {}
+      return hand.length > 0 && hand.every((id) => (objects[id]?.basicPlayAbilities ?? []).some((a) => /^Play /.test(a.value)))
     }
     case 'hasAlwaysAttack': {
       const sim2 = (gv.players ?? []).find((p) => !p?.controlled)

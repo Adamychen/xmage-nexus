@@ -52,8 +52,8 @@ test.describe('Recorded real frames (anti-drift smoke)', { tag: '@recorded' }, (
           await expect(page.locator('[data-testid="game-status"]')).toBeVisible()
           await expect(page.getByTestId('hand-bar')).toHaveAttribute('data-hand-count', '6')
           await expect(page.locator('.player-zone .card-slot[data-card-name="Krenko, Mob Boss"]')).toHaveCount(1)
-        } else if (entry.assert === 'hasKarnRestart') {
-          // Reinicio de Karn: mesa vacía pero mano nueva (7 cartas).
+        } else if (entry.assert === 'hasKarnRestart' || entry.assert === 'hasLandDropWindow') {
+          // Reinicio de Karn / primera ventana con tierra: mesa vacía pero mano llena.
           await expect(page.locator('.hand-zone .card-slot').first()).toBeVisible()
         } else {
           const myCard = page.locator('.player-zone .card-slot').first()

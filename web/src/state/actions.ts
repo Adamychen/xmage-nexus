@@ -5,8 +5,8 @@ import type { ChatMessageEvent, DeckJson, GameView } from '../net/types'
 import { advanceProgress, dungeonProgressKey, findDungeonGraph, parseDungeonEntry } from '../game/dungeons'
 import { parseRoomDoor, roomDoorKey, mergeRoomDoor } from '../game/rooms'
 import { parseSpeedLevel, speedLevelKey } from '../game/speed'
-import { clonePhaseStops } from '../game/phaseStops'
-import { meaningfulPlayables } from '../game/smartStops'
+import { serverPhaseStops } from '../game/phaseStops'
+import { decideStop } from '../game/stopPolicy'
 import { manaPaymentActions } from '../game/manaPayment'
 import { serverAutoAnswerActions } from '../game/autoAnswers'
 import { gameplayPreset, PRESET_OWNED_KEYS, type GameplayPresetId } from '../settings/gameplayPresets'
@@ -423,6 +423,12 @@ export function setSetting<K extends keyof AppState['settings']>(key: K, value: 
   setState({ settings: next })
   persistClientSettings(next)
   if (key === 'autoAnswers') syncAutoAnswersToServer()
+  if (key === 'smartStops') {
+    const gameId = getState().gameId
+    if (gameId && (getState().game?.players ?? []).some((p) => p.controlled)) {
+      void cmds.updatePreferences(serverPhaseStops(next.smartStops, getState().phaseStops))
+    }
+  }
 }
 
 /**
@@ -448,7 +454,7 @@ export function applyGameplayPreset(id: GameplayPresetId) {
   if (!s.gameId) return
   for (const action of manaPaymentActions(next.manaPayment)) void cmds.sendManaPaymentMode(action, s.gameId)
   void cmds.updateManaConfirmPreference(next.manaPayment.confirmEmptyPool)
-  void cmds.updatePreferences(clonePhaseStops(next.phaseStops))
+  void cmds.updatePreferences(serverPhaseStops(next.smartStops, next.phaseStops))
   void cmds.sendPlayerAction(next.holdPriority ? 'HOLD_PRIORITY' : 'UNHOLD_PRIORITY', s.gameId)
 }
 
@@ -464,7 +470,7 @@ export function maybeAutoPass(game: GameView) {
   if (s.combat && s.combat.selectable.length > 0) return
   const request = s.priorityRequest
   if (!request || s.game !== request || request === lastSmartAnswer) return
-  if (meaningfulPlayables(game, s.playableIds).length > 0) return
+  if (decideStop(game, s.phaseStops).action === 'stop') return
   lastSmartAnswer = request
   void cmds.sendPlayerBoolean(false, s.gameId)
 }
