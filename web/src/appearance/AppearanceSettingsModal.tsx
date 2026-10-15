@@ -154,6 +154,12 @@ export default function AppearanceSettingsModal({ onClose }: Props) {
             label={t('lobby', 'hand_cost_show')}
             title={t('lobby', 'hand_cost_show_hint')}
           />
+          <Toggle
+            checked={settings.showManaSource}
+            onChange={(v) => setSetting('showManaSource', v)}
+            label={t('lobby', 'mana_source_show')}
+            title={t('lobby', 'mana_source_show_hint')}
+          />
           <RenderedCardsSettings />
           <div className="board-layout-grid">
             {PT_BADGE_MODES.map((mode) => (

@@ -1050,3 +1050,16 @@ html.fx-off .entered-glow {
   left: auto;
   right: 4px;
 }
+
+/* Classic cards with the mana pill (settings → show mana sources): the pill
+   takes the top-left corner, so the sickness badge moves to the top centre
+   and the transform badge to the top right, as on compact tiles. */
+.card-slot.has-mana-pill .sickness-badge {
+  left: 50%;
+  margin-left: -10px;
+}
+
+.card-slot.has-mana-pill .card-transform-badge {
+  left: auto;
+  right: 4px;
+}

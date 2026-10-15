@@ -552,6 +552,8 @@ export const ja: TranslationSchema = {
     card_overlays_hint: 'カード本体の上に描画される追加レイヤー',
     hand_cost_show: '手札のコスト記号',
     hand_cost_show_hint: '印刷されたコストはすでにカード画像にあります。これをpipとして2つ目として重ねて表示します',
+    mana_source_show: 'カードのマナ源',
+    mana_source_show_hint: '戦場の各パーマネントが生み出せるマナを、コンパクトモードと同様に表示します。コンパクト表示では常に表示されます。',
     card_render_show: 'レンダリングカード(読みやすいテキスト)',
     card_render_show_hint: '印刷された画像ではなくカードのデータから描画し、どんなサイズでもルールテキストを鮮明に保ちます',
     board_fill_show: '戦場のカードを空きスペースに合わせる',

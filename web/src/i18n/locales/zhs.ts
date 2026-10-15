@@ -552,6 +552,8 @@ export const zhs: TranslationSchema = {
     card_overlays_hint: '绘制在卡牌之上的额外图层',
     hand_cost_show: '手牌中的费用符号',
     hand_cost_show_hint: '印刷费用已在卡牌图像上；此选项再叠加一份符号',
+    mana_source_show: '卡牌上的法术力来源',
+    mana_source_show_hint: '显示战场上每个永久物可产出的法术力，与紧凑模式相同。紧凑卡块始终显示。',
     card_render_show: '渲染卡牌(清晰文字)',
     card_render_show_hint: '根据卡牌数据绘制,而不是使用印刷图像,使规则文字在任何尺寸下都清晰可读',
     board_fill_show: '让战场卡牌适应可用空间',

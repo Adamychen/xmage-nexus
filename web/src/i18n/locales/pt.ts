@@ -549,6 +549,8 @@ export const pt: TranslationSchema = {
     card_overlays_hint: 'Camadas extra desenhadas sobre as cartas',
     hand_cost_show: 'Símbolos de custo na mão',
     hand_cost_show_hint: 'O custo impresso já está na imagem da carta; isto adiciona uma segunda cópia em balões',
+    mana_source_show: 'Fontes de mana nas cartas',
+    mana_source_show_hint: 'Mostra o mana que cada permanente no campo de batalha pode produzir, como no modo compacto. Os blocos compactos sempre o mostram.',
     card_render_show: 'Cartas renderizadas (texto legível)',
     card_render_show_hint: 'Desenha as cartas a partir dos seus dados em vez da imagem impressa, para o texto de regras ficar nítido em qualquer tamanho',
     board_fill_show: 'Ajustar as cartas do campo ao espaço',

@@ -549,6 +549,8 @@ export const es: TranslationSchema = {
     card_overlays_hint: 'Capas extra dibujadas encima de las propias cartas',
     hand_cost_show: 'Símbolos de coste en la mano',
     hand_cost_show_hint: 'El coste impreso ya está en la imagen de la carta; esto añade una segunda copia en forma de burbujas',
+    mana_source_show: 'Fuentes de maná en las cartas',
+    mana_source_show_hint: 'Muestra el maná que puede producir cada permanente del campo, como en el modo compacto. Las cartas compactas siempre lo muestran.',
     card_render_show: 'Cartas renderizadas (texto legible)',
     card_render_show_hint: 'Dibuja las cartas a partir de sus datos en vez de la imagen impresa, para que el texto de reglas se lea nítido a cualquier tamaño',
     board_fill_show: 'Ajustar las cartas del campo al espacio',

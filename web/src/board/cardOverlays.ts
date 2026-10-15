@@ -8,6 +8,10 @@ export function normalizeShowHandCost(value: unknown): boolean {
   return typeof value === 'boolean' ? value : true
 }
 
+export function normalizeShowManaSource(value: unknown): boolean {
+  return value === true
+}
+
 export type PtBadgeMode = 'always' | 'changed' | 'hidden'
 
 export const PT_BADGE_MODES: readonly PtBadgeMode[] = ['always', 'changed', 'hidden']

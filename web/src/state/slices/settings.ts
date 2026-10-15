@@ -6,7 +6,7 @@ import type { AutoAnswerRule } from '../../game/autoAnswers'
 import type { ChoiceMemoryRule } from '../../game/choiceMemory'
 import { normalizePlaymat, type PlaymatId } from '../../appearance/playmats'
 import { normalizeCardStyle, normalizeTapStyle, type CardStyle, type TapStyle } from '../../board/compactCard'
-import { normalizeBoardFill, normalizeCardRender, normalizeHandRail, normalizeHandRailWidth, normalizeHandRow, normalizePtBadgeMode, normalizeShowHandCost, normalizeSicknessStyle, type CardRender, type PtBadgeMode, type SicknessStyle } from '../../board/cardOverlays'
+import { normalizeBoardFill, normalizeCardRender, normalizeHandRail, normalizeHandRailWidth, normalizeHandRow, normalizePtBadgeMode, normalizeShowHandCost, normalizeShowManaSource, normalizeSicknessStyle, type CardRender, type PtBadgeMode, type SicknessStyle } from '../../board/cardOverlays'
 import { gameplayPreset, isGameplayPresetId, type GameplayPresetId } from '../../settings/gameplayPresets'
 
 export interface SettingsState {
@@ -39,6 +39,7 @@ export interface SettingsState {
   cardStyle: CardStyle
   tapStyle: TapStyle
   showHandCost: boolean
+  showManaSource: boolean
   ptBadgeMode: PtBadgeMode
   cardRender: CardRender
   handRail: boolean
@@ -82,6 +83,7 @@ export const initialSettings: SettingsSlice = {
     cardStyle: normalizeCardStyle(loadAppearanceSettings().cardStyle),
     tapStyle: normalizeTapStyle(loadAppearanceSettings().tapStyle),
     showHandCost: normalizeShowHandCost(loadAppearanceSettings().showHandCost),
+    showManaSource: normalizeShowManaSource(loadAppearanceSettings().showManaSource),
     ptBadgeMode: normalizePtBadgeMode(loadAppearanceSettings().ptBadgeMode),
     cardRender: normalizeCardRender(loadAppearanceSettings().cardRender),
     handRail: normalizeHandRail(loadAppearanceSettings().handRail),

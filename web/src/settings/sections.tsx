@@ -184,6 +184,12 @@ export function BoardSection() {
         label={t('lobby', 'hand_cost_show')}
         title={t('lobby', 'hand_cost_show_hint')}
       />
+      <Toggle
+        checked={settings.showManaSource}
+        onChange={(v) => setSetting('showManaSource', v)}
+        label={t('lobby', 'mana_source_show')}
+        title={t('lobby', 'mana_source_show_hint')}
+      />
       <RenderedCardsSettings />
       <h3 className="settings-section-title">{t('lobby', 'pt_badge_title')}</h3>
       <p className="settings-hint">{t('lobby', 'pt_badge_hint')}</p>

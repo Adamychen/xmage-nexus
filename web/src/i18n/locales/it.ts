@@ -549,6 +549,8 @@ export const it: TranslationSchema = {
     card_overlays_hint: 'Livelli extra disegnati sopra le carte',
     hand_cost_show: 'Simboli di costo in mano',
     hand_cost_show_hint: 'Il costo stampato è già sull’immagine della carta; questo ne aggiunge una seconda copia a bolle',
+    mana_source_show: 'Fonti di mana sulle carte',
+    mana_source_show_hint: 'Mostra il mana che ogni permanente sul campo di battaglia può produrre, come in modalità compatta. Le tessere compatte lo mostrano sempre.',
     card_render_show: 'Carte renderizzate (testo leggibile)',
     card_render_show_hint: 'Disegna le carte dai loro dati invece che dall\'immagine stampata, così il testo resta nitido a qualsiasi dimensione',
     board_fill_show: 'Adatta le carte del campo allo spazio',

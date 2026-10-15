@@ -88,6 +88,7 @@ export default function BoardZone({
 
   const rendered = useStore((s) => s.settings.cardRender) === 'rendered'
   const cardStyle = useStore((s) => s.settings.cardStyle)
+  const showManaSource = useStore((s) => s.settings.showManaSource)
   const compactCards = cardStyle === 'compact' && !rendered
   const tiltedTaps = useStore((s) => s.settings.tapStyle) === 'tilted'
   const cardAspect = cardAspectFor(compactCards ? 'compact' : 'classic')
@@ -326,6 +327,7 @@ export default function BoardZone({
               isPlayable={playableIds.has(attId)}
               className="attachment-subcard"
               compact={compactCards}
+              showManaSource={showManaSource}
               style={{ left: `calc(${offsetPx}px + ${ai + 1} * var(--attach-step))`, zIndex: attachments.length - ai }}
             />
           )
@@ -351,6 +353,7 @@ export default function BoardZone({
                 card={part}
                 className="mutate-part"
                 compact={compactCards}
+                showManaSource={showManaSource}
                 style={{ left: `${(mi + 1) * 12}px`, top: `${(mi + 1) * 6}px` }}
               />
             ))}
@@ -371,6 +374,7 @@ export default function BoardZone({
             showCounters
             showDamage={isCreature}
             compact={compactCards}
+            showManaSource={showManaSource}
           />
         </div>
       )
@@ -400,6 +404,7 @@ export default function BoardZone({
             showCounters
             showDamage={isCreature}
             compact={compactCards}
+            showManaSource={showManaSource}
           />
         </div>
       )
@@ -422,6 +427,7 @@ export default function BoardZone({
         showCounters
         showDamage={isCreature}
         compact={compactCards}
+        showManaSource={showManaSource}
       />
     )
   }

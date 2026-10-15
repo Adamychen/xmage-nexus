@@ -547,6 +547,8 @@ export const en = {
     card_overlays_hint: 'Extra layers drawn on top of the cards themselves',
     hand_cost_show: 'Cost symbols in hand',
     hand_cost_show_hint: 'The printed mana cost is already on the card image; this adds a second copy as bubbles',
+    mana_source_show: 'Mana sources on cards',
+    mana_source_show_hint: 'Shows the mana each permanent on the battlefield can produce, as in compact mode. Compact tiles always show it.',
     card_render_show: 'Rendered cards (readable text)',
     card_render_show_hint: 'Draw cards from their data instead of the printed image, so the rules text stays sharp at any size',
     board_fill_show: 'Fit battlefield cards to the space',

@@ -549,6 +549,8 @@ export const fr: TranslationSchema = {
     card_overlays_hint: 'Calques supplémentaires dessinés par-dessus les cartes',
     hand_cost_show: 'Symboles de coût dans la main',
     hand_cost_show_hint: 'Le coût imprimé est déjà sur l’image de la carte ; ceci en ajoute une seconde copie en bulles',
+    mana_source_show: 'Sources de mana sur les cartes',
+    mana_source_show_hint: 'Affiche le mana que chaque permanent du champ de bataille peut produire, comme en mode compact. Les tuiles compactes l’affichent toujours.',
     card_render_show: 'Cartes rendues (texte lisible)',
     card_render_show_hint: 'Dessiner les cartes à partir de leurs données plutôt que de l\'image imprimée, pour que le texte reste net à toute taille',
     board_fill_show: 'Adapter les cartes du champ à l\'espace',

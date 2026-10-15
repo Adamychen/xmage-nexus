@@ -549,6 +549,8 @@ export const de: TranslationSchema = {
     card_overlays_hint: 'Zusätzliche Ebenen direkt auf den Karten',
     hand_cost_show: 'Kostensymbole in der Hand',
     hand_cost_show_hint: 'Die gedruckten Mana-Kosten stehen bereits auf dem Kartenbild; dies fügt eine zweite Kopie als Blasen hinzu',
+    mana_source_show: 'Manaquellen auf den Karten',
+    mana_source_show_hint: 'Zeigt das Mana, das jedes Permanent auf dem Schlachtfeld produzieren kann, wie im kompakten Modus. Kompakte Kacheln zeigen es immer.',
     card_render_show: 'Gerenderte Karten (lesbarer Text)',
     card_render_show_hint: 'Karten aus ihren Daten statt aus dem gedruckten Bild zeichnen, damit der Regeltext in jeder Größe scharf bleibt',
     board_fill_show: 'Schlachtfeldkarten an den Platz anpassen',

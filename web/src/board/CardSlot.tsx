@@ -50,6 +50,8 @@ interface CardSlotProps {
   showDamage?: boolean
   /** Compact battlefield tile: art crop with the name, type and mana source overlaid. */
   compact?: boolean
+  /** Classic battlefield card: overlay its mana source too (the compact tile always does). */
+  showManaSource?: boolean
   /** Settings previews only: local art (never a network lookup) and per-option overrides of the global overlay settings. */
   demo?: { artUrl: string | null; ptBadgeMode?: PtBadgeMode; sicknessStyle?: SicknessStyle }
 }
@@ -73,6 +75,7 @@ export default function CardSlot({
   showCounters = false,
   showDamage = false,
   compact = false,
+  showManaSource = false,
   demo,
 }: CardSlotProps) {
   const { t } = useTranslation()
@@ -260,7 +263,8 @@ export default function CardSlot({
   const classLevel = useMemo(() => classLevelOf(card.rules), [card.rules])
   const evidence = useMemo(() => evidenceCounts(card.rules), [card.rules])
   const protector = useMemo(() => protectorName(card.rules), [card.rules])
-  const manaSymbols = useMemo(() => (compact ? manaSourceSymbols(card) : []), [compact, card.rules, card.subTypes])
+  const manaSymbols = useMemo(() => (compact || showManaSource ? manaSourceSymbols(card) : []), [compact, showManaSource, card.rules, card.subTypes])
+  const showManaPill = (compact || showManaSource) && !showBack && !renderedFace && manaSymbols.length > 0
   const tileType = compact ? primaryCardType(card) : null
   // In 'changed' mode the badge only appears when we can PROVE the P/T moved: an
 // unknown printed value (token, cloak, disguise — the server sends no
@@ -357,6 +361,7 @@ const showPtBadge =
         isFaceDownCard ? 'face-down' : '',
         isFlipped ? 'is-flipped-card' : '',
         compact ? 'is-compact' : '',
+        showManaPill && !compact ? 'has-mana-pill' : '',
         onClick ? 'clickable' : '',
         entering ? 'entering' : '',
         flightState === 'hidden' || held ? 'flight-hidden' : '',
@@ -405,17 +410,18 @@ const showPtBadge =
         </div>
       )}
 
+      {showManaPill && (
+        <div className="compact-mana-source" data-testid="compact-mana-source" data-mana={manaSymbols.join('')}>
+          {manaSymbols.map((sym) => (
+            sym === 'ANY'
+              ? <span key={sym} className="compact-mana-any" />
+              : <ManaPip key={sym} symbol={sym} size={16} className="compact-mana-pip" />
+          ))}
+        </div>
+      )}
+
       {compact && !showBack && (
         <>
-          {manaSymbols.length > 0 && (
-            <div className="compact-mana-source" data-testid="compact-mana-source" data-mana={manaSymbols.join('')}>
-              {manaSymbols.map((sym) => (
-                sym === 'ANY'
-                  ? <span key={sym} className="compact-mana-any" />
-                  : <ManaPip key={sym} symbol={sym} size={16} className="compact-mana-pip" />
-              ))}
-            </div>
-          )}
           {tapped && (
             <div className="compact-tap-badge" data-testid="compact-tap-badge" title={t('game', 'tapped')}>
               <ManaPip symbol="T" size={16} className="compact-tap-pip" />
