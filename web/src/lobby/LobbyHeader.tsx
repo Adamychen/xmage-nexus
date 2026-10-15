@@ -1,5 +1,7 @@
 import { reset } from '../state/store'
 import IconButton from '../ui/IconButton'
+import DropdownMenu from '../ui/DropdownMenu'
+import MenuItem from '../ui/MenuItem'
 import Button from '../ui/Button'
 import type { ConnectionInfo } from '../state/persistence'
 import type { UsersView } from '../net/types'
@@ -137,23 +139,31 @@ export default function LobbyHeader({
             <RankBadge elo={myUser?.constructedRating ?? 1500} compact />
           </div>
         </div>
-        <IconButton label={t('system', 'report_title')} icon="bug" size="lg"
-          className="lobby-appearance-btn"
-          onClick={onOpenReport}
-          data-testid="open-report" />
         <IconButton label={t('common', 'settings')} icon="settings" size="lg"
           className="lobby-appearance-btn"
           onClick={onOpenSettings}
           data-testid="open-settings" />
-        <IconButton label={t('system', 'about_title')} size="lg"
-          className="lobby-appearance-btn"
-          onClick={onOpenAbout}
-          data-testid="open-about">
-          <Icon name="info" size={16} />
-          {hasNews && (
-            <span className="lobby-news-dot" data-testid="lobby-news-dot" aria-hidden="true">●</span>
-          )}
-        </IconButton>
+        <DropdownMenu
+          label={<Icon name="ellipsis" size={16} />}
+          hideChevron
+          align="end"
+          aria-label={t('lobby', 'more_options')}
+          className="lobby-more-menu"
+          data-testid="lobby-more-menu"
+        >
+          <MenuItem icon="bug" onClick={onOpenReport} data-testid="open-report">
+            {t('system', 'report_title')}
+          </MenuItem>
+          <MenuItem icon="info" onClick={onOpenAbout} data-testid="open-about">
+            {t('system', 'about_title')}
+            {hasNews && (
+              <span className="lobby-news-dot" data-testid="lobby-news-dot" aria-hidden="true">●</span>
+            )}
+          </MenuItem>
+          <MenuItem icon="logout" danger onClick={() => onConfirmDisconnect(true)}>
+            {t('lobby', 'disconnect')}
+          </MenuItem>
+        </DropdownMenu>
 
         {confirmDisconnect ? (
           <div className="lobby-disconnect-confirm">
@@ -161,11 +171,7 @@ export default function LobbyHeader({
             <Button variant="soft-danger" size="sm" onClick={reset}>{t('common', 'yes')}</Button>
             <Button variant="subtle" size="sm" onClick={() => onConfirmDisconnect(false)}>{t('common', 'no')}</Button>
           </div>
-        ) : (
-          <button type="button" className="lobby-disconnect-btn" onClick={() => onConfirmDisconnect(true)} title={t('lobby', 'disconnect')}>
-            <Icon name="logout" size={15} />
-          </button>
-        )}
+        ) : null}
       </div>
     </header>
   )

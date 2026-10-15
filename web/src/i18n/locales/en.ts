@@ -113,6 +113,7 @@ export const en = {
     in_lobby: 'In Lobby',
     global_chat: 'Global Chat',
     disconnect: 'Disconnect',
+    more_options: 'More options',
     disconnect_confirm: 'Disconnect from server?',
     filter_search_placeholder: 'Search by table or player name...',
     filter_format_limited: 'Limited',

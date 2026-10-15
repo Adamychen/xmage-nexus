@@ -115,6 +115,7 @@ export const de: TranslationSchema = {
     in_lobby: 'In der Lobby',
     global_chat: 'Globaler Chat',
     disconnect: 'Trennen',
+    more_options: 'Weitere Optionen',
     disconnect_confirm: 'Vom Server trennen?',
     filter_search_placeholder: 'Nach Tisch- oder Spielernamen suchen...',
     filter_format_limited: 'Limited',

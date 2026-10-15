@@ -115,6 +115,7 @@ export const zhs: TranslationSchema = {
     in_lobby: '在大厅',
     global_chat: '全服聊天',
     disconnect: '断开连接',
+    more_options: '更多选项',
     disconnect_confirm: '确定要断开与服务器的连接吗？',
     filter_search_placeholder: '搜索对战桌或玩家名称...',
     filter_format_limited: '限制',

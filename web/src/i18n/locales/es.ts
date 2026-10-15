@@ -115,6 +115,7 @@ export const es: TranslationSchema = {
     in_lobby: 'En el lobby',
     global_chat: 'Chat Global',
     disconnect: 'Desconectar',
+    more_options: 'Más opciones',
     disconnect_confirm: '¿Desconectar del servidor?',
     filter_search_placeholder: 'Buscar por nombre de mesa o jugador...',
     filter_format_limited: 'Limitado',

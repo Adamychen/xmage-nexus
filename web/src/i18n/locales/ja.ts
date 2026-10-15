@@ -115,6 +115,7 @@ export const ja: TranslationSchema = {
     in_lobby: 'ロビー待機中',
     global_chat: '全体チャット',
     disconnect: '切断',
+    more_options: 'その他のオプション',
     disconnect_confirm: 'サーバーから切断しますか？',
     filter_search_placeholder: 'テーブル名またはプレイヤー名で検索...',
     filter_format_limited: 'リミテッド',

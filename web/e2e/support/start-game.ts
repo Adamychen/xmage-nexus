@@ -235,7 +235,12 @@ export async function startMatch(page: Page, tableName: string): Promise<void> {
   // El lobby puede auto-saltar a staging al unirse: arrancar desde allí.
   const stagingStart = page.getByTestId('staging-start')
   const row = page.locator('.table-row', { hasText: tableName }).first()
-  const startButton = row.getByRole('button', { name: /Empezar|Iniciar Partida|Start/i })
+  // Tu mesa activa muestra el botón de iniciar en la banda superior, no en la tarjeta.
+  const activeStrip = page.locator('.active-table-strip', { hasText: tableName })
+  const startButton = row
+    .getByRole('button', { name: /Empezar|Iniciar Partida|Start/i })
+    .or(activeStrip.getByTestId('btn-start'))
+    .first()
   await expect(async () => {
     if (await stagingStartReady(page)) return
     await dismissStaging(page)

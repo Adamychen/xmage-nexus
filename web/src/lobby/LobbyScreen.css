@@ -1247,6 +1247,13 @@ html:lang(zh) .tables-list {
   white-space: nowrap;
 }
 
+.seat-open-label {
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  color: var(--fg-3);
+  white-space: nowrap;
+}
+
 .seat-ready-dot {
   width: 6px;
   height: 6px;

@@ -115,6 +115,7 @@ export const ru: TranslationSchema = {
     in_lobby: 'В лобби',
     global_chat: 'Общий Чат',
     disconnect: 'Отключиться',
+    more_options: 'Ещё',
     disconnect_confirm: 'Отключиться от сервера?',
     filter_search_placeholder: 'Поиск по столу или игроку...',
     filter_format_limited: 'Лимитед',
