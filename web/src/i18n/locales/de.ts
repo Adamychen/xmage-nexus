@@ -614,6 +614,8 @@ export const de: TranslationSchema = {
     card_style_title: 'Kartenstil',
     card_style_hint: 'Darstellung der bleibenden Karten. Maus darüber zeigt die ganze Karte.',
     card_style_rendered_note: 'Gerenderte Karten verwenden immer die volle Kartenform',
+    option_choice_off: 'Aus',
+    option_choice_on: 'An',
     card_style_classic: 'Klassisch',
     card_style_classic_desc: 'Vollständige gedruckte Karte',
     card_style_compact: 'Kompakt',

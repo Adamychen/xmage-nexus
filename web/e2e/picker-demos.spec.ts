@@ -77,6 +77,13 @@ test.describe('Visual preset & playmat pickers', { tag: '@site' }, () => {
       }
       await expectAllImagesLoaded(page, '[data-testid^="board-demo-"] img.card-image', 20)
 
+      for (const kind of ['handCost', 'manaSource', 'rendered', 'boardFill', 'handRail', 'handRow'] as const) {
+        for (const state of ['on', 'off'] as const) {
+          await expect(page.getByTestId(`option-choice-${kind}-${state}`).getByTestId(`option-preview-${kind}-${state}`)).toBeVisible()
+        }
+      }
+      await expect(page.getByTestId('option-choice-manaSource-on').getByTestId('board-demo-manaSource-true')).toBeVisible()
+
       await expect(demo('cardStyle', 'compact').locator('.card-slot.is-compact')).toHaveCount(3)
       await expect(demo('cardStyle', 'classic').locator('.card-slot.is-compact')).toHaveCount(0)
 

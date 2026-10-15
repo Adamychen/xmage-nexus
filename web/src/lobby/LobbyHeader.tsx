@@ -1,3 +1,4 @@
+import { useLayoutEffect, useRef, useState } from 'react'
 import { reset } from '../state/store'
 import IconButton from '../ui/IconButton'
 import DropdownMenu from '../ui/DropdownMenu'
@@ -39,7 +40,30 @@ export default function LobbyHeader({
   onOpenSettings, onOpenReport, onOpenLeaderboard, activeTab, onTabChange,
   tableCount, activeTableCount = 0, onGoToActiveTable, onCreate, onCreateTournament, onOpenAbout, hasNews,
 }: Props) {
-  const { t } = useTranslation()
+  const { t, lang } = useTranslation()
+  const navRef = useRef<HTMLElement>(null)
+  const [indicator, setIndicator] = useState<{ x: number; y: number; w: number; h: number } | null>(null)
+
+  // The sliding pill tracks the active tab button. It is measured after layout
+  // (labels change width with counts and language) and re-measured when the nav
+  // itself resizes (wrapping at narrow widths).
+  useLayoutEffect(() => {
+    const nav = navRef.current
+    if (!nav) return
+    const measure = () => {
+      const active = nav.querySelector<HTMLElement>('.top-nav-btn.active')
+      if (!active) {
+        setIndicator(null)
+        return
+      }
+      setIndicator({ x: active.offsetLeft, y: active.offsetTop, w: active.offsetWidth, h: active.offsetHeight })
+    }
+    measure()
+    const ro = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(measure)
+    ro?.observe(nav)
+    void document.fonts?.ready.then(measure)
+    return () => ro?.disconnect()
+  }, [activeTab, tableCount, activeTableCount, lang])
 
   return (
     <header className="lobby-topstrip">
@@ -54,7 +78,15 @@ export default function LobbyHeader({
         </div>
       </div>
 
-      <nav className="lobby-top-nav" aria-label="Main navigation">
+      <nav className="lobby-top-nav" aria-label="Main navigation" ref={navRef}>
+        {indicator && (
+          <span
+            className="top-nav-indicator"
+            aria-hidden="true"
+            style={{ transform: `translate(${indicator.x}px, ${indicator.y}px)`, width: indicator.w, height: indicator.h }}
+            data-testid="top-nav-indicator"
+          />
+        )}
         <button
           type="button"
           className="top-nav-btn top-nav-create"

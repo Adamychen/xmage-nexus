@@ -162,6 +162,7 @@ button, input, select { font: inherit; color: inherit; }
   place-items: center;
 }
 .icon-btn:hover { background: var(--surface-2); }
+a.icon-btn { display: inline-flex; align-items: center; text-decoration: none; color: var(--ink-2); font-size: 12px; font-weight: 600; }
 .icon-btn svg { width: 16px; height: 16px; fill: var(--ink-2); }
 
 .tabs {

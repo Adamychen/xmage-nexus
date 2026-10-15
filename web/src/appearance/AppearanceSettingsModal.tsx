@@ -3,7 +3,7 @@ import RenderedCardsSettings from '../settings/RenderedCardsSettings'
 import CloseButton from '../ui/CloseButton'
 import IconButton from '../ui/IconButton'
 import Checkbox from '../ui/Checkbox'
-import Toggle from '../ui/Toggle'
+import OptionChoice from '../settings/OptionChoice'
 import { SLEEVES } from './sleeves'
 import CustomSleeveTile from './CustomSleeveTile'
 import CustomCardArtManager from './CustomCardArtManager'
@@ -148,17 +148,19 @@ export default function AppearanceSettingsModal({ onClose }: Props) {
         <section className="appearance-section">
           <h3 className="appearance-section-title">{t('lobby', 'card_overlays_title')}</h3>
           <p className="appearance-section-hint">{t('lobby', 'card_overlays_hint')}</p>
-          <Toggle
-            checked={settings.showHandCost}
-            onChange={(v) => setSetting('showHandCost', v)}
+          <OptionChoice
+            kind="handCost"
             label={t('lobby', 'hand_cost_show')}
-            title={t('lobby', 'hand_cost_show_hint')}
+            hint={t('lobby', 'hand_cost_show_hint')}
+            value={settings.showHandCost}
+            onChange={(v) => setSetting('showHandCost', v)}
           />
-          <Toggle
-            checked={settings.showManaSource}
-            onChange={(v) => setSetting('showManaSource', v)}
+          <OptionChoice
+            kind="manaSource"
             label={t('lobby', 'mana_source_show')}
-            title={t('lobby', 'mana_source_show_hint')}
+            hint={t('lobby', 'mana_source_show_hint')}
+            value={settings.showManaSource}
+            onChange={(v) => setSetting('showManaSource', v)}
           />
           <RenderedCardsSettings />
           <div className="board-layout-grid">

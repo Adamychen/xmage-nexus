@@ -234,151 +234,153 @@ export default function LobbyScreen() {
 
         {/* CENTER: Main tab content */}
         <main className={`lobby-main ${deckBuilderId ? 'has-deck-builder' : activeTab === 'decks' ? 'has-decks-gallery' : ''}`}>
-          {activeTab === 'tables' && (
-            <div className="lobby-tables-view">
-              <section className="panel tables-panel">
-                <div className="tables-panel-header">
-                  <div className="tables-header-title-row">
-                    <h2>
-                      {t('lobby.tables_heading')} ({filteredTables.length}
-                      {filteredTables.length !== tables.length ? ` / ${tables.length}` : ''})
-                    </h2>
-                    <span className="tables-deck-hint">{t('lobby.tables_deck_hint')}</span>
-                  </div>
-                  <div className="tables-header-actions">
-                    <div className="hero-deck-badge" title={`${t('lobby.active_deck')} ${myDeck?.name ?? '—'}`}>
-                      <span className="hero-deck-label">{t('lobby.active_deck')}</span>
-                      <span className="hero-deck-name"><Icon name="layers" size={13} /> {myDeck?.name ?? '—'}</span>
+          <div key={deckBuilderId ? 'deck-builder' : activeTab} className={`lobby-tab-view${activeTab === 'decks' ? '' : ' is-animated'}`}>
+            {activeTab === 'tables' && (
+              <div className="lobby-tables-view">
+                <section className="panel tables-panel">
+                  <div className="tables-panel-header">
+                    <div className="tables-header-title-row">
+                      <h2>
+                        {t('lobby.tables_heading')} ({filteredTables.length}
+                        {filteredTables.length !== tables.length ? ` / ${tables.length}` : ''})
+                      </h2>
+                      <span className="tables-deck-hint">{t('lobby.tables_deck_hint')}</span>
                     </div>
-                    <IconButton
-                      label={compactTables ? t('lobby.tables_density_cards') : t('lobby.tables_density_compact')}
-                      icon={compactTables ? 'layoutGrid' : 'list'}
-                      aria-pressed={compactTables}
-                      data-testid="tables-density-toggle"
-                      onClick={() => {
-                        setCompactTables((v) => {
-                          try { localStorage.setItem('tables_density', v ? 'cards' : 'compact') } catch {}
-                          return !v
-                        })
-                      }}
-                    />
-                    <button
-                      type="button"
-                      className={`tables-filter-toggle ${showFilters ? 'is-open' : ''} ${countActiveFilters(filters) > 0 ? 'has-active' : ''}`}
-                      onClick={() => {
-                        setShowFilters((v) => {
-                          try { localStorage.setItem('tables_filters_open', v ? '0' : '1') } catch {}
-                          return !v
-                        })
-                      }}
-                      aria-expanded={showFilters}
-                      title={t('lobby.filter_search_placeholder')}
-                    >
-                      <Icon name="filter" size={14} />
-                      {countActiveFilters(filters) > 0 && (
-                        <span className="tables-filter-count">{countActiveFilters(filters)}</span>
-                      )}
-                      <Icon name={showFilters ? 'chevronUp' : 'chevronDown'} size={13} />
-                    </button>
+                    <div className="tables-header-actions">
+                      <div className="hero-deck-badge" title={`${t('lobby.active_deck')} ${myDeck?.name ?? '—'}`}>
+                        <span className="hero-deck-label">{t('lobby.active_deck')}</span>
+                        <span className="hero-deck-name"><Icon name="layers" size={13} /> {myDeck?.name ?? '—'}</span>
+                      </div>
+                      <IconButton
+                        label={compactTables ? t('lobby.tables_density_cards') : t('lobby.tables_density_compact')}
+                        icon={compactTables ? 'layoutGrid' : 'list'}
+                        aria-pressed={compactTables}
+                        data-testid="tables-density-toggle"
+                        onClick={() => {
+                          setCompactTables((v) => {
+                            try { localStorage.setItem('tables_density', v ? 'cards' : 'compact') } catch {}
+                            return !v
+                          })
+                        }}
+                      />
+                      <button
+                        type="button"
+                        className={`tables-filter-toggle ${showFilters ? 'is-open' : ''} ${countActiveFilters(filters) > 0 ? 'has-active' : ''}`}
+                        onClick={() => {
+                          setShowFilters((v) => {
+                            try { localStorage.setItem('tables_filters_open', v ? '0' : '1') } catch {}
+                            return !v
+                          })
+                        }}
+                        aria-expanded={showFilters}
+                        title={t('lobby.filter_search_placeholder')}
+                      >
+                        <Icon name="filter" size={14} />
+                        {countActiveFilters(filters) > 0 && (
+                          <span className="tables-filter-count">{countActiveFilters(filters)}</span>
+                        )}
+                        <Icon name={showFilters ? 'chevronUp' : 'chevronDown'} size={13} />
+                      </button>
+                    </div>
                   </div>
-                </div>
 
-                <div className={`tables-filter-collapse ${showFilters ? 'is-open' : ''}`}>
-                  <div className="tables-filter-collapse-inner">
-                    <TableFilterBar
-                      className="in-panel"
-                      tables={tables}
-                      filters={filters}
-                      onChange={(f) => { setFilters(f); try { localStorage.setItem('lobby_filters', JSON.stringify(f)) } catch {} }}
-                      onReset={() => { setFilters(INITIAL_TABLE_FILTERS); try { localStorage.removeItem('lobby_filters') } catch {} }}
-                    />
+                  <div className={`tables-filter-collapse ${showFilters ? 'is-open' : ''}`}>
+                    <div className="tables-filter-collapse-inner">
+                      <TableFilterBar
+                        className="in-panel"
+                        tables={tables}
+                        filters={filters}
+                        onChange={(f) => { setFilters(f); try { localStorage.setItem('lobby_filters', JSON.stringify(f)) } catch {} }}
+                        onReset={() => { setFilters(INITIAL_TABLE_FILTERS); try { localStorage.removeItem('lobby_filters') } catch {} }}
+                      />
+                    </div>
                   </div>
-                </div>
 
-                {myActiveTables.length > 0 && (
-                  <ActiveTablesBar
-                    tables={myActiveTables}
-                    username={conn?.username}
-                    busyTable={busyTable}
-                    onOpenStaging={(tableId) => openStagingTable(tableId)}
-                    onStart={tableActions.startTable}
-                    onWatch={tableActions.watchTable}
-                    onResume={tableActions.resumeGame}
-                    onRemove={(t) => void tableActions.removeTable(t)}
-                  />
-                )}
-
-                <div className={`tables-list${compactTables ? ' is-compact' : ''}`}>
-                  {filteredTables.map((tTable) => (
-                    <TableCard
-                      key={tTable.tableId}
-                      tTable={tTable}
-                      users={users}
+                  {myActiveTables.length > 0 && (
+                    <ActiveTablesBar
+                      tables={myActiveTables}
                       username={conn?.username}
-                      avatarId={conn?.avatarId}
-                      stagingTableId={stagingTableId}
                       busyTable={busyTable}
-                      onJoinHuman={tableActions.joinHuman}
-                      onJoinAi={tableActions.joinAi}
+                      onOpenStaging={(tableId) => openStagingTable(tableId)}
                       onStart={tableActions.startTable}
                       onWatch={tableActions.watchTable}
                       onResume={tableActions.resumeGame}
-                      onOpenBracket={bracket.openBracket}
-                      onSelectUser={setSelectedUser}
                       onRemove={(t) => void tableActions.removeTable(t)}
                     />
-                  ))}
-
-                  {filteredTables.length === 0 && tables.length === 0 && (
-                    <EmptyState
-                      size="lg"
-                      icon="castle"
-                      iconSize={30}
-                      title={t('lobby','empty_tables')}
-                      action={
-                        <Button variant="primary" onClick={() => setCreateKind('match')}>
-                          <Icon name="plus" size={13} /> {t('lobby','create_table_btn')}
-                        </Button>
-                      }
-                    >
-                      {t('lobby','tables_deck_hint')}
-                    </EmptyState>
                   )}
 
-                  {filteredTables.length === 0 && tables.length > 0 && (
-                    <EmptyState
-                      size="lg"
-                      boxed
-                      icon="search"
-                      title={t('lobby','empty_filtered')}
-                      action={
-                        <Button size="sm" onClick={() => setFilters(INITIAL_TABLE_FILTERS)}>
-                          {t('lobby','filter_reset')}
-                        </Button>
-                      }
-                    >
-                      {t('lobby','no_tables_found')}
-                    </EmptyState>
-                  )}
-                </div>
-              </section>
-            </div>
-          )}
+                  <div className={`tables-list${compactTables ? ' is-compact' : ''}`}>
+                    {filteredTables.map((tTable) => (
+                      <TableCard
+                        key={tTable.tableId}
+                        tTable={tTable}
+                        users={users}
+                        username={conn?.username}
+                        avatarId={conn?.avatarId}
+                        stagingTableId={stagingTableId}
+                        busyTable={busyTable}
+                        onJoinHuman={tableActions.joinHuman}
+                        onJoinAi={tableActions.joinAi}
+                        onStart={tableActions.startTable}
+                        onWatch={tableActions.watchTable}
+                        onResume={tableActions.resumeGame}
+                        onOpenBracket={bracket.openBracket}
+                        onSelectUser={setSelectedUser}
+                        onRemove={(t) => void tableActions.removeTable(t)}
+                      />
+                    ))}
 
-          {activeTab === 'decks' && (
-            deckBuilderId ? (
-              <DeckBuilder deckId={deckBuilderId} onClose={() => setDeckBuilderId(null)} />
-            ) : (
-              <DecksGallery onEdit={(id) => setDeckBuilderId(id)} />
-            )
-          )}
+                    {filteredTables.length === 0 && tables.length === 0 && (
+                      <EmptyState
+                        size="lg"
+                        icon="castle"
+                        iconSize={30}
+                        title={t('lobby','empty_tables')}
+                        action={
+                          <Button variant="primary" onClick={() => setCreateKind('match')}>
+                            <Icon name="plus" size={13} /> {t('lobby','create_table_btn')}
+                          </Button>
+                        }
+                      >
+                        {t('lobby','tables_deck_hint')}
+                      </EmptyState>
+                    )}
 
-          {activeTab === 'matches' && (
-            <MatchesSection
-              users={users}
-              onInspectUser={(username) => openLeaderboard(username, 'profile')}
-            />
-          )}
+                    {filteredTables.length === 0 && tables.length > 0 && (
+                      <EmptyState
+                        size="lg"
+                        boxed
+                        icon="search"
+                        title={t('lobby','empty_filtered')}
+                        action={
+                          <Button size="sm" onClick={() => setFilters(INITIAL_TABLE_FILTERS)}>
+                            {t('lobby','filter_reset')}
+                          </Button>
+                        }
+                      >
+                        {t('lobby','no_tables_found')}
+                      </EmptyState>
+                    )}
+                  </div>
+                </section>
+              </div>
+            )}
+
+            {activeTab === 'decks' && (
+              deckBuilderId ? (
+                <DeckBuilder deckId={deckBuilderId} onClose={() => setDeckBuilderId(null)} />
+              ) : (
+                <DecksGallery onEdit={(id) => setDeckBuilderId(id)} />
+              )
+            )}
+
+            {activeTab === 'matches' && (
+              <MatchesSection
+                users={users}
+                onInspectUser={(username) => openLeaderboard(username, 'profile')}
+              />
+            )}
+          </div>
         </main>
 
         <FloatingChat

@@ -614,6 +614,8 @@ export const ru: TranslationSchema = {
     card_style_title: 'Стиль карт',
     card_style_hint: 'Вид перманентов на поле боя. Наведите курсор, чтобы увидеть карту целиком.',
     card_style_rendered_note: 'Отрисованные карты всегда используют полную форму карты',
+    option_choice_off: 'Выкл.',
+    option_choice_on: 'Вкл.',
     card_style_classic: 'Классический',
     card_style_classic_desc: 'Полная карта',
     card_style_compact: 'Компактный',

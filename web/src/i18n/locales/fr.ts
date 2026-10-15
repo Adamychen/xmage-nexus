@@ -614,6 +614,8 @@ export const fr: TranslationSchema = {
     card_style_title: 'Style des cartes',
     card_style_hint: 'Affichage des permanents sur le champ de bataille. Survolez pour voir la carte entière.',
     card_style_rendered_note: 'Les cartes rendues utilisent toujours la forme de carte complète',
+    option_choice_off: 'Désactivé',
+    option_choice_on: 'Activé',
     card_style_classic: 'Classique',
     card_style_classic_desc: 'Carte imprimée complète',
     card_style_compact: 'Compact',

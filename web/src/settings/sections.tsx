@@ -6,6 +6,7 @@ import CustomSleeveTile from '../appearance/CustomSleeveTile'
 import CustomCardArtManager from '../appearance/CustomCardArtManager'
 import BoardDemo from './BoardDemo'
 import LayoutDemo from './LayoutDemo'
+import OptionChoice from './OptionChoice'
 import PlaymatPicker from '../appearance/PlaymatPicker'
 import { ZOOM_PRESETS, isZoomPreset, stepZoom, zoomPercent } from '../appearance/zoom'
 import SoundFxControls from './SoundFxControls'
@@ -178,17 +179,19 @@ export function BoardSection() {
       </div>
       <h3 className="settings-section-title">{t('lobby', 'card_overlays_title')}</h3>
       <p className="settings-hint">{t('lobby', 'card_overlays_hint')}</p>
-      <Toggle
-        checked={settings.showHandCost}
-        onChange={(v) => setSetting('showHandCost', v)}
+      <OptionChoice
+        kind="handCost"
         label={t('lobby', 'hand_cost_show')}
-        title={t('lobby', 'hand_cost_show_hint')}
+        hint={t('lobby', 'hand_cost_show_hint')}
+        value={settings.showHandCost}
+        onChange={(v) => setSetting('showHandCost', v)}
       />
-      <Toggle
-        checked={settings.showManaSource}
-        onChange={(v) => setSetting('showManaSource', v)}
+      <OptionChoice
+        kind="manaSource"
         label={t('lobby', 'mana_source_show')}
-        title={t('lobby', 'mana_source_show_hint')}
+        hint={t('lobby', 'mana_source_show_hint')}
+        value={settings.showManaSource}
+        onChange={(v) => setSetting('showManaSource', v)}
       />
       <RenderedCardsSettings />
       <h3 className="settings-section-title">{t('lobby', 'pt_badge_title')}</h3>

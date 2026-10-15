@@ -612,6 +612,8 @@ export const en = {
     card_style_title: 'Card style',
     card_style_hint: 'How permanents look on the battlefield. Hover a card to see it in full.',
     card_style_rendered_note: 'Rendered cards always use the full card shape',
+    option_choice_off: 'Off',
+    option_choice_on: 'On',
     card_style_classic: 'Classic',
     card_style_classic_desc: 'Full printed card',
     card_style_compact: 'Compact',

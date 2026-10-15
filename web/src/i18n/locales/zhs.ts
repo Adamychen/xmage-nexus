@@ -617,6 +617,8 @@ export const zhs: TranslationSchema = {
     card_style_title: '卡牌样式',
     card_style_hint: '战场上永久物的显示方式。悬停可查看完整卡牌。',
     card_style_rendered_note: '渲染卡牌始终使用完整的卡牌形状',
+    option_choice_off: '关闭',
+    option_choice_on: '开启',
     card_style_classic: '经典',
     card_style_classic_desc: '完整卡牌',
     card_style_compact: '紧凑',

@@ -614,6 +614,8 @@ export const it: TranslationSchema = {
     card_style_title: 'Stile carte',
     card_style_hint: 'Aspetto dei permanenti sul campo. Passa il mouse per vedere la carta intera.',
     card_style_rendered_note: 'Le carte renderizzate usano sempre la forma di carta completa',
+    option_choice_off: 'Disattivato',
+    option_choice_on: 'Attivato',
     card_style_classic: 'Classico',
     card_style_classic_desc: 'Carta stampata completa',
     card_style_compact: 'Compatto',

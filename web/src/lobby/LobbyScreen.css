@@ -127,11 +127,46 @@
   border-color: var(--line-1);
 }
 
+/* The active look is drawn by .top-nav-indicator, which slides between tabs.
+   The button only changes its text color so the indicator stays the single
+   source of the highlight. */
 .top-nav-btn.active {
-  background: var(--brand-soft);
-  border-color: var(--brand-line);
+  background: transparent;
+  border-color: transparent;
   color: var(--fg-hi);
+}
+
+.top-nav-btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.top-nav-btn {
+  position: relative;
+  z-index: 1;
+}
+
+.top-nav-indicator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 0;
+  border-radius: var(--r-md);
+  background: var(--brand-soft);
+  border: 1px solid var(--brand-line);
   box-shadow: inset 0 -2px 0 var(--gold-500);
+  pointer-events: none;
+  transition: transform 0.32s cubic-bezier(0.2, 0.8, 0.2, 1), width 0.32s cubic-bezier(0.2, 0.8, 0.2, 1), height 0.32s cubic-bezier(0.2, 0.8, 0.2, 1);
+  animation: topNavIndicatorIn 0.2s ease both;
+}
+
+@keyframes topNavIndicatorIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .top-nav-indicator { transition: none; animation: none; }
+  .top-nav-btn:active:not(:disabled) { transform: none; }
 }
 
 .top-nav-btn.top-nav-create {
@@ -1542,3 +1577,34 @@ html:lang(zh) .tables-list {
   font-weight: 600;
 }
 
+/* Each main view mounts under a key that changes with the tab, so a switch
+   replays this entrance instead of cutting. The children fill the column the
+   same way they did when they were direct children of .lobby-main. The Mazos
+   views are not animated: while an animation runs the wrapper is a stacking
+   context, which drops the gallery footer below the floating chat. */
+.lobby-tab-view {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+}
+
+.lobby-tab-view.is-animated {
+  animation: lobbyTabIn 0.26s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+}
+
+.lobby-tab-view > * {
+  flex: 1 1 auto;
+  min-height: 0;
+  min-width: 0;
+}
+
+@keyframes lobbyTabIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lobby-tab-view.is-animated { animation: none; }
+}

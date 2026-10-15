@@ -617,6 +617,8 @@ export const ja: TranslationSchema = {
     card_style_title: 'カードスタイル',
     card_style_hint: '戦場のパーマネントの表示。カーソルを合わせると全体を表示。',
     card_style_rendered_note: 'レンダリングカードは常にカード全体の形を使用します',
+    option_choice_off: 'オフ',
+    option_choice_on: 'オン',
     card_style_classic: 'クラシック',
     card_style_classic_desc: 'カード全体を表示',
     card_style_compact: 'コンパクト',
