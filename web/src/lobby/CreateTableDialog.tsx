@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import CloseButton from '../ui/CloseButton'
 import { useCreateTableForm } from './CreateTable/useCreateTableForm'
 import GeneralTab from './CreateTable/GeneralTab'
@@ -28,11 +29,27 @@ const STEP_DESC_KEY = {
   dev: 'dev_subtitle',
 } as const satisfies Record<CreateTab, string>
 
-export default function CreateTableDialog({ onClose, onEditDeck, kind = 'match' }: { onClose: () => void; onEditDeck?: (deckId: string) => void; kind?: CreateKind }) {
+type CreateTableDialogProps = { onClose: () => void; onEditDeck?: (deckId: string) => void; kind?: CreateKind }
+
+export default function CreateTableDialog(props: CreateTableDialogProps) {
+  // "Reset to defaults" remounts the body so every hook initializer runs again
+  const [generation, setGeneration] = useState(0)
+  return <CreateTableDialogBody key={generation} {...props} onReset={() => setGeneration((g) => g + 1)} />
+}
+
+function CreateTableDialogBody({ onClose, onEditDeck, kind = 'match', onReset }: CreateTableDialogProps & { onReset: () => void }) {
   const { t, tError } = useTranslation()
-  const form = useCreateTableForm(onClose, kind)
+  const form = useCreateTableForm(onClose, kind, onReset)
   const { wizardSteps, activeTab, activeIndex, goNext, goPrev, goToStep, isLastStep, isFirstStep } = form
   const stepMessage = t('lobby', STEP_DESC_KEY[activeTab])
+  const submitBlockedBy = form.busy ? null : form.validateStep('general')
+  const inlineError = form.error ?? submitBlockedBy
+
+  const stepSummary = (id: CreateTab): string => {
+    if (id === 'general') return form.name.trim()
+    if (id === 'seats') return form.myDeck?.name ?? ''
+    return ''
+  }
 
   return (
     <DialogShell
@@ -55,13 +72,16 @@ export default function CreateTableDialog({ onClose, onEditDeck, kind = 'match' 
             const isActive = idx === activeIndex
             const isCompleted = idx < activeIndex
             const label = step.labelKey ? t('lobby', step.labelKey) : step.titleFallback
+            const stepError = form.validateStep(step.id)
+            const summary = isActive ? stepSummary(step.id) : ''
             return (
               <button
                 key={step.id}
                 type="button"
-                className={`wizard-step ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''}`}
+                className={`wizard-step ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''} ${stepError ? 'has-error' : ''}`}
                 onClick={() => goToStep(step.id)}
                 aria-current={isActive ? 'step' : undefined}
+                aria-label={stepError ? `${label}: ${tError(stepError)}` : undefined}
                 title={label}
               >
                 <span className="wizard-step-circle">
@@ -70,6 +90,7 @@ export default function CreateTableDialog({ onClose, onEditDeck, kind = 'match' 
                 <span className="wizard-step-label">
                   <span className="wizard-step-icon"><Icon name={step.icon} size={13} /></span>
                   <span className="wizard-step-text">{label}</span>
+                  {summary && <span className="wizard-step-summary">{summary}</span>}
                 </span>
                 {idx < wizardSteps.length - 1 && <span className={`wizard-connector ${isCompleted ? 'done' : ''}`} />}
               </button>
@@ -97,7 +118,7 @@ export default function CreateTableDialog({ onClose, onEditDeck, kind = 'match' 
           {activeTab === 'dev' && <DevTab form={form} />}
         </div>
 
-        {form.error && <div className="error-box"><Icon name="alert" size={14} /> {tError(form.error)}</div>}
+        {inlineError && <div className="error-box"><Icon name="alert" size={14} /> {tError(inlineError)}</div>}
 
         <div className="dialog-actions wizard-actions">
           <div className="wizard-actions-left">
@@ -109,15 +130,18 @@ export default function CreateTableDialog({ onClose, onEditDeck, kind = 'match' 
             <Button onClick={onClose} disabled={form.busy}>
               {t('common','cancel')}
             </Button>
+            <Button variant="ghost" size="sm" type="button" onClick={form.resetToDefaults} disabled={form.busy}>
+              {t('lobby','create_reset_defaults')}
+            </Button>
           </div>
           <div className="wizard-actions-right">
             <Button
               variant={isLastStep ? 'primary' : 'ghost'}
               type="button"
               className="create-submit-btn"
-              disabled={form.busy || !!form.compatibilityError || !form.name.trim()}
+              disabled={form.busy || !!submitBlockedBy}
               onClick={() => void form.submit()}
-              title={form.compatibilityError || undefined}
+              title={submitBlockedBy || undefined}
             >
               {form.busy
                 ? `${t('lobby','create_table_btn')}…`

@@ -95,6 +95,7 @@ test.describe('Wizard crear mesa (U3)', () => {
       await login(page, 'wiz')
       await openWizard(page)
       await page.getByPlaceholder(/Ej\. Modern Casual Bo3/).fill('mad-duel')
+      await page.getByLabel(/Formato \(Tipo de Mazo\)|Format \(Deck Type\)/i).selectOption('Constructed - Modern')
       await page.getByRole('button', { name: /Siguiente/ }).click()
       await page.getByRole('button', { name: /Siguiente/ }).click()
       await page.getByRole('button', { name: /Siguiente/ }).click()
@@ -147,7 +148,7 @@ test.describe('Wizard crear mesa (U3)', () => {
       await login(page, 'wiz')
       await openTournamentWizard(page)
       await page.getByPlaceholder(/Ej\. Modern Casual Bo3/).fill('swiss-e2e')
-      await page.getByRole('button', { name: /Modern Swiss/ }).click()
+      await page.getByRole('button', { name: /Modern (Swiss|Suizo)/ }).click()
       for (let i = 0; i < 3; i++) {
         await page.getByRole('button', { name: /Siguiente/ }).click()
       }

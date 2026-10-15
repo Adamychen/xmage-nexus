@@ -134,5 +134,6 @@ export interface CreateTableForm {
   compatibilityError: string | null
   validateStep: (tab: CreateTab) => string | null
   submit: () => Promise<void>
+  resetToDefaults: () => void
   runDemoTable: () => Promise<void>
 }

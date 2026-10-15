@@ -422,16 +422,16 @@ describe('CreateTableDialog', () => {
     render(<CreateTableDialog onClose={onClose} />)
 
     // Click Commander 4P preset
-    fireEvent.click(screen.getByRole('button', { name: /Commander 4P/i }))
+    fireEvent.click(screen.getByRole('button', { name: /Commander 4J|Commander 4P/i }))
     const gameTypeSelect = screen.getAllByRole('combobox')[0] as HTMLSelectElement
     expect(gameTypeSelect.value).toBe('Commander Free For All')
 
-    expect(screen.queryByRole('button', { name: /Modern Swiss \(8P\)/i })).toBeNull()
+    expect(screen.queryByRole('button', { name: /Modern (Suizo|Swiss) \((8J|8P)\)/i })).toBeNull()
   })
 
   it('T7b: el preset Modern Swiss vive en el torneo y configura un torneo construido', () => {
     render(<CreateTableDialog onClose={onClose} kind="tourney" />)
-    fireEvent.click(screen.getByRole('button', { name: /Modern Swiss \(8P\)/i }))
+    fireEvent.click(screen.getByRole('button', { name: /Modern (Suizo|Swiss) \((8J|8P)\)/i }))
     expect(screen.getByRole('tab', { name: /^Construido/i }).getAttribute('aria-selected')).toBe('true')
   })
 
@@ -440,7 +440,7 @@ describe('CreateTableDialog', () => {
 
     fireEvent.change(screen.getByPlaceholderText(/Ej. Modern Casual Bo3/), { target: { value: 'Modern Swiss 8P' } })
     // Click Modern Swiss (8P) preset
-    fireEvent.click(screen.getByRole('button', { name: /Modern Swiss \(8P\)/i }))
+    fireEvent.click(screen.getByRole('button', { name: /Modern (Suizo|Swiss) \((8J|8P)\)/i }))
 
     for (let i = 0; i < 6; i++) {
       const nextBtn = screen.queryByRole('button', { name: /Siguiente/ })
@@ -720,5 +720,40 @@ describe('CreateTableDialog', () => {
       expect(screen.getByText(/necesita un nombre|needs a name/i)).toBeDefined()
     })
     expect((screen.getByRole('button', { name: /Crear mesa|Create table/i }) as HTMLButtonElement).disabled).toBe(true)
+  })
+  it('marks the General step has-error and shows the reason when the name is cleared on the last step', async () => {
+    render(<CreateTableDialog onClose={onClose} />)
+    for (let i = 0; i < 6; i++) {
+      const nextBtn = screen.queryByRole('button', { name: /Siguiente|Next/ })
+      if (!nextBtn) break
+      fireEvent.click(nextBtn)
+    }
+    const stepper = screen.getByRole('navigation', { name: /Pasos de creación|Creation steps/ })
+    fireEvent.click(stepper.querySelectorAll('button')[0])
+    fireEvent.change(screen.getByPlaceholderText(/Ej. Modern Casual Bo3/), { target: { value: '' } })
+
+    expect(stepper.querySelectorAll('button')[0].classList.contains('has-error')).toBe(true)
+    expect(stepper.querySelectorAll('button')[0].getAttribute('aria-label')).toMatch(/necesita un nombre|needs a name/i)
+    expect(screen.getByText(/necesita un nombre|needs a name/i).closest('.error-box')).not.toBeNull()
+    expect((screen.getByRole('button', { name: /Crear mesa|Create table/i }) as HTMLButtonElement).disabled).toBe(true)
+  })
+
+  it('Reset to defaults restores a fresh form and clears the saved key', async () => {
+    const store = new Map<string, string>()
+    vi.stubGlobal('localStorage', {
+      getItem: (k: string) => store.get(k) ?? null,
+      setItem: (k: string, v: string) => { store.set(k, v) },
+      removeItem: vi.fn((k: string) => { store.delete(k) }),
+    })
+    await renderDialog()
+    fireEvent.change(screen.getByPlaceholderText(/Ej. Modern Casual Bo3/), { target: { value: 'Mi mesa' } })
+    await waitFor(() => expect(JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '{}').name).toBe('Mi mesa'))
+
+    fireEvent.click(screen.getByRole('button', { name: /Restablecer valores|Reset to defaults/ }))
+
+    expect(vi.mocked(localStorage.removeItem)).toHaveBeenCalledWith(STORAGE_KEY)
+    await waitFor(() => expect((screen.getByPlaceholderText(/Ej. Modern Casual Bo3/) as HTMLInputElement).value).toBe('Game'))
+    expect(JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '{}').name).toBe('Game')
+    vi.unstubAllGlobals()
   })
 })

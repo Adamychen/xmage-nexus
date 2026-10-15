@@ -45,6 +45,13 @@
 .wizard-step.completed {
   color: var(--brand-fg);
 }
+.wizard-step.has-error {
+  color: var(--err);
+}
+.wizard-step.has-error .wizard-step-circle {
+  border-color: var(--err);
+  color: var(--err);
+}
 
 .wizard-step-circle {
   width: 30px;
@@ -84,6 +91,14 @@
 .wizard-step-icon {
   font-size: var(--fs-md);
   line-height: 1;
+}
+.wizard-step-summary {
+  font-size: var(--fs-3xs);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  opacity: 0.75;
 }
 .wizard-step-text {
   font-size: var(--fs-3xs);

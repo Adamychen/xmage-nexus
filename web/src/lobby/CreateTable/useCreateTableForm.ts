@@ -75,7 +75,7 @@ function readSaved(): SavedForm {
   }
 }
 
-export function useCreateTableForm(onClose: () => void, kind: CreateKind = 'match'): CreateTableForm {
+export function useCreateTableForm(onClose: () => void, kind: CreateKind = 'match', onReset?: () => void): CreateTableForm {
   const isTourneyKind = kind === 'tourney'
   const { t, tError } = useTranslation()
   const username = useStore((s) => s.conn?.username ?? 'player')
@@ -536,7 +536,22 @@ export function useCreateTableForm(onClose: () => void, kind: CreateKind = 'matc
 
   const runDemoTable = () => runDemoTableCommand({ skipInitShuffling, skipStartingPlayerChoice }, { setBusy, onClose })
 
-  const submit = () => submitCreateTable({
+  const firstInvalidStep = (): { tab: CreateTab; message: string } | null => {
+    for (const step of wizardSteps) {
+      const message = validateStep(step.id)
+      if (message) return { tab: step.id, message }
+    }
+    return null
+  }
+
+  const submit = async () => {
+    const invalid = firstInvalidStep()
+    if (invalid) {
+      setError(invalid.message)
+      setActiveTab(invalid.tab)
+      return
+    }
+    return submitCreateTable({
     name, gameType, deckType, wins, skillLevel, rated,
     draftSetsRaw, draftBoosters, draftConstructionTime, draftCubeName, draftTiming,
     numberRounds, singleGame, timeLimit, bufferTime, freeMulligans, mulliganType,
@@ -548,6 +563,16 @@ export function useCreateTableForm(onClose: () => void, kind: CreateKind = 'matc
     isTournament, compatibilityError,
     username, tableResolution, findDeck,
   }, { t, tError, setBusy, setError, onClose })
+  }
+
+  // Remounting the form (via `onReset`) re-runs the initializers above, so the
+  // defaults live only in this file.
+  const resetToDefaults = () => {
+    try {
+      localStorage.removeItem(STORAGE_KEY)
+    } catch {}
+    onReset?.()
+  }
 
   return {
     kind,
@@ -680,5 +705,6 @@ export function useCreateTableForm(onClose: () => void, kind: CreateKind = 'matc
     validateStep,
     submit,
     runDemoTable,
+    resetToDefaults,
   }
 }

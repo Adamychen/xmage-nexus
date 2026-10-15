@@ -3,6 +3,7 @@ import { act, cleanup, renderHook, waitFor } from '@testing-library/react'
 import * as cmds from '../../net/commands'
 import { requestDeckValidation } from '../DeckIssuesDialog'
 import { useCreateTableForm } from './useCreateTableForm'
+import { STORAGE_KEY } from './constants'
 
 vi.mock('../../net/commands', () => ({
   getGameTypes: vi.fn(),
@@ -290,5 +291,33 @@ describe('runDemoTable', () => {
     expect(cmds.startMatch).not.toHaveBeenCalled()
     expect(m.onClose).not.toHaveBeenCalled()
     expect(m.form().busy).toBe(false)
+  })
+})
+
+describe('reset and submit guard', () => {
+  it('resetToDefaults clears the saved form and asks the host to remount', async () => {
+    const onReset = vi.fn()
+    const hook = renderHook(() => useCreateTableForm(vi.fn(), 'match', onReset))
+    await waitFor(() => expect(cmds.getTournamentTypes).toHaveBeenCalled())
+    await act(async () => {})
+    act(() => hook.result.current.setName('Mesa'))
+    expect(ls.has(STORAGE_KEY)).toBe(true)
+
+    act(() => hook.result.current.resetToDefaults())
+
+    expect(ls.has(STORAGE_KEY)).toBe(false)
+    expect(onReset).toHaveBeenCalledTimes(1)
+  })
+
+  it('submit with an empty name moves to General with the error and creates nothing', async () => {
+    const m = await mount()
+    act(() => m.form().setName('  '))
+    act(() => m.form().setActiveTab('review'))
+    await act(() => m.form().submit())
+
+    expect(cmds.createTable).not.toHaveBeenCalled()
+    expect(cmds.createTournamentTable).not.toHaveBeenCalled()
+    expect(m.form().activeTab).toBe('general')
+    expect(m.form().error).toBeTruthy()
   })
 })

@@ -50,19 +50,19 @@ export default function GeneralTab({ form }: { form: CreateTableForm }) {
               {isTourney ? (
                 <>
                   <ChipButton size="sm" onClick={() => form.applyPreset('draft_8p')}>
-                    Draft MH3 (8P)
+                    {t('lobby', 'create_preset_draft_mh3')}
                   </ChipButton>
                   <ChipButton size="sm" onClick={() => form.applyPreset('modern_swiss_8p')}>
-                    Modern Swiss (8P)
+                    {t('lobby', 'create_preset_modern_swiss')}
                   </ChipButton>
                 </>
               ) : (
                 <>
                   <ChipButton size="sm" onClick={() => form.applyPreset('modern_bo3')}>
-                    Modern Bo3
+                    {t('lobby', 'create_preset_modern_bo3')}
                   </ChipButton>
                   <ChipButton size="sm" onClick={() => form.applyPreset('commander_4p')}>
-                    Commander 4P
+                    {t('lobby', 'create_preset_commander_4p')}
                   </ChipButton>
                 </>
               )}
@@ -120,7 +120,7 @@ export default function GeneralTab({ form }: { form: CreateTableForm }) {
           </Field>
 
           {!isTourney && form.selectedGameTypeInfo && form.selectedGameTypeInfo.minPlayers !== form.selectedGameTypeInfo.maxPlayers && (
-            <Field label={t('lobby','create_field_num_players')} hint={<>Min {form.selectedGameTypeInfo.minPlayers} — Max {form.selectedGameTypeInfo.maxPlayers}</>}>
+            <Field label={t('lobby','create_field_num_players')} hint={t('lobby', 'create_hint_min_max', { min: form.selectedGameTypeInfo.minPlayers, max: form.selectedGameTypeInfo.maxPlayers })}>
               <select value={form.numPlayers} onChange={(e) => form.setNumPlayers(Number(e.target.value))}>
                 {Array.from({ length: form.selectedGameTypeInfo.maxPlayers - form.selectedGameTypeInfo.minPlayers + 1 }, (_, i) => {
                   const n = form.selectedGameTypeInfo!.minPlayers + i

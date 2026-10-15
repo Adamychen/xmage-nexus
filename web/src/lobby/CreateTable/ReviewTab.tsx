@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { useTranslation } from '../../i18n'
 import Icon from '../../ui/Icon'
+import Button from '../../ui/Button'
 import { deckRef } from '../decks'
 import {
   BUFFER_TIME_OPTIONS,
@@ -14,6 +15,7 @@ import {
   parseLimitedSetCodes,
   seatTypeLabel,
 } from './constants'
+import type { CreateTab } from './constants'
 import type { CreateTableForm } from './useCreateTableForm'
 
 type Row = { label: string; value: ReactNode }
@@ -36,10 +38,12 @@ export default function ReviewTab({ form }: { form: CreateTableForm }) {
   const draftTimingLabel = form.draftTiming === 'BEGINNER' ? t('lobby','create_draft_timing_beginner') : form.draftTiming === 'REGULAR' ? t('lobby','create_draft_timing_regular') : t('lobby','create_draft_timing_professional')
   const setCodes = parseLimitedSetCodes(form.draftSetsRaw)
 
-  const sections: { title: string; rows: Row[] }[] = []
+  const sections: { title: string; tab: CreateTab; rows: Row[] }[] = []
+  const stepIds = new Set(form.wizardSteps.map((step) => step.id))
 
   sections.push({
     title: t('lobby', 'create_tab_general'),
+    tab: 'general',
     rows: [
       { label: t('lobby', 'create_field_table_name'), value: form.name.trim() || none },
       { label: t('lobby', 'create_field_game_type'), value: form.gameType },
@@ -60,6 +64,7 @@ export default function ReviewTab({ form }: { form: CreateTableForm }) {
   if (form.isDraftLimited) {
     sections.push({
       title: t('lobby', 'create_tab_draft'),
+      tab: 'draft',
       rows: [
         { label: t('lobby', 'create_field_boosters'), value: String(form.draftBoosters) },
         { label: t('lobby', 'create_field_construction_time'), value: construction ? getConstructionTimeLabel(construction, t) : none },
@@ -73,6 +78,7 @@ export default function ReviewTab({ form }: { form: CreateTableForm }) {
 
   sections.push({
     title: t('lobby', 'create_tab_timing'),
+    tab: 'timing',
     rows: [
       { label: t('lobby', 'create_field_timing_limit'), value: timeLimit ? getTimeLimitLabel(timeLimit, t) : none },
       { label: t('lobby', 'create_field_buffer_time'), value: buffer ? getBufferTimeLabel(buffer, t) : none },
@@ -86,6 +92,7 @@ export default function ReviewTab({ form }: { form: CreateTableForm }) {
 
   sections.push({
     title: t('lobby', 'create_tab_restrictions'),
+    tab: 'security',
     rows: [
       { label: t('lobby', 'create_field_password'), value: form.password.trim() ? t('lobby', 'tag_private') : t('common', 'no') },
       { label: t('lobby', 'create_field_min_rating'), value: form.minimumRating > 0 ? String(form.minimumRating) : t('common', 'all') },
@@ -106,7 +113,7 @@ export default function ReviewTab({ form }: { form: CreateTableForm }) {
       return { label, value: `${seatTypeLabel(cfg.type, t)} · ${t('lobby', 'create_field_seat_skill')} ${cfg.skill ?? 2}${form.isDraftLimited ? '' : ` · ${deck?.name ?? none}`}` }
     }),
   ]
-  sections.push({ title: t('lobby', 'create_tab_multi'), rows: seatRows })
+  sections.push({ title: t('lobby', 'create_tab_multi'), tab: 'seats', rows: seatRows })
 
   const compatibility = form.compatibilityError
 
@@ -118,7 +125,19 @@ export default function ReviewTab({ form }: { form: CreateTableForm }) {
       <div className="create-review-grid">
         {sections.map((section) => (
           <section key={section.title} className="create-review-section">
-            <h4 className="create-review-title">{section.title}</h4>
+            <h4 className="create-review-title">
+              {section.title}
+              {stepIds.has(section.tab) && (
+                <Button
+                  variant="link"
+                  size="sm"
+                  aria-label={t('lobby', 'create_review_edit_section', { section: section.title })}
+                  onClick={() => form.goToStep(section.tab)}
+                >
+                  {t('common', 'edit')}
+                </Button>
+              )}
+            </h4>
             <dl className="create-review-list">
               {section.rows.map((row) => (
                 <div key={row.label} className="create-review-row">
