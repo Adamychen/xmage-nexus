@@ -1,11 +1,128 @@
-import { useRef, useEffect } from 'react'
+import { memo, useRef, useEffect } from 'react'
 import Button from '../ui/Button'
 import type { ScryfallSearchCard } from './scryfallSearch'
 import { scryfallCardImage } from './scryfallSearch'
 import { setFloatingCardDragImage } from './arenaDragHelpers'
+import { flyCardTo, landingRow } from '../ui/flyCard'
+import { deckCardKey, searchResultCard } from './deckCardOps'
+import { useEventCallback } from '../utils/useEventCallback'
 import Icon from '../ui/Icon'
 import { useTranslation, toBcp47Locale } from '../i18n'
 import './ArenaCardGrid.css'
+
+const DECK_DROP = '.arena-deck-list-container'
+
+function flyToDeckRow(source: HTMLElement, card: ScryfallSearchCard) {
+  const key = deckCardKey(searchResultCard(card))
+  flyCardTo(source, landingRow(DECK_DROP, '.arena-card-strip[data-zone="main"]', (row) => row.dataset.cardKey === key), { pop: true })
+}
+
+function startGridDrag(e: React.DragEvent, card: ScryfallSearchCard, onLeave?: () => void) {
+  onLeave?.()
+  const displayName = card.printed_name || card.name
+  e.dataTransfer.setData('application/json', JSON.stringify({
+    cardName: card.name,
+    printedName: card.printed_name,
+    setCode: card.set.toUpperCase(),
+    cardNumber: card.collector_number,
+    manaCost: card.mana_cost,
+    cmc: card.cmc,
+    typeLine: card.type_line || card.printed_type_line,
+    colors: card.colors || card.color_identity || [],
+    colorIdentity: card.color_identity,
+    oracleText: card.oracle_text ?? '',
+    source: 'search',
+  }))
+  e.dataTransfer.effectAllowed = 'copy'
+
+  const imgUrl = scryfallCardImage(card)
+  setFloatingCardDragImage(e, imgUrl, displayName)
+}
+
+interface GridTileProps {
+  card: ScryfallSearchCard
+  count: number
+  notOnServer: boolean
+  onAdd: (card: ScryfallSearchCard) => void
+  onHover: (card: ScryfallSearchCard, rect: DOMRect) => void
+  onLeave: () => void
+}
+
+const GridTile = memo(function GridTile({ card, count, notOnServer, onAdd, onHover, onLeave }: GridTileProps) {
+  const { t } = useTranslation()
+  const imgUrl = scryfallCardImage(card)
+  const maxPips = 4
+  const displayName = card.printed_name || card.name
+  const displayType = card.printed_type_line || card.type_line
+  const hoverTitle = displayName !== card.name ? `${displayName} (${card.name})` : card.name
+
+  return (
+    <div
+      className={`arena-grid-card search-card${notOnServer ? ' is-unimplemented' : ''}`}
+      data-unimplemented={notOnServer || undefined}
+      draggable
+      role="button"
+      tabIndex={0}
+      aria-label={`${displayName} — ${t('decks', 'builder_grid_add')}`}
+      onDragStart={(e) => startGridDrag(e, card, onLeave)}
+      onClick={(e) => {
+        const source = e.currentTarget
+        onAdd(card)
+        queueMicrotask(() => flyToDeckRow(source, card))
+      }}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          const source = e.currentTarget
+          onAdd(card)
+          queueMicrotask(() => flyToDeckRow(source, card))
+        }
+      }}
+      onMouseEnter={(e) => onHover(card, e.currentTarget.getBoundingClientRect())}
+      onMouseLeave={onLeave}
+      title={notOnServer
+        ? `${hoverTitle} — ${t('decks', 'card_not_implemented')}`
+        : `${hoverTitle} — ${t('decks', 'builder_grid_add')}`}
+    >
+      {/* Copy diamond indicators (e.g. 1/4, 2/4) */}
+      <div className="arena-card-pips">
+        {count > maxPips ? (
+          <span className="card-pip-count" title={`${count}× ${displayName}`}>{count}×</span>
+        ) : (
+          Array.from({ length: maxPips }).map((_, i) => (
+            <div
+              key={i}
+              className={`card-pip-diamond ${i < count ? 'filled' : ''}`}
+            />
+          ))
+        )}
+      </div>
+
+      {/* Card Image */}
+      <div className="arena-grid-card-img-wrapper">
+        {imgUrl ? (
+          <img
+            src={imgUrl}
+            alt={displayName}
+            className="arena-grid-card-img"
+            loading="lazy"
+          />
+        ) : (
+          <div className="arena-grid-card-fallback">
+            <div className="arena-grid-card-fallback-name">{displayName}</div>
+            <div>{displayType}</div>
+          </div>
+        )}
+        {notOnServer && (
+          <span className="arena-unimplemented-badge">{t('decks', 'card_not_implemented_short')}</span>
+        )}
+        <div className="arena-grid-card-overlay">
+          <span className="arena-add-badge search-card-add">+ {t('decks', 'builder_grid_add')}</span>
+        </div>
+      </div>
+    </div>
+  )
+})
 
 export function ArenaCardGrid({
   cards,
@@ -47,6 +164,9 @@ export function ArenaCardGrid({
 }) {
   const { t, tError, lang } = useTranslation()
   const sentinelRef = useRef<HTMLDivElement | null>(null)
+  const stableAdd = useEventCallback(onAdd)
+  const stableHover = useEventCallback((card: ScryfallSearchCard, rect: DOMRect) => onHover?.(card, rect))
+  const stableLeave = useEventCallback(() => onLeave?.())
 
   useEffect(() => {
     const el = sentinelRef.current
@@ -67,28 +187,6 @@ export function ArenaCardGrid({
     const keySetNum = `${card.set.toUpperCase()}/${card.collector_number}`
     const keyName = card.name.toLowerCase()
     return countMap.get(keySetNum) ?? countMap.get(keyName) ?? 0
-  }
-
-  const handleDragStart = (e: React.DragEvent, card: ScryfallSearchCard) => {
-    onLeave?.()
-    const displayName = card.printed_name || card.name
-    e.dataTransfer.setData('application/json', JSON.stringify({
-      cardName: card.name,
-      printedName: card.printed_name,
-      setCode: card.set.toUpperCase(),
-      cardNumber: card.collector_number,
-      manaCost: card.mana_cost,
-      cmc: card.cmc,
-      typeLine: card.type_line || card.printed_type_line,
-      colors: card.colors || card.color_identity || [],
-      colorIdentity: card.color_identity,
-      oracleText: card.oracle_text ?? '',
-      source: 'search',
-    }))
-    e.dataTransfer.effectAllowed = 'copy'
-
-    const imgUrl = scryfallCardImage(card)
-    setFloatingCardDragImage(e, imgUrl, displayName)
   }
 
   if (throttled && cards.length === 0) {
@@ -145,77 +243,17 @@ export function ArenaCardGrid({
         onScroll={handleScroll}
         style={cardMinPx ? { gridTemplateColumns: `repeat(auto-fill, minmax(${cardMinPx}px, 1fr))` } : undefined}
       >
-        {cards.map((card) => {
-          const imgUrl = scryfallCardImage(card)
-          const count = getDeckCount(card)
-          const maxPips = 4
-          const displayName = card.printed_name || card.name
-          const displayType = card.printed_type_line || card.type_line
-          const hoverTitle = displayName !== card.name ? `${displayName} (${card.name})` : card.name
-          const notOnServer = !!unimplemented?.has(card.name.toLowerCase())
-
-          return (
-            <div
-              key={card.id}
-              className={`arena-grid-card search-card${notOnServer ? ' is-unimplemented' : ''}`}
-              data-unimplemented={notOnServer || undefined}
-              draggable
-              role="button"
-              tabIndex={0}
-              aria-label={`${displayName} — ${t('decks', 'builder_grid_add')}`}
-              onDragStart={(e) => handleDragStart(e, card)}
-              onClick={() => onAdd(card)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault()
-                  onAdd(card)
-                }
-              }}
-              onMouseEnter={(e) => onHover?.(card, e.currentTarget.getBoundingClientRect())}
-              onMouseLeave={onLeave}
-              title={notOnServer
-                ? `${hoverTitle} — ${t('decks', 'card_not_implemented')}`
-                : `${hoverTitle} — ${t('decks', 'builder_grid_add')}`}
-            >
-              {/* Copy diamond indicators (e.g. 1/4, 2/4) */}
-              <div className="arena-card-pips">
-                {count > maxPips ? (
-                  <span className="card-pip-count" title={`${count}× ${displayName}`}>{count}×</span>
-                ) : (
-                  Array.from({ length: maxPips }).map((_, i) => (
-                    <div
-                      key={i}
-                      className={`card-pip-diamond ${i < count ? 'filled' : ''}`}
-                    />
-                  ))
-                )}
-              </div>
-
-              {/* Card Image */}
-              <div className="arena-grid-card-img-wrapper">
-                {imgUrl ? (
-                  <img
-                    src={imgUrl}
-                    alt={displayName}
-                    className="arena-grid-card-img"
-                    loading="lazy"
-                  />
-                ) : (
-                  <div className="arena-grid-card-fallback">
-                    <div className="arena-grid-card-fallback-name">{displayName}</div>
-                    <div>{displayType}</div>
-                  </div>
-                )}
-                {notOnServer && (
-                  <span className="arena-unimplemented-badge">{t('decks', 'card_not_implemented_short')}</span>
-                )}
-                <div className="arena-grid-card-overlay">
-                  <span className="arena-add-badge search-card-add">+ {t('decks', 'builder_grid_add')}</span>
-                </div>
-              </div>
-            </div>
-          )
-        })}
+        {cards.map((card) => (
+          <GridTile
+            key={card.id}
+            card={card}
+            count={getDeckCount(card)}
+            notOnServer={!!unimplemented?.has(card.name.toLowerCase())}
+            onAdd={stableAdd}
+            onHover={stableHover}
+            onLeave={stableLeave}
+          />
+        ))}
 
         {/* Bottom Sentinel for IntersectionObserver */}
         <div ref={sentinelRef} className="arena-grid-sentinel" />

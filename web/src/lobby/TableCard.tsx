@@ -1,3 +1,4 @@
+import { useRef } from 'react'
 import { openStagingTable } from '../state/store'
 import type { TableView, UsersView } from '../net/types'
 import Icon from '../ui/Icon'
@@ -12,6 +13,7 @@ import Button from '../ui/Button'
 import { tableOwnerName } from './TableFilterBar'
 import { useCardArtUrl } from '../decks/useCardArtUrl'
 import { tableArtCard } from './tableArt'
+import { usePointerVars } from './usePointerVars'
 
 interface Props {
   tTable: TableView
@@ -73,9 +75,12 @@ export default function TableCard({
     && !!ownerName && !!username && ownerName.toLowerCase() === username.toLowerCase()
 
   const artUrl = useCardArtUrl(tableArtCard(tTable.deckType))
+  const cardRef = useRef<HTMLDivElement>(null)
+  usePointerVars(cardRef)
 
   return (
     <div
+      ref={cardRef}
       className={`table-card table-row ${statusClass}${isMine ? ' is-my-table' : ''}`}
       style={artUrl ? { ['--card-art' as string]: `url("${artUrl}")` } : undefined}
       onDoubleClick={() => {

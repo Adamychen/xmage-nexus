@@ -121,6 +121,40 @@
 .pos-medal--2 { color: var(--medal-silver); }
 .pos-medal--3 { color: var(--medal-bronze); }
 
+@keyframes podiumIn {
+  from { opacity: 0; translate: -12px 0; }
+  to { opacity: 1; translate: 0 0; }
+}
+
+.leaderboard-row.is-podium {
+  --podium-tone: var(--medal-bronze);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--podium-tone) 16%, transparent) 0%, transparent 55%);
+  animation: podiumIn 0.45s var(--ease-out) both;
+}
+.leaderboard-row.is-podium td:first-child {
+  box-shadow: inset 3px 0 0 var(--podium-tone);
+}
+.leaderboard-row.is-podium-1 {
+  --podium-tone: var(--medal-gold);
+  animation-delay: 0ms;
+}
+.leaderboard-row.is-podium-2 {
+  --podium-tone: var(--medal-silver);
+  animation-delay: 80ms;
+}
+.leaderboard-row.is-podium-3 {
+  animation-delay: 160ms;
+}
+.leaderboard-row.is-podium-1 .pos-medal {
+  filter: drop-shadow(0 0 6px rgb(var(--gold-rgb) / 0.7));
+}
+html.fx-off .leaderboard-row.is-podium {
+  animation: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .leaderboard-row.is-podium { animation: none; }
+}
+
 .user-cell-wrap {
   display: flex;
   align-items: center;

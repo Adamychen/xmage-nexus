@@ -45,6 +45,8 @@
   border-radius: var(--r-base);
   cursor: pointer;
   user-select: none;
+  content-visibility: auto;
+  contain-intrinsic-size: auto 300px;
   transition: transform 150ms cubic-bezier(0.2, 0, 0.2, 1), box-shadow 150ms ease;
 }
 

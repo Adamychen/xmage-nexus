@@ -44,6 +44,9 @@ export const de: TranslationSchema = {
   },
   login: {
     subtitle: 'Moderner Hochleistungs-Web-Client für XMage',
+    tagline_1: 'Tappen, entappen, gewinnen',
+    tagline_2: 'Dein Tisch wartet',
+    tagline_3: 'Mischen und spielen',
     world: 'Global / Welt',
     server_target: 'XMage-Server:',
     server_local: 'Lokal',

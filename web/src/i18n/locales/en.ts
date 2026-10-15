@@ -42,6 +42,9 @@ export const en = {
   },
   login: {
     subtitle: 'Modern high-performance web client for XMage',
+    tagline_1: 'Tap, untap, win',
+    tagline_2: 'Your table is waiting',
+    tagline_3: 'Shuffle up and play',
     world: 'Global / World',
     server_target: 'XMage Server:',
     server_local: 'Local',

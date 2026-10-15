@@ -218,10 +218,6 @@
   transition: transform 0.15s ease;
 }
 
-.user-avatar-preview:hover {
-  transform: scale(1.04);
-}
-
 .user-avatar-preview::after {
   content: '✏️';
   position: absolute;
@@ -400,6 +396,10 @@
 
 /* Submit Button */
 .login-submit-btn {
+  position: relative;
+  overflow: hidden;
+  transform: translate(calc((var(--px, 0.5) - 0.5) * 8px), calc((var(--py, 0.5) - 0.5) * 6px));
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease;
   padding: var(--sp-3) 0;
   border-radius: var(--r-lg);
   font-size: var(--fs-md);
@@ -410,7 +410,6 @@
 
 .login-submit-btn:hover:not(:disabled) {
   box-shadow: var(--sheen), 0 14px 32px rgb(var(--brand-rgb) / 0.42);
-  transform: translateY(-1px);
 }
 
 .login-submit-btn:disabled {
@@ -501,6 +500,202 @@ details.login-network-box .login-network-fields {
 
 /* U4-2: contraseña deshabilitada en el servidor público (beta) */
 
+
+/* Visual intro: mana field, hero cards, tagline, staggered entry, sheen, pips, tilt */
+
+.login-mana-field {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  transform: translate(calc((var(--px, 0.5) - 0.5) * -22px), calc((var(--py, 0.5) - 0.5) * -16px));
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.mana-mote {
+  position: absolute;
+  bottom: -28px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgb(var(--tint-rgb) / 0.95) 0%, rgb(var(--tint-rgb) / 0) 70%);
+  box-shadow: 0 0 10px rgb(var(--tint-rgb) / 0.7);
+  opacity: 0;
+  animation-name: moteRise;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+.mana-mote[data-color="w"] { --tint-rgb: var(--mana-w-rgb); }
+.mana-mote[data-color="u"] { --tint-rgb: var(--mana-u-rgb); }
+.mana-mote[data-color="b"] { --tint-rgb: var(--mana-b-rgb); }
+.mana-mote[data-color="r"] { --tint-rgb: var(--mana-r-rgb); }
+.mana-mote[data-color="g"] { --tint-rgb: var(--mana-g-rgb); }
+
+@keyframes moteRise {
+  0% { transform: translate(0, 0); opacity: 0; }
+  12% { opacity: 0.7; }
+  85% { opacity: 0.45; }
+  100% { transform: translate(40px, -118vh); opacity: 0; }
+}
+
+.login-header {
+  position: relative;
+}
+
+.login-hero {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 124px;
+  z-index: 0;
+  pointer-events: none;
+  transform: translate(calc((var(--px, 0.5) - 0.5) * -14px), calc((var(--py, 0.5) - 0.5) * -10px));
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.hero-card {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 70px;
+  height: 98px;
+  margin: -49px 0 0 -35px;
+  border-radius: var(--r-md);
+  border: 1.5px solid rgb(var(--gold-rgb) / 0.5);
+  background: linear-gradient(160deg, rgb(var(--ink-2-rgb)), rgb(var(--ink-rgb)));
+  box-shadow: 0 10px 24px var(--shade-2), 0 0 18px rgb(var(--tint-rgb) / 0.35);
+  transform: translateX(var(--dx)) rotate(var(--rot));
+  animation: heroFloat 7s ease-in-out infinite alternate;
+  overflow: hidden;
+}
+
+.hero-card::after {
+  content: '';
+  position: absolute;
+  inset: 16px;
+  border-radius: 50%;
+  border: 1px solid rgb(var(--tint-rgb) / 0.6);
+  background: radial-gradient(circle, rgb(var(--tint-rgb) / 0.5), rgb(var(--tint-rgb) / 0) 70%);
+}
+
+.hero-card-1 { --rot: -18deg; --dx: -58px; --tint-rgb: var(--mana-w-rgb); animation-delay: -1s; }
+.hero-card-2 { --rot: 0deg; --dx: 0px; --tint-rgb: var(--mana-u-rgb); animation-delay: -3s; }
+.hero-card-3 { --rot: 18deg; --dx: 58px; --tint-rgb: var(--mana-g-rgb); animation-delay: -5s; }
+
+@keyframes heroFloat {
+  from { transform: translateX(var(--dx)) rotate(var(--rot)) translateY(0); }
+  to { transform: translateX(var(--dx)) rotate(var(--rot)) translateY(-8px); }
+}
+
+.login-logo-img {
+  position: relative;
+  z-index: 1;
+}
+
+.login-tagline {
+  margin: 0;
+  font-size: var(--fs-md);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  background: linear-gradient(90deg, var(--gold-300), var(--brand-fg));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: taglineIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+
+@keyframes taglineIn {
+  from { opacity: 0; transform: translateY(6px); filter: blur(4px); }
+  to { opacity: 1; transform: translateY(0); filter: blur(0); }
+}
+
+.login-card > * {
+  animation: riseIn 0.55s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+.login-card > *:nth-child(2) { animation-delay: 0.06s; }
+.login-card > *:nth-child(3) { animation-delay: 0.12s; }
+.login-card > *:nth-child(4) { animation-delay: 0.18s; }
+.login-card > *:nth-child(5) { animation-delay: 0.24s; }
+.login-card > *:nth-child(6) { animation-delay: 0.3s; }
+.login-card > *:nth-child(7) { animation-delay: 0.36s; }
+.login-card > *:nth-child(8) { animation-delay: 0.42s; }
+.login-card > *:nth-child(9) { animation-delay: 0.48s; }
+
+@keyframes riseIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.login-submit-btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, transparent 35%, var(--veil-6) 50%, transparent 65%);
+  transform: translateX(-120%);
+  animation: btnSheen 4.8s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes btnSheen {
+  0%, 55% { transform: translateX(-120%); }
+  100% { transform: translateX(120%); }
+}
+
+.login-submit-btn:active:not(:disabled) {
+  transform: translate(calc((var(--px, 0.5) - 0.5) * 8px), calc((var(--py, 0.5) - 0.5) * 6px)) scale(0.97);
+}
+
+.login-card input:focus,
+.login-card select:focus {
+  animation: fieldFocus 0.6s ease-out;
+}
+
+@keyframes fieldFocus {
+  0% { box-shadow: 0 0 0 0 rgb(var(--gold-rgb) / 0.55); }
+  100% { box-shadow: 0 0 0 7px rgb(var(--gold-rgb) / 0); }
+}
+
+.user-avatar-preview {
+  transform: perspective(240px) rotateX(calc((0.5 - var(--py, 0.5)) * 28deg)) rotateY(calc((var(--px, 0.5) - 0.5) * 28deg));
+  transition: transform 0.2s ease;
+}
+
+.user-avatar-preview:hover {
+  transform: perspective(240px) rotateX(calc((0.5 - var(--py, 0.5)) * 28deg)) rotateY(calc((var(--px, 0.5) - 0.5) * 28deg)) scale(1.06);
+}
+
+.mana-pips {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1h);
+}
+
+.mana-pip {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: rgb(var(--tint-rgb));
+  opacity: 0.25;
+  transform: scale(0.8);
+  animation: pipLit 1.2s ease-in-out infinite;
+}
+
+.mana-pip[data-color="w"] { --tint-rgb: var(--mana-w-rgb); }
+.mana-pip[data-color="u"] { --tint-rgb: var(--mana-u-rgb); }
+.mana-pip[data-color="b"] { --tint-rgb: var(--mana-b-rgb); }
+.mana-pip[data-color="r"] { --tint-rgb: var(--mana-r-rgb); }
+.mana-pip[data-color="g"] { --tint-rgb: var(--mana-g-rgb); }
+
+@keyframes pipLit {
+  0%, 100% { opacity: 0.25; transform: scale(0.8); box-shadow: none; }
+  25% { opacity: 1; transform: scale(1.2); box-shadow: 0 0 10px rgb(var(--tint-rgb) / 0.9); }
+  50% { opacity: 0.4; transform: scale(0.9); box-shadow: none; }
+}
+
+.connecting-splash .mana-pips {
+  margin: var(--sp-4) auto 0 auto;
+}
+
 /* Movimiento reducido (plan4 §5.7): glows del fondo, logo y spinners infinitos
    quedan estáticos. Al final del fichero para ganar en orden a sus reglas. */
 @media (prefers-reduced-motion: reduce) {
@@ -508,7 +703,30 @@ details.login-network-box .login-network-fields {
   .login-bg-glow-2,
   .login-logo-img,
   .btn-spinner,
-  .connecting-spinner {
+  .connecting-spinner,
+  .login-mana-field,
+  .mana-mote,
+  .hero-card,
+  .login-tagline,
+  .login-card > *,
+  .login-card input:focus,
+  .login-card select:focus,
+  .login-submit-btn::after,
+  .mana-pip {
     animation: none;
+  }
+
+  .login-mana-field,
+  .login-hero,
+  .login-submit-btn,
+  .user-avatar-preview,
+  .user-avatar-preview:hover {
+    transform: none;
+    transition: none;
+  }
+
+  .mana-pip {
+    opacity: 0.6;
+    transform: none;
   }
 }

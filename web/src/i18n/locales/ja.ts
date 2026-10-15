@@ -44,6 +44,9 @@ export const ja: TranslationSchema = {
   },
   login: {
     subtitle: 'XMage用モダン高速Webクライアント',
+    tagline_1: 'タップ、アンタップ、勝利',
+    tagline_2: '卓があなたを待っています',
+    tagline_3: 'シャッフルして、プレイ',
     world: 'グローバル / 世界',
     server_target: 'XMageサーバー:',
     server_local: 'ローカル',

@@ -9,6 +9,7 @@ export interface DialogShellProps {
   titleId?: string
   testId?: string
   size?: 'sm' | 'md' | 'lg'
+  ornate?: boolean
   legacyPanelClass?: string
   legacyBackdropClass?: string
   zIndex?: number
@@ -37,6 +38,7 @@ export default function DialogShell({
   titleId,
   testId,
   size = 'md',
+  ornate = false,
   legacyPanelClass,
   legacyBackdropClass,
   zIndex,
@@ -64,7 +66,7 @@ export default function DialogShell({
   return (
     <Modal
       backdropClassName={['dlg-backdrop', legacyBackdropClass].filter(Boolean).join(' ')}
-      dialogClassName={['dlg-panel', `dlg-${size}`, legacyPanelClass].filter(Boolean).join(' ')}
+      dialogClassName={['dlg-panel', `dlg-${size}`, ornate ? 'dlg-ornate' : '', legacyPanelClass].filter(Boolean).join(' ')}
       labelledBy={labelledBy}
       testId={testId}
       zIndex={zIndex}

@@ -383,13 +383,14 @@ export default function ConstructScreen() {
         <div className="construct-columns">
           <div
             className={`construct-column ${isPoolDragOver ? 'is-drag-over' : ''}`}
+            data-fly-target="pool"
             onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; if (!isPoolDragOver) setIsPoolDragOver(true) }}
             onDragLeave={(e) => { if (e.currentTarget.contains(e.relatedTarget as Node)) return; setIsPoolDragOver(false) }}
             onDrop={handleDropOnPool}
           >
             <div className="construct-col-header">
               <h3>{t('game', 'construct_pool')}</h3>
-              <span className="construct-col-count">{poolTotal}</span>
+              <span key={poolTotal} className="construct-col-count">{poolTotal}</span>
             </div>
             {pool.length > 0 && (
               <div className="construct-pool-tools">
@@ -435,6 +436,7 @@ export default function ConstructScreen() {
                     onDec={handleDec}
                     onRemove={handleRemove}
                     onSwap={moveOneToMain}
+                    flyTo='[data-fly-target="main"]'
                     swapLabel={`${t('game', 'sideboard_main')} →`}
                     onHover={handleHover}
                     onLeave={handleLeave}
@@ -449,13 +451,14 @@ export default function ConstructScreen() {
 
           <div
             className={`construct-column ${isMainDragOver ? 'is-drag-over' : ''}`}
+            data-fly-target="main"
             onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; if (!isMainDragOver) setIsMainDragOver(true) }}
             onDragLeave={(e) => { if (e.currentTarget.contains(e.relatedTarget as Node)) return; setIsMainDragOver(false) }}
             onDrop={handleDropOnMain}
           >
             <div className="construct-col-header">
               <h3>{t('game', 'sideboard_main')}</h3>
-              <span className={`construct-col-count ${mainValid ? 'valid' : 'invalid'}`}>{mainTotal}</span>
+              <span key={mainTotal} className={`construct-col-count ${mainValid ? 'valid' : 'invalid'}`}>{mainTotal}</span>
             </div>
             <BasicLandAdder
               cards={main}
@@ -499,6 +502,7 @@ export default function ConstructScreen() {
                           onDec={handleDec}
                           onRemove={handleRemove}
                           onSwap={moveOneToPool}
+                          flyTo='[data-fly-target="pool"]'
                           swapLabel={`← ${t('game', 'construct_pool')}`}
                           onHover={handleHover}
                           onLeave={handleLeave}

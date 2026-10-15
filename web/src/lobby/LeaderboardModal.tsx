@@ -214,7 +214,7 @@ export default function LeaderboardModal({
                       return (
                         <tr
                           key={u.userName}
-                          className={`leaderboard-row ${isMe ? 'is-me' : ''}`}
+                          className={`leaderboard-row ${isMe ? 'is-me' : ''}${medalRank ? ` is-podium is-podium-${medalRank}` : ''}`}
                           onClick={() => {
                             setTargetUsername(u.userName)
                             setActiveTab('profile')

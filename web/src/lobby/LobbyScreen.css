@@ -2,6 +2,7 @@
   height: 100%;
   width: 100%;
   display: flex;
+  animation: lobbyEnter 0.5s cubic-bezier(0.16, 1, 0.3, 1) backwards;
   flex-direction: column;
   background:
     radial-gradient(ellipse 60% 38% at 50% -4%, rgb(var(--gold-rgb) / 0.09), transparent 72%),
@@ -1062,15 +1063,46 @@ html:lang(zh) .tables-list {
   display: none;
 }
 
+/* The entry moves `translate`, not `transform`: `forwards` would otherwise pin
+   the transform and the hover tilt below could never apply. */
 @keyframes tableCardIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; translate: 0 8px; }
+  to   { opacity: 1; translate: 0 0; }
 }
 
+/* Tilt follows the pointer (`usePointerVars` sets --px/--py on the card). */
 .table-card:hover {
   border-color: var(--gold-line);
-  transform: translateY(-2px);
+  transform: perspective(900px) rotateX(calc((0.5 - var(--py, 0.5)) * 7deg)) rotateY(calc((var(--px, 0.5) - 0.5) * 9deg)) translateY(-2px);
   box-shadow: var(--card-rail, inset 3px 0 0 transparent), var(--shadow-2), 0 0 0 1px rgb(var(--gold-rgb) / 0.14), 0 12px 30px rgb(var(--gold-rgb) / 0.1), var(--sheen);
+}
+
+.table-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  background: radial-gradient(circle at calc(var(--px, 0.5) * 100%) calc(var(--py, 0.5) * 100%), var(--veil-2), transparent 60%);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+}
+
+.table-card:hover::after {
+  opacity: 1;
+}
+
+.tables-list.is-compact .table-card:hover {
+  transform: translateY(-2px);
+}
+
+html.fx-off .table-card:hover {
+  transform: translateY(-2px);
+}
+
+html.fx-off .table-card:hover::after {
+  opacity: 0;
 }
 
 /* State accent: a colored rail on the left edge and a faint tint from the
@@ -1607,4 +1639,13 @@ html:lang(zh) .tables-list {
 
 @media (prefers-reduced-motion: reduce) {
   .lobby-tab-view.is-animated { animation: none; }
+}
+
+@keyframes lobbyEnter {
+  from { opacity: 0; transform: scale(0.985); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lobby { animation: none; }
 }

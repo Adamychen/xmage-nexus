@@ -56,6 +56,7 @@ function CreateTableDialogBody({ onClose, onEditDeck, kind = 'match', onReset }:
       labelledBy="create-table-title"
       titleId="create-table-title"
       size="lg"
+      ornate
       legacyPanelClass="dialog create-table-dialog"
       kickerIcon={wizardSteps[activeIndex]?.icon ?? 'settings'}
       kickerLabel={t('lobby', 'create_wizard_step_of', { current: activeIndex + 1, total: wizardSteps.length })}
