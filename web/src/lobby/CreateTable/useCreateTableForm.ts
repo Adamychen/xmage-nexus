@@ -95,10 +95,10 @@ export function useCreateTableForm(onClose: () => void, kind: CreateKind = 'matc
   })
   const [tournamentCategory, setTournamentCategoryState] = useState<TournamentCategory>(() => (saved.tournamentCategory === 'limited' || saved.tournamentCategory === 'constructed') ? saved.tournamentCategory as TournamentCategory : 'limited')
 
-  const [name, setName] = useState<string>(() => saved.name || `${username}'s table`)
+  const [name, setName] = useState<string>(() => saved.name || (isTourneyKind ? 'Tournament' : 'Game'))
   const [gameType, setGameTypeState] = useState<string>(() => saved.gameType || 'Two Player Duel')
   const [deckType, setDeckTypeState] = useState<string>(() => {
-    if (!isTourneyKind) return saved.deckType || 'Constructed - Modern'
+    if (!isTourneyKind) return saved.deckType || 'Limited'
     if (tournamentCategory === 'limited') return 'Limited'
     return saved.deckType && !isLimitedDeckType(saved.deckType) ? saved.deckType : 'Constructed - Modern'
   })
@@ -117,7 +117,7 @@ export function useCreateTableForm(onClose: () => void, kind: CreateKind = 'matc
       setGameTypeState(getDefaultGameTypeForDeck(newDt, numPlayers))
     }
   }
-  const [wins, setWins] = useState<number>(() => typeof saved.wins === 'number' && saved.wins >= 1 && saved.wins <= 5 ? saved.wins : 1)
+  const [wins, setWins] = useState<number>(() => typeof saved.wins === 'number' && saved.wins >= 1 && saved.wins <= 5 ? saved.wins : 2)
   const [skillLevel, setSkillLevel] = useState<'BEGINNER' | 'CASUAL' | 'SERIOUS'>(() => saved.skillLevel || 'CASUAL')
   const [rated, setRated] = useState<boolean>(() => saved.rated === true)
   // invariant: a tournament drafts exactly when its category is limited (see tableKind.ts)
@@ -249,7 +249,7 @@ export function useCreateTableForm(onClose: () => void, kind: CreateKind = 'matc
   const [customStartHandSizeEnabled, setCustomStartHandSizeEnabled] = useState(false)
   const [customStartHandSize, setCustomStartHandSize] = useState(7)
   const [planeChase, setPlaneChase] = useState(false)
-  const [attackOption, setAttackOption] = useState('LEFT')
+  const [attackOption, setAttackOption] = useState('MULTIPLE')
   const [range, setRange] = useState('ALL')
 
   // Security & Permissions tab
@@ -260,7 +260,7 @@ export function useCreateTableForm(onClose: () => void, kind: CreateKind = 'matc
   const [rollbackTurnsAllowed, setRollbackTurnsAllowed] = useState(true)
   const [minimumRating, setMinimumRating] = useState(0)
   const [quitRatio, setQuitRatio] = useState(100)
-  const [edhPowerLevel, setEdhPowerLevel] = useState(100)
+  const [edhPowerLevel, setEdhPowerLevel] = useState(0)
 
   const [numPlayers, setNumPlayers] = useState<number>(() => typeof saved.numPlayers === 'number' && saved.numPlayers >= 2 && saved.numPlayers <= 10 ? saved.numPlayers : 2)
   // the proxy-side SIM bot is dev-only: a form persisted by an older client loses its SIM seats,

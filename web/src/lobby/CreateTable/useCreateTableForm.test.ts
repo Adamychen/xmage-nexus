@@ -77,12 +77,29 @@ async function constructedTourneyWithBots(bots: number) {
   return m
 }
 
+describe('defaults match the official client', () => {
+  it('opens as a limited duel of "Game" with 2 wins, multiple-player attack and EDH power level 0', async () => {
+    const m = await mount()
+    expect(m.form().name).toBe('Game')
+    expect(m.form().deckType).toBe('Limited')
+    expect(m.form().wins).toBe(2)
+    expect(m.form().attackOption).toBe('MULTIPLE')
+    expect(m.form().edhPowerLevel).toBe(0)
+  })
+
+  it('an explicit attack choice wins over the default', async () => {
+    const m = await mount()
+    act(() => m.form().setAttackOption('LEFT'))
+    expect(m.form().attackOption).toBe('LEFT')
+  })
+})
+
 describe('table category', () => {
   it('multiplayer picks a game type for more than 2 and keeps a compatible format', async () => {
     const m = await mount()
     act(() => m.form().setTableCategory('multi'))
     expect(m.form().gameType).toBe('Free For All')
-    expect(m.form().deckType).toBe('Constructed - Modern')
+    expect(m.form().deckType).toBe('Limited')
     expect(m.form().numPlayers).toBe(4)
 
     act(() => m.form().setTableCategory('duel'))
@@ -207,6 +224,7 @@ describe('submit: constructed tournament with native AI', () => {
 describe('submit: match with native AI', () => {
   async function duelVsBot() {
     const m = await mount()
+    act(() => m.form().setDeckType('Constructed - Modern'))
     act(() => m.form().setNumPlayers(2))
     act(() => m.form().applySeatTypeToAll('COMPUTER_MAD'))
     return m

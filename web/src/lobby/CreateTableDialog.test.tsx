@@ -201,9 +201,9 @@ describe('CreateTableDialog', () => {
         expect.objectContaining({
           name: 'Epic Modern Duel',
           gameType: 'Two Player Duel',
-          deckType: 'Constructed - Modern',
+          deckType: 'Limited',
           freeMulligans: 0,
-          winsNeeded: 1,
+          winsNeeded: 2,
           skillLevel: 'CASUAL',
           spectatorsAllowed: true,
           rollbackTurnsAllowed: true,
@@ -497,9 +497,9 @@ describe('CreateTableDialog', () => {
     const gameTypeSelect = screen.getAllByRole('combobox')[0] as HTMLSelectElement
     const formatSelect = screen.getAllByRole('combobox')[1] as HTMLSelectElement
 
-    // Initial state: Two Player Duel -> Constructed - Modern
+    // Initial state: Two Player Duel -> Limited (official client default)
     expect(gameTypeSelect.value).toBe('Two Player Duel')
-    expect(formatSelect.value).toBe('Constructed - Modern')
+    expect(formatSelect.value).toBe('Limited')
     // Format options should NOT include Commander
     const initialOptions = Array.from(formatSelect.options).map((o) => o.value)
     expect(initialOptions).toContain('Constructed - Modern')
