@@ -5,7 +5,10 @@ type LobbyT = CategoryT<'lobby'>
 
 export const STORAGE_KEY = 'mage_createTable_v1'
 
-export type CreateTab = 'general' | 'timing' | 'security' | 'seats' | 'dev'
+export type CreateTab = 'general' | 'draft' | 'timing' | 'security' | 'seats' | 'review' | 'dev'
+
+/** Which entry point opened the wizard: a match ("New Table") or a tournament ("New Tournament"). */
+export type CreateKind = 'match' | 'tourney'
 
 export const TIME_LIMIT_OPTIONS = [
   { label: 'Sin límite (None)', value: 'NONE' },
@@ -438,9 +441,28 @@ export interface SeatConfig {
 
 export type WizardStep = { id: CreateTab; icon: import('../../ui/Icon').IconName; labelKey: keyof TranslationSchema['lobby'] | ''; titleFallback: string }
 
-export const WIZARD_STEPS_BASE: WizardStep[] = [
-  { id: 'general', icon: 'settings', labelKey: 'create_tab_general', titleFallback: 'General' },
-  { id: 'timing', icon: 'clock', labelKey: 'create_tab_timing', titleFallback: 'Tiempos & Reglas' },
-  { id: 'security', icon: 'shield', labelKey: 'create_tab_restrictions', titleFallback: 'Restricciones' },
-  { id: 'seats', icon: 'bot', labelKey: 'create_tab_multi', titleFallback: 'Jugadores' },
-]
+const WIZARD_STEP_DEFS: Record<CreateTab, WizardStep> = {
+  general: { id: 'general', icon: 'settings', labelKey: 'create_tab_general', titleFallback: 'General' },
+  draft: { id: 'draft', icon: 'layers', labelKey: 'create_tab_draft', titleFallback: 'Draft' },
+  timing: { id: 'timing', icon: 'clock', labelKey: 'create_tab_timing', titleFallback: 'Tiempos & Reglas' },
+  security: { id: 'security', icon: 'shield', labelKey: 'create_tab_restrictions', titleFallback: 'Restricciones' },
+  seats: { id: 'seats', icon: 'bot', labelKey: 'create_tab_multi', titleFallback: 'Jugadores' },
+  dev: { id: 'dev', icon: 'settings', labelKey: '', titleFallback: 'Dev' },
+  review: { id: 'review', icon: 'check', labelKey: 'create_tab_review', titleFallback: 'Review' },
+}
+
+/** The wizard's steps for the current table: the draft step only exists for
+ *  a limited tournament, the dev step only in dev builds, and review always
+ *  closes the flow. */
+export function buildWizardSteps({ draft, dev }: { draft: boolean; dev: boolean }): WizardStep[] {
+  const ids: CreateTab[] = [
+    'general',
+    ...(draft ? (['draft'] as const) : []),
+    'timing',
+    'security',
+    'seats',
+    ...(dev ? (['dev'] as const) : []),
+    'review',
+  ]
+  return ids.map((id) => WIZARD_STEP_DEFS[id])
+}

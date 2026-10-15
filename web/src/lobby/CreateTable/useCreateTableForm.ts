@@ -34,7 +34,8 @@ import {
   type WizardStep,
   type TableCategory,
   type TournamentCategory,
-  WIZARD_STEPS_BASE,
+  buildWizardSteps,
+  type CreateKind,
 } from './constants'
 import {
   resolveTableKind,
@@ -74,58 +75,11 @@ function readSaved(): SavedForm {
   }
 }
 
-export function useCreateTableForm(onClose: () => void): CreateTableForm {
+export function useCreateTableForm(onClose: () => void, kind: CreateKind = 'match'): CreateTableForm {
+  const isTourneyKind = kind === 'tourney'
   const { t, tError } = useTranslation()
   const username = useStore((s) => s.conn?.username ?? 'player')
   const storeDeck = useStore((s) => s.myDeck)
-
-  const wizardSteps: WizardStep[] = useMemo(() => {
-    const steps = [...WIZARD_STEPS_BASE]
-    if (import.meta.env.DEV) steps.push({ id: 'dev', icon: 'settings', labelKey: '', titleFallback: 'Dev' })
-    return steps
-  }, [])
-
-  const [activeTab, setActiveTab] = useState<CreateTab>('general')
-  const activeIndex = useMemo(() => {
-    const idx = wizardSteps.findIndex((s) => s.id === activeTab)
-    return idx >= 0 ? idx : 0
-  }, [wizardSteps, activeTab])
-
-  const goToIndex = (idx: number) => {
-    if (idx < 0 || idx >= wizardSteps.length) return
-    setActiveTab(wizardSteps[idx].id)
-  }
-  const goNext = () => {
-    const err = validateStep(activeTab)
-    if (err) {
-      setError(err)
-      return
-    }
-    setError(null)
-    goToIndex(activeIndex + 1)
-  }
-  const goPrev = () => goToIndex(activeIndex - 1)
-  const goToStep = (tab: CreateTab) => {
-    const target = wizardSteps.findIndex((s) => s.id === tab)
-    if (target < 0) return
-    if (target <= activeIndex) {
-      setError(null)
-      setActiveTab(tab)
-      return
-    }
-    for (let i = activeIndex; i < target; i++) {
-      const err = validateStep(wizardSteps[i].id)
-      if (err) {
-        setError(err)
-        setActiveTab(wizardSteps[i].id)
-        return
-      }
-    }
-    setError(null)
-    setActiveTab(tab)
-  }
-  const isLastStep = activeIndex === wizardSteps.length - 1
-  const isFirstStep = activeIndex === 0
 
   const [saved] = useState(readSaved)
   const [gameTypes, setGameTypes] = useState<GameTypeInfo[]>(DEFAULT_GAME_TYPES)
@@ -135,12 +89,19 @@ export function useCreateTableForm(onClose: () => void): CreateTableForm {
   const [draftCubes, setDraftCubes] = useState<string[]>(DEFAULT_DRAFT_CUBES)
 
   // General tab
-  const [tableCategory, setTableCategoryState] = useState<TableCategory>(() => (saved.tableCategory === 'duel' || saved.tableCategory === 'multi' || saved.tableCategory === 'tourney') ? saved.tableCategory as TableCategory : 'duel')
+  const [tableCategory, setTableCategoryState] = useState<TableCategory>(() => {
+    if (isTourneyKind) return 'tourney'
+    return saved.tableCategory === 'multi' ? 'multi' : 'duel'
+  })
   const [tournamentCategory, setTournamentCategoryState] = useState<TournamentCategory>(() => (saved.tournamentCategory === 'limited' || saved.tournamentCategory === 'constructed') ? saved.tournamentCategory as TournamentCategory : 'limited')
 
   const [name, setName] = useState<string>(() => saved.name || `${username}'s table`)
   const [gameType, setGameTypeState] = useState<string>(() => saved.gameType || 'Two Player Duel')
-  const [deckType, setDeckTypeState] = useState<string>(() => saved.deckType || 'Constructed - Modern')
+  const [deckType, setDeckTypeState] = useState<string>(() => {
+    if (!isTourneyKind) return saved.deckType || 'Constructed - Modern'
+    if (tournamentCategory === 'limited') return 'Limited'
+    return saved.deckType && !isLimitedDeckType(saved.deckType) ? saved.deckType : 'Constructed - Modern'
+  })
 
   const setGameType = (newGt: string) => {
     setGameTypeState(newGt)
@@ -159,7 +120,8 @@ export function useCreateTableForm(onClose: () => void): CreateTableForm {
   const [wins, setWins] = useState<number>(() => typeof saved.wins === 'number' && saved.wins >= 1 && saved.wins <= 5 ? saved.wins : 1)
   const [skillLevel, setSkillLevel] = useState<'BEGINNER' | 'CASUAL' | 'SERIOUS'>(() => saved.skillLevel || 'CASUAL')
   const [rated, setRated] = useState<boolean>(() => saved.rated === true)
-  const [useDraftTournament, setUseDraftTournament] = useState<boolean>(() => saved.useDraftTournament === true)
+  // invariant: a tournament drafts exactly when its category is limited (see tableKind.ts)
+  const [useDraftTournament, setUseDraftTournament] = useState<boolean>(() => isTourneyKind && tournamentCategory === 'limited')
   const [draftSetsRaw, setDraftSetsRaw] = useState('M21, M21, M21')
   const [draftBoostersState, setDraftBoostersState] = useState<3 | 6>(3)
   const setDraftBoosters = (v: 3 | 6) => {
@@ -428,12 +390,65 @@ export function useCreateTableForm(onClose: () => void): CreateTableForm {
   const tableResolution = resolveTableKind({
     tableCategory,
     tournamentCategory,
-    useDraftTournament,
+    // a match never drafts: only the tournament entry point can produce a draft
+    useDraftTournament: isTourneyKind && useDraftTournament,
     deckType,
     tournamentType,
     knownTournamentTypes: tournamentTypes,
   })
   const { isDraftLimited, isConstructedTournament, isTournament } = tableResolution
+
+  const wizardSteps: WizardStep[] = useMemo(
+    () => buildWizardSteps({ draft: isDraftLimited, dev: import.meta.env.DEV }),
+    [isDraftLimited],
+  )
+
+  const [activeTab, setActiveTab] = useState<CreateTab>('general')
+  const activeIndex = useMemo(() => {
+    const idx = wizardSteps.findIndex((s) => s.id === activeTab)
+    return idx >= 0 ? idx : 0
+  }, [wizardSteps, activeTab])
+
+  useEffect(() => {
+    if (!wizardSteps.some((s) => s.id === activeTab)) setActiveTab('general')
+  }, [wizardSteps, activeTab])
+
+  const goToIndex = (idx: number) => {
+    if (idx < 0 || idx >= wizardSteps.length) return
+    setActiveTab(wizardSteps[idx].id)
+  }
+  const goNext = () => {
+    const err = validateStep(activeTab)
+    if (err) {
+      setError(err)
+      return
+    }
+    setError(null)
+    goToIndex(activeIndex + 1)
+  }
+  const goPrev = () => goToIndex(activeIndex - 1)
+  const goToStep = (tab: CreateTab) => {
+    const target = wizardSteps.findIndex((s) => s.id === tab)
+    if (target < 0) return
+    if (target <= activeIndex) {
+      setError(null)
+      setActiveTab(tab)
+      return
+    }
+    for (let i = activeIndex; i < target; i++) {
+      const err = validateStep(wizardSteps[i].id)
+      if (err) {
+        setError(err)
+        setActiveTab(wizardSteps[i].id)
+        return
+      }
+    }
+    setError(null)
+    setActiveTab(tab)
+  }
+  const isLastStep = activeIndex === wizardSteps.length - 1
+  const isFirstStep = activeIndex === 0
+
 
   const compatibilityError = useMemo(() => {
     if (isDraftLimited) return null
@@ -535,6 +550,7 @@ export function useCreateTableForm(onClose: () => void): CreateTableForm {
   }, { t, tError, setBusy, setError, onClose })
 
   return {
+    kind,
     wizardSteps,
     activeTab,
     setActiveTab,

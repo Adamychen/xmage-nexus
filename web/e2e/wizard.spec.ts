@@ -21,6 +21,11 @@ async function openWizard(page: import('@playwright/test').Page) {
   await expect(page.getByRole('heading', { name: /Nueva mesa|Crear Mesa/i })).toBeVisible()
 }
 
+async function openTournamentWizard(page: import('@playwright/test').Page) {
+  await page.getByRole('button', { name: /Nuevo torneo/i }).first().click()
+  await expect(page.getByRole('heading', { name: /Crear torneo|Create Tournament/i })).toBeVisible()
+}
+
 test.describe('Wizard crear mesa (U3)', () => {
   test('U2: Siguiente bloquea con nombre vacío y avisa', async ({ page }) => {
     await withFakeServer(wizardScenario, async () => {
@@ -114,10 +119,11 @@ test.describe('Wizard crear mesa (U3)', () => {
       const buffers: CaptureBuffers = { frames: [], sent: [], pageErrors: [] }
       installCapture(page, buffers)
       await login(page, 'wiz')
-      await openWizard(page)
+      await openTournamentWizard(page)
       await page.getByPlaceholder(/Ej\. Modern Casual Bo3/).fill('draft-e2e')
       await page.getByRole('button', { name: /Draft MH3/ }).click()
-      for (let i = 0; i < 3; i++) {
+      // General → Draft (limited only) → Tiempos → Restricciones → Jugadores
+      for (let i = 0; i < 4; i++) {
         await page.getByRole('button', { name: /Siguiente/ }).click()
       }
       await page.getByRole('button', { name: /IA Draftbot/ }).click()
@@ -128,7 +134,7 @@ test.describe('Wizard crear mesa (U3)', () => {
       }
       await page.getByRole('button', { name: /Crear torneo|Create Draft/i }).click()
       await expect(page.getByText(/no llegan a rondas/)).toBeVisible({ timeout: 15_000 })
-      await expect(page.getByRole('heading', { name: /Nueva mesa|Crear Mesa/i })).toBeVisible()
+      await expect(page.getByRole('heading', { name: /Crear torneo|Create Tournament/i })).toBeVisible()
       const sent = buffers.sent as Array<{ action?: string; args?: Record<string, unknown> }>
       expect(sent.find((f) => f?.action === 'createTournamentTable')).toBeUndefined()
       expect(pageErrorsOf(buffers)).toEqual([])
@@ -139,7 +145,7 @@ test.describe('Wizard crear mesa (U3)', () => {
       const buffers: CaptureBuffers = { frames: [], sent: [], pageErrors: [] }
       installCapture(page, buffers)
       await login(page, 'wiz')
-      await openWizard(page)
+      await openTournamentWizard(page)
       await page.getByPlaceholder(/Ej\. Modern Casual Bo3/).fill('swiss-e2e')
       await page.getByRole('button', { name: /Modern Swiss/ }).click()
       for (let i = 0; i < 3; i++) {
@@ -152,7 +158,7 @@ test.describe('Wizard crear mesa (U3)', () => {
         await page.getByRole('button', { name: /Siguiente/ }).click()
       }
       await page.getByRole('button', { name: /Crear torneo|Create Draft/i }).click()
-      await expect(page.getByRole('heading', { name: /Nueva mesa|Crear Mesa/i })).toBeHidden({ timeout: 15_000 })
+      await expect(page.getByRole('heading', { name: /Crear torneo|Create Tournament/i })).toBeHidden({ timeout: 15_000 })
       const sent = buffers.sent as Array<{ action?: string; args?: Record<string, unknown> }>
       const createFrame = sent.find((f) => f?.action === 'createTournamentTable')
       expect(createFrame?.args?.tournamentType).toBe('Constructed Swiss')

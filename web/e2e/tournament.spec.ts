@@ -148,13 +148,11 @@ test.describe('Tournament', { tag: '@tournament' }, () => {
   test('random packs selector fills the draft sets over WS (T5)', async ({ page }) => {
     await withFakeServer(() => tournamentScenario(), async () => {
       await login(page, 'e2e')
-      await page.getByRole('button', { name: /Nueva/i }).first().click()
-      await expect(page.getByRole('heading', { name: /Nueva mesa|Crear Mesa/i })).toBeVisible()
-      await page.getByRole('button', { name: /^Torneo/i }).first().click()
+      await page.getByRole('button', { name: /Nuevo torneo/i }).first().click()
+      await expect(page.getByRole('heading', { name: /Crear torneo|Create Tournament/i })).toBeVisible()
       await page.getByRole('tab', { name: /Draft \/ Limitado/i }).click()
       await page.getByLabel(/Limitado — Draft \/ Sealed/i).selectOption('Booster Draft Elimination (Random)')
-      const draftToggle = page.getByLabel(/Crear como torneo Draft/i)
-      if (!(await draftToggle.isChecked())) await draftToggle.check()
+      await page.locator('button.wizard-step[title="Draft"]').click()
       await page.getByTestId('random-packs-open').click()
       const dialog = page.locator('[data-testid="random-packs-selector"]')
       await expect(dialog).toBeVisible({ timeout: 10_000 })

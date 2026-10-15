@@ -1,6 +1,6 @@
 import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/react'
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
-import CreateTableDialog from './CreateTableDialog'
+import CreateTableDialog, { type CreateKind } from './CreateTableDialog'
 import { STORAGE_KEY } from './CreateTable/constants'
 import * as cmds from '../net/commands'
 import { setState } from '../state/state'
@@ -50,8 +50,15 @@ describe('CreateTableDialog', () => {
   // Renders the dialog and waits until the async form data (game/deck/player/
   // tournament types) has been applied. Without this the synchronous assertions
   // race the initial data load and fail on slower CI runners.
-  async function renderDialog() {
-    const utils = render(<CreateTableDialog onClose={onClose} />)
+  /** Stepper button by its visible label (the step's `title`). */
+  function goToStep(label: string) {
+    const button = document.querySelector<HTMLButtonElement>(`button.wizard-step[title="${label}"]`)
+    expect(button, `stepper button "${label}"`).not.toBeNull()
+    fireEvent.click(button!)
+  }
+
+  async function renderDialog(kind: CreateKind = 'match') {
+    const utils = render(<CreateTableDialog onClose={onClose} kind={kind} />)
     await waitFor(() => {
       const gameType = screen.getAllByRole('combobox')[0] as HTMLSelectElement
       expect(gameType.options.length).toBeLessThan(10)
@@ -306,12 +313,9 @@ describe('CreateTableDialog', () => {
   })
 
   it('U8: draft tournament exposes number of rounds', async () => {
-    render(<CreateTableDialog onClose={onClose} />)
+    render(<CreateTableDialog onClose={onClose} kind="tourney" />)
 
-    const formatSelect = screen.getAllByRole('combobox')[1] as HTMLSelectElement
-    fireEvent.change(formatSelect, { target: { value: 'Limited' } })
-    fireEvent.click(screen.getByText(/Crear como torneo Draft/i))
-    const typeSelect = screen.getAllByRole('combobox')[2] as HTMLSelectElement
+    const typeSelect = screen.getAllByRole('combobox')[0] as HTMLSelectElement
     fireEvent.change(typeSelect, { target: { value: 'Booster Draft Swiss' } })
     const rounds = screen.getByLabelText(/rondas|rounds/i) as HTMLInputElement
     fireEvent.change(rounds, { target: { value: '5' } })
@@ -319,29 +323,27 @@ describe('CreateTableDialog', () => {
   })
 
   it('T3: number of rounds only shows for Swiss tournament types', async () => {
-    await renderDialog()
+    await renderDialog('tourney')
 
-    const formatSelect = screen.getAllByRole('combobox')[1] as HTMLSelectElement
-    fireEvent.change(formatSelect, { target: { value: 'Limited' } })
-    fireEvent.click(screen.getByText(/Crear como torneo Draft/i))
-    // default is now a valid server draft type → timing shown, rounds hidden
-    const typeSelect = screen.getAllByRole('combobox')[2] as HTMLSelectElement
+    // default is now a valid server draft type → rounds hidden
+    const typeSelect = screen.getAllByRole('combobox')[0] as HTMLSelectElement
     expect(typeSelect.value).toBe('Booster Draft Elimination')
-    expect(await screen.findByLabelText(/Draft pick time|Tiempo por pick/i)).toBeDefined()
     expect(screen.queryByLabelText(/rondas|rounds/i)).toBeNull()
     fireEvent.change(typeSelect, { target: { value: 'Booster Draft Swiss' } })
     expect(screen.getByLabelText(/rondas|rounds/i)).toBeDefined()
     fireEvent.change(typeSelect, { target: { value: 'Sealed Elimination' } })
     expect(screen.queryByLabelText(/rondas|rounds/i)).toBeNull()
+    // draft pick time is a Draft-step setting: only for a Draft type
+    fireEvent.change(typeSelect, { target: { value: 'Booster Draft Elimination' } })
+    goToStep('Draft')
+    expect(await screen.findByLabelText(/Draft pick time|Tiempo por pick/i)).toBeDefined()
   })
 
   it('T2: draft tournament sends lobby flags (skill/rated/rollback/clocks/single)', async () => {
-    render(<CreateTableDialog onClose={onClose} />)
+    render(<CreateTableDialog onClose={onClose} kind="tourney" />)
 
     fireEvent.change(screen.getByPlaceholderText(/Ej. Modern Casual Bo3/), { target: { value: 'Draft Night' } })
-    const formatSelect = screen.getAllByRole('combobox')[1] as HTMLSelectElement
-    fireEvent.change(formatSelect, { target: { value: 'Limited' } })
-    fireEvent.click(screen.getByText(/Crear como torneo Draft/i))
+    goToStep('Draft')
     fireEvent.click(screen.getByText(/Jugar como partida única|Play as single game/i))
     // Sin bots: todos los asientos en HUMANO (los bots no entregan el mazo construido)
     fireEvent.click(
@@ -382,17 +384,15 @@ describe('CreateTableDialog', () => {
   })
 
   it('T6: draft tournament sends timing only for Draft types', async () => {
-    await renderDialog()
+    await renderDialog('tourney')
 
     fireEvent.change(screen.getByPlaceholderText(/Ej. Modern Casual Bo3/), { target: { value: 'Timed Draft' } })
-    const formatSelect = screen.getAllByRole('combobox')[1] as HTMLSelectElement
-    fireEvent.change(formatSelect, { target: { value: 'Limited' } })
-    fireEvent.click(screen.getByText(/Crear como torneo Draft/i))
-    const typeSelect = screen.getAllByRole('combobox')[2] as HTMLSelectElement
+    const typeSelect = screen.getAllByRole('combobox')[0] as HTMLSelectElement
     fireEvent.change(typeSelect, { target: { value: 'Sealed Swiss' } })
     // timing selector hidden for non-draft types
     expect(screen.queryByText(/Draft pick time|Tiempo por pick/i)).toBeNull()
     fireEvent.change(typeSelect, { target: { value: 'Booster Draft Elimination' } })
+    goToStep('Draft')
     const timingSelect = await screen.findByLabelText(/Draft pick time|Tiempo por pick/i) as HTMLSelectElement
     expect(timingSelect.value).toBe('REGULAR')
     fireEvent.change(timingSelect, { target: { value: 'PROFESSIONAL' } })
@@ -426,13 +426,17 @@ describe('CreateTableDialog', () => {
     const gameTypeSelect = screen.getAllByRole('combobox')[0] as HTMLSelectElement
     expect(gameTypeSelect.value).toBe('Commander Free For All')
 
-    // Click Modern Swiss (8P) preset
+    expect(screen.queryByRole('button', { name: /Modern Swiss \(8P\)/i })).toBeNull()
+  })
+
+  it('T7b: el preset Modern Swiss vive en el torneo y configura un torneo construido', () => {
+    render(<CreateTableDialog onClose={onClose} kind="tourney" />)
     fireEvent.click(screen.getByRole('button', { name: /Modern Swiss \(8P\)/i }))
     expect(screen.getByRole('tab', { name: /^Construido/i }).getAttribute('aria-selected')).toBe('true')
   })
 
   it('T8: constructed tournament creates tournament table with constructed format and joins with deck', async () => {
-    render(<CreateTableDialog onClose={onClose} />)
+    render(<CreateTableDialog onClose={onClose} kind="tourney" />)
 
     fireEvent.change(screen.getByPlaceholderText(/Ej. Modern Casual Bo3/), { target: { value: 'Modern Swiss 8P' } })
     // Click Modern Swiss (8P) preset
@@ -475,16 +479,14 @@ describe('CreateTableDialog', () => {
       { name: 'Booster Draft', minPlayers: 4, maxPlayers: 8 } as unknown as string,
     ])
 
-    render(<CreateTableDialog onClose={onClose} />)
+    render(<CreateTableDialog onClose={onClose} kind="tourney" />)
 
     // Wait for the async effect to resolve getTournamentTypes
     await waitFor(() => {
       expect(cmds.getTournamentTypes).toHaveBeenCalled()
     })
 
-    // Switch to tourney mode - should not throw t.startsWith error
-    fireEvent.click(screen.getByRole('button', { name: /^Torneo/i }))
-
+    // The tournament entry point renders the tournament tabs directly
     expect(screen.getByRole('tab', { name: /^Draft \/ Limit/i })).toBeDefined()
     expect(screen.getByRole('tab', { name: /^Construido/i })).toBeDefined()
   })
@@ -525,7 +527,7 @@ describe('CreateTableDialog', () => {
   it('T11: mode selector cards contain title and description in separate container elements', () => {
     const { container } = render(<CreateTableDialog onClose={onClose} />)
     const cards = container.querySelectorAll('.create-mode-card')
-    expect(cards.length).toBe(3)
+    expect(cards.length).toBe(2)
     cards.forEach((card) => {
       const content = card.querySelector('.create-mode-card-content')
       expect(content).not.toBeNull()
@@ -537,12 +539,9 @@ describe('CreateTableDialog', () => {
   })
 
   it('T12: DraftSetsSelector allows picking popular chips and configuring boosters with full visibility', async () => {
-    render(<CreateTableDialog onClose={onClose} />)
+    render(<CreateTableDialog onClose={onClose} kind="tourney" />)
 
-    // Switch to Limited Draft mode
-    const formatSelect = screen.getAllByRole('combobox')[1] as HTMLSelectElement
-    fireEvent.change(formatSelect, { target: { value: 'Limited' } })
-    fireEvent.click(screen.getByText(/Crear como torneo Draft/i))
+    goToStep('Draft')
 
     // Popular chips should be visible
     expect(screen.getByText('MH3')).toBeDefined()
@@ -653,29 +652,22 @@ describe('CreateTableDialog', () => {
     })
   })
 
-  it('LM1: match Limited muestra resumen honesto y al marcar draft enseña sobres', async () => {
+  it('LM1: match Limited muestra resumen honesto y no ofrece draft', async () => {
     const { container } = await renderDialog()
-    const summaryText = () =>
-      container.querySelector('.create-table-summary-strip')?.textContent ?? ''
+    const reviewText = () => container.querySelector('.create-review')?.textContent ?? ''
 
     const formatSelect = screen.getAllByRole('combobox')[1] as HTMLSelectElement
     fireEvent.change(formatSelect, { target: { value: 'Limited' } })
     expect(await screen.findByText(/no genera sobres/)).toBeDefined()
     expect(screen.queryByPlaceholderText(/Ej\. M21, MH3, BLB/)).toBeNull()
-    expect(summaryText()).toMatch(/mazos de 40\+/)
-
-    fireEvent.click(screen.getByText(/Crear como torneo Draft/i))
-    expect(screen.queryByText(/no genera sobres/)).toBeNull()
-    expect(await screen.findByPlaceholderText(/Ej\. M21, MH3, BLB/)).toBeDefined()
-    expect(summaryText()).toMatch(/Draft 3× M21/)
-    expect(summaryText()).toMatch(/10 minutos/)
+    expect(screen.queryByText(/Crear como torneo Draft/i)).toBeNull()
+    goToStep('Revisar')
+    expect(reviewText()).toMatch(/mazos de 40\+/)
   })
 
   it('T14: el wizard abre con el set repetido por sobre y lo sincroniza al cambiar de sobres', async () => {
-    await renderDialog()
-    const formatSelect = screen.getAllByRole('combobox')[1] as HTMLSelectElement
-    fireEvent.change(formatSelect, { target: { value: 'Limited' } })
-    fireEvent.click(screen.getByText(/Crear como torneo Draft/i))
+    await renderDialog('tourney')
+    goToStep('Draft')
     const setsInput = await screen.findByPlaceholderText(/Ej\. M21, MH3, BLB/) as HTMLInputElement
     expect(setsInput.value).toBe('M21, M21, M21')
     const boosterSelect = screen
@@ -690,11 +682,8 @@ describe('CreateTableDialog', () => {
   })
 
   it('T15: draft con bots elegidos a mano se bloquea con aviso (no llegan a rondas)', async () => {
-    render(<CreateTableDialog onClose={onClose} />)
+    render(<CreateTableDialog onClose={onClose} kind="tourney" />)
     fireEvent.change(screen.getByPlaceholderText(/Ej. Modern Casual Bo3/), { target: { value: 'Draft con bots' } })
-    const formatSelect = screen.getAllByRole('combobox')[1] as HTMLSelectElement
-    fireEvent.change(formatSelect, { target: { value: 'Limited' } })
-    fireEvent.click(screen.getByText(/Crear como torneo Draft/i))
 
     // walk to the seats step (the wizard is linear and draft adds timing options)
     for (let i = 0; i < 6; i++) {
@@ -725,11 +714,11 @@ describe('CreateTableDialog', () => {
     render(<CreateTableDialog onClose={onClose} />)
     fireEvent.change(screen.getByPlaceholderText(/Ej. Modern Casual Bo3/), { target: { value: '   ' } })
     const stepper = screen.getByRole('navigation', { name: /Pasos de creación|Creation steps/ })
-    const lastStep = stepper.querySelectorAll('button')[4]
-    fireEvent.click(lastStep)
+    const steps = stepper.querySelectorAll('button')
+    fireEvent.click(steps[steps.length - 1])
     await waitFor(() => {
       expect(screen.getByText(/necesita un nombre|needs a name/i)).toBeDefined()
     })
-    expect(screen.queryByRole('button', { name: /Crear mesa|Create table/i })).toBeNull()
+    expect((screen.getByRole('button', { name: /Crear mesa|Create table/i }) as HTMLButtonElement).disabled).toBe(true)
   })
 })

@@ -15,11 +15,7 @@ export default function SeatsTab({ form, onEditDeck }: { form: CreateTableForm; 
   const bots = form.seatConfigs.length - humansWaiting
   return (
     <div className="create-tab-content">
-      <div className="wizard-step-heading">
-        <h3><Icon name="bot" size={15} /> {t('lobby','create_tab_multi')}</h3>
-        <p>{t('lobby','create_step_desc_seats')}</p>
-      </div>
-      <div className="create-seats-section">
+      <div className="create-seats-layout">
         <div className="create-seat-box human-seat-box">
           <div className="seat-box-header">
             <span className="seat-title"><Icon name="user" size={13} /> {t('common','player')}</span>
@@ -97,53 +93,54 @@ export default function SeatsTab({ form, onEditDeck }: { form: CreateTableForm; 
             <div className="wizard-hint-box">{t('lobby','create_seats_no_extra')}</div>
           ) : (
             <div className="create-seats-section">
-              {form.seatConfigs.map((cfg, idx) => (
-                <div key={idx} className="create-seat-box create-seat-box--seat">
-                  <div className="seat-box-header">
-                    <span className="seat-title">{t('lobby','create_seat_number',{num:idx+2})} {form.humanSeat ? `→ ${idx + 2}` : `→ ${idx + 1}`}</span>
-                    <select data-testid={`seat-type-${idx}`} value={cfg.type} onChange={(e) => form.setSeatType(idx, e.target.value)} className="create-seat-select create-seat-select--type">
-                      <option value={HUMAN_SEAT}>{seatTypeLabel(HUMAN_SEAT, t)}</option>
-                      {form.playerTypes.map((pt) => (
-                        <option key={pt} value={pt}>{seatTypeLabel(pt, t)}</option>
-                      ))}
-                    </select>
-                  </div>
-                  {!isHumanSeatType(cfg.type) && (
-                  <Field label={t('lobby','create_field_seat_skill')}>
-                    <select data-testid={`seat-skill-${idx}`} value={cfg.skill ?? 2} onChange={(e) => form.setSeatSkill(idx, Number(e.target.value))} className="create-seat-select create-seat-select--skill">
-                      {Array.from({ length: 10 }, (_, i) => i + 1).map((v) => (
-                        <option key={v} value={v}>{v}</option>
-                      ))}
-                    </select>
-                  </Field>
-                  )}
-                  {isHumanSeatType(cfg.type) && <span className="wizard-hint-box"><Icon name="user" size={11} /> {t('lobby','create_seat_human_waiting')}</span>}
-                  {!isHumanSeatType(cfg.type) && !form.isDraftLimited && (() => {
-                    const deck = form.availableDecks.find((d) => deckRef(d) === cfg.deckName)
-                      ?? form.availableDecks.find((d) => d.name === cfg.deckName)
-                    const total = deck ? deck.cards.reduce((sum, c) => sum + c.amount, 0) : 0
-                    return (
-                      <>
-                        <Field label={t('lobby','create_seat_deck_label',{num:idx+2})}>
-                          <select value={cfg.deckName} onChange={(e) => form.setSeatDeck(idx, e.target.value)} disabled={form.availableDecks.length === 0}>
-                            {form.availableDecks.map((d) => (
-                              <option key={deckRef(d)} value={deckRef(d)}>
-                                {d.name} ({d.cards.reduce((sum, c) => sum + c.amount, 0)})
-                              </option>
+              {form.seatConfigs.map((cfg, idx) => {
+                const human = isHumanSeatType(cfg.type)
+                const deck = form.availableDecks.find((d) => deckRef(d) === cfg.deckName)
+                  ?? form.availableDecks.find((d) => d.name === cfg.deckName)
+                const total = deck ? deck.cards.reduce((sum, c) => sum + c.amount, 0) : 0
+                const deckEmpty = !deck || total === 0
+                return (
+                  <div key={idx} className="create-seat-box create-seat-box--seat">
+                    <div className="seat-box-header">
+                      <span className="seat-title">{t('lobby','create_seat_number',{num:idx+2})} {form.humanSeat ? `→ ${idx + 2}` : `→ ${idx + 1}`}</span>
+                      <select data-testid={`seat-type-${idx}`} value={cfg.type} onChange={(e) => form.setSeatType(idx, e.target.value)} className="create-seat-select create-seat-select--type">
+                        <option value={HUMAN_SEAT}>{seatTypeLabel(HUMAN_SEAT, t)}</option>
+                        {form.playerTypes.map((pt) => (
+                          <option key={pt} value={pt}>{seatTypeLabel(pt, t)}</option>
+                        ))}
+                      </select>
+                    </div>
+                    {human ? (
+                      <span className="wizard-hint-box"><Icon name="user" size={11} /> {t('lobby','create_seat_human_waiting')}</span>
+                    ) : (
+                      <div className="create-seat-fields">
+                        <Field label={t('lobby','create_field_seat_skill')}>
+                          <select data-testid={`seat-skill-${idx}`} value={cfg.skill ?? 2} onChange={(e) => form.setSeatSkill(idx, Number(e.target.value))} className="create-seat-select create-seat-select--skill">
+                            {Array.from({ length: 10 }, (_, i) => i + 1).map((v) => (
+                              <option key={v} value={v}>{v}</option>
                             ))}
                           </select>
                         </Field>
-                        {(!deck || total === 0) ? (
-                          <Chip tone="warn" size="xs" pill icon="alert">{t('lobby','create_warn_seat_deck_empty')}</Chip>
-                        ) : (
-                          <span className="wizard-hint-box">{total} {t('decks','total_cards')}</span>
+                        {!form.isDraftLimited && (
+                          <Field
+                            label={t('lobby','create_seat_deck_label',{num:idx+2})}
+                            hint={deckEmpty ? t('lobby','create_warn_seat_deck_empty') : `${total} ${t('decks','total_cards')}`}
+                            hintTone={deckEmpty ? 'warn' : 'muted'}
+                          >
+                            <select value={cfg.deckName} onChange={(e) => form.setSeatDeck(idx, e.target.value)} disabled={form.availableDecks.length === 0}>
+                              {form.availableDecks.map((d) => (
+                                <option key={deckRef(d)} value={deckRef(d)}>
+                                  {d.name} ({d.cards.reduce((sum, c) => sum + c.amount, 0)})
+                                </option>
+                              ))}
+                            </select>
+                          </Field>
                         )}
-                      </>
-                    )
-                  })()}
-                  {!isHumanSeatType(cfg.type) && <span className="wizard-hint-box">{t('lobby','create_seat_bot_internal',{type:seatTypeLabel(cfg.type, t)})}</span>}
-                </div>
-              ))}
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
             </div>
           )}
           <div className="create-seats-shortcuts">
@@ -152,20 +149,25 @@ export default function SeatsTab({ form, onEditDeck }: { form: CreateTableForm; 
                 <ChipButton
                   pill
                   active={form.playerTypesSel.includes(HUMAN_SEAT)}
-  onClick={() => {
-                  form.toggleAi(HUMAN_SEAT)
-                  form.applySeatTypeToAll(HUMAN_SEAT)
-                }}
-                ><Icon name="user" size={12} /> {t('lobby','create_seat_human_short')}</ChipButton>
+                  onClick={() => {
+                    form.toggleAi(HUMAN_SEAT)
+                    form.applySeatTypeToAll(HUMAN_SEAT)
+                  }}
+                >
+                  <Icon name="user" size={12} /> {t('lobby','create_seat_human_short')}
+                </ChipButton>
                 {form.playerTypes.map((pt) => (
                   <ChipButton
                     pill
+                    key={pt}
                     active={form.playerTypesSel.includes(pt)}
- key={pt}  onClick={() => {
-                    form.toggleAi(pt)
-                    form.applySeatTypeToAll(pt)
-                  }}
-                  >{seatTypeLabel(pt, t)}</ChipButton>
+                    onClick={() => {
+                      form.toggleAi(pt)
+                      form.applySeatTypeToAll(pt)
+                    }}
+                  >
+                    {seatTypeLabel(pt, t)}
+                  </ChipButton>
                 ))}
               </div>
             </Field>

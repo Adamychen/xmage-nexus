@@ -6,6 +6,7 @@ import * as cmds from '../net/commands'
 import type { UsersView } from '../net/types'
 import { cacheAvatar } from './avatarCache'
 import CreateTableDialog from './CreateTableDialog'
+import type { CreateKind } from './CreateTableDialog'
 import JoinTableDialog from './JoinTableDialog'
 import DecksGallery from '../decks/DecksGallery'
 import DeckBuilder from '../decks/DeckBuilder'
@@ -56,7 +57,7 @@ export default function LobbyScreen() {
   const [confirmDisconnect, setConfirmDisconnect] = useState(false)
   const [activeTab, setActiveTab] = useState<LobbyTab>('tables')
   const [deckBuilderId, setDeckBuilderId] = useState<string | null>(null)
-  const [showCreate, setShowCreate] = useState(false)
+  const [createKind, setCreateKind] = useState<CreateKind | null>(null)
   const [showAbout, setShowAbout] = useState(false)
   const [showReport, setShowReport] = useState(false)
   const { unseen: unseenNews, refresh: refreshNews } = useNewsBadge()
@@ -125,7 +126,7 @@ export default function LobbyScreen() {
           setShowSettings(true)
           break
         case 'create':
-          setShowCreate(true)
+          setCreateKind('match')
           break
         case 'builder':
           void getDeckStorage().list().then((decks) => {
@@ -214,7 +215,8 @@ export default function LobbyScreen() {
             }
           }
         }}
-        onCreate={() => setShowCreate(true)}
+        onCreate={() => setCreateKind('match')}
+        onCreateTournament={() => setCreateKind('tourney')}
         onOpenAbout={() => setShowAbout(true)}
         hasNews={unseenNews}
       />
@@ -334,7 +336,7 @@ export default function LobbyScreen() {
                       iconSize={30}
                       title={t('lobby','empty_tables')}
                       action={
-                        <Button variant="primary" onClick={() => setShowCreate(true)}>
+                        <Button variant="primary" onClick={() => setCreateKind('match')}>
                           <Icon name="plus" size={13} /> {t('lobby','create_table_btn')}
                         </Button>
                       }
@@ -394,7 +396,8 @@ export default function LobbyScreen() {
         <LobbyMobileNav
           activeTab={activeTab}
           onTabChange={setActiveTab}
-          onCreate={() => setShowCreate(true)}
+          onCreate={() => setCreateKind('match')}
+          onCreateTournament={() => setCreateKind('tourney')}
           mobileChatOpen={mobileChatOpen}
           onToggleChat={() => setMobileChatOpen((v) => !v)}
           onCloseChat={() => setMobileChatOpen(false)}
@@ -434,9 +437,10 @@ export default function LobbyScreen() {
         </div>
       )}
 
-      {showCreate && (
+      {createKind && (
         <CreateTableDialog
-          onClose={() => setShowCreate(false)}
+          kind={createKind}
+          onClose={() => setCreateKind(null)}
           onEditDeck={(id) => {
             setDeckBuilderId(id)
             setActiveTab('decks')

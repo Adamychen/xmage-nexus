@@ -146,9 +146,9 @@ export async function createTable(page: Page, tableName: string, opts: CreateTab
 
   if (opts.winsNeeded && opts.winsNeeded > 1) {
     if (opts.winsNeeded === 2) {
-      await page.getByRole('button', { name: /^Bo3/i }).click()
+      await page.getByRole('tab', { name: /^Bo3/i }).click()
     } else if (opts.winsNeeded === 3) {
-      await page.getByRole('button', { name: /^Bo5/i }).click()
+      await page.getByRole('tab', { name: /^Bo5/i }).click()
     }
   }
 

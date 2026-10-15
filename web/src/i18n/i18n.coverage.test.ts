@@ -15,6 +15,7 @@ const WHITELIST = new Set<string>([
   'login.server_xdhs',
   'lobby.create_seat_sim',
   'lobby.create_draft_timing_regular',
+  'lobby.create_tab_draft',
   'lobby.dev_title',
   'lobby.join_sb_suffix',
   'lobby.create_time_min_short',

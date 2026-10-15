@@ -5,15 +5,19 @@ import Icon from '../../ui/Icon'
 import { TIME_LIMIT_OPTIONS, BUFFER_TIME_OPTIONS, getTimeLimitLabel, getBufferTimeLabel } from './constants'
 import type { CreateTableForm } from './useCreateTableForm'
 import Field from '../../ui/Field'
+import Collapsible from './Collapsible'
 
 export default function TimingTab({ form }: { form: CreateTableForm }) {
   const { t } = useTranslation()
+  const customized = form.mulliganType !== 'GAME_DEFAULT' || form.customStartLifeEnabled || form.customStartHandSizeEnabled || form.planeChase
+  const customSummary = [
+    form.mulliganType !== 'GAME_DEFAULT' ? 'Mulligan' : null,
+    form.customStartLifeEnabled ? t('lobby','create_custom_life_tag',{life:form.customStartLife}) : null,
+    form.customStartHandSizeEnabled ? t('lobby','create_custom_hand_tag',{hand:form.customStartHandSize}) : null,
+    form.planeChase ? 'Planechase' : null,
+  ].filter(Boolean).join(', ')
   return (
     <div className="create-tab-content">
-      <div className="wizard-step-heading">
-        <h3><Icon name="clock" size={15} /> {t('lobby','create_tab_timing')}</h3>
-        <p>{t('lobby','create_step_desc_timing')}</p>
-      </div>
       <div className="create-grid-2col">
         <Field label={t('lobby','create_field_timing_limit')}>
           <select value={form.timeLimit} onChange={(e) => form.setTimeLimit(e.target.value)}>
@@ -47,51 +51,56 @@ export default function TimingTab({ form }: { form: CreateTableForm }) {
         </div>
       </Field>
 
-      <div className="create-restrictions-box create-restrictions-box--brand">
-        <span className="restrictions-box-title"><Icon name="dice" size={13} /> {t('lobby','create_custom_options')} {(form.mulliganType !== 'GAME_DEFAULT' || form.customStartLifeEnabled || form.customStartHandSizeEnabled || form.planeChase) ? `(${[form.mulliganType !== 'GAME_DEFAULT' ? 'Mulligan' : null, form.customStartLifeEnabled ? t('lobby','create_custom_life_tag',{life:form.customStartLife}) : null, form.customStartHandSizeEnabled ? t('lobby','create_custom_hand_tag',{hand:form.customStartHandSize}) : null, form.planeChase ? 'Planechase' : null].filter(Boolean).join(', ')})` : ''}</span>
-        <Field label={t('lobby','create_field_mulligan_type')}>
-          <select value={form.mulliganType} onChange={(e) => form.setMulliganType(e.target.value)}>
-            <option value="GAME_DEFAULT">{t('lobby','create_mulligan_format_default')}</option>
-            <option value="LONDON">London</option>
-            <option value="VANCOUVER">Vancouver</option>
-            <option value="PARIS">Paris</option>
-            <option value="SMOOTHED_LONDON">Smoothed London</option>
-            <option value="CANADIAN_HIGHLANDER">Canadian Highlander</option>
-          </select>
-        </Field>
-        <div className="create-grid-2col">
+      <Collapsible
+        title={<><Icon name="dice" size={13} /> {t('lobby','create_custom_options')}</>}
+        summary={customized ? customSummary : undefined}
+        defaultOpen={customized}
+      >
+        <div className="create-restrictions-box create-restrictions-box--brand">
+          <Field label={t('lobby','create_field_mulligan_type')}>
+            <select value={form.mulliganType} onChange={(e) => form.setMulliganType(e.target.value)}>
+              <option value="GAME_DEFAULT">{t('lobby','create_mulligan_format_default')}</option>
+              <option value="LONDON">London</option>
+              <option value="VANCOUVER">Vancouver</option>
+              <option value="PARIS">Paris</option>
+              <option value="SMOOTHED_LONDON">Smoothed London</option>
+              <option value="CANADIAN_HIGHLANDER">Canadian Highlander</option>
+            </select>
+          </Field>
+          <div className="create-grid-2col">
+            <Checkbox
+              card
+              checked={form.customStartLifeEnabled}
+              onChange={form.setCustomStartLifeEnabled}
+              label={
+                <>
+                  {t('lobby','create_field_custom_life')}
+                  <input type="number" min={1} max={100} value={form.customStartLife} onChange={(e) => form.setCustomStartLife(Math.min(100, Math.max(1, parseInt(e.target.value,10)||20)))} disabled={!form.customStartLifeEnabled} className="create-number-input" />
+                </>
+              }
+            />
+            <Checkbox
+              card
+              checked={form.customStartHandSizeEnabled}
+              onChange={form.setCustomStartHandSizeEnabled}
+              label={
+                <>
+                  {t('lobby','create_field_custom_hand')}
+                  <input type="number" min={0} max={20} value={form.customStartHandSize} onChange={(e) => form.setCustomStartHandSize(Math.min(20, Math.max(0, parseInt(e.target.value,10)||7)))} disabled={!form.customStartHandSizeEnabled} className="create-number-input" />
+                </>
+              }
+            />
+          </div>
           <Checkbox
             card
-            checked={form.customStartLifeEnabled}
-            onChange={form.setCustomStartLifeEnabled}
-            label={
-              <>
-                {t('lobby','create_field_custom_life')}
-                <input type="number" min={1} max={100} value={form.customStartLife} onChange={(e) => form.setCustomStartLife(Math.min(100, Math.max(1, parseInt(e.target.value,10)||20)))} disabled={!form.customStartLifeEnabled} className="create-number-input" />
-              </>
-            }
-          />
-          <Checkbox
-            card
-            checked={form.customStartHandSizeEnabled}
-            onChange={form.setCustomStartHandSizeEnabled}
-            label={
-              <>
-                {t('lobby','create_field_custom_hand')}
-                <input type="number" min={0} max={20} value={form.customStartHandSize} onChange={(e) => form.setCustomStartHandSize(Math.min(20, Math.max(0, parseInt(e.target.value,10)||7)))} disabled={!form.customStartHandSizeEnabled} className="create-number-input" />
-              </>
-            }
+            checked={form.planeChase}
+            onChange={form.setPlaneChase}
+            icon="map"
+            label="Planechase"
+            description={t('lobby','create_planechase_desc')}
           />
         </div>
-        <Checkbox
-          card
-          checked={form.planeChase}
-          onChange={form.setPlaneChase}
-          icon="map"
-          label="Planechase"
-          description={t('lobby','create_planechase_desc')}
-        />
-      </div>
+      </Collapsible>
 
       {form.showRangeAttack && (
         <div className="create-multiplayer-box">

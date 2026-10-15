@@ -1,10 +1,11 @@
 import type { Dispatch, SetStateAction } from 'react'
 import type { GameTypeInfo } from '../../net/commands'
 import type { Deck } from '../decks'
-import type { CreateTab, DraftTiming, SeatConfig, TableCategory, TournamentCategory, WizardStep } from './constants'
+import type { CreateKind, CreateTab, DraftTiming, SeatConfig, TableCategory, TournamentCategory, WizardStep } from './constants'
 
 /** Everything the Create Table wizard tabs read and change (see `useCreateTableForm`). */
 export interface CreateTableForm {
+  kind: CreateKind
   wizardSteps: WizardStep[]
   activeTab: CreateTab
   setActiveTab: (t: CreateTab) => void

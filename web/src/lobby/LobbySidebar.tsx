@@ -1,4 +1,5 @@
 import { useTranslation } from '../i18n'
+import Button from '../ui/Button'
 import Icon from '../ui/Icon'
 import type { LobbyTab } from './lobbyUtils'
 
@@ -76,6 +77,7 @@ interface MobileNavProps {
   activeTab: LobbyTab
   onTabChange: (tab: LobbyTab) => void
   onCreate: () => void
+  onCreateTournament: () => void
   mobileChatOpen: boolean
   onToggleChat: () => void
   onCloseChat: () => void
@@ -83,7 +85,7 @@ interface MobileNavProps {
 }
 
 export function LobbyMobileNav({
-  activeTab, onTabChange, onCreate, mobileChatOpen, onToggleChat, onCloseChat, unreadChat,
+  activeTab, onTabChange, onCreate, onCreateTournament, mobileChatOpen, onToggleChat, onCloseChat, unreadChat,
 }: MobileNavProps) {
   const { t } = useTranslation()
   return (
@@ -97,6 +99,9 @@ export function LobbyMobileNav({
       <button type="button" className="mobile-nav-btn" onClick={onCreate}>
         <span className="mobile-nav-icon"><Icon name="plus" size={16} /></span><span>{t('lobby.nav_new')}</span>
       </button>
+      <Button variant="ghost" className="mobile-nav-btn" onClick={onCreateTournament}>
+        <span className="mobile-nav-icon"><Icon name="trophy" size={16} /></span><span>{t('lobby.nav_new_tournament')}</span>
+      </Button>
       <button type="button" className={`mobile-nav-btn ${activeTab === 'matches' ? 'active' : ''}`} onClick={() => { onTabChange('matches'); onCloseChat() }}>
         <span className="mobile-nav-icon"><Icon name="scrollText" size={16} /></span><span>{t('lobby.nav_history')}</span>
       </button>
