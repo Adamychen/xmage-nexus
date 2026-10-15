@@ -3,6 +3,7 @@ import { meaningfulPlayables } from './smartStops'
 import { makeGameView } from '../__fixtures__/gameViews'
 import dayNightFrame from '../../fixtures/recorded/day-night.json'
 import alwaysAttackFrame from '../../fixtures/recorded/always-attack.json'
+import manaRocksFrame from '../../fixtures/recorded/mana-rocks.json'
 import landDropFrame from '../../fixtures/recorded/land-drop.json'
 import type { GameView } from '../net/types'
 
@@ -35,6 +36,22 @@ describe('smartStops', () => {
       expect(Object.keys(game.canPlayObjects?.objects ?? {}).length).toBeGreaterThan(0)
       expect(meaningfulPlayables(game)).toEqual([])
     }
+  })
+
+  it('non-basic mana abilities filed under `other` do not count as a window', () => {
+    const rock = { basicManaAbilities: [], basicPlayAbilities: [], basicCastAbilities: [], other: [{ id: 'r', value: '{T}: Add {C}{C}.' }] }
+    const filter = { basicManaAbilities: [], basicPlayAbilities: [], basicCastAbilities: [], other: [{ id: 'f', value: '{U/R}, {T}: Add {U}{U}.' }] }
+    const treasure = { basicManaAbilities: [], basicPlayAbilities: [], basicCastAbilities: [], other: [{ id: 't', value: '{T}, Sacrifice this artifact: Add one mana of any color.' }] }
+    expect(meaningfulPlayables(makeGameView({ canPlayObjects: { objects: { rock, filter, treasure } } }))).toEqual([])
+  })
+
+  it('a real ability next to a mana ability still counts', () => {
+    const both = { basicManaAbilities: [], basicPlayAbilities: [], basicCastAbilities: [], other: [{ id: 'r', value: '{T}: Add {C}{C}.' }, { id: 'd', value: '{2}: Draw a card' }] }
+    expect(meaningfulPlayables(makeGameView({ canPlayObjects: { objects: { both } } }))).toEqual(['both'])
+  })
+
+  it('real server frame: Sol Ring and a filter land are not a window', () => {
+    expect(meaningfulPlayables(viewOf(manaRocksFrame))).toEqual([])
   })
 
   it('real server frame: the first main phase with lands in hand is worth a stop', () => {

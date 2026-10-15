@@ -98,6 +98,7 @@ type AssertKind =
   | 'hasAttackBattle'
   | 'hasAlwaysAttack'
   | 'hasLandDropWindow'
+  | 'hasManaRocks'
   | 'hasAttackCostPaid'
   | 'hasEchoUpkeepPaid'
   | 'hasPlot'
@@ -1022,6 +1023,10 @@ function runAssert(kind: AssertKind, gv: GameView): boolean {
         defended &&
         Object.keys(gv.stack ?? {}).length === 0
       )
+    }
+    case 'hasManaRocks': {
+      const others = Object.values(gv.canPlayObjects?.objects ?? {}).flatMap((s) => s.other ?? [])
+      return others.some((a) => /Add \{C\}\{C\}/.test(a.value)) && others.some((a) => /\{U\/R\}, \{T\}: Add/.test(a.value))
     }
     case 'hasLandDropWindow': {
       const hand = Object.keys(gv.myHand ?? {})
