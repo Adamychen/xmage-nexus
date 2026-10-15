@@ -10,6 +10,8 @@ import { clickableProps } from '../ui/clickable'
 import { fallbackActionUser, formatDeckTypeName, formatSeatHistory, formatTimeAgo, getSkillBadge, isMyTable, stateLabel } from './lobbyUtils'
 import Button from '../ui/Button'
 import { tableOwnerName } from './TableFilterBar'
+import { useCardArtUrl } from '../decks/useCardArtUrl'
+import { tableArtCard } from './tableArt'
 
 interface Props {
   tTable: TableView
@@ -70,9 +72,12 @@ export default function TableCard({
   const canRemove = !!onRemove && !isPlaying && tTable.tableState !== 'FINISHED'
     && !!ownerName && !!username && ownerName.toLowerCase() === username.toLowerCase()
 
+  const artUrl = useCardArtUrl(tableArtCard(tTable.deckType))
+
   return (
     <div
       className={`table-card table-row ${statusClass}${isMine ? ' is-my-table' : ''}`}
+      style={artUrl ? { ['--card-art' as string]: `url("${artUrl}")` } : undefined}
       onDoubleClick={() => {
         if (isPlaying) {
           if (isMine || mySeat) {
