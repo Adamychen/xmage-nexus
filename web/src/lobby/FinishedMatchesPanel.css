@@ -379,7 +379,6 @@ html.fx-off .player-slot.winner::after {
   align-items: center;
   flex-wrap: wrap;
   gap: var(--sp-2);
-  margin: var(--sp-2) 0;
 }
 
 .matches-replay-error {

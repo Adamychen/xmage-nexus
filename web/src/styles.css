@@ -132,6 +132,7 @@ button:active { transform: scale(0.97); }
 button:disabled { opacity: 0.5; cursor: not-allowed; }
 button:focus-visible,
 a:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+.ui-tabs--underline .ui-tab:focus-visible { box-shadow: none; background: var(--veil-1); }
 
 input, select, textarea {
   font: inherit;
