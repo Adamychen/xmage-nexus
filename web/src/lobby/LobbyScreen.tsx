@@ -10,7 +10,8 @@ import type { CreateKind } from './CreateTableDialog'
 import JoinTableDialog from './JoinTableDialog'
 import DecksGallery from '../decks/DecksGallery'
 import DeckBuilder from '../decks/DeckBuilder'
-import LeaderboardModal from './LeaderboardModal'
+import PlayerProfileModal from './PlayerProfileModal'
+import RankingView from './RankingView'
 import UserActionModal from './UserActionModal'
 import TableFilterBar, { INITIAL_TABLE_FILTERS, countActiveFilters, filterTables, sanitizeTableFilters, type TableFilters } from './TableFilterBar'
 import Icon from '../ui/Icon'
@@ -19,7 +20,7 @@ import MatchesSection from './MatchesSection'
 import { t as tStatic, translateError } from '../i18n'
 import { useTranslation } from '../i18n'
 import { setState } from '../state/state'
-import LobbyHeader, { type LeaderboardTab } from './LobbyHeader'
+import LobbyHeader from './LobbyHeader'
 import { LobbyMobileNav } from './LobbySidebar'
 import FloatingChat from './FloatingChat'
 import TableCard from './TableCard'
@@ -61,9 +62,7 @@ export default function LobbyScreen() {
   const [showAbout, setShowAbout] = useState(false)
   const [showReport, setShowReport] = useState(false)
   const { unseen: unseenNews, refresh: refreshNews } = useNewsBadge()
-  const [showLeaderboard, setShowLeaderboard] = useState(false)
-  const [leaderboardTarget, setLeaderboardTarget] = useState<string | undefined>(undefined)
-  const [leaderboardTab, setLeaderboardTab] = useState<LeaderboardTab>('room')
+  const [profileTarget, setProfileTarget] = useState<string | null>(null)
   const [selectedUser, setSelectedUser] = useState<UsersView | null>(null)
   const [chatPrefill, setChatPrefill] = useState<string>('')
   const [showDebug, setShowDebug] = useState(false)
@@ -97,11 +96,8 @@ export default function LobbyScreen() {
   const { joiningTable, setJoiningTable, joinPassword, setJoinPassword, busyTable, notice, setNotice } = tableActions
   const bracket = useTournamentBracket()
 
-  const openLeaderboard = (target?: string, tab: LeaderboardTab = 'room') => {
-    setLeaderboardTarget(target)
-    setLeaderboardTab(tab)
-    setShowLeaderboard(true)
-  }
+  // An empty username opens the profile of the signed-in user.
+  const openProfile = (username: string) => setProfileTarget(username)
 
   useEffect(() => {
     if (!__DEMO__) return
@@ -119,8 +115,9 @@ export default function LobbyScreen() {
         case 'history':
           setActiveTab('matches')
           break
-        case 'leaderboard':
-          openLeaderboard(conn?.username, target.tab)
+        case 'ranking':
+          setDeckBuilderId(null)
+          setActiveTab('ranking')
           break
         case 'settings':
           setShowSettings(true)
@@ -199,7 +196,7 @@ export default function LobbyScreen() {
         onConfirmDisconnect={setConfirmDisconnect}
         onOpenSettings={() => setShowSettings(true)}
         onOpenReport={() => setShowReport(true)}
-        onOpenLeaderboard={openLeaderboard}
+        onOpenProfile={openProfile}
         activeTab={activeTab}
         onTabChange={setActiveTab}
         tableCount={tables.length}
@@ -377,7 +374,15 @@ export default function LobbyScreen() {
             {activeTab === 'matches' && (
               <MatchesSection
                 users={users}
-                onInspectUser={(username) => openLeaderboard(username, 'profile')}
+                onInspectUser={openProfile}
+              />
+            )}
+
+            {activeTab === 'ranking' && (
+              <RankingView
+                users={users}
+                currentUsername={conn?.username ?? ''}
+                onInspectUser={openProfile}
               />
             )}
           </div>
@@ -390,7 +395,10 @@ export default function LobbyScreen() {
           unreadChat={unreadChat}
           onMessageRead={() => setUnreadChat(0)}
           onSelectUser={setSelectedUser}
-          onOpenRoomLeaderboard={() => openLeaderboard(conn?.username, 'room')}
+          onOpenRanking={() => {
+            setMobileChatOpen(false)
+            setActiveTab('ranking')
+          }}
           open={mobileChatOpen}
           onOpenChange={setMobileChatOpen}
         />
@@ -449,17 +457,12 @@ export default function LobbyScreen() {
           }}
         />
       )}
-      {showLeaderboard && (
-        <LeaderboardModal
+      {profileTarget !== null && (
+        <PlayerProfileModal
           users={users}
           currentUsername={conn?.username ?? ''}
-          initialTargetUsername={leaderboardTarget}
-          initialTab={leaderboardTab}
-          onClose={() => {
-            setShowLeaderboard(false)
-            setLeaderboardTarget(undefined)
-            setLeaderboardTab('room')
-          }}
+          targetUsername={profileTarget}
+          onClose={() => setProfileTarget(null)}
         />
       )}
       {selectedUser && (
@@ -471,9 +474,7 @@ export default function LobbyScreen() {
             setMobileChatOpen(true)
             setChatPrefill(`/w ${username} `)
           }}
-          onViewLeaderboard={(username) => {
-            openLeaderboard(username, 'profile')
-          }}
+          onViewLeaderboard={openProfile}
           onWatchTable={async (tableId) => {
             setState({ error: null })
             setNotice(null)

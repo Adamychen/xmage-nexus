@@ -1,7 +1,7 @@
 import type { TableView, UsersView } from '../net/types'
 import { t as tStatic } from '../i18n'
 
-export type LobbyTab = 'tables' | 'decks' | 'community' | 'matches'
+export type LobbyTab = 'tables' | 'decks' | 'community' | 'matches' | 'ranking'
 
 /**
  * Paridad con TablesPanel.openTableAction (desktop): un torneo limitado

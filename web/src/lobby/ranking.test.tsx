@@ -22,51 +22,45 @@ describe('playerRankRating', () => {
 })
 
 describe('ranking.ts — MTG Arena Tier Calculation', () => {
-  it('calculates Bronze tier for ELO < 1400', () => {
+  it('calculates Bronze tier for rating < 1400', () => {
     const rank = getRankInfo(1200)
     expect(rank.tier).toBe('BRONZE')
     expect(rank.name).toBe('Bronce')
-    expect(rank.icon).toBe('medal')
     expect(rank.nextTierName).toBe('Plata')
   })
 
-  it('calculates Silver tier for default 1500 ELO', () => {
+  it('calculates Silver tier for default 1500 rating', () => {
     const rank = getRankInfo(1500)
     expect(rank.tier).toBe('SILVER')
     expect(rank.name).toBe('Plata')
-    expect(rank.icon).toBe('medal')
     expect(rank.nextTierName).toBe('Oro')
   })
 
-  it('calculates Gold tier for 1650 ELO', () => {
+  it('calculates Gold tier for 1650 rating', () => {
     const rank = getRankInfo(1650)
     expect(rank.tier).toBe('GOLD')
     expect(rank.name).toBe('Oro')
-    expect(rank.icon).toBe('medal')
     expect(rank.nextTierName).toBe('Platino')
   })
 
-  it('calculates Platinum tier for 1750 ELO', () => {
+  it('calculates Platinum tier for 1750 rating', () => {
     const rank = getRankInfo(1750)
     expect(rank.tier).toBe('PLATINUM')
     expect(rank.name).toBe('Platino')
-    expect(rank.icon).toBe('award')
     expect(rank.nextTierName).toBe('Diamante')
   })
 
-  it('calculates Diamond tier for 1900 ELO', () => {
+  it('calculates Diamond tier for 1900 rating', () => {
     const rank = getRankInfo(1900)
     expect(rank.tier).toBe('DIAMOND')
     expect(rank.name).toBe('Diamante')
-    expect(rank.icon).toBe('gem')
     expect(rank.nextTierName).toBe('Mítico')
   })
 
-  it('calculates Mythic tier for ELO >= 2000', () => {
+  it('calculates Mythic tier for rating >= 2000', () => {
     const rank = getRankInfo(2150)
     expect(rank.tier).toBe('MYTHIC')
     expect(rank.name).toBe('Mítico')
-    expect(rank.icon).toBe('crown')
     expect(rank.nextTierName).toBeNull()
     expect(rank.progressPercent).toBe(100)
   })

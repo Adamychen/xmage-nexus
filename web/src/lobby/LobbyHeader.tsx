@@ -13,8 +13,6 @@ import Icon from '../ui/Icon'
 import { useTranslation } from '../i18n'
 import type { LobbyTab } from './lobbyUtils'
 
-export type LeaderboardTab = 'room' | 'profile' | 'tiers'
-
 interface Props {
   conn: ConnectionInfo | null
   myUser: UsersView | undefined
@@ -23,7 +21,7 @@ interface Props {
   onConfirmDisconnect: (v: boolean) => void
   onOpenSettings: () => void
   onOpenReport: () => void
-  onOpenLeaderboard: (target?: string, tab?: LeaderboardTab) => void
+  onOpenProfile: (username: string) => void
   activeTab: LobbyTab
   onTabChange: (tab: LobbyTab) => void
   tableCount: number
@@ -37,7 +35,7 @@ interface Props {
 
 export default function LobbyHeader({
   conn, myUser, onlineCount, confirmDisconnect, onConfirmDisconnect,
-  onOpenSettings, onOpenReport, onOpenLeaderboard, activeTab, onTabChange,
+  onOpenSettings, onOpenReport, onOpenProfile, activeTab, onTabChange,
   tableCount, activeTableCount = 0, onGoToActiveTable, onCreate, onCreateTournament, onOpenAbout, hasNews,
 }: Props) {
   const { t, lang } = useTranslation()
@@ -147,9 +145,10 @@ export default function LobbyHeader({
         </button>
         <button
           type="button"
-          className="top-nav-btn"
-          onClick={() => onOpenLeaderboard(conn?.username, 'room')}
+          className={`top-nav-btn ${activeTab === 'ranking' ? 'active' : ''}`}
+          onClick={() => onTabChange('ranking')}
           title={t('lobby.nav_ranking')}
+          data-testid="top-nav-ranking"
         >
           <Icon name="trophy" size={14} />
           <span>{t('lobby.nav_ranking')}</span>
@@ -159,7 +158,7 @@ export default function LobbyHeader({
       <div className="lobby-user-actions">
         <div
           className="lobby-user-badge"
-          onClick={() => onOpenLeaderboard(conn?.username, 'profile')}
+          onClick={() => onOpenProfile(conn?.username ?? '')}
           title={`${t('lobby', 'view_profile_hint')} ${conn?.username ?? ''}`}
         >
           <AvatarImage avatarId={conn?.avatarId ?? 10} username={conn?.username} size="medium" />
