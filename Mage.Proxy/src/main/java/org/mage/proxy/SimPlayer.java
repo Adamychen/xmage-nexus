@@ -13,6 +13,7 @@ import mage.players.PlayerType;
 import mage.players.net.UserData;
 import mage.remote.Connection;
 import mage.remote.SessionImpl;
+import mage.util.MultiAmountMessage;
 import mage.utils.MageVersion;
 import mage.view.CardView;
 import mage.view.CardsView;
@@ -413,8 +414,15 @@ public class SimPlayer implements MageClient {
                     }
                     break;
                 }
+                case GAME_GET_MULTI_AMOUNT: {
+                    if (data instanceof GameClientMessage) {
+                        onMultiAmount((GameClientMessage) data);
+                    } else {
+                        pass();
+                    }
+                    break;
+                }
                 case GAME_PLAY_XMANA:
-                case GAME_GET_MULTI_AMOUNT:
                 case GAME_CHOOSE_ABILITY:
                 case GAME_CHOOSE_PILE:
                     // el guion nunca las provoca; por seguridad, cancelar
@@ -556,6 +564,39 @@ public class SimPlayer implements MageClient {
         int value = attempt == 0 ? gcm.getMin() : gcm.getMax();
         logger.info("sim " + username + " amount " + value + " (intento " + attempt + ")");
         session.sendPlayerInteger(gameId, value);
+    }
+
+    private void onMultiAmount(GameClientMessage gcm) {
+        List<MultiAmountMessage> messages = gcm.getMessages();
+        if (messages == null || messages.isEmpty()) {
+            pass();
+            return;
+        }
+        int[] values = new int[messages.size()];
+        int sum = 0;
+        for (int i = 0; i < values.length; i++) {
+            values[i] = messages.get(i).min;
+            sum += values[i];
+        }
+        for (int i = 0; i < values.length && sum < gcm.getMin(); i++) {
+            int add = Math.min(Math.max(0, messages.get(i).max - values[i]), gcm.getMin() - sum);
+            values[i] += add;
+            sum += add;
+        }
+        if (sum < gcm.getMin() || sum > gcm.getMax()) {
+            logger.info("sim " + username + " multi amount sin reparto valido -> cancel ('" + gcm.getMessage() + "')");
+            pass();
+            return;
+        }
+        StringBuilder answer = new StringBuilder();
+        for (int value : values) {
+            if (answer.length() > 0) {
+                answer.append(' ');
+            }
+            answer.append(value);
+        }
+        logger.info("sim " + username + " multi amount '" + answer + "' (" + gcm.getMessage() + ")");
+        session.sendPlayerString(gameId, answer.toString());
     }
 
     static List<String> choiceOptions(Choice choice) {
@@ -736,6 +777,16 @@ public class SimPlayer implements MageClient {
                 session.sendPlayerUUID(gameId, pick);
                 return;
             }
+            CardsView abilities = gcm.getCardsView1();
+            if (abilities != null && !abilities.isEmpty()) {
+                List<UUID> ids = new ArrayList<>(abilities.keySet());
+                int attempt = targetRetry.attempt(gcm.getMessage() + "|" + ids);
+                if (attempt < ids.size()) {
+                    logger.info("sim " + username + " target abilities: elijo " + ids.get(attempt) + " (intento " + attempt + ")");
+                    session.sendPlayerUUID(gameId, ids.get(attempt));
+                    return;
+                }
+            }
             pass();
             return;
         }
@@ -758,6 +809,10 @@ public class SimPlayer implements MageClient {
             if (!ordered.contains(target)) {
                 ordered.add(target);
             }
+        }
+        if (msg.contains("attack")) {
+            session.sendPlayerUUID(gameId, ordered.get(0));
+            return;
         }
         int attempt = targetRetry.attempt(gcm.getMessage() + "|" + ordered);
         if (attempt >= ordered.size()) {
