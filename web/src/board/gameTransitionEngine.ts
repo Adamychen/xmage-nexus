@@ -5,7 +5,7 @@ import { getPreviousCardPosition, getPreviousCardSize, clearCardPositionRegistry
 import { announceBanner, spawnFloater } from './feedbackFx'
 import { t } from '../i18n'
 import { isAbilityCard } from '../cards/cardImages'
-import { fxDuration } from './fx'
+import { fxMotionDuration } from './fx'
 import { slamSpell, spawnImpact, spellWeight } from './impactFx'
 import { clearCombatSnapshots, combatantIds, planDamageStrikes, playDamageStrikes, primeCombatHolds, snapshotCombatants } from './combatStrikes'
 
@@ -120,7 +120,7 @@ function shakeElement(selector: string, ms = 420): void {
 const SOURCE_PULSE_MS = 600
 
 function pulseStackSource(cardId: string): void {
-  const ms = fxDuration(SOURCE_PULSE_MS)
+  const ms = fxMotionDuration(SOURCE_PULSE_MS)
   if (ms === 0) return
   const el = document.querySelector(`.card-slot[data-card-id="${cardId}"]`)
   if (!el) return

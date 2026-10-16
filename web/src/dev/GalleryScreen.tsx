@@ -2,7 +2,7 @@ import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import { getState, setState } from '../state/state'
 import { getGateway, setGateway } from '../net/commands'
 import type { Gateway } from '../net/Gateway'
-import { buildGalleryEntries, type GalleryEntry } from './galleryFixtures'
+import { buildGalleryEntries, type GalleryAction, type GalleryEntry } from './galleryFixtures'
 import { getLanguage, setLanguage, t } from '../i18n'
 import GameScreen from '../game/GameScreen'
 import GameEndDialog from '../game/GameEndDialog'
@@ -89,13 +89,13 @@ function restoreStorage(previous: Record<string, string | null> | null): void {
   }
 }
 
-function simulateTargetDamage(): void {
-  const card = document.querySelector<HTMLElement>('[data-gallery-stage] .card-slot.targetable')
-  if (!card) return
-  card.classList.remove('took-damage')
-  void card.offsetWidth
-  card.classList.add('took-damage')
-  window.setTimeout(() => card.classList.remove('took-damage'), 1500)
+function runAction(action: GalleryAction): void {
+  if (action.run) {
+    action.run()
+    return
+  }
+  const game = getState().game
+  if (action.apply && game) setState({ game: action.apply(game) })
 }
 
 export default function GalleryScreen() {
@@ -190,6 +190,7 @@ export default function GalleryScreen() {
     return () => setGateway(prevGateway)
   }, [])
 
+  const action = active?.action
   const groups = [...new Set(entries.map((e) => e.group))]
 
   return (
@@ -220,15 +221,11 @@ export default function GalleryScreen() {
             </section>
           ))}
         </nav>
-        <button
-          type="button"
-          className="gallery-action"
-          data-gallery-damage
-          title="Aplica la clase took-damage a la primera carta objetivo visible (beacon + shake + flash a la vez)"
-          onClick={simulateTargetDamage}
-        >
-          Simular daño en objetivo
-        </button>
+        {action && (
+          <button type="button" className="gallery-action" data-gallery-action onClick={() => runAction(action)}>
+            {action.label}
+          </button>
+        )}
         <p className="gallery-hint">
           Solo disponible en dev. Cambia el estado del store; al salir se restaura el estado previo.
         </p>

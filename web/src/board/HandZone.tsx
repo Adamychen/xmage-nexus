@@ -5,7 +5,9 @@ import { galleryPinnedStatusH } from './useZoneScale'
 import Icon from '../ui/Icon'
 import { clickableProps } from '../ui/clickable'
 import { useTranslation } from '../i18n'
+import { useDrawSlide } from './useDrawSlide'
 import './HandZone.css'
+import './drawSlide.css'
 
 const MIN_CARD_W = 40
 const MAX_CARD_W = 160
@@ -93,6 +95,7 @@ export default function HandZone({
   const faceDownEntries = entries.filter(([, card]) => faceDown || card.faceDown === true)
   const collapseBacks = stackBacks && faceDownEntries.length > 1
   const shownFaceUp = collapseBacks ? faceUp : entries
+  const drawn = useDrawSlide(zoneRef, shownFaceUp.map(([id]) => id), true, { scope: '.bz-status-row', select: '.library-chip, .library-stack' })
   // El stack siempre abre el visor (aunque todo esté oculto: muestra dorsos).
 
   return (
@@ -104,10 +107,12 @@ export default function HandZone({
     >
       {shownFaceUp.map(([id, card]) => {
         const isCardFaceDown = faceDown || card.faceDown === true
+        const draw = drawn.get(id)
         return (
           <div
             key={id}
-            className="hand-card-slot"
+            className={`hand-card-slot${draw ? ` draw-${draw}` : ''}`}
+            data-hand-id={id}
             onMouseEnter={!isCardFaceDown && onHover ? (e) => onHover(card, e.currentTarget.getBoundingClientRect()) : undefined}
             onMouseLeave={!isCardFaceDown && onHover ? () => onHover(null) : undefined}
           >

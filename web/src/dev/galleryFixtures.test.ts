@@ -32,6 +32,7 @@ describe('galería de estados (P3)', () => {
     expect([...new Set(entries.map((entry) => entry.group))]).toEqual([
       'Frames reales',
       'Prompts',
+      'Animaciones',
       'Pantallas',
       'Tablero',
       'Dialogs',

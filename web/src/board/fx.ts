@@ -7,6 +7,8 @@ export interface FxPrefs {
 
 export const FX_SPEEDS = [0.5, 1, 1.5] as const
 
+export const FX_OPACITY_MAX_MS = 150
+
 export function getFxPrefs(): FxPrefs {
   try {
     const settings = getState().settings
@@ -28,18 +30,28 @@ export function fxEnabled(): boolean {
   return getFxPrefs().enabled
 }
 
-/** Duración efectiva (ms) de una animación decorativa según la velocidad
- *  elegida por el usuario. Devuelve 0 si los efectos están desactivados o si
- *  el sistema pide reduced-motion (los efectos se suprimen). */
-export function fxDuration(ms: number): number {
-  if (!fxEnabled()) return 0
-  if (prefersReducedMotion()) return 0
-  const { speed } = getFxPrefs()
-  return Math.max(60, Math.round(ms / speed))
+export function fxMotionAllowed(): boolean {
+  return fxEnabled() && !prefersReducedMotion()
 }
 
-/** Refleja los ajustes de efectos en el root del documento: clase `fx-off`
- *  (apaga animaciones decorativas CSS) + variable `--fx-speed`. */
+export function fxOpacityAllowed(): boolean {
+  return fxEnabled()
+}
+
+export function fxDuration(ms: number): number {
+  return Math.max(60, Math.round(ms / getFxPrefs().speed))
+}
+
+export function fxMotionDuration(ms: number): number {
+  return fxMotionAllowed() ? fxDuration(ms) : 0
+}
+
+export function fxOpacityDuration(ms: number): number {
+  return fxOpacityAllowed() ? Math.min(fxDuration(ms), FX_OPACITY_MAX_MS) : 0
+}
+
+/** Mirrors the effects settings on the document root: `fx-off` class (turns
+ *  off decorative CSS animations) and the `--fx-speed` variable. */
 export function applyFxRoot(): void {
   if (typeof document === 'undefined') return
   const { enabled, speed } = getFxPrefs()

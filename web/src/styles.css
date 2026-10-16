@@ -104,6 +104,13 @@ html.fx-off .fx-popover .ui-toggle-knob {
   transition: none !important;
 }
 
+html.fx-off *,
+html.fx-off *::before,
+html.fx-off *::after {
+  animation: none !important;
+  transition: none !important;
+}
+
 html, body, #root {
   margin: 0;
   height: 100%;

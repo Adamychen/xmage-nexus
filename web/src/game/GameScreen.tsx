@@ -43,7 +43,6 @@ import type { ManaColor } from '../board/impactFx'
 import '../appearance/playmats.css'
 import { musicEngine } from '../audio/musicEngine'
 import { musicIntensity } from '../audio/musicIntensity'
-import { applyFxRoot } from '../board/fx'
 import { hasCommanders as hasCommandersInGame } from '../board/commanders'
 import { dayNightStateOf } from '../board/dayNight'
 import TournamentPanel from './TournamentPanel'
@@ -62,6 +61,8 @@ import { perfMark } from '../system/perfProbe'
 import './GameScreen.css'
 import './TournamentPanel.css'
 import { commandItems } from './commandItems'
+import { usePriorityOrbs } from './usePriorityOrbs'
+import PriorityOrbLayer from './PriorityOrbLayer'
 
 /** El atajo global Space no debe disparar cuando el foco está en un control
  *  nativo (doble acción: el control + el pass). Cubre el caso en que el
@@ -138,10 +139,6 @@ export default function GameScreen() {
     if (liveGame) maybeAutoPass(liveGame)
   }, [liveGame])
 
-  useEffect(() => {
-    applyFxRoot()
-  }, [settings.effects, settings.animationSpeed])
-
   const gameOver = useStore((s) => s.gameEnd != null)
   const hasGame = !!game
   useEffect(() => {
@@ -167,6 +164,8 @@ export default function GameScreen() {
 
   const me = game?.players?.find((p) => p.controlled)
   const priorityPlayer = game?.players?.find((p) => p.hasPriority) ?? game?.players?.find((p) => p.isActive)
+  const priorityHolderId = game?.players?.find((p) => p.hasPriority)?.playerId ?? null
+  const { orbs: priorityOrbs, done: doneOrb } = usePriorityOrbs(gameId, priorityHolderId)
   const timerSecs = priorityPlayer?.priorityTimeLeftSecs ?? 0
   const isTimerTicking = !!priorityPlayer?.hasPriority
 
@@ -511,6 +510,7 @@ export default function GameScreen() {
               combatMode={combat?.mode ?? null}
             />
           </div>
+          <PriorityOrbLayer orbs={priorityOrbs} onDone={doneOrb} />
           <FeedbackDialog />
           <UserRequestDialog />
           <RollbackDialog />

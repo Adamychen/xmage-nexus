@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from 'react'
 import type { CardView } from '../net/types'
-import { fxDuration } from './fx'
+import { fxMotionDuration } from './fx'
 import { isAbilityCard } from '../cards/cardImages'
 import { soundManager } from '../audio/soundManager'
 
@@ -95,7 +95,7 @@ export function spawnImpact(
   rect: Pick<DOMRect, 'left' | 'top' | 'width' | 'height'> | null,
   opts: { colors?: ManaColor[]; weight?: SpellWeight } = {},
 ): ImpactFx | null {
-  const duration = fxDuration(BASE_MS[kind] * (kind === 'slam' && opts.weight === 2 ? 1.35 : 1))
+  const duration = fxMotionDuration(BASE_MS[kind] * (kind === 'slam' && opts.weight === 2 ? 1.35 : 1))
   if (!duration) return null
   if (kind !== 'slam' && (!rect || rect.width <= 0 || rect.height <= 0)) return null
   const item: ImpactFx = {
@@ -132,7 +132,7 @@ function quakeBoard(weight: SpellWeight, ms: number): void {
 export function slamSpell(card: CardView, landDelayMs = 320): SpellWeight {
   const weight = spellWeight(card)
   if (weight === 0) return 0
-  const delay = fxDuration(landDelayMs)
+  const delay = fxMotionDuration(landDelayMs)
   if (!delay) return weight
   setTimeout(() => {
     const fx = spawnImpact('slam', null, { colors: cardManaColors(card), weight })

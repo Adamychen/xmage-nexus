@@ -7,7 +7,7 @@ import { getPreviousCardPosition, getPreviousCardSize, getPreviousCardZone, reco
 import { startCardFlight, onFlightLanded, getActiveFlights, subscribeFlights, noteFlightEvent } from './flightManager'
 import { combatHoldRemaining, isOffBattlefield } from './combatStrikes'
 import { useCombatHeld } from './useCombatHeld'
-import { fxDuration } from './fx'
+import { fxMotionAllowed, fxMotionDuration } from './fx'
 import { extractOwnedKeywords } from '../data/keywordExtractor'
 import { keywordDisplayName, keywordSummary } from '../data/keywordI18n'
 import { cardDesignations, pairedPartnerName, classLevelOf, evidenceCounts, protectorName, type Designation } from './designations'
@@ -214,7 +214,7 @@ export default function CardSlot({
     const holdMs = combatHoldRemaining(String(effectiveId))
     if (holdMs <= 0 || !isOffBattlefield(el)) return
     setHeld(true)
-    const release = setTimeout(() => setHeld(false), holdMs + 40 + fxDuration(420))
+    const release = setTimeout(() => setHeld(false), holdMs + 40 + fxMotionDuration(420))
     return () => clearTimeout(release)
   }, [effectiveId])
 
@@ -289,7 +289,7 @@ const showPtBadge =
     : counters
 
   const handleClick = onClick ? () => {
-    if (isPlayable && fxDuration(80) > 0) setCastPhase('press')
+    if (isPlayable && fxMotionAllowed()) setCastPhase('press')
     const ackKind = isTarget ? 'chosen-pending' : 'pending'
     // No reenviar el mismo objetivo mientras el eco no lo confirme; el resto
     // de selecciones (jugable/combate) pueden re-clicarse (toggle del servidor).

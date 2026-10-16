@@ -77,10 +77,20 @@ export type GalleryScreenName =
   | 'gameend'
   | 'cards'
 
+/** Acción de dev de una entrada: un botón en el sidebar que modifica el estado de la galería. */
+export interface GalleryAction {
+  label: string
+  /** Transforma el `game` del store (p. ej. añadir una carta a la mano). */
+  apply?: (game: GameView) => GameView
+  /** Efecto directo sobre el DOM o el store cuando no basta con `apply`. */
+  run?: () => void
+}
+
 export interface GalleryEntry {
   id: string
   group: string
   label: string
+  action?: GalleryAction
   description?: string
   phase?: 'idle' | 'connecting' | 'lobby' | 'game'
   /** Pantalla no cubierta por `game`/`login`: lobby, editor de mazos, draft, construct, torneo… */
@@ -538,6 +548,42 @@ const THREE_PLAYER_COMMANDER = COMMANDER_FRAME?.gameView ?? null
 const HAND_15_GAME = GANG_BLOCK_FRAME ? withHandSize(GANG_BLOCK_FRAME.gameView, 15) : null
 const LONG_NAMES_GAME = GANG_BLOCK_FRAME ? withLongNames(GANG_BLOCK_FRAME.gameView) : null
 const TOP_CARD_PEEK_GAME = GANG_BLOCK_FRAME ? withTopCardPeek(GANG_BLOCK_FRAME.gameView) : null
+
+function drawOneCard(game: GameView): GameView {
+  const hand = (game.myHand ?? {}) as Record<string, unknown>
+  const sample = Object.values(hand)[0]
+  if (!sample) return game
+  const sampleId = String((sample as { id?: unknown }).id ?? '')
+  const id = `gallery-drawn-${Date.now()}`
+  const card = { ...(remapIds(sample, (v) => (v === sampleId ? id : undefined)) as MutableRecord), id }
+  const me = controlledPlayer(game)
+  return {
+    ...game,
+    myHand: { ...hand, [id]: card } as GameView['myHand'],
+    players: players(game).map((p) => (p === me ? { ...p, handCount: (p.handCount ?? 0) + 1 } : p)),
+  }
+}
+
+function passPriority(game: GameView): GameView {
+  const all = players(game)
+  const holder = all.find((p) => p.hasPriority)
+  const next = all.find((p) => p !== holder)
+  if (!next) return game
+  return {
+    ...game,
+    priorityPlayerName: next.name,
+    players: all.map((p) => (p === holder ? { ...p, hasPriority: false } : p === next ? { ...p, hasPriority: true } : p)),
+  }
+}
+
+function simulateTargetDamage(): void {
+  const card = document.querySelector<HTMLElement>('[data-gallery-stage] .card-slot.targetable')
+  if (!card) return
+  card.classList.remove('took-damage')
+  void card.offsetWidth
+  card.classList.add('took-damage')
+  window.setTimeout(() => card.classList.remove('took-damage'), 1500)
+}
 
 function withTopCardPeek(gv: GameView): GameView {
   const top = Object.values(gv.myHand ?? {})[0]
@@ -1028,6 +1074,38 @@ export function buildGalleryEntries(): GalleryEntry[] {
         playableIds: p.playableIds,
       })
     }
+
+    entries.push({
+      id: 'anim:draw-slide',
+      group: 'Animaciones',
+      label: 'Robo: deslizar desde biblioteca',
+      description: 'Pulsa "Robar carta": aparece una carta nueva en tu mano y debe deslizar desde la biblioteca.',
+      phase: 'game',
+      game,
+      gameId,
+      action: { label: 'Robar carta', apply: drawOneCard },
+    })
+    entries.push({
+      id: 'anim:priority-orb',
+      group: 'Animaciones',
+      label: 'Prioridad: orbe',
+      description: 'Pulsa "Pasar prioridad": el orbe dorado debe viajar del avatar que tenía prioridad al nuevo.',
+      phase: 'game',
+      game,
+      gameId,
+      action: { label: 'Pasar prioridad', apply: passPriority },
+    })
+    entries.push({
+      id: 'anim:target-damage',
+      group: 'Animaciones',
+      label: 'Objetivo: daño (beacon + shake)',
+      description: 'Pulsa el botón: la carta objetivo recibe la clase took-damage y debe mostrar beacon, shake y flash a la vez.',
+      phase: 'game',
+      game,
+      gameId,
+      feedback: targetPrompt(game, gameId, true),
+      action: { label: 'Simular daño en objetivo', run: simulateTargetDamage },
+    })
   }
 
   const slicerFrame = recordedFrames.find((frame) => frame.file === 'slicer.json')

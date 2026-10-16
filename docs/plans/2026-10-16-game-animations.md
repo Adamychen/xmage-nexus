@@ -65,12 +65,15 @@ Current state (verified 2026-10-16):
 - `fx.ts` already exposes `fxDuration`, `applyFxRoot`, `fxEnabled`, `prefersReducedMotion`. The
   off switch is the `settings.effects` boolean, not an animation speed of 0. The draft's
   "speed 0-2" model does not exist.
-- `fxDuration()` returns 0 under reduced motion, which also suppresses the opacity-only feedback.
-  The P0 work must split these two cases.
-- `html.fx-off` currently suppresses only named selectors (`styles.css`, `flyCard.css`,
-  `primitives.css`, `screenMotion.css`). The global rule above does not exist yet.
-- `tokens.css` defines `--ease-out` and two durations (`--dur-fast` 0.12 s, `--dur-med` 0.2 s).
-  The five-step duration scale in the draft is not there.
+- Foundation (done): `fxDuration(ms)` is speed scaling only. `fxMotionDuration(ms)` returns 0 when
+  effects are off or reduced motion is requested (transform and JS motion callers). `fxOpacityDuration(ms)`
+  keeps opacity-only feedback under reduced motion, capped at 150 ms. `fxMotionAllowed()` is the gate
+  for branches that used to test `fxDuration(80) > 0`.
+- `html.fx-off` suppresses the named selectors and the global rule above. `applyFxRoot()` runs from
+  `App` (it used to run only inside `GameScreen`, so the lobby ignored the setting).
+- `tokens.css` has `--ease-out`, `--ease-in-out`, and five durations: `--dur-instant` 80 ms,
+  `--dur-quick` 150 ms, `--dur-base` 250 ms, `--dur-slow` 400 ms, `--dur-slower` 600 ms, plus the
+  original `--dur-fast` and `--dur-med`.
 
 ## 3. Scope and inventory
 
@@ -301,7 +304,7 @@ against the code.
 
 Foundation (prerequisite):
 
-- [ ] Tokens (`tokens.css`), `fx.ts` split, global `fx-off` rule — in progress
+- [x] Tokens (`tokens.css`), `fx.ts` split, global `fx-off` rule — done (unit, fake e2e, and browser check of both off paths)
 
 P0 (being implemented now):
 
@@ -315,8 +318,8 @@ P0 (being implemented now):
 P1:
 
 - [ ] A4 Pending states — not started
-- [ ] B3 Priority orb — not started
-- [ ] B4 Draw slide — not started
+- [x] B3 Priority orb — done (unit, browser screenshot of the mid-flight orb; not checked on a real table)
+- [x] B4 Draw slide — done (local hand verified in the browser by measurement and a crop; the opponent face-down path and the HandRail/HandRow layouts are not animated or visually verified)
 - [ ] C2 Stack countdown — not started
 - [ ] A2 Mana tap pulse — not started
 
