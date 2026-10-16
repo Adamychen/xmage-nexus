@@ -1,10 +1,15 @@
 import CloseButton from '../ui/CloseButton'
 import Button from '../ui/Button'
 import Chip from '../ui/Chip'
-import { useState, useEffect } from 'react'
+import ChipButton from '../ui/ChipButton'
+import { useState, useEffect, useCallback, useMemo } from 'react'
+import type { DeckCard } from '../lobby/decks'
 import type { MetaDeckItem } from './metaDeckCatalog'
 import type { DeckV2 } from './types'
 import { ArenaCardStrip, type CardStripMeta } from './ArenaCardStrip'
+import { ArenaCardStacks } from './ArenaCardStacks'
+import { buildTypeColumns } from './stackColumns'
+import { useTypeLabels } from './useTypeLabels'
 import { aggregateCards } from './deckCardOps'
 import CurveChart from './CurveChart'
 import Icon from '../ui/Icon'
@@ -19,14 +24,17 @@ export function DeckInspectorModal({
   onClose,
   onCopy,
   onEdit,
+  onSelectCover,
 }: {
   deck: MetaDeckItem | DeckV2
   onClose: () => void
   onCopy: (d: MetaDeckItem | DeckV2) => unknown | Promise<unknown>
   onEdit: (d: MetaDeckItem | DeckV2) => void
+  onSelectCover?: (card: DeckV2['cards'][number]) => void
 }) {
   const [copied, setCopied] = useState(false)
   const [metaMap, setMetaMap] = useState<Map<string, CardStripMeta>>(new Map())
+  const [view, setView] = useState<'list' | 'stacks'>('list')
   const metaDesc = 'description' in deck ? (deck as MetaDeckItem).description : undefined
   const archetype = 'archetype' in deck ? (deck as MetaDeckItem).archetype : undefined
   const tier = 'tier' in deck ? (deck as MetaDeckItem).tier : undefined
@@ -36,6 +44,13 @@ export function DeckInspectorModal({
   const sideTotal = deck.sideboard.reduce((s, c) => s + c.amount, 0)
   const displayCards = aggregateCards(deck.cards)
   const displaySideboard = aggregateCards(deck.sideboard)
+  const metaOf = useCallback(
+    (c: DeckCard) => metaMap.get(`${c.setCode}/${c.cardNumber}`) ?? metaMap.get(c.cardName.toLowerCase()),
+    [metaMap],
+  )
+  const typeLabels = useTypeLabels()
+  const mainStacks = useMemo(() => buildTypeColumns(deck.cards, metaOf, typeLabels), [deck.cards, metaOf, typeLabels])
+  const sideStacks = useMemo(() => buildTypeColumns(deck.sideboard, metaOf, typeLabels), [deck.sideboard, metaOf, typeLabels])
 
   useEffect(() => {
     const all = [...displayCards, ...displaySideboard]
@@ -97,9 +112,29 @@ export function DeckInspectorModal({
           <Chip tone="gold" size="md" pill>{deck.format}</Chip>
           {archetype && <Chip tone="brand" size="md" pill>{archetype}</Chip>}
           {tier && <Chip tone="ok" size="md" pill>{tier}</Chip>}
+          <div className="inspector-view-toggle">
+            <ChipButton size="sm" active={view === 'list'} onClick={() => setView('list')}>{t('decks', 'inspector_view_list')}</ChipButton>
+            <ChipButton size="sm" active={view === 'stacks'} onClick={() => setView('stacks')}>{t('decks', 'inspector_view_stacks')}</ChipButton>
+          </div>
         </div>
 
         <div className="deck-inspector-body">
+          {view === 'stacks' ? (
+            <div className="inspector-cards-column inspector-stacks">
+              <div className="inspector-section-title">
+                {t('game', 'sideboard_main')} ({mainTotal} {t('decks', 'total_cards')})
+              </div>
+              <ArenaCardStacks columns={mainStacks} />
+              {deck.sideboard.length > 0 && (
+                <>
+                  <div className="inspector-section-title inspector-section-title--sideboard">
+                    {t('decks', 'sideboard')} (Sideboard: {sideTotal} {t('decks', 'total_cards')})
+                  </div>
+                  <ArenaCardStacks columns={sideStacks} />
+                </>
+              )}
+            </div>
+          ) : (
           <div className="inspector-cards-column">
             <div className="inspector-section-title">
               {t('game', 'sideboard_main')} ({mainTotal} {t('decks', 'total_cards')})
@@ -134,8 +169,35 @@ export function DeckInspectorModal({
               </>
             )}
           </div>
+          )}
 
           <div className="inspector-info-column">
+            {onSelectCover && (
+              <div>
+                <span className="inspector-info-label">
+                  Cover
+                </span>
+                <div className="inspector-cover-grid">
+                  {[...new Map(deck.cards.slice(0, 12).map((c) => [`${c.setCode}/${c.cardNumber}:${c.cardName}`, c])).values()].slice(0, 8).map((c, i) => {
+                    const key = `${c.setCode}/${c.cardNumber}:${c.cardName}`
+                    const cur = deck.coverCard ?? deck.cards[0]
+                    const curKey = cur ? `${cur.setCode}/${cur.cardNumber}:${cur.cardName}` : ''
+                    return (
+                      <ChipButton
+                        key={key}
+                        data-testid={`inspector-cover-${i}`}
+                        className="inspector-cover-btn"
+                        active={key === curKey}
+                        title={c.cardName}
+                        onClick={() => onSelectCover(c)}
+                      >
+                        {c.cardName}
+                      </ChipButton>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
             {metaDesc && (
               <div>
                 <span className="inspector-info-label">

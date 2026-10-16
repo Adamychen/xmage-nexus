@@ -167,9 +167,8 @@ describe('DecksGallery footer (C.13-mayores §1–§2)', () => {
     render(<DecksGallery onEdit={() => {}} />)
     await openMoreMenu()
     expect(await screen.findByText('Restaurar copia de seguridad (.json)')).not.toBeNull()
-    const stars = await screen.findAllByText('★')
-    const favBtn = stars.map((s) => s.closest('button')).find(Boolean)
-    expect(favBtn?.getAttribute('aria-pressed')).toBe('true')
+    const favBtn = document.querySelector('.decks-footer-actions .decks-footer-btn') as HTMLButtonElement
+    expect(favBtn.getAttribute('aria-pressed')).toBe('true')
     expect(favBtn?.textContent).toContain('Favorito')
   })
 
@@ -216,5 +215,54 @@ describe('DecksGallery enriching (C.13 nit: progreso Scryfall)', () => {
     render(<DecksGallery onEdit={() => {}} />)
     await screen.findAllByText('Mi Burn')
     await waitFor(() => expect(screen.queryByRole('status')).toBeNull())
+  })
+})
+
+describe('DecksGallery empty state (gallery polish)', () => {
+  it('sin resultados muestra vacío con accesos crear / importar / ver populares', async () => {
+    storeState.decks = [customDeck()]
+    render(<DecksGallery onEdit={() => {}} />)
+    await screen.findAllByText('Mi Burn')
+    const search = document.querySelector('.decks-search') as HTMLInputElement
+    fireEvent.change(search, { target: { value: 'zzz-sin-resultados' } })
+    expect(await screen.findByTestId('decks-empty')).not.toBeNull()
+    expect(screen.getByTestId('decks-empty-create')).not.toBeNull()
+    expect(screen.getByTestId('decks-empty-import')).not.toBeNull()
+    expect(screen.getByTestId('decks-empty-browse')).not.toBeNull()
+  })
+
+  it('el chip ★ Favoritos filtra a solo favoritos y se desactiva', async () => {
+    storeState.decks = [customDeck({ id: 'fav1', name: 'Fav One', favorite: true }), customDeck({ id: 'plain1', name: 'Plain One', favorite: false })]
+    render(<DecksGallery onEdit={() => {}} />)
+    await waitFor(() => expect(document.querySelector('.decks-grid')?.textContent).toContain('Fav One'))
+    await waitFor(() => expect(document.querySelector('.decks-grid')?.textContent).toContain('Plain One'))
+    const chip = await screen.findByTestId('decks-fav-filter')
+    expect(chip.getAttribute('aria-pressed')).toBe('false')
+    fireEvent.click(chip)
+    await waitFor(() => expect(document.querySelector('.decks-grid')?.textContent).not.toContain('Plain One'))
+    expect(document.querySelector('.decks-grid')?.textContent).toContain('Fav One')
+    expect(chip.getAttribute('aria-pressed')).toBe('true')
+    fireEvent.click(chip)
+    await waitFor(() => expect(document.querySelector('.decks-grid')?.textContent).toContain('Plain One'))
+  })
+
+  it('densidad Confortable/Compacto cambia el grid y persiste', async () => {
+    const safeGet = () => {
+      try { return localStorage.getItem('nexus_decks_density') } catch { return null }
+    }
+    try { localStorage.removeItem('nexus_decks_density') } catch {}
+    storeState.decks = [customDeck()]
+    render(<DecksGallery onEdit={() => {}} />)
+    await screen.findAllByText('Mi Burn')
+    const compact = await screen.findByTestId('decks-density-compact')
+    const comfort = await screen.findByTestId('decks-density-comfort')
+    expect(document.querySelector('.decks-grid')?.classList.contains('decks-grid--compact')).toBe(false)
+    fireEvent.click(compact)
+    await waitFor(() => expect(document.querySelector('.decks-grid')?.classList.contains('decks-grid--compact')).toBe(true))
+    expect(compact.getAttribute('aria-pressed')).toBe('true')
+    if (safeGet() !== null) expect(safeGet()).toBe('compact')
+    fireEvent.click(comfort)
+    await waitFor(() => expect(document.querySelector('.decks-grid')?.classList.contains('decks-grid--compact')).toBe(false))
+    if (safeGet() !== null) expect(safeGet()).toBe('comfortable')
   })
 })

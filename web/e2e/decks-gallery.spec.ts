@@ -20,7 +20,7 @@ test.describe('Decks Gallery', () => {
       await expect(page.locator('.decks-title', { hasText: /DECKS|Mazos/i })).toBeVisible()
       await expect(page.locator('.deck-box-create')).toBeVisible()
       await expect(page.locator('.deck-box').first()).toBeVisible()
-      await expect(page.getByRole('button', { name: /Editar|Edit/i })).toBeVisible()
+      await expect(page.locator('.decks-edit-btn')).toBeVisible()
       // create new deck navigates to builder
       await page.locator('.deck-box-create').click()
       await expect(page.locator('.deck-builder')).toBeVisible({ timeout: 8000 })
@@ -109,7 +109,7 @@ test.describe('Decks Gallery', () => {
       // Un precon solo existe en memoria: Editar debe clonarlo en storage y abrir
       // el builder; si no, DeckBuilder no encuentra el id y queda en "Cargando...".
       await page.locator('.deck-box', { hasText: /Precon/ }).first().click()
-      await page.getByRole('button', { name: /Editar|Edit/i }).click()
+      await page.locator('.decks-edit-btn').click()
       await expect(page.locator('.deck-builder-body')).toBeVisible({ timeout: 8000 })
       await expect(page.locator('[data-testid="builder-done"]')).toBeVisible()
       await expect(page.locator('.deck-builder.loading')).toHaveCount(0)

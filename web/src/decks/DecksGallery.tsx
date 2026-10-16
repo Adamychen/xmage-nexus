@@ -3,6 +3,8 @@ import Button from '../ui/Button'
 import DropdownMenu from '../ui/DropdownMenu'
 import MenuItem from '../ui/MenuItem'
 import CloseButton from '../ui/CloseButton'
+import IconButton from '../ui/IconButton'
+import ChipButton from '../ui/ChipButton'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { DeckBox, DeckBoxCreate } from './DeckBox'
 import { fetchCardJson } from '../cards/scryfallCards'
@@ -17,6 +19,7 @@ import { DeckBrowser } from './DeckBrowser'
 import { cloneDeckForEdit } from './cloneDeck'
 import { DeckInspectorModal } from './DeckInspectorModal'
 import { ImportDeckDialog } from './ImportDeckDialog'
+import { DeckStacksEditor } from './DeckStacksEditor'
 import type { MetaDeckItem } from './metaDeckCatalog'
 import { ManaPip } from './ArenaManaSymbols'
 import { useTranslation } from '../i18n'
@@ -99,8 +102,16 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
   const [inspectingDeck, setInspectingDeck] = useState<DeckV2 | null>(null)
   const [showImportDialog, setShowImportDialog] = useState(false)
   const [importPrefill, setImportPrefill] = useState<{ text: string; name: string } | null>(null)
+  const [density, setDensity] = useState<'comfortable' | 'compact'>(() => {
+    try {
+      return localStorage.getItem('nexus_decks_density') === 'compact' ? 'compact' : 'comfortable'
+    } catch {
+      return 'comfortable'
+    }
+  })
   // Enriquecimiento de colores vía Scryfall en curso (C.13 nit: sin indicador).
   const [enriching, setEnriching] = useState(false)
+  const [viewingId, setViewingId] = useState<string | null>(null)
 
   const storage = useMemo(() => getDeckStorage(), [])
   const precon = useMemo(() => preconToV2(), [])
@@ -123,6 +134,13 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
     if (next.has(c)) next.delete(c)
     else next.add(c)
     setColorFilter(next)
+  }
+
+  const setDensityMode = (mode: 'comfortable' | 'compact') => {
+    setDensity(mode)
+    try {
+      localStorage.setItem('nexus_decks_density', mode)
+    } catch {}
   }
 
   const filtered = useMemo(() => {
@@ -223,6 +241,16 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
   // Los precons viven solo en memoria (bundled) y los MetaDeckItem no están en
   // storage: al editar hay que clonarlos primero, o el builder queda en
   // "Cargando..." porque no existen en storage.
+  const openStacksEditor = async (d: DeckV2 | MetaDeckItem) => {
+    if ('source' in d && d.source !== 'precon') {
+      setViewingId(d.id)
+      return
+    }
+    const cloned = await handleCloneFromBrowser(d)
+    await load()
+    setViewingId(cloned.id)
+  }
+
   const openForEdit = async (d: DeckV2 | MetaDeckItem) => {
     if ('source' in d && d.source !== 'precon') {
       onEdit(d.id)
@@ -247,12 +275,33 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
     await load()
   }
 
-  const handleClone = async () => {
-    if (!selected) return
-    const clone: DeckV2 = { ...selected, id: makeDeckId(), name: `${selected.name} ${t('common', 'copy')}`, createdAt: Date.now(), updatedAt: Date.now(), source: 'custom' as const }
+  const cloneDeck = async (deck: DeckV2) => {
+    const clone: DeckV2 = { ...deck, id: makeDeckId(), name: `${deck.name} ${t('common', 'copy')}`, createdAt: Date.now(), updatedAt: Date.now(), source: 'custom' as const }
     await storage.put(clone)
     await load()
     setSelectedId(clone.id)
+  }
+
+  const toggleFavoriteDeck = async (deck: DeckV2) => {
+    if (deck.source === 'precon') return
+    const upd: DeckV2 = { ...deck, favorite: !deck.favorite, updatedAt: Date.now() }
+    await storage.put(upd)
+    await load()
+    setSelectedId(upd.id)
+  }
+
+  const handleSelectCover = async (card: DeckV2['cards'][number]) => {
+    if (!inspectingDeck || inspectingDeck.source === 'precon') return
+    const upd: DeckV2 = { ...inspectingDeck, coverCard: card, updatedAt: Date.now() }
+    await storage.put(upd)
+    setInspectingDeck(upd)
+    await load()
+    setSelectedId(upd.id)
+  }
+
+  const handleClone = async () => {
+    if (!selected) return
+    await cloneDeck(selected)
   }
 
   const handleExport = async (fmt: 'dck' | 'arena' | 'plain' | 'dek') => {
@@ -265,10 +314,7 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
 
   const handleFavorite = async () => {
     if (!selected || selected.source === 'precon') return
-    const upd: DeckV2 = { ...selected, favorite: !selected.favorite, updatedAt: Date.now() }
-    await storage.put(upd)
-    await load()
-    setSelectedId(upd.id)
+    await toggleFavoriteDeck(selected)
   }
 
   const handleBackupAll = async () => {
@@ -336,6 +382,24 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
     setShowImportDialog(true)
   }
 
+  const viewingDeck = viewingId ? decks.find((d) => d.id === viewingId) ?? null : null
+  if (viewingDeck) {
+    return (
+      <DeckStacksEditor
+        key={viewingDeck.id}
+        deck={viewingDeck}
+        onClose={() => {
+          setViewingId(null)
+          void load()
+        }}
+        onEdit={() => {
+          setViewingId(null)
+          void load().then(() => openForEdit(viewingDeck))
+        }}
+      />
+    )
+  }
+
   return (
     <div className="decks-gallery">
       <header className="decks-gallery-top">
@@ -357,6 +421,26 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
           </div>
 
           <div className="decks-gallery-header-right">
+            <div className="decks-density" role="group" aria-label="density">
+              <IconButton
+                label={t('decks', 'gallery_density_comfortable')}
+                data-testid="decks-density-comfort"
+                className={`decks-density-btn ${density === 'comfortable' ? 'active' : ''}`}
+                aria-pressed={density === 'comfortable'}
+                onClick={() => setDensityMode('comfortable')}
+              >
+                <Icon name="grid" size={14} />
+              </IconButton>
+              <IconButton
+                label={t('decks', 'gallery_density_compact')}
+                data-testid="decks-density-compact"
+                className={`decks-density-btn ${density === 'compact' ? 'active' : ''}`}
+                aria-pressed={density === 'compact'}
+                onClick={() => setDensityMode('compact')}
+              >
+                <Icon name="layers" size={14} />
+              </IconButton>
+            </div>
             <Button variant="primary" size="sm" data-testid="decks-import-cta" onClick={() => setShowImportDialog(true)}>
               <Icon name="download" size={14} /> {t('decks', 'import_deck')}
             </Button>
@@ -399,6 +483,15 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
                   <ManaPip symbol={c} size={18} />
                 </button>
               ))}
+              <ChipButton
+                data-testid="decks-fav-filter"
+                className="decks-fav-chip"
+                active={formatFilter === 'Favoritos'}
+                title={t('decks', 'favorite')}
+                onClick={() => setFormatFilter((f) => (f === 'Favoritos' ? 'All Decks' : 'Favoritos'))}
+              >
+                <span aria-hidden="true">★</span> {t('decks', 'favorite')}
+              </ChipButton>
             </div>
           </div>
         )}
@@ -406,7 +499,7 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
 
       {mainView === 'my-decks' ? (
         <>
-          <div className="decks-grid" onDragOver={(e) => e.preventDefault()} onDrop={async (e) => {
+          <div className={`decks-grid ${density === 'compact' ? 'decks-grid--compact' : ''}`} onDragOver={(e) => e.preventDefault()} onDrop={async (e) => {
             e.preventDefault()
             const f = e.dataTransfer.files?.[0]
             if (f) await handleFile(f)
@@ -419,8 +512,35 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
                 selected={selectedId === d.id}
                 onSelect={() => setSelectedId(d.id)}
                 onDoubleClick={() => setInspectingDeck(d)}
+                onEdit={() => void openForEdit(d)}
+                onInspect={() => setInspectingDeck(d)}
+                onClone={() => void cloneDeck(d)}
+                onToggleFavorite={d.source === 'precon' ? undefined : () => void toggleFavoriteDeck(d)}
               />
             ))}
+            {filtered.length === 0 && (
+              <div className="decks-empty" data-testid="decks-empty" role="status">
+                <div className="decks-empty-icon" aria-hidden="true"><Icon name="package" size={28} /></div>
+                <p className="decks-empty-title">{t('lobby', 'join_search_empty')}</p>
+                {search.trim() && <p className="decks-empty-hint">{t('decks', 'builder_search_no_results', { query: search.trim() })}</p>}
+                <div className="decks-empty-actions">
+                  <Button variant="primary" size="sm" data-testid="decks-empty-create" onClick={handleCreate}>
+                    <Icon name="plus" size={14} /> {t('decks', 'box_create')}
+                  </Button>
+                  <Button variant="subtle" size="sm" data-testid="decks-empty-import" onClick={() => setShowImportDialog(true)}>
+                    <Icon name="download" size={14} /> {t('decks', 'import_deck')}
+                  </Button>
+                  <Button variant="subtle" size="sm" data-testid="decks-empty-browse" onClick={() => setMainView('browser')}>
+                    <Icon name="globe" size={14} /> {t('decks', 'popular_meta')}
+                  </Button>
+                </div>
+                {search.trim() && (
+                  <Button variant="subtle" size="sm" className="decks-empty-clear" onClick={() => { setSearch(''); setFormatFilter('All Decks'); setColorFilter(new Set()) }}>
+                    {t('common', 'clear')}
+                  </Button>
+                )}
+              </div>
+            )}
           </div>
 
           <footer className="decks-footer">
@@ -450,6 +570,7 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
                 <MenuItem role="menuitem" icon="file" onClick={() => handleExport('dek')}>.dek</MenuItem>
               </DropdownMenu>
               <Button variant="soft-danger" size="sm" className="decks-footer-btn" icon="trash" disabled={!selected || selected?.source === 'precon'} title={selected?.source === 'precon' ? t('decks', 'browser_filter_precon') : undefined} onClick={handleDelete}>{t('common', 'delete')}</Button>
+              <Button variant="subtle" className="decks-footer-btn decks-stacks-btn" icon="layers" disabled={!selected} onClick={() => selected && void openStacksEditor(selected)}>{t('decks', 'stacks_editor')}</Button>
               <Button variant="primary" className="decks-edit-btn" icon="pencil" disabled={!selected} onClick={() => selected && void openForEdit(selected)}>{t('common', 'edit')}</Button>
             </div>
             <input ref={restoreInputRef} type="file" accept=".json" hidden onChange={async (e) => {
@@ -489,6 +610,7 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
             void openForEdit(deckToEdit)
           }}
           onCopy={handleClone}
+          onSelectCover={inspectingDeck.source === 'precon' ? undefined : handleSelectCover}
         />
       )}
     </div>
