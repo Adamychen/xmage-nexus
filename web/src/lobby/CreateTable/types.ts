@@ -19,7 +19,6 @@ export interface CreateTableForm {
   setTableCategory: (v: TableCategory) => void
   tournamentCategory: TournamentCategory
   setTournamentCategory: (v: TournamentCategory) => void
-  applyMode: (cat: TableCategory) => void
   applyPreset: (key: string) => void
   gameTypes: GameTypeInfo[]
   deckTypes: string[]

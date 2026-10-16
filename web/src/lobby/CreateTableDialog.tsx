@@ -58,8 +58,6 @@ function CreateTableDialogBody({ onClose, onEditDeck, kind = 'match', onReset }:
       size="lg"
       ornate
       legacyPanelClass="dialog create-table-dialog"
-      kickerIcon={wizardSteps[activeIndex]?.icon ?? 'settings'}
-      kickerLabel={t('lobby', 'create_wizard_step_of', { current: activeIndex + 1, total: wizardSteps.length })}
       title={kind === 'tourney' ? t('lobby', 'create_tournament_title') : t('lobby.create_table_btn')}
       message={stepMessage}
       topRight={(

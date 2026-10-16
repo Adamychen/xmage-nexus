@@ -26,6 +26,7 @@ import {
   defaultTournamentType,
   isDraftTournamentType,
   isConstructedTournamentType,
+  isHumanSeatType,
   normalizeSeatType,
   recommendedFreeMulligans,
   type CreateTab,
@@ -192,31 +193,13 @@ export function useCreateTableForm(onClose: () => void, kind: CreateKind = 'matc
     }
   }
 
-  const applyMode = (cat: TableCategory) => {
-    setTableCategory(cat)
-  }
-
   const setUseDraftTournamentChecked = (v: boolean) => {
     setUseDraftTournament(v)
     if (tableCategory === 'tourney') setTournamentCategory(v ? 'limited' : 'constructed')
   }
 
   const applyPreset = (key: string) => {
-    if (key === 'modern_bo3') {
-      setTableCategoryState('duel')
-      setUseDraftTournament(false)
-      setGameTypeState('Two Player Duel')
-      setDeckTypeState('Constructed - Modern')
-      setWins(2)
-      setNumPlayers(2)
-    } else if (key === 'commander_4p') {
-      setTableCategoryState('multi')
-      setUseDraftTournament(false)
-      setGameTypeState('Commander Free For All')
-      setDeckTypeState('Variant Magic - Commander')
-      setNumPlayers(4)
-      setWins(1)
-    } else if (key === 'draft_8p') {
+    if (key === 'draft_8p') {
       setTableCategoryState('tourney')
       setTournamentCategoryState('limited')
       setUseDraftTournament(true)
@@ -525,7 +508,10 @@ export function useCreateTableForm(onClose: () => void, kind: CreateKind = 'matc
   }
   const setSeatType = (idx: number, type: string) => {
     const n = normalizeSeatType(type)
-    setSeatConfigs((prev) => prev.map((s, i) => (i === idx ? { ...s, type: n } : s)))
+    const botDeck = simDeck ? deckRef(simDeck) : ''
+    setSeatConfigs((prev) => prev.map((s, i) => (i === idx
+      ? { ...s, type: n, deckName: isHumanSeatType(n) ? s.deckName : s.deckName || botDeck }
+      : s)))
   }
   const setSeatDeck = (idx: number, deckRefValue: string) => {
     setSeatConfigs((prev) => prev.map((s, i) => (i === idx ? { ...s, deckName: deckRefValue } : s)))
@@ -695,7 +681,6 @@ export function useCreateTableForm(onClose: () => void, kind: CreateKind = 'matc
     setTableCategory,
     tournamentCategory,
     setTournamentCategory,
-    applyMode,
     applyPreset,
     isLimited,
     isDraftLimited,

@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test'
 import { fakeOnly } from './support/fake-mode'
 import { withFakeServer } from './support/fake-backend'
-import { installCapture, login, type CaptureBuffers } from './support/start-game'
+import { installCapture, login, pickFormatOption, type CaptureBuffers } from './support/start-game'
 import { makeBaseScenario } from '../fixtures/fake'
 import { playerGameView } from '../src/__fixtures__/gameViews'
 
@@ -52,7 +52,8 @@ test.describe('Wizard crear mesa (U3)', () => {
       await page.getByPlaceholder(/separados por comas|comma-separated/i).fill('griefer')
       await page.getByRole('button', { name: /Siguiente/ }).click()
       // default seats now wait for humans: opt the seat into the Mad AI to get a bot seat with skill
-      await page.getByTestId('seat-type-0').selectOption('COMPUTER_MAD')
+      await page.getByTestId('seat-node-1').click()
+      await page.getByRole('radio', { name: /Mad/ }).click()
       await page.getByTestId('seat-skill-0').selectOption('7')
       await page.getByRole('button', { name: /Siguiente/ }).click()
       await page.getByRole('button', { name: /Crear Mesa/ }).click()
@@ -75,7 +76,8 @@ test.describe('Wizard crear mesa (U3)', () => {
       await page.getByRole('button', { name: /Siguiente/ }).click()
       await page.getByRole('button', { name: /Siguiente/ }).click()
       await page.getByRole('button', { name: /Siguiente/ }).click()
-      await page.getByTestId('seat-type-0').selectOption('HUMAN')
+      await page.getByTestId('seat-node-1').click()
+      await page.getByRole('radio', { name: /Humano|Human/ }).click()
       await page.getByRole('button', { name: /Siguiente/ }).click()
       await page.getByRole('button', { name: /Crear Mesa/ }).click()
       await expect(page.getByTestId('staging-player-actions')).toBeVisible({ timeout: 15_000 })
@@ -95,11 +97,12 @@ test.describe('Wizard crear mesa (U3)', () => {
       await login(page, 'wiz')
       await openWizard(page)
       await page.getByPlaceholder(/Ej\. Modern Casual Bo3/).fill('mad-duel')
-      await page.getByLabel(/Formato \(Tipo de Mazo\)|Format \(Deck Type\)/i).selectOption('Constructed - Modern')
+      await pickFormatOption(page, 'format-deck-type', 'Constructed - Modern')
       await page.getByRole('button', { name: /Siguiente/ }).click()
       await page.getByRole('button', { name: /Siguiente/ }).click()
       await page.getByRole('button', { name: /Siguiente/ }).click()
-      await page.getByTestId('seat-type-0').selectOption('COMPUTER_MAD')
+      await page.getByTestId('seat-node-1').click()
+      await page.getByRole('radio', { name: /Mad/ }).click()
       await page.getByRole('button', { name: /Siguiente/ }).click()
       await page.getByRole('button', { name: /Crear Mesa/ }).click()
       await expect(page.getByTestId('staging-player-actions')).toBeVisible({ timeout: 15_000 })
@@ -182,7 +185,7 @@ test.describe('Wizard crear mesa (U3)', () => {
       await login(page, 'wiz')
       await openWizard(page)
       await page.getByPlaceholder(/Ej\. Modern Casual Bo3/).fill('limited-match')
-      await page.getByLabel(/Formato \(Tipo de Mazo\)|Format \(Deck Type\)/i).selectOption('Limited')
+      await pickFormatOption(page, 'format-deck-type', 'Limited')
       await expect(page.getByText(/no genera sobres/)).toBeVisible()
       await expect(page.getByPlaceholder(/Ej\. M21, MH3, BLB/)).toBeHidden()
       for (let i = 0; i < 8; i++) {

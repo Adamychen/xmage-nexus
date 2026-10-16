@@ -161,6 +161,10 @@
 }
 
 /* Tab Body */
+.create-table-dialog {
+  --dlg-max-h: 86vh;
+}
+
 .create-table-body {
   flex: 1 1 auto;
   min-height: 0;
@@ -195,22 +199,6 @@
   .create-general-grid {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     gap: var(--sp-4);
-  }
-  .create-general-col .create-mode-selector {
-    grid-template-columns: 1fr;
-    gap: var(--sp-2);
-  }
-  .create-general-col .create-mode-card {
-    flex-direction: row;
-    align-items: center;
-    gap: var(--sp-3);
-    padding: var(--sp-2) var(--sp-3);
-  }
-  .create-general-col .create-mode-card:hover {
-    transform: none;
-  }
-  .create-general-col .create-mode-card-icon {
-    margin-bottom: 0;
   }
 }
 
@@ -350,70 +338,10 @@
 }
 
 
-/* Seats Section */
-.create-seats-section {
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-3);
-}
-
-.create-seat-box {
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-2h);
-  padding: var(--sp-3);
-  background: rgb(var(--ink-rgb) / 0.6);
-  border: 1px solid var(--veil-2);
-  border-radius: var(--r-md);
-}
-.create-seat-box--seat {
-  background: rgb(var(--ink-2-rgb) / 0.5);
-  padding: var(--sp-2) var(--sp-3);
-  gap: var(--sp-2);
-}
-.create-seat-fields {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 2.5fr);
-  gap: var(--sp-2) var(--sp-3);
-  align-items: start;
-}
-.create-seat-fields > :only-child {
-  grid-column: 1 / -1;
-}
-
-.create-seats-layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: var(--sp-3);
-  align-items: start;
-}
-@media (min-width: 880px) {
-  .create-seats-layout {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr);
-    gap: var(--sp-4);
-  }
-}
 .create-table-dialog .create-seat-select { width: auto; }
-.create-seat-select--type { min-width: 140px; }
 .create-seat-select--skill { min-width: 80px; }
 
-.create-deck-picker {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-2);
-}
-
-.create-deck-picker select {
-  flex: 1 1 auto;
-  min-width: 0;
-}
 .create-seats-shortcuts { margin-top: var(--sp-2h); border-top: 1px dashed var(--veil-2); padding-top: var(--sp-2h); }
-
-.seat-box-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
 
 .seat-title {
   font-size: var(--fs-xs);
@@ -539,75 +467,6 @@
   border: 1px solid var(--veil-5);
 }
 
-/* Mode Selector Cards */
-.create-mode-selector {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--sp-2h);
-}
-
-.create-mode-card {
-  background: rgb(var(--ink-2-rgb) / 0.6);
-  border: 1.5px solid var(--veil-3);
-  border-radius: var(--r-md);
-  padding: var(--sp-3);
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-1h);
-  text-align: left;
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  color: inherit;
-  position: relative;
-  overflow: hidden;
-}
-
-.create-mode-card:hover {
-  background: var(--ink-4);
-  border-color: rgb(var(--gold-rgb) / 0.4);
-  transform: translateY(-2px);
-}
-
-.create-mode-card.active {
-  background: rgb(var(--brand-rgb) / 0.16);
-  border-color: var(--gold-300);
-  box-shadow: 0 0 16px rgb(var(--gold-rgb) / 0.2), inset 0 0 12px rgb(var(--brand-rgb) / 0.15);
-}
-
-.create-mode-card-icon {
-  color: var(--gold-300);
-  display: flex;
-  align-items: center;
-  margin-bottom: var(--sp-0h);
-}
-
-.create-mode-card-content {
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-1);
-  min-width: 0;
-}
-
-.create-mode-card-title {
-  display: block;
-  font-size: var(--fs-md);
-  font-weight: 800;
-  color: var(--fg-1);
-  letter-spacing: 0.02em;
-  line-height: 1.25;
-}
-
-.create-mode-card.active .create-mode-card-title {
-  color: var(--gold-300);
-}
-
-.create-mode-card-desc {
-  display: block;
-  font-size: var(--fs-xs);
-  color: var(--fg-3);
-  line-height: 1.35;
-}
-
 /* Quick Presets Strip */
 .create-presets-strip {
   display: flex;
@@ -657,8 +516,5 @@
   .wizard-step.active .wizard-step-text {
     white-space: normal;
     text-align: center;
-  }
-  .create-mode-selector {
-    grid-template-columns: 1fr;
   }
 }

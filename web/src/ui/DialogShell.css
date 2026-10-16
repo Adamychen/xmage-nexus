@@ -108,6 +108,7 @@
 
 .dlg-head-right {
   flex: none;
+  margin-left: auto;
   display: flex;
   align-items: center;
   gap: var(--sp-2);
