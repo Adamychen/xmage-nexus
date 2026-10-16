@@ -43,16 +43,21 @@ export default function RankingView({ users, currentUsername, onInspectUser }: R
   const myElo = myUser ? playerRankRating(myUser, limited) : null
   const myTier = myElo ? getRankInfo(myElo).tier : null
 
-  // Sorted room leaderboard: ELO descending, then fair play descending
   const sortedUsers = useMemo(() => {
-    const list = users.map((u) => ({
-      ...u,
-      rating: playerRankRating(u, limited),
-      stats: parseMatchHistory(u.matchHistory),
-      // Juego limpio: dato REAL del server (ratio de abandonos); el win rate
-      // no existe (el historial solo trae el conteo de partidas).
-      fairPlay: Math.max(0, 100 - (u.matchQuitRatio ?? 0)),
-    }))
+    const list = users.map((u) => {
+      const tourneyRaw = u.tourneyHistory && u.tourneyHistory !== '0' ? u.tourneyHistory : null
+      const historyStr = limited ? (tourneyRaw ?? u.matchHistory) : u.matchHistory
+      const quitRatio = limited && u.tourneyQuitRatio !== undefined && u.tourneyQuitRatio > 0
+        ? u.tourneyQuitRatio
+        : (u.matchQuitRatio ?? 0)
+
+      return {
+        ...u,
+        rating: playerRankRating(u, limited),
+        stats: parseMatchHistory(historyStr),
+        fairPlay: Math.max(0, 100 - quitRatio),
+      }
+    })
 
     list.sort((a, b) => {
       const ra = a.rating ?? -1

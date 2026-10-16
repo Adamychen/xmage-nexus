@@ -115,8 +115,13 @@ export function formatSeatHistory(sHistory?: string, userHistory?: string): { sh
     const quitMatch = details.match(/Q:(\d+)/i)
     const quitCount = quitMatch ? parseInt(quitMatch[1], 10) : 0
 
+    const tourneyMatch = raw.match(/Tourneys:\s*(\d+)/i)
+    const tourneys = tourneyMatch ? parseInt(tourneyMatch[1], 10) : 0
+
     let short = totalMatches
-    if (quitPct && quitPct !== '0%') {
+    if (parseInt(totalMatches, 10) === 0 && tourneys > 0) {
+      short = `T:${tourneys}`
+    } else if (quitPct && quitPct !== '0%') {
       short = `${totalMatches} (${quitPct})`
     } else if (quitCount > 0) {
       short = `${totalMatches} (Q:${quitCount})`

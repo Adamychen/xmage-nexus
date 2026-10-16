@@ -154,4 +154,25 @@ describe('RankingView Component', () => {
     expect(document.querySelector('.rank-guide-tier.is-mine')).toBeNull()
     expect(document.querySelector('.pos-cell')?.textContent).toBe('—')
   })
+
+  it('shows tourney history and tourney quit ratio when limited format is selected', () => {
+    const users: UsersView[] = [
+      {
+        ...mockUsers[0],
+        userName: 'drafter',
+        matchHistory: '0',
+        tourneyHistory: '157 (D:11)',
+        matchQuitRatio: 0,
+        tourneyQuitRatio: 7,
+        constructedRating: 800,
+        limitedRating: 1773,
+      },
+    ]
+    render(<RankingView users={users} currentUsername="drafter" onInspectUser={vi.fn()} />)
+
+    fireEvent.click(screen.getByRole('tab', { name: /Limit/i }))
+
+    expect(screen.getByText('157 (D:11)')).toBeDefined()
+    expect(screen.getByText('93%')).toBeDefined()
+  })
 })
