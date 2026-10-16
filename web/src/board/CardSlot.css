@@ -128,18 +128,31 @@ html.fx-off .card-slot.attacking {
   box-shadow: 0 0 14px 2px rgb(var(--brand-rgb) / 0.65), 0 4px 12px var(--shade-2);
 }
 
-/* Combat damage feedback */
+/* Combat damage feedback. `translate` (not `transform`) so the shake composes
+   with the `.tapped` rotation instead of replacing it. */
 @keyframes shakeHit {
-  0%, 100% { margin-left: 0; }
-  20% { margin-left: -4px; }
-  40% { margin-left: var(--sp-1); }
-  60% { margin-left: -3px; }
-  80% { margin-left: var(--sp-1); }
+  0%, 100% { translate: 0 0; }
+  20% { translate: -4px 0; }
+  40% { translate: 4px 0; }
+  60% { translate: -2px 0; }
+  80% { translate: 2px 0; }
+}
+
+@keyframes damageFlash {
+  0%, 100% { filter: brightness(1) saturate(1); }
+  40% { filter: brightness(1.5) saturate(1.8); }
 }
 
 .card-slot.took-damage,
 .player-info-bar.took-damage {
-  animation: shakeHit 0.38s ease-in-out;
+  animation: shakeHit 300ms ease-in-out, damageFlash 120ms var(--ease-out);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-slot.took-damage,
+  .player-info-bar.took-damage {
+    animation: damageFlash 120ms var(--ease-out);
+  }
 }
 
 @keyframes stackSourcePulse {
@@ -179,30 +192,78 @@ html.fx-off .card-slot.stack-source-pulse {
   box-shadow: 0 0 20px 4px rgb(var(--ok-rgb) / 0.9), 0 10px 24px var(--shade-3);
 }
 
-/* Targetable glow (orange pulse) */
-@keyframes targetPulse {
-  0%, 100% {
-    box-shadow: 0 0 12px 2px rgb(var(--gold-rgb) / 0.6), 0 4px 12px var(--shade-2);
-    border-color: var(--gold-500);
+/* Cast press on a playable card: an 80 ms squeeze, then a spring pop back.
+   `scale` (not `transform`) so it composes with the `.tapped` rotation. Under
+   reduced motion both steps fade opacity instead. */
+.card-slot.casting-press {
+  animation: castPress 80ms var(--ease-out) forwards !important;
+}
+
+.card-slot.casting-pop {
+  animation: castPop 120ms var(--ease-spring) !important;
+}
+
+@keyframes castPress {
+  from { scale: 1; }
+  to { scale: 0.92; }
+}
+
+@keyframes castPop {
+  0% { scale: 0.92; }
+  60% { scale: 1.08; }
+  100% { scale: 1; }
+}
+
+@keyframes castFade {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.8; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-slot.casting-press,
+  .card-slot.casting-pop {
+    animation: castFade 120ms var(--ease-out);
   }
-  50% {
-    box-shadow: 0 0 24px 6px rgb(var(--gold-rgb) / 0.95), 0 4px 12px var(--shade-2);
-    border-color: var(--line-3);
+}
+
+/* Targetable beacon: a gold ring that pings once per 1.5 s and rests the rest of
+   the cycle, instead of a continuous pulse. The steady glow is the base state. */
+@keyframes targetBeacon {
+  0%, 50%, 100% {
+    box-shadow: 0 0 12px 2px rgb(var(--gold-rgb) / 0.6), 0 4px 12px var(--shade-2);
+  }
+  20% {
+    box-shadow: 0 0 26px 8px rgb(var(--gold-rgb) / 0.95), 0 4px 12px var(--shade-2);
   }
 }
 
 .card-slot.targetable {
-  animation: targetPulse 1.2s ease-in-out infinite;
+  box-shadow: 0 0 12px 2px rgb(var(--gold-rgb) / 0.6), 0 4px 12px var(--shade-2);
+  animation: targetBeacon 1.5s ease-out infinite;
   cursor: crosshair;
   border-color: var(--gold-500);
 }
 
-/* Pulso infinito de objetivo: la fase no es reproducible en capturas (WebKit). */
+/* Infinite beacon: reduced motion keeps the static gold glow. */
 @media (prefers-reduced-motion: reduce) {
   .card-slot.targetable,
   .sickness-badge,
   .sickness-veil {
     animation: none;
+  }
+}
+
+/* A targetable card that also took damage runs the beacon and the hit feedback
+   together. They animate different properties (box-shadow, translate, filter),
+   so the list composes; the shorthand on .card-slot.targetable would otherwise
+   drop the shake. */
+.card-slot.targetable.took-damage {
+  animation: targetBeacon 1.5s ease-out infinite, shakeHit 300ms ease-in-out, damageFlash 120ms var(--ease-out);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-slot.targetable.took-damage {
+    animation: damageFlash 120ms var(--ease-out);
   }
 }
 
@@ -244,17 +305,18 @@ html.fx-off .card-slot.stack-source-pulse {
   to { transform: rotate(360deg); }
 }
 
+/* One-shot confirmation ring while the chosen target awaits the server echo. */
 .card-slot.is-chosen-pending {
-  animation: chosenPendingPulse 0.6s ease-in-out infinite alternate;
+  animation: chosenPendingRing 0.6s var(--ease-out) both;
   border-color: var(--gold-300);
 }
 
-@keyframes chosenPendingPulse {
+@keyframes chosenPendingRing {
   from {
-    box-shadow: 0 0 12px 2px rgb(var(--gold-rgb) / 0.7), 0 4px 12px var(--shade-2);
+    box-shadow: 0 0 26px 8px rgb(var(--gold-rgb) / 0.95), 0 4px 12px var(--shade-2);
   }
   to {
-    box-shadow: 0 0 24px 6px rgb(var(--gold-rgb) / 0.95), 0 4px 12px var(--shade-2);
+    box-shadow: 0 0 12px 2px rgb(var(--gold-rgb) / 0.7), 0 4px 12px var(--shade-2);
   }
 }
 

@@ -298,6 +298,7 @@ html.fx-off .life-value {
   border: 1px solid var(--veil-5);
   color: var(--fg-2);
   font-family: var(--font-mono, monospace);
+  transition: color 200ms cubic-bezier(0.16, 1, 0.3, 1), border-color 200ms cubic-bezier(0.16, 1, 0.3, 1), transform 200ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .player-timer-badge.timer-active {
@@ -309,12 +310,46 @@ html.fx-off .life-value {
 .player-timer-badge.timer-low {
   border-color: var(--err);
   color: var(--err);
-  animation: timerWarning 0.8s infinite alternate;
 }
 
-@keyframes timerWarning {
-  from { opacity: 0.7; }
-  to { opacity: 1; text-shadow: 0 0 6px var(--err); }
+/* Urgency tiers: 30-10s warn, 10-5s urgent, 5-0s critical. The number re-keys
+   on every tick (PlayerInfoBar), so the one-shot pulse on `.timer-value` lands
+   once per second instead of free-running. */
+.player-timer-badge.warn {
+  color: var(--warn);
+  border-color: var(--warn);
+  transform: scale(1.02);
+}
+
+.player-timer-badge.urgent {
+  color: var(--err);
+  border-color: var(--err);
+}
+
+.player-timer-badge.urgent .timer-value {
+  animation: timerTick 1s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes timerTick {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+.player-timer-badge.critical {
+  color: var(--err);
+  border-color: var(--err);
+  transform: scale(1.1);
+}
+
+.player-timer-badge.critical .timer-value {
+  animation: timerShake 1s linear;
+}
+
+@keyframes timerShake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-1px); }
+  75% { transform: translateX(1px); }
 }
 
 .player-badges {
@@ -399,8 +434,33 @@ html.fx-off .life-value {
     box-shadow: 0 0 16px 2px rgb(var(--gold-rgb) / 0.5), 0 8px 24px var(--shade-3);
   }
   .avatar-priority-ring,
-  .life-counter.life-danger,
-  .player-timer-badge.timer-low {
+  .life-counter.life-danger {
+    animation: none;
+  }
+  .player-timer-badge.urgent .timer-value,
+  .player-timer-badge.critical .timer-value {
+    animation: none;
+  }
+  .player-timer-badge.warn,
+  .player-timer-badge.critical {
+    transform: none;
+  }
+}
+
+.player-info-bar.active-glow {
+  animation: activeGlow 300ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes activeGlow {
+  50% { border-color: var(--gold-500); transform: scale(1.02); }
+}
+
+html.fx-off .player-info-bar.active-glow {
+  animation: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .player-info-bar.active-glow {
     animation: none;
   }
 }

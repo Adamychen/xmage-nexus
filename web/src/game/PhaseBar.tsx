@@ -5,6 +5,7 @@ import { useStore } from '../state/store'
 import { getState, setState } from '../state/state'
 import { useTranslation } from '../i18n'
 import { serverPhaseStops } from './phaseStops'
+import { useChangeFlag } from './useChangeFlag'
 import './PhaseBar.css'
 
 interface StepDef {
@@ -46,6 +47,7 @@ export default function PhaseBar({ step }: { step: string }) {
   const currentIdx = STEPS.findIndex((s) => s.key === step)
   const activeIdx = currentIdx >= 0 ? currentIdx : 0
   const phaseStops = useStore((s) => s.phaseStops)
+  const [wiping, clearWipe] = useChangeFlag(step)
 
   const toggleStop = useCallback((stopKey?: string, e?: React.MouseEvent) => {
     if (!stopKey || !phaseStops) return
@@ -76,7 +78,10 @@ export default function PhaseBar({ step }: { step: string }) {
             {groupSteps.map((s) => {
               let cls = 'phase-badge'
               if (s.idx < activeIdx) cls += ' past'
-              else if (s.idx === activeIdx) cls += ' active'
+              else if (s.idx === activeIdx) {
+                cls += ' active'
+                if (wiping) cls += ' phase-wipe'
+              }
 
               const hasYourStop = s.stopKey ? !!phaseStops?.yourTurn?.[s.stopKey] : false
               const hasOppStop = s.stopKey ? !!phaseStops?.opponentTurn?.[s.stopKey] : false
@@ -95,6 +100,7 @@ export default function PhaseBar({ step }: { step: string }) {
                   data-testid={`phase-bar-step-${s.key}`}
                   title={`${stepFullName}${s.stopKey ? ` (${t('game', 'you')}: ${hasYourStop ? onLabel : offLabel}, ${t('game', 'opponent')}: ${hasOppStop ? onLabel : offLabel})` : ''}`}
                   onClick={(e) => toggleStop(s.stopKey, e)}
+                  onAnimationEnd={s.idx === activeIdx && wiping ? clearWipe : undefined}
                   onContextMenu={(e) => {
                     e.preventDefault()
                     if (s.stopKey) {

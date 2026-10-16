@@ -89,6 +89,15 @@ function restoreStorage(previous: Record<string, string | null> | null): void {
   }
 }
 
+function simulateTargetDamage(): void {
+  const card = document.querySelector<HTMLElement>('[data-gallery-stage] .card-slot.targetable')
+  if (!card) return
+  card.classList.remove('took-damage')
+  void card.offsetWidth
+  card.classList.add('took-damage')
+  window.setTimeout(() => card.classList.remove('took-damage'), 1500)
+}
+
 export default function GalleryScreen() {
   const entries = useMemo(() => buildGalleryEntries(), [])
   const [activeId, setActiveId] = useState(() => entries[0]?.id ?? '')
@@ -211,6 +220,15 @@ export default function GalleryScreen() {
             </section>
           ))}
         </nav>
+        <button
+          type="button"
+          className="gallery-action"
+          data-gallery-damage
+          title="Aplica la clase took-damage a la primera carta objetivo visible (beacon + shake + flash a la vez)"
+          onClick={simulateTargetDamage}
+        >
+          Simular daño en objetivo
+        </button>
         <p className="gallery-hint">
           Solo disponible en dev. Cambia el estado del store; al salir se restaura el estado previo.
         </p>

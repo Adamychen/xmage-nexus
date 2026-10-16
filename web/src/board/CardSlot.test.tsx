@@ -386,6 +386,12 @@ describe('CardSlot entering lifecycle', () => {
   })
 })
 
+const animationEnd = (el: Element, animationName: string) => {
+  const ev = new Event('animationend', { bubbles: true })
+  Object.defineProperty(ev, 'animationName', { value: animationName })
+  fireEvent(el, ev)
+}
+
 describe('CardSlot acuse optimista (plan4 §5.4)', () => {
   const makeSlotCard = (id: string) =>
     ({ id, name: 'Lightning Bolt', cardTypes: ['Instant'] }) as unknown as PermanentView
@@ -407,6 +413,30 @@ describe('CardSlot acuse optimista (plan4 §5.4)', () => {
     // eco del servidor: el GAME_UPDATE trae un card nuevo (objeto fresco)
     view.rerender(<CardSlot card={makeSlotCard('ack-1')} isPlayable onClick={onClick} />)
     expect(slot().className).not.toContain('is-pending')
+  })
+
+  it('un clic en carta jugable pinta casting-press y pasa a casting-pop al terminar el press', () => {
+    const view = render(<CardSlot card={makeSlotCard('cast-1')} isPlayable onClick={vi.fn()} />)
+    const slot = () => view.container.querySelector('.card-slot')!
+
+    fireEvent.click(slot())
+    expect(slot().className).toContain('casting-press')
+
+    animationEnd(slot(), 'cardAppear')
+    expect(slot().className).toContain('casting-press')
+
+    animationEnd(slot(), 'castPress')
+    expect(slot().className).toContain('casting-pop')
+    expect(slot().className).not.toContain('casting-press')
+
+    animationEnd(slot(), 'castPop')
+    expect(slot().className).not.toContain('casting-pop')
+  })
+
+  it('un clic en carta no jugable no pinta casting-press', () => {
+    const view = render(<CardSlot card={makeSlotCard('cast-2')} onClick={vi.fn()} />)
+    fireEvent.click(view.container.querySelector('.card-slot')!)
+    expect(view.container.querySelector('.card-slot')!.className).not.toContain('casting-press')
   })
 
   it('pinta is-chosen-pending al elegir objetivo, no reenvía el mismo target y reconcilia con isChosen', () => {

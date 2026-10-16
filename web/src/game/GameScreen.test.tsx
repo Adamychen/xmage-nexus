@@ -64,6 +64,27 @@ describe('GameScreen', () => {
     expect(parseFloat(root.style.zoom)).toBeCloseTo(1 / 1.3, 2)
   })
 
+  it('adds turn-glow only when the turn number changes', async () => {
+    const { container } = show()
+    const turn = container.querySelector<HTMLElement>('.game-turn')!
+    expect(turn.classList.contains('turn-glow')).toBe(false)
+
+    await act(async () => {
+      setState({ game: { ...playerGameView, turn: 2 } } as never)
+    })
+    expect(turn.classList.contains('turn-glow')).toBe(true)
+
+    await act(async () => {
+      turn.dispatchEvent(new Event('animationend', { bubbles: true }))
+    })
+    expect(turn.classList.contains('turn-glow')).toBe(false)
+
+    await act(async () => {
+      setState({ game: { ...playerGameView, turn: 2, life: 19 } } as never)
+    })
+    expect(turn.classList.contains('turn-glow')).toBe(false)
+  })
+
   it('survives a stream of view updates', async () => {
     show()
     for (let i = 0; i < 5; i++) {

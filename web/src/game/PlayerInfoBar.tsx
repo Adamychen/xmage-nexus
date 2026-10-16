@@ -14,6 +14,7 @@ import { clickableProps } from '../ui/clickable'
 import RankBadge from '../lobby/RankBadge'
 import { playerRankRating } from '../lobby/ranking'
 import { speedLevelKey } from './speed'
+import { useChangeFlag } from './useChangeFlag'
 import './PlayerInfoBar.css'
 import type { CommandEntry } from './commandItems'
 
@@ -256,6 +257,9 @@ export default function PlayerInfoBar({
   const unlimitedTime = isUnlimitedTime(player.priorityTimeLeftSecs)
   const hasTimer = !unlimitedTime && ((player.priorityTimeLeftSecs != null && player.priorityTimeLeftSecs > 0) || !!player.timerActive)
   const isTimeLow = hasTimer && timeLeft > 0 && timeLeft <= 30
+  const timerTier = !isTimeLow ? '' : timeLeft <= 5 ? 'critical' : timeLeft <= 10 ? 'urgent' : 'warn'
+  const [turnStarted, clearTurnStarted] = useChangeFlag(isTurnActive)
+  const turnGlow = turnStarted && isTurnActive
   const bufferTimeLeft = player.bufferTimeLeft ?? 0
   const hasBuffer = bufferTimeLeft > 0
 
@@ -309,9 +313,12 @@ export default function PlayerInfoBar({
     <div
       data-player-id={player.playerId}
       data-life={player.life != null ? String(player.life) : undefined}
-      className={`player-info-bar ${side} ${compact ? 'compact' : ''} ${isTarget ? 'targetable' : ''} ${hasPriority ? 'has-priority' : ''} ${showTurn ? 'is-turn' : ''} ${isDefeated ? 'player-defeated' : ''}`}
+      className={`player-info-bar ${side} ${compact ? 'compact' : ''} ${isTarget ? 'targetable' : ''} ${hasPriority ? 'has-priority' : ''} ${showTurn ? 'is-turn' : ''} ${isDefeated ? 'player-defeated' : ''} ${turnGlow ? 'active-glow' : ''}`}
       onClick={onClick}
       onContextMenu={onContextMenu}
+      onAnimationEnd={(e) => {
+        if (turnStarted && e.target === e.currentTarget) clearTurnStarted()
+      }}
       {...clickableProps(onClick)}
     >
       <div
@@ -377,11 +384,11 @@ export default function PlayerInfoBar({
 
           {hasTimer && (
             <span
-              className={`player-timer-badge ${isTimeLow ? 'timer-low' : ''} ${hasPriority ? 'timer-active' : ''}`}
+              className={`player-timer-badge ${isTimeLow ? 'timer-low' : ''} ${timerTier} ${hasPriority ? 'timer-active' : ''}`}
               title={t('game', 'priority_time_left')}
             >
               <span className="timer-icon"><Icon name="timer" size={12} /></span>
-              <span className="timer-value">{formatTimer(timeLeft)}</span>
+              <span key={timeLeft} className="timer-value">{formatTimer(timeLeft)}</span>
               {hasBuffer && (
                 <span className="timer-buffer" title={t('game', 'buffer_time_left')}>
                   +{formatTimer(bufferTimeLeft)}

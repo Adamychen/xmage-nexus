@@ -91,6 +91,7 @@ export default function CardSlot({
   const cropUrl = compact ? (demo ? demo.artUrl : artCropUrl(imgUrl)) : null
   const [cropFailed, setCropFailed] = useState<string | null>(null)
   const [pendingAck, setPendingAck] = useState<'pending' | 'chosen-pending' | null>(null)
+  const [castPhase, setCastPhase] = useState<'press' | 'pop' | null>(null)
   const pendingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const slotRef = useRef<HTMLDivElement>(null)
   const isFirstMountRef = useRef(true)
@@ -288,6 +289,7 @@ const showPtBadge =
     : counters
 
   const handleClick = onClick ? () => {
+    if (isPlayable && fxDuration(80) > 0) setCastPhase('press')
     const ackKind = isTarget ? 'chosen-pending' : 'pending'
     // No reenviar el mismo objetivo mientras el eco no lo confirme; el resto
     // de selecciones (jugable/combate) pueden re-clicarse (toggle del servidor).
@@ -302,6 +304,11 @@ const showPtBadge =
     soundManager.play('tap', 'game')
     onClick()
   } : undefined
+
+  const handleCastAnimationEnd = (e: React.AnimationEvent<HTMLDivElement>) => {
+    if (e.animationName === 'castPress') setCastPhase('pop')
+    else if (e.animationName === 'castPop' || e.animationName === 'castFade') setCastPhase(null)
+  }
 
   const handleContextMenu = (e: React.MouseEvent) => {
     e.preventDefault()
@@ -358,6 +365,8 @@ const showPtBadge =
         isChosen ? 'chosen' : '',
         pendingAck === 'pending' ? 'is-pending' : '',
         pendingAck === 'chosen-pending' ? 'is-chosen-pending' : '',
+        castPhase === 'press' ? 'casting-press' : '',
+        castPhase === 'pop' ? 'casting-pop' : '',
         isFaceDownCard ? 'face-down' : '',
         isFlipped ? 'is-flipped-card' : '',
         compact ? 'is-compact' : '',
@@ -369,6 +378,7 @@ const showPtBadge =
         className,
       ].filter(Boolean).join(' ')}
       onClick={handleClick}
+      onAnimationEnd={handleCastAnimationEnd}
       {...clickableProps(handleClick)}
       aria-label={onClick ? cardName(card) : undefined}
       aria-pressed={onClick && ariaPressed !== undefined ? ariaPressed : undefined}

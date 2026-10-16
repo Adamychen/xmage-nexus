@@ -26,6 +26,7 @@ import PhaseBar, { PhaseName } from './PhaseBar'
 import ActionButton from './ActionButton'
 import GameDock, { PromptSlotProvider, useDockOffset } from './GameDock'
 import GameStrip from './GameStrip'
+import { useChangeFlag } from './useChangeFlag'
 import GameDrawer, { DrawerToggles, type DrawerTab } from './GameDrawer'
 import StackZone from '../board/StackZone'
 import { targetsStackObject } from './stackTargeting'
@@ -376,6 +377,7 @@ export default function GameScreen() {
   const isPodLayout = effectiveLayout === 'pod'
 
   useDockOffset(boardWrapRef, [effectiveLayout, isSpectator, !!game, game?.turn])
+  const [turnGlow, clearTurnGlow] = useChangeFlag(game?.turn)
 
   const toggleDrawer = useCallback((tab: DrawerTab) => setDrawerTab((cur) => (cur === tab ? null : tab)), [])
   const activeDrawerTab = drawerTab === 'commander' && !hasCommanders ? null : drawerTab
@@ -385,7 +387,12 @@ export default function GameScreen() {
       left={
         game && (
           <div className="game-state" data-testid="game-status">
-            <span className="game-turn">{t('game', 'turn')} {game.turn}</span>
+            <span
+              className={`game-turn${turnGlow ? ' turn-glow' : ''}`}
+              onAnimationEnd={turnGlow ? clearTurnGlow : undefined}
+            >
+              {t('game', 'turn')} {game.turn}
+            </span>
             <PhaseName step={game.step ?? ''} />
             <PhaseBar step={game.step ?? ''} />
           </div>
