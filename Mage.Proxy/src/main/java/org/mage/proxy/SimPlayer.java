@@ -1,6 +1,7 @@
 package org.mage.proxy;
 
 import mage.cards.decks.DeckCardLists;
+import mage.choices.Choice;
 import mage.constants.CardType;
 import mage.constants.Constants;
 import mage.constants.PhaseStep;
@@ -24,6 +25,7 @@ import mage.view.TableClientMessage;
 import mage.view.UserRequestMessage;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -92,7 +94,24 @@ public class SimPlayer implements MageClient {
     private int lastLandTurn = -1;
     private int blockTurn = -1;
     private final Set<UUID> triedBlockers = new HashSet<>();
+    private final Set<UUID> triedManaSources = new HashSet<>();
+    private String manaPaymentSignature = null;
     private String lastCastSignature = null;
+    private final Retry choiceRetry = new Retry();
+    private final Retry targetRetry = new Retry();
+    private final Retry amountRetry = new Retry();
+
+    /** Cuántas veces seguidas el servidor repite el mismo prompt: 0 la primera vez. */
+    private static final class Retry {
+        private String signature = null;
+        private int attempts = 0;
+
+        int attempt(String next) {
+            attempts = next != null && next.equals(signature) ? attempts + 1 : 0;
+            signature = next;
+            return attempts;
+        }
+    }
 
     public SimPlayer(String username, String password, DeckCardLists deck, String host, int port, int skill) {
         this.username = username;
@@ -378,12 +397,26 @@ public class SimPlayer implements MageClient {
                     }
                     break;
                 }
+                case GAME_CHOOSE_CHOICE: {
+                    if (data instanceof GameClientMessage) {
+                        onChoice((GameClientMessage) data);
+                    } else {
+                        pass();
+                    }
+                    break;
+                }
+                case GAME_GET_AMOUNT: {
+                    if (data instanceof GameClientMessage) {
+                        onAmount((GameClientMessage) data);
+                    } else {
+                        pass();
+                    }
+                    break;
+                }
                 case GAME_PLAY_XMANA:
-                case GAME_GET_AMOUNT:
                 case GAME_GET_MULTI_AMOUNT:
                 case GAME_CHOOSE_ABILITY:
                 case GAME_CHOOSE_PILE:
-                case GAME_CHOOSE_CHOICE:
                     // el guion nunca las provoca; por seguridad, cancelar
                     pass();
                     break;
@@ -504,6 +537,45 @@ public class SimPlayer implements MageClient {
         pass();
     }
 
+    private void onChoice(GameClientMessage gcm) {
+        Choice choice = gcm.getChoice();
+        String signature = choice == null ? null : choice.getMessage() + choiceOptions(choice).toString();
+        int attempt = choiceRetry.attempt(signature);
+        String answer = choiceAnswer(choice, attempt);
+        if (answer == null || gameId == null) {
+            pass();
+            return;
+        }
+        logger.info("sim " + username + " choice '" + answer + "' (intento " + attempt + ")");
+        session.sendPlayerString(gameId, answer);
+    }
+
+    private void onAmount(GameClientMessage gcm) {
+        String signature = gcm.getMessage() + "|" + gcm.getMin() + "|" + gcm.getMax();
+        int attempt = amountRetry.attempt(signature);
+        int value = attempt == 0 ? gcm.getMin() : gcm.getMax();
+        logger.info("sim " + username + " amount " + value + " (intento " + attempt + ")");
+        session.sendPlayerInteger(gameId, value);
+    }
+
+    static List<String> choiceOptions(Choice choice) {
+        List<String> options = new ArrayList<>();
+        if (choice == null) {
+            return options;
+        }
+        if (choice.isKeyChoice() && choice.getKeyChoices() != null && !choice.getKeyChoices().isEmpty()) {
+            options.addAll(choice.getKeyChoices().keySet());
+        } else if (choice.getChoices() != null) {
+            options.addAll(choice.getChoices());
+        }
+        return options;
+    }
+
+    static String choiceAnswer(Choice choice, int attempt) {
+        List<String> options = choiceOptions(choice);
+        return options.isEmpty() ? null : options.get(attempt % options.size());
+    }
+
     static UUID nextBlocker(Object possible, Set<UUID> tried) {
         if (!(possible instanceof List)) {
             return null;
@@ -617,10 +689,15 @@ public class SimPlayer implements MageClient {
             pass();
             return;
         }
+        String signature = view.getTurn() + "|" + msg;
+        if (!signature.equals(manaPaymentSignature)) {
+            manaPaymentSignature = signature;
+            triedManaSources.clear();
+        }
         UUID source = null;
         String sourceName = null;
         for (PermanentView perm : me.getBattlefield().values()) {
-            if (perm.isTapped() || !isLand(perm)) {
+            if (perm.isTapped() || !isLand(perm) || triedManaSources.contains(perm.getId())) {
                 continue;
             }
             if (required.isEmpty() || landProduces(perm, required)) {
@@ -630,6 +707,7 @@ public class SimPlayer implements MageClient {
             }
         }
         if (source != null) {
+            triedManaSources.add(source);
             logger.info("sim " + username + " playMana: paga '" + msg + "' con " + sourceName + " (" + source + ") untapped=" + countUntappedLands(me));
             session.sendPlayerUUID(gameId, source);
         } else {
@@ -672,11 +750,21 @@ public class SimPlayer implements MageClient {
             return;
         }
         UUID opponent = opponentPlayerId(gcm.getGameView());
+        List<UUID> ordered = new ArrayList<>();
         if (opponent != null && targets.contains(opponent)) {
-            session.sendPlayerUUID(gameId, opponent);
+            ordered.add(opponent);
+        }
+        for (UUID target : targets) {
+            if (!ordered.contains(target)) {
+                ordered.add(target);
+            }
+        }
+        int attempt = targetRetry.attempt(gcm.getMessage() + "|" + ordered);
+        if (attempt >= ordered.size()) {
+            pass();
             return;
         }
-        session.sendPlayerUUID(gameId, targets.iterator().next());
+        session.sendPlayerUUID(gameId, ordered.get(attempt));
     }
 
     /** true si el GAME_TARGET de cartas (sobrecarga Cards) ya satisfizo su

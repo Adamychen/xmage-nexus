@@ -53,6 +53,7 @@ const MAX_GAME_MS = argNum('maxGameMs', 8 * 60_000)
 // Techo por debajo de maxGameThreads del servidor de test (20 en
 // local-server/config/config.xml) dejando margen para otro uso concurrente.
 const CONCURRENCY = argNum('concurrency', 6)
+const LIVELOCK_UPDATES = argNum('livelockUpdates', 1000)
 
 const REPORT_DIR = path.join(repoRoot, '.run')
 const REPORT_PATH = path.join(REPORT_DIR, `fuzz-report-${Date.now()}.json`)
@@ -216,6 +217,7 @@ function connectPlayer(username) {
     const api = {
       ws, name: username, view: null, gameId: null,
       lastEventAt: Date.now(), anomalies: [], turn: 0, over: false, closedExpectedly: false,
+      progressKey: null, sameStateUpdates: 0, maxSameStateUpdates: 0,
     }
     api.call = (action, args) =>
       new Promise((res) => {
@@ -274,6 +276,13 @@ function connectPlayer(username) {
       }
       if (msg.data?.gameView) { api.view = msg.data.gameView; api.turn = msg.data.gameView.turn ?? api.turn }
       else if (Array.isArray(msg.data?.players)) { api.view = msg.data; api.turn = msg.data.turn ?? api.turn }
+      if (method === 'GAME_UPDATE' || method === 'GAME_UPDATE_AND_INFORM') {
+        const v = api.view
+        const key = JSON.stringify([v?.turn, v?.step, v?.activePlayerId, v?.priorityPlayerId])
+        api.sameStateUpdates = key === api.progressKey ? api.sameStateUpdates + 1 : 0
+        api.progressKey = key
+        api.maxSameStateUpdates = Math.max(api.maxSameStateUpdates, api.sameStateUpdates)
+      }
       if (msg.objectId && (method === 'START_GAME' || String(method).startsWith('GAME_')) && !api.gameId) {
         api.gameId = String(msg.objectId)
       }
@@ -456,6 +465,14 @@ async function playOneGame(gameNum) {
     while (Date.now() < deadline) {
       await new Promise((r) => setTimeout(r, 1000))
       if (human.over) { result.outcome = 'game-over'; break }
+      if (human.gameId && human.sameStateUpdates > LIVELOCK_UPDATES) {
+        result.outcome = 'livelock'
+        result.anomalies.push({
+          kind: 'livelock', at: Date.now(), turn: human.turn, sameStateUpdates: human.sameStateUpdates,
+          state: human.progressKey, gameId: human.gameId,
+        })
+        break
+      }
       if (human.gameId && Date.now() - human.lastEventAt > STALL_MS) {
         result.outcome = 'stalled'
         result.anomalies.push({
@@ -480,6 +497,7 @@ async function playOneGame(gameNum) {
     result.anomalies.push({ kind: 'scriptException', message: String(e?.stack ?? e) })
   } finally {
     result.turnsPlayed = human.turn
+    result.maxSameStateUpdates = human.maxSameStateUpdates
     result.anomalies.push(...human.anomalies)
     human.closedExpectedly = true
     try { if (tableId) human.ws.send(JSON.stringify({ action: 'removeTable', args: { tableId } })) } catch {}
@@ -531,7 +549,7 @@ async function main() {
   log('resumen:', JSON.stringify(summary.outcomeCounts))
   log(`anomalías totales: ${summary.totalAnomalies}`)
   log(`informe: ${REPORT_PATH}`)
-  process.exit(summary.totalAnomalies > 0 && results.some((r) => r.anomalies.some((a) => a.kind === 'stall' || a.kind === 'scriptException' || a.kind === 'unknownCallback')) ? 1 : 0)
+  process.exit(summary.totalAnomalies > 0 && results.some((r) => r.anomalies.some((a) => ['stall', 'livelock', 'gameTimeout', 'scriptException', 'unknownCallback'].includes(a.kind))) ? 1 : 0)
 }
 
 main().catch((e) => {
