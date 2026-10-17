@@ -185,6 +185,18 @@
   white-space: nowrap;
 }
 
+.stack-deck-tab-by {
+  flex: 0 1 auto;
+  max-width: 40%;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--fs-4xs);
+  font-weight: 600;
+  color: var(--fg-3);
+}
+
 .stack-deck-tab-x {
   padding: 0 var(--sp-1h);
   border-radius: var(--r-base);

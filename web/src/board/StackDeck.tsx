@@ -264,6 +264,7 @@ export default function StackDeck({
                 <span className="stack-deck-tab-inner" style={{ ['--inset' as string]: `${Math.min(i * 3, 18)}px` }}>
                   <span className="stack-deck-tab-pos">{position}</span>
                   <span className="stack-deck-tab-name"><StackEntryCardName card={card} /></span>
+                  <span className="stack-deck-tab-by" title={ctrl.name}>{ctrl.name}</span>
                   {count > 1 && <span className="stack-deck-tab-x">×{count}</span>}
                   {hasTargets && <span className="stack-deck-tab-target"><Icon name="target" size={11} /></span>}
                   <span className="stack-deck-tab-kind">{ability ? t('game', 'ability_general') : t('game', 'type_spell')}</span>
