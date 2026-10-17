@@ -414,3 +414,42 @@ test('v2 rewind sits on the left of the phase dial and the two do not overlap @g
   }
   await page.screenshot({ path: testInfo.outputPath('v2-rewind-left.png') })
 })
+
+test('tapping an untapped land in v2 flies a mana particle into the pool @gameui', async ({ page }) => {
+  const game = richCommanderGame()
+  const me = (game.players as Array<{ playerId: string; battlefield: Record<string, Record<string, unknown>> }>).find((p) => p.playerId === 'p-adam')
+  if (me) me.battlefield['adam-l1'] = { ...me.battlefield['adam-l1'], rules: ['{T}: Add {B}.'], controllerId: 'p-adam' }
+  await showGame(page, game, V2)
+  await expect(page.getByTestId('arena-board')).toBeVisible({ timeout: 10_000 })
+  await expect(page.locator('[data-card-id="adam-l1"]')).toHaveAttribute('data-tapped', '0')
+  await page.waitForTimeout(1200)
+
+  const tapped = richCommanderGame()
+  const tappedMe = (tapped.players as Array<{ playerId: string; battlefield: Record<string, Record<string, unknown>> }>).find((p) => p.playerId === 'p-adam')
+  if (tappedMe) tappedMe.battlefield['adam-l1'] = { ...tappedMe.battlefield['adam-l1'], rules: ['{T}: Add {B}.'], controllerId: 'p-adam', tapped: true }
+  await showGame(page, tapped, V2)
+
+  const flight = await page.waitForFunction(() => {
+    const particle = document.querySelector<HTMLElement>('.mana-particle')
+    const pool = document.querySelector<HTMLElement>('.pp-pool [data-testid="resource-pool"]')
+    if (!particle || !pool) return null
+    const r = particle.getBoundingClientRect()
+    const p = pool.getBoundingClientRect()
+    const dx = parseFloat(particle.style.getPropertyValue('--particle-dx'))
+    const dy = parseFloat(particle.style.getPropertyValue('--particle-dy'))
+    return {
+      startInside: r.width > 0,
+      endX: r.left + r.width / 2 + dx,
+      endY: r.top + r.height / 2 + dy,
+      poolLeft: p.left, poolRight: p.right, poolTop: p.top, poolBottom: p.bottom,
+    }
+  }, undefined, { polling: 'raf', timeout: 2000 })
+  const box = await flight.jsonValue() as { startInside: boolean; endX: number; endY: number; poolLeft: number; poolRight: number; poolTop: number; poolBottom: number }
+  expect(box.startInside).toBe(true)
+  expect(box.endX).toBeGreaterThanOrEqual(box.poolLeft)
+  expect(box.endX).toBeLessThanOrEqual(box.poolRight)
+  expect(box.endY).toBeGreaterThanOrEqual(box.poolTop)
+  expect(box.endY).toBeLessThanOrEqual(box.poolBottom)
+
+  await page.waitForFunction(() => document.querySelector('.mana-pool-landed'), undefined, { polling: 'raf', timeout: 2000 })
+})
