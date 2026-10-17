@@ -4,7 +4,6 @@ import Button from '../ui/Button'
 import EmptyState from '../ui/EmptyState'
 import Icon from '../ui/Icon'
 import RankBadge from './RankBadge'
-import { useTranslation } from '../i18n'
 import { useRemoteMatches, useRemoteRanking, type RemoteStatus } from './useRemoteStats'
 import type { RankingFormat } from './statsApi'
 import './PublicRankingScreen.css'
@@ -20,30 +19,29 @@ function formatDate(value: string | number | undefined): string {
 }
 
 export default function PublicRankingScreen() {
-  const { t } = useTranslation()
   const [tab, setTab] = useState<PublicTab>('ranking')
 
   return (
     <div className="login-wrap public-ranking-wrap">
       <div className="login-card panel public-ranking" data-testid="public-ranking">
         <header className="public-ranking-header">
-          <h1>{t('lobby', 'public_ranking_title')}</h1>
-          <p className="subtitle">{t('lobby', 'public_ranking_subtitle')}</p>
+          <h1>{'Public ranking'}</h1>
+          <p className="subtitle">{'Players and recent matches, updated every few minutes.'}</p>
         </header>
 
         <Tabs
           value={tab}
           onChange={setTab}
           items={[
-            { id: 'ranking', icon: 'trophy', label: t('lobby', 'public_tab_ranking') },
-            { id: 'matches', label: t('lobby', 'public_tab_matches') },
+            { id: 'ranking', icon: 'trophy', label: 'Ratings' },
+            { id: 'matches', label: 'Matches' },
           ]}
         />
 
         {tab === 'ranking' ? <RankingPanel /> : <MatchesPanel />}
 
         <Button variant="ghost" onClick={() => { window.location.hash = '#/' }}>
-          {t('lobby', 'public_back')}
+          {'Back to login'}
         </Button>
       </div>
     </div>
@@ -51,21 +49,19 @@ export default function PublicRankingScreen() {
 }
 
 function RemoteNote({ status, onRetry }: { status: RemoteStatus; onRetry: () => void }) {
-  const { t } = useTranslation()
   if (status === 'ready') return null
   if (status === 'loading') {
-    return <p className="public-ranking-note" role="status">{t('lobby', 'public_loading')}</p>
+    return <p className="public-ranking-note" role="status">{'Loading…'}</p>
   }
   return (
     <div className="public-ranking-note" role="alert">
-      <p>{t('lobby', status === 'not_ready' ? 'public_not_ready' : 'public_error')}</p>
-      <Button variant="soft" size="sm" onClick={onRetry}>{t('lobby', 'public_retry')}</Button>
+      <p>{status === 'not_ready' ? 'The ranking is still being prepared. Try again in a moment.' : 'The ranking could not be loaded.'}</p>
+      <Button variant="soft" size="sm" onClick={onRetry}>{'Retry'}</Button>
     </div>
   )
 }
 
 function RankingPanel() {
-  const { t } = useTranslation()
   const [format, setFormat] = useState<RankingFormat>('constructed')
   const { data, status, refresh } = useRemoteRanking(format)
 
@@ -77,13 +73,13 @@ function RankingPanel() {
         value={format}
         onChange={setFormat}
         items={[
-          { id: 'constructed', label: t('lobby', 'public_format_constructed') },
-          { id: 'limited', label: t('lobby', 'public_format_limited') },
+          { id: 'constructed', label: 'Constructed' },
+          { id: 'limited', label: 'Limited' },
         ]}
       />
       <RemoteNote status={status} onRetry={refresh} />
       {status === 'ready' && data && data.players.length === 0 && (
-        <EmptyState icon="trophy" title={t('lobby', 'public_empty')} />
+        <EmptyState icon="trophy" title={'No players yet.'} />
       )}
       {status === 'ready' && data && data.players.length > 0 && (
         <>
@@ -91,10 +87,10 @@ function RankingPanel() {
             <table className="public-ranking-table">
               <thead>
                 <tr>
-                  <th className="col-num">{t('lobby', 'leaderboard_col_pos')}</th>
-                  <th>{t('lobby', 'leaderboard_col_player')}</th>
-                  <th>{t('lobby', 'leaderboard_col_tier')}</th>
-                  <th className="col-num">{t('lobby', 'leaderboard_col_elo')}</th>
+                  <th className="col-num">{'Pos.'}</th>
+                  <th>{'Player'}</th>
+                  <th>{'Tier'}</th>
+                  <th className="col-num">{'Glicko'}</th>
                 </tr>
               </thead>
               <tbody>
@@ -109,7 +105,7 @@ function RankingPanel() {
               </tbody>
             </table>
           </div>
-          <p className="public-ranking-updated"><Icon name="info" size={12} /> {t('lobby', 'public_updated_at', { time: formatDate(data.updatedAt) })}</p>
+          <p className="public-ranking-updated"><Icon name="info" size={12} /> {`Updated ${formatDate(data.updatedAt)}`}</p>
         </>
       )}
     </section>
@@ -117,14 +113,13 @@ function RankingPanel() {
 }
 
 function MatchesPanel() {
-  const { t } = useTranslation()
   const { data, status, refresh } = useRemoteMatches(MATCHES_LIMIT)
 
   return (
     <section className="public-ranking-section">
       <RemoteNote status={status} onRetry={refresh} />
       {status === 'ready' && data && data.matches.length === 0 && (
-        <EmptyState icon="trophy" title={t('lobby', 'public_empty')} />
+        <EmptyState icon="trophy" title={'No players yet.'} />
       )}
       {status === 'ready' && data && data.matches.length > 0 && (
         <>
@@ -132,10 +127,10 @@ function MatchesPanel() {
             <table className="public-ranking-table">
               <thead>
                 <tr>
-                  <th>{t('lobby', 'public_col_match')}</th>
-                  <th>{t('lobby', 'public_col_players')}</th>
-                  <th>{t('lobby', 'public_col_result')}</th>
-                  <th>{t('lobby', 'public_col_date')}</th>
+                  <th>{'Match'}</th>
+                  <th>{'Players'}</th>
+                  <th>{'Result'}</th>
+                  <th>{'Date'}</th>
                 </tr>
               </thead>
               <tbody>
@@ -150,7 +145,7 @@ function MatchesPanel() {
               </tbody>
             </table>
           </div>
-          <p className="public-ranking-updated"><Icon name="info" size={12} /> {t('lobby', 'public_updated_at', { time: formatDate(data.updatedAt) })}</p>
+          <p className="public-ranking-updated"><Icon name="info" size={12} /> {`Updated ${formatDate(data.updatedAt)}`}</p>
         </>
       )}
     </section>

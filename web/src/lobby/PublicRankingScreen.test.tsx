@@ -68,7 +68,7 @@ describe('PublicRankingScreen', () => {
 
     render(<PublicRankingScreen />)
 
-    await waitFor(() => expect(screen.getByRole('alert').textContent).toContain('Could not load the data'))
+    await waitFor(() => expect(screen.getByRole('alert').textContent).toContain('The ranking could not be loaded.'))
   })
 
   it('switches to the matches tab and requests the match history', async () => {

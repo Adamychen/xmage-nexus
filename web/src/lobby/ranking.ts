@@ -6,7 +6,7 @@ export interface RankInfo {
   tier: RankTier
   name: string
   subTier: string // 'IV', 'III', 'II', 'I' or 'Top'
-  label: string // e.g. 'Oro II', 'Mítico'
+  label: string // e.g. 'Oro II', 'Mythic'
   icon: IconName
   color: string
   bg: string
@@ -32,7 +32,7 @@ export const RANK_TIERS_CONFIG: Array<{
 }> = [
   {
     tier: 'BRONZE',
-    name: 'Bronce',
+    name: 'Bronze',
     minElo: 0,
     maxElo: 1135,
     subTierStarts: [0, 885, 985, 1051],
@@ -43,7 +43,7 @@ export const RANK_TIERS_CONFIG: Array<{
   },
   {
     tier: 'SILVER',
-    name: 'Plata',
+    name: 'Silver',
     minElo: 1136,
     maxElo: 1359,
     subTierStarts: [1136, 1177, 1250, 1298],
@@ -54,7 +54,7 @@ export const RANK_TIERS_CONFIG: Array<{
   },
   {
     tier: 'GOLD',
-    name: 'Oro',
+    name: 'Gold',
     minElo: 1360,
     maxElo: 1519,
     subTierStarts: [1360, 1401, 1429, 1473],
@@ -65,7 +65,7 @@ export const RANK_TIERS_CONFIG: Array<{
   },
   {
     tier: 'PLATINUM',
-    name: 'Platino',
+    name: 'Platinum',
     minElo: 1520,
     maxElo: 1610,
     subTierStarts: [1520, 1541, 1557, 1580],
@@ -76,7 +76,7 @@ export const RANK_TIERS_CONFIG: Array<{
   },
   {
     tier: 'DIAMOND',
-    name: 'Diamante',
+    name: 'Diamond',
     minElo: 1611,
     maxElo: 1687,
     subTierStarts: [1611, 1628, 1648, 1662],
@@ -87,7 +87,7 @@ export const RANK_TIERS_CONFIG: Array<{
   },
   {
     tier: 'MYTHIC',
-    name: 'Mítico',
+    name: 'Mythic',
     minElo: 1688,
     maxElo: 3000,
     subTierStarts: [],
@@ -105,9 +105,9 @@ export function getRankInfo(eloInput?: number | string | null): RankInfo {
   if (elo >= 1688) {
     return {
       tier: 'MYTHIC',
-      name: 'Mítico',
+      name: 'Mythic',
     subTier: 'Top',
-    label: 'Mítico',
+    label: 'Mythic',
     icon: 'crown',
       color: '#fb923c',
       bg: 'rgba(251, 146, 60, 0.2)',
@@ -157,12 +157,12 @@ export function getRankInfo(eloInput?: number | string | null): RankInfo {
 export function getTierName(tier: RankTier, t?: (ns: 'lobby', key: string) => string): string {
   if (!t) {
     const fallbackMap: Record<RankTier, string> = {
-      BRONZE: 'Bronce',
-      SILVER: 'Plata',
-      GOLD: 'Oro',
-      PLATINUM: 'Platino',
-      DIAMOND: 'Diamante',
-      MYTHIC: 'Mítico',
+      BRONZE: 'Bronze',
+      SILVER: 'Silver',
+      GOLD: 'Gold',
+      PLATINUM: 'Platinum',
+      DIAMOND: 'Diamond',
+      MYTHIC: 'Mythic',
     }
     return fallbackMap[tier] ?? tier
   }

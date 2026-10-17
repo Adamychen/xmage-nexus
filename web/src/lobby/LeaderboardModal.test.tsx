@@ -74,7 +74,7 @@ describe('LeaderboardModal Component', () => {
     // Switch to profile tab
     fireEvent.click(screen.getByText(/Mi Rango & Estadísticas/i))
     expect(screen.getAllByText(/1650 ELO/i).length).toBeGreaterThan(0)
-    expect(screen.getAllByText('Oro II').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('Diamante II').length).toBeGreaterThan(0)
 
     // Switch to tiers guide tab
     fireEvent.click(screen.getByText(/Guía de Rangos/i))
