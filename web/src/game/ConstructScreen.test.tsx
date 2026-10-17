@@ -1,7 +1,8 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import ConstructScreen, { poolToDeckCards } from './ConstructScreen'
+import ConstructScreen, { poolToDeckCards, restoreConstructSelection } from './ConstructScreen'
 import { setState } from '../state/store'
+import { clearActiveConstruct, saveConstructSelection } from '../state/persistence'
 import { submitDeck } from '../net/commands'
 
 vi.mock('../net/commands', async (importOriginal) => ({
@@ -106,5 +107,68 @@ describe('ConstructScreen — pool CONSTRUCT sin nombres (engine SimpleCardsView
     expect(poolToDeckCards(pool)).toEqual([
       { cardName: 'Lightning Bolt', setCode: 'M10', cardNumber: '146', amount: 1 },
     ])
+  })
+})
+
+describe('ConstructScreen — restore del armado en curso', () => {
+  const serverPool = [
+    { cardName: 'Pool Card 100', setCode: 'M21', cardNumber: '101', amount: 1 },
+    { cardName: 'Pool Card 101', setCode: 'M21', cardNumber: '102', amount: 2 },
+  ]
+
+  it('restaura main y pool tal como se guardaron cuando el pool del server sigue igual', () => {
+    const saved = {
+      main: [{ cardName: 'Pool Card 101', setCode: 'M21', cardNumber: '102', amount: 1 }],
+      pool: [{ cardName: 'Pool Card 101', setCode: 'M21', cardNumber: '102', amount: 1 }],
+    }
+    expect(restoreConstructSelection(serverPool, saved)).toEqual(saved)
+  })
+
+  it('descarta cartas que ya no están en el pool del server y recorta cantidades', () => {
+    const saved = {
+      main: [
+        { cardName: 'Gone Card', setCode: 'M21', cardNumber: '9', amount: 1 },
+        { cardName: 'Pool Card 101', setCode: 'M21', cardNumber: '102', amount: 5 },
+      ],
+      pool: [{ cardName: 'Pool Card 100', setCode: 'M21', cardNumber: '101', amount: 2 }],
+    }
+    expect(restoreConstructSelection(serverPool, saved)).toEqual({
+      main: [{ cardName: 'Pool Card 101', setCode: 'M21', cardNumber: '102', amount: 2 }],
+      pool: [{ cardName: 'Pool Card 100', setCode: 'M21', cardNumber: '101', amount: 1 }],
+    })
+  })
+
+  it('conserva las básicas del adder aunque no estén en el pool', () => {
+    const saved = {
+      main: [{ cardName: 'Plains', setCode: 'DMU', cardNumber: '277', amount: 12 }],
+      pool: [],
+    }
+    expect(restoreConstructSelection(serverPool, saved)).toEqual({
+      main: [{ cardName: 'Plains', setCode: 'DMU', cardNumber: '277', amount: 12 }],
+      pool: [],
+    })
+  })
+
+  it('al montar con un armado guardado del mismo construct lo pinta de nuevo', () => {
+    clearActiveConstruct()
+    saveConstructSelection('t-restore', {
+      main: [{ cardName: 'Plains', setCode: 'DMU', cardNumber: '277', amount: 3 }],
+      pool: [{ cardName: 'Pool Card 100', setCode: 'M21', cardNumber: '101', amount: 1 }],
+    })
+    const { container } = render(<ConstructScreen />)
+    act(() => {
+      setState({
+        construct: {
+          deckName: 'Pool',
+          pool: { 'i-1': { id: 'i-1', name: 'Pool Card 100', expansionSetCode: 'M21', cardNumber: '101' } },
+          tableId: 't-restore',
+          parentTableId: null,
+          timeLeft: 600,
+        },
+      } as never)
+    })
+    expect(container.querySelector('.basic-land-btn-count')?.textContent).toBe('3')
+    expect((screen.getByTestId('construct-submit') as HTMLButtonElement).disabled).toBe(true)
+    clearActiveConstruct()
   })
 })

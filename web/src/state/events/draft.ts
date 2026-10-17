@@ -1,7 +1,7 @@
 import { getState, setState, addLog } from '../state'
 import * as cmds from '../../net/commands'
 import { translateError } from '../../i18n'
-import { saveActiveDraft, clearActiveDraft } from '../persistence'
+import { saveActiveDraft, clearActiveDraft, saveActiveConstruct } from '../persistence'
 import type { DraftClientMessage } from '../../net/types.generated'
 import type { DraftState } from '../slices'
 
@@ -170,7 +170,9 @@ export function handleConstruct(data: unknown, objectId: string | null): void {
   // El servidor manda lo drafteado en `sideboard` (cards vacío): el pool es la unión.
   const pool = { ...(d?.deck?.sideboard ?? {}), ...(d?.deck?.cards ?? {}) } as Record<string, unknown>
   const time = d?.time ?? 600
-  setState({ construct: { deckName, pool, tableId, parentTableId: d?.parentTableId ?? null, timeLeft: time } })
+  const construct = { deckName, pool, tableId, parentTableId: d?.parentTableId ?? null, timeLeft: time }
+  setState({ construct })
+  saveActiveConstruct(construct)
   setState({ draft: null, draftOverAt: null, lastDraftEventAt: null, lastDraftMethod: null })
   clearActiveDraft()
   addLog('torneo', `Construcción: pool ${Object.keys(pool).length} cartas — ${time}s`)

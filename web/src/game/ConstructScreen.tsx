@@ -1,14 +1,15 @@
 import { useCallback, useEffect, useMemo, useState, useRef } from 'react'
 import EmptyState from '../ui/EmptyState'
 import * as cmds from '../net/commands'
-import { useStore } from '../state/store'
+import { useStore, clearActiveConstruct } from '../state/store'
+import { loadConstructSelection, saveConstructSelection, type ConstructSelection } from '../state/persistence'
 import { setState, addLog, getState } from '../state/state'
 import { useTickingTimer } from '../utils/timer'
 import type { SimpleCardView } from '../net/types'
 import type { DeckCard } from '../lobby/decks'
 import { ArenaCardStrip } from '../decks/ArenaCardStrip'
 import { BasicLandAdder } from '../decks/BasicLandAdder'
-import type { BasicLandPreset } from '../decks/deckUtils'
+import { basicLandKind, type BasicLandPreset } from '../decks/deckUtils'
 import { replaceBasicLands, type SuggestedLand } from '../decks/deckCardOps'
 import Icon from '../ui/Icon'
 import { fetchCardJson } from '../cards/scryfallCards'
@@ -56,6 +57,31 @@ export function poolToDeckCards(pool: Record<string, unknown>): DeckCard[] {
   return [...map.values()]
 }
 
+/** Merges a saved armado into the server's pool. Pool cards are only kept up to
+ *  the amount the server still has; basic lands are not in the pool (they come
+ *  from the adder), so they are kept as saved. Cards gone from the pool are dropped. */
+export function restoreConstructSelection(serverPool: DeckCard[], saved: ConstructSelection): { main: DeckCard[]; pool: DeckCard[] } {
+  const available = new Map(serverPool.map((c) => [deckCardKey(c), c.amount]))
+  const take = (card: DeckCard): number => {
+    const key = deckCardKey(card)
+    const left = available.get(key) ?? 0
+    const amount = Math.min(card.amount, left)
+    if (amount > 0) available.set(key, left - amount)
+    return amount
+  }
+  const main: DeckCard[] = []
+  for (const card of saved.main) {
+    const amount = basicLandKind(card.cardName) ? Math.min(99, card.amount) : take(card)
+    if (amount > 0) main.push({ cardName: card.cardName, setCode: card.setCode, cardNumber: card.cardNumber, amount })
+  }
+  const pool: DeckCard[] = []
+  for (const card of saved.pool) {
+    const amount = take(card)
+    if (amount > 0) pool.push({ cardName: card.cardName, setCode: card.setCode, cardNumber: card.cardNumber, amount })
+  }
+  return { main, pool }
+}
+
 function categorizeCard(typeLine?: string): string {
   if (!typeLine) return tStatic('game', 'category_other')
   const lower = typeLine.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
@@ -83,6 +109,7 @@ export default function ConstructScreen() {
   }, [construct])
   const [main, setMain] = useState<DeckCard[]>([])
   const [pool, setPool] = useState<DeckCard[]>([])
+  const [hydratedTableId, setHydratedTableId] = useState<string | null>(null)
   const [metaMap, setMetaMap] = useState<Map<string, CardStripMeta>>(new Map())
   const timeLeft = useTickingTimer(construct?.timeLeft ?? 0, !!construct)
   const [busy, setBusy] = useState(false)
@@ -102,11 +129,21 @@ export default function ConstructScreen() {
   useEffect(() => {
     if (!construct) return
     const grouped = poolToDeckCards(construct.pool as Record<string, unknown>)
-    setPool(grouped)
-    setMain([])
+    const saved = loadConstructSelection(construct.tableId)
+    const restored = saved ? restoreConstructSelection(grouped, saved) : { main: [], pool: grouped }
+    setPool(restored.pool)
+    setMain(restored.main)
+    setHydratedTableId(construct.tableId)
     setMainFilter('')
     setPoolFilter('')
   }, [construct?.tableId])
+
+  const selectionTableId = construct?.tableId ?? null
+  useEffect(() => {
+    if (selectionTableId && hydratedTableId === selectionTableId) {
+      saveConstructSelection(selectionTableId, { main, pool })
+    }
+  }, [selectionTableId, hydratedTableId, main, pool])
 
   const updateMetaForCards = useCallback((cards: DeckCard[]) => {
     const toFetch: DeckCard[] = []
@@ -284,6 +321,7 @@ export default function ConstructScreen() {
       const result = await cmds.submitDeck(construct.tableId, deck)
       if (result.ok) {
         setState({ construct: null })
+        clearActiveConstruct()
         addLog('torneo', t('game', 'sideboard_submit'))
       } else {
         addLog('error', `${t('errors', 'send_failed')}: ${result.error ?? t('errors', 'generic_error')}`)

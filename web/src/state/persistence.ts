@@ -1,7 +1,7 @@
 import type { PhaseStops } from '../net/commands'
 import { normalizePrioritySound, type PrioritySoundMode } from '../audio/prioritySound'
 import type { DeckJson } from '../net/types'
-import type { DraftState } from './slices/limited'
+import type { ConstructState, DraftState } from './slices/limited'
 import { mergePhaseStops } from '../game/phaseStops'
 
 export interface ConnectionInfo {
@@ -86,7 +86,29 @@ function readJson<T>(key: string): T | undefined {
   }
 }
 
-export function loadConn(): ConnectionInfo | null {
+const QUICK_TUNNEL_SUFFIX = '.trycloudflare.com'
+
+function hostOf(url: string): string {
+  return url.replace(/^wss?:\/\//i, '').replace(/[/:].*$/, '').toLowerCase()
+}
+
+function isQuickTunnel(url: string): boolean {
+  return hostOf(url).endsWith(QUICK_TUNNEL_SUFFIX)
+}
+
+/** Quick tunnels get a new hostname on every restart of cloudflared, so a saved
+ *  wsHost can point at a dead tunnel while the build carries the live one. Only
+ *  that case is corrected: a saved tunnel that differs from a tunnel build default. */
+function followBuildTunnel(conn: ConnectionInfo): ConnectionInfo {
+  const build = (import.meta.env.VITE_DEFAULT_PROXY_HOST as string | undefined) ?? ''
+  if (!isQuickTunnel(build) || !isQuickTunnel(conn.wsHost)) return conn
+  if (hostOf(conn.wsHost) === hostOf(build)) return conn
+  const next = { ...conn, wsHost: build }
+  writeJson(STORAGE_KEY, next)
+  return next
+}
+
+function readConn(): ConnectionInfo | null {
   const parsed = readJson<Partial<ConnectionInfo> & { host?: string }>(STORAGE_KEY)
   if (parsed !== undefined) {
     if (parsed && !parsed.wsHost) {
@@ -102,6 +124,11 @@ export function loadConn(): ConnectionInfo | null {
     return { proxyPort: 8787, ...parsed } as ConnectionInfo
   }
   return null
+}
+
+export function loadConn(): ConnectionInfo | null {
+  const conn = readConn()
+  return conn ? followBuildTunnel(conn) : null
 }
 
 export function saveConn(conn: ConnectionInfo | null) {
@@ -265,6 +292,94 @@ export function clearActiveDraft() {
   try {
     getStorage().removeItem(ACTIVE_DRAFT_KEY)
   } catch {}
+}
+
+const ACTIVE_CONSTRUCT_KEY = 'mage-web-active-construct'
+const ACTIVE_CONSTRUCT_MAX_AGE_MS = 60 * 60 * 1000
+const CONSTRUCT_SELECTION_KEY = 'mage-web-construct-selection'
+
+interface ActiveConstructPersistence {
+  construct: ConstructState
+  savedAt: number
+}
+
+/** Construcción de mazo pendiente (pool del draft + mesa) para recuperarla tras
+ *  recargar: el server no reenvía CONSTRUCT, así que sin esto la pantalla se
+ *  pierde. El tiempo restante se descuenta desde que se guardó. */
+export function loadActiveConstruct(): ConstructState | null {
+  const parsed = readJson<ActiveConstructPersistence>(ACTIVE_CONSTRUCT_KEY)
+  const construct = parsed?.construct
+  if (!parsed || !construct || typeof construct.tableId !== 'string' || !construct.tableId || !construct.pool) {
+    clearActiveConstruct()
+    return null
+  }
+  const elapsedMs = Date.now() - parsed.savedAt
+  const timeLeft = Math.round(construct.timeLeft - elapsedMs / 1000)
+  if (elapsedMs > ACTIVE_CONSTRUCT_MAX_AGE_MS || timeLeft <= 0) {
+    clearActiveConstruct()
+    return null
+  }
+  return { ...construct, timeLeft }
+}
+
+export function saveActiveConstruct(construct: ConstructState | null) {
+  if (construct && construct.tableId) {
+    const data: ActiveConstructPersistence = { construct, savedAt: Date.now() }
+    writeJson(ACTIVE_CONSTRUCT_KEY, data)
+  } else {
+    clearActiveConstruct()
+  }
+}
+
+export function clearActiveConstruct() {
+  try {
+    const storage = getStorage()
+    storage.removeItem(ACTIVE_CONSTRUCT_KEY)
+    storage.removeItem(CONSTRUCT_SELECTION_KEY)
+  } catch {}
+}
+
+export interface ConstructSelectionCard {
+  cardName: string
+  setCode: string
+  cardNumber: string
+  amount: number
+}
+
+export interface ConstructSelection {
+  main: ConstructSelectionCard[]
+  pool: ConstructSelectionCard[]
+}
+
+interface ConstructSelectionPersistence extends ConstructSelection {
+  tableId: string
+}
+
+function validSelectionCards(list: unknown): ConstructSelectionCard[] {
+  if (!Array.isArray(list)) return []
+  return list.filter((entry): entry is ConstructSelectionCard => {
+    const card = entry as Partial<ConstructSelectionCard>
+    return typeof card?.cardName === 'string'
+      && typeof card?.setCode === 'string'
+      && typeof card?.cardNumber === 'string'
+      && typeof card?.amount === 'number'
+      && card.amount > 0
+  }).map((card) => ({ cardName: card.cardName, setCode: card.setCode, cardNumber: card.cardNumber, amount: card.amount }))
+}
+
+/** Armado en curso del mazo (main y pool) del construct `tableId`. Solo el
+ *  armado: el pool lo sigue dando el server en el snapshot del CONSTRUCT. */
+export function saveConstructSelection(tableId: string, selection: ConstructSelection) {
+  if (!tableId) return
+  const data: ConstructSelectionPersistence = { tableId, main: selection.main, pool: selection.pool }
+  writeJson(CONSTRUCT_SELECTION_KEY, data)
+}
+
+/** The saved selection, only when it was made for the same construct table. */
+export function loadConstructSelection(tableId: string): ConstructSelection | null {
+  const parsed = readJson<Partial<ConstructSelectionPersistence>>(CONSTRUCT_SELECTION_KEY)
+  if (!parsed || !tableId || parsed.tableId !== tableId) return null
+  return { main: validSelectionCards(parsed.main), pool: validSelectionCards(parsed.pool) }
 }
 
 const ACTIVE_DECK_KEY = 'mage-web-active-deck'
