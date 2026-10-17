@@ -116,6 +116,12 @@ public class ProxyClient implements MageClient, CommandContext {
     private final ServerMessageMailbox serverMessages = new ServerMessageMailbox();
 
     private ScheduledFuture<?> graceDisconnectTimer = null;
+    /**
+     * The session is drafting or building its deck for a tournament (see {@link #nextDraftPhase}).
+     * A page closed in this state gets the full grace period: a reload that outlasts the short one
+     * would drop the player from the tournament on the server.
+     */
+    private volatile boolean draftPhase = false;
     private volatile boolean released = false;
     /** dispose() is idempotent but reachable from several paths; the counter must be once-only. */
     private boolean disposeCounted = false;
@@ -383,13 +389,43 @@ public class ProxyClient implements MageClient, CommandContext {
         if (connections.count() != 0 || (!connected && !relinking) || released) {
             return;
         }
-        int secs = left ? config.getLeaveGraceSecs() : config.getGraceSecs();
-        logger.info("All WebSocket clients disconnected" + (left ? " (page closed)" : "") + ". Starting " + secs
+        int secs = graceSecs(config, left, draftPhase);
+        logger.info("All WebSocket clients disconnected" + (left ? " (page closed)" : "")
+                + (left && draftPhase ? " during draft/construction" : "") + ". Starting " + secs
                 + "s grace period before stopping session.");
         if (graceDisconnectTimer != null) {
             graceDisconnectTimer.cancel(false);
         }
         graceDisconnectTimer = pingTimer.schedule(this::expireGrace, secs, TimeUnit.SECONDS);
+    }
+
+    /**
+     * The grace for a session whose last page is gone. A page that announced it was closing gets
+     * the short grace, except while the session is drafting or building its deck: then it gets the
+     * full one, like a dropped connection.
+     */
+    static int graceSecs(Config config, boolean left, boolean inDraft) {
+        return left && !inDraft ? config.getLeaveGraceSecs() : config.getGraceSecs();
+    }
+
+    /**
+     * Tracks the draft/construction phase from the server's callbacks: it starts with the draft
+     * (or the construct phase of a sealed event) and ends when the first game of the tournament
+     * starts or the tournament is over. Other callbacks leave it unchanged.
+     */
+    static boolean nextDraftPhase(boolean inDraft, ClientCallbackMethod m) {
+        switch (m) {
+            case START_DRAFT:
+            case DRAFT_INIT:
+            case CONSTRUCT:
+                return true;
+            case START_GAME:
+            case GAME_INIT:
+            case TOURNAMENT_OVER:
+                return false;
+            default:
+                return inDraft;
+        }
     }
 
     /** Seconds left on the grace timer, or -1 when none is running. */
@@ -743,6 +779,7 @@ public class ProxyClient implements MageClient, CommandContext {
             // over the same channel; forwarding them floods the single-threaded callback queue
             // and starves real events of the new session (e.g. WATCHGAME arriving 60+ seconds late).
             ClientCallbackMethod m = callback.getMethod();
+            draftPhase = nextDraftPhase(draftPhase, m);
             UUID callbackObjectId = callback.getObjectId();
             boolean gameEvent = callbackObjectId != null && CallbackEvents.isGameRelated(m);
             if (gameEvent) {

@@ -186,9 +186,16 @@ class ProxyClientStreamTest {
     }
 
     private long graceAfterClose(boolean left) throws Exception {
+        return graceAfterClose(left, false);
+    }
+
+    private long graceAfterClose(boolean left, boolean inDraft) throws Exception {
         java.lang.reflect.Field connected = ProxyClient.class.getDeclaredField("connected");
         connected.setAccessible(true);
         connected.set(client, true);
+        java.lang.reflect.Field draft = ProxyClient.class.getDeclaredField("draftPhase");
+        draft.setAccessible(true);
+        draft.set(client, inDraft);
         WebSocket page = conn();
         client.attach(page, "1", null, -1);
         client.onClientClose(page, left);
@@ -209,6 +216,36 @@ class ProxyClientStreamTest {
     void aDroppedConnectionKeepsTheFullGracePeriod() throws Exception {
         long secs = graceAfterClose(false);
         assertTrue(secs > Config.DEFAULT_GRACE_SECS - 5 && secs <= Config.DEFAULT_GRACE_SECS, "grace " + secs);
+    }
+
+    @Test
+    void aPageClosedDuringADraftGetsTheFullGracePeriod() throws Exception {
+        long secs = graceAfterClose(true, true);
+        assertTrue(secs > Config.DEFAULT_GRACE_SECS - 5 && secs <= Config.DEFAULT_GRACE_SECS, "grace " + secs);
+    }
+
+    @Test
+    void theGraceOfAClosedPageDependsOnlyOnThePhase() {
+        Config config = Config.parse(new String[]{});
+        assertEquals(Config.DEFAULT_LEAVE_GRACE_SECS, ProxyClient.graceSecs(config, true, false), "a game: short grace");
+        assertEquals(Config.DEFAULT_GRACE_SECS, ProxyClient.graceSecs(config, true, true), "a draft: full grace");
+        assertEquals(Config.DEFAULT_GRACE_SECS, ProxyClient.graceSecs(config, false, false), "a dropped link: full grace");
+        assertEquals(Config.DEFAULT_GRACE_SECS, ProxyClient.graceSecs(config, false, true), "a dropped link in a draft: full grace");
+    }
+
+    @Test
+    void theDraftPhaseStartsWithTheDraftAndEndsWithTheFirstGame() {
+        boolean phase = false;
+        phase = ProxyClient.nextDraftPhase(phase, ClientCallbackMethod.START_DRAFT);
+        assertTrue(phase, "the draft starts");
+        phase = ProxyClient.nextDraftPhase(phase, ClientCallbackMethod.DRAFT_PICK);
+        assertTrue(phase, "picks keep it");
+        phase = ProxyClient.nextDraftPhase(phase, ClientCallbackMethod.CONSTRUCT);
+        assertTrue(phase, "deck construction keeps it");
+        phase = ProxyClient.nextDraftPhase(phase, ClientCallbackMethod.START_GAME);
+        assertFalse(phase, "the first game of the tournament ends the phase");
+        assertFalse(ProxyClient.nextDraftPhase(false, ClientCallbackMethod.SHOW_USERMESSAGE), "an unrelated callback changes nothing");
+        assertFalse(ProxyClient.nextDraftPhase(false, ClientCallbackMethod.TOURNAMENT_OVER), "the tournament end clears it");
     }
 
     @Test

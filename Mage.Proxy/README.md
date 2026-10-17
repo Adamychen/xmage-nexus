@@ -111,7 +111,14 @@ back is it closed for good (the server then removes the player from its tables).
 When the last page announced it was closing (`leaving`, sent by the web on
 `pagehide`: tab closed, reload, navigation) the shorter `--leaveGraceSecs`
 (default 45 s) applies instead: a reload is back within seconds, and the opponent
-of a player who closed the tab waits 45 s instead of 3 minutes.
+of a player who closed the tab waits 45 s instead of 3 minutes. The exception is a
+session in its draft or deck-construction phase (`START_DRAFT`, `DRAFT_INIT` or
+`CONSTRUCT` seen, until `START_GAME`, `GAME_INIT` or `TOURNAMENT_OVER`): there the
+full `--graceSecs` (180 s) applies even after `leaving`. A reload that outlasts the
+short grace would expire the session, and the server would then remove the player from
+the draft table (tournament quit during construction). The server's tournament logic is
+not changed; the proxy only keeps the session. The phase is tracked per session in
+`ProxyClient.draftPhase` (`nextDraftPhase`), and the grace choice is `ProxyClient.graceSecs`.
 The proxy never closes a session early with `keepMySessionActive`: the server
 keeps a zombie session whose callbacks block its threads. When the proxy process
 itself stops (restart, deploy) it does **not** disconnect its sessions: the server
@@ -170,7 +177,7 @@ per-connection lock (`Gateway.send`).
 |---|---|---|
 | `connect` | `{host, port, username, password, resume?: {streamId, seq}}` | Connect to XMage server. While the proxy builds its card DB on first boot it answers `ok:false, errorCode:"WARMING_UP"` — retry in a few seconds. A server running another XMage release refuses the login with `errorCode:"VERSION_MISMATCH"` (the detail keeps the server's `Your version` / `Server version` text): the proxy has to be rebuilt against that release, no retry helps. Result data: `{attached: boolean, streamId: string, resumed?: boolean}` |
 | `disconnect` | `{}` | Disconnect from server |
-| `leaving` | `{}` | The page is closing; no answer. The session then gets the short grace period (`--leaveGraceSecs`) when this was its last connection |
+| `leaving` | `{}` | The page is closing; no answer. The session then gets the short grace period (`--leaveGraceSecs`) when this was its last connection, unless it is in a draft or deck construction (then the full grace period) |
 | `ping` | `{}` | Keepalive and web heartbeat; answered at once on the WebSocket thread (before or after `connect`), never queued behind the session's commands |
 | `getServerInfo` | `{}` | Server version, protocol version |
 | `getGameTypes` | `{}` | Available game types |
