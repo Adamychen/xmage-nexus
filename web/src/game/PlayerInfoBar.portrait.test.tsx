@@ -110,6 +110,18 @@ describe('PlayerInfoBar portrait (new table interface)', () => {
     expect(container.querySelectorAll('.rank-badge')).toHaveLength(1)
   })
 
+  it('renders the v2 rank as a large emblem with no name or elo text', () => {
+    const ranked = makePlayer({ playerId: 'r', name: 'Rina', isHuman: true, userData: { generalRating: 1850 } as never })
+    setState({ game: makeGameView({ players: [me, ranked] }) })
+    const { container } = render(<PlayerInfoBar player={ranked} side="opp" />)
+    const badge = container.querySelector('.player-avatar .rank-badge.pp-rank-icon') as HTMLElement
+    expect(badge).not.toBeNull()
+    expect(badge.classList.contains('pp-rank-icon-lg')).toBe(true)
+    expect(badge.querySelector('.rank-emblem svg')).not.toBeNull()
+    expect(badge.querySelector('.rank-badge-elo')).toBeNull()
+    expect(badge.textContent?.trim()).toBe('')
+  })
+
   it('opens the mechanics panel from a mechanic chip', () => {
     const openPanel = vi.fn()
     const { container } = render(
