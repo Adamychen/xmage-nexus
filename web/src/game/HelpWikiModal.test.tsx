@@ -46,6 +46,20 @@ describe('HelpWikiModal', () => {
     expect(screen.getAllByText(/Pasar Prioridad/i).length).toBeGreaterThan(0)
   })
 
+  it('renders each phases section under a heading and keeps the close control focusable', () => {
+    render(<HelpWikiModal onClose={vi.fn()} />)
+
+    fireEvent.click(screen.getByRole('tab', { name: /Fases y Prioridad/i }))
+
+    const headings = screen.getAllByRole('heading', { level: 3 })
+    expect(headings).toHaveLength(2)
+    expect(headings[0].textContent).toMatch(/Fases y Prioridad/i)
+
+    const closeBtn = screen.getByTitle(/Cerrar/i)
+    expect(closeBtn.tagName).toBe('BUTTON')
+    expect(closeBtn.tabIndex).toBeGreaterThanOrEqual(0)
+  })
+
   it('calls onClose when clicking close button or Entendido', () => {
     const onClose = vi.fn()
     render(<HelpWikiModal onClose={onClose} />)
