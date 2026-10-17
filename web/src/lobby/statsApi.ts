@@ -5,18 +5,13 @@ export type RankingFormat = 'constructed' | 'limited'
 export interface RankingPlayer {
   username: string
   rating: number
-  ranked: boolean
 }
 
 interface RankingFileEntry {
   username: string
   constructed: number | null
   limited: number | null
-  matches: number
 }
-
-const BASE_RATING = 800
-const MIN_RANKED_MATCHES = 20
 
 export interface RankingResponse {
   format: RankingFormat
@@ -87,18 +82,9 @@ export async function fetchRanking(format: RankingFormat): Promise<RankingRespon
   const players = (body.players as RankingFileEntry[])
     .map((entry): RankingPlayer => {
       const value = format === 'limited' ? entry.limited : entry.constructed
-      const rating = typeof value === 'number' ? value : 0
-      return {
-        username: entry.username,
-        rating,
-        ranked: rating > BASE_RATING && entry.matches >= MIN_RANKED_MATCHES,
-      }
+      return { username: entry.username, rating: typeof value === 'number' ? value : 0 }
     })
-    .sort((a, b) => {
-      if (a.ranked !== b.ranked) return a.ranked ? -1 : 1
-      if (a.ranked) return b.rating - a.rating || a.username.localeCompare(b.username, undefined, { sensitivity: 'base' })
-      return a.username.localeCompare(b.username, undefined, { sensitivity: 'base' })
-    })
+    .sort((a, b) => b.rating - a.rating || a.username.localeCompare(b.username, undefined, { sensitivity: 'base' }))
   return { format, updatedAt: generatedAt, players }
 }
 

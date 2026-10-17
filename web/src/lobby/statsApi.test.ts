@@ -33,7 +33,7 @@ describe('statsApi', () => {
       expect(result).toEqual({
         format: 'constructed',
         updatedAt: '2026-10-17T10:00:00Z',
-        players: [{ username: 'alice', rating: 1650, ranked: true }],
+        players: [{ username: 'alice', rating: 1650 }],
       })
       const url = String(fetchMock.mock.calls[0][0])
       expect(url).toMatch(/^\/ranking\.json/)

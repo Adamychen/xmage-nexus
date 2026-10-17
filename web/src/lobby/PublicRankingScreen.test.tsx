@@ -43,7 +43,6 @@ describe('PublicRankingScreen', () => {
     expect(screen.getByText('bob')).toBeTruthy()
     expect(screen.getByText('1820')).toBeTruthy()
     expect(screen.getByText('carol')).toBeTruthy()
-    expect(screen.getAllByText('Unrated').length).toBeGreaterThan(0)
     expect(String(fetchMock.mock.calls[0][0])).toMatch(/^\/ranking\.json/)
   })
 
