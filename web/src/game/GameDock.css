@@ -49,6 +49,11 @@
   width: 100%;
 }
 
+.game-dock-rewind {
+  display: flex;
+  flex-shrink: 0;
+}
+
 .game-dock-row > .action-button-container {
   flex: 1;
   min-width: 0;

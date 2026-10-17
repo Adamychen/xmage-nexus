@@ -385,3 +385,32 @@ for (const layout of ['pod', 'arena']) {
     await page.screenshot({ path: testInfo.outputPath(`v2-${layout}-ticker.png`) })
   })
 }
+
+test('v2 rewind sits on the left of the phase dial and the two do not overlap @gameui', async ({ page }, testInfo) => {
+  await page.setViewportSize({ width: 1280, height: 800 })
+  await showGame(page, richCommanderGame(), { ...V2, boardRewind: true })
+  await expect(page.getByTestId('phase-dial')).toBeVisible({ timeout: 10_000 })
+  for (const [id, step] of [[1, 'UPKEEP'], [2, 'DRAW']] as const) {
+    await page.evaluate(
+      ({ gameView, id }) => {
+        const store = (globalThis as unknown as { __mageStore: { handleMessage: (m: unknown) => void } }).__mageStore
+        store.handleMessage({ type: 'event', method: 'GAME_UPDATE', messageId: id, objectId: 'g-v2', data: { gameView } })
+      },
+      { gameView: richCommanderGame({ step }), id },
+    )
+  }
+  const rewind = page.getByTestId('rewind-open')
+  const dial = page.getByTestId('phase-dial')
+  await expect(rewind).toBeVisible()
+  await page.waitForTimeout(400)
+  const r = (await rewind.boundingBox())!
+  const d = (await dial.boundingBox())!
+  expect(r.x + r.width).toBeLessThanOrEqual(d.x)
+  expect(r.x + r.width / 2).toBeLessThan(d.x + d.width / 2)
+  const pips = page.locator('.phase-dial-pip')
+  for (let i = 0; i < (await pips.count()); i++) {
+    const p = (await pips.nth(i).boundingBox())!
+    expect(p.x + p.width).toBeLessThanOrEqual(1280)
+  }
+  await page.screenshot({ path: testInfo.outputPath('v2-rewind-left.png') })
+})

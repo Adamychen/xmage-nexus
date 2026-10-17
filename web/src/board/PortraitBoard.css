@@ -42,7 +42,15 @@
 .game--v2 .game-dock {
   right: 24px;
   bottom: 36px;
-  width: 232px;
+  width: 266px;
+}
+
+.game--v2 .game-dock-row {
+  justify-content: flex-end;
+}
+
+.game--v2 .game-dock-rewind {
+  align-self: flex-end;
 }
 
 @container board (max-width: 520px) {
