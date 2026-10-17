@@ -19,6 +19,7 @@ function memoryStorage(): Storage {
 function show(extra: Record<string, unknown> = {}) {
   setState({
     ...initialState,
+    settings: { ...initialState.settings, gameUi: 'v1' },
     conn: { serverHost: 'localhost', port: 17171, username: 'tester', wsHost: 'localhost', proxyPort: 8787 },
     gameId: 'game-1',
     game: playerGameView,
@@ -83,6 +84,17 @@ describe('GameScreen', () => {
       setState({ game: { ...playerGameView, turn: 2, life: 19 } } as never)
     })
     expect(turn.classList.contains('turn-glow')).toBe(false)
+  })
+
+  it('glows the v2 top-bar turn number when the turn changes', async () => {
+    const { container } = show({ settings: { ...initialState.settings, gameUi: 'v2' } })
+    const turn = container.querySelector<HTMLElement>('.game-topbar-turn-num')!
+    expect(turn.classList.contains('turn-glow')).toBe(false)
+
+    await act(async () => {
+      setState({ game: { ...playerGameView, turn: 2 } } as never)
+    })
+    expect(turn.classList.contains('turn-glow')).toBe(true)
   })
 
   it('survives a stream of view updates', async () => {

@@ -1,40 +1,20 @@
 import Tabs from '../ui/Tabs'
 import EmptyState from '../ui/EmptyState'
 import { useEffect, useMemo, useState } from 'react'
-import type { CardView, PlayerView } from '../net/types'
+import type { CardView } from '../net/types'
 import { useStore } from '../state/store'
 import { awaitImageUrl } from '../cards/cardImages'
 import { useTranslation } from '../i18n'
 import type { CategoryT } from '../i18n/types'
 import Icon, { type IconName } from '../ui/Icon'
 import DungeonMap from './DungeonMap'
-import { commandItems } from './commandItems'
-import {
-  dungeonProgressKey,
-  dungeonRoot,
-  findDungeonGraph,
-  pathToRoom,
-  type DungeonGraph,
-} from './dungeons'
+import { dungeonStateOf, findRingBearer, ringStateOf, type DungeonState, type RingState } from './mechanicsState'
 import { dayNightStateOf, type DayNightState } from '../board/dayNight'
 import { speedLevelKey } from './speed'
 import './MechanicsTray.css'
 
 interface MechanicsTrayProps {
   onHoverCard?: (card: CardView | null, rect?: DOMRect) => void
-}
-
-interface RingState {
-  level: number
-  bearerName?: string
-  player: PlayerView
-}
-
-interface DungeonState {
-  name: string
-  player: PlayerView
-  graph: DungeonGraph | null
-  visited: string[]
 }
 
 function getRingLevels(t: CategoryT<'game'>) {
@@ -56,16 +36,7 @@ function getFallbackRooms(t: CategoryT<'game'>): DungeonRoomDef[] {
   ]
 }
 
-export function findRingBearer(player: PlayerView): string | undefined {
-  const battlefield = player.battlefield ?? {}
-  for (const perm of Object.values(battlefield)) {
-    const icons = perm.cardIcons ?? []
-    if (icons.some((icon) => icon.cardIconType === 'RINGBEARER')) {
-      return perm.displayName || perm.name || 'Creature'
-    }
-  }
-  return undefined
-}
+export { findRingBearer }
 
 export default function MechanicsTray({ onHoverCard }: MechanicsTrayProps) {
   const { t } = useTranslation()
@@ -76,60 +47,16 @@ export default function MechanicsTray({ onHoverCard }: MechanicsTrayProps) {
   const [activeTab, setActiveTab] = useState<string>('auto')
   const [tokenImages, setTokenImages] = useState<Record<string, string>>({})
 
-  const ringStates = useMemo((): RingState[] => {
-    if (!game?.players) return []
-    const list: RingState[] = []
-    for (const p of game.players) {
-      const items = commandItems(p)
-      const ringItem = items.find((c) => {
-        const n = String(c?.name ?? '').toLowerCase()
-        return n === 'the ring' || n.startsWith('the ring')
-      })
+  const ringStates = useMemo(
+    (): RingState[] => (game?.players ?? []).map(ringStateOf).filter((r): r is RingState => r !== null),
+    [game?.players],
+  )
 
-      if (ringItem) {
-        const rules = ringItem.rules ?? []
-        const level = Math.min(4, Math.max(1, rules.length))
-        list.push({
-          level,
-          bearerName: findRingBearer(p),
-          player: p,
-        })
-      }
-    }
-    return list
-  }, [game?.players])
-
-  const dungeonStates = useMemo((): DungeonState[] => {
-    if (!game?.players) return []
-    const list: DungeonState[] = []
-    for (const p of game.players) {
-      const items = commandItems(p)
-      const dungeonItem = items.find((c) => {
-        const n = String(c?.name ?? '').toLowerCase()
-        const types = Array.isArray(c?.cardTypes) ? c.cardTypes.map((t) => String(t).toLowerCase()) : []
-        return types.includes('dungeon') || ['undercity', 'dungeon of the mad mage', 'lost mine of phandelver', 'tomb of annihilation'].some((k) => n.includes(k))
-      })
-
-      if (dungeonItem?.name) {
-        const graph = findDungeonGraph(dungeonItem.name)
-        let visited: string[] = []
-        if (graph) {
-          const tracked = gameId ? progress[dungeonProgressKey(gameId, p.name, graph.id)] : undefined
-          if (tracked && tracked.length > 0) {
-            visited = tracked
-          } else if (dungeonItem.currentRoom) {
-            const root = dungeonRoot(graph)
-            visited = pathToRoom(graph, dungeonItem.currentRoom) ?? (root ? [root] : [])
-          } else {
-            const root = dungeonRoot(graph)
-            visited = root ? [root] : []
-          }
-        }
-        list.push({ name: dungeonItem.name, player: p, graph, visited })
-      }
-    }
-    return list
-  }, [game?.players, gameId, progress])
+  const dungeonStates = useMemo(
+    (): DungeonState[] =>
+      (game?.players ?? []).map((p) => dungeonStateOf(p, gameId, progress)).filter((d): d is DungeonState => d !== null),
+    [game?.players, gameId, progress],
+  )
 
   const dayNightState = useMemo((): DayNightState | null => dayNightStateOf(game), [game])
 

@@ -1,0 +1,179 @@
+.combat-ledger {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 33;
+  width: min(330px, calc(100% - var(--sp-6)));
+  padding: var(--sp-2h) var(--sp-3) var(--sp-3);
+  border-radius: var(--r-lg);
+  background: linear-gradient(180deg, rgb(var(--ink-2-rgb)), rgb(var(--ink-rgb)));
+  border: 1px solid var(--ledger-line);
+  box-shadow: 0 18px 50px var(--shade-4), 0 0 36px rgb(var(--err-rgb) / 0.16);
+  animation: ledgerIn 0.45s var(--ease-out) both;
+}
+
+@keyframes ledgerIn {
+  from {
+    opacity: 0;
+    margin-top: var(--sp-3);
+  }
+  to {
+    opacity: 1;
+    margin-top: 0;
+  }
+}
+
+.board-wrap:has(.arena-board) .combat-ledger {
+  left: 18px;
+  top: auto;
+  bottom: var(--overlay-bottom, 262px);
+  transform: none;
+}
+
+.combat-ledger-head {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-1h);
+}
+
+.combat-ledger-sub {
+  margin-left: auto;
+  font-size: var(--fs-2xs);
+  color: var(--fg-3);
+}
+
+.combat-ledger-title + button {
+  margin-left: auto;
+}
+
+.combat-ledger-who {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  min-width: 0;
+}
+
+.combat-ledger-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-1);
+}
+
+.combat-ledger-dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.combat-ledger-title {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1h);
+  font-family: var(--font-display);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--err);
+}
+
+.combat-ledger-rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.combat-ledger-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding: var(--sp-1h) 0;
+  border-top: 1px solid var(--line-1);
+  font-size: var(--fs-sm);
+}
+
+.combat-ledger-names {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--sp-1h);
+  min-width: 0;
+  font-weight: 700;
+  color: var(--fg-1);
+}
+
+.combat-ledger-arrow {
+  color: var(--fg-3);
+}
+
+.combat-ledger-tag {
+  padding: 0 var(--sp-1h);
+  border-radius: var(--r-xs);
+  font-size: var(--fs-3xs);
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: var(--warn-soft);
+  border: 1px solid var(--warn-line);
+  color: var(--warn);
+}
+
+.combat-ledger-amount {
+  flex: none;
+  font-family: var(--font-display);
+  font-size: var(--fs-xl);
+  font-weight: 800;
+  text-align: right;
+  white-space: nowrap;
+  color: var(--fg-2);
+}
+
+.combat-ledger-amount small {
+  display: block;
+  font-family: var(--font-ui);
+  font-size: var(--fs-3xs);
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: var(--fg-3);
+}
+
+.combat-ledger-row.to-player .combat-ledger-amount {
+  color: var(--err);
+}
+
+.combat-ledger-totals {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-1h);
+  margin-top: var(--sp-2);
+  padding-top: var(--sp-2);
+  border-top: 1px solid var(--line-2);
+}
+
+.combat-ledger-total {
+  padding: var(--sp-0h) var(--sp-2h);
+  border-radius: var(--r-pill);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  background: var(--ink-3);
+  border: 1px solid var(--line-2);
+  color: var(--fg-2);
+}
+
+.combat-ledger-total b {
+  color: var(--err);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .combat-ledger {
+    animation: none;
+  }
+}

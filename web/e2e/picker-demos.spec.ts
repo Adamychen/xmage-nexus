@@ -60,13 +60,15 @@ test.describe('Visual preset & playmat pickers', { tag: '@site' }, () => {
       await page.getByTestId('open-settings').click()
       await page.getByTestId('settings-nav-board').click()
       const demo = (kind: string, value: string) => page.getByTestId(`board-demo-${kind}-${value}`)
-      for (const [layout, zones] of [['standard', 2], ['pod', 4], ['arena', 4]] as const) {
+      for (const [layout, zones] of [['standard', 2], ['pod', 4], ['arena', 4], ['table', 4]] as const) {
         const miniature = page.getByTestId(`layout-demo-${layout}`)
         await expect(miniature).toBeVisible()
         await expect(miniature.getByTestId('layout-demo-zone')).toHaveCount(zones)
         await expect(miniature.locator('.layout-demo-zone.is-mine')).toHaveCount(1)
       }
       await expectAllImagesLoaded(page, '[data-testid^="layout-demo-"] img.layout-demo-tile', 12)
+      await page.getByTestId('settings-layout-table').scrollIntoViewIfNeeded()
+      await page.screenshot({ path: testInfo.outputPath('layouts.png') })
       for (const [kind, values] of [
         ['cardStyle', ['classic', 'compact']],
         ['tapStyle', ['sideways', 'tilted']],

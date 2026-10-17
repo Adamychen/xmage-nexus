@@ -1,6 +1,7 @@
-import { cleanup, render } from '@testing-library/react'
+import { cleanup, fireEvent, render } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
 import ArenaBoard from './ArenaBoard'
+import { setSetting } from '../state/store'
 import { makeCard, makeGameView, makePlayer } from '../__fixtures__/gameViews'
 import type { CardView, GameView } from '../net/types'
 
@@ -92,6 +93,7 @@ describe('ArenaBoard', () => {
   })
 
   it('keeps opponent mini-hands inside their columns', () => {
+    setSetting('gameUi', 'v1')
     const game = multiplayerGame({
       myPlayerId: 'p1',
       opponentHands: {
@@ -106,6 +108,23 @@ describe('ArenaBoard', () => {
     const { container } = render(<ArenaBoard game={game} />)
     expect(container.querySelectorAll('.arena-opp-cell .hand-card-slot').length).toBe(2)
     expect(container.querySelectorAll('.board-zone .hand-zone.compact').length).toBe(2)
+    setSetting('gameUi', 'v2')
+  })
+
+  it('v2: a visible hand is opened from its badge instead of a face-down stack', () => {
+    setSetting('gameUi', 'v2')
+    const game = multiplayerGame({
+      myPlayerId: 'p1',
+      opponentHands: { Bob: { 'oh-1': { id: 'oh-1' } } },
+    })
+    const bob = game.players![1] as unknown as Record<string, unknown>
+    bob['handCount'] = 2
+    const { container, getAllByTestId } = render(<ArenaBoard game={game} />)
+    expect(container.querySelector('.arena-opp-cell [data-testid="opp-hand-stack"]')).toBeNull()
+    const badge = getAllByTestId('pp-hand-count').find((el) => el.classList.contains('is-viewable'))
+    expect(badge?.textContent).toContain('1/2')
+    fireEvent.click(badge as Element)
+    expect(container.ownerDocument.querySelector('[data-testid="hand-viewer"]')).not.toBeNull()
   })
 
   it('spectator: rivales arriba (hasta 3) y un jugador abajo, como los otros modos', () => {

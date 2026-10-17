@@ -13,16 +13,18 @@ import SoundFxControls from './SoundFxControls'
 import PresetPicker from './PresetPicker'
 import Toggle from '../ui/Toggle'
 import RenderedCardsSettings from './RenderedCardsSettings'
+import { boardLayoutChoiceOf, chooseBoardLayout, type BoardLayoutChoice } from './boardLayoutChoice'
 import { PT_BADGE_MODES, SICKNESS_STYLES } from '../board/cardOverlays'
 import Button from '../ui/Button'
 import { CARD_STYLES, TAP_STYLES } from '../board/compactCard'
 import './SettingsModal.css'
 import '../appearance/SleevePickerModal.css'
 
-export const LAYOUTS: Array<{ id: 'standard' | 'pod' | 'arena'; labelKey: string; descKey: string }> = [
+export const LAYOUTS: Array<{ id: BoardLayoutChoice; labelKey: string; descKey: string }> = [
   { id: 'standard', labelKey: 'board_standard', descKey: 'board_standard_desc' },
   { id: 'pod', labelKey: 'board_pod', descKey: 'board_pod_desc' },
   { id: 'arena', labelKey: 'board_arena', descKey: 'board_arena_desc' },
+  { id: 'table', labelKey: 'board_table', descKey: 'board_table_desc' },
 ]
 
 export function LanguageSection() {
@@ -127,14 +129,14 @@ export function BoardSection() {
           <button
             key={l.id}
             type="button"
-            className={`settings-card ${settings.boardLayout === l.id ? 'selected' : ''}`}
-            onClick={() => setSetting('boardLayout', l.id)}
+            className={`settings-card ${boardLayoutChoiceOf(settings) === l.id ? 'selected' : ''}`}
+            onClick={() => chooseBoardLayout(l.id)}
             data-testid={`settings-layout-${l.id}`}
           >
             <LayoutDemo layout={l.id} />
             <span className="settings-card-label">{t('lobby', l.labelKey as 'board_standard')}</span>
             <span className="settings-card-desc">{t('lobby', l.descKey as 'board_standard_desc')}</span>
-            {settings.boardLayout === l.id && <span className="settings-card-check">✓</span>}
+            {boardLayoutChoiceOf(settings) === l.id && <span className="settings-card-check">✓</span>}
           </button>
         ))}
       </div>

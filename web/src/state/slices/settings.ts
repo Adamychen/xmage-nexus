@@ -7,6 +7,7 @@ import type { ChoiceMemoryRule } from '../../game/choiceMemory'
 import { normalizePlaymat, type PlaymatId } from '../../appearance/playmats'
 import { normalizeCardStyle, normalizeTapStyle, type CardStyle, type TapStyle } from '../../board/compactCard'
 import { normalizeBoardFill, normalizeCardRender, normalizeHandRail, normalizeHandRailWidth, normalizeHandRow, normalizePtBadgeMode, normalizeShowHandCost, normalizeShowManaSource, normalizeSicknessStyle, type CardRender, type PtBadgeMode, type SicknessStyle } from '../../board/cardOverlays'
+import { normalizeGameUi, type GameUi } from '../../game/gameUi'
 import { gameplayPreset, isGameplayPresetId, type GameplayPresetId } from '../../settings/gameplayPresets'
 
 export interface SettingsState {
@@ -46,6 +47,7 @@ export interface SettingsState {
   handRailWidth: number
   handRow: boolean
   boardFill: boolean
+  gameUi: GameUi
   sicknessStyle: SicknessStyle
   uiScale: ZoomLevel
   cjkBoost: boolean
@@ -90,6 +92,7 @@ export const initialSettings: SettingsSlice = {
     handRailWidth: normalizeHandRailWidth(loadAppearanceSettings().handRailWidth),
     handRow: normalizeHandRow(loadAppearanceSettings().handRow),
     boardFill: normalizeBoardFill(loadAppearanceSettings().boardFill),
+    gameUi: normalizeGameUi(loadAppearanceSettings().gameUi),
     sicknessStyle: normalizeSicknessStyle(loadAppearanceSettings().sicknessStyle),
     ...(storedPreset ? storedPreset.bundle : null),
   },
