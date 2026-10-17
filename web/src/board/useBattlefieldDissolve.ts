@@ -18,10 +18,16 @@ interface Box {
   transform: string
 }
 
+export interface DissolveContext {
+  players?: ReadonlyArray<PlayerView>
+  gameCycle?: number
+}
+
 interface Snapshot {
   gameId: string | null
   playerId: string
   host: HTMLElement | null
+  gameCycle: number | undefined
   cards: Map<string, { node: HTMLElement; box: Box }>
 }
 
@@ -89,6 +95,7 @@ export function useBattlefieldDissolve(
   scopes: ReadonlyArray<HTMLElement | null>,
   gameId: string | null,
   player: PlayerView | undefined,
+  context?: DissolveContext,
 ): void {
   const snapshotRef = useRef<Snapshot | null>(null)
   const ghostsRef = useRef<Ghosts>(new Map())
@@ -114,8 +121,11 @@ export function useBattlefieldDissolve(
     const battlefield = player.battlefield ?? {}
     const onField = new Set(Object.keys(battlefield))
 
-    if (prev && allowed && prev.gameId === gameId && prev.playerId === player.playerId) {
-      const toZone = new Set([...Object.keys(player.graveyard ?? {}), ...Object.keys(player.exile ?? {})])
+    const gameCycle = context?.gameCycle
+    const rolledBack = prev?.gameCycle !== undefined && gameCycle !== undefined && gameCycle < prev.gameCycle
+    if (prev && allowed && !rolledBack && prev.gameId === gameId && prev.playerId === player.playerId) {
+      const zonePlayers = context?.players ?? [player]
+      const toZone = new Set(zonePlayers.flatMap((p) => [...Object.keys(p.graveyard ?? {}), ...Object.keys(p.exile ?? {})]))
       for (const [id, entry] of prev.cards) {
         if (!onField.has(id) && toZone.has(id)) spawnGhost(entry.node, entry.box, prev.host, ghostsRef.current)
       }
@@ -129,6 +139,6 @@ export function useBattlefieldDissolve(
     for (const [id, node] of cardNodesIn(scopes)) {
       if (onField.has(id)) cards.set(id, { node, box: captureBox(node) })
     }
-    snapshotRef.current = { gameId, playerId: player.playerId, host: hostOf(scopes), cards }
+    snapshotRef.current = { gameId, playerId: player.playerId, host: hostOf(scopes), gameCycle, cards }
   })
 }

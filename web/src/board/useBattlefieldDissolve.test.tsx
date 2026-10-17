@@ -1,7 +1,7 @@
 import { renderHook } from '@testing-library/react'
 import type { PlayerView } from '../net/types'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { useBattlefieldDissolve, DISSOLVE_CLASS } from './useBattlefieldDissolve'
+import { useBattlefieldDissolve, DISSOLVE_CLASS, type DissolveContext } from './useBattlefieldDissolve'
 import { getState, setState } from '../state/state'
 import { makeCard, makePermanent, makePlayer } from '../__fixtures__/gameViews'
 
@@ -189,6 +189,36 @@ describe('useBattlefieldDissolve', () => {
     expect(ghost?.style.position).toBe('absolute')
     expect(ghost?.hasAttribute('role')).toBe(false)
     expect(ghost?.classList.contains('clickable')).toBe(false)
+  })
+
+  it('spawns a ghost on the controller board when a stolen card dies to its owner graveyard', () => {
+    const scope = board(['c1'])
+    const owner = (graveyard: string[]) => makePlayer({
+      playerId: 'p2',
+      name: 'Bob',
+      graveyard: Object.fromEntries(graveyard.map((id) => [id, makeCard({ name: id, id })])),
+    })
+    const { rerender } = renderHook(
+      ({ p, ctx }: { p: PlayerView; ctx: DissolveContext }) => useBattlefieldDissolve([scope], 'g1', p, ctx),
+      { initialProps: { p: playerWith({ battlefield: ['c1'] }), ctx: { players: [playerWith({ battlefield: ['c1'] }), owner([])], gameCycle: 10 } } },
+    )
+    removeCard(scope, 'c1')
+    rerender({
+      p: playerWith({}),
+      ctx: { players: [playerWith({}), owner(['c1'])], gameCycle: 11 },
+    })
+    expect(ghosts()).toHaveLength(1)
+  })
+
+  it('does not spawn a ghost when a rollback reverts a permanent into the graveyard', () => {
+    const scope = board(['c1'])
+    const { rerender } = renderHook(
+      ({ p, ctx }: { p: PlayerView; ctx: DissolveContext }) => useBattlefieldDissolve([scope], 'g1', p, ctx),
+      { initialProps: { p: playerWith({ battlefield: ['c1'] }), ctx: { gameCycle: 40 } } },
+    )
+    removeCard(scope, 'c1')
+    rerender({ p: playerWith({ graveyard: ['c1'] }), ctx: { gameCycle: 12 } })
+    expect(ghosts()).toHaveLength(0)
   })
 
   it('removes its live ghosts on unmount', () => {

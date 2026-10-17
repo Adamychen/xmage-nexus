@@ -120,15 +120,16 @@ export default function BoardZone({
   useBandFit(permanentsBandEl, cardW, compactPod, cardAspect)
   useTapFlip(permanentsBandEl)
   const gameId = useStore((s) => s.gameId)
+  const gamePlayers = useStore((s) => s.game?.players)
+  const gameCycle = useStore((s) => s.game?.gameCycle)
   const bandEls = [permanentsBandEl, creaturesBandEl]
   useUntapWave(bandEls, tiltedTaps)
   useTokenPop(bandEls, player)
-  useBattlefieldDissolve(bandEls, gameId, player)
+  useBattlefieldDissolve(bandEls, gameId, player, { players: gamePlayers, gameCycle })
   const { t } = useTranslation()
 
   // Switch Hands (Mindslaver & cía.): el servidor envía la mano controlada en `opponentHands`.
   const opponentHands = useStore((s) => s.game?.opponentHands)
-  const gamePlayers = useStore((s) => s.game?.players)
   const switchKeys = useMemo(() => switchableHandKeys(opponentHands), [opponentHands])
   const switchedHandKey = useStore((s) => s.switchedHandKey)
   const canSwitchHands = effectiveControlled && switchKeys.length > 0
