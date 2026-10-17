@@ -26,6 +26,7 @@ import {
   defaultTournamentType,
   isDraftTournamentType,
   isConstructedTournamentType,
+  isHumanSeatType,
   normalizeSeatType,
   recommendedFreeMulligans,
   type CreateTab,
@@ -34,7 +35,8 @@ import {
   type WizardStep,
   type TableCategory,
   type TournamentCategory,
-  WIZARD_STEPS_BASE,
+  buildWizardSteps,
+  type CreateKind,
 } from './constants'
 import {
   resolveTableKind,
@@ -74,58 +76,11 @@ function readSaved(): SavedForm {
   }
 }
 
-export function useCreateTableForm(onClose: () => void): CreateTableForm {
+export function useCreateTableForm(onClose: () => void, kind: CreateKind = 'match', onReset?: () => void): CreateTableForm {
+  const isTourneyKind = kind === 'tourney'
   const { t, tError } = useTranslation()
   const username = useStore((s) => s.conn?.username ?? 'player')
   const storeDeck = useStore((s) => s.myDeck)
-
-  const wizardSteps: WizardStep[] = useMemo(() => {
-    const steps = [...WIZARD_STEPS_BASE]
-    if (import.meta.env.DEV) steps.push({ id: 'dev', icon: 'settings', labelKey: '', titleFallback: 'Dev' })
-    return steps
-  }, [])
-
-  const [activeTab, setActiveTab] = useState<CreateTab>('general')
-  const activeIndex = useMemo(() => {
-    const idx = wizardSteps.findIndex((s) => s.id === activeTab)
-    return idx >= 0 ? idx : 0
-  }, [wizardSteps, activeTab])
-
-  const goToIndex = (idx: number) => {
-    if (idx < 0 || idx >= wizardSteps.length) return
-    setActiveTab(wizardSteps[idx].id)
-  }
-  const goNext = () => {
-    const err = validateStep(activeTab)
-    if (err) {
-      setError(err)
-      return
-    }
-    setError(null)
-    goToIndex(activeIndex + 1)
-  }
-  const goPrev = () => goToIndex(activeIndex - 1)
-  const goToStep = (tab: CreateTab) => {
-    const target = wizardSteps.findIndex((s) => s.id === tab)
-    if (target < 0) return
-    if (target <= activeIndex) {
-      setError(null)
-      setActiveTab(tab)
-      return
-    }
-    for (let i = activeIndex; i < target; i++) {
-      const err = validateStep(wizardSteps[i].id)
-      if (err) {
-        setError(err)
-        setActiveTab(wizardSteps[i].id)
-        return
-      }
-    }
-    setError(null)
-    setActiveTab(tab)
-  }
-  const isLastStep = activeIndex === wizardSteps.length - 1
-  const isFirstStep = activeIndex === 0
 
   const [saved] = useState(readSaved)
   const [gameTypes, setGameTypes] = useState<GameTypeInfo[]>(DEFAULT_GAME_TYPES)
@@ -135,12 +90,19 @@ export function useCreateTableForm(onClose: () => void): CreateTableForm {
   const [draftCubes, setDraftCubes] = useState<string[]>(DEFAULT_DRAFT_CUBES)
 
   // General tab
-  const [tableCategory, setTableCategoryState] = useState<TableCategory>(() => (saved.tableCategory === 'duel' || saved.tableCategory === 'multi' || saved.tableCategory === 'tourney') ? saved.tableCategory as TableCategory : 'duel')
+  const [tableCategory, setTableCategoryState] = useState<TableCategory>(() => {
+    if (isTourneyKind) return 'tourney'
+    return saved.tableCategory === 'multi' ? 'multi' : 'duel'
+  })
   const [tournamentCategory, setTournamentCategoryState] = useState<TournamentCategory>(() => (saved.tournamentCategory === 'limited' || saved.tournamentCategory === 'constructed') ? saved.tournamentCategory as TournamentCategory : 'limited')
 
-  const [name, setName] = useState<string>(() => saved.name || `${username}'s table`)
+  const [name, setName] = useState<string>(() => saved.name || (isTourneyKind ? 'Tournament' : 'Game'))
   const [gameType, setGameTypeState] = useState<string>(() => saved.gameType || 'Two Player Duel')
-  const [deckType, setDeckTypeState] = useState<string>(() => saved.deckType || 'Constructed - Modern')
+  const [deckType, setDeckTypeState] = useState<string>(() => {
+    if (!isTourneyKind) return saved.deckType || 'Limited'
+    if (tournamentCategory === 'limited') return 'Limited'
+    return saved.deckType && !isLimitedDeckType(saved.deckType) ? saved.deckType : 'Constructed - Modern'
+  })
 
   const setGameType = (newGt: string) => {
     setGameTypeState(newGt)
@@ -156,10 +118,11 @@ export function useCreateTableForm(onClose: () => void): CreateTableForm {
       setGameTypeState(getDefaultGameTypeForDeck(newDt, numPlayers))
     }
   }
-  const [wins, setWins] = useState<number>(() => typeof saved.wins === 'number' && saved.wins >= 1 && saved.wins <= 5 ? saved.wins : 1)
+  const [wins, setWins] = useState<number>(() => typeof saved.wins === 'number' && saved.wins >= 1 && saved.wins <= 5 ? saved.wins : 2)
   const [skillLevel, setSkillLevel] = useState<'BEGINNER' | 'CASUAL' | 'SERIOUS'>(() => saved.skillLevel || 'CASUAL')
   const [rated, setRated] = useState<boolean>(() => saved.rated === true)
-  const [useDraftTournament, setUseDraftTournament] = useState<boolean>(() => saved.useDraftTournament === true)
+  // invariant: a tournament drafts exactly when its category is limited (see tableKind.ts)
+  const [useDraftTournament, setUseDraftTournament] = useState<boolean>(() => isTourneyKind && tournamentCategory === 'limited')
   const [draftSetsRaw, setDraftSetsRaw] = useState('M21, M21, M21')
   const [draftBoostersState, setDraftBoostersState] = useState<3 | 6>(3)
   const setDraftBoosters = (v: 3 | 6) => {
@@ -230,31 +193,13 @@ export function useCreateTableForm(onClose: () => void): CreateTableForm {
     }
   }
 
-  const applyMode = (cat: TableCategory) => {
-    setTableCategory(cat)
-  }
-
   const setUseDraftTournamentChecked = (v: boolean) => {
     setUseDraftTournament(v)
     if (tableCategory === 'tourney') setTournamentCategory(v ? 'limited' : 'constructed')
   }
 
   const applyPreset = (key: string) => {
-    if (key === 'modern_bo3') {
-      setTableCategoryState('duel')
-      setUseDraftTournament(false)
-      setGameTypeState('Two Player Duel')
-      setDeckTypeState('Constructed - Modern')
-      setWins(2)
-      setNumPlayers(2)
-    } else if (key === 'commander_4p') {
-      setTableCategoryState('multi')
-      setUseDraftTournament(false)
-      setGameTypeState('Commander Free For All')
-      setDeckTypeState('Variant Magic - Commander')
-      setNumPlayers(4)
-      setWins(1)
-    } else if (key === 'draft_8p') {
+    if (key === 'draft_8p') {
       setTableCategoryState('tourney')
       setTournamentCategoryState('limited')
       setUseDraftTournament(true)
@@ -287,7 +232,7 @@ export function useCreateTableForm(onClose: () => void): CreateTableForm {
   const [customStartHandSizeEnabled, setCustomStartHandSizeEnabled] = useState(false)
   const [customStartHandSize, setCustomStartHandSize] = useState(7)
   const [planeChase, setPlaneChase] = useState(false)
-  const [attackOption, setAttackOption] = useState('LEFT')
+  const [attackOption, setAttackOption] = useState('MULTIPLE')
   const [range, setRange] = useState('ALL')
 
   // Security & Permissions tab
@@ -298,7 +243,7 @@ export function useCreateTableForm(onClose: () => void): CreateTableForm {
   const [rollbackTurnsAllowed, setRollbackTurnsAllowed] = useState(true)
   const [minimumRating, setMinimumRating] = useState(0)
   const [quitRatio, setQuitRatio] = useState(100)
-  const [edhPowerLevel, setEdhPowerLevel] = useState(100)
+  const [edhPowerLevel, setEdhPowerLevel] = useState(0)
 
   const [numPlayers, setNumPlayers] = useState<number>(() => typeof saved.numPlayers === 'number' && saved.numPlayers >= 2 && saved.numPlayers <= 10 ? saved.numPlayers : 2)
   // the proxy-side SIM bot is dev-only: a form persisted by an older client loses its SIM seats,
@@ -428,12 +373,65 @@ export function useCreateTableForm(onClose: () => void): CreateTableForm {
   const tableResolution = resolveTableKind({
     tableCategory,
     tournamentCategory,
-    useDraftTournament,
+    // a match never drafts: only the tournament entry point can produce a draft
+    useDraftTournament: isTourneyKind && useDraftTournament,
     deckType,
     tournamentType,
     knownTournamentTypes: tournamentTypes,
   })
   const { isDraftLimited, isConstructedTournament, isTournament } = tableResolution
+
+  const wizardSteps: WizardStep[] = useMemo(
+    () => buildWizardSteps({ draft: isDraftLimited, dev: import.meta.env.DEV }),
+    [isDraftLimited],
+  )
+
+  const [activeTab, setActiveTab] = useState<CreateTab>('general')
+  const activeIndex = useMemo(() => {
+    const idx = wizardSteps.findIndex((s) => s.id === activeTab)
+    return idx >= 0 ? idx : 0
+  }, [wizardSteps, activeTab])
+
+  useEffect(() => {
+    if (!wizardSteps.some((s) => s.id === activeTab)) setActiveTab('general')
+  }, [wizardSteps, activeTab])
+
+  const goToIndex = (idx: number) => {
+    if (idx < 0 || idx >= wizardSteps.length) return
+    setActiveTab(wizardSteps[idx].id)
+  }
+  const goNext = () => {
+    const err = validateStep(activeTab)
+    if (err) {
+      setError(err)
+      return
+    }
+    setError(null)
+    goToIndex(activeIndex + 1)
+  }
+  const goPrev = () => goToIndex(activeIndex - 1)
+  const goToStep = (tab: CreateTab) => {
+    const target = wizardSteps.findIndex((s) => s.id === tab)
+    if (target < 0) return
+    if (target <= activeIndex) {
+      setError(null)
+      setActiveTab(tab)
+      return
+    }
+    for (let i = activeIndex; i < target; i++) {
+      const err = validateStep(wizardSteps[i].id)
+      if (err) {
+        setError(err)
+        setActiveTab(wizardSteps[i].id)
+        return
+      }
+    }
+    setError(null)
+    setActiveTab(tab)
+  }
+  const isLastStep = activeIndex === wizardSteps.length - 1
+  const isFirstStep = activeIndex === 0
+
 
   const compatibilityError = useMemo(() => {
     if (isDraftLimited) return null
@@ -510,7 +508,10 @@ export function useCreateTableForm(onClose: () => void): CreateTableForm {
   }
   const setSeatType = (idx: number, type: string) => {
     const n = normalizeSeatType(type)
-    setSeatConfigs((prev) => prev.map((s, i) => (i === idx ? { ...s, type: n } : s)))
+    const botDeck = simDeck ? deckRef(simDeck) : ''
+    setSeatConfigs((prev) => prev.map((s, i) => (i === idx
+      ? { ...s, type: n, deckName: isHumanSeatType(n) ? s.deckName : s.deckName || botDeck }
+      : s)))
   }
   const setSeatDeck = (idx: number, deckRefValue: string) => {
     setSeatConfigs((prev) => prev.map((s, i) => (i === idx ? { ...s, deckName: deckRefValue } : s)))
@@ -521,7 +522,22 @@ export function useCreateTableForm(onClose: () => void): CreateTableForm {
 
   const runDemoTable = () => runDemoTableCommand({ skipInitShuffling, skipStartingPlayerChoice }, { setBusy, onClose })
 
-  const submit = () => submitCreateTable({
+  const firstInvalidStep = (): { tab: CreateTab; message: string } | null => {
+    for (const step of wizardSteps) {
+      const message = validateStep(step.id)
+      if (message) return { tab: step.id, message }
+    }
+    return null
+  }
+
+  const submit = async () => {
+    const invalid = firstInvalidStep()
+    if (invalid) {
+      setError(invalid.message)
+      setActiveTab(invalid.tab)
+      return
+    }
+    return submitCreateTable({
     name, gameType, deckType, wins, skillLevel, rated,
     draftSetsRaw, draftBoosters, draftConstructionTime, draftCubeName, draftTiming,
     numberRounds, singleGame, timeLimit, bufferTime, freeMulligans, mulliganType,
@@ -533,8 +549,19 @@ export function useCreateTableForm(onClose: () => void): CreateTableForm {
     isTournament, compatibilityError,
     username, tableResolution, findDeck,
   }, { t, tError, setBusy, setError, onClose })
+  }
+
+  // Remounting the form (via `onReset`) re-runs the initializers above, so the
+  // defaults live only in this file.
+  const resetToDefaults = () => {
+    try {
+      localStorage.removeItem(STORAGE_KEY)
+    } catch {}
+    onReset?.()
+  }
 
   return {
+    kind,
     wizardSteps,
     activeTab,
     setActiveTab,
@@ -654,7 +681,6 @@ export function useCreateTableForm(onClose: () => void): CreateTableForm {
     setTableCategory,
     tournamentCategory,
     setTournamentCategory,
-    applyMode,
     applyPreset,
     isLimited,
     isDraftLimited,
@@ -664,5 +690,6 @@ export function useCreateTableForm(onClose: () => void): CreateTableForm {
     validateStep,
     submit,
     runDemoTable,
+    resetToDefaults,
   }
 }

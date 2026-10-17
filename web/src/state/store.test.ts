@@ -422,9 +422,10 @@ describe('maybeAutoPass with smart stops', () => {
     vi.clearAllMocks()
     setSetting('smartStops', true)
     handleMessage({ type: 'event', method: 'START_GAME', messageId: 1, objectId: 'g-1', data: { gameId: 'g-1' } })
+    setState({ phaseStops: { yourTurn: {}, opponentTurn: {} } })
   })
 
-  it('passes a window where only mana sources are available, even with every phase stop on', () => {
+  it('passes a window where only mana sources are available when no stop is set', () => {
     const game = select(makeGameView({
       step: 'UPKEEP',
       players: [me()],
@@ -433,6 +434,18 @@ describe('maybeAutoPass with smart stops', () => {
     }))
     maybeAutoPass(game)
     expect(sendPlayerBoolean).toHaveBeenCalledWith(false, 'g-1')
+  })
+
+  it('holds an empty window on a step the player marked as a stop', () => {
+    setState({ phaseStops: { yourTurn: { upkeep: true }, opponentTurn: {} } })
+    maybeAutoPass(select(makeGameView({ step: 'UPKEEP', players: [me(true)], canPlayObjects: { objects: { mountain: mana } } })))
+    expect(sendPlayerBoolean).not.toHaveBeenCalled()
+  })
+
+  it('stops for a land drop on a step with no stop set', () => {
+    const land = { basicManaAbilities: [], basicPlayAbilities: [{ id: 'p', value: 'Play Forest' }], basicCastAbilities: [], other: [] }
+    maybeAutoPass(select(makeGameView({ step: 'PRECOMBAT_MAIN', players: [me(true)], canPlayObjects: { objects: { forest: land } } })))
+    expect(sendPlayerBoolean).not.toHaveBeenCalled()
   })
 
   it('stops when a spell can be cast', () => {
@@ -1528,8 +1541,9 @@ describe('applyGameplayPreset', () => {
     expect(sendManaPaymentMode).toHaveBeenCalledWith('MANA_AUTO_PAYMENT_RESTRICTED_OFF', 'g-1')
     expect(sendManaPaymentMode).toHaveBeenCalledWith('USE_FIRST_MANA_ABILITY_OFF', 'g-1')
     expect(updateManaConfirmPreference).toHaveBeenCalledWith(false)
+    expect(s.phaseStops.yourTurn.main1).toBe(false)
     expect(updatePreferences).toHaveBeenCalledWith(
-      expect.objectContaining({ yourTurn: expect.objectContaining({ main1: false }) }),
+      expect.objectContaining({ yourTurn: expect.objectContaining({ main1: true }) }),
     )
     expect(sendPlayerAction).toHaveBeenCalledWith('UNHOLD_PRIORITY', 'g-1')
     expect(loadGameplayPreset()).toBe('simple')

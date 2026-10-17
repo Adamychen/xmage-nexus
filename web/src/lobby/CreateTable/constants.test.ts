@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  buildWizardSteps,
   aiSeatTypes,
   DEFAULT_DRAFT_TOURNAMENT_TYPE,
   defaultTournamentType,
@@ -123,3 +124,21 @@ describe('recommendedFreeMulligans (CR 103.5c)', () => {
     expect(recommendedFreeMulligans('', 2)).toBe(0)
   })
 })
+
+describe('buildWizardSteps', () => {
+  const ids = (steps: ReturnType<typeof buildWizardSteps>) => steps.map((s) => s.id)
+
+  it('match: general, timing, security, seats, review', () => {
+    expect(ids(buildWizardSteps({ draft: false, dev: false }))).toEqual(['general', 'timing', 'security', 'seats', 'review'])
+  })
+
+  it('adds the draft step after general only for a limited draft', () => {
+    expect(ids(buildWizardSteps({ draft: true, dev: false }))).toEqual(['general', 'draft', 'timing', 'security', 'seats', 'review'])
+  })
+
+  it('dev sits before review; review always closes the flow', () => {
+    const steps = ids(buildWizardSteps({ draft: true, dev: true }))
+    expect(steps.slice(-2)).toEqual(['dev', 'review'])
+  })
+})
+

@@ -7,6 +7,10 @@ import OpponentSwitcherBar from '../board/OpponentSwitcherBar'
 import { DividerSlotContext } from '../board/BoardShell'
 import TurnOrderRing from '../board/TurnOrderRing'
 import * as cmds from '../net/commands'
+import RewindBar from './RewindBar'
+import MobileSpectator from './MobileSpectator'
+import { useNarrowScreen } from './useNarrowScreen'
+import { useRewind, viewedSnapshot } from './rewind'
 import { isRollbackVoteBlocking, maybeAutoPass, setStoreError, useGame, useSettings, useStore } from '../state/store'
 import FeedbackDialog from './FeedbackDialog'
 import UserRequestDialog from './UserRequestDialog'
@@ -22,8 +26,16 @@ import PhaseBar, { PhaseName } from './PhaseBar'
 import ActionButton from './ActionButton'
 import GameDock, { PromptSlotProvider, useDockOffset } from './GameDock'
 import GameStrip from './GameStrip'
+import { useChangeFlag } from './useChangeFlag'
 import GameDrawer, { DrawerToggles, type DrawerTab } from './GameDrawer'
+import SidePanel, { type SidePanelTab } from './SidePanel'
+import GameTopBar from './GameTopBar'
+import PhaseDial from './PhaseDial'
+import { ChromeActionsContext } from './chromeActions'
+import LogTicker from './LogTicker'
+import CombatLedger from './CombatLedger'
 import StackZone from '../board/StackZone'
+import StackDeck from '../board/StackDeck'
 import { targetsStackObject } from './stackTargeting'
 import CombatArrowsOverlay from '../board/CombatArrowsOverlay'
 import FeedbackOverlay from '../board/FeedbackOverlay'
@@ -38,9 +50,7 @@ import type { ManaColor } from '../board/impactFx'
 import '../appearance/playmats.css'
 import { musicEngine } from '../audio/musicEngine'
 import { musicIntensity } from '../audio/musicIntensity'
-import { applyFxRoot } from '../board/fx'
 import { hasCommanders as hasCommandersInGame } from '../board/commanders'
-import { dayNightStateOf } from '../board/dayNight'
 import TournamentPanel from './TournamentPanel'
 import { resolveTargetSourceId } from './resolveTargetSourceId'
 import { SPACE_PASS_REGION_SELECTOR, SPACE_SHORTCUT_OFF_SELECTOR } from '../ui/clickable'
@@ -48,6 +58,8 @@ import { crossZonePlayables } from '../board/crossZone'
 import { resolveTargetHits, targetZoneKindOf } from '../board/targetZones'
 import { combatActorsFrom } from '../state/gameUtils'
 import { effectiveBoardLayout } from '../board/boardLayout'
+import { MAX_BOARD_PLAYERS } from '../board/boardShared'
+import { useOverlayGutters } from './useOverlayGutters'
 import { useTranslation } from '../i18n'
 import { soundManager } from '../audio/soundManager'
 import { inverseZoom } from '../appearance/zoom'
@@ -56,7 +68,9 @@ import { isControllingPriority } from '../state/control'
 import { perfMark } from '../system/perfProbe'
 import './GameScreen.css'
 import './TournamentPanel.css'
-import { commandItems } from './commandItems'
+import { activeMechanicsCount } from './mechanicsState'
+import { usePriorityOrbs } from './usePriorityOrbs'
+import PriorityOrbLayer from './PriorityOrbLayer'
 
 /** El atajo global Space no debe disparar cuando el foco está en un control
  *  nativo (doble acción: el control + el pass). Cubre el caso en que el
@@ -99,7 +113,12 @@ export function mouseFocusedGameControl(target: EventTarget | null, root: HTMLEl
 
 export default function GameScreen() {
   const { t } = useTranslation()
-  const game = useGame()
+  const liveGame = useGame()
+  const rewind = useRewind()
+  const narrowScreen = useNarrowScreen()
+  const [fullBoardOnNarrow, setFullBoardOnNarrow] = useState(false)
+  const rewindView = viewedSnapshot(rewind)
+  const game = rewindView?.game ?? liveGame
   const settings = useSettings()
   const gameId = useStore((s) => s.gameId)
   const feedback = useStore((s) => s.feedback)
@@ -109,7 +128,11 @@ export default function GameScreen() {
   const gameRootRef = useRef<HTMLDivElement>(null)
   const gameBodyRef = useRef<HTMLDivElement>(null)
   const boardWrapRef = useRef<HTMLDivElement>(null)
+  const v2 = settings.gameUi === 'v2'
   const [drawerTab, setDrawerTab] = useState<DrawerTab | null>(null)
+  const [sidePanelTab, setSidePanelTab] = useState<SidePanelTab | null>(null)
+  const [deckOpen, setDeckOpen] = useState(false)
+  const [stackFocus, setStackFocus] = useState<ReadonlySet<string> | null>(null)
   const [promptSlot, setPromptSlot] = useState<HTMLElement | null>(null)
   const [dividerSlot, setDividerSlot] = useState<HTMLElement | null>(null)
   const [handPromptSlot, setHandPromptSlot] = useState<HTMLElement | null>(null)
@@ -120,17 +143,17 @@ export default function GameScreen() {
   useEffect(() => {
     const prev = prevStackCountRef.current
     prevStackCountRef.current = stackCount
+    if (v2) {
+      if (stackCount === 0 && prev > 0) setDeckOpen(false)
+      return
+    }
     if (stackCount > 0 && prev === 0) setDrawerTab((cur) => cur ?? 'stack')
     if (stackCount === 0 && prev > 0) setDrawerTab((cur) => (cur === 'stack' ? null : cur))
-  }, [stackCount])
+  }, [stackCount, v2])
 
   useEffect(() => {
-    if (game) maybeAutoPass(game)
-  }, [game])
-
-  useEffect(() => {
-    applyFxRoot()
-  }, [settings.effects, settings.animationSpeed])
+    if (liveGame) maybeAutoPass(liveGame)
+  }, [liveGame])
 
   const gameOver = useStore((s) => s.gameEnd != null)
   const hasGame = !!game
@@ -157,6 +180,8 @@ export default function GameScreen() {
 
   const me = game?.players?.find((p) => p.controlled)
   const priorityPlayer = game?.players?.find((p) => p.hasPriority) ?? game?.players?.find((p) => p.isActive)
+  const priorityHolderId = game?.players?.find((p) => p.hasPriority)?.playerId ?? null
+  const { orbs: priorityOrbs, done: doneOrb } = usePriorityOrbs(gameId, priorityHolderId)
   const timerSecs = priorityPlayer?.priorityTimeLeftSecs ?? 0
   const isTimerTicking = !!priorityPlayer?.hasPriority
 
@@ -178,7 +203,7 @@ export default function GameScreen() {
   const targetIdSet = useMemo(() => new Set(targetIds), [targetIds])
   const targetSourceId = game && feedback?.method === 'GAME_TARGET' ? resolveTargetSourceId(game, feedback.sourceName) : undefined
   const combatActors = useMemo(() => combatActorsFrom(game), [game])
-  useAttentionAlerts(game, gameId, feedback, combat, settings.browserNotifications)
+  useAttentionAlerts(liveGame, gameId, feedback, combat, settings.browserNotifications)
 
   // Anti doble-envío del mismo objetivo mientras no llega el eco: el CardSlot
   // cubre las cartas; este ref cubre el resto de superficies (headers, pila...).
@@ -189,8 +214,10 @@ export default function GameScreen() {
 
   const stackTargeted = targetsStackObject(game?.stack, targetIds)
   useEffect(() => {
-    if (stackTargeted) setDrawerTab('stack')
-  }, [stackTargeted])
+    if (!stackTargeted) return
+    if (v2) setDeckOpen(true)
+    else setDrawerTab('stack')
+  }, [stackTargeted, v2])
 
   const onTargetClick = async (id: string) => {
     if (!gameId) return
@@ -285,6 +312,7 @@ export default function GameScreen() {
         // No enviar pass a ciegas si hay un diálogo de maná o target abierto
         if (feedback && feedback.mode !== 'combat') return
         if (rollbackBlocking) return
+        if (gameRootRef.current?.dataset.rewind) return
         if (canPass) void onResolveClick()
       }
     }
@@ -315,6 +343,7 @@ export default function GameScreen() {
       // Sin diálogos modales abiertos (misma guarda que Space)
       if (feedback && feedback.mode !== 'combat') return
       if (rollbackBlocking) return
+      if (gameRootRef.current?.dataset.rewind) return
       const skip = skipForShortcut(e.key)
       void sendSkip(skip ? skip.action : CANCEL_SKIP_ACTION)
     }
@@ -339,49 +368,35 @@ export default function GameScreen() {
     return topOpps[0]
   }, [topOpps, selectedOppId, game?.activePlayerId])
 
-  const hasActiveMechanics = useMemo(() => {
-    if (!game) return false
-    if (dayNightStateOf(game)) return true
-    if (!game.players) return false
-    return game.players.some((p) => {
-      const items = commandItems(p)
-      const hasRing = items.some((c) => String(c?.name ?? '').toLowerCase().includes('the ring'))
-      const hasDungeon = items.some(
-        (c) => Array.isArray(c?.cardTypes) && c.cardTypes.map((t) => String(t).toLowerCase()).includes('dungeon')
-      )
-      const hasMonarch = !!p.monarch
-      const hasInitiative = !!p.initiative
-      const hasBlessing = p.designationNames?.some((d) => d.toLowerCase().includes('blessing'))
-      const hasSpeed = p.designationNames?.some((d) => d.toLowerCase().includes('speed'))
-      return hasRing || hasDungeon || hasMonarch || hasInitiative || hasBlessing || hasSpeed
-    })
-  }, [game])
+  const mechanicsCount = useMemo(() => activeMechanicsCount(game), [game])
+  const hasActiveMechanics = mechanicsCount > 0
 
   const hasCommanders = useMemo(() => hasCommandersInGame(game), [game])
 
   const totalPlayers = game?.players?.length ?? opps.length + (isSpectator ? 0 : 1)
-  const effectiveLayout = effectiveBoardLayout(settings.boardLayout, settings.boardLayoutManual ?? false, opps.length, totalPlayers)
+  const effectiveLayout =
+    v2 && totalPlayers <= MAX_BOARD_PLAYERS
+      ? 'arena'
+      : effectiveBoardLayout(settings.boardLayout, settings.boardLayoutManual ?? false, opps.length, totalPlayers)
   const isArenaLayout = effectiveLayout === 'arena'
   const isPodLayout = effectiveLayout === 'pod'
 
-  useDockOffset(boardWrapRef, [effectiveLayout, isSpectator, !!game, game?.turn])
+  useDockOffset(boardWrapRef, [effectiveLayout, isSpectator, !!game, game?.turn, v2])
+  const [turnGlow, clearTurnGlow] = useChangeFlag(game?.turn)
 
-  const toggleDrawer = useCallback((tab: DrawerTab) => setDrawerTab((cur) => (cur === tab ? null : tab)), [])
+  const toggleDrawer = useCallback((tab: DrawerTab) => {
+    if (tab === 'stack') return
+    setSidePanelTab((cur) => (cur === tab ? null : tab))
+  }, [])
+  const toggleLegacyDrawer = useCallback((tab: DrawerTab) => setDrawerTab((cur) => (cur === tab ? null : tab)), [])
   const activeDrawerTab = drawerTab === 'commander' && !hasCommanders ? null : drawerTab
+  const activeSidePanelTab = sidePanelTab === 'commander' && !hasCommanders ? null : sidePanelTab
+  const chromeLeft = v2 && activeSidePanelTab ? 372 : 0
+  const chromeRight = v2 && stackCount > 0 ? (deckOpen ? 372 : 284) : 0
+  useOverlayGutters(boardWrapRef, v2 && isArenaLayout, `${isSpectator}|${!!game}|${chromeLeft}|${chromeRight}`)
 
-  const strip = (
-    <GameStrip
-      left={
-        game && (
-          <div className="game-state" data-testid="game-status">
-            <span className="game-turn">{t('game', 'turn')} {game.turn}</span>
-            <PhaseName step={game.step ?? ''} />
-            <PhaseBar step={game.step ?? ''} />
-          </div>
-        )
-      }
-      center={
-        isPodLayout ? (
+  const stripCenter = (
+        isPodLayout || (v2 && isArenaLayout) ? (
           <TurnOrderRing players={game?.players ?? []} activePlayerId={game?.activePlayerId ?? ''} />
         ) : topOpps.length > 1 ? (
           <OpponentSwitcherBar
@@ -397,13 +412,31 @@ export default function GameScreen() {
         ) : (
           <TurnOrderRing lane players={game?.players ?? []} activePlayerId={game?.activePlayerId ?? ''} />
         )
+  )
+
+  const strip = (
+    <GameStrip
+      left={
+        game && (
+          <div className="game-state" data-testid="game-status">
+            <span
+              className={`game-turn${turnGlow ? ' turn-glow' : ''}`}
+              onAnimationEnd={turnGlow ? clearTurnGlow : undefined}
+            >
+              {t('game', 'turn')} {game.turn}
+            </span>
+            <PhaseName step={game.step ?? ''} />
+            <PhaseBar step={game.step ?? ''} />
+          </div>
+        )
       }
+      center={stripCenter}
       right={
         <>
           <DrawerToggles
             active={activeDrawerTab}
             stackCount={stackCount}
-            onToggle={toggleDrawer}
+            onToggle={toggleLegacyDrawer}
             hasCommanders={hasCommanders}
             hasActiveMechanics={hasActiveMechanics}
           />
@@ -433,14 +466,81 @@ export default function GameScreen() {
     />
   )
 
+  const actionButton = (
+    <ActionButton
+      game={game}
+      feedback={feedback}
+      gameId={gameId}
+      canPass={canPass}
+      onPass={onResolveClick}
+      onSkip={sendSkip}
+      busy={busy}
+      variant={v2 ? 'dial' : 'bar'}
+    />
+  )
+  const dockAction = v2 ? (
+    <PhaseDial step={game?.step ?? ''} mine={!!me?.hasPriority && stackCount === 0} action={actionButton} />
+  ) : (
+    actionButton
+  )
+  const topBar = (
+    <GameTopBar
+      game={game}
+      menu={<GameMenu />}
+      center={stripCenter}
+      toggles={
+        <DrawerToggles
+          active={activeSidePanelTab}
+          stackCount={stackCount}
+          onToggle={toggleDrawer}
+          hasCommanders={hasCommanders}
+          hasActiveMechanics={hasActiveMechanics}
+          mechanicsCount={mechanicsCount}
+          exclude={['stack']}
+        />
+      }
+    />
+  )
+
+  const sidePanelOpen = activeSidePanelTab !== null
+  const chromeActions = useMemo(() => ({ openPanel: (tab: SidePanelTab) => setSidePanelTab(tab), sidePanelOpen }), [sidePanelOpen])
+
+  if (narrowScreen && isSpectator && !fullBoardOnNarrow) {
+    return (
+      <div className="game game--mobile-spectator" ref={gameRootRef} style={{ zoom: inverseZoom(settings.uiScale) }}>
+        <MobileSpectator onFullBoard={() => setFullBoardOnNarrow(true)} />
+      </div>
+    )
+  }
+
   return (
     <PromptSlotProvider value={promptSlot} hand={handPromptSlot} onHandSlot={setHandPromptSlot}>
+      <ChromeActionsContext.Provider value={v2 ? chromeActions : null}>
       <DividerSlotContext.Provider value={setDividerSlot}>
-        <div className="game" ref={gameRootRef} style={{ zoom: inverseZoom(settings.uiScale) }}>
-          {!dividerSlot && <header className="game-top">{strip}</header>}
-          {dividerSlot && createPortal(strip, dividerSlot)}
+        <div
+          className={`game${v2 ? ' game--v2' : ''}${rewindView ? ' game--rewind' : ''}`}
+          ref={gameRootRef}
+          data-rewind={rewindView ? 'true' : undefined}
+          style={{ zoom: inverseZoom(settings.uiScale) }}
+        >
+          {v2 ? (
+            <>
+              <header className="game-top game-top--v2">{topBar}</header>
+            </>
+          ) : (
+            <>
+              {!dividerSlot && <header className="game-top">{strip}</header>}
+              {dividerSlot && createPortal(strip, dividerSlot)}
+            </>
+          )}
           <div className="game-body" ref={gameBodyRef} data-space-passes-priority="true">
-            <div className="board-wrap" ref={boardWrapRef} data-playmat={playmatId}>
+            <div
+              className="board-wrap"
+              ref={boardWrapRef}
+              data-playmat={playmatId}
+              data-ui={v2 ? 'v2' : undefined}
+              style={v2 ? ({ '--chrome-l': `${chromeLeft}px`, '--chrome-r': `${chromeRight}px` } as React.CSSProperties) : undefined}
+            >
               {playmatId !== 'classic' && (
                 <div className="playmat-layer" data-playmat={playmatId} data-testid="playmat-layer" style={matStyle} aria-hidden="true" />
               )}
@@ -455,23 +555,41 @@ export default function GameScreen() {
               <TurnRecapStrip />
               <FeedbackOverlay />
               <ImpactOverlay />
+              {v2 && stackCount > 0 && (
+                <StackDeck
+                  stack={game?.stack ?? null}
+                  open={deckOpen}
+                  onOpenChange={setDeckOpen}
+                  onCardClick={onTargetClick}
+                  targetIds={targetIdSet}
+                  onResolveClick={onResolveClick}
+                  canResolve={canPass}
+                  players={game?.players}
+                  myPlayerId={me?.playerId}
+                  onFocusIds={setStackFocus}
+                />
+              )}
+              {v2 && activeSidePanelTab !== 'log' && <LogTicker />}
+              {v2 && <CombatLedger />}
+              {v2 && activeSidePanelTab && (
+                <SidePanel
+                  tab={activeSidePanelTab}
+                  onTabChange={setSidePanelTab}
+                  onClose={() => setSidePanelTab(null)}
+                  hasCommanders={hasCommanders}
+                  hasActiveMechanics={hasActiveMechanics}
+                />
+              )}
               <GameDock
                 onPromptSlot={setPromptSlot}
-                action={
-                  <ActionButton
-                    game={game}
-                    feedback={feedback}
-                    gameId={gameId}
-                    canPass={canPass}
-                    onPass={onResolveClick}
-                    onSkip={sendSkip}
-                    busy={busy}
-                  />
-                }
+                rewind={(settings.boardRewind || rewind.replay) ? <RewindBar rewind={rewind} /> : null}
+                action={dockAction}
               />
             </div>
             <CombatArrowsOverlay
               game={game}
+              stackFocusIds={v2 ? stackFocus : null}
+              variant={v2 ? 'v2' : 'v1'}
               boardRef={gameBodyRef}
               targetSourceId={targetSourceId}
               chosenTargetIds={chosenTargetIds}
@@ -479,6 +597,7 @@ export default function GameScreen() {
               combatMode={combat?.mode ?? null}
             />
           </div>
+          <PriorityOrbLayer orbs={priorityOrbs} onDone={doneOrb} />
           <FeedbackDialog />
           <UserRequestDialog />
           <RollbackDialog />
@@ -496,6 +615,7 @@ export default function GameScreen() {
           <TournamentPanel />
         </div>
       </DividerSlotContext.Provider>
+      </ChromeActionsContext.Provider>
     </PromptSlotProvider>
   )
 }

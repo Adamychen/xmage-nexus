@@ -9,11 +9,12 @@ export interface DialogShellProps {
   titleId?: string
   testId?: string
   size?: 'sm' | 'md' | 'lg'
+  ornate?: boolean
   legacyPanelClass?: string
   legacyBackdropClass?: string
   zIndex?: number
-  kickerIcon: IconName
-  kickerLabel: ReactNode
+  kickerIcon?: IconName
+  kickerLabel?: ReactNode
   title: ReactNode
   sourceName?: ReactNode
   message?: ReactNode
@@ -37,6 +38,7 @@ export default function DialogShell({
   titleId,
   testId,
   size = 'md',
+  ornate = false,
   legacyPanelClass,
   legacyBackdropClass,
   zIndex,
@@ -64,7 +66,7 @@ export default function DialogShell({
   return (
     <Modal
       backdropClassName={['dlg-backdrop', legacyBackdropClass].filter(Boolean).join(' ')}
-      dialogClassName={['dlg-panel', `dlg-${size}`, legacyPanelClass].filter(Boolean).join(' ')}
+      dialogClassName={['dlg-panel', `dlg-${size}`, ornate ? 'dlg-ornate' : '', legacyPanelClass].filter(Boolean).join(' ')}
       labelledBy={labelledBy}
       testId={testId}
       zIndex={zIndex}
@@ -74,9 +76,11 @@ export default function DialogShell({
       sectionProps={sectionProps}
     >
       <div className="dlg-head">
-        <div className="dlg-kicker">
-          <span className="kicker-icon"><Icon name={kickerIcon} size={13} /></span> {kickerLabel}
-        </div>
+        {kickerLabel != null && kickerLabel !== '' && (
+          <div className="dlg-kicker">
+            {kickerIcon && <span className="kicker-icon"><Icon name={kickerIcon} size={13} /></span>} {kickerLabel}
+          </div>
+        )}
         <div className="dlg-head-right">
           {!closeInCorner && closeButton}
           {topRight && <div className="dlg-head-right-extra">{topRight}</div>}

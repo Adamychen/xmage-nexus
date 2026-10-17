@@ -16,8 +16,10 @@ import {
   HAND_BAR_PADDING_Y,
 } from './handSizing'
 import { handDropIndex, moveHandCard, reconcileHandOrder } from './handOrder'
+import { useDrawSlide } from './useDrawSlide'
 import { useSettings } from '../state/store'
 import './HandBar.css'
+import './drawSlide.css'
 
 const HAND_DRAG_THRESHOLD_PX = 8
 import './targetZone.css'
@@ -73,6 +75,7 @@ export default function HandBar({
   const dragRef = useRef<{ id: string; pointerId: number; startX: number; startY: number; active: boolean } | null>(null)
   const suppressClickRef = useRef(false)
   const [draggingId, setDraggingId] = useState<string | null>(null)
+  const drawn = useDrawSlide(zoneRef, serverIds, !raised, { scope: '.board-shell', select: '.resource-bar.my .library-chip, .resource-bar.my .library-stack' })
 
   useEffect(() => {
     orderedIdsRef.current = orderedIds
@@ -176,12 +179,13 @@ export default function HandBar({
     >
       {entries.map(([id, card], i) => {
         const arc = arcEntries[i] ?? { rot: 0, rise: 0 }
+        const draw = drawn.get(id)
         const isInteractive = playableIds.has(id) || targetIds.has(id)
         const rise = arc.rise + (isInteractive ? HAND_ARC_PLAYABLE_RISE_PX : 0)
         return (
           <div
             key={id}
-            className={`hand-card-slot${draggingId === id ? ' is-dragging' : ''}`}
+            className={`hand-card-slot${draggingId === id ? ' is-dragging' : ''}${draw ? ` draw-${draw}` : ''}`}
             data-hand-id={id}
             style={{ '--rot': `${arc.rot}deg`, '--rise': `${rise}px` } as React.CSSProperties}
             onMouseEnter={onHover ? (e) => onHover(card, e.currentTarget.getBoundingClientRect()) : undefined}

@@ -32,6 +32,17 @@ describe('renderNewsMarkdown', () => {
     expect(html).toContain('<a href="https://example.com" target="_blank"')
   })
 
+  it('cannot break out of an href attribute with quotes', () => {
+    const md = renderNewsMarkdown('[x](https://a.com/"onmouseover="alert(1))\nsee https://a.com/"autofocus onfocus="alert(1)\n[y](https://a.com/\'onclick=\'x)')
+    const root = document.createElement('div')
+    root.innerHTML = md
+    const anchors = Array.from(root.querySelectorAll('a'))
+    expect(anchors.length).toBe(3)
+    for (const a of anchors) {
+      expect(a.getAttributeNames().sort()).toEqual(['href', 'rel', 'target'])
+    }
+  })
+
   it('renders headings without allowing raw HTML injection', () => {
     const html = renderNewsMarkdown('## Title <img src=x>')
     expect(html).toContain('<h3>Title &lt;img src=x&gt;</h3>')

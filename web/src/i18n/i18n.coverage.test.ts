@@ -15,6 +15,7 @@ const WHITELIST = new Set<string>([
   'login.server_xdhs',
   'lobby.create_seat_sim',
   'lobby.create_draft_timing_regular',
+  'lobby.create_tab_draft',
   'lobby.dev_title',
   'lobby.join_sb_suffix',
   'lobby.create_time_min_short',
@@ -160,5 +161,22 @@ describe('i18n coverage guard', () => {
     for (const k of Object.keys(base)) if (esFlat[k] === base[k] && !WHITELIST.has(k)) identicalAfterWhitelist++
     const pct = ((total - identicalAfterWhitelist) / total) * 100
     expect(pct).toBeGreaterThanOrEqual(99.5)
+  })
+
+  it('every language keeps the {placeholders} of the English string (keywords have their own substitution)', () => {
+    const base = flatten(en)
+    const names = (v: string) => Array.from(v.matchAll(/\{([A-Za-z_][A-Za-z0-9_]*)\}/g), (m) => m[1]).sort()
+    const problems: string[] = []
+    for (const [lang, dict] of Object.entries(locales)) {
+      if (lang === 'en') continue
+      const flat = flatten(dict)
+      for (const [key, enValue] of Object.entries(base)) {
+        if (key.startsWith('keywords.')) continue
+        const want = names(enValue)
+        const got = names(flat[key] ?? '')
+        if (want.join(',') !== got.join(',')) problems.push(`${lang} ${key}: expected {${want.join(',')}} got {${got.join(',')}}`)
+      }
+    }
+    expect(problems).toEqual([])
   })
 })

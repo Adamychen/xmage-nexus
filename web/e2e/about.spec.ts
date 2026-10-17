@@ -36,6 +36,7 @@ test.describe('About modal and remote news', () => {
         window.localStorage.clear()
       })
       await login(page, 'about-e2e')
+      await page.getByTestId('lobby-more-menu').click()
       await expect(page.getByTestId('lobby-news-dot')).toBeVisible({ timeout: 20000 })
       await page.getByTestId('open-about').click()
       await expect(page.getByTestId('about-modal')).toBeVisible()
@@ -60,6 +61,7 @@ test.describe('About modal and remote news', () => {
       })
       await login(page, 'about-offline')
       const beforeOpen = githubCalls
+      await page.getByTestId('lobby-more-menu').click()
       await page.getByTestId('open-about').click()
       await page.getByTestId('about-tab-news').click()
       await expect(page.getByTestId('about-modal')).toContainText(/offline|sin conexión|GitHub/i, { timeout: 10000 })

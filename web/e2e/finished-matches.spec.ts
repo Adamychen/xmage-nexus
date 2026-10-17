@@ -71,3 +71,32 @@ historyTest(
     await expect(page.locator('.match-card').last()).toBeVisible()
   },
 )
+
+historyTest(
+  'historial: source tabs and replay button share the content column and keyboard focus has no ring',
+  { tag: '@history' },
+  async ({ page, historyServer }) => {
+    void historyServer
+    const username = `hist-${String(Date.now()).slice(-9)}`
+    cleanupUser(username)
+
+    await login(page, username)
+    await page.getByRole('button', { name: /^Historial$/ }).click()
+    await expect(page.locator('.finished-matches-list')).toBeVisible({ timeout: 10_000 })
+
+    const panel = await page.locator('.finished-matches-panel').boundingBox()
+    const toolbar = await page.locator('.matches-toolbar').boundingBox()
+    const replay = await page.getByTestId('replay-open').boundingBox()
+    expect(panel && toolbar && replay).toBeTruthy()
+    expect(Math.abs(toolbar!.x - panel!.x)).toBeLessThanOrEqual(1)
+    expect(Math.abs(toolbar!.x + toolbar!.width - (panel!.x + panel!.width))).toBeLessThanOrEqual(1)
+    expect(replay!.x + replay!.width).toBeLessThanOrEqual(panel!.x + panel!.width + 1)
+
+    await page.getByRole('tab', { name: 'Partidas del servidor' }).focus()
+    await page.keyboard.press('ArrowRight')
+    const statsTab = page.getByRole('tab', { name: 'Mis estadísticas' })
+    await expect(statsTab).toBeFocused()
+    const boxShadow = await statsTab.evaluate((el) => getComputedStyle(el).boxShadow)
+    expect(boxShadow).toBe('none')
+  },
+)

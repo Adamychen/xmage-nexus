@@ -13,6 +13,8 @@ export interface DropdownMenuProps {
   align?: 'start' | 'end'
   direction?: 'up' | 'down'
   className?: string
+  hideChevron?: boolean
+  'aria-label'?: string
   'data-testid'?: string
   children: ReactNode
 }
@@ -26,6 +28,8 @@ export default function DropdownMenu({
   align = 'start',
   direction = 'down',
   className = '',
+  hideChevron = false,
+  'aria-label': ariaLabel,
   'data-testid': testId,
   children,
 }: DropdownMenuProps) {
@@ -57,11 +61,12 @@ export default function DropdownMenu({
         disabled={disabled}
         aria-haspopup="menu"
         aria-expanded={open}
+        aria-label={ariaLabel}
         data-testid={testId}
         onClick={() => setOpen((o) => !o)}
       >
         {label}
-        <Icon name={direction === 'up' ? 'chevronUp' : 'chevronDown'} size={12} />
+        {!hideChevron && <Icon name={direction === 'up' ? 'chevronUp' : 'chevronDown'} size={12} />}
       </Button>
       {open && (
         <div

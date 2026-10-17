@@ -1,0 +1,107 @@
+.mspec {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  height: 100%;
+  min-height: 0;
+  padding: var(--sp-3);
+  box-sizing: border-box;
+  color: var(--fg-1);
+}
+
+.mspec-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+}
+
+.mspec-turn {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  font-weight: 700;
+}
+
+.mspec-head-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.mspec-players {
+  display: grid;
+  gap: var(--sp-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mspec-player {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-areas: 'name life' 'counts counts';
+  gap: var(--sp-1) var(--sp-3);
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--r-md);
+  border: 1px solid var(--line-2);
+  background: var(--surface-card);
+}
+
+.mspec-player.is-active {
+  border-color: var(--warn-line);
+}
+
+.mspec-player.has-priority {
+  box-shadow: inset 3px 0 0 var(--ok);
+}
+
+.mspec-player.is-gone {
+  opacity: 0.55;
+}
+
+.mspec-name {
+  grid-area: name;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.mspec-life {
+  grid-area: life;
+  font-size: var(--fs-xl);
+  font-weight: 800;
+}
+
+.mspec-counts {
+  grid-area: counts;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+  color: var(--fg-2);
+  font-size: var(--fs-xs);
+}
+
+.mspec-counts span {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+}
+
+.mspec-pane {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  border-radius: var(--r-md);
+  border: 1px solid var(--line-2);
+  background: var(--surface-card);
+}
+
+.mspec-stack {
+  margin: 0;
+  padding: var(--sp-3) var(--sp-4);
+  display: grid;
+  gap: var(--sp-2);
+}

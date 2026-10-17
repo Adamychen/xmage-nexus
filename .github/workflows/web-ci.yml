@@ -66,6 +66,28 @@ jobs:
       - name: Build
         working-directory: web
         run: npm run build
+      - name: Bundle size budget
+        working-directory: web
+        run: npm run check:bundle
+
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 26
+      - name: npm audit (web, shipped dependencies)
+        working-directory: web
+        run: npm audit --omit=dev --audit-level=high
+      - name: npm audit (mcp, shipped dependencies)
+        working-directory: mcp
+        run: npm audit --omit=dev --audit-level=high
+      - name: cargo audit (launcher)
+        working-directory: launcher
+        run: |
+          cargo install cargo-audit --locked
+          cargo audit
 
   mcp:
     runs-on: ubuntu-latest

@@ -35,7 +35,6 @@
   min-height: 48px;
   background: rgb(var(--ink-rgb) / 0.96);
   border-bottom: 1px solid var(--veil-2);
-  backdrop-filter: blur(10px);
   z-index: 10;
   flex-shrink: 0;
 }

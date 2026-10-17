@@ -11,21 +11,6 @@
   box-sizing: border-box;
 }
 
-/* Wizard progress */
-.wizard-progress-track {
-  height: 4px;
-  border-radius: var(--r-pill);
-  background: var(--veil-2);
-  overflow: hidden;
-  margin-bottom: var(--sp-1h);
-}
-.wizard-progress-fill {
-  height: 100%;
-  background: linear-gradient(90deg, var(--gold-300) 0%, var(--brand) 100%);
-  border-radius: var(--r-pill);
-  transition: width 0.3s ease;
-}
-
 /* Wizard stepper */
 .wizard-stepper {
   display: flex;
@@ -59,6 +44,13 @@
 }
 .wizard-step.completed {
   color: var(--brand-fg);
+}
+.wizard-step.has-error {
+  color: var(--err);
+}
+.wizard-step.has-error .wizard-step-circle {
+  border-color: var(--err);
+  color: var(--err);
 }
 
 .wizard-step-circle {
@@ -100,6 +92,14 @@
   font-size: var(--fs-md);
   line-height: 1;
 }
+.wizard-step-summary {
+  font-size: var(--fs-3xs);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  opacity: 0.75;
+}
 .wizard-step-text {
   font-size: var(--fs-3xs);
   font-weight: 800;
@@ -122,24 +122,6 @@
 }
 .wizard-connector.done {
   background: rgb(var(--brand-rgb) / 0.5);
-}
-
-.wizard-step-heading {
-  margin-bottom: var(--sp-0h);
-  padding-bottom: var(--sp-2);
-  border-bottom: 1px dashed var(--veil-2);
-}
-.wizard-step-heading h3 {
-  margin: 0 0 var(--sp-0h);
-  font-size: var(--fs-md);
-  font-weight: 800;
-  color: var(--fg-1);
-  letter-spacing: 0.02em;
-}
-.wizard-step-heading p {
-  margin: 0;
-  font-size: var(--fs-2xs);
-  color: var(--fg-3);
 }
 
 .wizard-hint-box {
@@ -179,6 +161,10 @@
 }
 
 /* Tab Body */
+.create-table-dialog {
+  --dlg-max-h: 86vh;
+}
+
 .create-table-body {
   flex: 1 1 auto;
   min-height: 0;
@@ -192,7 +178,28 @@
 .create-tab-content {
   display: flex;
   flex-direction: column;
-  gap: var(--sp-4);
+  gap: var(--sp-3);
+}
+
+/* General tab: identity (modes, name, presets) on the left, rules on the
+   right, the tournament box spanning both. One column below the breakpoint. */
+.create-general-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--sp-3);
+  align-items: start;
+}
+.create-general-col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  min-width: 0;
+}
+@media (min-width: 880px) {
+  .create-general-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: var(--sp-4);
+  }
 }
 
 .create-table-dialog input[type="text"],
@@ -219,6 +226,65 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: var(--sp-3);
+}
+.create-grid-2col > :only-child {
+  grid-column: 1 / -1;
+}
+
+/* Collapsible: a group of advanced settings folded by default */
+.create-collapsible {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--veil-2);
+  border-radius: var(--r-md);
+  background: rgb(var(--ink-2-rgb) / 0.4);
+}
+.create-collapsible-head {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-3);
+  background: none;
+  border: none;
+  color: var(--brand-fg);
+  cursor: pointer;
+  text-align: left;
+  font-size: var(--fs-2xs);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.create-collapsible-head:hover {
+  color: var(--fg-hi);
+}
+.create-collapsible-title {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1h);
+}
+.create-collapsible-summary {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--fs-2xs);
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--fg-3);
+}
+.create-collapsible-body {
+  padding: 0 var(--sp-2) var(--sp-2);
+}
+.create-collapsible-body[hidden] {
+  display: none;
+}
+.create-collapsible-body > .create-restrictions-box,
+.create-collapsible-body > .create-restrictions-box--brand {
+  border: none;
+  background: none;
+  padding: var(--sp-1) var(--sp-1);
 }
 
 .chip-row {
@@ -272,44 +338,10 @@
 }
 
 
-/* Seats Section */
-.create-seats-section {
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-3);
-}
-
-.create-seat-box {
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-2h);
-  padding: var(--sp-3);
-  background: rgb(var(--ink-rgb) / 0.6);
-  border: 1px solid var(--veil-2);
-  border-radius: var(--r-md);
-}
-.create-seat-box--seat { background: rgb(var(--ink-2-rgb) / 0.5); }
 .create-table-dialog .create-seat-select { width: auto; }
-.create-seat-select--type { min-width: 140px; }
 .create-seat-select--skill { min-width: 80px; }
 
-.create-deck-picker {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-2);
-}
-
-.create-deck-picker select {
-  flex: 1 1 auto;
-  min-width: 0;
-}
 .create-seats-shortcuts { margin-top: var(--sp-2h); border-top: 1px dashed var(--veil-2); padding-top: var(--sp-2h); }
-
-.seat-box-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
 
 .seat-title {
   font-size: var(--fs-xs);
@@ -328,16 +360,57 @@
   color: var(--gold-300);
 }
 
-/* Summary Strip */
-.create-table-summary-strip {
+/* Review step: read-only list of every choice, two columns when wide */
+.create-review-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--sp-3);
+}
+@media (min-width: 880px) {
+  .create-review-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: var(--sp-4) var(--sp-4);
+  }
+}
+.create-review-section {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   gap: var(--sp-1h);
-  padding: var(--sp-2) var(--sp-3);
-  margin-top: var(--sp-2h);
-  background: rgb(var(--ink-2-rgb) / 0.6);
-  border: 1px solid var(--veil-2);
-  border-radius: var(--r-base);
+  min-width: 0;
+}
+.create-review-title {
+  margin: 0;
+  font-size: var(--fs-2xs);
+  font-weight: 700;
+  color: var(--brand-fg);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.create-review-list {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+}
+.create-review-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--sp-3);
+  padding: var(--sp-1) 0;
+  border-bottom: 1px dashed var(--veil-2);
+  font-size: var(--fs-xs);
+}
+.create-review-row dt {
+  color: var(--fg-3);
+  flex: 0 0 auto;
+}
+.create-review-row dd {
+  margin: 0;
+  color: var(--fg-1);
+  font-weight: 600;
+  text-align: right;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 /* Actions */
@@ -355,6 +428,9 @@
   display: flex;
   gap: var(--sp-2);
   align-items: center;
+}
+.dialog-actions.wizard-actions {
+  flex-wrap: wrap;
 }
 
 .dev-demo-box {
@@ -391,82 +467,11 @@
   border: 1px solid var(--veil-5);
 }
 
-/* Mode Selector Cards */
-.create-mode-selector {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--sp-2h);
-  margin-bottom: var(--sp-3);
-}
-
-.create-mode-card {
-  background: rgb(var(--ink-2-rgb) / 0.6);
-  border: 1.5px solid var(--veil-3);
-  border-radius: var(--r-md);
-  padding: var(--sp-3);
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-1h);
-  text-align: left;
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  color: inherit;
-  position: relative;
-  overflow: hidden;
-}
-
-.create-mode-card:hover {
-  background: var(--ink-4);
-  border-color: rgb(var(--gold-rgb) / 0.4);
-  transform: translateY(-2px);
-}
-
-.create-mode-card.active {
-  background: rgb(var(--brand-rgb) / 0.16);
-  border-color: var(--gold-300);
-  box-shadow: 0 0 16px rgb(var(--gold-rgb) / 0.2), inset 0 0 12px rgb(var(--brand-rgb) / 0.15);
-}
-
-.create-mode-card-icon {
-  color: var(--gold-300);
-  display: flex;
-  align-items: center;
-  margin-bottom: var(--sp-0h);
-}
-
-.create-mode-card-content {
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-1);
-  min-width: 0;
-}
-
-.create-mode-card-title {
-  display: block;
-  font-size: var(--fs-md);
-  font-weight: 800;
-  color: var(--fg-1);
-  letter-spacing: 0.02em;
-  line-height: 1.25;
-}
-
-.create-mode-card.active .create-mode-card-title {
-  color: var(--gold-300);
-}
-
-.create-mode-card-desc {
-  display: block;
-  font-size: var(--fs-xs);
-  color: var(--fg-3);
-  line-height: 1.35;
-}
-
 /* Quick Presets Strip */
 .create-presets-strip {
   display: flex;
   align-items: center;
   gap: var(--sp-2);
-  margin-bottom: var(--sp-4);
   padding: var(--sp-1h) var(--sp-2h);
   background: rgb(var(--ink-2-rgb) / 0.5);
   border: 1px dashed var(--veil-3);
@@ -491,16 +496,25 @@
   flex-wrap: wrap;
 }
 
-/* Tournament Box */
-.tourney-box {
-  background: rgb(var(--ink-2-rgb) / 0.6);
-  border: 1px solid rgb(var(--brand-rgb) / 0.3);
-  border-radius: var(--r-md);
-  padding: var(--sp-3);
-  margin-top: var(--sp-1h);
-  display: grid;
+/* Tournament format: a flat section of the General step */
+.tourney-section {
+  display: flex;
+  flex-direction: column;
   gap: var(--sp-2h);
 }
 
 .tourney-tabs { width: 100%; }
 .tourney-tabs .ui-tab { flex: 1; }
+
+@media (max-width: 520px) {
+  .overlay {
+    padding: var(--sp-2);
+  }
+  .wizard-step:not(.active) .wizard-step-text {
+    display: none;
+  }
+  .wizard-step.active .wizard-step-text {
+    white-space: normal;
+    text-align: center;
+  }
+}

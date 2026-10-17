@@ -1,36 +1,40 @@
 import { useSettings, setSetting } from '../state/store'
 import { useTranslation } from '../i18n'
-import Toggle from '../ui/Toggle'
 import { HAND_RAIL_MAX_W, HAND_RAIL_MIN_W } from '../board/cardOverlays'
+import OptionChoice from './OptionChoice'
 
 export default function RenderedCardsSettings() {
   const { t } = useTranslation()
   const settings = useSettings()
   return (
     <>
-      <Toggle
-        checked={settings.cardRender === 'rendered'}
-        onChange={(v) => setSetting('cardRender', v ? 'rendered' : 'image')}
+      <OptionChoice
+        kind="rendered"
         label={t('lobby', 'card_render_show')}
-        title={t('lobby', 'card_render_show_hint')}
+        hint={t('lobby', 'card_render_show_hint')}
+        value={settings.cardRender === 'rendered'}
+        onChange={(v) => setSetting('cardRender', v ? 'rendered' : 'image')}
       />
-      <Toggle
-        checked={settings.boardFill}
-        onChange={(v) => setSetting('boardFill', v)}
+      <OptionChoice
+        kind="boardFill"
         label={t('lobby', 'board_fill_show')}
-        title={t('lobby', 'board_fill_show_hint')}
+        hint={t('lobby', 'board_fill_show_hint')}
+        value={settings.boardFill}
+        onChange={(v) => setSetting('boardFill', v)}
       />
-      <Toggle
-        checked={settings.handRail}
-        onChange={(v) => setSetting('handRail', v)}
+      <OptionChoice
+        kind="handRail"
         label={t('lobby', 'hand_rail_show')}
-        title={t('lobby', 'hand_rail_show_hint')}
+        hint={t('lobby', 'hand_rail_show_hint')}
+        value={settings.handRail}
+        onChange={(v) => setSetting('handRail', v)}
       />
-      <Toggle
-        checked={settings.handRow}
-        onChange={(v) => setSetting('handRow', v)}
+      <OptionChoice
+        kind="handRow"
         label={t('lobby', 'hand_row_show')}
-        title={t('lobby', 'hand_row_show_hint')}
+        hint={t('lobby', 'hand_row_show_hint')}
+        value={settings.handRow}
+        onChange={(v) => setSetting('handRow', v)}
       />
       {(settings.handRail || settings.handRow) && (
         <label className="hand-rail-width-row">

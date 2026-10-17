@@ -40,9 +40,10 @@
   --dlg-border: 1px solid var(--line-2);
   --dlg-shadow: var(--shadow-3), 0 0 0 1px var(--line-1);
   --dlg-anim: dialogIn 0.18s cubic-bezier(0.16, 1, 0.3, 1);
-  --dlg-width-sm: min(440px, 94vw);
-  --dlg-width-md: min(600px, 94vw);
-  --dlg-width-lg: min(1100px, 96vw);
+  --ui-zoom: 1;
+  --dlg-width-sm: min(440px, calc(94vw / var(--ui-zoom)));
+  --dlg-width-md: min(600px, calc(94vw / var(--ui-zoom)));
+  --dlg-width-lg: min(1100px, calc(96vw / var(--ui-zoom)));
   --dlg-max-h: 70vh;
   --dlg-kicker-fg: var(--gold-300);
   --dlg-kicker-bg: var(--gold-soft);
@@ -103,6 +104,13 @@ html.fx-off .fx-popover .ui-toggle-knob {
   transition: none !important;
 }
 
+html.fx-off *,
+html.fx-off *::before,
+html.fx-off *::after {
+  animation: none !important;
+  transition: none !important;
+}
+
 html, body, #root {
   margin: 0;
   height: 100%;
@@ -131,6 +139,7 @@ button:active { transform: scale(0.97); }
 button:disabled { opacity: 0.5; cursor: not-allowed; }
 button:focus-visible,
 a:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+.ui-tabs--underline .ui-tab:focus-visible { box-shadow: none; background: var(--veil-1); }
 
 input, select, textarea {
   font: inherit;

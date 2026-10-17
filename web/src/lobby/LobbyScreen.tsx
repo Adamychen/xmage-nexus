@@ -6,10 +6,12 @@ import * as cmds from '../net/commands'
 import type { UsersView } from '../net/types'
 import { cacheAvatar } from './avatarCache'
 import CreateTableDialog from './CreateTableDialog'
+import type { CreateKind } from './CreateTableDialog'
 import JoinTableDialog from './JoinTableDialog'
 import DecksGallery from '../decks/DecksGallery'
 import DeckBuilder from '../decks/DeckBuilder'
-import LeaderboardModal from './LeaderboardModal'
+import PlayerProfileModal from './PlayerProfileModal'
+import RankingView from './RankingView'
 import UserActionModal from './UserActionModal'
 import TableFilterBar, { INITIAL_TABLE_FILTERS, countActiveFilters, filterTables, sanitizeTableFilters, type TableFilters } from './TableFilterBar'
 import Icon from '../ui/Icon'
@@ -18,7 +20,7 @@ import MatchesSection from './MatchesSection'
 import { t as tStatic, translateError } from '../i18n'
 import { useTranslation } from '../i18n'
 import { setState } from '../state/state'
-import LobbyHeader, { type LeaderboardTab } from './LobbyHeader'
+import LobbyHeader from './LobbyHeader'
 import { LobbyMobileNav } from './LobbySidebar'
 import FloatingChat from './FloatingChat'
 import TableCard from './TableCard'
@@ -56,13 +58,11 @@ export default function LobbyScreen() {
   const [confirmDisconnect, setConfirmDisconnect] = useState(false)
   const [activeTab, setActiveTab] = useState<LobbyTab>('tables')
   const [deckBuilderId, setDeckBuilderId] = useState<string | null>(null)
-  const [showCreate, setShowCreate] = useState(false)
+  const [createKind, setCreateKind] = useState<CreateKind | null>(null)
   const [showAbout, setShowAbout] = useState(false)
   const [showReport, setShowReport] = useState(false)
   const { unseen: unseenNews, refresh: refreshNews } = useNewsBadge()
-  const [showLeaderboard, setShowLeaderboard] = useState(false)
-  const [leaderboardTarget, setLeaderboardTarget] = useState<string | undefined>(undefined)
-  const [leaderboardTab, setLeaderboardTab] = useState<LeaderboardTab>('room')
+  const [profileTarget, setProfileTarget] = useState<string | null>(null)
   const [selectedUser, setSelectedUser] = useState<UsersView | null>(null)
   const [chatPrefill, setChatPrefill] = useState<string>('')
   const [showDebug, setShowDebug] = useState(false)
@@ -96,11 +96,8 @@ export default function LobbyScreen() {
   const { joiningTable, setJoiningTable, joinPassword, setJoinPassword, busyTable, notice, setNotice } = tableActions
   const bracket = useTournamentBracket()
 
-  const openLeaderboard = (target?: string, tab: LeaderboardTab = 'room') => {
-    setLeaderboardTarget(target)
-    setLeaderboardTab(tab)
-    setShowLeaderboard(true)
-  }
+  // An empty username opens the profile of the signed-in user.
+  const openProfile = (username: string) => setProfileTarget(username)
 
   useEffect(() => {
     if (!__DEMO__) return
@@ -118,14 +115,15 @@ export default function LobbyScreen() {
         case 'history':
           setActiveTab('matches')
           break
-        case 'leaderboard':
-          openLeaderboard(conn?.username, target.tab)
+        case 'ranking':
+          setDeckBuilderId(null)
+          setActiveTab('ranking')
           break
         case 'settings':
           setShowSettings(true)
           break
         case 'create':
-          setShowCreate(true)
+          setCreateKind('match')
           break
         case 'builder':
           void getDeckStorage().list().then((decks) => {
@@ -198,7 +196,7 @@ export default function LobbyScreen() {
         onConfirmDisconnect={setConfirmDisconnect}
         onOpenSettings={() => setShowSettings(true)}
         onOpenReport={() => setShowReport(true)}
-        onOpenLeaderboard={openLeaderboard}
+        onOpenProfile={openProfile}
         activeTab={activeTab}
         onTabChange={setActiveTab}
         tableCount={tables.length}
@@ -214,7 +212,8 @@ export default function LobbyScreen() {
             }
           }
         }}
-        onCreate={() => setShowCreate(true)}
+        onCreate={() => setCreateKind('match')}
+        onCreateTournament={() => setCreateKind('tourney')}
         onOpenAbout={() => setShowAbout(true)}
         hasNews={unseenNews}
       />
@@ -232,151 +231,161 @@ export default function LobbyScreen() {
 
         {/* CENTER: Main tab content */}
         <main className={`lobby-main ${deckBuilderId ? 'has-deck-builder' : activeTab === 'decks' ? 'has-decks-gallery' : ''}`}>
-          {activeTab === 'tables' && (
-            <div className="lobby-tables-view">
-              <section className="panel tables-panel">
-                <div className="tables-panel-header">
-                  <div className="tables-header-title-row">
-                    <h2>
-                      {t('lobby.tables_heading')} ({filteredTables.length}
-                      {filteredTables.length !== tables.length ? ` / ${tables.length}` : ''})
-                    </h2>
-                    <span className="tables-deck-hint">{t('lobby.tables_deck_hint')}</span>
-                  </div>
-                  <div className="tables-header-actions">
-                    <div className="hero-deck-badge" title={`${t('lobby.active_deck')} ${myDeck?.name ?? '—'}`}>
-                      <span className="hero-deck-label">{t('lobby.active_deck')}</span>
-                      <span className="hero-deck-name"><Icon name="layers" size={13} /> {myDeck?.name ?? '—'}</span>
+          <div key={deckBuilderId ? 'deck-builder' : activeTab} className={`lobby-tab-view${activeTab === 'decks' ? '' : ' is-animated'}`}>
+            {activeTab === 'tables' && (
+              <div className="lobby-tables-view">
+                <section className="panel tables-panel">
+                  <div className="tables-panel-header">
+                    <div className="tables-header-title-row">
+                      <h2>
+                        {t('lobby.tables_heading')} ({filteredTables.length}
+                        {filteredTables.length !== tables.length ? ` / ${tables.length}` : ''})
+                      </h2>
+                      <span className="tables-deck-hint">{t('lobby.tables_deck_hint')}</span>
                     </div>
-                    <IconButton
-                      label={compactTables ? t('lobby.tables_density_cards') : t('lobby.tables_density_compact')}
-                      icon={compactTables ? 'layoutGrid' : 'list'}
-                      aria-pressed={compactTables}
-                      data-testid="tables-density-toggle"
-                      onClick={() => {
-                        setCompactTables((v) => {
-                          try { localStorage.setItem('tables_density', v ? 'cards' : 'compact') } catch {}
-                          return !v
-                        })
-                      }}
-                    />
-                    <button
-                      type="button"
-                      className={`tables-filter-toggle ${showFilters ? 'is-open' : ''} ${countActiveFilters(filters) > 0 ? 'has-active' : ''}`}
-                      onClick={() => {
-                        setShowFilters((v) => {
-                          try { localStorage.setItem('tables_filters_open', v ? '0' : '1') } catch {}
-                          return !v
-                        })
-                      }}
-                      aria-expanded={showFilters}
-                      title={t('lobby.filter_search_placeholder')}
-                    >
-                      <Icon name="filter" size={14} />
-                      {countActiveFilters(filters) > 0 && (
-                        <span className="tables-filter-count">{countActiveFilters(filters)}</span>
-                      )}
-                      <Icon name={showFilters ? 'chevronUp' : 'chevronDown'} size={13} />
-                    </button>
+                    <div className="tables-header-actions">
+                      <div className="hero-deck-badge" title={`${t('lobby.active_deck')} ${myDeck?.name ?? '—'}`}>
+                        <span className="hero-deck-label">{t('lobby.active_deck')}</span>
+                        <span className="hero-deck-name"><Icon name="layers" size={13} /> {myDeck?.name ?? '—'}</span>
+                      </div>
+                      <IconButton
+                        label={compactTables ? t('lobby.tables_density_cards') : t('lobby.tables_density_compact')}
+                        icon={compactTables ? 'layoutGrid' : 'list'}
+                        aria-pressed={compactTables}
+                        data-testid="tables-density-toggle"
+                        onClick={() => {
+                          setCompactTables((v) => {
+                            try { localStorage.setItem('tables_density', v ? 'cards' : 'compact') } catch {}
+                            return !v
+                          })
+                        }}
+                      />
+                      <button
+                        type="button"
+                        className={`tables-filter-toggle ${showFilters ? 'is-open' : ''} ${countActiveFilters(filters) > 0 ? 'has-active' : ''}`}
+                        onClick={() => {
+                          setShowFilters((v) => {
+                            try { localStorage.setItem('tables_filters_open', v ? '0' : '1') } catch {}
+                            return !v
+                          })
+                        }}
+                        aria-expanded={showFilters}
+                        title={t('lobby.filter_search_placeholder')}
+                      >
+                        <Icon name="filter" size={14} />
+                        {countActiveFilters(filters) > 0 && (
+                          <span className="tables-filter-count">{countActiveFilters(filters)}</span>
+                        )}
+                        <Icon name={showFilters ? 'chevronUp' : 'chevronDown'} size={13} />
+                      </button>
+                    </div>
                   </div>
-                </div>
 
-                <div className={`tables-filter-collapse ${showFilters ? 'is-open' : ''}`}>
-                  <div className="tables-filter-collapse-inner">
-                    <TableFilterBar
-                      className="in-panel"
-                      tables={tables}
-                      filters={filters}
-                      onChange={(f) => { setFilters(f); try { localStorage.setItem('lobby_filters', JSON.stringify(f)) } catch {} }}
-                      onReset={() => { setFilters(INITIAL_TABLE_FILTERS); try { localStorage.removeItem('lobby_filters') } catch {} }}
-                    />
+                  <div className={`tables-filter-collapse ${showFilters ? 'is-open' : ''}`}>
+                    <div className="tables-filter-collapse-inner">
+                      <TableFilterBar
+                        className="in-panel"
+                        tables={tables}
+                        filters={filters}
+                        onChange={(f) => { setFilters(f); try { localStorage.setItem('lobby_filters', JSON.stringify(f)) } catch {} }}
+                        onReset={() => { setFilters(INITIAL_TABLE_FILTERS); try { localStorage.removeItem('lobby_filters') } catch {} }}
+                      />
+                    </div>
                   </div>
-                </div>
 
-                {myActiveTables.length > 0 && (
-                  <ActiveTablesBar
-                    tables={myActiveTables}
-                    username={conn?.username}
-                    busyTable={busyTable}
-                    onOpenStaging={(tableId) => openStagingTable(tableId)}
-                    onStart={tableActions.startTable}
-                    onWatch={tableActions.watchTable}
-                    onResume={tableActions.resumeGame}
-                    onRemove={(t) => void tableActions.removeTable(t)}
-                  />
-                )}
-
-                <div className={`tables-list${compactTables ? ' is-compact' : ''}`}>
-                  {filteredTables.map((tTable) => (
-                    <TableCard
-                      key={tTable.tableId}
-                      tTable={tTable}
-                      users={users}
+                  {myActiveTables.length > 0 && (
+                    <ActiveTablesBar
+                      tables={myActiveTables}
                       username={conn?.username}
-                      avatarId={conn?.avatarId}
-                      stagingTableId={stagingTableId}
                       busyTable={busyTable}
-                      onJoinHuman={tableActions.joinHuman}
-                      onJoinAi={tableActions.joinAi}
+                      onOpenStaging={(tableId) => openStagingTable(tableId)}
                       onStart={tableActions.startTable}
                       onWatch={tableActions.watchTable}
                       onResume={tableActions.resumeGame}
-                      onOpenBracket={bracket.openBracket}
-                      onSelectUser={setSelectedUser}
                       onRemove={(t) => void tableActions.removeTable(t)}
                     />
-                  ))}
-
-                  {filteredTables.length === 0 && tables.length === 0 && (
-                    <EmptyState
-                      size="lg"
-                      icon="castle"
-                      iconSize={30}
-                      title={t('lobby','empty_tables')}
-                      action={
-                        <Button variant="primary" onClick={() => setShowCreate(true)}>
-                          <Icon name="plus" size={13} /> {t('lobby','create_table_btn')}
-                        </Button>
-                      }
-                    >
-                      {t('lobby','tables_deck_hint')}
-                    </EmptyState>
                   )}
 
-                  {filteredTables.length === 0 && tables.length > 0 && (
-                    <EmptyState
-                      size="lg"
-                      boxed
-                      icon="search"
-                      title={t('lobby','empty_filtered')}
-                      action={
-                        <Button size="sm" onClick={() => setFilters(INITIAL_TABLE_FILTERS)}>
-                          {t('lobby','filter_reset')}
-                        </Button>
-                      }
-                    >
-                      {t('lobby','no_tables_found')}
-                    </EmptyState>
-                  )}
-                </div>
-              </section>
-            </div>
-          )}
+                  <div className={`tables-list${compactTables ? ' is-compact' : ''}`}>
+                    {filteredTables.map((tTable) => (
+                      <TableCard
+                        key={tTable.tableId}
+                        tTable={tTable}
+                        users={users}
+                        username={conn?.username}
+                        avatarId={conn?.avatarId}
+                        stagingTableId={stagingTableId}
+                        busyTable={busyTable}
+                        onJoinHuman={tableActions.joinHuman}
+                        onJoinAi={tableActions.joinAi}
+                        onStart={tableActions.startTable}
+                        onWatch={tableActions.watchTable}
+                        onResume={tableActions.resumeGame}
+                        onOpenBracket={bracket.openBracket}
+                        onSelectUser={setSelectedUser}
+                        onRemove={(t) => void tableActions.removeTable(t)}
+                      />
+                    ))}
 
-          {activeTab === 'decks' && (
-            deckBuilderId ? (
-              <DeckBuilder deckId={deckBuilderId} onClose={() => setDeckBuilderId(null)} />
-            ) : (
-              <DecksGallery onEdit={(id) => setDeckBuilderId(id)} />
-            )
-          )}
+                    {filteredTables.length === 0 && tables.length === 0 && (
+                      <EmptyState
+                        size="lg"
+                        icon="castle"
+                        iconSize={30}
+                        title={t('lobby','empty_tables')}
+                        action={
+                          <Button variant="primary" onClick={() => setCreateKind('match')}>
+                            <Icon name="plus" size={13} /> {t('lobby','create_table_btn')}
+                          </Button>
+                        }
+                      >
+                        {t('lobby','tables_deck_hint')}
+                      </EmptyState>
+                    )}
 
-          {activeTab === 'matches' && (
-            <MatchesSection
-              users={users}
-              onInspectUser={(username) => openLeaderboard(username, 'profile')}
-            />
-          )}
+                    {filteredTables.length === 0 && tables.length > 0 && (
+                      <EmptyState
+                        size="lg"
+                        boxed
+                        icon="search"
+                        title={t('lobby','empty_filtered')}
+                        action={
+                          <Button size="sm" onClick={() => setFilters(INITIAL_TABLE_FILTERS)}>
+                            {t('lobby','filter_reset')}
+                          </Button>
+                        }
+                      >
+                        {t('lobby','no_tables_found')}
+                      </EmptyState>
+                    )}
+                  </div>
+                </section>
+              </div>
+            )}
+
+            {activeTab === 'decks' && (
+              deckBuilderId ? (
+                <DeckBuilder deckId={deckBuilderId} onClose={() => setDeckBuilderId(null)} />
+              ) : (
+                <DecksGallery onEdit={(id) => setDeckBuilderId(id)} />
+              )
+            )}
+
+            {activeTab === 'matches' && (
+              <MatchesSection
+                users={users}
+                onInspectUser={openProfile}
+              />
+            )}
+
+            {activeTab === 'ranking' && (
+              <RankingView
+                users={users}
+                currentUsername={conn?.username ?? ''}
+                onInspectUser={openProfile}
+              />
+            )}
+          </div>
         </main>
 
         <FloatingChat
@@ -386,7 +395,10 @@ export default function LobbyScreen() {
           unreadChat={unreadChat}
           onMessageRead={() => setUnreadChat(0)}
           onSelectUser={setSelectedUser}
-          onOpenRoomLeaderboard={() => openLeaderboard(conn?.username, 'room')}
+          onOpenRanking={() => {
+            setMobileChatOpen(false)
+            setActiveTab('ranking')
+          }}
           open={mobileChatOpen}
           onOpenChange={setMobileChatOpen}
         />
@@ -394,7 +406,8 @@ export default function LobbyScreen() {
         <LobbyMobileNav
           activeTab={activeTab}
           onTabChange={setActiveTab}
-          onCreate={() => setShowCreate(true)}
+          onCreate={() => setCreateKind('match')}
+          onCreateTournament={() => setCreateKind('tourney')}
           mobileChatOpen={mobileChatOpen}
           onToggleChat={() => setMobileChatOpen((v) => !v)}
           onCloseChat={() => setMobileChatOpen(false)}
@@ -434,26 +447,22 @@ export default function LobbyScreen() {
         </div>
       )}
 
-      {showCreate && (
+      {createKind && (
         <CreateTableDialog
-          onClose={() => setShowCreate(false)}
+          kind={createKind}
+          onClose={() => setCreateKind(null)}
           onEditDeck={(id) => {
             setDeckBuilderId(id)
             setActiveTab('decks')
           }}
         />
       )}
-      {showLeaderboard && (
-        <LeaderboardModal
+      {profileTarget !== null && (
+        <PlayerProfileModal
           users={users}
           currentUsername={conn?.username ?? ''}
-          initialTargetUsername={leaderboardTarget}
-          initialTab={leaderboardTab}
-          onClose={() => {
-            setShowLeaderboard(false)
-            setLeaderboardTarget(undefined)
-            setLeaderboardTab('room')
-          }}
+          targetUsername={profileTarget}
+          onClose={() => setProfileTarget(null)}
         />
       )}
       {selectedUser && (
@@ -465,9 +474,7 @@ export default function LobbyScreen() {
             setMobileChatOpen(true)
             setChatPrefill(`/w ${username} `)
           }}
-          onViewLeaderboard={(username) => {
-            openLeaderboard(username, 'profile')
-          }}
+          onViewLeaderboard={openProfile}
           onWatchTable={async (tableId) => {
             setState({ error: null })
             setNotice(null)

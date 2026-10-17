@@ -2,7 +2,7 @@ import { showcaseArtUrl } from '../cards/showcaseArt'
 import '../appearance/playmats.css'
 import './LayoutDemo.css'
 
-export type LayoutDemoId = 'standard' | 'pod' | 'arena'
+export type LayoutDemoId = 'standard' | 'pod' | 'arena' | 'table'
 
 interface Zone {
   mine?: boolean
@@ -18,6 +18,7 @@ const ZONES: Record<LayoutDemoId, Zone[]> = {
   standard: [{ tiles: RIVAL_A }, { mine: true, tiles: MINE }],
   pod: [{ tiles: RIVAL_A }, { tiles: RIVAL_B }, { tiles: RIVAL_C }, { mine: true, tiles: MINE.slice(0, 4) }],
   arena: [{ tiles: RIVAL_A }, { tiles: RIVAL_B }, { tiles: RIVAL_C }, { mine: true, tiles: MINE }],
+  table: [{ tiles: RIVAL_A }, { tiles: RIVAL_B }, { tiles: RIVAL_C }, { mine: true, tiles: MINE.slice(0, 3) }],
 }
 
 /**

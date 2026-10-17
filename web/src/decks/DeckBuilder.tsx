@@ -39,7 +39,8 @@ import { useCommanderEligibility } from './useCommanderEligibility'
 import DeckBuilderFooter from './DeckBuilderFooter'
 import DeckServerIssues from './DeckServerIssues'
 import DeckFormatIssues from './DeckFormatIssues'
-import DeckHoverPreview, { type HoverPreview } from './DeckHoverPreview'
+import { createHoverPreviewStore, HoverPreviewLayer } from './hoverPreviewStore'
+import { useEventCallback } from '../utils/useEventCallback'
 import './DeckBuilder.css'
 
 export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClose: () => void }) {
@@ -50,7 +51,7 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
   const [format, setFormat] = useState<DeckV2['format']>('Freeform')
   const [layout, setLayout] = useState<'vertical' | 'horizontal'>('vertical')
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
-  const [hoverPreview, setHoverPreview] = useState<HoverPreview | null>(null)
+  const [previewStore] = useState(createHoverPreviewStore)
   const [isDragging, setIsDragging] = useState(false)
   const isDraggingRef = useRef(false)
   const [isCollectionDragOver, setIsCollectionDragOver] = useState(false)
@@ -110,12 +111,12 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
     const handleGlobalDragStart = () => {
       isDraggingRef.current = true
       setIsDragging(true)
-      setHoverPreview(null)
+      previewStore.set(null)
     }
     const handleGlobalDragEnd = () => {
       isDraggingRef.current = false
       setIsDragging(false)
-      setHoverPreview(null)
+      previewStore.set(null)
     }
     window.addEventListener('dragstart', handleGlobalDragStart, true)
     window.addEventListener('dragend', handleGlobalDragEnd, true)
@@ -125,7 +126,7 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
       window.removeEventListener('dragend', handleGlobalDragEnd, true)
       window.removeEventListener('drop', handleGlobalDragEnd, true)
     }
-  }, [])
+  }, [previewStore])
 
   useEffect(() => {
     const onResize = () => {
@@ -305,7 +306,7 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
       y = window.innerHeight / 2 - 180
     }
 
-    setHoverPreview({
+    previewStore.set({
       url: img,
       backUrl: backImg,
       x,
@@ -315,8 +316,20 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
   }
 
   const handleLeaveCard = () => {
-    setHoverPreview(null)
+    previewStore.set(null)
   }
+
+  const stableInc = useEventCallback(mutations.handleInc)
+  const stableDec = useEventCallback(mutations.handleDec)
+  const stableRemove = useEventCallback(mutations.handleRemove)
+  const stableSetCover = useEventCallback(mutations.handleSetCover)
+  const stableSetCommander = useEventCallback(mutations.handleSetCommander)
+  const stableSetPartner = useEventCallback(mutations.handleSetPartner)
+  const stableChangePrinting = useEventCallback(mutations.handleChangePrinting)
+  const stableDropCard = useEventCallback(mutations.handleDropCardOnDeck)
+  const stableSwap = useEventCallback(mutations.handleSwap)
+  const stableHover = useEventCallback(handleHoverCard)
+  const stableLeave = useEventCallback(handleLeaveCard)
 
   const handleRepairIssue = (fixes: DeckFix[]) => {
     if (!deck) return
@@ -531,17 +544,17 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
             commanderEligibilityMap={commanderEligibilityMap}
             cardIssues={mergedCardIssues}
             layout={layout}
-            onInc={mutations.handleInc}
-            onDec={mutations.handleDec}
-            onRemove={mutations.handleRemove}
-            onSetCover={mutations.handleSetCover}
-            onSetCommander={mutations.handleSetCommander}
-            onSetPartner={mutations.handleSetPartner}
-            onHover={handleHoverCard}
-            onLeave={handleLeaveCard}
-            onChangePrinting={mutations.handleChangePrinting}
-            onDropCard={mutations.handleDropCardOnDeck}
-            onSwap={mutations.handleSwap}
+            onInc={stableInc}
+            onDec={stableDec}
+            onRemove={stableRemove}
+            onSetCover={stableSetCover}
+            onSetCommander={stableSetCommander}
+            onSetPartner={stableSetPartner}
+            onHover={stableHover}
+            onLeave={stableLeave}
+            onChangePrinting={stableChangePrinting}
+            onDropCard={stableDropCard}
+            onSwap={stableSwap}
             onDropFile={mutations.handleDropFile}
           />
 
@@ -590,9 +603,7 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
       )}
 
       {/* Floating Card Image Preview on Hover */}
-      {!isDragging && hoverPreview && (
-        <DeckHoverPreview preview={hoverPreview} />
-      )}
+      <HoverPreviewLayer store={previewStore} hidden={isDragging} />
 
       {/* Deck Inspector & Statistics Modal */}
       {showInspector && deck && (

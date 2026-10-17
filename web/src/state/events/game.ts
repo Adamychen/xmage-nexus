@@ -3,7 +3,7 @@ import type { GameEndInfo, GameView } from '../../net/types'
 import { parseFeedback } from '../../game/feedback'
 import { manaPaymentActions } from '../../game/manaPayment'
 import { serverAutoAnswerActions } from '../../game/autoAnswers'
-import { clonePhaseStops } from '../../game/phaseStops'
+import { clonePhaseStops, serverPhaseStops } from '../../game/phaseStops'
 import { getState, setState, addLog } from '../state'
 import { sniffDungeonEntry, sniffSpeedLevel, sniffRoomDoor, enterTableChat, exitTableChat, armRollbackPending, disarmRollbackPending, sniffElimination } from '../actions'
 import { ingestRollbackServerMessage } from '../rollbackVote'
@@ -137,7 +137,7 @@ export function handleGameUpdate(method: string, objectId: string | null, data: 
         }
         const sessionStops = clonePhaseStops(getState().settings.phaseStops)
         patch.phaseStops = sessionStops
-        void cmds.updatePreferences(sessionStops)
+        void cmds.updatePreferences(serverPhaseStops(getState().settings.smartStops, sessionStops))
       }
     }
     if (method === 'GAME_SELECT') {

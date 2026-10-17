@@ -1,7 +1,7 @@
 import type { GameView } from '../net/types'
 import { stringList } from '../state/gameUtils'
 import { soundManager } from '../audio/soundManager'
-import { fxDuration } from './fx'
+import { fxMotionDuration } from './fx'
 import { spawnImpact } from './impactFx'
 import { getPreviousCardPosition } from './cardPositionRegistry'
 import './combatStrikes.css'
@@ -224,7 +224,7 @@ export function snapshotCombatants(game: GameView | null | undefined): void {
 }
 
 function sequenceMs(count: number, duration: number): number {
-  return (Math.min(count, MAX_STRIKES) - 1) * fxDuration(STRIKE_GAP_MS) + duration
+  return (Math.min(count, MAX_STRIKES) - 1) * fxMotionDuration(STRIKE_GAP_MS) + duration
 }
 
 function holdCombatants(ids: Iterable<string>, ms: number): void {
@@ -233,7 +233,7 @@ function holdCombatants(ids: Iterable<string>, ms: number): void {
 }
 
 function impactSchedule(plans: StrikePlan[], duration: number): Map<string, number> {
-  const gap = fxDuration(STRIKE_GAP_MS)
+  const gap = fxMotionDuration(STRIKE_GAP_MS)
   const impactAt = new Map<string, number>()
   plans.slice(0, MAX_STRIKES).forEach((plan, i) => {
     const hit = i * gap + Math.round(duration * IMPACT_AT)
@@ -251,7 +251,7 @@ function holdUntilImpact(impactAt: Map<string, number>): void {
 export function primeCombatHolds(prevGame: GameView | null | undefined, nextGame: GameView | null | undefined): void {
   if (!prevGame || !nextGame) return
   const plans = planDamageStrikes(prevGame, nextGame)
-  const duration = fxDuration(STRIKE_MS)
+  const duration = fxMotionDuration(STRIKE_MS)
   if (plans.length === 0 || !duration) return
   snapshotCombatants(prevGame)
   holdCombatants(combatantIds(prevGame), sequenceMs(plans.length, duration))
@@ -333,7 +333,7 @@ function runStrike(
 export function playDamageStrikes(plans: StrikePlan[], combatants: string[]): StrikeSchedule {
   const schedule: StrikeSchedule = { holdMs: 0, impactAt: new Map() }
   if (plans.length === 0 || typeof document === 'undefined') return schedule
-  const duration = fxDuration(STRIKE_MS)
+  const duration = fxMotionDuration(STRIKE_MS)
   if (!duration) {
     new Set(plans.map((p) => p.targetId)).forEach((id) => {
       const el = strikeTargetElement(id)
@@ -352,7 +352,7 @@ export function playDamageStrikes(plans: StrikePlan[], combatants: string[]): St
     standIns.set(id, snap.ghost)
   }
 
-  const gap = fxDuration(STRIKE_GAP_MS)
+  const gap = fxMotionDuration(STRIKE_GAP_MS)
   const strikes = plans.slice(0, MAX_STRIKES)
   schedule.impactAt = impactSchedule(strikes, duration)
   strikes.forEach((plan, i) => {

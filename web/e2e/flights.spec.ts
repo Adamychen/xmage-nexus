@@ -72,7 +72,7 @@ test('animaciones de movimiento: diagnóstico de vuelos por transición @flights
             // eslint-disable-next-line @typescript-eslint/no-implied-eval
             const apply = new Function('view', `return (${fn})(view)`) as (v: any) => void
             apply(next)
-            st.handleMessage({ type: 'event', method: 'GAME_UPDATE', messageId: Date.now(), objectId: gameId, data: { gameView: next } })
+            st.handleMessage({ type: 'event', method: 'GAME_UPDATE', objectId: gameId, data: { gameView: next } })
           },
           { gameId: setup.gameId, fn: mutate },
         )
@@ -233,7 +233,7 @@ test('animaciones de movimiento: diagnóstico de vuelos por transición @flights
               const next = structuredClone(st.getState().game)
               const apply = new Function('view', `return (${steps[i]})(view)`) as (v: any) => void
               apply(next)
-              st.handleMessage({ type: 'event', method: 'GAME_UPDATE', messageId: Date.now(), objectId: gameId, data: { gameView: next } })
+              st.handleMessage({ type: 'event', method: 'GAME_UPDATE', objectId: gameId, data: { gameView: next } })
               if (i < steps.length - 1) await new Promise((resolve) => setTimeout(resolve, gapMs))
             }
           },

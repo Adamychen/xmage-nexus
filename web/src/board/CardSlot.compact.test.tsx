@@ -104,3 +104,29 @@ describe('CardSlot compact tile', () => {
     expect(recordCardPosition).toHaveBeenLastCalledWith('p1', expect.anything(), '', expect.objectContaining({ compact: true }))
   })
 })
+
+describe('CardSlot classic mana pill', () => {
+  it('stays hidden on a classic card unless the setting asks for it', async () => {
+    const { container } = render(<CardSlot card={perm()} />)
+    await act(async () => {})
+    expect(container.querySelector('[data-testid="compact-mana-source"]')).toBeNull()
+  })
+
+  it('overlays the mana the permanent produces when showManaSource is set', async () => {
+    const { container } = render(<CardSlot card={perm()} showManaSource />)
+    await act(async () => {})
+    const slot = container.querySelector('.card-slot')!
+    expect(slot.classList.contains('is-compact')).toBe(false)
+    expect(slot.classList.contains('has-mana-pill')).toBe(true)
+    expect(container.querySelector('[data-testid="compact-mana-source"]')?.getAttribute('data-mana')).toBe('G')
+    expect(container.querySelector('img.card-art-crop')).toBeNull()
+  })
+
+  it('shows no pill for a permanent that makes no mana', async () => {
+    const bear = perm({ name: 'Grizzly Bears', cardTypes: ['CREATURE'], subTypes: ['BEAR'], rules: [] })
+    const { container } = render(<CardSlot card={bear} showManaSource />)
+    await act(async () => {})
+    expect(container.querySelector('[data-testid="compact-mana-source"]')).toBeNull()
+    expect(container.querySelector('.card-slot')!.classList.contains('has-mana-pill')).toBe(false)
+  })
+})

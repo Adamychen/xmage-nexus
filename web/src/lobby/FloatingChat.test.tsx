@@ -9,7 +9,7 @@ const props = {
   unreadChat: 0,
   onMessageRead: () => {},
   onSelectUser: () => {},
-  onOpenRoomLeaderboard: () => {},
+  onOpenRanking: () => {},
   open: true,
   onOpenChange: () => {},
 }

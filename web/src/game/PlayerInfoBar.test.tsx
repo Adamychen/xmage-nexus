@@ -1,10 +1,11 @@
-import { describe, it, expect, vi } from 'vitest'
-import { render, fireEvent } from '@testing-library/react'
+import { beforeEach, describe, it, expect, vi } from 'vitest'
+import { setSetting } from '../state/store'
+import { act, render, fireEvent } from '@testing-library/react'
 import PlayerInfoBar from './PlayerInfoBar'
 import type { PlayerView } from '../net/types'
 import { setState } from '../state/store'
 
-import { makePermanent, makePlayer } from '../__fixtures__/gameViews'
+import { makePermanent, makePlayer, playerGameView } from '../__fixtures__/gameViews'
 
 const basePlayer: PlayerView = makePlayer({
   playerId: 'p1',
@@ -18,6 +19,8 @@ const basePlayer: PlayerView = makePlayer({
 })
 
 describe('PlayerInfoBar', () => {
+  beforeEach(() => setSetting('gameUi', 'v1'))
+
   it('renders basic player info (avatar, name, life)', () => {
     const { container } = render(<PlayerInfoBar player={basePlayer} side="my" />)
     expect(container.querySelector('.player-name')?.textContent).toBe('Alice')
@@ -272,6 +275,45 @@ describe('PlayerInfoBar', () => {
     const { container } = render(<PlayerInfoBar player={lowTimePlayer} side="my" />)
     const timerBadge = container.querySelector('.player-timer-badge')
     expect(timerBadge?.classList.contains('timer-low')).toBe(true)
+  })
+
+  it('marks the timer critical at 5 seconds', () => {
+    const { container } = render(<PlayerInfoBar player={{ ...basePlayer, priorityTimeLeftSecs: 5 }} side="my" />)
+    const timerBadge = container.querySelector('.player-timer-badge')
+    expect(timerBadge?.classList.contains('critical')).toBe(true)
+    expect(timerBadge?.classList.contains('urgent')).toBe(false)
+    expect(timerBadge?.classList.contains('warn')).toBe(false)
+  })
+
+  it('marks the timer urgent at 10 seconds and warn at 30', () => {
+    const { container: urgent } = render(<PlayerInfoBar player={{ ...basePlayer, priorityTimeLeftSecs: 10 }} side="my" />)
+    expect(urgent.querySelector('.player-timer-badge')?.classList.contains('urgent')).toBe(true)
+    const { container: warn } = render(<PlayerInfoBar player={{ ...basePlayer, priorityTimeLeftSecs: 30 }} side="my" />)
+    expect(warn.querySelector('.player-timer-badge')?.classList.contains('warn')).toBe(true)
+  })
+
+  it('glows only when this player becomes the active turn', () => {
+    setState({ game: { ...playerGameView, activePlayerId: 'p1' } } as never)
+    const opp = { ...basePlayer, playerId: 'p2', name: 'Bob', controlled: false }
+    const { container, rerender } = render(<PlayerInfoBar player={opp} side="opp" />)
+    const bar = container.querySelector('.player-info-bar')!
+    expect(bar.classList.contains('active-glow')).toBe(false)
+
+    act(() => {
+      setState({ game: { ...playerGameView, activePlayerId: 'p2' } } as never)
+    })
+    rerender(<PlayerInfoBar player={opp} side="opp" />)
+    expect(bar.classList.contains('active-glow')).toBe(true)
+
+    fireEvent.animationEnd(bar)
+    expect(bar.classList.contains('active-glow')).toBe(false)
+
+    act(() => {
+      setState({ game: { ...playerGameView, activePlayerId: 'p1', life: 19 } } as never)
+    })
+    rerender(<PlayerInfoBar player={opp} side="opp" />)
+    expect(bar.classList.contains('active-glow')).toBe(false)
+    setState({ game: null } as never)
   })
 
   it('hides the timer badge when the server sends no time limit (Integer.MAX_VALUE)', () => {

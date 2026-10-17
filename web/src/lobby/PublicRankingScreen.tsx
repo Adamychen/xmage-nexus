@@ -4,6 +4,7 @@ import Button from '../ui/Button'
 import EmptyState from '../ui/EmptyState'
 import Icon from '../ui/Icon'
 import { getRankInfo } from './ranking'
+import RankEmblem from './RankEmblem'
 import './RankBadge.css'
 import { useRemoteMatches, useRemoteRanking, type RemoteStatus } from './useRemoteStats'
 import type { RankingFormat } from './statsApi'
@@ -70,7 +71,7 @@ function TierBadge({ rating }: { rating: number }) {
       className={`rank-badge ${rank.tier.toLowerCase()} compact`}
       style={{ backgroundColor: rank.bg, borderColor: rank.border, color: rank.color }}
     >
-      <span className="rank-badge-icon"><Icon name={rank.icon} size={10} /></span>
+      <span className="rank-badge-icon"><RankEmblem tier={rank.tier} /></span>
       <span className="rank-badge-name">{label}</span>
     </div>
   )

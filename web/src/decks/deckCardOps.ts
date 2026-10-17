@@ -109,10 +109,14 @@ export function insertOrIncrement(
 }
 
 /** Añade un resultado de búsqueda (normaliza set/número y suma si ya existe). */
+export function searchResultCard(search: ScryfallSearchCard): DeckCard {
+  return normalizeDeckCard({ cardName: search.name, setCode: search.set.toUpperCase(), cardNumber: search.collector_number, amount: 1 })
+}
+
 export function addSearchResult(
   cards: DeckCard[], search: ScryfallSearchCard,
 ): { cards: DeckCard[]; card: DeckCard } {
-  const raw = normalizeDeckCard({ cardName: search.name, setCode: search.set.toUpperCase(), cardNumber: search.collector_number, amount: 1 })
+  const raw = searchResultCard(search)
   const key = deckCardKey(raw)
   const existingIdx = cards.findIndex((c) => deckCardKey(c) === key)
   if (existingIdx >= 0) {

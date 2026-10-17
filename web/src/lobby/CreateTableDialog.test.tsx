@@ -1,8 +1,9 @@
 import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/react'
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
-import CreateTableDialog from './CreateTableDialog'
+import CreateTableDialog, { type CreateKind } from './CreateTableDialog'
 import { STORAGE_KEY } from './CreateTable/constants'
 import * as cmds from '../net/commands'
+import { closeGallery, formatValue, galleryNames, openGallery, pickFormat } from './CreateTable/formatGalleryTestUtils'
 import { setState } from '../state/state'
 
 vi.mock('../net/commands', () => ({
@@ -34,6 +35,12 @@ vi.mock('../net/commands', () => ({
   validateDeck: vi.fn().mockResolvedValue({ ok: true }),
 }))
 
+/** Seats tab: pick a seat on the table (node 0 is my own seat), then a seat type from its editor. */
+async function pickSeatType(node: number, name: RegExp) {
+  fireEvent.click(await screen.findByTestId(`seat-node-${node}`))
+  fireEvent.click(await screen.findByRole('radio', { name }))
+}
+
 describe('CreateTableDialog', () => {
   const onClose = vi.fn()
 
@@ -50,11 +57,17 @@ describe('CreateTableDialog', () => {
   // Renders the dialog and waits until the async form data (game/deck/player/
   // tournament types) has been applied. Without this the synchronous assertions
   // race the initial data load and fail on slower CI runners.
-  async function renderDialog() {
-    const utils = render(<CreateTableDialog onClose={onClose} />)
+  /** Stepper button by its visible label (the step's `title`). */
+  function goToStep(label: string) {
+    const button = document.querySelector<HTMLButtonElement>(`button.wizard-step[title="${label}"]`)
+    expect(button, `stepper button "${label}"`).not.toBeNull()
+    fireEvent.click(button!)
+  }
+
+  async function renderDialog(kind: CreateKind = 'match') {
+    const utils = render(<CreateTableDialog onClose={onClose} kind={kind} />)
     await waitFor(() => {
-      const gameType = screen.getAllByRole('combobox')[0] as HTMLSelectElement
-      expect(gameType.options.length).toBeLessThan(10)
+      expect(screen.getByTestId('format-game-type')).toBeDefined()
     }, { timeout: 5000, interval: 20 })
     return utils
   }
@@ -91,7 +104,6 @@ describe('CreateTableDialog', () => {
     const chips = () => Array.from(container.querySelectorAll('.chip-row .ui-chip')) as HTMLButtonElement[]
     const selectedChip = () => chips().find((c) => c.getAttribute('aria-pressed') === 'true')?.textContent
     const hint = () => screen.queryByText(/recomendado 1|recommended 1/)
-    const gameType = () => screen.getAllByRole('combobox')[0] as HTMLSelectElement
 
     // Two Player Duel: sin mulligan gratis y sin recomendación
     goToStep(1)
@@ -100,7 +112,7 @@ describe('CreateTableDialog', () => {
 
     // Commander Free For All: preset 1 + hint visible
     goToStep(0)
-    fireEvent.change(gameType(), { target: { value: 'Commander Free For All' } })
+    await pickFormat('format-game-type', 'Commander Free For All')
     goToStep(1)
     expect(selectedChip()).toBe('1')
     expect(hint()).toBeDefined()
@@ -111,14 +123,14 @@ describe('CreateTableDialog', () => {
 
     // volver a 1v1 devuelve el default a 0
     goToStep(0)
-    fireEvent.change(gameType(), { target: { value: 'Two Player Duel' } })
+    await pickFormat('format-game-type', 'Two Player Duel')
     goToStep(1)
     expect(selectedChip()).toBe('0')
 
     // y al crear una mesa multijugador se envía freeMulligans: 1
     goToStep(0)
     fireEvent.change(screen.getByPlaceholderText(/Ej. Modern Casual Bo3/), { target: { value: 'Commander Night' } })
-    fireEvent.change(gameType(), { target: { value: 'Commander Free For All' } })
+    await pickFormat('format-game-type', 'Commander Free For All')
     for (let i = 0; i < 5; i++) {
       const nextBtn = screen.queryByRole('button', { name: /Siguiente/ })
       if (!nextBtn) break
@@ -194,9 +206,9 @@ describe('CreateTableDialog', () => {
         expect.objectContaining({
           name: 'Epic Modern Duel',
           gameType: 'Two Player Duel',
-          deckType: 'Constructed - Modern',
+          deckType: 'Limited',
           freeMulligans: 0,
-          winsNeeded: 1,
+          winsNeeded: 2,
           skillLevel: 'CASUAL',
           spectatorsAllowed: true,
           rollbackTurnsAllowed: true,
@@ -252,8 +264,7 @@ describe('CreateTableDialog', () => {
     )
     fireEvent.click(screen.getByRole('button', { name: /Siguiente/ }))
     // default extra seats wait for a human rival; opt into the Mad AI to get a bot seat with skill
-    const seatType = await screen.findByTestId('seat-type-0') as HTMLSelectElement
-    fireEvent.change(seatType, { target: { value: 'COMPUTER_MAD' } })
+    await pickSeatType(1, /IA Mad/)
     const seatSkill = await screen.findByTestId('seat-skill-0') as HTMLSelectElement
     fireEvent.change(seatSkill, { target: { value: '7' } })
 
@@ -282,8 +293,7 @@ describe('CreateTableDialog', () => {
     fireEvent.click(screen.getByRole('button', { name: /Siguiente/ }))
     fireEvent.click(screen.getByRole('button', { name: /Siguiente/ }))
     fireEvent.click(screen.getByRole('button', { name: /Siguiente/ }))
-    const seatType = await screen.findByTestId('seat-type-0') as HTMLSelectElement
-    fireEvent.change(seatType, { target: { value: 'HUMAN' } })
+    await pickSeatType(1, /Humano/)
 
     for (let i = 0; i < 5; i++) {
       const nextBtn = screen.queryByRole('button', { name: /Siguiente/ })
@@ -306,12 +316,9 @@ describe('CreateTableDialog', () => {
   })
 
   it('U8: draft tournament exposes number of rounds', async () => {
-    render(<CreateTableDialog onClose={onClose} />)
+    render(<CreateTableDialog onClose={onClose} kind="tourney" />)
 
-    const formatSelect = screen.getAllByRole('combobox')[1] as HTMLSelectElement
-    fireEvent.change(formatSelect, { target: { value: 'Limited' } })
-    fireEvent.click(screen.getByText(/Crear como torneo Draft/i))
-    const typeSelect = screen.getAllByRole('combobox')[2] as HTMLSelectElement
+    const typeSelect = screen.getAllByRole('combobox')[0] as HTMLSelectElement
     fireEvent.change(typeSelect, { target: { value: 'Booster Draft Swiss' } })
     const rounds = screen.getByLabelText(/rondas|rounds/i) as HTMLInputElement
     fireEvent.change(rounds, { target: { value: '5' } })
@@ -319,29 +326,27 @@ describe('CreateTableDialog', () => {
   })
 
   it('T3: number of rounds only shows for Swiss tournament types', async () => {
-    await renderDialog()
+    await renderDialog('tourney')
 
-    const formatSelect = screen.getAllByRole('combobox')[1] as HTMLSelectElement
-    fireEvent.change(formatSelect, { target: { value: 'Limited' } })
-    fireEvent.click(screen.getByText(/Crear como torneo Draft/i))
-    // default is now a valid server draft type → timing shown, rounds hidden
-    const typeSelect = screen.getAllByRole('combobox')[2] as HTMLSelectElement
+    // default is now a valid server draft type → rounds hidden
+    const typeSelect = screen.getAllByRole('combobox')[0] as HTMLSelectElement
     expect(typeSelect.value).toBe('Booster Draft Elimination')
-    expect(await screen.findByLabelText(/Draft pick time|Tiempo por pick/i)).toBeDefined()
     expect(screen.queryByLabelText(/rondas|rounds/i)).toBeNull()
     fireEvent.change(typeSelect, { target: { value: 'Booster Draft Swiss' } })
     expect(screen.getByLabelText(/rondas|rounds/i)).toBeDefined()
     fireEvent.change(typeSelect, { target: { value: 'Sealed Elimination' } })
     expect(screen.queryByLabelText(/rondas|rounds/i)).toBeNull()
+    // draft pick time is a Draft-step setting: only for a Draft type
+    fireEvent.change(typeSelect, { target: { value: 'Booster Draft Elimination' } })
+    goToStep('Draft')
+    expect(await screen.findByLabelText(/Draft pick time|Tiempo por pick/i)).toBeDefined()
   })
 
   it('T2: draft tournament sends lobby flags (skill/rated/rollback/clocks/single)', async () => {
-    render(<CreateTableDialog onClose={onClose} />)
+    render(<CreateTableDialog onClose={onClose} kind="tourney" />)
 
     fireEvent.change(screen.getByPlaceholderText(/Ej. Modern Casual Bo3/), { target: { value: 'Draft Night' } })
-    const formatSelect = screen.getAllByRole('combobox')[1] as HTMLSelectElement
-    fireEvent.change(formatSelect, { target: { value: 'Limited' } })
-    fireEvent.click(screen.getByText(/Crear como torneo Draft/i))
+    goToStep('Draft')
     fireEvent.click(screen.getByText(/Jugar como partida única|Play as single game/i))
     // Sin bots: todos los asientos en HUMANO (los bots no entregan el mazo construido)
     fireEvent.click(
@@ -349,8 +354,7 @@ describe('CreateTableDialog', () => {
         .getAllByRole('button', { name: /Multijugador/ })
         .find((b) => (b as HTMLElement).classList.contains('wizard-step'))!,
     )
-    const seatTypeSelect = await screen.findByTestId('seat-type-0') as HTMLSelectElement
-    fireEvent.change(seatTypeSelect, { target: { value: 'HUMAN' } })
+    await pickSeatType(1, /Humano/)
 
     for (let i = 0; i < 6; i++) {
       const nextBtn = screen.queryByRole('button', { name: /Siguiente/ })
@@ -382,17 +386,15 @@ describe('CreateTableDialog', () => {
   })
 
   it('T6: draft tournament sends timing only for Draft types', async () => {
-    await renderDialog()
+    await renderDialog('tourney')
 
     fireEvent.change(screen.getByPlaceholderText(/Ej. Modern Casual Bo3/), { target: { value: 'Timed Draft' } })
-    const formatSelect = screen.getAllByRole('combobox')[1] as HTMLSelectElement
-    fireEvent.change(formatSelect, { target: { value: 'Limited' } })
-    fireEvent.click(screen.getByText(/Crear como torneo Draft/i))
-    const typeSelect = screen.getAllByRole('combobox')[2] as HTMLSelectElement
+    const typeSelect = screen.getAllByRole('combobox')[0] as HTMLSelectElement
     fireEvent.change(typeSelect, { target: { value: 'Sealed Swiss' } })
     // timing selector hidden for non-draft types
     expect(screen.queryByText(/Draft pick time|Tiempo por pick/i)).toBeNull()
     fireEvent.change(typeSelect, { target: { value: 'Booster Draft Elimination' } })
+    goToStep('Draft')
     const timingSelect = await screen.findByLabelText(/Draft pick time|Tiempo por pick/i) as HTMLSelectElement
     expect(timingSelect.value).toBe('REGULAR')
     fireEvent.change(timingSelect, { target: { value: 'PROFESSIONAL' } })
@@ -402,8 +404,7 @@ describe('CreateTableDialog', () => {
         .getAllByRole('button', { name: /Multijugador/ })
         .find((b) => (b as HTMLElement).classList.contains('wizard-step'))!,
     )
-    const seatTypeSelectT6 = await screen.findByTestId('seat-type-0') as HTMLSelectElement
-    fireEvent.change(seatTypeSelectT6, { target: { value: 'HUMAN' } })
+    await pickSeatType(1, /Humano/)
 
     for (let i = 0; i < 6; i++) {
       const nextBtn = screen.queryByRole('button', { name: /Siguiente/ })
@@ -418,25 +419,31 @@ describe('CreateTableDialog', () => {
     })
   })
 
-  it('T7: mode switcher and quick presets configure table correctly', async () => {
+  it('T7: the game type and format fields configure the table', async () => {
     render(<CreateTableDialog onClose={onClose} />)
 
-    // Click Commander 4P preset
-    fireEvent.click(screen.getByRole('button', { name: /Commander 4P/i }))
-    const gameTypeSelect = screen.getAllByRole('combobox')[0] as HTMLSelectElement
-    expect(gameTypeSelect.value).toBe('Commander Free For All')
+    await pickFormat('format-game-type', 'Commander Free For All')
+    expect(formatValue('format-game-type')).toBe('Commander Free For All')
+    expect(formatValue('format-deck-type')).toBe('Variant Magic - Commander')
 
-    // Click Modern Swiss (8P) preset
-    fireEvent.click(screen.getByRole('button', { name: /Modern Swiss \(8P\)/i }))
+    await pickFormat('format-game-type', 'Two Player Duel')
+    expect(formatValue('format-game-type')).toBe('Two Player Duel')
+
+    expect(screen.queryByRole('button', { name: /Modern (Suizo|Swiss) \((8J|8P)\)/i })).toBeNull()
+  })
+
+  it('T7b: el preset Modern Swiss vive en el torneo y configura un torneo construido', () => {
+    render(<CreateTableDialog onClose={onClose} kind="tourney" />)
+    fireEvent.click(screen.getByRole('button', { name: /Modern (Suizo|Swiss) \((8J|8P)\)/i }))
     expect(screen.getByRole('tab', { name: /^Construido/i }).getAttribute('aria-selected')).toBe('true')
   })
 
   it('T8: constructed tournament creates tournament table with constructed format and joins with deck', async () => {
-    render(<CreateTableDialog onClose={onClose} />)
+    render(<CreateTableDialog onClose={onClose} kind="tourney" />)
 
     fireEvent.change(screen.getByPlaceholderText(/Ej. Modern Casual Bo3/), { target: { value: 'Modern Swiss 8P' } })
     // Click Modern Swiss (8P) preset
-    fireEvent.click(screen.getByRole('button', { name: /Modern Swiss \(8P\)/i }))
+    fireEvent.click(screen.getByRole('button', { name: /Modern (Suizo|Swiss) \((8J|8P)\)/i }))
 
     for (let i = 0; i < 6; i++) {
       const nextBtn = screen.queryByRole('button', { name: /Siguiente/ })
@@ -475,16 +482,14 @@ describe('CreateTableDialog', () => {
       { name: 'Booster Draft', minPlayers: 4, maxPlayers: 8 } as unknown as string,
     ])
 
-    render(<CreateTableDialog onClose={onClose} />)
+    render(<CreateTableDialog onClose={onClose} kind="tourney" />)
 
     // Wait for the async effect to resolve getTournamentTypes
     await waitFor(() => {
       expect(cmds.getTournamentTypes).toHaveBeenCalled()
     })
 
-    // Switch to tourney mode - should not throw t.startsWith error
-    fireEvent.click(screen.getByRole('button', { name: /^Torneo/i }))
-
+    // The tournament entry point renders the tournament tabs directly
     expect(screen.getByRole('tab', { name: /^Draft \/ Limit/i })).toBeDefined()
     expect(screen.getByRole('tab', { name: /^Construido/i })).toBeDefined()
   })
@@ -492,57 +497,50 @@ describe('CreateTableDialog', () => {
   it('T10: links gameType and deckType to prevent incompatible combinations', async () => {
     render(<CreateTableDialog onClose={onClose} />)
 
-    const gameTypeSelect = screen.getAllByRole('combobox')[0] as HTMLSelectElement
-    const formatSelect = screen.getAllByRole('combobox')[1] as HTMLSelectElement
-
-    // Initial state: Two Player Duel -> Constructed - Modern
-    expect(gameTypeSelect.value).toBe('Two Player Duel')
-    expect(formatSelect.value).toBe('Constructed - Modern')
+    // Initial state: Two Player Duel -> Limited (official client default)
+    expect(formatValue('format-game-type')).toBe('Two Player Duel')
+    expect(formatValue('format-deck-type')).toBe('Limited')
     // Format options should NOT include Commander
-    const initialOptions = Array.from(formatSelect.options).map((o) => o.value)
+    await openGallery('format-deck-type')
+    const initialOptions = galleryNames()
     expect(initialOptions).toContain('Constructed - Modern')
     expect(initialOptions).toContain('Constructed - Standard')
     expect(initialOptions).not.toContain('Variant Magic - Commander')
+    closeGallery()
 
     // Change gameType to Commander Free For All
-    fireEvent.change(gameTypeSelect, { target: { value: 'Commander Free For All' } })
-    expect(formatSelect.value).toBe('Variant Magic - Commander')
+    await pickFormat('format-game-type', 'Commander Free For All')
+    expect(formatValue('format-deck-type')).toBe('Variant Magic - Commander')
 
     // Format options should now ONLY include Commander formats
-    const commanderOptions = Array.from(formatSelect.options).map((o) => o.value)
+    await openGallery('format-deck-type')
+    const commanderOptions = galleryNames()
     expect(commanderOptions).toContain('Variant Magic - Commander')
     expect(commanderOptions).not.toContain('Constructed - Modern')
     expect(commanderOptions).not.toContain('Constructed - Standard')
+    closeGallery()
 
     // Switch back to Two Player Duel
-    fireEvent.change(gameTypeSelect, { target: { value: 'Two Player Duel' } })
-    expect(formatSelect.value).toBe('Constructed - Modern')
-    const duelOptions = Array.from(formatSelect.options).map((o) => o.value)
+    await pickFormat('format-game-type', 'Two Player Duel')
+    expect(formatValue('format-deck-type')).toBe('Constructed - Modern')
+    await openGallery('format-deck-type')
+    const duelOptions = galleryNames()
     expect(duelOptions).toContain('Constructed - Modern')
     expect(duelOptions).not.toContain('Variant Magic - Commander')
+    closeGallery()
   })
 
-  it('T11: mode selector cards contain title and description in separate container elements', () => {
+  it('T11: the match step shows the game type and format fields instead of format cards', () => {
     const { container } = render(<CreateTableDialog onClose={onClose} />)
-    const cards = container.querySelectorAll('.create-mode-card')
-    expect(cards.length).toBe(3)
-    cards.forEach((card) => {
-      const content = card.querySelector('.create-mode-card-content')
-      expect(content).not.toBeNull()
-      const title = content?.querySelector('.create-mode-card-title')
-      const desc = content?.querySelector('.create-mode-card-desc')
-      expect(title).not.toBeNull()
-      expect(desc).not.toBeNull()
-    })
+    expect(screen.getByTestId('format-game-type')).toBeDefined()
+    expect(screen.getByTestId('format-deck-type')).toBeDefined()
+    expect(container.querySelectorAll('.format-card').length).toBe(0)
   })
 
   it('T12: DraftSetsSelector allows picking popular chips and configuring boosters with full visibility', async () => {
-    render(<CreateTableDialog onClose={onClose} />)
+    render(<CreateTableDialog onClose={onClose} kind="tourney" />)
 
-    // Switch to Limited Draft mode
-    const formatSelect = screen.getAllByRole('combobox')[1] as HTMLSelectElement
-    fireEvent.change(formatSelect, { target: { value: 'Limited' } })
-    fireEvent.click(screen.getByText(/Crear como torneo Draft/i))
+    goToStep('Draft')
 
     // Popular chips should be visible
     expect(screen.getByText('MH3')).toBeDefined()
@@ -568,7 +566,7 @@ describe('CreateTableDialog', () => {
     const onEditDeck = vi.fn()
     render(<CreateTableDialog onClose={onClose} onEditDeck={onEditDeck} />)
     await waitFor(() => {
-      expect((screen.getAllByRole('combobox')[0] as HTMLSelectElement).options.length).toBeLessThan(10)
+      expect(screen.getByTestId('format-game-type')).toBeDefined()
     }, { timeout: 5000, interval: 20 })
 
     const stepper = screen.getByRole('navigation', { name: /Pasos de creación|Creation steps/ })
@@ -594,7 +592,7 @@ describe('CreateTableDialog', () => {
     // must not be enabled: it used to be clickable and did nothing.
     render(<CreateTableDialog onClose={onClose} />)
     await waitFor(() => {
-      expect((screen.getAllByRole('combobox')[0] as HTMLSelectElement).options.length).toBeLessThan(10)
+      expect(screen.getByTestId('format-game-type')).toBeDefined()
     }, { timeout: 5000, interval: 20 })
 
     const stepper = screen.getByRole('navigation', { name: /Pasos de creación|Creation steps/ })
@@ -616,10 +614,9 @@ describe('CreateTableDialog', () => {
       if (nextBtn) fireEvent.click(nextBtn)
     }
 
-    // Set seat 0 (seat-type-0) to COMPUTER_MAD
-    const seatTypeSelect = await screen.findByTestId('seat-type-0') as HTMLSelectElement
-    fireEvent.change(seatTypeSelect, { target: { value: 'COMPUTER_MAD' } })
-    expect(seatTypeSelect.value).toBe('COMPUTER_MAD')
+    // Set seat 2 (the first opponent seat, node 1 after my own) to the Mad AI
+    await pickSeatType(1, /IA Mad/)
+    expect(screen.getByRole('radio', { name: /IA Mad/ }).getAttribute('aria-checked')).toBe('true')
 
     // Navigate to Summary / last step
     const nextBtn = screen.queryByRole('button', { name: /Siguiente/ })
@@ -653,29 +650,21 @@ describe('CreateTableDialog', () => {
     })
   })
 
-  it('LM1: match Limited muestra resumen honesto y al marcar draft enseña sobres', async () => {
+  it('LM1: match Limited muestra resumen honesto y no ofrece draft', async () => {
     const { container } = await renderDialog()
-    const summaryText = () =>
-      container.querySelector('.create-table-summary-strip')?.textContent ?? ''
+    const reviewText = () => container.querySelector('.create-review')?.textContent ?? ''
 
-    const formatSelect = screen.getAllByRole('combobox')[1] as HTMLSelectElement
-    fireEvent.change(formatSelect, { target: { value: 'Limited' } })
+    await pickFormat('format-deck-type', 'Limited')
     expect(await screen.findByText(/no genera sobres/)).toBeDefined()
     expect(screen.queryByPlaceholderText(/Ej\. M21, MH3, BLB/)).toBeNull()
-    expect(summaryText()).toMatch(/mazos de 40\+/)
-
-    fireEvent.click(screen.getByText(/Crear como torneo Draft/i))
-    expect(screen.queryByText(/no genera sobres/)).toBeNull()
-    expect(await screen.findByPlaceholderText(/Ej\. M21, MH3, BLB/)).toBeDefined()
-    expect(summaryText()).toMatch(/Draft 3× M21/)
-    expect(summaryText()).toMatch(/10 minutos/)
+    expect(screen.queryByText(/Crear como torneo Draft/i)).toBeNull()
+    goToStep('Revisar')
+    expect(reviewText()).toMatch(/mazos de 40\+/)
   })
 
   it('T14: el wizard abre con el set repetido por sobre y lo sincroniza al cambiar de sobres', async () => {
-    await renderDialog()
-    const formatSelect = screen.getAllByRole('combobox')[1] as HTMLSelectElement
-    fireEvent.change(formatSelect, { target: { value: 'Limited' } })
-    fireEvent.click(screen.getByText(/Crear como torneo Draft/i))
+    await renderDialog('tourney')
+    goToStep('Draft')
     const setsInput = await screen.findByPlaceholderText(/Ej\. M21, MH3, BLB/) as HTMLInputElement
     expect(setsInput.value).toBe('M21, M21, M21')
     const boosterSelect = screen
@@ -690,22 +679,18 @@ describe('CreateTableDialog', () => {
   })
 
   it('T15: draft con bots elegidos a mano se bloquea con aviso (no llegan a rondas)', async () => {
-    render(<CreateTableDialog onClose={onClose} />)
+    render(<CreateTableDialog onClose={onClose} kind="tourney" />)
     fireEvent.change(screen.getByPlaceholderText(/Ej. Modern Casual Bo3/), { target: { value: 'Draft con bots' } })
-    const formatSelect = screen.getAllByRole('combobox')[1] as HTMLSelectElement
-    fireEvent.change(formatSelect, { target: { value: 'Limited' } })
-    fireEvent.click(screen.getByText(/Crear como torneo Draft/i))
 
     // walk to the seats step (the wizard is linear and draft adds timing options)
     for (let i = 0; i < 6; i++) {
-      if (screen.queryByTestId('seat-type-0')) break
+      if (screen.queryByTestId('seat-node-0')) break
       const nextBtn = screen.queryByRole('button', { name: /Siguiente/ })
       if (!nextBtn) break
       fireEvent.click(nextBtn)
     }
     // default draft seats wait for humans (valid); pick the draftbot by hand to hit the guard
-    const seatType = await screen.findByTestId('seat-type-0') as HTMLSelectElement
-    fireEvent.change(seatType, { target: { value: 'COMPUTER_DRAFT_BOT' } })
+    await pickSeatType(1, /IA Draftbot/)
     for (let i = 0; i < 3; i++) {
       if (screen.queryByRole('button', { name: /Crear torneo|Create Draft/i })) break
       const nextBtn = screen.queryByRole('button', { name: /Siguiente/ })
@@ -725,11 +710,46 @@ describe('CreateTableDialog', () => {
     render(<CreateTableDialog onClose={onClose} />)
     fireEvent.change(screen.getByPlaceholderText(/Ej. Modern Casual Bo3/), { target: { value: '   ' } })
     const stepper = screen.getByRole('navigation', { name: /Pasos de creación|Creation steps/ })
-    const lastStep = stepper.querySelectorAll('button')[4]
-    fireEvent.click(lastStep)
+    const steps = stepper.querySelectorAll('button')
+    fireEvent.click(steps[steps.length - 1])
     await waitFor(() => {
       expect(screen.getByText(/necesita un nombre|needs a name/i)).toBeDefined()
     })
-    expect(screen.queryByRole('button', { name: /Crear mesa|Create table/i })).toBeNull()
+    expect((screen.getByRole('button', { name: /Crear mesa|Create table/i }) as HTMLButtonElement).disabled).toBe(true)
+  })
+  it('marks the General step has-error and shows the reason when the name is cleared on the last step', async () => {
+    render(<CreateTableDialog onClose={onClose} />)
+    for (let i = 0; i < 6; i++) {
+      const nextBtn = screen.queryByRole('button', { name: /Siguiente|Next/ })
+      if (!nextBtn) break
+      fireEvent.click(nextBtn)
+    }
+    const stepper = screen.getByRole('navigation', { name: /Pasos de creación|Creation steps/ })
+    fireEvent.click(stepper.querySelectorAll('button')[0])
+    fireEvent.change(screen.getByPlaceholderText(/Ej. Modern Casual Bo3/), { target: { value: '' } })
+
+    expect(stepper.querySelectorAll('button')[0].classList.contains('has-error')).toBe(true)
+    expect(stepper.querySelectorAll('button')[0].getAttribute('aria-label')).toMatch(/necesita un nombre|needs a name/i)
+    expect(screen.getByText(/necesita un nombre|needs a name/i).closest('.error-box')).not.toBeNull()
+    expect((screen.getByRole('button', { name: /Crear mesa|Create table/i }) as HTMLButtonElement).disabled).toBe(true)
+  })
+
+  it('Reset to defaults restores a fresh form and clears the saved key', async () => {
+    const store = new Map<string, string>()
+    vi.stubGlobal('localStorage', {
+      getItem: (k: string) => store.get(k) ?? null,
+      setItem: (k: string, v: string) => { store.set(k, v) },
+      removeItem: vi.fn((k: string) => { store.delete(k) }),
+    })
+    await renderDialog()
+    fireEvent.change(screen.getByPlaceholderText(/Ej. Modern Casual Bo3/), { target: { value: 'Mi mesa' } })
+    await waitFor(() => expect(JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '{}').name).toBe('Mi mesa'))
+
+    fireEvent.click(screen.getByRole('button', { name: /Restablecer valores|Reset to defaults/ }))
+
+    expect(vi.mocked(localStorage.removeItem)).toHaveBeenCalledWith(STORAGE_KEY)
+    await waitFor(() => expect((screen.getByPlaceholderText(/Ej. Modern Casual Bo3/) as HTMLInputElement).value).toBe('Game'))
+    expect(JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '{}').name).toBe('Game')
+    vi.unstubAllGlobals()
   })
 })

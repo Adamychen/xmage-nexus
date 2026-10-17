@@ -8,13 +8,40 @@
   display: flex;
   align-items: center;
   gap: var(--sp-2);
+  min-width: 0;
   font-size: var(--fs-sm);
 }
 
 .game-turn {
   color: var(--gold-500);
+  white-space: nowrap;
   font-weight: 700;
   font-family: 'Cinzel', 'Merriweather', Georgia, serif;
+}
+
+.game-turn.turn-glow, .game-topbar-turn-num.turn-glow {
+  animation: turnGlow calc(0.4s / var(--fx-speed, 1)) cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes turnGlow {
+  0% { transform: scale(1); text-shadow: 0 0 0 rgb(var(--gold-rgb) / 0); }
+  50% { transform: scale(1.05); text-shadow: 0 0 12px rgb(var(--gold-rgb) / 0.8); }
+  100% { transform: scale(1); text-shadow: 0 0 0 rgb(var(--gold-rgb) / 0); }
+}
+
+html.fx-off .game-turn.turn-glow, html.fx-off .game-topbar-turn-num.turn-glow {
+  animation: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .game-turn.turn-glow, .game-topbar-turn-num.turn-glow {
+    animation: turnFade 400ms ease-out;
+  }
+}
+
+@keyframes turnFade {
+  from { opacity: 0.6; }
+  to { opacity: 1; }
 }
 
 .game-body {
@@ -52,3 +79,17 @@
 .game-log-text {
   color: var(--fg-2);
 }
+
+.board-wrap[data-ui='v2'] {
+  box-sizing: border-box;
+  padding-left: var(--chrome-l, 0px);
+  padding-right: var(--chrome-r, 0px);
+  transition: padding 0.3s var(--ease-out);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .board-wrap[data-ui='v2'] {
+    transition: none;
+  }
+}
+

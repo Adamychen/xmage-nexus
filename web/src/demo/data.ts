@@ -17,13 +17,13 @@ const ROSTER: RosterRow[] = [
   { name: DEMO_USERNAME, flag: 'ar', rating: 1688, matches: 41, ping: '34ms', avatarId: 12 },
   { name: 'Ajani_Fan', flag: 'es', rating: 2184, matches: 412, ping: '58ms', avatarId: 4 },
   { name: 'JaceMind', flag: 'us', rating: 2031, matches: 355, ping: '71ms', playing: true, avatarId: 7 },
-  { name: 'Liliana_B', flag: 'de', rating: 1912, matches: 288, ping: '49ms', avatarId: 21 },
+  { name: 'Liliana_B', flag: 'de', rating: 1650, matches: 288, ping: '49ms', avatarId: 21 },
   { name: 'GoblinKing', flag: 'mx', rating: 1766, matches: 190, ping: '63ms', playing: true, avatarId: 9 },
   { name: 'Nissa_Roots', flag: 'br', rating: 1604, matches: 97, ping: '88ms', avatarId: 15 },
   { name: 'ChandraFire', flag: 'fr', rating: 1533, matches: 74, ping: '42ms', avatarId: 3 },
   { name: 'Teferi_Time', flag: 'gb', rating: 1471, matches: 63, ping: '55ms', avatarId: 18 },
-  { name: 'SamwiseMTG', flag: 'ca', rating: 1388, matches: 31, ping: '120ms', avatarId: 26 },
-  { name: 'NewPlayer42', flag: 'cl', rating: 1215, matches: 8, ping: '97ms', avatarId: 30 },
+  { name: 'SamwiseMTG', flag: 'ca', rating: 1250, matches: 31, ping: '120ms', avatarId: 26 },
+  { name: 'NewPlayer42', flag: 'cl', rating: 1050, matches: 8, ping: '97ms', avatarId: 30 },
 ]
 
 export function demoRoster(): UsersView[] {

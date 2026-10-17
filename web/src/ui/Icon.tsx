@@ -3,13 +3,14 @@ import {
   ArrowLeftRight, Armchair, AtSign, Award, Ban, Bell, BookOpen, Bug, ChevronDown, ChevronUp, ChevronsDown, ChevronsUp,
   Circle, CircleAlert, Castle, Clock, Clipboard, ChartColumn, Copy, Download, Dices, Eye, EyeOff, Flame, Funnel,
   Gamepad2, Gauge, Gem, File, Folder, Globe, Hand, Hourglass, House, Inbox, Info, Key, Keyboard, Landmark, Layers, LayoutGrid, List, Lock, LockOpen, LogOut, Map, Maximize, Medal, MessageCircle,
-  Minus, MapPin, Mountain, Package, Palette, Pause, Pencil, Play, Plus, RefreshCw, RotateCcw, RotateCw, Save, Scale, ScrollText, Search, Send, Settings,
+  Ellipsis, Minus, MapPin, Mountain, Package, Palette, Pause, Pencil, Play, Plus, RefreshCw, RotateCcw, RotateCw, Save, Scale, ScrollText, Search, Send, Settings,
   Star, Smile, Square, Tag, Hash, Trash, TriangleAlert, TreePine, Trophy, Undo2, Upload, UserCheck, Users, UserX, VolumeX, Wand, Wind, X, Zap,
   type LucideIcon,
 } from 'lucide-react'
 
 export type IconName =
   | 'sun'
+  | 'ellipsis'
   | 'moon'
   | 'swords'
   | 'dna'
@@ -153,6 +154,7 @@ const LUCIDE_ICONS: Record<string, LucideIcon> = {
   rotateCw: RotateCw,
   rotateCcw: RotateCcw,
   info: Info,
+  ellipsis: Ellipsis,
   alert: TriangleAlert,
   error: CircleAlert,
   clock: Clock,

@@ -25,6 +25,7 @@ test.describe('Report dialog from the lobby', () => {
       })
       await login(page, 'report-e2e')
 
+      await page.getByTestId('lobby-more-menu').click()
       await page.getByTestId('open-report').click()
       await expect(page.getByTestId('report-dialog')).toBeVisible()
       // dialogIn scales 0.96->1 over 0.18s: measuring before it settles

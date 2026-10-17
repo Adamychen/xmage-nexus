@@ -3,6 +3,7 @@ import { act, cleanup, renderHook, waitFor } from '@testing-library/react'
 import * as cmds from '../../net/commands'
 import { requestDeckValidation } from '../DeckIssuesDialog'
 import { useCreateTableForm } from './useCreateTableForm'
+import { STORAGE_KEY } from './constants'
 
 vi.mock('../../net/commands', () => ({
   getGameTypes: vi.fn(),
@@ -77,12 +78,29 @@ async function constructedTourneyWithBots(bots: number) {
   return m
 }
 
+describe('defaults match the official client', () => {
+  it('opens as a limited duel of "Game" with 2 wins, multiple-player attack and EDH power level 0', async () => {
+    const m = await mount()
+    expect(m.form().name).toBe('Game')
+    expect(m.form().deckType).toBe('Limited')
+    expect(m.form().wins).toBe(2)
+    expect(m.form().attackOption).toBe('MULTIPLE')
+    expect(m.form().edhPowerLevel).toBe(0)
+  })
+
+  it('an explicit attack choice wins over the default', async () => {
+    const m = await mount()
+    act(() => m.form().setAttackOption('LEFT'))
+    expect(m.form().attackOption).toBe('LEFT')
+  })
+})
+
 describe('table category', () => {
   it('multiplayer picks a game type for more than 2 and keeps a compatible format', async () => {
     const m = await mount()
     act(() => m.form().setTableCategory('multi'))
     expect(m.form().gameType).toBe('Free For All')
-    expect(m.form().deckType).toBe('Constructed - Modern')
+    expect(m.form().deckType).toBe('Limited')
     expect(m.form().numPlayers).toBe(4)
 
     act(() => m.form().setTableCategory('duel'))
@@ -207,6 +225,7 @@ describe('submit: constructed tournament with native AI', () => {
 describe('submit: match with native AI', () => {
   async function duelVsBot() {
     const m = await mount()
+    act(() => m.form().setDeckType('Constructed - Modern'))
     act(() => m.form().setNumPlayers(2))
     act(() => m.form().applySeatTypeToAll('COMPUTER_MAD'))
     return m
@@ -272,5 +291,33 @@ describe('runDemoTable', () => {
     expect(cmds.startMatch).not.toHaveBeenCalled()
     expect(m.onClose).not.toHaveBeenCalled()
     expect(m.form().busy).toBe(false)
+  })
+})
+
+describe('reset and submit guard', () => {
+  it('resetToDefaults clears the saved form and asks the host to remount', async () => {
+    const onReset = vi.fn()
+    const hook = renderHook(() => useCreateTableForm(vi.fn(), 'match', onReset))
+    await waitFor(() => expect(cmds.getTournamentTypes).toHaveBeenCalled())
+    await act(async () => {})
+    act(() => hook.result.current.setName('Mesa'))
+    expect(ls.has(STORAGE_KEY)).toBe(true)
+
+    act(() => hook.result.current.resetToDefaults())
+
+    expect(ls.has(STORAGE_KEY)).toBe(false)
+    expect(onReset).toHaveBeenCalledTimes(1)
+  })
+
+  it('submit with an empty name moves to General with the error and creates nothing', async () => {
+    const m = await mount()
+    act(() => m.form().setName('  '))
+    act(() => m.form().setActiveTab('review'))
+    await act(() => m.form().submit())
+
+    expect(cmds.createTable).not.toHaveBeenCalled()
+    expect(cmds.createTournamentTable).not.toHaveBeenCalled()
+    expect(m.form().activeTab).toBe('general')
+    expect(m.form().error).toBeTruthy()
   })
 })

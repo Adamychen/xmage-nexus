@@ -59,20 +59,27 @@
 }
 
 .opp-pill.is-targetable {
-  border-color: var(--ok);
-  box-shadow: 0 0 14px rgb(var(--ok-rgb) / 0.7);
-  animation: targetPulse 1.2s infinite ease-in-out;
+  border-color: var(--gold-500);
+  box-shadow: 0 0 14px rgb(var(--gold-rgb) / 0.6);
+}
+
+.opp-pill.is-target-beacon {
+  animation: oppTargetBeacon 1.5s ease-out infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .opp-pill.is-targetable {
+  .opp-pill.is-target-beacon {
     animation: none;
   }
 }
 
-@keyframes targetPulse {
-  0%, 100% { transform: scale(1); border-color: var(--ok); }
-  50% { transform: scale(1.03); border-color: var(--gold-300); }
+@keyframes oppTargetBeacon {
+  0%, 50%, 100% {
+    box-shadow: 0 0 14px rgb(var(--gold-rgb) / 0.6);
+  }
+  20% {
+    box-shadow: 0 0 22px 4px rgb(var(--gold-rgb) / 0.95);
+  }
 }
 
 .opp-pill-life {

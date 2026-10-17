@@ -125,12 +125,6 @@
     "fontSizes": 1,
     "spacing": 0
   },
-  "lobby/LeaderboardModal.css": {
-    "colors": 0,
-    "radii": 0,
-    "fontSizes": 1,
-    "spacing": 0
-  },
   "lobby/LobbyScreen.css": {
     "colors": 0,
     "radii": 1,

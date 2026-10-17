@@ -21,6 +21,7 @@ const cfg = {
   xmagePort: Number(env.XMAGE_PORT || 17171),
   proxyHttp: env.PROXY_HTTP || 'http://127.0.0.1:8788/',
   journalFile: env.STATUS_JOURNAL_FILE || '',
+  reportsDir: env.REPORTS_DIR || '',
   sampleSecs: Number(env.STATUS_SAMPLE_SECS || 30),
   retentionDays: Number(env.STATUS_SAMPLE_RETENTION_DAYS || 180),
 };
@@ -701,6 +702,93 @@ function playersPayload(rangeName) {
   return { range: { name: r.name, from: r.from, to: r.to }, players: rows.map(p => ({ ...p, online: onlineNow.has(p.user) })) };
 }
 
+const REPORT_ID = /^[0-9a-f]{8}$/;
+
+function reportsPayload(rangeName) {
+  const r = rangeOf(rangeName);
+  const rows = all(`SELECT id, ts, user,
+      json_extract(kv, '$.ref') AS ref, json_extract(kv, '$.refused') AS refused, json_extract(kv, '$.kind') AS kind,
+      json_extract(kv, '$.bytes') AS bytes, json_extract(kv, '$.turn') AS turn, json_extract(kv, '$.step') AS step,
+      json_extract(kv, '$.fp') AS fp, json_extract(kv, '$.text') AS text, json_extract(kv, '$.file') AS file
+    FROM events WHERE type = 'report' AND ts >= ? AND ts < ? ORDER BY ts DESC LIMIT 2000`, r.from, r.to);
+  const refused = {};
+  const groups = new Map();
+  let stored = 0;
+  for (const e of rows) {
+    if (!e.ref) {
+      const why = e.refused || 'unknown';
+      refused[why] = (refused[why] || 0) + 1;
+      continue;
+    }
+    stored++;
+    const key = e.fp || `${e.kind || 'feedback'}|(no fingerprint)`;
+    let g = groups.get(key);
+    if (!g) {
+      g = { fp: key, kind: e.kind || 'feedback', count: 0, users: new Set(), first: e.ts, last: e.ts, latest: null, refs: [] };
+      groups.set(key, g);
+    }
+    g.count++;
+    g.users.add(e.user || '?');
+    g.first = Math.min(g.first, e.ts);
+    g.last = Math.max(g.last, e.ts);
+    if (!g.latest) g.latest = { ref: e.ref, user: e.user, ts: e.ts, text: e.text || '', turn: e.turn, step: e.step, bytes: e.bytes };
+    if (g.refs.length < 20) g.refs.push({ ref: e.ref, user: e.user, ts: e.ts, text: e.text || '' });
+  }
+  const list = [...groups.values()]
+    .map(g => ({ ...g, users: g.users.size }))
+    .sort((a, b) => b.count - a.count || b.last - a.last);
+  return {
+    range: { name: r.name, from: r.from, to: r.to },
+    total: rows.length,
+    stored,
+    refused,
+    files: Boolean(cfg.reportsDir),
+    groups: list,
+  };
+}
+
+function findReportFile(id) {
+  if (!cfg.reportsDir || !REPORT_ID.test(id)) return null;
+  let days;
+  try {
+    days = fs.readdirSync(cfg.reportsDir).filter(d => /^\d{4}-\d{2}-\d{2}$/.test(d)).sort().reverse();
+  } catch {
+    return null;
+  }
+  for (const day of days) {
+    const file = path.join(cfg.reportsDir, day, `${id}.json`);
+    if (fs.existsSync(file)) return file;
+  }
+  return null;
+}
+
+function reportDetail(id) {
+  const file = findReportFile(id);
+  if (!file) return { id, found: false };
+  const rec = JSON.parse(fs.readFileSync(file, 'utf8'));
+  const payload = rec.payload && typeof rec.payload === 'object' ? rec.payload : {};
+  const bundle = payload.bundle && typeof payload.bundle === 'object' ? payload.bundle : {};
+  const frames = Array.isArray(bundle.frames) ? bundle.frames.length : 0;
+  return {
+    id,
+    found: true,
+    at: rec.at,
+    kind: rec.kind,
+    user: rec.user,
+    fingerprint: rec.fingerprint,
+    text: rec.text,
+    viewport: payload.viewport || null,
+    errors: Array.isArray(payload.errors) ? payload.errors.slice(-10) : [],
+    appVersion: bundle.appVersion || null,
+    userAgent: bundle.userAgent || null,
+    language: bundle.language || null,
+    conn: bundle.conn || null,
+    game: bundle.game ? { turn: bundle.game.turn, step: bundle.game.step, players: bundle.game.players } : null,
+    log: Array.isArray(bundle.log) ? bundle.log.slice(-30) : [],
+    frames,
+  };
+}
+
 function versionMismatch(target) {
   const ok = one("SELECT MAX(ts) AS ts FROM events WHERE type = 'login_ok' AND json_extract(kv, '$.server') = ?", target)?.ts ?? 0;
   const fail = one(`SELECT ts, json_extract(kv, '$.reason') AS reason FROM events
@@ -941,6 +1029,10 @@ const server = http.createServer(async (req, res) => {
         return sendJson(res, statsPayload(url.searchParams.get('range') || '30d'));
       case '/api/players':
         return sendJson(res, playersPayload(url.searchParams.get('range') || '30d'));
+      case '/api/reports':
+        return sendJson(res, reportsPayload(url.searchParams.get('range') || '30d'));
+      case '/api/report':
+        return sendJson(res, reportDetail(url.searchParams.get('id') || ''));
       case '/api/system':
         return sendJson(res, systemPayload(url.searchParams.get('range') || '24h'));
       case '/api/logs':

@@ -92,6 +92,26 @@
   }
 }
 
+.arrow-path.arrow-v2 {
+  stroke-width: 2.2;
+  stroke-dasharray: 7 6;
+  opacity: 0.9;
+  filter: drop-shadow(0 0 5px currentColor);
+  animation: arrowFlowV2 1s linear infinite;
+}
+
+@keyframes arrowFlowV2 {
+  to {
+    stroke-dashoffset: -26;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .arrow-path.arrow-v2 {
+    animation: none;
+  }
+}
+
 @keyframes arrowFlowTarget {
   from {
     stroke-dashoffset: 26;

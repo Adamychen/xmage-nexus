@@ -4,7 +4,8 @@ import { useState } from 'react'
 import { useSettings, setSetting } from '../state/store'
 import { useTranslation } from '../i18n'
 import type { ManaPaymentStored } from '../state/persistence'
-import { saveBrowserNotifications, saveGameLogAutoSave } from '../state/persistence'
+import { saveBoardRewind, saveBrowserNotifications, saveGameLogAutoSave } from '../state/persistence'
+import { clearRewind } from '../game/rewind'
 import { notificationsSupported, requestNotificationPermission } from '../game/attentionAlerts'
 import { clearAutoAnswers, removeAutoAnswer } from '../game/autoAnswers'
 import { PhaseStopGrid } from '../game/PhaseStopSelector'
@@ -68,6 +69,16 @@ function GameplaySection() {
         }}
         label={t('system', 'log_autosave')}
         title={t('system', 'log_autosave_hint')}
+      />
+      <Toggle
+        checked={settings.boardRewind}
+        onChange={(v) => {
+          setSetting('boardRewind', v)
+          saveBoardRewind(v)
+          if (!v) clearRewind()
+        }}
+        label={t('game', 'rewind_setting')}
+        title={t('game', 'rewind_setting_hint')}
       />
       {notificationsSupported() && (
         <>

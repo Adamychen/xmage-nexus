@@ -53,6 +53,8 @@ const MAX_GAME_MS = argNum('maxGameMs', 8 * 60_000)
 // Techo por debajo de maxGameThreads del servidor de test (20 en
 // local-server/config/config.xml) dejando margen para otro uso concurrente.
 const CONCURRENCY = argNum('concurrency', 6)
+const LIVELOCK_UPDATES = argNum('livelockUpdates', 1000)
+const LIVELOCK_PROMPTS = argNum('livelockPrompts', 500)
 
 const REPORT_DIR = path.join(repoRoot, '.run')
 const REPORT_PATH = path.join(REPORT_DIR, `fuzz-report-${Date.now()}.json`)
@@ -87,6 +89,10 @@ function loadKnownMethods() {
   return new Set(FALLBACK_CALLBACKS)
 }
 const KNOWN_METHODS = loadKnownMethods()
+const PROGRESS_CALLBACKS = new Set(['START_GAME', 'WATCHGAME', 'END_GAME_INFO'])
+function isGameProgress(method) {
+  return String(method ?? '').startsWith('GAME_') || PROGRESS_CALLBACKS.has(method)
+}
 
 // ---------------------------------------------------------------------------
 // Pool de mazos reales (.dck del fork, no generados)
@@ -178,16 +184,26 @@ function getMe(gv) {
   return gv?.players?.find((p) => p?.controlled)
 }
 const MANA_CREATURES = ['Elvish Mystic', 'Llanowar Elves', 'Birds of Paradise', 'Wood Elves', 'Fyndhorn Elves']
-function untappedManaSource(gv) {
+function untappedManaSources(gv) {
   const me = getMe(gv)
-  if (!me?.battlefield) return null
-  let land = null
+  if (!me?.battlefield) return []
+  const creatures = []
+  const lands = []
   for (const [id, c] of Object.entries(me.battlefield)) {
     if (c.tapped) continue
-    if ((c.cardTypes ?? []).includes('LAND')) { if (!land) land = id }
-    else if (MANA_CREATURES.includes(c.name ?? c.displayName ?? '')) return id
+    if ((c.cardTypes ?? []).includes('LAND')) lands.push(id)
+    else if (MANA_CREATURES.includes(c.name ?? c.displayName ?? '')) creatures.push(id)
   }
-  return land
+  return [...creatures, ...lands]
+}
+function nextUntried(api, promptKey, candidates) {
+  if (promptKey !== api.promptKey) {
+    api.promptKey = promptKey
+    api.askTried.clear()
+  }
+  const pick = candidates.find((id) => !api.askTried.has(id))
+  if (pick) api.askTried.add(pick)
+  return pick ?? null
 }
 function firstBasicLand(hand) {
   if (!hand) return null
@@ -215,7 +231,8 @@ function connectPlayer(username) {
     const pending = new Map()
     const api = {
       ws, name: username, view: null, gameId: null,
-      lastEventAt: Date.now(), anomalies: [], turn: 0, over: false, closedExpectedly: false,
+      lastEventAt: Date.now(), anomalies: [], turn: 0, over: false, closedExpectedly: false, askTried: new Set(), promptKey: null,
+      progressKey: null, sameStateUpdates: 0, maxSameStateUpdates: 0, promptsSinceUpdate: 0, maxPromptsSinceUpdate: 0,
     }
     api.call = (action, args) =>
       new Promise((res) => {
@@ -267,16 +284,29 @@ function connectPlayer(username) {
         return
       }
       if (msg.type !== 'event') return
-      api.lastEventAt = Date.now()
       const method = msg.method
+      if (isGameProgress(method)) api.lastEventAt = Date.now()
       if (method && !KNOWN_METHODS.has(method)) {
         api.anomalies.push({ kind: 'unknownCallback', at: Date.now(), method })
       }
       if (msg.data?.gameView) { api.view = msg.data.gameView; api.turn = msg.data.gameView.turn ?? api.turn }
       else if (Array.isArray(msg.data?.players)) { api.view = msg.data; api.turn = msg.data.turn ?? api.turn }
+      if (method === 'GAME_UPDATE' || method === 'GAME_UPDATE_AND_INFORM') {
+        api.askTried.clear()
+        api.promptsSinceUpdate = 0
+        const v = api.view
+        const key = JSON.stringify([v?.turn, v?.step, v?.activePlayerId, v?.priorityPlayerId])
+        api.sameStateUpdates = key === api.progressKey ? api.sameStateUpdates + 1 : 0
+        api.progressKey = key
+        api.maxSameStateUpdates = Math.max(api.maxSameStateUpdates, api.sameStateUpdates)
+      } else if (String(method).startsWith('GAME_') && method !== 'GAME_INFORM_PERSONAL') {
+        api.promptsSinceUpdate++
+        api.maxPromptsSinceUpdate = Math.max(api.maxPromptsSinceUpdate, api.promptsSinceUpdate)
+      }
       if (msg.objectId && (method === 'START_GAME' || String(method).startsWith('GAME_')) && !api.gameId) {
         api.gameId = String(msg.objectId)
       }
+      if (method === 'START_GAME' && msg.objectId) api.call('joinGame', { gameId: String(msg.objectId) })
       if (method === 'GAME_OVER' || method === 'END_GAME_INFO') api.over = true
       const RESPONSE_REQUIRED = new Set([
         'GAME_ASK', 'GAME_CHOOSE_ABILITY', 'GAME_CHOOSE_CHOICE', 'GAME_CHOOSE_PILE', 'GAME_TARGET',
@@ -302,11 +332,13 @@ function connectPlayer(username) {
     }
     ws.onerror = (e) => {
       api.anomalies.push({ kind: 'wsError', at: Date.now(), message: String(e?.message ?? e) })
+      reject(new Error(`WebSocket ${WS_URL} failed before connecting: ${String(e?.message ?? e)}`))
     }
     ws.onclose = (e) => {
       if (!api.closedExpectedly) {
         api.anomalies.push({ kind: 'wsClosedUnexpectedly', at: Date.now(), code: e?.code, reason: e?.reason })
       }
+      reject(new Error(`WebSocket ${WS_URL} closed before connecting (code ${e?.code ?? '?'})`))
     }
   })
 }
@@ -357,8 +389,10 @@ function respond(api, m) {
       }
       const possible = m.data?.options?.possibleTargets ?? m.data?.targets
       const ids = Array.isArray(possible) ? possible : Object.keys(possible ?? {})
-      if (m.data?.flag === false && ids.length === 0) { api.send('sendPlayerBoolean', { value: false }); return }
-      if (ids.length) { api.send('sendPlayerUUID', { value: ids[0] }); return }
+      const candidates = ids.length ? ids : Object.keys(m.data?.cardsView1 ?? {})
+      if (m.data?.flag === false && candidates.length === 0) { api.send('sendPlayerBoolean', { value: false }); return }
+      const pick = nextUntried(api, JSON.stringify([method, m.data?.message ?? m.data?.question, candidates]), candidates)
+      if (pick) { api.send('sendPlayerUUID', { value: pick }); return }
       api.send('sendPlayerBoolean', { value: false })
       return
     }
@@ -368,15 +402,24 @@ function respond(api, m) {
       return
     case 'GAME_GET_MULTI_AMOUNT': {
       const items = Array.isArray(m.data?.messages) ? m.data.messages : []
-      const vals = items.map((it) => Number(it?.defaultValue ?? it?.min ?? 0))
-      api.send('sendPlayerString', { value: vals.map(String).join(' ') })
+      const vals = items.map((it) => Number(it?.min ?? 0))
+      let need = Number(m.data?.min ?? 0) - vals.reduce((s, v) => s + v, 0)
+      items.forEach((it, i) => {
+        const add = Math.min(Math.max(0, Number(it?.max ?? 0) - vals[i]), Math.max(0, need))
+        vals[i] += add
+        need -= add
+      })
+      const sum = vals.reduce((s, v) => s + v, 0)
+      if (need > 0 || sum > Number(m.data?.max ?? Infinity)) { api.send('sendPlayerBoolean', { value: false }); return }
+      api.send('sendPlayerString', { value: vals.join(' ') })
       return
     }
     case 'GAME_PLAY_MANA':
     case 'GAME_PLAY_XMANA': {
       const me = getMe(gv)
       if (me?.isActive === true && me?.hasPriority === true) {
-        const src = untappedManaSource(gv)
+        const sources = untappedManaSources(gv)
+        const src = nextUntried(api, JSON.stringify([method, sources]), sources)
         if (src) { api.send('sendPlayerUUID', { value: src }); return }
       }
       api.send('sendPlayerBoolean', { value: false })
@@ -384,7 +427,7 @@ function respond(api, m) {
     }
     case 'GAME_SELECT': {
       const me = getMe(gv)
-      if (me?.hasPriority !== true) return
+      if (me?.hasPriority !== true) { api.send('sendPlayerBoolean', { value: false }); return }
       const roll = Math.random()
       if (roll < 0.35) {
         const land = firstBasicLand(gv?.myHand ?? gv?.hand)
@@ -456,6 +499,14 @@ async function playOneGame(gameNum) {
     while (Date.now() < deadline) {
       await new Promise((r) => setTimeout(r, 1000))
       if (human.over) { result.outcome = 'game-over'; break }
+      if (human.gameId && (human.sameStateUpdates > LIVELOCK_UPDATES || human.promptsSinceUpdate > LIVELOCK_PROMPTS)) {
+        result.outcome = 'livelock'
+        result.anomalies.push({
+          kind: 'livelock', at: Date.now(), turn: human.turn, sameStateUpdates: human.sameStateUpdates,
+          promptsSinceUpdate: human.promptsSinceUpdate, state: human.progressKey, gameId: human.gameId,
+        })
+        break
+      }
       if (human.gameId && Date.now() - human.lastEventAt > STALL_MS) {
         result.outcome = 'stalled'
         result.anomalies.push({
@@ -480,6 +531,8 @@ async function playOneGame(gameNum) {
     result.anomalies.push({ kind: 'scriptException', message: String(e?.stack ?? e) })
   } finally {
     result.turnsPlayed = human.turn
+    result.maxSameStateUpdates = human.maxSameStateUpdates
+    result.maxPromptsSinceUpdate = human.maxPromptsSinceUpdate
     result.anomalies.push(...human.anomalies)
     human.closedExpectedly = true
     try { if (tableId) human.ws.send(JSON.stringify({ action: 'removeTable', args: { tableId } })) } catch {}
@@ -531,7 +584,7 @@ async function main() {
   log('resumen:', JSON.stringify(summary.outcomeCounts))
   log(`anomalías totales: ${summary.totalAnomalies}`)
   log(`informe: ${REPORT_PATH}`)
-  process.exit(summary.totalAnomalies > 0 && results.some((r) => r.anomalies.some((a) => a.kind === 'stall' || a.kind === 'scriptException' || a.kind === 'unknownCallback')) ? 1 : 0)
+  process.exit(summary.totalAnomalies > 0 && results.some((r) => r.anomalies.some((a) => ['stall', 'livelock', 'gameTimeout', 'scriptException', 'unknownCallback'].includes(a.kind))) ? 1 : 0)
 }
 
 main().catch((e) => {

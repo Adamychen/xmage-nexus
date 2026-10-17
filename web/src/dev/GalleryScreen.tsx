@@ -2,7 +2,7 @@ import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import { getState, setState } from '../state/state'
 import { getGateway, setGateway } from '../net/commands'
 import type { Gateway } from '../net/Gateway'
-import { buildGalleryEntries, type GalleryEntry } from './galleryFixtures'
+import { buildGalleryEntries, type GalleryAction, type GalleryEntry } from './galleryFixtures'
 import { getLanguage, setLanguage, t } from '../i18n'
 import GameScreen from '../game/GameScreen'
 import GameEndDialog from '../game/GameEndDialog'
@@ -87,6 +87,15 @@ function restoreStorage(previous: Record<string, string | null> | null): void {
     if (value == null) localStorage.removeItem(key)
     else localStorage.setItem(key, value)
   }
+}
+
+function runAction(action: GalleryAction): void {
+  if (action.run) {
+    action.run()
+    return
+  }
+  const game = getState().game
+  if (action.apply && game) setState({ game: action.apply(game) })
 }
 
 export default function GalleryScreen() {
@@ -181,6 +190,7 @@ export default function GalleryScreen() {
     return () => setGateway(prevGateway)
   }, [])
 
+  const action = active?.action
   const groups = [...new Set(entries.map((e) => e.group))]
 
   return (
@@ -211,6 +221,11 @@ export default function GalleryScreen() {
             </section>
           ))}
         </nav>
+        {action && (
+          <button type="button" className="gallery-action" data-gallery-action onClick={() => runAction(action)}>
+            {action.label}
+          </button>
+        )}
         <p className="gallery-hint">
           Solo disponible en dev. Cambia el estado del store; al salir se restaura el estado previo.
         </p>

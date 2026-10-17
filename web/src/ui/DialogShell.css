@@ -48,6 +48,28 @@
 .dlg-md { width: var(--dlg-width-md); max-height: var(--dlg-max-h); }
 .dlg-lg { width: var(--dlg-width-lg); max-height: var(--dlg-max-h); }
 
+.dlg-sm,
+.dlg-md,
+.dlg-lg {
+  max-width: calc((100vw - 2 * var(--sp-4h)) / var(--ui-zoom, 1));
+  box-sizing: border-box;
+}
+
+.dlg-panel.dlg-ornate {
+  border-color: var(--gold-line);
+  background:
+    linear-gradient(180deg, rgb(var(--gold-rgb) / 0.1) 0%, transparent 140px),
+    var(--dlg-bg);
+  box-shadow: var(--dlg-shadow), inset 0 0 0 1px rgb(var(--gold-rgb) / 0.12), 0 0 0 3px var(--ink-1), 0 0 0 4px var(--gold-line);
+}
+
+.dlg-panel.dlg-ornate .dlg-title {
+  background: linear-gradient(135deg, var(--fg-hi) 0%, var(--gold-300) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
 @keyframes dialogIn {
   from {
     opacity: 0;
@@ -86,6 +108,7 @@
 
 .dlg-head-right {
   flex: none;
+  margin-left: auto;
   display: flex;
   align-items: center;
   gap: var(--sp-2);

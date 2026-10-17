@@ -8,10 +8,6 @@ export default function DevTab({ form }: { form: CreateTableForm }) {
   const { t } = useTranslation()
   return (
     <div className="create-tab-content">
-      <div className="wizard-step-heading">
-        <h3><Icon name="settings" size={15} /> {t('lobby','dev_title')}</h3>
-        <p>{t('lobby','dev_subtitle')}</p>
-      </div>
       <div className="dev-options-notice">
         <span><Icon name="alert" size={12} /> {t('lobby','dev_notice')}</span>
       </div>

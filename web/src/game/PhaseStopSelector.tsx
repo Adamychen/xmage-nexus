@@ -2,9 +2,9 @@ import { useCallback } from 'react'
 import * as cmds from '../net/commands'
 import type { PhaseStops } from '../net/commands'
 import { useStore } from '../state/store'
-import { setState } from '../state/state'
+import { getState, setState } from '../state/state'
 import { useTranslation } from '../i18n'
-import { PHASES, togglePhaseStop } from './phaseStops'
+import { PHASES, serverPhaseStops, togglePhaseStop } from './phaseStops'
 import type { PhaseTurn } from './phaseStops'
 import './PhaseStopSelector.css'
 
@@ -50,7 +50,7 @@ export default function PhaseStopSelector() {
   const toggle = useCallback((turn: PhaseTurn, key: string) => {
     const next = togglePhaseStop(phaseStops, turn, key)
     setState({ phaseStops: next })
-    void cmds.updatePreferences(next)
+    void cmds.updatePreferences(serverPhaseStops(getState().settings.smartStops, next))
   }, [phaseStops])
 
   return (

@@ -3,6 +3,7 @@ import { act, StrictMode } from 'react'
 import { fireEvent, render, screen } from '@testing-library/react'
 import CardSlot from './CardSlot'
 import type { PermanentView } from '../net/types'
+import type { FeedbackPrompt } from '../game/feedback'
 import { getState, setState, setSetting } from '../state/store'
 import { perfClear, perfEntries } from '../system/perfProbe'
 
@@ -386,6 +387,69 @@ describe('CardSlot entering lifecycle', () => {
   })
 })
 
+const animationEnd = (el: Element, animationName: string) => {
+  const ev = new Event('animationend', { bubbles: true })
+  Object.defineProperty(ev, 'animationName', { value: animationName })
+  fireEvent(el, ev)
+}
+
+describe('CardSlot target feedback (C1)', () => {
+  const choice = (required: boolean) =>
+    ({
+      method: 'GAME_TARGET',
+      gameId: 'g-target',
+      title: 'Choose target',
+      message: 'Choose target',
+      mode: 'uuid',
+      options: [],
+      min: 1,
+      max: 1,
+      required,
+    }) as unknown as FeedbackPrompt
+  const target = { id: 'tgt-1', name: 'Grizzly Bears', cardTypes: ['Creature'] } as unknown as PermanentView
+
+  afterEach(() => setState({ feedback: null }))
+
+  it('a required target gets the beacon and no optional class', () => {
+    setState({ feedback: choice(true) })
+    const slot = render(<CardSlot card={target} isTarget />).container.querySelector('.card-slot')!
+    expect(slot.classList.contains('targetable')).toBe(true)
+    expect(slot.classList.contains('target-beacon')).toBe(true)
+    expect(slot.classList.contains('target-optional')).toBe(false)
+  })
+
+  it('an optional target keeps the static border: no beacon', () => {
+    setState({ feedback: choice(false) })
+    const slot = render(<CardSlot card={target} isTarget />).container.querySelector('.card-slot')!
+    expect(slot.classList.contains('targetable')).toBe(true)
+    expect(slot.classList.contains('target-optional')).toBe(true)
+    expect(slot.classList.contains('target-beacon')).toBe(false)
+  })
+
+  it('a chosen target drops the beacon and gets the chosen class', () => {
+    setState({ feedback: choice(true) })
+    const slot = render(<CardSlot card={target} isTarget isChosen />).container.querySelector('.card-slot')!
+    expect(slot.classList.contains('chosen')).toBe(true)
+    expect(slot.classList.contains('target-beacon')).toBe(false)
+    expect(slot.classList.contains('target-optional')).toBe(false)
+  })
+
+  it('a click on a required target stops the beacon while the echo is pending', () => {
+    setState({ feedback: choice(true) })
+    const view = render(<CardSlot card={target} isTarget onClick={vi.fn()} />)
+    const slot = view.container.querySelector('.card-slot')!
+    expect(slot.classList.contains('target-beacon')).toBe(true)
+    fireEvent.click(slot)
+    expect(slot.classList.contains('is-chosen-pending')).toBe(true)
+    expect(slot.classList.contains('target-beacon')).toBe(false)
+  })
+
+  it('a target without a GAME_TARGET prompt counts as required', () => {
+    const slot = render(<CardSlot card={target} isTarget />).container.querySelector('.card-slot')!
+    expect(slot.classList.contains('target-beacon')).toBe(true)
+  })
+})
+
 describe('CardSlot acuse optimista (plan4 §5.4)', () => {
   const makeSlotCard = (id: string) =>
     ({ id, name: 'Lightning Bolt', cardTypes: ['Instant'] }) as unknown as PermanentView
@@ -407,6 +471,30 @@ describe('CardSlot acuse optimista (plan4 §5.4)', () => {
     // eco del servidor: el GAME_UPDATE trae un card nuevo (objeto fresco)
     view.rerender(<CardSlot card={makeSlotCard('ack-1')} isPlayable onClick={onClick} />)
     expect(slot().className).not.toContain('is-pending')
+  })
+
+  it('un clic en carta jugable pinta casting-press y pasa a casting-pop al terminar el press', () => {
+    const view = render(<CardSlot card={makeSlotCard('cast-1')} isPlayable onClick={vi.fn()} />)
+    const slot = () => view.container.querySelector('.card-slot')!
+
+    fireEvent.click(slot())
+    expect(slot().className).toContain('casting-press')
+
+    animationEnd(slot(), 'cardAppear')
+    expect(slot().className).toContain('casting-press')
+
+    animationEnd(slot(), 'castPress')
+    expect(slot().className).toContain('casting-pop')
+    expect(slot().className).not.toContain('casting-press')
+
+    animationEnd(slot(), 'castPop')
+    expect(slot().className).not.toContain('casting-pop')
+  })
+
+  it('un clic en carta no jugable no pinta casting-press', () => {
+    const view = render(<CardSlot card={makeSlotCard('cast-2')} onClick={vi.fn()} />)
+    fireEvent.click(view.container.querySelector('.card-slot')!)
+    expect(view.container.querySelector('.card-slot')!.className).not.toContain('casting-press')
   })
 
   it('pinta is-chosen-pending al elegir objetivo, no reenvía el mismo target y reconcilia con isChosen', () => {
@@ -444,6 +532,98 @@ describe('CardSlot acuse optimista (plan4 §5.4)', () => {
     } finally {
       vi.useRealTimers()
     }
+  })
+})
+
+describe('CardSlot pending bar (A4) and mana tap pulse (A2)', () => {
+  const makeCard = (id: string, over: Record<string, unknown> = {}) =>
+    ({ id, name: 'Lightning Bolt', cardTypes: ['Instant'], ...over }) as unknown as PermanentView
+  const land = (id: string, over: Record<string, unknown> = {}) =>
+    ({ id, name: 'Forest', cardTypes: ['Land'], subTypes: ['Forest'], rules: [], ...over }) as unknown as PermanentView
+
+  beforeEach(() => perfClear())
+
+  it('is-pending renders the ack bar; is-chosen-pending does not', () => {
+    const view = render(<CardSlot card={makeCard('bar-1')} isPlayable onClick={vi.fn()} />)
+    const slot = () => view.container.querySelector('.card-slot')!
+    expect(slot().querySelector('.pending-ack-bar')).toBeNull()
+
+    fireEvent.click(slot())
+    expect(slot().classList.contains('is-pending')).toBe(true)
+    expect(slot().querySelector<HTMLElement>('.pending-ack-bar')?.style.animationDuration).toBe('3000ms')
+
+    view.rerender(<CardSlot card={makeCard('bar-1')} isPlayable onClick={vi.fn()} />)
+    expect(slot().querySelector('.pending-ack-bar')).toBeNull()
+  })
+
+  it('is-chosen-pending has no ack bar', () => {
+    const view = render(<CardSlot card={makeCard('bar-2')} isTarget onClick={vi.fn()} />)
+    fireEvent.click(view.container.querySelector('.card-slot')!)
+    expect(view.container.querySelector('.card-slot')!.classList.contains('is-chosen-pending')).toBe(true)
+    expect(view.container.querySelector('.pending-ack-bar')).toBeNull()
+  })
+
+  it('the bar and is-pending clear at 3 s when the echo never arrives', () => {
+    vi.useFakeTimers()
+    try {
+      const view = render(<CardSlot card={makeCard('bar-3')} isPlayable onClick={vi.fn()} />)
+      const slot = () => view.container.querySelector('.card-slot')!
+      fireEvent.click(slot())
+      expect(slot().querySelector('.pending-ack-bar')).not.toBeNull()
+      act(() => { vi.advanceTimersByTime(3100) })
+      expect(slot().classList.contains('is-pending')).toBe(false)
+      expect(slot().querySelector('.pending-ack-bar')).toBeNull()
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('a land that goes from untapped to tapped gets mana-<color> once', () => {
+    vi.useFakeTimers()
+    try {
+      const view = render(<CardSlot card={land('tap-1')} tapped={false} />)
+      const slot = () => view.container.querySelector('.card-slot')!
+      expect(slot().className).not.toMatch(/mana-/)
+
+      view.rerender(<CardSlot card={land('tap-1')} tapped />)
+      expect(slot().classList.contains('mana-G')).toBe(true)
+
+      act(() => { vi.advanceTimersByTime(1100) })
+      expect(slot().classList.contains('mana-G')).toBe(false)
+
+      view.rerender(<CardSlot card={land('tap-1')} tapped />)
+      expect(slot().classList.contains('mana-G')).toBe(false)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('a land that is born tapped gets no pulse', () => {
+    const view = render(<CardSlot card={land('tap-2')} tapped />)
+    expect(view.container.querySelector('.card-slot')!.className).not.toMatch(/mana-/)
+  })
+
+  it('only lands with a known color pulse: no creatures, no any-color sources', () => {
+    vi.useFakeTimers()
+    try {
+      const creature = makeCard('tap-3', { cardTypes: ['Creature'] })
+      const any = land('tap-4', { subTypes: [], rules: ['{T}: Add one mana of any color.'] })
+      const view = render(<CardSlot card={creature} tapped={false} />)
+      view.rerender(<CardSlot card={creature} tapped />)
+      expect(view.container.querySelector('.card-slot')!.className).not.toMatch(/mana-/)
+
+      const second = render(<CardSlot card={any} tapped={false} />)
+      second.rerender(<CardSlot card={any} tapped />)
+      expect(second.container.querySelector('.card-slot')!.className).not.toMatch(/mana-/)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('a dual land uses its first color', () => {
+    const view = render(<CardSlot card={land('tap-5', { subTypes: [], rules: ['{T}: Add {U} or {B}.'] })} tapped={false} />)
+    view.rerender(<CardSlot card={land('tap-5', { subTypes: [], rules: ['{T}: Add {U} or {B}.'] })} tapped />)
+    expect(view.container.querySelector('.card-slot')!.classList.contains('mana-U')).toBe(true)
   })
 })
 

@@ -1,5 +1,8 @@
+import { useLayoutEffect, useRef, useState } from 'react'
 import { reset } from '../state/store'
 import IconButton from '../ui/IconButton'
+import DropdownMenu from '../ui/DropdownMenu'
+import MenuItem from '../ui/MenuItem'
 import Button from '../ui/Button'
 import type { ConnectionInfo } from '../state/persistence'
 import type { UsersView } from '../net/types'
@@ -10,8 +13,6 @@ import Icon from '../ui/Icon'
 import { useTranslation } from '../i18n'
 import type { LobbyTab } from './lobbyUtils'
 
-export type LeaderboardTab = 'room' | 'profile' | 'tiers'
-
 interface Props {
   conn: ConnectionInfo | null
   myUser: UsersView | undefined
@@ -20,23 +21,47 @@ interface Props {
   onConfirmDisconnect: (v: boolean) => void
   onOpenSettings: () => void
   onOpenReport: () => void
-  onOpenLeaderboard: (target?: string, tab?: LeaderboardTab) => void
+  onOpenProfile: (username: string) => void
   activeTab: LobbyTab
   onTabChange: (tab: LobbyTab) => void
   tableCount: number
   activeTableCount?: number
   onGoToActiveTable?: () => void
   onCreate: () => void
+  onCreateTournament: () => void
   onOpenAbout: () => void
   hasNews: boolean
 }
 
 export default function LobbyHeader({
   conn, myUser, onlineCount, confirmDisconnect, onConfirmDisconnect,
-  onOpenSettings, onOpenReport, onOpenLeaderboard, activeTab, onTabChange,
-  tableCount, activeTableCount = 0, onGoToActiveTable, onCreate, onOpenAbout, hasNews,
+  onOpenSettings, onOpenReport, onOpenProfile, activeTab, onTabChange,
+  tableCount, activeTableCount = 0, onGoToActiveTable, onCreate, onCreateTournament, onOpenAbout, hasNews,
 }: Props) {
-  const { t } = useTranslation()
+  const { t, lang } = useTranslation()
+  const navRef = useRef<HTMLElement>(null)
+  const [indicator, setIndicator] = useState<{ x: number; y: number; w: number; h: number } | null>(null)
+
+  // The sliding pill tracks the active tab button. It is measured after layout
+  // (labels change width with counts and language) and re-measured when the nav
+  // itself resizes (wrapping at narrow widths).
+  useLayoutEffect(() => {
+    const nav = navRef.current
+    if (!nav) return
+    const measure = () => {
+      const active = nav.querySelector<HTMLElement>('.top-nav-btn.active')
+      if (!active) {
+        setIndicator(null)
+        return
+      }
+      setIndicator({ x: active.offsetLeft, y: active.offsetTop, w: active.offsetWidth, h: active.offsetHeight })
+    }
+    measure()
+    const ro = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(measure)
+    ro?.observe(nav)
+    void document.fonts?.ready.then(measure)
+    return () => ro?.disconnect()
+  }, [activeTab, tableCount, activeTableCount, lang])
 
   return (
     <header className="lobby-topstrip">
@@ -51,7 +76,15 @@ export default function LobbyHeader({
         </div>
       </div>
 
-      <nav className="lobby-top-nav" aria-label="Main navigation">
+      <nav className="lobby-top-nav" aria-label="Main navigation" ref={navRef}>
+        {indicator && (
+          <span
+            className="top-nav-indicator"
+            aria-hidden="true"
+            style={{ transform: `translate(${indicator.x}px, ${indicator.y}px)`, width: indicator.w, height: indicator.h }}
+            data-testid="top-nav-indicator"
+          />
+        )}
         <button
           type="button"
           className="top-nav-btn top-nav-create"
@@ -61,6 +94,15 @@ export default function LobbyHeader({
           <Icon name="plus" size={14} />
           <span>{t('lobby.nav_new')}</span>
         </button>
+        <Button
+          variant="ghost"
+          className="top-nav-btn"
+          icon="trophy"
+          onClick={onCreateTournament}
+          title={t('lobby.nav_new_tournament')}
+        >
+          <span>{t('lobby.nav_new_tournament')}</span>
+        </Button>
         {activeTableCount > 0 && (
           <button
             type="button"
@@ -96,15 +138,17 @@ export default function LobbyHeader({
           className={`top-nav-btn ${activeTab === 'matches' ? 'active' : ''}`}
           onClick={() => onTabChange('matches')}
           title={t('lobby.nav_history')}
+          data-testid="top-nav-matches"
         >
           <Icon name="scrollText" size={14} />
           <span>{t('lobby.nav_history')}</span>
         </button>
         <button
           type="button"
-          className="top-nav-btn"
-          onClick={() => onOpenLeaderboard(conn?.username, 'room')}
+          className={`top-nav-btn ${activeTab === 'ranking' ? 'active' : ''}`}
+          onClick={() => onTabChange('ranking')}
           title={t('lobby.nav_ranking')}
+          data-testid="top-nav-ranking"
         >
           <Icon name="trophy" size={14} />
           <span>{t('lobby.nav_ranking')}</span>
@@ -114,7 +158,7 @@ export default function LobbyHeader({
       <div className="lobby-user-actions">
         <div
           className="lobby-user-badge"
-          onClick={() => onOpenLeaderboard(conn?.username, 'profile')}
+          onClick={() => onOpenProfile(conn?.username ?? '')}
           title={`${t('lobby', 'view_profile_hint')} ${conn?.username ?? ''}`}
         >
           <AvatarImage avatarId={conn?.avatarId ?? 10} username={conn?.username} size="medium" />
@@ -126,23 +170,31 @@ export default function LobbyHeader({
             <RankBadge elo={myUser?.constructedRating ?? 1500} compact />
           </div>
         </div>
-        <IconButton label={t('system', 'report_title')} icon="bug" size="lg"
-          className="lobby-appearance-btn"
-          onClick={onOpenReport}
-          data-testid="open-report" />
         <IconButton label={t('common', 'settings')} icon="settings" size="lg"
           className="lobby-appearance-btn"
           onClick={onOpenSettings}
           data-testid="open-settings" />
-        <IconButton label={t('system', 'about_title')} size="lg"
-          className="lobby-appearance-btn"
-          onClick={onOpenAbout}
-          data-testid="open-about">
-          <Icon name="info" size={16} />
-          {hasNews && (
-            <span className="lobby-news-dot" data-testid="lobby-news-dot" aria-hidden="true">●</span>
-          )}
-        </IconButton>
+        <DropdownMenu
+          label={<Icon name="ellipsis" size={16} />}
+          hideChevron
+          align="end"
+          aria-label={t('lobby', 'more_options')}
+          className="lobby-more-menu"
+          data-testid="lobby-more-menu"
+        >
+          <MenuItem icon="bug" onClick={onOpenReport} data-testid="open-report">
+            {t('system', 'report_title')}
+          </MenuItem>
+          <MenuItem icon="info" onClick={onOpenAbout} data-testid="open-about">
+            {t('system', 'about_title')}
+            {hasNews && (
+              <span className="lobby-news-dot" data-testid="lobby-news-dot" aria-hidden="true">●</span>
+            )}
+          </MenuItem>
+          <MenuItem icon="logout" danger onClick={() => onConfirmDisconnect(true)}>
+            {t('lobby', 'disconnect')}
+          </MenuItem>
+        </DropdownMenu>
 
         {confirmDisconnect ? (
           <div className="lobby-disconnect-confirm">
@@ -150,11 +202,7 @@ export default function LobbyHeader({
             <Button variant="soft-danger" size="sm" onClick={reset}>{t('common', 'yes')}</Button>
             <Button variant="subtle" size="sm" onClick={() => onConfirmDisconnect(false)}>{t('common', 'no')}</Button>
           </div>
-        ) : (
-          <button type="button" className="lobby-disconnect-btn" onClick={() => onConfirmDisconnect(true)} title={t('lobby', 'disconnect')}>
-            <Icon name="logout" size={15} />
-          </button>
-        )}
+        ) : null}
       </div>
     </header>
   )

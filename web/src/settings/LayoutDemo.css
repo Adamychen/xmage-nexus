@@ -32,12 +32,14 @@
   grid-template-rows: 1fr 1fr;
 }
 
-.layout-demo[data-layout='arena'] .layout-demo-zones {
+.layout-demo[data-layout='arena'] .layout-demo-zones,
+.layout-demo[data-layout='table'] .layout-demo-zones {
   grid-template-columns: repeat(3, 1fr);
   grid-template-rows: 2fr 3fr;
 }
 
-.layout-demo[data-layout='arena'] .layout-demo-zone.is-mine {
+.layout-demo[data-layout='arena'] .layout-demo-zone.is-mine,
+.layout-demo[data-layout='table'] .layout-demo-zone.is-mine {
   grid-column: 1 / -1;
 }
 
@@ -90,4 +92,20 @@
 
 .layout-demo-pill.is-on {
   background: rgb(var(--brand-rgb) / 0.9);
+}
+
+.layout-demo[data-layout='table'] .layout-demo-zone.is-mine {
+  padding: 0 24%;
+}
+
+.layout-demo[data-layout='table']::after {
+  content: '';
+  position: absolute;
+  right: 5%;
+  bottom: 7%;
+  width: 9%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: rgb(var(--brand-rgb) / 0.9);
+  box-shadow: 0 0 0 2px rgb(var(--ink-rgb) / 0.9);
 }

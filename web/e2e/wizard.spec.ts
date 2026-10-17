@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test'
 import { fakeOnly } from './support/fake-mode'
 import { withFakeServer } from './support/fake-backend'
-import { installCapture, login, type CaptureBuffers } from './support/start-game'
+import { installCapture, login, pickFormatOption, type CaptureBuffers } from './support/start-game'
 import { makeBaseScenario } from '../fixtures/fake'
 import { playerGameView } from '../src/__fixtures__/gameViews'
 
@@ -19,6 +19,11 @@ function wizardScenario() {
 async function openWizard(page: import('@playwright/test').Page) {
   await page.getByRole('button', { name: /Nueva/i }).first().click()
   await expect(page.getByRole('heading', { name: /Nueva mesa|Crear Mesa/i })).toBeVisible()
+}
+
+async function openTournamentWizard(page: import('@playwright/test').Page) {
+  await page.getByRole('button', { name: /Nuevo torneo/i }).first().click()
+  await expect(page.getByRole('heading', { name: /Crear torneo|Create Tournament/i })).toBeVisible()
 }
 
 test.describe('Wizard crear mesa (U3)', () => {
@@ -47,7 +52,8 @@ test.describe('Wizard crear mesa (U3)', () => {
       await page.getByPlaceholder(/separados por comas|comma-separated/i).fill('griefer')
       await page.getByRole('button', { name: /Siguiente/ }).click()
       // default seats now wait for humans: opt the seat into the Mad AI to get a bot seat with skill
-      await page.getByTestId('seat-type-0').selectOption('COMPUTER_MAD')
+      await page.getByTestId('seat-node-1').click()
+      await page.getByRole('radio', { name: /Mad/ }).click()
       await page.getByTestId('seat-skill-0').selectOption('7')
       await page.getByRole('button', { name: /Siguiente/ }).click()
       await page.getByRole('button', { name: /Crear Mesa/ }).click()
@@ -70,7 +76,8 @@ test.describe('Wizard crear mesa (U3)', () => {
       await page.getByRole('button', { name: /Siguiente/ }).click()
       await page.getByRole('button', { name: /Siguiente/ }).click()
       await page.getByRole('button', { name: /Siguiente/ }).click()
-      await page.getByTestId('seat-type-0').selectOption('HUMAN')
+      await page.getByTestId('seat-node-1').click()
+      await page.getByRole('radio', { name: /Humano|Human/ }).click()
       await page.getByRole('button', { name: /Siguiente/ }).click()
       await page.getByRole('button', { name: /Crear Mesa/ }).click()
       await expect(page.getByTestId('staging-player-actions')).toBeVisible({ timeout: 15_000 })
@@ -90,10 +97,12 @@ test.describe('Wizard crear mesa (U3)', () => {
       await login(page, 'wiz')
       await openWizard(page)
       await page.getByPlaceholder(/Ej\. Modern Casual Bo3/).fill('mad-duel')
+      await pickFormatOption(page, 'format-deck-type', 'Constructed - Modern')
       await page.getByRole('button', { name: /Siguiente/ }).click()
       await page.getByRole('button', { name: /Siguiente/ }).click()
       await page.getByRole('button', { name: /Siguiente/ }).click()
-      await page.getByTestId('seat-type-0').selectOption('COMPUTER_MAD')
+      await page.getByTestId('seat-node-1').click()
+      await page.getByRole('radio', { name: /Mad/ }).click()
       await page.getByRole('button', { name: /Siguiente/ }).click()
       await page.getByRole('button', { name: /Crear Mesa/ }).click()
       await expect(page.getByTestId('staging-player-actions')).toBeVisible({ timeout: 15_000 })
@@ -114,10 +123,11 @@ test.describe('Wizard crear mesa (U3)', () => {
       const buffers: CaptureBuffers = { frames: [], sent: [], pageErrors: [] }
       installCapture(page, buffers)
       await login(page, 'wiz')
-      await openWizard(page)
+      await openTournamentWizard(page)
       await page.getByPlaceholder(/Ej\. Modern Casual Bo3/).fill('draft-e2e')
       await page.getByRole('button', { name: /Draft MH3/ }).click()
-      for (let i = 0; i < 3; i++) {
+      // General → Draft (limited only) → Tiempos → Restricciones → Jugadores
+      for (let i = 0; i < 4; i++) {
         await page.getByRole('button', { name: /Siguiente/ }).click()
       }
       await page.getByRole('button', { name: /IA Draftbot/ }).click()
@@ -128,7 +138,7 @@ test.describe('Wizard crear mesa (U3)', () => {
       }
       await page.getByRole('button', { name: /Crear torneo|Create Draft/i }).click()
       await expect(page.getByText(/no llegan a rondas/)).toBeVisible({ timeout: 15_000 })
-      await expect(page.getByRole('heading', { name: /Nueva mesa|Crear Mesa/i })).toBeVisible()
+      await expect(page.getByRole('heading', { name: /Crear torneo|Create Tournament/i })).toBeVisible()
       const sent = buffers.sent as Array<{ action?: string; args?: Record<string, unknown> }>
       expect(sent.find((f) => f?.action === 'createTournamentTable')).toBeUndefined()
       expect(pageErrorsOf(buffers)).toEqual([])
@@ -139,9 +149,9 @@ test.describe('Wizard crear mesa (U3)', () => {
       const buffers: CaptureBuffers = { frames: [], sent: [], pageErrors: [] }
       installCapture(page, buffers)
       await login(page, 'wiz')
-      await openWizard(page)
+      await openTournamentWizard(page)
       await page.getByPlaceholder(/Ej\. Modern Casual Bo3/).fill('swiss-e2e')
-      await page.getByRole('button', { name: /Modern Swiss/ }).click()
+      await page.getByRole('button', { name: /Modern (Swiss|Suizo)/ }).click()
       for (let i = 0; i < 3; i++) {
         await page.getByRole('button', { name: /Siguiente/ }).click()
       }
@@ -152,7 +162,7 @@ test.describe('Wizard crear mesa (U3)', () => {
         await page.getByRole('button', { name: /Siguiente/ }).click()
       }
       await page.getByRole('button', { name: /Crear torneo|Create Draft/i }).click()
-      await expect(page.getByRole('heading', { name: /Nueva mesa|Crear Mesa/i })).toBeHidden({ timeout: 15_000 })
+      await expect(page.getByRole('heading', { name: /Crear torneo|Create Tournament/i })).toBeHidden({ timeout: 15_000 })
       const sent = buffers.sent as Array<{ action?: string; args?: Record<string, unknown> }>
       const createFrame = sent.find((f) => f?.action === 'createTournamentTable')
       expect(createFrame?.args?.tournamentType).toBe('Constructed Swiss')
@@ -175,7 +185,7 @@ test.describe('Wizard crear mesa (U3)', () => {
       await login(page, 'wiz')
       await openWizard(page)
       await page.getByPlaceholder(/Ej\. Modern Casual Bo3/).fill('limited-match')
-      await page.getByLabel(/Formato \(Tipo de Mazo\)|Format \(Deck Type\)/i).selectOption('Limited')
+      await pickFormatOption(page, 'format-deck-type', 'Limited')
       await expect(page.getByText(/no genera sobres/)).toBeVisible()
       await expect(page.getByPlaceholder(/Ej\. M21, MH3, BLB/)).toBeHidden()
       for (let i = 0; i < 8; i++) {

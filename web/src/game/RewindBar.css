@@ -1,0 +1,170 @@
+.rewind-dock {
+  position: relative;
+  display: flex;
+  flex-shrink: 0;
+}
+
+.rewind-toggle {
+  width: 30px;
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--r-base);
+  border: 1.5px solid var(--veil-3);
+  background: var(--ink-3);
+  color: var(--fg-3);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.rewind-toggle:hover {
+  color: var(--fg-1);
+}
+
+.rewind-toggle.is-open {
+  color: var(--purple-fg);
+  border-color: var(--brand);
+}
+
+.rewind-toggle.is-viewing {
+  color: var(--warn-strong);
+  border-color: var(--warn-line);
+  background: var(--warn-soft);
+}
+
+.rewind-bar {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + var(--sp-2));
+  z-index: 40;
+  width: min(320px, calc(100vw - 32px));
+  display: grid;
+  grid-template-rows: 22px 30px 30px;
+  row-gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--r-lg);
+  border: 1px solid var(--line-2);
+  background: var(--surface-raised);
+  box-shadow: 0 8px 24px var(--shade-3);
+  color: var(--fg-1);
+  font-size: var(--fs-sm);
+}
+
+.rewind-bar.is-viewing {
+  border-color: var(--warn-line);
+}
+
+.rewind-status {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.rewind-status > * {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rewind-status > .rewind-badge {
+  flex: none;
+}
+
+.rewind-badge {
+  padding: 1px var(--sp-2);
+  border-radius: var(--r-sm);
+  background: var(--warn-soft);
+  color: var(--warn-strong);
+  font-weight: 700;
+  font-size: var(--fs-2xs);
+  text-transform: uppercase;
+}
+
+.rewind-track {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr) 30px;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.rewind-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 14px;
+  margin: 0;
+  padding: 0;
+  background: linear-gradient(to right, var(--brand) var(--rewind-fill), var(--ink-4) var(--rewind-fill)) center / 100% 4px no-repeat;
+  --rewind-fill: calc(7px + (100% - 14px) * var(--rewind-p, 1));
+  cursor: pointer;
+  outline: none;
+}
+
+.rewind-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--brand);
+  cursor: pointer;
+}
+
+.rewind-slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--brand);
+  cursor: pointer;
+}
+
+.rewind-slider::-moz-range-track {
+  background: transparent;
+}
+
+.rewind-slider:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 3px;
+  border-radius: var(--r-2xs);
+}
+
+.rewind-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--sp-2);
+}
+
+.rewind-actions.is-single {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.rewind-action {
+  width: 100%;
+  height: 30px;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.game--rewind .board-wrap > * {
+  pointer-events: none;
+}
+
+.game--rewind .game-dock {
+  pointer-events: none;
+}
+
+.game--rewind .game-dock .rewind-dock {
+  pointer-events: auto;
+}
+
+.game--rewind .board-wrap {
+  filter: saturate(0.85);
+}

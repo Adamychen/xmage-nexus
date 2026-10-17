@@ -6,10 +6,13 @@ import { setState } from './state/state'
 import { parseDeepLink } from './lobby/deepLink'
 import { setSetting } from './state/actions'
 import { ZOOM_DEFAULT, stepZoom } from './appearance/zoom'
+import { applyFxRoot } from './board/fx'
 import { useTranslation } from './i18n'
 import { soundManager } from './audio/soundManager'
 import { loadAudioSettings, loadMusicSettings, loadAppearanceSettings, applyAppearanceToDocument } from './state/persistence'
+import './ui/screenMotion.css'
 import LoginScreen from './lobby/LoginScreen'
+import ManaPips from './lobby/ManaPips'
 import LobbyScreen from './lobby/LobbyScreen'
 import PublicRankingScreen from './lobby/PublicRankingScreen'
 import { isPublicRankingHash } from './lobby/publicRankingRoute'
@@ -41,6 +44,11 @@ export default function App() {
   const linkAttempt = useStore((s) => s.linkAttempt)
   const loginRetry = useStore((s) => s.loginRetry)
   const settings = useStore((s) => s.settings)
+
+  useEffect(() => {
+    applyFxRoot()
+  }, [settings.effects, settings.animationSpeed])
+
   const [showSetup, setShowSetup] = useState(() => bootPlanFromStorage().showWizard)
   const [gallery, setGallery] = useState(() => Boolean(GalleryScreen) && isGalleryHash(window.location.hash))
   const [publicRanking, setPublicRanking] = useState(() => isPublicRankingHash(window.location.hash))
@@ -141,6 +149,16 @@ export default function App() {
     return <PublicRankingScreen />
   }
 
+  const screenKey = phase === 'lobby'
+    ? 'lobby'
+    : phase === 'spectating_pending' || phase === 'staging'
+    ? 'match-staging'
+    : phase === 'game'
+    ? 'game'
+    : phase === 'connecting'
+    ? 'connecting'
+    : 'login'
+
   return (
     <>
       {banner && (
@@ -148,28 +166,30 @@ export default function App() {
           {t('common', banner.key, { n: banner.n })}
         </div>
       )}
-      {phase === 'lobby' ? (
-        <LobbyScreen />
-      ) : phase === 'spectating_pending' ? (
-        <SpectatorStagingScreen />
-      ) : phase === 'staging' ? (
-        <SpectatorStagingScreen mode="player" />
-      ) : phase === 'game' ? (
-        <GameScreen />
-      ) : phase === 'connecting' ? (
-        <div className="login-wrap">
-          <div className="login-card panel connecting-splash">
-            <div className="login-header">
-              <img src="/logo.jpeg" alt="XMage Nexus" className="login-logo-img" />
-              <p className="subtitle">{t('common', 'connecting_server')}</p>
+      <div key={screenKey} className={screenKey === 'game' ? 'screen-root' : 'screen-root screen-enter'}>
+        {phase === 'lobby' ? (
+          <LobbyScreen />
+        ) : phase === 'spectating_pending' ? (
+          <SpectatorStagingScreen />
+        ) : phase === 'staging' ? (
+          <SpectatorStagingScreen mode="player" />
+        ) : phase === 'game' ? (
+          <GameScreen />
+        ) : phase === 'connecting' ? (
+          <div className="login-wrap">
+            <div className="login-card panel connecting-splash">
+              <div className="login-header">
+                <img src="/logo.jpeg" alt="XMage Nexus" className="login-logo-img" />
+                <p className="subtitle">{t('common', 'connecting_server')}</p>
+              </div>
+              <ManaPips />
+              {loginRetry && <LoginRetryHint attempt={loginRetry.attempt} max={loginRetry.max} until={loginRetry.until} />}
             </div>
-            <div className="connecting-spinner" />
-            {loginRetry && <LoginRetryHint attempt={loginRetry.attempt} max={loginRetry.max} until={loginRetry.until} />}
           </div>
-        </div>
-      ) : (
-        <LoginScreen />
-      )}
+        ) : (
+          <LoginScreen />
+        )}
+      </div>
       <DraftScreen />
       <ConstructScreen />
       <GameEndDialog />

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { normalizePtBadgeMode, normalizeShowHandCost, normalizeSicknessStyle } from './cardOverlays'
+import { normalizePtBadgeMode, normalizeShowHandCost, normalizeShowManaSource, normalizeSicknessStyle } from './cardOverlays'
 
 describe('normalizeShowHandCost', () => {
   it('defaults to true for a missing or non-boolean value', () => {
@@ -44,5 +44,15 @@ describe('normalizeSicknessStyle', () => {
   it('keeps each valid style', () => {
     expect(normalizeSicknessStyle('badge')).toBe('badge')
     expect(normalizeSicknessStyle('veil')).toBe('veil')
+  })
+})
+
+describe('normalizeShowManaSource', () => {
+  it('is off unless explicitly enabled', () => {
+    expect(normalizeShowManaSource(undefined)).toBe(false)
+    expect(normalizeShowManaSource('true')).toBe(false)
+    expect(normalizeShowManaSource(1)).toBe(false)
+    expect(normalizeShowManaSource(false)).toBe(false)
+    expect(normalizeShowManaSource(true)).toBe(true)
   })
 })

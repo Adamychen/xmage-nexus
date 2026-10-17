@@ -415,6 +415,42 @@ describe('DraftScreen', () => {
     })
   })
 
+  it('suggests the rare first, marks it on the booster and remembers hiding the helper', async () => {
+    globalThis.fetch = vi.fn(async (url: unknown) => ({
+      ok: true,
+      json: async () => ({
+        name: 'Mock Card',
+        type_line: 'Creature',
+        mana_cost: '{1}{G}',
+        cmc: 2,
+        colors: ['G'],
+        rarity: String(url).toLowerCase().includes('/m21/1?') ? 'rare' : 'common',
+        legalities: {},
+        image_uris: { normal: 'https://img.test/n.jpg', art_crop: 'https://img.test/a.jpg' },
+      }),
+    }) as unknown as Response)
+    setState({ draft: { draftId: 'draft-1', message: makeDraftMessage() }, lastDraftMethod: 'DRAFT_PICK' })
+    const { container } = render(<DraftScreen />)
+    await waitFor(() => {
+      const items = container.querySelectorAll('[data-testid="draft-helper-item"]')
+      expect(items.length).toBe(2)
+      expect(items[0].getAttribute('data-card-id')).toBe('c-1')
+    })
+    expect(container.querySelector('[data-testid="draft-card"][data-card-id="c-1"]')?.className).toContain('is-advised')
+
+    fireEvent.click(container.querySelector('[data-testid="draft-helper-hide"]') as HTMLButtonElement)
+    expect(container.querySelector('[data-testid="draft-helper"]')).toBeNull()
+    expect(container.querySelector('[data-testid="draft-helper-show"]')).toBeTruthy()
+    expect(container.querySelector('[data-card-id="c-1"].is-advised')).toBeNull()
+
+    cleanup()
+    const again = render(<DraftScreen />)
+    await waitFor(() => expect(again.container.querySelector('[data-testid="draft-card"]')).toBeTruthy())
+    expect(again.container.querySelector('[data-testid="draft-helper"]')).toBeNull()
+    fireEvent.click(again.container.querySelector('[data-testid="draft-helper-show"]') as HTMLButtonElement)
+    await waitFor(() => expect(again.container.querySelector('[data-testid="draft-helper"]')).toBeTruthy())
+  })
+
   it('pick rechazado muestra aviso visible (antes: silencio)', async () => {
     mockSendCardPick.mockResolvedValueOnce({ ok: false, error: 'rejected' })
     setState({ draft: { draftId: 'draft-1', message: makeDraftMessage() }, lastDraftMethod: 'DRAFT_PICK' })

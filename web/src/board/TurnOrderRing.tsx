@@ -3,6 +3,8 @@ import { useTranslation } from '../i18n'
 import { isPlayerOut, MAX_BOARD_PLAYERS } from './boardShared'
 import { useLaneFit } from './useLaneFit'
 import Icon from '../ui/Icon'
+import { useSettings } from '../state/store'
+import { seatColorVar, seatIndexOf } from './seatColor'
 import './TurnOrderRing.css'
 
 export interface TurnOrderRingProps {
@@ -29,13 +31,22 @@ export function turnOrderSeats(players: PlayerView[] | undefined, lane = false):
 
 export default function TurnOrderRing({ players, activePlayerId, lane = false }: TurnOrderRingProps) {
   const { t } = useTranslation()
+  const portrait = useSettings().gameUi === 'v2' && !lane
   const ordered = turnOrderSeats(players, lane)
   const count = ordered.length
   const fitKey = `${ordered.map((p) => `${p.playerId}:${p.name}`).join('|')}|${activePlayerId}`
   const { ref, fit } = useLaneFit(lane && count > 0, fitKey)
   if (count === 0) return null
 
-  const seatBody = (p: PlayerView, isActive: boolean, withName: boolean, withBadgeId = true) => (
+  const seatBody = (p: PlayerView, isActive: boolean, withName: boolean, withBadgeId = true) => portrait ? (
+    <>
+      <span className="tor-avatar" style={{ '--seat': seatColorVar(seatIndexOf(players, p.playerId)) } as React.CSSProperties}>
+        <span className="pp-av" aria-hidden="true">{Array.from(p.name.trim())[0]?.toUpperCase() ?? '?'}</span>
+        {isPlayerOut(p) && <Icon name="skull" size={11} />}
+      </span>
+      {withName && <span className="tor-seat-name">{p.name}</span>}
+    </>
+  ) : (
     <>
       <span className="tor-seat-dot" aria-hidden>
         {isActive ? <Icon name="play" size={9} /> : <Icon name="circle" size={7} />}
@@ -95,7 +106,7 @@ export default function TurnOrderRing({ players, activePlayerId, lane = false }:
   return (
     <div
       ref={ref}
-      className={`turn-order-ring ${lane ? 'lane' : ''} count-${count}`}
+      className={`turn-order-ring ${lane ? 'lane' : ''} ${portrait ? 'is-portrait' : ''} count-${count}`}
       data-testid={lane ? 'turn-lane' : 'turn-order-ring'}
       data-active-player={activePlayerId || undefined}
       data-lane-fit={lane ? fit : undefined}

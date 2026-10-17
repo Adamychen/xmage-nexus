@@ -1,9 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
-import { fxDuration } from '../board/fx'
+import { fxMotionDuration } from '../board/fx'
 
-/** Anima el cambio de un número (vida, contadores) con rAF y easing
- *  cúbico. Respeta los ajustes de efectos: si `fxDuration` devuelve 0
- *  (fx-off o reduced-motion) salta directo al valor final. */
+/** Tweens a number (life, counters) with rAF and cubic easing. Respects the effects settings: when `fxMotionDuration` returns 0 (fx-off or reduced motion) it jumps straight to the final value. */
 export function useTweenNumber(value: number, durationMs = 350): number {
   const [display, setDisplay] = useState(value)
   const displayRef = useRef(value)
@@ -12,7 +10,7 @@ export function useTweenNumber(value: number, durationMs = 350): number {
     const from = displayRef.current
     if (from === value) return
 
-    const duration = fxDuration(durationMs)
+    const duration = fxMotionDuration(durationMs)
     if (!duration) {
       displayRef.current = value
       setDisplay(value)
