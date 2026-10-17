@@ -104,6 +104,7 @@ public class ProxyClient implements MageClient, CommandContext {
     static final long SUPERSEDED_WINDOW_MS = 120_000;
 
     private final SimManager simManager;
+    private volatile boolean service = false;
     private String accountKey = null;
     private volatile String activityUser = null;
 
@@ -1168,7 +1169,9 @@ public class ProxyClient implements MageClient, CommandContext {
             lobbyTimer = Executors.newSingleThreadScheduledExecutor();
             lobbyTimer.scheduleWithFixedDelay(this::publishLobby, 0, 2, TimeUnit.SECONDS);
             accountKey = host + "|" + username;
-            gateway.registerSession(accountKey, this);
+            if (!service) {
+                gateway.registerSession(accountKey, this);
+            }
             if (activityUser != null && !activityUser.equals(username)) {
                 gameActivity.closeAll("user_switch");
             }
@@ -1181,7 +1184,9 @@ public class ProxyClient implements MageClient, CommandContext {
             Activity.login(username, gateway.ipOf(conn), host, port, true, null, false);
             connections.finishLogin(conn, ProxyProtocol.resultJson("connect", requestId, true, null, connections.connectData(false, false)));
             simManager.setOwner(accountKey);
-            simManager.restoreSims();
+            if (!service) {
+                simManager.restoreSims();
+            }
         } else {
             connections.abandonLogin();
             // el servidor manda el detalle del fallo por un callback SHOW_USERMESSAGE
@@ -1193,7 +1198,7 @@ public class ProxyClient implements MageClient, CommandContext {
             if (detail == null || detail.isEmpty() || detail.equalsIgnoreCase("No message")) detail = ProxyProtocol.ERR_FAILED;
             Activity.login(username, gateway.ipOf(conn), host, port, false, detail, false);
             gateway.send(conn, ProxyProtocol.resultJson("connect", requestId, false, ErrorClassifier.classifyErrorCode(detail), detail));
-            if (lastConnection == null) {
+            if (lastConnection == null && !service) {
                 // never logged in: stop holding the account's slot for concurrent logins, and
                 // stop holding five non-daemon threads and their timers for a client that can
                 // never reach a session. A retry arrives on a new WebSocket, so this client
@@ -1206,6 +1211,34 @@ public class ProxyClient implements MageClient, CommandContext {
 
     public boolean isRelinking() {
         return relinking;
+    }
+
+    /**
+     * Marks this client as the proxy's own statistics session (see {@link StatsService}): it is
+     * never registered under an account key, so no WebSocket login can attach to it, and a failed
+     * login keeps the client for the supervisor's next attempt instead of releasing it.
+     */
+    void markService() {
+        service = true;
+    }
+
+    /** Logs the statistics session in anonymously, with no WebSocket to answer. */
+    synchronized void connectService(String host, int port, String username) {
+        connect(null, "", host, port, username, "", "world.png", 51, null, 0L);
+    }
+
+    /** Logs the statistics session out on the proxy's own initiative (proxy shutdown). */
+    synchronized void stopService() {
+        cancelGraceTimer();
+        Connection logged = lastConnection;
+        lastConnection = null;
+        if (logged != null) {
+            RestoreIds.clear(logged.getHost(), logged.getUsername());
+        }
+        stopSession(false);
+        connected = false;
+        Activity.sessionEnd(activityUser, "stats_service_stopped");
+        dispose();
     }
 
     /**

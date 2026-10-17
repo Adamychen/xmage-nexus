@@ -215,6 +215,14 @@ public class Config {
         return "on".equalsIgnoreCase(get("sim", "off"));
     }
 
+    /**
+     * The read-only statistics API (see {@link StatsService}) and the anonymous session behind it.
+     * Off by default: nothing logs in to the XMage server unless a deployment asks for it.
+     */
+    public boolean isStatsServiceEnabled() {
+        return "on".equalsIgnoreCase(get("statsService", "off"));
+    }
+
     /** File that keeps the playing SIM seats across proxy restarts ("none" disables it). */
     public String getSimRosterPath() {
         String raw = get("simRoster", "");

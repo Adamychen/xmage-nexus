@@ -41,9 +41,18 @@ public class Main {
         System.out.println("[proxy]   protocol version  : " + Config.PROTOCOL_VERSION);
         System.out.println("[proxy]   multi-tenant     : each WebSocket connection = its own XMage session");
 
-        startHttpServer(config, gateway);
+        StatsService stats = config.isStatsServiceEnabled() ? StatsService.forProxy(config, gateway) : null;
+        if (stats != null) {
+            stats.start();
+            System.out.println("[proxy]   statistics API    : /api/ranking, /api/matches (session as " + StatsService.USERNAME + ")");
+        }
+
+        startHttpServer(config, gateway, stats);
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            if (stats != null) {
+                stats.stop();
+            }
             for (ProxyClient pc : gateway.getSessions()) {
                 pc.shutdown();
             }
@@ -54,7 +63,7 @@ public class Main {
         }));
     }
 
-    private static void startHttpServer(Config config, Gateway gateway) throws IOException {
+    private static void startHttpServer(Config config, Gateway gateway, StatsService stats) throws IOException {
         HttpServer server = HttpServer.create(new InetSocketAddress(config.getBindAddress(), config.getHttpPort()), 0);
         // Without an executor the JDK uses a single-threaded dispatcher, so one slow
         // /admin/status (it serialises 500 events) or one large static file blocked every other
@@ -67,10 +76,35 @@ public class Main {
         server.createContext("/", exchange -> serveFile(exchange, config.getWebDir()));
         server.createContext("/health", exchange -> serveHealth(exchange, true));
         server.createContext("/ready", exchange -> serveHealth(exchange, false));
+        StatsApi.Source source = stats != null ? stats : StatsApi.UNAVAILABLE;
+        server.createContext("/api/", exchange -> serveStats(exchange, source, config.getAllowedOrigins()));
         if (!config.getAdminToken().isEmpty()) {
             server.createContext("/admin/status", exchange -> serveAdmin(exchange, gateway, config.getAdminToken()));
         }
         server.start();
+    }
+
+    /** The public statistics API: routing and CORS live in {@link StatsApi}, this only writes the result. */
+    private static void serveStats(HttpExchange exchange, StatsApi.Source source, java.util.Set<String> allowedOrigins) {
+        try {
+            java.net.URI uri = exchange.getRequestURI();
+            StatsApi.Response response = StatsApi.handle(exchange.getRequestMethod(), uri.getPath(),
+                    uri.getRawQuery(), exchange.getRequestHeaders().getFirst("Origin"), allowedOrigins, source);
+            for (java.util.Map.Entry<String, String> header : response.headers.entrySet()) {
+                exchange.getResponseHeaders().add(header.getKey(), header.getValue());
+            }
+            byte[] bytes = response.body == null ? null
+                    : response.body.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+            exchange.sendResponseHeaders(response.status, bytes == null ? -1 : bytes.length);
+            if (bytes != null) {
+                try (OutputStream os = exchange.getResponseBody()) {
+                    os.write(bytes);
+                }
+            }
+        } catch (IOException ignored) {
+        } finally {
+            exchange.close();
+        }
     }
 
     /**
