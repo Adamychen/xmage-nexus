@@ -10,6 +10,7 @@ import { applyFxRoot } from './board/fx'
 import { useTranslation } from './i18n'
 import { soundManager } from './audio/soundManager'
 import { useLobbyMusic } from './audio/useLobbyMusic'
+import { installUiClickSound } from './audio/uiClickSound'
 import { loadAudioSettings, loadMusicSettings, loadAppearanceSettings, applyAppearanceToDocument } from './state/persistence'
 import './ui/screenMotion.css'
 import LoginScreen from './lobby/LoginScreen'
@@ -47,6 +48,8 @@ export default function App() {
   const settings = useStore((s) => s.settings)
 
   useLobbyMusic(phase !== 'game', settings.musicEnabled)
+
+  useEffect(() => installUiClickSound(), [])
 
   useEffect(() => {
     applyFxRoot()
