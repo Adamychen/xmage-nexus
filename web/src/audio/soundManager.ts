@@ -21,6 +21,7 @@ class SoundManager {
   private lastPlayed: Map<SoundKey, number> = new Map()
   private settings: AudioSettings = { ...DEFAULT_SETTINGS }
   private initialized = false
+  private unlockListeners: Array<() => void> = []
 
   init(settings?: AudioSettings) {
     if (settings) {
@@ -47,6 +48,7 @@ class SoundManager {
           window.removeEventListener('click', unlock)
           window.removeEventListener('keydown', unlock)
           window.removeEventListener('touchstart', unlock)
+          for (const listener of this.unlockListeners) listener()
         }
       }
     }
@@ -81,6 +83,17 @@ class SoundManager {
     }
 
     return true
+  }
+
+  isUnlocked(): boolean {
+    return this.ctx !== null && this.ctx.state === 'running'
+  }
+
+  onUnlock(listener: () => void): () => void {
+    this.unlockListeners.push(listener)
+    return () => {
+      this.unlockListeners = this.unlockListeners.filter((l) => l !== listener)
+    }
   }
 
   setSettings(newSettings: AudioSettings) {
