@@ -161,6 +161,37 @@ describe('gameTransitionEngine', () => {
     expect(flight?.toSelector).toBe('[data-card-id="h-new"]')
   })
 
+  it('measures the draw destination at rest while the draw slide is still moving the slot', () => {
+    const realGetComputedStyle = window.getComputedStyle.bind(window)
+    const slot = document.querySelector('[data-card-id="h-new"]') as HTMLElement
+    vi.spyOn(slot, 'getBoundingClientRect').mockReturnValue(mockRect(100, 120))
+    vi.spyOn(window, 'getComputedStyle').mockImplementation((el: Element) =>
+      el === slot ? ({ translate: '-400px -500px' } as CSSStyleDeclaration) : realGetComputedStyle(el)
+    )
+
+    const alice1 = makePlayer({ playerId: 'p-alice', name: 'Alice', controlled: true, handCount: 1 })
+    const prevGame = makeGameView({
+      players: [alice1],
+      myHand: { 'h-old': makeCard({ id: 'h-old', name: 'Forest' }) },
+    })
+    const alice2 = makePlayer({ playerId: 'p-alice', name: 'Alice', controlled: true, handCount: 2 })
+    const nextGame = makeGameView({
+      players: [alice2],
+      myHand: {
+        'h-old': makeCard({ id: 'h-old', name: 'Forest' }),
+        'h-new': makeCard({ id: 'h-new', name: 'Lightning Bolt' }),
+      },
+    })
+
+    detectAndAnimateTransitions(prevGame, nextGame)
+    vi.advanceTimersByTime(200)
+
+    const flight = getActiveFlights().find((f) => f.card.name === 'Lightning Bolt')
+    expect(flight).toBeDefined()
+    expect(flight?.toRect.left).toBe(500)
+    expect(flight?.toRect.top).toBe(620)
+  })
+
   it('lands a controlled draw on the dedicated hand bar (my hand lives outside the player zone)', () => {
     document.querySelector('.player-zone .hand-zone')?.remove()
     document.querySelector('[data-card-id="h-new"]')?.remove()
