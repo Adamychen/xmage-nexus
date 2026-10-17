@@ -5,7 +5,18 @@ export type RankingFormat = 'constructed' | 'limited'
 export interface RankingPlayer {
   username: string
   rating: number
+  ranked: boolean
 }
+
+interface RankingFileEntry {
+  username: string
+  constructed: number | null
+  limited: number | null
+  matches: number
+}
+
+const BASE_RATING = 800
+const MIN_RANKED_MATCHES = 20
 
 export interface RankingResponse {
   format: RankingFormat
@@ -68,11 +79,27 @@ async function getJson(path: string, query: URLSearchParams): Promise<unknown> {
 }
 
 export async function fetchRanking(format: RankingFormat): Promise<RankingResponse> {
-  const body = await getJson('/api/ranking', new URLSearchParams({ format }))
+  const body = await getJson('/ranking.json', new URLSearchParams())
   if (!body || typeof body !== 'object' || !('players' in body) || !Array.isArray(body.players)) {
     throw new StatsApiError('bad_response', 200)
   }
-  return body as RankingResponse
+  const generatedAt = 'generatedAt' in body && typeof body.generatedAt === 'string' ? body.generatedAt : ''
+  const players = (body.players as RankingFileEntry[])
+    .map((entry): RankingPlayer => {
+      const value = format === 'limited' ? entry.limited : entry.constructed
+      const rating = typeof value === 'number' ? value : 0
+      return {
+        username: entry.username,
+        rating,
+        ranked: rating > BASE_RATING && entry.matches >= MIN_RANKED_MATCHES,
+      }
+    })
+    .sort((a, b) => {
+      if (a.ranked !== b.ranked) return a.ranked ? -1 : 1
+      if (a.ranked) return b.rating - a.rating || a.username.localeCompare(b.username, undefined, { sensitivity: 'base' })
+      return a.username.localeCompare(b.username, undefined, { sensitivity: 'base' })
+    })
+  return { format, updatedAt: generatedAt, players }
 }
 
 export async function fetchMatches(limit: number): Promise<MatchesResponse> {

@@ -102,8 +102,10 @@ function RankingPanel() {
                   <tr key={player.username}>
                     <td className="col-num">{index + 1}</td>
                     <td>{player.username}</td>
-                    <td><RankBadge elo={player.rating} compact /></td>
-                    <td className="col-num">{player.rating}</td>
+                    <td>{player.ranked
+                      ? <RankBadge elo={player.rating} compact />
+                      : <span className="public-ranking-unranked">{t('lobby', 'tag_unrated')}</span>}</td>
+                    <td className="col-num">{player.ranked ? player.rating : '—'}</td>
                   </tr>
                 ))}
               </tbody>

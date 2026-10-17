@@ -10,11 +10,11 @@ function jsonResponse(status: number, body: unknown): Response {
 }
 
 const RANKING = {
-  format: 'constructed',
-  updatedAt: '2026-10-17T10:00:00Z',
+  generatedAt: '2026-10-17T10:00:00Z',
   players: [
-    { username: 'alice', rating: 1820 },
-    { username: 'bob', rating: 1210 },
+    { username: 'alice', constructed: 1820, limited: 800, general: 1800, matches: 40, tourneys: 0, lastSeen: null },
+    { username: 'bob', constructed: 1210, limited: 800, general: 1200, matches: 25, tourneys: 0, lastSeen: null },
+    { username: 'carol', constructed: 800, limited: 800, general: 800, matches: 0, tourneys: 0, lastSeen: null },
   ],
 }
 
@@ -42,7 +42,9 @@ describe('PublicRankingScreen', () => {
     expect(await screen.findByText('alice')).toBeTruthy()
     expect(screen.getByText('bob')).toBeTruthy()
     expect(screen.getByText('1820')).toBeTruthy()
-    expect(String(fetchMock.mock.calls[0][0])).toBe('/api/ranking?format=constructed')
+    expect(screen.getByText('carol')).toBeTruthy()
+    expect(screen.getAllByText('Unrated').length).toBeGreaterThan(0)
+    expect(String(fetchMock.mock.calls[0][0])).toMatch(/^\/ranking\.json/)
   })
 
   it('shows a retry state on 503 and reloads on retry', async () => {

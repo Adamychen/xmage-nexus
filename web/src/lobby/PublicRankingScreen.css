@@ -74,3 +74,8 @@
     padding: var(--sp-3);
   }
 }
+
+.public-ranking-unranked {
+  color: var(--text-muted, #8b93a7);
+  font-size: 0.85em;
+}

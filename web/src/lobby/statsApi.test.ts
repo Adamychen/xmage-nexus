@@ -20,18 +20,23 @@ describe('statsApi', () => {
 
   describe('fetchRanking', () => {
     it('returns the parsed ranking and requests the relative API path', async () => {
-      const body = {
-        format: 'constructed',
-        updatedAt: '2026-10-17T10:00:00Z',
-        players: [{ username: 'alice', rating: 1650, games: 12 }],
+      const file = {
+        generatedAt: '2026-10-17T10:00:00Z',
+        players: [
+          { username: 'alice', constructed: 1650, limited: 800, general: 1600, matches: 30, tourneys: 0, lastSeen: null },
+        ],
       }
-      fetchMock.mockResolvedValueOnce(jsonResponse(200, body))
+      fetchMock.mockResolvedValueOnce(jsonResponse(200, file))
 
       const result = await fetchRanking('constructed')
 
-      expect(result).toEqual(body)
+      expect(result).toEqual({
+        format: 'constructed',
+        updatedAt: '2026-10-17T10:00:00Z',
+        players: [{ username: 'alice', rating: 1650, ranked: true }],
+      })
       const url = String(fetchMock.mock.calls[0][0])
-      expect(url).toBe('/api/ranking?format=constructed')
+      expect(url).toMatch(/^\/ranking\.json/)
     })
 
     it('throws not_ready on 503 with the error code', async () => {
