@@ -16,6 +16,7 @@ import { clickableProps } from '../ui/clickable'
 import { useTranslation } from '../i18n'
 import { SETUP_CONN_EVENT, openSetupWizard } from '../setup/setupFlag'
 import { parseAutoConnect } from './autoConnect'
+import { PUBLIC_RANKING_HASH } from './publicRankingRoute'
 import type { ConnectionInfo } from '../state/persistence'
 import './LoginScreen.css'
 
@@ -178,6 +179,10 @@ export default function LoginScreen() {
     <div className="login-wrap">
       <div className="login-top-bar">
         <LanguageSelector showCardLangToggle={true} />
+        <IconButton label={t('lobby', 'public_open_link')} icon="trophy" size="lg"
+          className="login-settings-btn"
+          onClick={() => { window.location.hash = PUBLIC_RANKING_HASH }}
+          data-testid="open-public-ranking" />
         <IconButton label={t('common', 'settings')} icon="settings" size="lg"
           className="login-settings-btn"
           onClick={() => setShowSettings(true)}

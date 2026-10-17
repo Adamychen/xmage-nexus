@@ -143,6 +143,16 @@ public class Gateway extends WebSocketServer {
     }
 
     /**
+     * The statistics session owns one client that no WebSocket and no account key reaches. The
+     * watchdog counts it as reachable, so its one live client does not read as a leak.
+     */
+    private volatile ProxyClient serviceClient;
+
+    void setServiceClient(ProxyClient client) {
+        serviceClient = client;
+    }
+
+    /**
      * One line per minute on the existing roster tick.
      *
      * <p>{@code clientsAlive} is the number to read across ticks: a session that is playing
@@ -167,7 +177,8 @@ public class Gateway extends WebSocketServer {
         logger.info("watchdog: threads=" + threads + " (peak " + peakThreads + "), openConns=" + open
                 + ", accounts=" + accounts + ", clientsAlive=" + alive + " (created=" + created
                 + " disposed=" + disposed + "), wsErrors=" + wsErrors + ", cardDb=" + DeckValidation.getState());
-        int reachable = accounts + open;
+        ProxyClient stats = serviceClient;
+        int reachable = accounts + open + (stats != null && !stats.isReleased() ? 1 : 0);
         if (alive > reachable + 5) {
             logger.warning("watchdog: " + alive + " clients alive but only " + reachable
                     + " reachable through an account key or a connection; the difference holds six "
