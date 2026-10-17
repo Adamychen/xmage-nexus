@@ -3,7 +3,8 @@ import Tabs from '../ui/Tabs'
 import Button from '../ui/Button'
 import EmptyState from '../ui/EmptyState'
 import Icon from '../ui/Icon'
-import RankBadge from './RankBadge'
+import { getRankInfo } from './ranking'
+import './RankBadge.css'
 import { useRemoteMatches, useRemoteRanking, type RemoteStatus } from './useRemoteStats'
 import type { RankingFormat } from './statsApi'
 import './PublicRankingScreen.css'
@@ -61,6 +62,20 @@ function RemoteNote({ status, onRetry }: { status: RemoteStatus; onRetry: () => 
   )
 }
 
+function TierBadge({ rating }: { rating: number }) {
+  const rank = getRankInfo(rating)
+  const label = rank.subTier === 'Top' ? rank.name : `${rank.name} ${rank.subTier}`
+  return (
+    <div
+      className={`rank-badge ${rank.tier.toLowerCase()} compact`}
+      style={{ backgroundColor: rank.bg, borderColor: rank.border, color: rank.color }}
+    >
+      <span className="rank-badge-icon"><Icon name={rank.icon} size={10} /></span>
+      <span className="rank-badge-name">{label}</span>
+    </div>
+  )
+}
+
 function RankingPanel() {
   const [format, setFormat] = useState<RankingFormat>('constructed')
   const { data, status, refresh } = useRemoteRanking(format)
@@ -98,7 +113,7 @@ function RankingPanel() {
                   <tr key={player.username}>
                     <td className="col-num">{index + 1}</td>
                     <td>{player.username}</td>
-                    <td><RankBadge elo={player.rating} compact /></td>
+                    <td><TierBadge rating={player.rating} /></td>
                     <td className="col-num">{player.rating}</td>
                   </tr>
                 ))}
