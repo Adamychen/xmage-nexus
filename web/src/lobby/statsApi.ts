@@ -1,0 +1,84 @@
+import type { MatchView } from '../net/types'
+
+export type RankingFormat = 'constructed' | 'limited'
+
+export interface RankingPlayer {
+  username: string
+  rating: number
+}
+
+export interface RankingResponse {
+  format: RankingFormat
+  updatedAt: string
+  players: RankingPlayer[]
+}
+
+export interface MatchesResponse {
+  updatedAt: string
+  matches: MatchView[]
+}
+
+export const STATS_TIMEOUT_MS = 8000
+
+export class StatsApiError extends Error {
+  readonly code: string
+  readonly status: number | null
+
+  constructor(code: string, status: number | null) {
+    super(code)
+    this.name = 'StatsApiError'
+    this.code = code
+    this.status = status
+  }
+}
+
+function statsUrl(path: string, query: URLSearchParams): string {
+  const base = ((import.meta.env.VITE_STATS_API_BASE as string | undefined) ?? '').replace(/\/+$/, '')
+  return `${base}${path}?${query.toString()}`
+}
+
+function errorCode(body: unknown): string | null {
+  if (body && typeof body === 'object' && 'error' in body && typeof body.error === 'string') return body.error
+  return null
+}
+
+async function getJson(path: string, query: URLSearchParams): Promise<unknown> {
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), STATS_TIMEOUT_MS)
+  try {
+    const res = await fetch(statsUrl(path, query), {
+      headers: { Accept: 'application/json' },
+      signal: controller.signal,
+    })
+    const text = await res.text()
+    let body: unknown = null
+    try {
+      body = JSON.parse(text)
+    } catch {
+      body = null
+    }
+    if (!res.ok) throw new StatsApiError(errorCode(body) ?? 'http_error', res.status)
+    return body
+  } catch (err) {
+    if (err instanceof StatsApiError) throw err
+    throw new StatsApiError(controller.signal.aborted ? 'timeout' : 'network', null)
+  } finally {
+    clearTimeout(timer)
+  }
+}
+
+export async function fetchRanking(format: RankingFormat): Promise<RankingResponse> {
+  const body = await getJson('/api/ranking', new URLSearchParams({ format }))
+  if (!body || typeof body !== 'object' || !('players' in body) || !Array.isArray(body.players)) {
+    throw new StatsApiError('bad_response', 200)
+  }
+  return body as RankingResponse
+}
+
+export async function fetchMatches(limit: number): Promise<MatchesResponse> {
+  const body = await getJson('/api/matches', new URLSearchParams({ limit: String(limit) }))
+  if (!body || typeof body !== 'object' || !('matches' in body) || !Array.isArray(body.matches)) {
+    throw new StatsApiError('bad_response', 200)
+  }
+  return body as MatchesResponse
+}
