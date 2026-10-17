@@ -62,6 +62,28 @@ describe('StackDeck', () => {
     expect(container.querySelector('.stack-deck-face')?.textContent).toContain('you may draw a card')
   })
 
+  it('a compact tab names the controller and the kind, Habilidad or Hechizo, with the source name', () => {
+    const stack = stackOf(
+      spell('s1', 'Counterspell', 'p-mira'),
+      ability('a1', 'Rhystic Study', 'p-me', 'Whenever an opponent casts a spell, you may draw a card.'),
+    )
+    const { container } = render(<StackDeck {...BASE} stack={stack} />)
+    const tabs = container.querySelectorAll('.stack-deck-tab')
+    expect(tabs).toHaveLength(1)
+    expect(tabs[0].textContent).toContain('Habilidad')
+    expect(tabs[0].textContent).toContain('Rhystic Study')
+    expect(tabs[0].textContent).toContain('Tú')
+  })
+
+  it('a compact spell tab names its caster and the Hechizo kind', () => {
+    const stack = stackOf(spell('s1', 'Counterspell', 'p-me'), spell('s2', 'Lightning Bolt', 'p-mira'))
+    const { container } = render(<StackDeck {...BASE} stack={stack} />)
+    const tab = container.querySelector('.stack-deck-tab')
+    expect(tab?.textContent).toContain('Hechizo')
+    expect(tab?.textContent).toContain('Lightning Bolt')
+    expect(tab?.textContent).toContain('Mira')
+  })
+
   it('groups identical adjacent abilities into one tab with a count', () => {
     const same = 'Whenever a creature dies, target player loses 1 life.'
     const stack = stackOf(
