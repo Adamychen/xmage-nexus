@@ -2,6 +2,7 @@ import { useLayoutEffect, useRef, useState } from 'react'
 import { useActiveFlights, markFlightLanded, normalizeFlightRect, type FlightRecord } from './flightManager'
 import { useCardImageUrl } from '../cards/useCardImageUrl'
 import { artCropUrl } from './compactCard'
+import { restingRect } from './restingRect'
 import './FlyingCardOverlay.css'
 
 const CARD_BACK_URL = 'https://cards.scryfall.io/back.png'
@@ -88,9 +89,9 @@ function FlyingCardItem({ flight }: { flight: FlightRecord }) {
     const retarget = () => {
       if (anim.playState !== 'running') return
       if (flight.toSelector && typeof KeyframeEffect === 'function') {
-        const target = document.querySelector(flight.toSelector)
-        if (target) {
-          const r = target.getBoundingClientRect()
+        const target = document.querySelector<HTMLElement>(flight.toSelector)
+        const r = target ? restingRect(target) : null
+        if (r) {
           const normalized = normalizeFlightRect(r, null, flight.toCompact)
           const moved =
             Math.abs(normalized.rect.left + normalized.rect.width / 2 - (toRect.left + toRect.width / 2)) > 2 ||

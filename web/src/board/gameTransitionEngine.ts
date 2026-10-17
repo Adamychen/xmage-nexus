@@ -9,6 +9,7 @@ import { fxMotionDuration } from './fx'
 import { slamSpell, spawnImpact, spellWeight } from './impactFx'
 import { clearCombatSnapshots, combatantIds, planDamageStrikes, playDamageStrikes, primeCombatHolds, snapshotCombatants } from './combatStrikes'
 import { spawnDamageNumber } from './DamageNumber'
+import { restingRect } from './restingRect'
 
 const pendingSlams = new Map<string, CardView>()
 const DAMAGE_TEXT = /\bdamage\b/i
@@ -65,17 +66,6 @@ function getRect(selector: string): DOMRect | null {
 /** Resuelve el destino real probando selectores concretos (slot de la carta)
  *  antes de caer al rect del contenedor de zona. Devuelve también el selector
  *  que casó para poder re-medirlo en vuelo. */
-function restingRect(el: HTMLElement): DOMRect | null {
-  const rect = el.getBoundingClientRect()
-  if (rect.width <= 0 || rect.height <= 0) return null
-  const [tx = 0, ty = 0] = getComputedStyle(el).translate.split(' ').map((v) => parseFloat(v) || 0)
-  const width = el.offsetWidth || rect.width
-  const height = el.offsetHeight || rect.height
-  const left = rect.left + rect.width / 2 - tx - width / 2
-  const top = rect.top + rect.height / 2 - ty - height / 2
-  return { left, top, width, height, right: left + width, bottom: top + height, x: left, y: top } as DOMRect
-}
-
 function getDestRect(selectors: string[]): { rect: DOMRect; selector: string } | null {
   for (const selector of selectors) {
     const el = document.querySelector(selector) as HTMLElement | null
