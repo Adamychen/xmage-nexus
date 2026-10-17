@@ -1,7 +1,8 @@
 export const HAND_BAR_MIN_CARD_W = 64
 export const HAND_BAR_MAX_CARD_W = 156
 export const HAND_CARD_ASPECT = 1.4
-export const HAND_BAR_MIN_VISIBLE_RATIO = 0.55
+/** Smallest visible strip of a card at the maximum overlap (the fan's rest pitch never goes below it). */
+export const HAND_BAR_MIN_VISIBLE_RATIO = 0.35
 export const HAND_BAR_REST_OVERLAP_RATIO = 0.5
 export const HAND_BAR_MAX_GAP = 6
 export const HAND_BAR_MAX_SPAN = 1100
@@ -61,19 +62,23 @@ export function computeHandBarSizing(availW: number, count: number): HandBarSizi
     }
   }
 
-  const usableW = Math.max(0, Math.min(availW - HAND_BAR_PADDING_X, HAND_BAR_MAX_SPAN, availW * 0.8))
+  const usableW = Math.max(0, Math.min(availW - HAND_BAR_PADDING_X, HAND_BAR_MAX_SPAN))
 
   if (count === 1 || usableW <= 0) {
     const cardW = Math.min(HAND_BAR_MAX_CARD_W, Math.max(HAND_BAR_MIN_CARD_W, usableW))
     return { cardW, gap: 0, barHeight: cardW * HAND_CARD_ASPECT * HAND_BAR_PEEK_RATIO + HAND_BAR_PADDING_Y }
   }
 
-  const fitW = usableW / (count - (1 - HAND_BAR_MIN_VISIBLE_RATIO) * (count - 1))
+  // Cards keep their size while the row still fits at the maximum overlap; past that they shrink.
+  const fitW = usableW / (1 + (count - 1) * HAND_BAR_MIN_VISIBLE_RATIO)
   const cardW = Math.min(HAND_BAR_MAX_CARD_W, Math.max(HAND_BAR_MIN_CARD_W, fitW))
-  const maxOverlap = -(1 - HAND_BAR_MIN_VISIBLE_RATIO) * cardW
 
-  const naturalGap = (usableW - count * cardW) / (count - 1)
-  const gap = Math.max(maxOverlap, Math.min(HAND_BAR_MAX_GAP, naturalGap))
+  // The rendered pitch is the rest strip (cardW * (1 - rest overlap)) plus the gap.
+  // The gap spreads the row over the usable width, bounded by the maximum overlap
+  // and by the compact fan's max gap.
+  const pitch = (usableW - cardW) / (count - 1)
+  const minGap = -(HAND_BAR_REST_OVERLAP_RATIO - HAND_BAR_MIN_VISIBLE_RATIO) * cardW
+  const gap = Math.min(HAND_BAR_MAX_GAP, Math.max(minGap, pitch - cardW * (1 - HAND_BAR_REST_OVERLAP_RATIO)))
 
   return { cardW, gap, barHeight: cardW * HAND_CARD_ASPECT * HAND_BAR_PEEK_RATIO + HAND_BAR_PADDING_Y }
 }

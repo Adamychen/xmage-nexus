@@ -15,7 +15,9 @@ import {
   HAND_BAR_MIN_CARD_W,
   HAND_BAR_MIN_VISIBLE_RATIO,
   HAND_BAR_PEEK_RATIO,
+  HAND_BAR_REST_OVERLAP_RATIO,
   HAND_CARD_ASPECT,
+  HAND_BAR_PADDING_X,
   HAND_BAR_PADDING_Y,
   HAND_HOVER_MIN_SCALE,
   HAND_COST_PIP_CARD_RATIO,
@@ -49,7 +51,7 @@ describe('computeHandBarSizing', () => {
   it('ample width: max card size, compact via cap or slight overlap', () => {
     const s = computeHandBarSizing(1286, 7)
     expect(s.cardW).toBe(HAND_BAR_MAX_CARD_W)
-    const maxOverlap = -(1 - HAND_BAR_MIN_VISIBLE_RATIO) * HAND_BAR_MAX_CARD_W
+    const maxOverlap = -(HAND_BAR_REST_OVERLAP_RATIO - HAND_BAR_MIN_VISIBLE_RATIO) * HAND_BAR_MAX_CARD_W
     expect(s.gap).toBeGreaterThanOrEqual(maxOverlap)
     expect(s.gap).toBeLessThanOrEqual(HAND_BAR_MAX_GAP)
     expect(s.barHeight).toBe(bandHeight(s.cardW))
@@ -57,9 +59,7 @@ describe('computeHandBarSizing', () => {
 
   it('very wide screens: the hand never spans beyond the max span', () => {
     for (const availW of [1286, 1686, 2400]) {
-      const s = computeHandBarSizing(availW, 7)
-      const span = 7 * s.cardW + 6 * s.gap
-      expect(span).toBeLessThanOrEqual(HAND_BAR_MAX_SPAN + 1e-9)
+      expect(renderedRowW(availW, 7)).toBeLessThanOrEqual(HAND_BAR_MAX_SPAN + 1e-9)
     }
   })
 
@@ -67,15 +67,13 @@ describe('computeHandBarSizing', () => {
     const s = computeHandBarSizing(400, 7)
     expect(s.cardW).toBeGreaterThan(HAND_BAR_MIN_CARD_W)
     expect(s.cardW).toBeLessThan(HAND_BAR_MAX_CARD_W)
-    const visible = s.cardW + s.gap
-    expect(visible).toBeGreaterThanOrEqual(s.cardW * HAND_BAR_MIN_VISIBLE_RATIO - 1e-9)
+    expect(handRestStripWidth(s.cardW, s.gap)).toBeGreaterThanOrEqual(s.cardW * HAND_BAR_MIN_VISIBLE_RATIO - 1e-9)
   })
 
   it('very narrow width: clamps at min card width and still respects the ratio', () => {
     const s = computeHandBarSizing(200, 7)
     expect(s.cardW).toBe(HAND_BAR_MIN_CARD_W)
-    const visible = s.cardW + s.gap
-    expect(visible).toBeGreaterThanOrEqual(s.cardW * HAND_BAR_MIN_VISIBLE_RATIO - 1e-9)
+    expect(handRestStripWidth(s.cardW, s.gap)).toBeGreaterThanOrEqual(s.cardW * HAND_BAR_MIN_VISIBLE_RATIO - 1e-9)
     expect(s.barHeight).toBe(bandHeight(s.cardW))
   })
 
@@ -98,6 +96,37 @@ describe('computeHandBarSizing', () => {
   it('peek ratios keep the hand half-visible at rest and ~90% on hover', () => {
     expect(HAND_BAR_PEEK_RATIO).toBeGreaterThan(0.25)
     expect(HAND_BAR_PEEK_RATIO).toBeLessThan(0.75)
+  })
+})
+
+/** Rendered row width: the first card, then one rest pitch per card (CSS: margin-left = gap - cardW * rest overlap). */
+const renderedRowW = (availW: number, count: number) => {
+  const s = computeHandBarSizing(availW, count)
+  return s.cardW + (count - 1) * handRestStripWidth(s.cardW, s.gap)
+}
+const usableHandW = (availW: number) => Math.min(availW - HAND_BAR_PADDING_X, HAND_BAR_MAX_SPAN)
+
+describe('the hand spreads across the width as cards are added', () => {
+  const availW = 1008
+
+  it('a small hand keeps the normal card size and the compact fan', () => {
+    const s = computeHandBarSizing(availW, 3)
+    expect(s.cardW).toBe(HAND_BAR_MAX_CARD_W)
+    expect(s.gap).toBe(HAND_BAR_MAX_GAP)
+  })
+
+  it.each([12, 15])('%i cards reach the usable width of the hand', (count) => {
+    expect(renderedRowW(availW, count)).toBeCloseTo(usableHandW(availW), 0)
+  })
+
+  it('cards keep their size until the maximum overlap is reached, then shrink', () => {
+    for (let count = 1; count <= 15; count++) {
+      const s = computeHandBarSizing(availW, count)
+      if (s.cardW < HAND_BAR_MAX_CARD_W - 1e-9) {
+        const visible = handRestStripWidth(s.cardW, s.gap)
+        expect(visible, `${count} cards: max overlap reached`).toBeCloseTo(s.cardW * HAND_BAR_MIN_VISIBLE_RATIO, 0)
+      }
+    }
   })
 })
 
