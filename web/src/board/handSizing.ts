@@ -8,6 +8,8 @@ export const HAND_BAR_MAX_GAP = 6
 export const HAND_BAR_MAX_SPAN = 1100
 export const HAND_BAR_PADDING_X = 24
 export const HAND_BAR_PADDING_Y = 12
+/** Clear space kept between the hand's centre band and a side panel it sits beside. */
+export const HAND_BAR_PANEL_GAP_PX = 16
 
 export const HAND_BAR_PEEK_RATIO = 0.5
 
@@ -51,6 +53,33 @@ export interface HandBarSizing {
   cardW: number
   gap: number
   barHeight: number
+}
+
+export interface HandSpan {
+  left: number
+  right: number
+}
+
+export interface HandSideReserve {
+  left: number
+  right: number
+}
+
+/** The part of the hand's band that side panels take from each edge. A panel left of the band's
+ *  centre reserves its inner edge (plus the gap) from the left edge; one right of it, from the right. */
+export function computeHandSideReserve(band: HandSpan, panels: HandSpan[]): HandSideReserve {
+  const mid = (band.left + band.right) / 2
+  const reserve = { left: 0, right: 0 }
+  for (const panel of panels) {
+    if ((panel.left + panel.right) / 2 < mid) {
+      const inset = panel.right - band.left
+      if (inset > 0) reserve.left = Math.max(reserve.left, inset + HAND_BAR_PANEL_GAP_PX)
+    } else {
+      const inset = band.right - panel.left
+      if (inset > 0) reserve.right = Math.max(reserve.right, inset + HAND_BAR_PANEL_GAP_PX)
+    }
+  }
+  return reserve
 }
 
 export function computeHandBarSizing(availW: number, count: number): HandBarSizing {

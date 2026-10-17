@@ -3,6 +3,7 @@ import {
   computeHandArc,
   computeHandBarSizing,
   computeHandHoverScale,
+  computeHandSideReserve,
   computeCostPipLayout,
   computeCostPipSize,
   handRestStripWidth,
@@ -14,6 +15,7 @@ import {
   HAND_BAR_MAX_SPAN,
   HAND_BAR_MIN_CARD_W,
   HAND_BAR_MIN_VISIBLE_RATIO,
+  HAND_BAR_PANEL_GAP_PX,
   HAND_BAR_PEEK_RATIO,
   HAND_BAR_REST_OVERLAP_RATIO,
   HAND_CARD_ASPECT,
@@ -127,6 +129,46 @@ describe('the hand spreads across the width as cards are added', () => {
         expect(visible, `${count} cards: max overlap reached`).toBeCloseTo(s.cardW * HAND_BAR_MIN_VISIBLE_RATIO, 0)
       }
     }
+  })
+})
+
+describe('the hand stays in the centre band between the side panels', () => {
+  const band = { left: 0, right: 1008 }
+  const leftPanel = { left: 18, right: 254 }
+  const dock = { left: 742, right: 990 }
+
+  it('no side panels: nothing is reserved', () => {
+    expect(computeHandSideReserve(band, [])).toEqual({ left: 0, right: 0 })
+  })
+
+  it('a left panel reserves its inner edge plus the gap, measured from the band edge', () => {
+    expect(computeHandSideReserve(band, [leftPanel])).toEqual({ left: 254 + HAND_BAR_PANEL_GAP_PX, right: 0 })
+  })
+
+  it('a right panel reserves its inner edge plus the gap on the right', () => {
+    expect(computeHandSideReserve(band, [dock])).toEqual({ left: 0, right: 1008 - 742 + HAND_BAR_PANEL_GAP_PX })
+  })
+
+  it('both sides reserve independently', () => {
+    expect(computeHandSideReserve(band, [leftPanel, dock])).toEqual({
+      left: 254 + HAND_BAR_PANEL_GAP_PX,
+      right: 1008 - 742 + HAND_BAR_PANEL_GAP_PX,
+    })
+  })
+
+  it.each([8, 15])('%i cards: the row fits the centre band and keeps the minimum visible strip', (count) => {
+    const reserve = computeHandSideReserve(band, [leftPanel, dock])
+    const centreW = band.right - band.left - reserve.left - reserve.right
+    const s = computeHandBarSizing(centreW, count)
+    expect(renderedRowW(centreW, count)).toBeLessThanOrEqual(centreW - HAND_BAR_PADDING_X + 1e-9)
+    expect(s.cardW).toBeGreaterThanOrEqual(HAND_BAR_MIN_CARD_W)
+    expect(handRestStripWidth(s.cardW, s.gap)).toBeGreaterThanOrEqual(s.cardW * HAND_BAR_MIN_VISIBLE_RATIO - 1e-9)
+  })
+
+  it('the centre band gives 15 cards smaller cards than the full width, never larger', () => {
+    const reserve = computeHandSideReserve(band, [leftPanel, dock])
+    const centreW = band.right - band.left - reserve.left - reserve.right
+    expect(computeHandBarSizing(centreW, 15).cardW).toBeLessThan(computeHandBarSizing(band.right, 15).cardW)
   })
 })
 
