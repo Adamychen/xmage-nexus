@@ -6,12 +6,14 @@ import RenderedCard from '../cards/rendered/RenderedCard'
 import { getPreviousCardPosition, getPreviousCardSize, getPreviousCardZone, recordCardPosition } from './cardPositionRegistry'
 import { startCardFlight, onFlightLanded, getActiveFlights, subscribeFlights, noteFlightEvent } from './flightManager'
 import { combatHoldRemaining, isOffBattlefield } from './combatStrikes'
+import { DamageNumbers } from './DamageNumber'
 import { useCombatHeld } from './useCombatHeld'
 import { fxMotionAllowed, fxMotionDuration } from './fx'
 import { extractOwnedKeywords } from '../data/keywordExtractor'
 import { keywordDisplayName, keywordSummary } from '../data/keywordI18n'
 import { cardDesignations, pairedPartnerName, classLevelOf, evidenceCounts, protectorName, type Designation } from './designations'
 import { roomDoorKey, roomSidesLabel } from '../game/rooms'
+import { useChangeFlag } from '../game/useChangeFlag'
 import CardIcons from './CardIcons'
 import { basePtValue, ptTrend } from './ptTrend'
 import Icon from '../ui/Icon'
@@ -22,9 +24,11 @@ import { setState, useSettings, useStore } from '../state/store'
 import { useSleeveFor } from '../appearance/useSleeve'
 import { perfMark } from '../system/perfProbe'
 import { ManaPip } from '../decks/ArenaManaSymbols'
-import { artCropUrl, manaSourceSymbols, primaryCardType } from './compactCard'
+import { artCropUrl, landTapColor, manaSourceSymbols, primaryCardType } from './compactCard'
 import type { PtBadgeMode, SicknessStyle } from './cardOverlays'
+import { manaPoolElement, spawnManaParticle, type ManaSide } from './manaParticle'
 import './CardSlot.css'
+import './manaParticle.css'
 
 /** Cota del acuse optimista si el eco del servidor no llega nunca. */
 const PENDING_ACK_MS = 3000
@@ -92,6 +96,7 @@ export default function CardSlot({
   const [cropFailed, setCropFailed] = useState<string | null>(null)
   const [pendingAck, setPendingAck] = useState<'pending' | 'chosen-pending' | null>(null)
   const [castPhase, setCastPhase] = useState<'press' | 'pop' | null>(null)
+  const [pendingRun, setPendingRun] = useState(0)
   const pendingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const slotRef = useRef<HTMLDivElement>(null)
   const isFirstMountRef = useRef(true)
@@ -107,6 +112,18 @@ export default function CardSlot({
   const recapMark = useStore((s) => (effectiveId ? s.turnRecap?.marks[effectiveId] : undefined))
   const enteredThisTurn = useStore((s) => (effectiveId ? s.enteredThisTurn[effectiveId] === true : false))
   const shownDamage = useCombatHeld(effectiveId ? String(effectiveId) : null, (card as PermanentView).damage ?? 0)
+  const targetOptional = useStore((s) => s.feedback?.method === 'GAME_TARGET' && s.feedback.required === false)
+  const [tapChanged] = useChangeFlag(tapped)
+  const tapManaColor = useMemo(() => landTapColor(card), [card])
+  const localPlayerId = useStore((s) => s.game?.players?.find((p) => p.controlled)?.playerId)
+
+  useEffect(() => {
+    if (!tapChanged || !tapped || !tapManaColor || !localPlayerId || !card.controllerId) return
+    const from = slotRef.current?.getBoundingClientRect()
+    const side: ManaSide = card.controllerId === localPlayerId ? 'my' : 'opp'
+    const pool = manaPoolElement(side)
+    if (from && pool && from.width > 0) spawnManaParticle(from, pool, tapManaColor)
+  }, [tapChanged, tapped, tapManaColor, localPlayerId, card.controllerId])
 
   const clearPending = useCallback(() => {
     if (pendingTimerRef.current) {
@@ -152,7 +169,8 @@ export default function CardSlot({
           if (!prevZone || !curZoneClass || prevZone !== curZoneClass) {
             const sourceSize = getPreviousCardSize(effectiveId)
             const flyIn = (toRect: DOMRect) => {
-              const flightId = startCardFlight(card, prev, toRect, 340, `[data-card-id="${effectiveId}"]`, { sourceSize, toCompact: compact })
+              const enteringLand = (card.cardTypes ?? []).some((t) => String(t).toUpperCase() === 'LAND')
+              const flightId = startCardFlight(card, prev, toRect, 340, `[data-card-id="${effectiveId}"]`, { sourceSize, toCompact: compact, variant: enteringLand ? 'land' : undefined })
               if (!flightId) return
               setFlightState('hidden')
               const land = () => {
@@ -295,6 +313,7 @@ const showPtBadge =
     // de selecciones (jugable/combate) pueden re-clicarse (toggle del servidor).
     if (pendingAck === 'chosen-pending' && !isChosen) return
     setPendingAck(ackKind)
+    setPendingRun((n) => n + 1)
     if (pendingTimerRef.current) clearTimeout(pendingTimerRef.current)
     pendingTimerRef.current = setTimeout(() => {
       pendingTimerRef.current = null
@@ -361,9 +380,12 @@ const showPtBadge =
         attacking ? 'attacking' : '',
         blocking ? 'blocking' : '',
         isTarget ? 'targetable' : '',
+        isTarget && targetOptional && !isChosen ? 'target-optional' : '',
+        isTarget && !targetOptional && !isChosen && pendingAck !== 'chosen-pending' ? 'target-beacon' : '',
         isPlayable ? 'playable' : '',
         isChosen ? 'chosen' : '',
         pendingAck === 'pending' ? 'is-pending' : '',
+        tapChanged && tapped && tapManaColor ? `mana-${tapManaColor}` : '',
         pendingAck === 'chosen-pending' ? 'is-chosen-pending' : '',
         castPhase === 'press' ? 'casting-press' : '',
         castPhase === 'pop' ? 'casting-pop' : '',
@@ -601,6 +623,17 @@ const showPtBadge =
             </span>
           ))}
         </div>
+      )}
+
+      <DamageNumbers targetKey={`card:${effectiveId}`} />
+
+      {pendingAck === 'pending' && (
+        <span
+          key={pendingRun}
+          className="pending-ack-bar"
+          aria-hidden="true"
+          style={{ animationDuration: `${PENDING_ACK_MS}ms` }}
+        />
       )}
     </div>
   )

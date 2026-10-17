@@ -245,6 +245,22 @@ describe('gameTransitionEngine', () => {
 
     const flights = getActiveFlights()
     expect(flights.some((f) => f.card.name === 'Lightning Bolt')).toBe(true)
+    expect(flights.find((f) => f.card.name === 'Lightning Bolt')?.trail).toBe('gold')
+  })
+
+  it('a land entering the battlefield from hand flies with the land variant', () => {
+    const forest = makePermanent({ id: 'perm-forest', name: 'Forest', cardTypes: ['Land'] })
+    const alice1 = makePlayer({ playerId: 'p-alice', name: 'Alice' })
+    const alice2 = makePlayer({ playerId: 'p-alice', name: 'Alice', battlefield: { 'perm-forest': forest } })
+
+    recordCardPosition('perm-forest', mockRect(400, 600), 'hand-zone')
+    const band = document.querySelector('.creatures-band') as HTMLElement
+    vi.spyOn(band, 'getBoundingClientRect').mockReturnValue(mockRect(100, 100, 500, 112))
+
+    detectAndAnimateTransitions(makeGameView({ players: [alice1] }), makeGameView({ players: [alice2] }))
+    vi.advanceTimersByTime(200)
+
+    expect(getActiveFlights().find((f) => f.card.name === 'Forest')?.variant).toBe('land')
   })
 
   it('skips the flight when the only source available is the stack entry itself', () => {
@@ -456,11 +472,12 @@ describe('gameTransitionEngine', () => {
     expect(grizzlyEl?.classList.contains('took-damage')).toBe(true)
   })
 
-  it('shakes the player info bar when life drops', () => {
+  it('shakes the player info bar when life drops to a resolved damage spell', () => {
+    const bolt = makeCard({ id: 'bolt-hit', name: 'Lightning Bolt', rules: ['Lightning Bolt deals 3 damage to any target.'] })
     const alice1 = makePlayer({ playerId: 'p-alice', name: 'Alice', life: 20 })
-    const prevGame = makeGameView({ players: [alice1] })
+    const prevGame = makeGameView({ players: [alice1], stack: { 'bolt-hit': bolt } })
     const alice2 = makePlayer({ playerId: 'p-alice', name: 'Alice', life: 17 })
-    const nextGame = makeGameView({ players: [alice2] })
+    const nextGame = makeGameView({ players: [alice2], stack: {} })
 
     const zoneRoot = document.querySelector('[data-player-id="p-alice"]') as HTMLElement
     const infoBar = document.createElement('div')
@@ -471,5 +488,21 @@ describe('gameTransitionEngine', () => {
 
     expect(infoBar.classList.contains('took-damage')).toBe(true)
     expect(zoneRoot.classList.contains('took-damage')).toBe(false)
+  })
+
+  it('does not shake the player info bar when life is lost to an effect', () => {
+    const alice1 = makePlayer({ playerId: 'p-alice', name: 'Alice', life: 20 })
+    const prevGame = makeGameView({ players: [alice1] })
+    const alice2 = makePlayer({ playerId: 'p-alice', name: 'Alice', life: 18 })
+    const nextGame = makeGameView({ players: [alice2] })
+
+    const zoneRoot = document.querySelector('[data-player-id="p-alice"]') as HTMLElement
+    const infoBar = document.createElement('div')
+    infoBar.setAttribute('data-player-id', 'p-alice')
+    zoneRoot.appendChild(infoBar)
+
+    detectAndAnimateTransitions(prevGame, nextGame)
+
+    expect(infoBar.classList.contains('took-damage')).toBe(false)
   })
 })

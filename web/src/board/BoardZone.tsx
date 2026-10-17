@@ -11,6 +11,9 @@ import { useZoneScale } from './useZoneScale'
 import { useDragScroll } from './useDragScroll'
 import { useBandFit } from './useBandFit'
 import { useTapFlip } from './useTapFlip'
+import { useUntapWave } from './useUntapWave'
+import { useTokenPop } from './useTokenPop'
+import { useBattlefieldDissolve } from './useBattlefieldDissolve'
 import { hasVigilance } from '../cards/cardImages'
 import type { CrossZonePlayable } from './crossZone'
 import { switchedHandCards, switchableHandKeys } from './handSwitch'
@@ -116,6 +119,11 @@ export default function BoardZone({
   useBandFit(creaturesBandEl, cardW, compactPod, cardAspect)
   useBandFit(permanentsBandEl, cardW, compactPod, cardAspect)
   useTapFlip(permanentsBandEl)
+  const gameId = useStore((s) => s.gameId)
+  const bandEls = [permanentsBandEl, creaturesBandEl]
+  useUntapWave(bandEls, tiltedTaps)
+  useTokenPop(bandEls, player)
+  useBattlefieldDissolve(bandEls, gameId, player)
   const { t } = useTranslation()
 
   // Switch Hands (Mindslaver & cía.): el servidor envía la mano controlada en `opponentHands`.
@@ -142,6 +150,8 @@ export default function BoardZone({
 
   const combatSelectableSet = useMemo(() => new Set(combatSelectable), [combatSelectable])
   const combatChosenSet = useMemo(() => new Set(combatChosen), [combatChosen])
+  const promptChosenTargets = useStore((s) => (s.feedback?.method === 'GAME_TARGET' ? s.feedback.chosenTargets : undefined))
+  const promptChosenSet = useMemo(() => new Set(promptChosenTargets ?? []), [promptChosenTargets])
   const attackingSet = useMemo(() => new Set(attackingIds), [attackingIds])
   const blockingSet = useMemo(() => new Set(blockingIds), [blockingIds])
   const busyIds = useMemo(() => {
@@ -366,7 +376,7 @@ export default function BoardZone({
             onHover={onCardHover}
             isTarget={isTarget}
             isPlayable={isPlayable}
-            isChosen={isChosen}
+            isChosen={isChosen || promptChosenSet.has(id)}
             tapped={isTapped}
             attacking={isAttacking}
             blocking={isBlocking}
@@ -396,7 +406,7 @@ export default function BoardZone({
             onHover={onCardHover}
             isTarget={isTarget}
             isPlayable={isPlayable}
-            isChosen={isChosen}
+            isChosen={isChosen || promptChosenSet.has(id)}
             tapped={isTapped}
             attacking={isAttacking}
             blocking={isBlocking}
@@ -419,7 +429,7 @@ export default function BoardZone({
         onHover={onCardHover}
         isTarget={isTarget}
         isPlayable={isPlayable}
-        isChosen={isChosen}
+        isChosen={isChosen || promptChosenSet.has(id)}
         tapped={isTapped}
         attacking={isAttacking}
         blocking={isBlocking}

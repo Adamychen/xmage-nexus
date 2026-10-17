@@ -1,6 +1,6 @@
 # Game animations plan
 
-Date: 2026-10-16. Status: **In progress — P0 subset being implemented** (checklist in section 6).
+Date: 2026-10-16. Status: **Implemented for v1, pending real-table verification** — every item in P0, P1 and P2 is done except the v2 items (B1 and C2 on `feat/game-ui-v2`) and D1/D2 (dropped). Checklist in section 6; every item is reachable from the dev gallery (`#/gallery`, group "Animaciones").
 
 Condensed from the Spanish draft `animaciones.md` at the repo root. The draft's header said
 "COMPLETO", which referred to the written plan, not to the code. Nothing in section 4 is
@@ -231,7 +231,10 @@ starting values to be checked on a real board, not final numbers.
 - Not included: the draft's 3 s "auto-resolve" timer. The client must not visually resolve a
   spell; XMage resolves the stack on the server and the view decides when it leaves.
 - Scope: v2 uses `StackDeck` (exists only on `feat/game-ui-v2`). The v1 stack keeps the same
-  logic in its current container.
+  logic in its current container: `StackZone` (`web/src/board/StackZone.tsx`), where the top entry
+  is the first one in the stack record.
+- The top entry pulses three times (1 s each) and then rests; it is not an infinite loop, so it
+  follows section 1. The pulse stops when the stack empties.
 - Acceptance: unit test: only the top card gets the pulse; the bar is absent when the stack is
   empty.
 
@@ -306,29 +309,33 @@ Foundation (prerequisite):
 
 - [x] Tokens (`tokens.css`), `fx.ts` split, global `fx-off` rule — done (unit, fake e2e, and browser check of both off paths)
 
-P0 (being implemented now):
+Legend: "not visually verified on a real table" means the item was checked in unit tests and
+the dev gallery (`#/gallery`, group "Animaciones", headless Chromium) but never on a live
+game table.
 
-- [ ] A1 Cast "suck and shoot" — in progress
-- [ ] A3 Damage feedback — in progress
-- [ ] B1 Phase wipe (v1 `PhaseBar`; v2 waits for `feat/game-ui-v2`) — in progress
-- [ ] B2 Turn glow — in progress
-- [ ] C1 Target beacon — in progress
-- [ ] C4 Timer tick — in progress
+P0:
+
+- [x] A1 Cast "suck and shoot" — done with known deviation: press and pop (commit 1474248e1df, unit); the arc flight predates this work. The gold trail for non-ability spells (`.flight-trail-gold`) and the land slide (`.flight-land`) are built and reachable (`anim:stack-trail`, `anim:land-slide`). Not visually verified on a real table.
+- [x] A3 Damage feedback — done with known deviations: the effect-vs-combat split is a heuristic on rules text (a stack item whose rules contain "damage" that leaves the stack while the controlled life drops counts as a spell hit; `DAMAGE_TEXT` in `gameTransitionEngine.ts`); hit stop is dropped (section 4). The `translate` shake, the flash and the floating amount are verified in the gallery (`anim:creature-damage`, `anim:player-damage`, `anim:player-life-loss`). Not visually verified on a real table.
+- [x] B1 Phase wipe (v1 `PhaseBar`; v2 waits for `feat/game-ui-v2`) — done for v1 (commit 1474248e1df, unit). Not visually verified on a real table.
+- [x] B2 Turn glow — done (commit 1474248e1df, unit). Not visually verified on a real table.
+- [x] C1 Target beacon — done for targets (attack arrows excluded, see section 7). Required card targets get the beacon (`target-beacon`); optional card targets and optional opponent pills get a static border only (`target-optional`, `is-targetable`); required opponent pills use `oppTargetBeacon` (the old `targetPulse` is gone from `OpponentSwitcherBar.css`); targetable player bars pulse 3 times, not forever. A chosen target gets the static error border and no beacon: `BoardZone` reads `feedback.chosenTargets` into `isChosen` (gallery `anim:chosen-target` renders `.card-slot.chosen` 1, `.target-beacon` 0). Not visually verified on a real table.
+- [x] C4 Timer tick — done (commit 1474248e1df, unit). Not visually verified on a real table.
 
 P1:
 
-- [ ] A4 Pending states — not started
-- [x] B3 Priority orb — done (unit, browser screenshot of the mid-flight orb; not checked on a real table)
-- [x] B4 Draw slide — done (local hand verified in the browser by measurement and a crop; the opponent face-down path and the HandRail/HandRow layouts are not animated or visually verified)
-- [ ] C2 Stack countdown — not started
-- [ ] A2 Mana tap pulse — not started
+- [x] A4 Pending states — done: `is-pending` scales 0.98, fades to 0.85 and shows a 2 px bar filling over `PENDING_ACK_MS` (unit; the bar was checked in the gallery at its mid-point; reduced motion and fx-off checked in the browser via computed style). `is-chosen-pending` unchanged. Not visually verified on a real table.
+- [x] B3 Priority orb — done (unit, browser screenshot of the mid-flight orb). Not visually verified on a real table.
+- [x] B4 Draw slide — done for the local hand in `HandBar` and `HandZone`, and for the `HandRail` and `HandRow` layouts (same `useDrawSlide` hook; unit tests in `HandRail.test.tsx` and `HandRow.test.tsx`). Verified in the browser by measurement and a crop for `HandBar` only. Opponent face-down hands animate only when not collapsed into a stack (`stackBacks`); a collapsed stack has no per-card slot to animate, by design.
+- [x] C2 Stack countdown — done for v1 (`StackZone`); v2 `StackDeck` waits for `feat/game-ui-v2`. Checked in the gallery: the top entry pulses, the bar is half filled at a seeked 1.5 s, both disappear when the stack entry unmounts, and reduced motion removes both. Not visually verified on a real table.
+- [x] A2 Mana tap pulse — done for v1 (ring and brightness flash) plus the optional particle: the mana symbol of each tapped land (28 px, `symbols/<X>.svg`) flies to its controller's mana pool (`manaParticle.ts`, `manaParticle.css`, spawned from `CardSlot` on the untapped-to-tapped edge; on landing the controller's mana pool pulses once (`mana-pool-landed`, scale only); `transform` and `opacity` only; unit `manaParticle.test.ts`; gate passed in the measurement below). Checked in the gallery: the green ring shows on the tapped Forest at a seeked 230 ms. Measured in headless Chromium on the dev gallery (prototype particles, before the real one was built) (`board:arena-4-crowded`, 129 card slots on the stage): ten lands pulsing at once and a prototype of ten `transform`/`opacity` particles each ran 1.5 s with no frame over 10.5 ms (interval 8.3 ms at this display rate) and no frame over 33 ms; the prototype was a throwaway benchmark, not product code. The product particle was then checked in the gallery: one particle per tap, correct color, removed after 400 ms, and its frozen mid-flight point is the topmost element (z-index 900, above the gallery shell at 500). This is a synthetic run, not a real GPU or a live table, so it does not replace a DevTools trace on hardware.
 
 P2:
 
-- [ ] B5 Untap wave — not started
-- [ ] C3 Low life vignette — not started
-- [ ] D3 Token pop — not started
-- [ ] D4 Graveyard dissolve — not started
+- [x] B5 Untap wave — done (unit `useUntapWave.test.tsx`; gallery `anim:untap-wave`: three tapped cards untap and run the staggered untap-wave animation). Not visually verified on a real table.
+- [x] C3 Low life vignette — done (unit `LowLifeVignette.test.tsx`, `lowLife.test.ts`; gallery `anim:life-5` renders `active` at level 1, `anim:life-2` renders `critical` at level 2, `anim:life-6` renders nothing). Not visually verified on a real table.
+- [x] D3 Token pop — done: the spring pop, the ring impact the engine fires for a new token, and a burst of six 8 px dots (`tokenBurst.ts`, `tokenBurst.css`) radiating from the token in its first colour (colourless tokens use the grey dot). Spawned from `useTokenPop` only for tokens absent from the previous update; the rect is measured before the pop starts, since the pop begins at scale 0. Gate passed: five tokens at once (30 dots, 320 ms) in headless Chromium with no frame over 9.4 ms. Gallery `anim:token-pop`: the new token runs the pop animation. Not visually verified on a real table.
+- [x] D4 Graveyard dissolve — done with known gaps: stolen cards and a rollback edge case. Gallery `anim:dissolve`: a `.card-dissolve-ghost` appears where the creature stood. Not visually verified on a real table.
 
 Dropped:
 

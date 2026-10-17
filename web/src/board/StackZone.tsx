@@ -437,6 +437,7 @@ export default function StackZone({
               className={[
                 'stack-tl-entry',
                 isTop ? 'is-top' : '',
+                isTop ? 'stack-top-pulse' : '',
                 isAbility ? 'is-ability' : 'is-spell',
                 isCopy ? 'is-copy' : '',
                 isTargetable ? 'targetable' : '',
@@ -503,6 +504,7 @@ export default function StackZone({
                     )}
                   </div>
                 </div>
+                {isTop && <span key={id} className="stack-top-wait-bar" aria-hidden="true" />}
               </div>
             </RecordedStackEntry>
           )

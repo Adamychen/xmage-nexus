@@ -30,15 +30,23 @@
   to { opacity: 1; }
 }
 
-.hand-card-slot.draw-slide {
+.hand-card-slot.draw-slide,
+.hand-rail-card.draw-slide,
+.hand-row-card.draw-slide {
   animation: drawSlide var(--draw-ms, 550ms) var(--ease-out) backwards;
 }
 
-.hand-card-slot.draw-fade {
+.hand-card-slot.draw-fade,
+.hand-rail-card.draw-fade,
+.hand-row-card.draw-fade {
   animation: drawFade var(--draw-ms, 150ms) linear backwards;
 }
 
 .hand-card-slot.draw-slide .card-slot.entering,
-.hand-card-slot.draw-fade .card-slot.entering {
+.hand-card-slot.draw-fade .card-slot.entering,
+.hand-rail-card.draw-slide .card-slot.entering,
+.hand-rail-card.draw-fade .card-slot.entering,
+.hand-row-card.draw-slide .card-slot.entering,
+.hand-row-card.draw-fade .card-slot.entering {
   animation: none;
 }

@@ -15,6 +15,7 @@ import RankBadge from '../lobby/RankBadge'
 import { playerRankRating } from '../lobby/ranking'
 import { speedLevelKey } from './speed'
 import { useChangeFlag } from './useChangeFlag'
+import { DamageNumbers } from '../board/DamageNumber'
 import './PlayerInfoBar.css'
 import type { CommandEntry } from './commandItems'
 
@@ -321,6 +322,7 @@ export default function PlayerInfoBar({
       }}
       {...clickableProps(onClick)}
     >
+      <DamageNumbers targetKey={`player:${player.playerId}`} />
       <div
         className={`player-avatar ${hasPriority ? 'avatar-active' : ''}`}
         data-player-anchor={player.playerId}
@@ -361,7 +363,7 @@ export default function PlayerInfoBar({
         </div>
 
         <div className="player-counters">
-          <span className={`counter life-counter ${shownLife <= 5 ? 'life-danger' : ''}`} title={t('game', 'life')}>
+          <span className={`counter life-counter ${shownLife <= 5 ? 'low-life' : ''} ${shownLife <= 2 ? 'critical' : ''}`} title={t('game', 'life')}>
             <span className="counter-icon"><Icon name="heart" size={12} /></span>
             <span className="life-value" key={shownLife}>{life}</span>
           </span>

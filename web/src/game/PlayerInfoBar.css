@@ -222,9 +222,13 @@
   font-size: var(--fs-md);
 }
 
-.life-counter.life-danger {
+.life-counter.low-life {
   color: var(--err);
-  animation: dangerPulse 1s infinite alternate;
+  animation: lifeLowPulse calc(1.2s / var(--fx-speed, 1)) ease-in-out 3;
+}
+
+.life-counter.low-life.critical {
+  animation: lifeCriticalPulse calc(0.6s / var(--fx-speed, 1)) ease-in-out 3;
 }
 
 .life-value {
@@ -243,9 +247,14 @@ html.fx-off .life-value {
   animation: none !important;
 }
 
-@keyframes dangerPulse {
-  from { transform: scale(1); }
-  to { transform: scale(1.1); text-shadow: 0 0 8px var(--err); }
+@keyframes lifeLowPulse {
+  0%, 100% { scale: 1; }
+  50% { scale: 1.08; }
+}
+
+@keyframes lifeCriticalPulse {
+  0%, 100% { scale: 1; }
+  50% { scale: 1.16; }
 }
 
 .player-counter-badge {
@@ -421,7 +430,7 @@ html.fx-off .life-value {
 }
 
 .player-info-bar.targetable {
-  animation: playerTargetPulse 1.2s ease-in-out infinite;
+  animation: playerTargetPulse 1.2s ease-in-out 3;
   cursor: pointer;
   border-color: var(--gold-300);
   z-index: 30;
@@ -434,7 +443,8 @@ html.fx-off .life-value {
     box-shadow: 0 0 16px 2px rgb(var(--gold-rgb) / 0.5), 0 8px 24px var(--shade-3);
   }
   .avatar-priority-ring,
-  .life-counter.life-danger {
+  .life-counter.low-life,
+  .life-counter.low-life.critical {
     animation: none;
   }
   .player-timer-badge.urgent .timer-value,

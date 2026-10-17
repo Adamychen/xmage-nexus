@@ -451,6 +451,48 @@ html.fx-off .stack-tl-node.node-top {
   font-size: var(--fs-sm);
 }
 
+/* Stack countdown (C2): while the stack has items, the top entry pulses three
+   times (1 s each) and then rests, and a 2 px bar under it fills over 3 s to show
+   how long the stack has waited. The bar is keyed on the top card id, so it
+   restarts when the top changes. Neither resolves or hides the card: the server
+   decides when it leaves the stack. The pulse is finite (no infinite feedback
+   loop); the rest state is scale 1. `scale` on the body (not `transform`) keeps
+   the card's own animations free. */
+@keyframes stackTopPulse {
+  0%, 100% { scale: 1; }
+  50% { scale: 1.02; }
+}
+
+.stack-tl-entry.stack-top-pulse > .stack-tl-body {
+  animation: stackTopPulse calc(1s / var(--fx-speed, 1)) ease-in-out 3;
+}
+
+.stack-top-wait-bar {
+  display: block;
+  height: 2px;
+  margin-top: var(--sp-1);
+  border-radius: var(--r-2xs);
+  background: var(--ok);
+  transform: scaleX(0);
+  transform-origin: left center;
+}
+
+@keyframes stackTopFill {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+.stack-tl-entry.stack-top-pulse .stack-top-wait-bar {
+  animation: stackTopFill calc(3s / var(--fx-speed, 1)) linear forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stack-tl-entry.stack-top-pulse > .stack-tl-body,
+  .stack-tl-entry.stack-top-pulse .stack-top-wait-bar {
+    animation: none;
+  }
+}
+
 /* ── Deprecated selectors kept for test compatibility ── */
 .stack-item--top,
 .stack-item.is-top,

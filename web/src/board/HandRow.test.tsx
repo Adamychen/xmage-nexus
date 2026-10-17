@@ -34,3 +34,15 @@ describe('HandRow', () => {
     expect(container.firstChild).toBeNull()
   })
 })
+
+describe('HandRow draw slide', () => {
+  it('animates only a card drawn after the hand is on screen', () => {
+    setState({ settings: { ...getState().settings, cardRender: 'image', handRow: true, effects: true } })
+    const { container, rerender } = render(<HandRow cards={hand} />)
+    expect(container.querySelectorAll('.draw-slide, .draw-fade').length).toBe(0)
+    const drawn = { ...hand, c: { name: 'Island', manaValue: 0, cardTypes: ['LAND'], rules: [] } as CardView }
+    rerender(<HandRow cards={drawn} />)
+    expect(container.querySelector('[data-hand-id="c"]')?.className).toContain('draw-')
+    expect(container.querySelector('[data-hand-id="a"]')?.className).not.toContain('draw-')
+  })
+})

@@ -1,0 +1,33 @@
+/* Token burst (D3, optional): a few dots fly radially out of a newly created
+   token and fade. `transform` and `opacity` only. Spawned by tokenBurst.ts from
+   useTokenPop, which runs only for tokens that did not exist on the previous
+   update, so an existing token never bursts. */
+.token-burst-dot {
+  position: fixed;
+  width: 8px;
+  height: 8px;
+  margin: -4px 0 0 -4px;
+  border-radius: 50%;
+  background: rgb(var(--burst-rgb));
+  pointer-events: none;
+  z-index: 900;
+  animation: tokenBurstFly var(--burst-ms, 320ms) ease-out forwards;
+}
+
+.token-burst-dot--w { --burst-rgb: var(--mana-w-rgb); }
+.token-burst-dot--u { --burst-rgb: var(--mana-u-rgb); }
+.token-burst-dot--b { --burst-rgb: var(--mana-b-rgb); }
+.token-burst-dot--r { --burst-rgb: var(--mana-r-rgb); }
+.token-burst-dot--g { --burst-rgb: var(--mana-g-rgb); }
+.token-burst-dot--c { --burst-rgb: var(--mana-c-rgb); }
+
+@keyframes tokenBurstFly {
+  from {
+    transform: translate(0, 0) scale(1);
+    opacity: 1;
+  }
+  to {
+    transform: translate(var(--burst-dx), var(--burst-dy)) scale(0.3);
+    opacity: 0;
+  }
+}

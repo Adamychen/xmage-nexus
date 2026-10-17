@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import Tabs from '../ui/Tabs'
 import IconButton from '../ui/IconButton'
 import CloseButton from '../ui/CloseButton'
-import { clearError, doConnect, useStore, loadConn, clearActiveGame, clearActiveDraft, isSameAccount } from '../state/store'
+import { clearError, doConnect, useStore, loadConn, clearActiveGame, clearActiveDraft, clearActiveConstruct, isSameAccount } from '../state/store'
 import CountryFlag from './CountryFlag'
 import AvatarImage from './AvatarImage'
 import AvatarPickerModal from './AvatarPickerModal'
@@ -200,6 +200,7 @@ export default function LoginScreen() {
     if (!isSameAccount(loadConn(), serverHost.trim() || proxyHost.trim(), parseInt(port, 10) || 17171, username.trim())) {
       clearActiveGame()
       clearActiveDraft()
+      clearActiveConstruct()
     }
     void doConnect(
       proxyHost.trim(),

@@ -6,6 +6,13 @@ import './FlyingCardOverlay.css'
 
 const CARD_BACK_URL = 'https://cards.scryfall.io/back.png'
 
+function unitDirection(fromRect: DOMRect, toRect: DOMRect): { x: number; y: number } {
+  const dx = toRect.left + toRect.width / 2 - (fromRect.left + fromRect.width / 2)
+  const dy = toRect.top + toRect.height / 2 - (fromRect.top + fromRect.height / 2)
+  const len = Math.hypot(dx, dy)
+  return len > 0 ? { x: dx / len, y: dy / len } : { x: 0, y: 0 }
+}
+
 function FlyingCardItem({ flight }: { flight: FlightRecord }) {
   const elRef = useRef<HTMLDivElement>(null)
   const cropRef = useRef<HTMLImageElement>(null)
@@ -53,9 +60,10 @@ function FlyingCardItem({ flight }: { flight: FlightRecord }) {
       const dx = toCx - fromCx
       const dy = toCy - fromCy
       const dist = Math.hypot(dx, dy)
-      const arcLift = Math.min(110, dist * 0.22)
+      const straight = flight.variant === 'land'
+      const arcLift = straight ? 0 : Math.min(110, dist * 0.22)
       // Tilt 3D sutil en vuelos largos: la carta "gira en la mano" mientras cruza.
-      const tilt = dist > 80 ? 14 : dist > 40 ? 8 : 0
+      const tilt = straight ? 0 : dist > 80 ? 14 : dist > 40 ? 8 : 0
       const midRot = (startRot + endRot) / 2
 
       return [
@@ -135,12 +143,18 @@ function FlyingCardItem({ flight }: { flight: FlightRecord }) {
     return () => anim.cancel()
   }, [flight, cropUrl])
 
+  const dir = flight.trail ? unitDirection(flight.fromRect, flight.toRect) : null
+  const flightStyle = {
+    '--flight-dur': `${flight.duration}ms`,
+    ...(dir ? { '--trail-ux': dir.x, '--trail-uy': dir.y } : null),
+  } as React.CSSProperties
+
   return (
     <div
       ref={elRef}
-      className={`flying-card-item${flight.variant ? ` flight-${flight.variant}` : ''}`}
+      className={`flying-card-item${flight.variant ? ` flight-${flight.variant}` : ''}${flight.trail ? ` flight-trail-${flight.trail}` : ''}`}
       data-flight-id={flight.flightId}
-      style={{ '--flight-dur': `${flight.duration}ms` } as React.CSSProperties}
+      style={flightStyle}
     >
       {flight.card.faceDown === true ? (
         <img src={CARD_BACK_URL} alt="" className="flying-card-img" draggable={false} />

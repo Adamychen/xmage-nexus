@@ -629,3 +629,41 @@ describe('StackZone', () => {
     expect(container.querySelector('.floating-card-preview')).toBeTruthy()
   })
 })
+
+describe('StackZone countdown (C2)', () => {
+  const spell = (name: string) => ({ name, cardTypes: ['INSTANT'], manaValue: 1 }) as unknown as CardView
+
+  it('only the top entry pulses (a finite run, 3 iterations in CSS) and carries the wait bar', () => {
+    const stack = { 'spell-1': spell('Counterspell'), 'spell-2': spell('Lightning Bolt') }
+    const { container } = render(<StackZone stack={stack} />)
+    const entries = container.querySelectorAll('.stack-tl-entry')
+    expect(container.querySelectorAll('.stack-top-pulse')).toHaveLength(1)
+    expect(entries[0].classList.contains('stack-top-pulse')).toBe(true)
+    expect(entries[1].classList.contains('stack-top-pulse')).toBe(false)
+    expect(container.querySelectorAll('.stack-top-wait-bar')).toHaveLength(1)
+    expect(entries[0].querySelector('.stack-top-wait-bar')).not.toBeNull()
+  })
+
+  it('the pulse and the bar disappear when the stack empties', () => {
+    const stack = { 'spell-1': spell('Counterspell') }
+    const view = render(<StackZone stack={stack} />)
+    expect(view.container.querySelector('.stack-top-wait-bar')).not.toBeNull()
+    view.rerender(<StackZone stack={{}} />)
+    expect(view.container.querySelector('.ui-empty')).toBeTruthy()
+    expect(view.container.querySelector('.stack-top-pulse')).toBeNull()
+    expect(view.container.querySelector('.stack-top-wait-bar')).toBeNull()
+  })
+
+  it('the bar restarts only when the top card changes', () => {
+    const view = render(<StackZone stack={{ 'spell-1': spell('Counterspell') }} />)
+    const first = view.container.querySelector('.stack-top-wait-bar')
+
+    view.rerender(<StackZone stack={{ 'spell-1': spell('Counterspell'), 'spell-2': spell('Lightning Bolt') }} />)
+    expect(view.container.querySelector('.stack-top-wait-bar')).toBe(first)
+
+    view.rerender(<StackZone stack={{ 'spell-3': spell('Giant Growth'), 'spell-1': spell('Counterspell'), 'spell-2': spell('Lightning Bolt') }} />)
+    const restarted = view.container.querySelector('.stack-top-wait-bar')
+    expect(restarted).not.toBeNull()
+    expect(restarted).not.toBe(first)
+  })
+})
