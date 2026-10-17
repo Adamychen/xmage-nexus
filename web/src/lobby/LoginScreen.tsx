@@ -217,21 +217,23 @@ export default function LoginScreen() {
 
   return (
     <div className="login-wrap" ref={wrapRef}>
-      <div className="login-mana-field" aria-hidden="true">
-        {MOTES.map((m, i) => (
-          <span
-            key={i}
-            className="mana-mote"
-            data-color={m.color}
-            style={{
-              left: m.left,
-              width: `${m.size}px`,
-              height: `${m.size}px`,
-              animationDuration: `${m.duration}s`,
-              animationDelay: `${m.delay}s`,
-            }}
-          />
-        ))}
+      <div className="login-mana-clip" aria-hidden="true">
+        <div className="login-mana-field">
+          {MOTES.map((m, i) => (
+            <span
+              key={i}
+              className="mana-mote"
+              data-color={m.color}
+              style={{
+                left: m.left,
+                width: `${m.size}px`,
+                height: `${m.size}px`,
+                animationDuration: `${m.duration}s`,
+                animationDelay: `${m.delay}s`,
+              }}
+            />
+          ))}
+        </div>
       </div>
       <div className="login-top-bar">
         <LanguageSelector showCardLangToggle={true} />
