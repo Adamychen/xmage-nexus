@@ -749,7 +749,13 @@ html.fx-off .player-info-bar.active-glow {
 
 .pp-stats .resource-chip .chip-icon {
   display: inline-flex;
+  font-size: var(--fs-md);
   color: var(--fg-3);
+}
+
+.pp-stats .resource-chip .chip-icon svg {
+  width: 1.375em;
+  height: 1.375em;
 }
 
 .pp-stats .resource-chip.has-playable {
