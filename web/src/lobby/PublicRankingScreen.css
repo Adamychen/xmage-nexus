@@ -2,6 +2,10 @@
   overflow-y: auto;
 }
 
+.public-ranking-wrap > .public-ranking {
+  margin: auto;
+}
+
 .login-card.public-ranking {
   width: min(760px, 100%);
   max-width: 100%;
