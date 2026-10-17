@@ -16,6 +16,7 @@
 }
 
 .board-wrap[data-ui='v2'] {
+  container: board / inline-size;
   --me-gutter-l: 290px;
   --me-gutter-r: 250px;
 }
@@ -42,6 +43,17 @@
   right: 24px;
   bottom: 36px;
   width: 232px;
+}
+
+@container board (max-width: 520px) {
+  .game--v2 .game-dock {
+    right: 8px;
+    zoom: 0.7;
+  }
+
+  .board-wrap[data-ui='v2'] .arena-board > .zone-bottom .pz-bottom-row {
+    width: calc(100cqw - 200px);
+  }
 }
 
 .board-wrap[data-ui='v2'] .compact-pod .bz-status-row,

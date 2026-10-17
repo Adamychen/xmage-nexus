@@ -6,6 +6,7 @@
 }
 
 .game-topbar {
+  container: topbar / inline-size;
   position: absolute;
   inset: 0;
   display: grid;
@@ -38,6 +39,12 @@
 .game-topbar-center > * {
   min-width: 0;
   max-width: 100%;
+}
+
+@container topbar (max-width: 600px) {
+  .game-topbar-center .turn-order-ring:not(.lane) {
+    display: none;
+  }
 }
 
 .game-topbar-turn {

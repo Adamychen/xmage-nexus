@@ -2,6 +2,10 @@
   display: flex;
   align-items: center;
   gap: var(--sp-1);
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
   background: rgb(var(--ink-2-rgb) / 0.75);
   padding: var(--sp-1) var(--sp-2);
   border-radius: var(--r-base);

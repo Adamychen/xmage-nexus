@@ -8,11 +8,13 @@
   display: flex;
   align-items: center;
   gap: var(--sp-2);
+  min-width: 0;
   font-size: var(--fs-sm);
 }
 
 .game-turn {
   color: var(--gold-500);
+  white-space: nowrap;
   font-weight: 700;
   font-family: 'Cinzel', 'Merriweather', Georgia, serif;
 }
