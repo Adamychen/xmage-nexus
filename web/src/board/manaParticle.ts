@@ -8,7 +8,7 @@ export type ManaSide = 'my' | 'opp'
 
 export function manaPoolElement(side: ManaSide): HTMLElement | null {
   if (typeof document === 'undefined') return null
-  const el = document.querySelector<HTMLElement>(`.resource-bar.${side} .resource-mana-wrap`)
+  const el = document.querySelector<HTMLElement>(`.resource-bar.${side} .resource-mana-wrap, .resource-bar-pool[data-side="${side}"]`)
   return el && el.getBoundingClientRect().width > 0 ? el : null
 }
 

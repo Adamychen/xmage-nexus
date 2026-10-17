@@ -194,7 +194,7 @@ export default function ResourceBar({
 
   if (poolOnly) {
     return (
-      <div className="resource-bar-pool" data-testid="resource-pool">
+      <div className="resource-bar-pool" data-side={side} data-testid="resource-pool">
         <ManaPoolView pool={pool} canPay={canPayMana} onPay={payMana} showAll={manaPromptOpen && side === 'my'} size={14} />
         {Object.values(pool).every((n) => !n) && !manaPromptOpen && <em className="resource-pool-label">{t('game', 'mana_pool_label')}</em>}
       </div>

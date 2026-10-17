@@ -72,4 +72,13 @@ describe('manaPoolElement', () => {
   it('returns null when the pool is not on screen', () => {
     expect(manaPoolElement('my')).toBeNull()
   })
+
+  it('finds the controller pool the v2 layout renders outside the resource bar', () => {
+    const pool = document.createElement('div')
+    pool.className = 'resource-bar-pool'
+    pool.dataset.side = 'my'
+    pool.getBoundingClientRect = () => TO
+    document.body.appendChild(pool)
+    expect(manaPoolElement('my')).toBe(pool)
+  })
 })

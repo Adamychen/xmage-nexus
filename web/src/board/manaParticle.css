@@ -28,7 +28,7 @@
   background: var(--ink-1);
 }
 
-.resource-mana-wrap.mana-pool-landed {
+.mana-pool-landed {
   animation: manaPoolLand 220ms ease-out;
 }
 
