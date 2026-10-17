@@ -145,6 +145,7 @@
 
 .wiki-kw-card-header {
   display: flex;
+  flex-wrap: wrap;
   align-items: flex-start;
   justify-content: space-between;
   gap: var(--sp-2);
@@ -152,6 +153,7 @@
 
 .wiki-kw-card-title {
   display: flex;
+  flex: 1 1 auto;
   align-items: flex-start;
   gap: var(--sp-1h);
   min-width: 0;
@@ -169,7 +171,7 @@
   color: var(--gold-300);
   font-family: var(--font-display, serif);
   letter-spacing: 0.02em;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
 }
 
 .wiki-kw-name-es {

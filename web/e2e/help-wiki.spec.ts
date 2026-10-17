@@ -20,6 +20,29 @@ async function expectInsideViewport(page: Page) {
   expect(panelOverflow, 'dialog does not scroll sideways').toBeLessThanOrEqual(0)
 }
 
+async function brokenKeywordTitles(page: Page): Promise<string[]> {
+  return page.evaluate(() => {
+    const broken: string[] = []
+    for (const el of document.querySelectorAll<HTMLElement>('.wiki-kw-name-en')) {
+      const name = el.textContent ?? ''
+      if (el.scrollWidth > el.clientWidth + 1) broken.push(`${name}: overflows ${el.scrollWidth}>${el.clientWidth}`)
+      const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT)
+      for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+        for (const m of (node.textContent ?? '').matchAll(/\S+/g)) {
+          const range = document.createRange()
+          range.setStart(node, m.index!)
+          range.setEnd(node, m.index! + m[0].length)
+          const tops = [...range.getClientRects()].map((r) => r.top)
+          if (tops.length && Math.max(...tops) - Math.min(...tops) > 2) {
+            broken.push(`${name}: "${m[0]}" is split across lines`)
+          }
+        }
+      }
+    }
+    return broken
+  })
+}
+
 for (const viewport of [{ width: 1280, height: 800 }, { width: 390, height: 844 }]) {
   test.describe(`help wiki at ${viewport.width}x${viewport.height} @site`, () => {
     test.use({ viewport })
@@ -42,6 +65,15 @@ for (const viewport of [{ width: 1280, height: 800 }, { width: 390, height: 844 
       expect(body.overflowY).toBe('auto')
       expect(body.box.bottom).toBeLessThanOrEqual(panel!.y + panel!.height)
       expect(body.box.top).toBeGreaterThanOrEqual(panel!.y)
+    })
+
+    test('keeps every keyword card title on whole words (no word broken across lines)', async ({ page }) => {
+      await page.addInitScript(() => localStorage.setItem('nexus_lang', 'es'))
+      await openWiki(page)
+      await expect(page.locator('.wiki-kw-name-en').first()).toBeVisible()
+      const titles = await page.locator('.wiki-kw-name-en').count()
+      expect(titles).toBeGreaterThan(0)
+      expect(await brokenKeywordTitles(page)).toEqual([])
     })
   })
 }
