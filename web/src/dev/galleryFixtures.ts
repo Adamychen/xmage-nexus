@@ -467,8 +467,8 @@ function withClonedOpponent(game: GameView, src: PlayerView | undefined, suffix:
 function withHandSize(game: GameView, size: number): GameView {
   const hand = (game.myHand ?? {}) as Record<string, unknown>
   const entries = Object.entries(hand)
-  if (entries.length === 0 || entries.length >= size) return game
-  const next: Record<string, unknown> = { ...hand }
+  if (entries.length === 0 || entries.length === size) return game
+  const next: Record<string, unknown> = entries.length > size ? Object.fromEntries(entries.slice(0, size)) : { ...hand }
   let i = 0
   while (Object.keys(next).length < size) {
     const [id, card] = entries[i % entries.length]
@@ -548,6 +548,9 @@ const FOUR_PLAYER_GAME = GANG_BLOCK_FRAME
 const CROWDED_POD_GAME = FOUR_PLAYER_GAME ? withCrowdedBattlefields(FOUR_PLAYER_GAME, 16, 14) : null
 const THREE_PLAYER_COMMANDER = COMMANDER_FRAME?.gameView ?? null
 const HAND_15_GAME = GANG_BLOCK_FRAME ? withHandSize(GANG_BLOCK_FRAME.gameView, 15) : null
+const HAND_12_GAME = GANG_BLOCK_FRAME ? withHandSize(GANG_BLOCK_FRAME.gameView, 12) : null
+const HAND_3_GAME = GANG_BLOCK_FRAME ? withHandSize(GANG_BLOCK_FRAME.gameView, 3) : null
+const HAND_8_GAME = GANG_BLOCK_FRAME ? withHandSize(GANG_BLOCK_FRAME.gameView, 8) : null
 const LONG_NAMES_GAME = GANG_BLOCK_FRAME ? withLongNames(GANG_BLOCK_FRAME.gameView) : null
 const TOP_CARD_PEEK_GAME = GANG_BLOCK_FRAME ? withTopCardPeek(GANG_BLOCK_FRAME.gameView) : null
 
@@ -1947,6 +1950,33 @@ export function buildGalleryEntries(): GalleryEntry[] {
     game: THREE_PLAYER_COMMANDER,
     gameId: COMMANDER_FRAME?.gameId ?? null,
     boardLayout: 'pod',
+  })
+  entries.push({
+    id: 'game:hand-3',
+    group: 'Tablero',
+    label: 'Mano de 3 cartas',
+    description: 'Mano corta (3 cartas) sobre el frame gang-block.',
+    phase: 'game',
+    game: HAND_3_GAME,
+    gameId: GANG_BLOCK_FRAME?.gameId ?? null,
+  })
+  entries.push({
+    id: 'game:hand-8',
+    group: 'Tablero',
+    label: 'Mano de 8 cartas',
+    description: 'Mano media (8 cartas) sobre el frame gang-block.',
+    phase: 'game',
+    game: HAND_8_GAME,
+    gameId: GANG_BLOCK_FRAME?.gameId ?? null,
+  })
+  entries.push({
+    id: 'game:hand-12',
+    group: 'Tablero',
+    label: 'Mano de 12 cartas',
+    description: 'Mano larga (12 cartas) sobre el frame gang-block.',
+    phase: 'game',
+    game: HAND_12_GAME,
+    gameId: GANG_BLOCK_FRAME?.gameId ?? null,
   })
   entries.push({
     id: 'game:hand-15',
