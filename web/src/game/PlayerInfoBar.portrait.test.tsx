@@ -72,6 +72,24 @@ describe('PlayerInfoBar portrait (new table interface)', () => {
     expect(container.querySelector('.player-chips .counter-speed')).toBeNull()
   })
 
+  it('shows the Ring level and the dungeon room as visible text inside their chips', () => {
+    const mira = makePlayer({
+      playerId: 'm',
+      name: 'Mira',
+      commandList: [
+        makeCard({ id: 'ring', name: 'The Ring', mageObjectType: 'EMBLEM', rules: ['a', 'b'] }),
+        makeCard({ id: 'dun', name: 'Lost Mine of Phandelver', mageObjectType: 'DUNGEON', cardTypes: ['DUNGEON'] }),
+      ],
+    })
+    setState({ game: makeGameView({ players: [me, mira] }) })
+    const { container } = render(<PlayerInfoBar player={mira} side="opp" />)
+    const ring = container.querySelector('.player-chips .badge-ring')
+    const dungeon = container.querySelector('.player-chips .badge-dungeon')
+    expect(ring?.querySelector('.badge-label')?.textContent).toBe('Anillo 2')
+    expect(dungeon?.querySelector('.badge-label')?.textContent).toBe('Cave Entrance 1/4')
+    expect(ring?.getAttribute('title')).toContain('2')
+  })
+
   it('adds one chip per commander that damaged the player and flags the dangerous ones', () => {
     const { getAllByTestId } = render(<PlayerInfoBar player={me} side="my" />)
     const chips = getAllByTestId('commander-chip')
