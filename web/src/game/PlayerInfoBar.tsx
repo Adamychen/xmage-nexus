@@ -559,7 +559,7 @@ export default function PlayerInfoBar({
         )}
         {portrait && <CountFlash flash={handFlash} className="count-flash--hand" />}
         {portrait && rankElo != null && (
-          <RankBadge elo={rankElo} iconOnly className="pp-rank-icon" />
+          <RankBadge elo={rankElo} iconOnly className="pp-rank-icon pp-rank-icon-lg" />
         )}
       </div>
 

@@ -606,8 +606,6 @@ html.fx-off .player-info-bar.active-glow {
   position: absolute;
   left: -8px;
   top: -4px;
-  width: 22px;
-  height: 22px;
   padding: 0;
   justify-content: center;
   border-radius: 50%;
@@ -617,9 +615,18 @@ html.fx-off .player-info-bar.active-glow {
   pointer-events: auto;
 }
 
-.arena-board > .zone-bottom .pz-bottom-row > .player-info-bar.is-portrait .rank-badge.pp-rank-icon {
-  width: 26px;
-  height: 26px;
+.rank-badge.pp-rank-icon-lg {
+  font-size: var(--fs-lg);
+  width: 2.2em;
+  height: 2.2em;
+}
+
+.rank-badge.pp-rank-icon-lg .rank-badge-icon {
+  font-size: 1em;
+}
+
+.arena-board > .zone-bottom .pz-bottom-row > .player-info-bar.is-portrait .rank-badge.pp-rank-icon-lg {
+  font-size: var(--fs-xl);
   left: -10px;
 }
 
