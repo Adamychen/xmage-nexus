@@ -1,3 +1,4 @@
+import { getState, setState } from '../state/state'
 import { parseFeedback, type FeedbackCard, type FeedbackPrompt } from '../game/feedback'
 import { TOP_CARD_PEEK_NAME } from '../game/topCardPeek'
 import { landTapColor } from '../board/compactCard'
@@ -664,6 +665,32 @@ function addSoldierToken(game: GameView): GameView {
     ...p,
     battlefield: { ...p.battlefield, [id]: token },
   }))
+}
+
+let galleryCreatureSeq = 0
+
+function addSickCreature(game: GameView): { game: GameView; id: string } {
+  galleryCreatureSeq += 1
+  const id = `gallery-creature-${galleryCreatureSeq}`
+  const creature = {
+    id,
+    name: 'Grizzly Bears',
+    displayName: 'Grizzly Bears',
+    manaValue: 2,
+    cardTypes: ['Creature'],
+    subtypes: ['Bear'],
+    power: '2',
+    toughness: '2',
+    tapped: false,
+    summoningSickness: true,
+  }
+  return {
+    id,
+    game: mapControlled(game, (p) => ({
+      ...p,
+      battlefield: { ...p.battlefield, [id]: creature },
+    })),
+  }
 }
 
 function sendToGraveyard(game: GameView, id: string): GameView {
@@ -1377,6 +1404,34 @@ export function buildGalleryEntries(): GalleryEntry[] {
       game: animBase,
       gameId,
       action: { label: 'Añadir ficha Soldado', apply: addSoldierToken },
+    })
+    entries.push({
+      id: 'anim:sickness',
+      group: 'Animaciones',
+      label: 'Sickness: badge on a new creature (summoning sickness)',
+      description: 'Press "Invocar criatura": a new creature with summoning sickness enters your battlefield and its badge floats (sicknessFloat loops forever).',
+      phase: 'game',
+      game: animBase,
+      gameId,
+      action: { label: 'Invocar criatura', apply: (g) => addSickCreature(g).game },
+    })
+    entries.push({
+      id: 'anim:entered-glow',
+      group: 'Animaciones',
+      label: 'Entered: gold glow on a new creature (enteredGlow)',
+      description: 'Press "Entrar criatura": a new creature enters your battlefield marked as entered this turn, so it shows the gold glow (enteredGlow loops forever).',
+      phase: 'game',
+      game: animBase,
+      gameId,
+      action: {
+        label: 'Entrar criatura',
+        run: () => {
+          const game = getState().game
+          if (!game) return
+          const { id, game: next } = addSickCreature(game)
+          setState({ game: next, enteredThisTurn: { [id]: true as const } })
+        },
+      },
     })
     entries.push({
       id: 'anim:dissolve',

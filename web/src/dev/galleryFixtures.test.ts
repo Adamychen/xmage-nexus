@@ -65,6 +65,8 @@ describe('galería de estados (P3)', () => {
       'anim:life-5',
       'anim:life-2',
       'anim:token-pop',
+      'anim:sickness',
+      'anim:entered-glow',
       'anim:dissolve',
       'anim:stack-trail',
       'anim:land-slide',
@@ -89,6 +91,13 @@ describe('galería de estados (P3)', () => {
     expect(entry(entries, 'anim:opp-pill-required').feedback?.required).toBe(true)
     expect(entry(entries, 'anim:opp-pill-optional').feedback?.required).toBe(false)
     expect(entry(entries, 'anim:chosen-target').feedback?.chosenTargets?.length).toBe(1)
+  })
+
+  it('las entradas de sickness y entered-glow pertenecen a Animaciones', () => {
+    expect(entry(entries, 'anim:sickness').group).toBe('Animaciones')
+    expect(entry(entries, 'anim:entered-glow').group).toBe('Animaciones')
+    expect(entry(entries, 'anim:sickness').action?.label).toBe('Invocar criatura')
+    expect(entry(entries, 'anim:entered-glow').action?.label).toBe('Entrar criatura')
   })
 
   it('la búsqueda filtrada declara solo parte de las candidatas como elegibles', () => {
