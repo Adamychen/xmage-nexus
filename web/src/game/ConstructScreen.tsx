@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState, useRef } from 'react'
 import EmptyState from '../ui/EmptyState'
 import * as cmds from '../net/commands'
 import { useStore, clearActiveConstruct } from '../state/store'
-import { loadConstructSelection, saveConstructSelection, type ConstructSelection } from '../state/persistence'
+import { clearConstructSelection, loadConstructSelection, saveConstructSelection, type ConstructSelection } from '../state/persistence'
 import { setState, addLog, getState } from '../state/state'
 import { useTickingTimer } from '../utils/timer'
 import type { SimpleCardView } from '../net/types'
@@ -141,7 +141,8 @@ export default function ConstructScreen() {
   const selectionTableId = construct?.tableId ?? null
   useEffect(() => {
     if (selectionTableId && hydratedTableId === selectionTableId) {
-      saveConstructSelection(selectionTableId, { main, pool })
+      if (main.length === 0) clearConstructSelection()
+      else saveConstructSelection(selectionTableId, { main, pool })
     }
   }, [selectionTableId, hydratedTableId, main, pool])
 

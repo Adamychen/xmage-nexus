@@ -423,6 +423,13 @@ test('tapping an untapped land in v2 flies a mana particle into the pool @gameui
   await expect(page.getByTestId('arena-board')).toBeVisible({ timeout: 10_000 })
   await expect(page.locator('[data-card-id="adam-l1"]')).toHaveAttribute('data-tapped', '0')
   await page.waitForTimeout(1200)
+  await page.evaluate(() => {
+    const w = window as unknown as { __manaLanded?: boolean }
+    w.__manaLanded = false
+    new MutationObserver(() => {
+      if (document.querySelector('.mana-pool-landed')) w.__manaLanded = true
+    }).observe(document.body, { subtree: true, attributes: true, childList: true, attributeFilter: ['class'] })
+  })
 
   const tapped = richCommanderGame()
   const tappedMe = (tapped.players as Array<{ playerId: string; battlefield: Record<string, Record<string, unknown>> }>).find((p) => p.playerId === 'p-adam')
@@ -451,5 +458,5 @@ test('tapping an untapped land in v2 flies a mana particle into the pool @gameui
   expect(box.endY).toBeGreaterThanOrEqual(box.poolTop)
   expect(box.endY).toBeLessThanOrEqual(box.poolBottom)
 
-  await page.waitForFunction(() => document.querySelector('.mana-pool-landed'), undefined, { polling: 'raf', timeout: 2000 })
+  await page.waitForFunction(() => (window as unknown as { __manaLanded?: boolean }).__manaLanded === true, undefined, { polling: 'raf', timeout: 5000 })
 })

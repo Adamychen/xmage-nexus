@@ -331,6 +331,12 @@ export function saveActiveConstruct(construct: ConstructState | null) {
   }
 }
 
+export function clearConstructSelection() {
+  try {
+    getStorage().removeItem(CONSTRUCT_SELECTION_KEY)
+  } catch {}
+}
+
 export function clearActiveConstruct() {
   try {
     const storage = getStorage()
