@@ -1,29 +1,21 @@
 import { test, type Browser, type Page } from '@playwright/test'
 import { login } from './support/start-game'
+import { FAKE_MODE } from './dual'
 
 const TABLE_NAME = (tag: string) => `drr-${tag}`
 
 async function createHumanDraft(page: Page, table: string) {
   await page.getByRole('button', { name: /Nuevo torneo/i }).first().click()
+  const dialog = page.locator('.create-table-dialog')
   await page.getByPlaceholder(/Ej\. Modern Casual Bo3/).fill(table)
   await page.getByRole('tab', { name: /Draft \/ Limitado/i }).click()
-  await page.getByLabel(/Limitado — Draft \/ Sealed/i).selectOption('Booster Draft Elimination (Random)')
-  await page.locator('button.wizard-step[title="Draft"]').click()
-  await page.getByPlaceholder(/M21, MH3, BLB/).fill('M21')
-  const seat = page.getByTestId('seat-type-1')
-  const plaza2 = page.getByText('Plaza 2', { exact: true }).first()
-  for (let i = 0; i < 8; i++) {
-    if (await plaza2.count() > 0 && await plaza2.isVisible()) {
-      await plaza2.click()
-      if (await seat.count() > 0 && await seat.first().isVisible()) break
-    }
-    await page.getByRole('button', { name: /Siguiente/ }).click()
-  }
-  await seat.getByRole('radio', { name: /Humano/ }).click()
-  await page.getByRole('button', { name: /Crear Torneo Draft|Crear torneo|Create Draft/i }).last().click()
+  await dialog.getByRole('button', { name: '2 plazas' }).first().click()
+  await dialog.getByRole('button', { name: /Crear Torneo Draft/ }).click()
 }
 
+
 test.describe('Draft reload against the real stack', { tag: '@draftreal' }, () => {
+  test.skip(FAKE_MODE, 'solo stack real (proxy + XMage local)')
   test('two humans draft, then reload during construction', async ({ page, browser }: { page: Page; browser: Browser }) => {
     test.setTimeout(10 * 60_000)
     const tag = String(Date.now()).slice(-6)

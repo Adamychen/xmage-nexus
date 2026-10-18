@@ -614,6 +614,8 @@ export const de: TranslationSchema = {
     card_render_show_hint: 'Karten aus ihren Daten statt aus dem gedruckten Bild zeichnen, damit der Regeltext in jeder Größe scharf bleibt',
     board_fill_show: 'Schlachtfeldkarten an den Platz anpassen',
     board_fill_show_hint: 'Karten so groß machen, wie der freie Platz erlaubt: wenige Permanents ergeben große Karten, ein volles Feld verkleinert sie',
+    stack_caption_show: 'Typ und Effekt über der obersten Stapelkarte anzeigen',
+    stack_caption_show_hint: 'Zeigt Art (ausgelöste Fähigkeit, Zauber, Kreatur …) und Regeltext über der obersten Stapelkarte im Bildmodus an. Ausschalten, wenn das Bild den Text unleserlich macht.',
     hand_rail_show: 'Hand als Spalte',
     hand_rail_show_hint: 'Deine Hand als Spalte links anzeigen, alle Karten gleichzeitig lesbar',
     hand_row_show: 'Hand als Reihe',

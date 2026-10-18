@@ -36,6 +36,15 @@ export default function RenderedCardsSettings() {
         value={settings.handRow}
         onChange={(v) => setSetting('handRow', v)}
       />
+      {settings.cardRender !== 'rendered' && (
+        <OptionChoice
+          kind="stackCaption"
+          label={t('lobby', 'stack_caption_show')}
+          hint={t('lobby', 'stack_caption_show_hint')}
+          value={settings.stackCaption}
+          onChange={(v) => setSetting('stackCaption', v)}
+        />
+      )}
       {(settings.handRail || settings.handRow) && (
         <label className="hand-rail-width-row">
           <span>{t('lobby', 'hand_rail_width')}</span>

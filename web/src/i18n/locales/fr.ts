@@ -614,6 +614,8 @@ export const fr: TranslationSchema = {
     card_render_show_hint: 'Dessiner les cartes à partir de leurs données plutôt que de l\'image imprimée, pour que le texte reste net à toute taille',
     board_fill_show: 'Adapter les cartes du champ à l\'espace',
     board_fill_show_hint: 'Agrandit les cartes autant que l\'espace libre le permet : peu de permanents donnent de grandes cartes, un champ chargé les réduit',
+    stack_caption_show: 'Afficher le type et l\'effet sur la carte du dessus de la pile',
+    stack_caption_show_hint: 'Affiche le type (capacité déclenchée, sort, créature…) et le texte des règles sur la carte du dessus de la pile en mode image. Désactivez-le si l\'illustration rend le texte illisible.',
     hand_rail_show: 'Main en colonne',
     hand_rail_show_hint: 'Afficher votre main en colonne à gauche, toutes les cartes lisibles à la fois',
     hand_row_show: 'Main en rangée',

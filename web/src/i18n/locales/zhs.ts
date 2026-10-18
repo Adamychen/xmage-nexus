@@ -617,6 +617,8 @@ export const zhs: TranslationSchema = {
     card_render_show_hint: '根据卡牌数据绘制,而不是使用印刷图像,使规则文字在任何尺寸下都清晰可读',
     board_fill_show: '让战场卡牌适应可用空间',
     board_fill_show_hint: '在可用空间允许的范围内放大卡牌:永久物少时卡牌更大,战场拥挤时会缩小',
+    stack_caption_show: '在堆叠顶部卡牌上显示类型与效果',
+    stack_caption_show_hint: '在图片模式下，于堆叠顶部卡牌上方显示类型（触发式能力、法术、生物等）和规则文本。若画面使文字难以辨认，可关闭。',
     hand_rail_show: '手牌竖列',
     hand_rail_show_hint: '将手牌显示为左侧的一列,所有卡牌同时可读',
     hand_row_show: '手牌横行',

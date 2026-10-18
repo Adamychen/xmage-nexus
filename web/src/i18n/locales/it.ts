@@ -614,6 +614,8 @@ export const it: TranslationSchema = {
     card_render_show_hint: 'Disegna le carte dai loro dati invece che dall\'immagine stampata, così il testo resta nitido a qualsiasi dimensione',
     board_fill_show: 'Adatta le carte del campo allo spazio',
     board_fill_show_hint: 'Ingrandisce le carte quanto lo spazio libero consente: con pochi permanenti sono grandi, con un campo pieno si riducono',
+    stack_caption_show: 'Mostra tipo ed effetto sulla carta in cima allo stack',
+    stack_caption_show_hint: 'Mostra tipo (capacità innescata, incantesimo, creatura…) e testo delle regole sulla carta in cima allo stack in modalità immagine. Disattivalo se l\'illustrazione rende il testo illeggibile.',
     hand_rail_show: 'Mano in colonna',
     hand_rail_show_hint: 'Mostra la tua mano come colonna a sinistra, con tutte le carte leggibili insieme',
     hand_row_show: 'Mano in riga',

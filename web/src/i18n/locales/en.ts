@@ -612,6 +612,8 @@ export const en = {
     card_render_show_hint: 'Draw cards from their data instead of the printed image, so the rules text stays sharp at any size',
     board_fill_show: 'Fit battlefield cards to the space',
     board_fill_show_hint: 'Make the cards as large as the free space allows: few permanents get big cards, a crowded board shrinks them',
+    stack_caption_show: 'Show the effect over the top stack card',
+    stack_caption_show_hint: 'Shows the kind (triggered ability, spell, creature…) and its rules text over the top stack card in image mode. Turn it off when the art makes the text hard to read.',
     hand_rail_show: 'Hand as a column',
     hand_rail_show_hint: 'Show your hand as a column on the left with every card readable at once',
     hand_row_show: 'Hand as a scrollable row',

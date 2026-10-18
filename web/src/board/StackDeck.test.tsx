@@ -1,8 +1,9 @@
-import { cleanup, fireEvent, render } from '@testing-library/react'
+import { cleanup, fireEvent, render, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import StackDeck, { STACK_DECK_MAX_TABS } from './StackDeck'
 import type { CardView, PlayerView } from '../net/types'
 import { makePlayer } from '../__fixtures__/gameViews'
+import { getState, setState } from '../state/state'
 
 vi.mock('../cards/cardImages', async (importOriginal) => ({
   ...(await importOriginal<typeof import('../cards/cardImages')>()),
@@ -55,11 +56,20 @@ describe('StackDeck', () => {
   })
 
   it('draws an ability on top with the same card frame as a spell, with its rules', () => {
+    setState({ settings: { ...getState().settings, cardRender: 'rendered' } })
     const stack = stackOf(ability('a1', 'Rhystic Study', 'p-mira', 'Whenever an opponent casts a spell, you may draw a card.'))
     const { container } = render(<StackDeck {...BASE} stack={stack} />)
     expect(container.querySelector('.stack-deck-face .rc')).not.toBeNull()
     expect(container.querySelector('.stack-deck-face')?.textContent).toContain('Rhystic Study')
     expect(container.querySelector('.stack-deck-face')?.textContent).toContain('you may draw a card')
+  })
+
+  it('shows the original art on top, not the rendered frame, when render is off', async () => {
+    setState({ settings: { ...getState().settings, cardRender: 'image' } })
+    const stack = stackOf(spell('s1', 'Lightning Bolt', 'p-mira'))
+    const { container } = render(<StackDeck {...BASE} stack={stack} />)
+    expect(container.querySelector('.stack-deck-face .rc')).toBeNull()
+    await waitFor(() => expect(container.querySelector('.stack-deck-face img.stack-deck-art')?.getAttribute('src')).toBe('https://img.test/card.jpg'))
   })
 
   it('a compact tab names the controller and the kind, Habilidad or Hechizo, with the source name', () => {
@@ -70,16 +80,40 @@ describe('StackDeck', () => {
     const { container } = render(<StackDeck {...BASE} stack={stack} />)
     const tabs = container.querySelectorAll('.stack-deck-tab')
     expect(tabs).toHaveLength(1)
-    expect(tabs[0].textContent).toContain('Habilidad')
+    expect(tabs[0].textContent).toContain('Disparada')
     expect(tabs[0].textContent).toContain('Rhystic Study')
     expect(tabs[0].textContent).toContain('Tú')
   })
 
-  it('a compact spell tab names its caster and the Hechizo kind', () => {
+  it('a creature spell tab says Criatura, not Hechizo', () => {
+    const creature: CardView = { id: 's3', name: 'Grizzly Bears', cardTypes: ['CREATURE'], manaValue: 2, controllerId: 'p-mira', targets: [] }
+    const { container } = render(<StackDeck {...BASE} stack={stackOf(spell('s4', 'Counterspell', 'p-me'), ['s3', creature])} />)
+    const grizzly = [...container.querySelectorAll('.stack-deck-tab')].find((el) => el.textContent?.includes('Grizzly Bears'))
+    expect(grizzly?.textContent).toContain('Criatura')
+  })
+
+  it('shows the type and the rules of the top entry in image mode', () => {
+    setState({ settings: { ...getState().settings, cardRender: 'image' } })
+    const stack = stackOf(ability('a1', 'Rhystic Study', 'p-mira', 'Whenever an opponent casts a spell, you may draw a card.'))
+    const { getByTestId } = render(<StackDeck {...BASE} stack={stack} />)
+    const caption = getByTestId('stack-deck-caption')
+    expect(caption.textContent).toContain('Disparada')
+    expect(caption.textContent).toContain('you may draw a card')
+  })
+
+  it('hides the type and rules over the top card when the caption setting is off', () => {
+    setState({ settings: { ...getState().settings, cardRender: 'image', stackCaption: false } })
+    const stack = stackOf(ability('a1', 'Rhystic Study', 'p-mira', 'Whenever an opponent casts a spell, you may draw a card.'))
+    const { queryByTestId } = render(<StackDeck {...BASE} stack={stack} />)
+    expect(queryByTestId('stack-deck-caption')).toBeNull()
+    setState({ settings: { ...getState().settings, stackCaption: true } })
+  })
+
+  it('a compact spell tab names its caster and its card type', () => {
     const stack = stackOf(spell('s1', 'Counterspell', 'p-me'), spell('s2', 'Lightning Bolt', 'p-mira'))
     const { container } = render(<StackDeck {...BASE} stack={stack} />)
     const tab = container.querySelector('.stack-deck-tab')
-    expect(tab?.textContent).toContain('Hechizo')
+    expect(tab?.textContent).toContain('Instantáneo')
     expect(tab?.textContent).toContain('Lightning Bolt')
     expect(tab?.textContent).toContain('Mira')
   })

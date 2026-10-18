@@ -56,3 +56,7 @@ export function normalizeHandRailWidth(value: unknown): number {
 export function normalizeBoardFill(value: unknown): boolean {
   return typeof value === 'boolean' ? value : true
 }
+
+export function normalizeStackCaption(value: unknown): boolean {
+  return typeof value === 'boolean' ? value : true
+}

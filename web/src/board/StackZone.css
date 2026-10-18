@@ -275,8 +275,8 @@ html.fx-off .stack-tl-node.node-top {
 
 /* ── Thumbnail ── */
 .stack-thumb {
-  width: 34px;
-  height: 48px;
+  width: calc(var(--sp-6) * 3);
+  aspect-ratio: 2 / 1;
   border-radius: var(--r-xs);
   overflow: hidden;
   flex-shrink: 0;
@@ -501,4 +501,26 @@ html.fx-off .stack-tl-node.node-top {
 
 .stack-tl-entry.is-top {
   /* Also acts as .stack-item--top for tests */
+}
+
+/* Identical entries stack into one row with ×N; clicking it fans the copies out
+   below so each one stays selectable. */
+.stack-tl-entry.is-group {
+  cursor: pointer;
+}
+
+.stack-tl-entry.stack-tl-sub {
+  opacity: 0.9;
+  margin-left: var(--sp-3h);
+}
+
+.stack-tl-entry.stack-tl-sub .stack-tl-card {
+  padding: var(--sp-1) var(--sp-2h);
+}
+
+/* A collapsed group reads as a pile: the cards beneath peek out below the
+   bottom edge of the top card, so ×N is visible at a glance. */
+.stack-tl-entry.is-group:not(.is-open) .stack-tl-card {
+  margin-bottom: var(--sp-3);
+  box-shadow: 0 var(--sp-1) 0 var(--veil-5), 0 var(--sp-2) 0 var(--veil-4), 0 var(--sp-3) 0 var(--veil-3);
 }

@@ -107,6 +107,60 @@
   width: var(--card-w);
 }
 
+.stack-deck-art {
+  display: block;
+  height: auto;
+  aspect-ratio: 5 / 7;
+  object-fit: cover;
+  border-radius: var(--r-mid);
+  pointer-events: none;
+}
+
+.stack-deck-caption {
+  position: absolute;
+  left: var(--sp-2);
+  right: var(--sp-2);
+  bottom: var(--sp-2);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sp-1);
+  padding: var(--sp-2);
+  border-radius: var(--r-mid);
+  background: var(--shade-5);
+  border: 1px solid var(--line-1, var(--shade-3));
+  color: var(--fg-1);
+  pointer-events: none;
+}
+
+.stack-deck-caption-kind {
+  padding: 1px var(--sp-2);
+  border-radius: var(--r-pill);
+  background: var(--ink-0);
+  border: 1px solid var(--gold-300);
+  font-size: var(--fs-3xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--gold-300);
+}
+
+.stack-deck-caption-rules {
+  font-size: var(--fs-2xs);
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.stack-deck-art-placeholder {
+  height: auto;
+  aspect-ratio: 5 / 7;
+  border-radius: var(--r-mid);
+  background: var(--shade-3);
+}
+
 .stack-deck-targets {
   display: flex;
   align-items: center;
@@ -139,7 +193,20 @@
 .stack-deck-tab {
   display: block;
   margin-top: -2px;
+  position: relative;
+  z-index: var(--z, 1);
   cursor: pointer;
+}
+
+/* Arena-style column: each entry tucks under the one above it, so every
+   name strip stays readable and the last entry shows in full. Hover lifts it. */
+.stack-deck-tab + .stack-deck-tab {
+  margin-top: -4px;
+}
+
+.stack-deck-tab:hover,
+.stack-deck-tab.is-hover {
+  z-index: 60;
 }
 
 .stack-deck-tab-inner {
@@ -170,6 +237,15 @@
   outline-offset: -2px;
 }
 
+.stack-deck-thumb {
+  flex: 0 0 auto;
+  width: 40px;
+  height: 26px;
+  object-fit: cover;
+  border-radius: var(--r-xs);
+  background: var(--ink-4);
+}
+
 .stack-deck-tab-pos {
   width: 14px;
   color: var(--fg-3);
@@ -181,8 +257,17 @@
   flex: 1;
   min-width: 0;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  line-height: 1.1;
+}
+
+.stack-deck-tab-name .stack-tl-name {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  white-space: normal;
+  overflow: hidden;
+  text-overflow: clip;
+  overflow-wrap: anywhere;
 }
 
 .stack-deck-tab-by {
@@ -326,4 +411,53 @@
   .stack-deck-tab-inner {
     transition: none;
   }
+}
+
+/* A group of identical entries reads as a pile: the cards beneath peek out
+   below the bottom edge of the row, so ×N is visible at a glance. */
+.stack-deck-tab.is-group {
+  margin-bottom: var(--sp-3);
+}
+
+.stack-deck-tab.is-group .stack-deck-tab-inner {
+  box-shadow: 0 var(--sp-1) 0 var(--veil-5), 0 var(--sp-2) 0 var(--veil-4), 0 var(--sp-3) 0 var(--veil-3);
+}
+
+
+/* A grouped top card sits on a pile: three copies peek out below it. */
+.stack-deck-face.is-group {
+  margin-bottom: var(--sp-3);
+  box-shadow: 0 0 0 2px var(--seat, var(--brand)), 0 0 26px color-mix(in srgb, var(--seat, var(--brand)) 55%, transparent), 0 var(--sp-1) 0 var(--veil-5), 0 var(--sp-2) 0 var(--veil-4), 0 var(--sp-3) 0 var(--veil-3), 0 12px 28px var(--shade-3);
+}
+
+/* New stack entries ease in: the top card and each tab fade and settle. */
+@keyframes stackDeckIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.stack-deck-face,
+.stack-deck-tab {
+  animation: stackDeckIn calc(0.25s / var(--fx-speed, 1)) ease-out;
+}
+
+html.fx-off .stack-deck-face,
+html.fx-off .stack-deck-tab {
+  animation: none !important;
+}
+
+/* Copies of the top card: the count sits in the card corner, not in the controller pill. */
+.stack-deck-count {
+  position: absolute;
+  top: var(--sp-1);
+  right: var(--sp-1);
+  z-index: 2;
+  padding: var(--sp-0h) var(--sp-1h);
+  border-radius: var(--r-pill);
+  background: var(--ink-0);
+  border: 1px solid var(--seat, var(--brand));
+  color: var(--gold-300);
+  font-size: var(--fs-2xs);
+  font-weight: 700;
+  pointer-events: none;
 }

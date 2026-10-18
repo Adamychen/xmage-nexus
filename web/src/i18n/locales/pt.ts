@@ -614,6 +614,8 @@ export const pt: TranslationSchema = {
     card_render_show_hint: 'Desenha as cartas a partir dos seus dados em vez da imagem impressa, para o texto de regras ficar nítido em qualquer tamanho',
     board_fill_show: 'Ajustar as cartas do campo ao espaço',
     board_fill_show_hint: 'Faz as cartas tão grandes quanto o espaço livre permitir: com poucos permanentes ficam grandes, com muitos encolhem',
+    stack_caption_show: 'Mostrar o tipo e o efeito sobre a carta do topo da pilha',
+    stack_caption_show_hint: 'Mostra o tipo (habilidade disparada, feitiço, criatura…) e o texto de regras sobre a carta do topo da pilha no modo imagem. Desative se a arte dificultar a leitura.',
     hand_rail_show: 'Mão em coluna',
     hand_rail_show_hint: 'Mostra a tua mão como uma coluna à esquerda, com todas as cartas legíveis ao mesmo tempo',
     hand_row_show: 'Mão em fila',

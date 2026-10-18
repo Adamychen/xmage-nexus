@@ -617,6 +617,8 @@ export const ja: TranslationSchema = {
     card_render_show_hint: '印刷された画像ではなくカードのデータから描画し、どんなサイズでもルールテキストを鮮明に保ちます',
     board_fill_show: '戦場のカードを空きスペースに合わせる',
     board_fill_show_hint: '空きスペースの許す限りカードを大きくします。パーマネントが少ないと大きく、多いと小さくなります',
+    stack_caption_show: 'スタックの一番上のカードに種類と効果を表示',
+    stack_caption_show_hint: '画像モードでは、スタック最上部のカードの上に種類（誘発型能力、呪文、クリーチャーなど）とルール文を表示します。絵柄で文字が読みにくい場合はオフにしてください。',
     hand_rail_show: '手札を縦列で表示',
     hand_rail_show_hint: '手札を左側の縦列で表示し、すべてのカードを同時に読めるようにします',
     hand_row_show: '手札を横列で表示',

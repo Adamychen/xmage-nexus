@@ -276,6 +276,34 @@ describe('gameTransitionEngine', () => {
     expect(getActiveFlights()).toHaveLength(0)
   })
 
+  it('flies a cast spell to the StackDeck when the stack is shown as a deck', () => {
+    document.querySelector('.stack-zone')?.remove()
+    const deck = document.createElement('section')
+    deck.className = 'stack-deck'
+    document.body.appendChild(deck)
+    vi.spyOn(deck, 'getBoundingClientRect').mockReturnValue(mockRect(800, 300, 250, 400))
+    const bolt = makeCard({
+      id: 'spell-bolt',
+      name: 'Lightning Bolt',
+      controllerId: 'p-alice',
+      sourceCard: makeCard({ id: 'hand-bolt', name: 'Lightning Bolt' }),
+    })
+    const alice = makePlayer({ playerId: 'p-alice', name: 'Alice' })
+
+    recordCardPosition('hand-bolt', mockRect(400, 600), 'hand-zone')
+
+    const prevGame = makeGameView({ players: [alice], stack: {} })
+    const nextGame = makeGameView({ players: [alice], stack: { 'spell-bolt': bolt } })
+
+    detectAndAnimateTransitions(prevGame, nextGame)
+    vi.advanceTimersByTime(200)
+
+    const flight = getActiveFlights().find((f) => f.card.name === 'Lightning Bolt')
+    expect(flight).toBeDefined()
+    expect(flight?.toRect.left).toBe(800)
+    deck.remove()
+  })
+
   it('lands a new stack spell on the stack entry (thumb), not the zone center', () => {
     const bolt = makeCard({ id: 'spell-bolt', name: 'Lightning Bolt', controllerId: 'p-alice' })
     const alice = makePlayer({ playerId: 'p-alice', name: 'Alice' })

@@ -190,7 +190,7 @@ export function stackEntrySignature(
   players: PlayerView[] | undefined,
   myPlayerId: string | null | undefined,
 ): string | null {
-  if (!isStackAbility(card) || targetIds.has(id)) return null
+  if (targetIds.has(id)) return null
   const ctrl = getControllerInfo(card, id, players, myPlayerId)
   const source = card.sourceCard ?? card
   return [

@@ -603,6 +603,38 @@ function tapOneLand(game: GameView): GameView {
   }
 }
 
+function withIdenticalSpellPile(game: GameView): GameView {
+  const me = controlledPlayer(game)
+  const controller = { controllerId: me?.playerId, controllerName: me?.name }
+  const copy = (id: string) => ({ id, name: 'Lightning Bolt', expansionSetCode: '2XM', cardNumber: '129', cardTypes: ['INSTANT'], ...controller })
+  return {
+    ...game,
+    stack: {
+      'gallery-pile-1': copy('gallery-pile-1'),
+      'gallery-pile-2': copy('gallery-pile-2'),
+      'gallery-pile-3': copy('gallery-pile-3'),
+    } as unknown as GameView['stack'],
+  }
+}
+
+function pushStackEntry(game: GameView): GameView {
+  const me = controlledPlayer(game)
+  const id = 'gallery-push-' + Date.now()
+  const spell = { id, name: 'Lightning Bolt', expansionSetCode: '2XM', cardNumber: '129', cardTypes: ['INSTANT'], controllerId: me?.playerId, controllerName: me?.name }
+  return { ...game, stack: { [id]: spell, ...(game.stack ?? {}) } as unknown as GameView['stack'] }
+}
+
+function withMixedStackKinds(game: GameView): GameView {
+  const me = controlledPlayer(game)
+  const controller = { controllerId: me?.playerId, controllerName: me?.name }
+  const stack = {
+    'gallery-kind-trigger': { id: 'gallery-kind-trigger', name: 'Soul Warden', mageObjectType: 'TRIGGERED_ABILITY', abilityType: 'Triggered', rules: ['You gain 1 life.'], sourceCard: { name: 'Soul Warden', ...controller }, ...controller },
+    'gallery-kind-spell': { id: 'gallery-kind-spell', name: 'Lightning Bolt', expansionSetCode: '2XM', cardNumber: '129', cardTypes: ['INSTANT'], ...controller },
+    'gallery-kind-creature': { id: 'gallery-kind-creature', name: 'Mystic Snake', expansionSetCode: 'MH2', cardNumber: '50', cardTypes: ['CREATURE'], power: 2, toughness: 2, ...controller },
+  }
+  return { ...game, stack: stack as unknown as GameView['stack'] }
+}
+
 function withSpellStack(game: GameView): GameView {
   const spell = (id: string, name: string) => ({ id, name, expansionSetCode: '2XM', cardNumber: '129', cardTypes: ['Instant'] })
   return {
@@ -1341,6 +1373,34 @@ export function buildGalleryEntries(): GalleryEntry[] {
       game,
       gameId,
       action: { label: 'Tap land', apply: tapOneLand },
+    })
+    entries.push({
+      id: 'stack:identical-pile',
+      group: 'Pila',
+      label: 'Stack: identical spells pile',
+      description: 'Three identical instants from the same controller, no targets: they fold into one row with ×3 and the cards beneath peek out below the top one.',
+      phase: 'game',
+      game: withIdenticalSpellPile(game),
+      gameId,
+    })
+    entries.push({
+      id: 'stack:entry-animation',
+      group: 'Pila',
+      label: 'Stack: entry animation (press the button)',
+      description: 'Each press puts a new spell on top of the pile: the new top card and its tab ease in. Press it to replay the entry animation.',
+      phase: 'game',
+      game: withIdenticalSpellPile(game),
+      gameId,
+      action: { label: 'Lanzar hechizo a la pila', apply: pushStackEntry },
+    })
+    entries.push({
+      id: 'stack:mixed-kinds',
+      group: 'Pila',
+      label: 'Stack: triggered ability, spell, creature cast',
+      description: 'One triggered ability, one instant and one creature spell: each row names its kind (habilidad disparada, hechizo, criatura).',
+      phase: 'game',
+      game: withMixedStackKinds(game),
+      gameId,
     })
     entries.push({
       id: 'anim:stack-countdown',

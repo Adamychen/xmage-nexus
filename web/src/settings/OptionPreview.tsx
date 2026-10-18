@@ -6,7 +6,7 @@ import BoardDemo from './BoardDemo'
 import '../appearance/playmats.css'
 import './OptionPreview.css'
 
-export type OptionPreviewKind = 'handCost' | 'manaSource' | 'rendered' | 'boardFill' | 'handRail' | 'handRow'
+export type OptionPreviewKind = 'handCost' | 'manaSource' | 'rendered' | 'boardFill' | 'handRail' | 'handRow' | 'stackCaption'
 
 const HAND_SAMPLE = [
   { name: 'Shivan Dragon', cost: '{4}{R}{R}' },
@@ -129,6 +129,21 @@ export default function OptionPreview({ kind, on = true }: { kind: OptionPreview
       {kind === 'boardFill' && <Tiles fill={on} />}
       {kind === 'handRail' && <HandRailPreview on={on} />}
       {kind === 'handRow' && <HandRowPreview on={on} />}
+      {kind === 'stackCaption' && <StackCaptionPreview on={on} />}
+    </div>
+  )
+}
+
+function StackCaptionPreview({ on }: { on: boolean }) {
+  return (
+    <div className="opt-stack-caption">
+      <div className="opt-stack-caption-art" />
+      {on && (
+        <div className="opt-stack-caption-panel">
+          <span className="opt-stack-caption-kind">Disparada</span>
+          <span className="opt-stack-caption-rules">You gain 1 life.</span>
+        </div>
+      )}
     </div>
   )
 }

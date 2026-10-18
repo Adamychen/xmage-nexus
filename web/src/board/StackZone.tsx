@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState, useCallback, useEffect, useContext } from 'react'
+import { Fragment, useLayoutEffect, useRef, useState, useCallback, useEffect, useContext } from 'react'
 import { createPortal } from 'react-dom'
 import Tabs from '../ui/Tabs'
 import Button from '../ui/Button'
@@ -28,6 +28,7 @@ import {
   stackTypeLabel,
 } from './stackEntries'
 import { DrawerHeadSlotContext } from '../game/drawerHeadSlot'
+import { artCropUrl } from './compactCard'
 import './StackZone.css'
 
 interface StackZoneProps {
@@ -43,11 +44,12 @@ interface StackZoneProps {
 
 function StackThumbnail({ card }: { card: CardView }) {
   const imgUrl = useCardImageUrl(card)
+  const artUrl = artCropUrl(imgUrl) ?? imgUrl
 
   return (
     <div className="stack-thumb">
-      {imgUrl ? (
-        <img src={imgUrl} alt="" className="stack-thumb-img" draggable={false} />
+      {artUrl ? (
+        <img src={artUrl} alt="" className="stack-thumb-img" draggable={false} />
       ) : (
         <div className="stack-thumb-placeholder">
           <Icon name={isStackAbility(card) ? 'zap' : 'layers'} size={18} />
@@ -128,6 +130,15 @@ export default function StackZone({
   const [hoverCard, setHoverCard] = useState<CardView | null>(null)
   const [hoverRect, setHoverRect] = useState<DOMRect | null>(null)
   const [viewMode, setViewMode] = useState<'compact' | 'expanded'>('compact')
+  const [openGroups, setOpenGroups] = useState<Set<string>>(() => new Set())
+  const toggleGroup = useCallback((key: string) => {
+    setOpenGroups((prev) => {
+      const next = new Set(prev)
+      if (next.has(key)) next.delete(key)
+      else next.add(key)
+      return next
+    })
+  }, [])
   const { t } = useTranslation()
   const headSlot = useContext(DrawerHeadSlotContext)
 
@@ -243,8 +254,8 @@ export default function StackZone({
           const tgtLabels = resolveStackTargetLabels(stackTargetIds(card), stack ?? {}, players)
 
           return (
+            <Fragment key={group.items[count - 1][0]}>
             <RecordedStackEntry
-              key={group.items[count - 1][0]}
               id={id}
               className={[
                 'stack-tl-entry',
@@ -253,10 +264,12 @@ export default function StackZone({
                 isAbility ? 'is-ability' : 'is-spell',
                 isCopy ? 'is-copy' : '',
                 isTargetable ? 'targetable' : '',
-                onCardClick ? 'clickable' : '',
+                onCardClick || count > 1 ? 'clickable' : '',
+                count > 1 ? 'is-group' : '',
+                count > 1 && openGroups.has(id) ? 'is-open' : '',
                 `owner-${ownership}`,
               ].filter(Boolean).join(' ')}
-              onClick={onCardClick ? () => onCardClick(id) : undefined}
+              onClick={count > 1 ? () => toggleGroup(id) : onCardClick ? () => onCardClick(id) : undefined}
               onMouseEnter={(e) => handleHover(card, e.currentTarget.getBoundingClientRect())}
               onMouseLeave={() => handleHover(null)}
             >
@@ -319,6 +332,31 @@ export default function StackZone({
                 {isTop && <span key={id} className="stack-top-wait-bar" aria-hidden="true" />}
               </div>
             </RecordedStackEntry>
+            {count > 1 && openGroups.has(id) && group.items.map(([subId, subCard], k) => (
+              <RecordedStackEntry
+                key={subId}
+                id={subId}
+                className={['stack-tl-entry', 'stack-tl-sub', onCardClick ? 'clickable' : ''].filter(Boolean).join(' ')}
+                onClick={onCardClick ? () => onCardClick(subId) : undefined}
+                onMouseEnter={(e) => handleHover(subCard, e.currentTarget.getBoundingClientRect())}
+                onMouseLeave={() => handleHover(null)}
+              >
+                <div className="stack-tl-rail">
+                  <div className="stack-tl-node" />
+                </div>
+                <div className="stack-tl-body">
+                  <div className="stack-tl-card">
+                    <div className="stack-tl-info">
+                      <div className="stack-tl-name-row">
+                        <span className="stack-tl-pos">#{idx + k + 1}</span>
+                        <StackEntryCardName card={subCard} />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </RecordedStackEntry>
+            ))}
+            </Fragment>
           )
         })}
       </div>

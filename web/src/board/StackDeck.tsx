@@ -2,6 +2,8 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import type { CSSProperties } from 'react'
 import type { CardView, PlayerView } from '../net/types'
 import RenderedCard from '../cards/rendered/RenderedCard'
+import { useCardImageUrl } from '../cards/useCardImageUrl'
+import { artCropUrl } from './compactCard'
 import { costSymbols } from '../cards/rendered/cardLayout'
 import { symbolToSvgPath } from '../decks/ArenaManaSymbols'
 import { seatColorVar, seatIndexOf } from './seatColor'
@@ -44,6 +46,30 @@ interface StackDeckProps {
 
 const NO_TARGETS: Set<string> = new Set()
 
+function StackDeckCaption({ card }: { card: CardView }) {
+  const { t } = useTranslation()
+  const rules = stackRulesText(card)
+  return (
+    <div className="stack-deck-caption" data-testid="stack-deck-caption">
+      <span className="stack-deck-caption-kind">{stackTypeLabel(card, t)}</span>
+      {rules && <div className="stack-deck-caption-rules"><FormattedText text={rules} cardName={card.displayName ?? card.name} /></div>}
+    </div>
+  )
+}
+
+function StackDeckThumb({ card }: { card: CardView }) {
+  const imgUrl = useCardImageUrl(card)
+  const art = artCropUrl(imgUrl) ?? imgUrl
+  if (!art) return <span className="stack-deck-thumb stack-deck-thumb-empty" />
+  return <img src={art} alt="" className="stack-deck-thumb" draggable={false} />
+}
+
+function StackDeckArt({ card, className }: { card: CardView; className: string }) {
+  const imgUrl = useCardImageUrl(card)
+  if (!imgUrl) return <div className={`${className} stack-deck-art-placeholder`} />
+  return <img src={imgUrl} alt={card.name || card.alternateName || ''} className={`${className} stack-deck-art`} draggable={false} />
+}
+
 export default function StackDeck({
   stack,
   open,
@@ -56,6 +82,8 @@ export default function StackDeck({
 }: StackDeckProps) {
   const { t } = useTranslation()
   const modalOpen = useStore(isBlockingModal)
+  const cardRender = useStore((s) => s.settings.cardRender)
+  const stackCaption = useStore((s) => s.settings.stackCaption)
   const [hoverCard, setHoverCard] = useState<CardView | null>(null)
   const [hoverRect, setHoverRect] = useState<DOMRect | null>(null)
   const sectionRef = useRef<HTMLElement>(null)
@@ -223,16 +251,19 @@ export default function StackDeck({
         <span className="stack-deck-ctrl" title={`${t('game', 'controller')}: ${topCtrl.name}`}>
           <Icon name={topCtrl.avatarIcon} size={12} />
           <span>{topCtrl.name}</span>
-          {topGroup.items.length > 1 && <b>×{topGroup.items.length}</b>}
         </span>
         <RecordedStackEntry
+          key={topEntryId}
           id={topEntryId}
-          className={`stack-deck-face${isStackAbility(topCard) ? ' is-ability' : ''}${topTargetable ? ' targetable' : ''}`}
+          className={`stack-deck-face${isStackAbility(topCard) ? ' is-ability' : ''}${topTargetable ? ' targetable' : ''}${topGroup.items.length > 1 ? ' is-group' : ''}`}
           onClick={topTargetable && onCardClick ? () => onCardClick(topEntryId) : undefined}
           onMouseEnter={(e) => handleHover(topCard, e.currentTarget.getBoundingClientRect())}
           onMouseLeave={() => handleHover(null)}
         >
-          <RenderedCard card={topCard} className="stack-deck-card" />
+          {cardRender === 'rendered'
+            ? <RenderedCard card={topCard} className="stack-deck-card" />
+            : <><StackDeckArt card={topCard} className="stack-deck-card" />{stackCaption && <StackDeckCaption card={topCard} />}</>}
+          {topGroup.items.length > 1 && <span className="stack-deck-count" data-testid="stack-deck-top-count">×{topGroup.items.length}</span>}
         </RecordedStackEntry>
         {topTargets.length > 0 && (
           <div className="stack-deck-targets" data-testid="stack-targets" title={topTargets.join(', ')}>
@@ -247,7 +278,6 @@ export default function StackDeck({
             const [id, card] = group.items[0]
             const count = group.items.length
             const targetable = targetIds.has(id)
-            const ability = isStackAbility(card)
             const ctrl = getControllerInfo(card, id, players, myPlayerId, t)
             const hasTargets = stackTargetIds(card).length > 0
             const position = group.start + 1
@@ -255,19 +285,20 @@ export default function StackDeck({
               <RecordedStackEntry
                 key={group.items[count - 1][0]}
                 id={id}
-                className={`stack-deck-tab owner-${ctrl.isMe ? 'mine' : 'opponent'}${targetable ? ' targetable' : ''}${hoverId === id ? ' is-hover' : ''}`}
-                style={{ ['--seat' as string]: seatColorVar(seatIndexOf(players, ctrl.id)) }}
+                style={{ ['--seat' as string]: seatColorVar(seatIndexOf(players, ctrl.id)), ['--z' as string]: i + 1 }}
+                className={`stack-deck-tab owner-${ctrl.isMe ? 'mine' : 'opponent'}${targetable ? ' targetable' : ''}${hoverId === id ? ' is-hover' : ''}${count > 1 ? ' is-group' : ''}`}
                 onClick={targetable && onCardClick ? () => onCardClick(id) : () => onOpenChange(true)}
                 onMouseEnter={(e) => handleHover(card, e.currentTarget.getBoundingClientRect())}
                 onMouseLeave={() => handleHover(null)}
               >
                 <span className="stack-deck-tab-inner" style={{ ['--inset' as string]: `${Math.min(i * 3, 18)}px` }}>
+                  {cardRender !== 'rendered' && <StackDeckThumb card={card} />}
                   <span className="stack-deck-tab-pos">{position}</span>
                   <span className="stack-deck-tab-name"><StackEntryCardName card={card} /></span>
                   <span className="stack-deck-tab-by" title={ctrl.name}>{ctrl.name}</span>
                   {count > 1 && <span className="stack-deck-tab-x">×{count}</span>}
                   {hasTargets && <span className="stack-deck-tab-target"><Icon name="target" size={11} /></span>}
-                  <span className="stack-deck-tab-kind">{ability ? t('game', 'ability_general') : t('game', 'type_spell')}</span>
+                  <span className="stack-deck-tab-kind">{stackTypeLabel(card, t)}</span>
                 </span>
               </RecordedStackEntry>
             )
