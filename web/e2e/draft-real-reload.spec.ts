@@ -1,4 +1,4 @@
-import { test, expect, type Browser, type Page } from '@playwright/test'
+import { test, type Browser, type Page } from '@playwright/test'
 import { login } from './support/start-game'
 
 const TABLE_NAME = (tag: string) => `drr-${tag}`
