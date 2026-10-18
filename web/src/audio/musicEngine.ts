@@ -21,6 +21,9 @@ const DIRE: number[][] = [
 const BPM: Record<MusicIntensity, number> = { 0: 60, 1: 78, 2: 96 }
 const CUTOFF: Record<MusicIntensity, number> = { 0: 520, 1: 900, 2: 1500 }
 
+export type MusicMode = 'game' | 'lobby'
+const LOBBY_LEVEL = 0.6
+
 export function progressionFor(intensity: MusicIntensity): number[][] {
   return intensity === 2 ? DIRE : CALM
 }
@@ -32,6 +35,7 @@ export function barSeconds(intensity: MusicIntensity): number {
 class MusicEngine {
   private wanted = false
   private running = false
+  private mode: MusicMode = 'game'
   private intensity: MusicIntensity = 0
   private timer: ReturnType<typeof setInterval> | null = null
   private nextBar = 0
@@ -39,13 +43,24 @@ class MusicEngine {
   private out: GainNode | null = null
   private noise: AudioBuffer | null = null
 
-  start() {
+  constructor() {
+    soundManager.onUnlock(() => this.tryStart())
+  }
+
+  start(mode: MusicMode = 'game') {
+    if (this.running && this.mode !== mode) this.halt()
+    this.mode = mode
     this.wanted = true
     this.tryStart()
   }
 
-  stop() {
+  stop(mode?: MusicMode) {
+    if (mode && mode !== this.mode) return
     this.wanted = false
+    this.halt()
+  }
+
+  private halt() {
     if (!this.running) return
     this.running = false
     if (this.timer) clearInterval(this.timer)
@@ -80,13 +95,14 @@ class MusicEngine {
 
   private tryStart() {
     if (this.running || !this.wanted) return
+    if (this.mode === 'lobby' && !soundManager.isUnlocked()) return
     const bus = soundManager.getMusicBus()
     if (!bus) return
     const { ctx } = bus
     try {
       this.out = ctx.createGain()
       this.out.gain.setValueAtTime(0, ctx.currentTime)
-      this.out.gain.linearRampToValueAtTime(1, ctx.currentTime + 3)
+      this.out.gain.linearRampToValueAtTime(this.mode === 'lobby' ? LOBBY_LEVEL : 1, ctx.currentTime + 3)
       this.out.connect(bus.out)
     } catch {
       this.out = null
@@ -107,7 +123,7 @@ class MusicEngine {
           this.scheduleBar(ctx, this.nextBar)
         } catch {}
       }
-      this.nextBar += barSeconds(this.intensity)
+      this.nextBar += barSeconds(this.effectiveIntensity())
       this.bar += 1
     }
   }
@@ -122,9 +138,13 @@ class MusicEngine {
     return this.noise
   }
 
+  private effectiveIntensity(): MusicIntensity {
+    return this.mode === 'lobby' ? 0 : this.intensity
+  }
+
   private scheduleBar(ctx: AudioContext, t0: number) {
     const out = this.out!
-    const level = this.intensity
+    const level = this.effectiveIntensity()
     const dur = barSeconds(level)
     const beat = dur / 4
     const chord = progressionFor(level)[this.bar % 4]

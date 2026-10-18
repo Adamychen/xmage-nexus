@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useRef, useState, useCallback } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import Tabs from '../ui/Tabs'
 import EmptyState from '../ui/EmptyState'
 import { useStore, isBlockingModal } from '../state/store'
-import { parseGameEvent, toFeedItem, type ActionFeedItem } from './gameEventParser'
+import { useFeedItems } from './useFeedItems'
 import ActionFeedCard from './ActionFeedCard'
-import FormattedText, { cleanMageHtml } from './FormattedText'
+import FormattedText from './FormattedText'
 import FloatingCardPreview from '../board/FloatingCardPreview'
 import type { CardView, PermanentView } from '../net/types'
 import { useTranslation } from '../i18n'
@@ -17,7 +17,6 @@ interface ActionFeedProps {
 export default function ActionFeed({ onHover }: ActionFeedProps) {
   const { t } = useTranslation()
   const log = useStore((s) => s.log)
-  const game = useStore((s) => s.game)
   const [viewMode, setViewMode] = useState<'visual' | 'raw'>('visual')
   const containerRef = useRef<HTMLDivElement | null>(null)
   const [autoScroll, setAutoScroll] = useState(true)
@@ -31,9 +30,6 @@ export default function ActionFeed({ onHover }: ActionFeedProps) {
       setHoverRect(null)
     }
   }, [modalOpen])
-
-  const myPlayer = game?.players?.find((p) => p.controlled)
-  const myPlayerName = myPlayer?.name
 
   const handleCardHover = useCallback(
     (card: CardView | PermanentView | null, rect?: DOMRect) => {
@@ -49,33 +45,7 @@ export default function ActionFeed({ onHover }: ActionFeedProps) {
     [onHover, modalOpen]
   )
 
-  const feedItems = useMemo((): ActionFeedItem[] => {
-    const items: ActionFeedItem[] = []
-    const seenRaw = new Set<string>()
-
-    for (let i = 0; i < log.length; i++) {
-      const entry = log[i]
-      if ((entry.channel ?? 'game') !== 'game') continue
-      const key = `${entry.time}-${entry.text}`
-      if (seenRaw.has(key)) continue
-      seenRaw.add(key)
-
-      const parsed = parseGameEvent(entry.text, myPlayerName, `log-${entry.id ?? i}`)
-      if (parsed) {
-        items.push(toFeedItem(parsed, t))
-      } else if (entry.text) {
-        items.push({
-          id: `log-sys-${entry.id ?? i}`,
-          type: 'system',
-          description: cleanMageHtml(entry.text),
-          rawText: entry.text,
-          timestamp: entry.time,
-        })
-      }
-    }
-
-    return items
-  }, [log, myPlayerName, t])
+  const feedItems = useFeedItems()
 
   const handleScroll = () => {
     if (!containerRef.current) return

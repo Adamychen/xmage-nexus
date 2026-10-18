@@ -238,3 +238,74 @@
 .turn-order-ring.lane .tor-measure .tor-seat-name {
   max-width: none;
 }
+
+.turn-order-ring.is-portrait {
+  gap: var(--sp-1);
+  padding: var(--sp-1);
+  background: rgb(var(--ink-rgb) / 0.78);
+  border: 1px solid var(--line-2);
+  box-shadow: none;
+}
+
+.is-portrait .tor-seat {
+  gap: var(--sp-1h);
+  padding: var(--sp-0h) var(--sp-3) var(--sp-0h) var(--sp-0h);
+  background: transparent;
+  border: 1px solid transparent;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  color: var(--fg-3);
+}
+
+.is-portrait .tor-seat.is-active {
+  background: var(--gold-soft);
+  border-color: rgb(var(--gold-rgb) / 0.55);
+  box-shadow: none;
+  color: var(--gold-300);
+}
+
+.is-portrait .tor-seat.has-priority:not(.is-active) {
+  box-shadow: none;
+}
+
+.is-portrait .tor-seat-name {
+  max-width: 110px;
+  font-weight: 600;
+}
+
+.tor-avatar {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  flex: none;
+  box-shadow: 0 0 0 2px var(--ink-gap), 0 0 0 3px color-mix(in srgb, var(--seat) 70%, transparent);
+  margin: 0 var(--sp-0h) 0 var(--sp-0h);
+}
+
+.tor-avatar .avatar-image {
+  width: 24px;
+  height: 24px;
+  border: 0;
+  border-radius: 50%;
+}
+
+.tor-avatar > .ico {
+  position: absolute;
+  color: var(--fg-hi);
+}
+
+.is-portrait .tor-arrow {
+  font-size: var(--fs-3xs);
+  opacity: 0.5;
+  color: var(--fg-3);
+}
+
+.tor-avatar .pp-av {
+  width: 24px;
+  height: 24px;
+  font-size: var(--fs-3xs);
+  box-shadow: none;
+}

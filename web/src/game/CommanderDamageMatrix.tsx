@@ -47,11 +47,12 @@ function useDamageMatrix(game: GameView | null) {
 
 export interface CommanderDamageMatrixProps {
   game: GameView | null
+  defaultView?: 'cards' | 'table'
 }
 
-export default function CommanderDamageMatrix({ game }: CommanderDamageMatrixProps) {
+export default function CommanderDamageMatrix({ game, defaultView = 'cards' }: CommanderDamageMatrixProps) {
   const { t } = useTranslation()
-  const [viewMode, setViewMode] = useState<'cards' | 'table'>('cards')
+  const [viewMode, setViewMode] = useState<'cards' | 'table'>(defaultView)
   const { players, commanders, rows } = useDamageMatrix(game)
 
   const alerts = useMemo(

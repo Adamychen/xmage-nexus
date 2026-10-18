@@ -65,8 +65,8 @@ describe('PlayerProfileModal Component', () => {
     render(<PlayerProfileModal users={mockUsers} currentUsername="player1" onClose={onClose} />)
 
     const badges = Array.from(document.querySelectorAll('.format-card .rank-badge-name')).map((el) => el.textContent)
-    // constructed 1650 = Oro II, limited 1500 = Plata II
-    expect(badges).toEqual(['Oro II', 'Plata II'])
+    // constructed 1650 = Diamante II, limited 1500 = Oro I
+    expect(badges).toEqual(['Diamante II', 'Oro I'])
     expect(document.querySelectorAll('.format-card .rank-badge svg').length).toBe(2)
   })
 

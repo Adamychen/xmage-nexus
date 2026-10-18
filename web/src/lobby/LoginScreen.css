@@ -503,6 +503,13 @@ details.login-network-box .login-network-fields {
 
 /* Visual intro: mana field, hero cards, tagline, staggered entry, sheen, pips, tilt */
 
+.login-mana-clip {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
 .login-mana-field {
   position: absolute;
   inset: 0;

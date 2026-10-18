@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo, useCallback } from 'react'
 import { BOARD_RELAYOUT_EVENT } from './useBandFit'
 import { isPlayerOut } from './boardShared'
 import type { GameView } from '../net/types'
+import { seatColorVar, seatIndexOf } from './seatColor'
 import './CombatArrowsOverlay.css'
 
 interface ArrowItem {
@@ -15,6 +16,8 @@ interface ArrowItem {
    *  quién apunta cada flecha en los tests (pod multijugador). */
   fromId: string
   toId: string
+  path?: string
+  color?: string
 }
 
 interface CombatArrowsOverlayProps {
@@ -24,9 +27,30 @@ interface CombatArrowsOverlayProps {
   chosenTargetIds?: string[]
   combatChosen?: string[]
   combatMode?: 'attack' | 'block' | null
+  stackFocusIds?: ReadonlySet<string> | null
+  variant?: 'v1' | 'v2'
 }
 
 const EMPTY_ARRAY: string[] = []
+
+type Pt = { x: number; y: number }
+
+export function rectEdgePoint(center: Pt, halfW: number, halfH: number, toward: Pt): Pt {
+  const dx = toward.x - center.x
+  const dy = toward.y - center.y
+  if (dx === 0 && dy === 0) return center
+  const tx = dx === 0 ? Infinity : halfW / Math.abs(dx)
+  const ty = dy === 0 ? Infinity : halfH / Math.abs(dy)
+  const t = Math.min(tx, ty, 1)
+  return { x: center.x + dx * t, y: center.y + dy * t }
+}
+
+export function liftedArcPath(a: Pt, b: Pt): string {
+  const lift = Math.min(90, Math.hypot(b.x - a.x, b.y - a.y) * 0.18)
+  const mx = Math.round((a.x + b.x) / 2)
+  const my = Math.round((a.y + b.y) / 2 - lift)
+  return `M ${Math.round(a.x)} ${Math.round(a.y)} Q ${mx} ${my} ${Math.round(b.x)} ${Math.round(b.y)}`
+}
 
 export default function CombatArrowsOverlay({
   game,
@@ -35,6 +59,8 @@ export default function CombatArrowsOverlay({
   chosenTargetIds = EMPTY_ARRAY,
   combatChosen = EMPTY_ARRAY,
   combatMode,
+  stackFocusIds = null,
+  variant = 'v1',
 }: CombatArrowsOverlayProps) {
   const [arrows, setArrows] = useState<ArrowItem[]>([])
 
@@ -119,7 +145,36 @@ export default function CombatArrowsOverlay({
       return null
     }
 
+    const seated = variant === 'v2'
+    const controllerOf = (cardId: string): string | undefined => {
+      for (const p of game.players ?? []) {
+        if (cardId in (p.battlefield ?? {})) return p.playerId
+      }
+      const onStack = (game.stack as Record<string, { controllerId?: string }> | undefined)?.[cardId]
+      if (onStack?.controllerId) return String(onStack.controllerId)
+      if (cardId in (game.myHand ?? {})) return me?.playerId
+      return undefined
+    }
+
     const makeArrow = (id: string, from: { x: number; y: number; rect: DOMRect }, to: { x: number; y: number; rect: DOMRect }, type: ArrowItem['type'], fromId = '', toId = ''): ArrowItem => {
+      if (seated) {
+        const a = rectEdgePoint(from, from.rect.width / 2, from.rect.height / 2, to)
+        const edge = rectEdgePoint(to, to.rect.width / 2, to.rect.height / 2, from)
+        const len = Math.hypot(edge.x - a.x, edge.y - a.y) || 1
+        const b = { x: edge.x - ((edge.x - a.x) / len) * 3, y: edge.y - ((edge.y - a.y) / len) * 3 }
+        return {
+          id,
+          x1: Math.round(a.x),
+          y1: Math.round(a.y),
+          x2: Math.round(b.x),
+          y2: Math.round(b.y),
+          type,
+          fromId,
+          toId,
+          path: liftedArcPath(a, b),
+          color: seatColorVar(seatIndexOf(game.players, controllerOf(fromId) ?? me?.playerId)),
+        }
+      }
       const dx = to.x - from.x
       const dy = to.y - from.y
       const dist = Math.hypot(dx, dy) || 1
@@ -238,6 +293,7 @@ export default function CombatArrowsOverlay({
     // 5. Stack spell/ability targeting arrows from stack items -> their targets
     if (game.stack && typeof game.stack === 'object') {
       Object.entries(game.stack).forEach(([stackId, stackCard]) => {
+        if (stackFocusIds && !stackFocusIds.has(stackId)) return
         const sourceCenter = getCenter(stackId)
         if (!sourceCenter) return
 
@@ -249,8 +305,31 @@ export default function CombatArrowsOverlay({
           ? Object.keys(targets)
           : []
 
+        const inDeck = !!stackFocusIds && !!sourceCenter.rect && !!boardEl.querySelector('.stack-deck')?.contains(
+          boardEl.querySelector(`[data-card-id="${stackId}"]`),
+        )
+        const controllerId = String(cardObj.controllerId ?? '')
+        const seatColor = seatColorVar(seatIndexOf(game.players, controllerId))
+
         targetList.forEach((tgtId, ti) => {
           const tgtCenter = getCenter(tgtId)
+          const tgtEl = boardEl.querySelector(`[data-card-id="${tgtId}"]`)
+          if (inDeck && tgtCenter && tgtEl && boardEl.querySelector('.stack-deck')?.contains(tgtEl)) {
+            const ax = Math.round(sourceCenter.rect.left - boardRect.left)
+            const ay = Math.round(sourceCenter.y)
+            const bx = Math.round(tgtCenter.rect.left - boardRect.left)
+            const by = Math.round(tgtCenter.y)
+            newArrows.push({
+              id: `stack-target-${stackId}-${ti}-${tgtId}`,
+              x1: ax, y1: ay, x2: bx, y2: by,
+              type: 'target',
+              fromId: String(stackId),
+              toId: String(tgtId),
+              path: `M ${ax} ${ay} C ${ax - 80} ${ay} ${bx - 80} ${by} ${bx - 2} ${by}`,
+              color: seatColor,
+            })
+            return
+          }
           if (tgtCenter) {
             newArrows.push(makeArrow(`stack-target-${stackId}-${ti}-${tgtId}`, sourceCenter, tgtCenter, 'target', String(stackId), String(tgtId)))
           }
@@ -259,7 +338,7 @@ export default function CombatArrowsOverlay({
     }
 
     return newArrows
-  }, [game, boardRef, targetSourceId, chosenTargetIds, combatChosen, combatMode, me, opp])
+  }, [game, boardRef, targetSourceId, chosenTargetIds, combatChosen, combatMode, me, opp, stackFocusIds, variant])
 
   useEffect(() => {
     const update = () => {
@@ -361,7 +440,28 @@ export default function CombatArrowsOverlay({
         const cx = Math.round(mx - dy * curveFactor)
         const cy = Math.round(my + dx * curveFactor)
 
-        const pathData = `M ${a.x1} ${a.y1} Q ${cx} ${cy} ${a.x2} ${a.y2}`
+        const pathData = a.path ?? `M ${a.x1} ${a.y1} Q ${cx} ${cy} ${a.x2} ${a.y2}`
+        if (a.color) {
+          const markerId = `marker-seat-${a.id.replace(/[^\w-]/g, '_')}`
+          return (
+            <g
+              key={a.id}
+              className={`arrow-group arrow-${a.type} arrow-group--v2`}
+              data-arrow-from={a.fromId}
+              data-arrow-to={a.toId}
+            >
+              <marker id={markerId} markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+                <path d="M1,1 L9,5 L1,9 z" style={{ fill: a.color }} />
+              </marker>
+              <path
+                d={pathData}
+                className={`arrow-path arrow-v2 arrow-${a.type}-v2`}
+                style={{ stroke: a.color, color: a.color }}
+                markerEnd={`url(#${markerId})`}
+              />
+            </g>
+          )
+        }
 
         return (
           <g

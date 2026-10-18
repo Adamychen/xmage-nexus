@@ -1,0 +1,75 @@
+.board-wrap[data-ui='v2'] .arena-opp-cell > .board-zone {
+  padding-top: var(--sp-2);
+  background-image: linear-gradient(90deg, transparent, var(--seat), transparent);
+  background-size: calc(100% - 24px) 2px;
+  background-position: center top;
+  background-repeat: no-repeat;
+  border-radius: var(--r-xl);
+}
+
+.board-wrap[data-ui='v2'] .arena-opp-cell > .board-zone[data-turn] {
+  background-image:
+    linear-gradient(90deg, transparent, var(--seat), transparent),
+    linear-gradient(180deg, rgb(var(--gold-rgb) / 0.08), transparent 60%);
+  background-size: calc(100% - 24px) 2px, 100% 100%;
+  background-position: center top, center top;
+}
+
+.board-wrap[data-ui='v2'] {
+  container: board / inline-size;
+  --me-gutter-l: 290px;
+  --me-gutter-r: 250px;
+}
+
+.board-wrap[data-ui='v2'] .arena-board > .zone-bottom {
+  position: relative;
+  padding-left: var(--me-gutter-l);
+  padding-right: var(--me-gutter-r);
+  overflow: visible;
+}
+
+.board-wrap[data-ui='v2'] .arena-board > .zone-bottom .pz-bottom-row {
+  position: absolute;
+  left: 18px;
+  bottom: 18px;
+  width: 236px;
+  min-height: 0;
+  max-height: none;
+  display: block;
+  z-index: 12;
+}
+
+.game--v2 .game-dock {
+  right: 24px;
+  bottom: 36px;
+  width: 266px;
+}
+
+.game--v2 .game-dock-row {
+  justify-content: flex-end;
+}
+
+.game--v2 .game-dock-rewind {
+  align-self: flex-end;
+}
+
+@container board (max-width: 520px) {
+  .game--v2 .game-dock {
+    right: 8px;
+    zoom: 0.7;
+  }
+
+  .board-wrap[data-ui='v2'] .arena-board > .zone-bottom .pz-bottom-row {
+    width: calc(100cqw - 200px);
+  }
+}
+
+.board-wrap[data-ui='v2'] .compact-pod .bz-status-row,
+.board-wrap[data-ui='v2'] .compact-pod .pz-bottom-row,
+.board-wrap[data-ui='v2'] .compact-pod .oz-top-row {
+  max-height: none;
+}
+
+.board-wrap[data-ui='v2'] .player-zone.compact-pod {
+  padding-bottom: var(--sp-1h);
+}

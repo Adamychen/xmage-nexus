@@ -21,6 +21,8 @@ class SoundManager {
   private lastPlayed: Map<SoundKey, number> = new Map()
   private settings: AudioSettings = { ...DEFAULT_SETTINGS }
   private initialized = false
+  private unlockListeners: Array<() => void> = []
+  private uiClickClaimed = false
 
   init(settings?: AudioSettings) {
     if (settings) {
@@ -47,6 +49,7 @@ class SoundManager {
           window.removeEventListener('click', unlock)
           window.removeEventListener('keydown', unlock)
           window.removeEventListener('touchstart', unlock)
+          for (const listener of this.unlockListeners) listener()
         }
       }
     }
@@ -83,6 +86,21 @@ class SoundManager {
     return true
   }
 
+  isUnlocked(): boolean {
+    return this.ctx !== null && this.ctx.state === 'running'
+  }
+
+  onUnlock(listener: () => void): () => void {
+    this.unlockListeners.push(listener)
+    return () => {
+      this.unlockListeners = this.unlockListeners.filter((l) => l !== listener)
+    }
+  }
+
+  isUiClickClaimed(): boolean {
+    return this.uiClickClaimed
+  }
+
   setSettings(newSettings: AudioSettings) {
     this.settings = { ...newSettings }
     this.applySettings()
@@ -113,6 +131,15 @@ class SoundManager {
     this.sfxGain.gain.value = Math.max(0, Math.min(1, sfxVolume))
     this.uiGain.gain.value = Math.max(0, Math.min(1, uiVolume))
     if (this.musicGain) this.musicGain.gain.value = this.musicVolume
+  }
+
+  private claimUiClick() {
+    this.uiClickClaimed = true
+    const release = () => {
+      this.uiClickClaimed = false
+    }
+    if (typeof requestAnimationFrame === 'function') requestAnimationFrame(release)
+    else setTimeout(release, 16)
   }
 
   private getBuffer(key: SoundKey): AudioBuffer | null {
@@ -148,6 +175,7 @@ class SoundManager {
   }
 
   play(key: SoundKey, category: SoundCategory = 'game') {
+    if (key === 'ui_click') this.claimUiClick()
     if (!this.settings.soundEnabled) return
 
     const now = Date.now()

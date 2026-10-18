@@ -1,0 +1,159 @@
+.mech-overview {
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding: var(--sp-3);
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.mech-sec {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1h);
+  padding-bottom: var(--sp-3);
+  border-bottom: 1px solid var(--line-1);
+}
+
+.mech-sec:last-child {
+  border-bottom: 0;
+}
+
+.mech-head {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-size: var(--fs-sm);
+  color: var(--fg-1);
+}
+
+.mech-head > svg {
+  flex: none;
+  color: var(--gold-500);
+}
+
+.mech-head > span {
+  margin-left: auto;
+  font-size: var(--fs-2xs);
+  color: var(--fg-3);
+  white-space: nowrap;
+}
+
+.mech-bearer {
+  font-size: var(--fs-xs);
+  color: var(--fg-2);
+}
+
+.mech-bearer b {
+  color: var(--gold-300);
+}
+
+.mech-lvl {
+  display: flex;
+  gap: var(--sp-2);
+  padding: var(--sp-1h) var(--sp-2);
+  border-radius: var(--r-md);
+  background: var(--ink-3);
+  border: 1px solid var(--line-1);
+  font-size: var(--fs-2xs);
+  line-height: 1.4;
+  color: var(--fg-3);
+}
+
+.mech-lvl-n {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--ink-4);
+  font-size: var(--fs-3xs);
+  font-weight: 800;
+  color: var(--fg-3);
+}
+
+.mech-lvl.done {
+  color: var(--fg-2);
+}
+
+.mech-lvl.done .mech-lvl-n {
+  background: rgb(var(--gold-rgb) / 0.25);
+  color: var(--gold-300);
+}
+
+.mech-lvl.cur {
+  border-color: var(--gold-line);
+  background: var(--gold-soft);
+  color: var(--fg-1);
+}
+
+.mech-dungeon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-1h);
+}
+
+.mech-dungeon-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--sp-1h);
+}
+
+.mech-room {
+  padding: var(--sp-1h) var(--sp-2h);
+  border-radius: var(--r-md);
+  background: var(--ink-3);
+  border: 1px solid var(--line-2);
+  font-size: var(--fs-2xs);
+  font-weight: 700;
+  text-align: center;
+  color: var(--fg-3);
+}
+
+.mech-room.seen {
+  background: rgb(var(--purple-rgb) / 0.14);
+  border-color: rgb(var(--purple-rgb) / 0.45);
+  color: var(--fg-2);
+}
+
+.mech-room.cur {
+  background: var(--gold-500);
+  border-color: var(--gold-300);
+  box-shadow: 0 0 14px rgb(var(--gold-rgb) / 0.5);
+  color: var(--dial-resolve-ink);
+}
+
+.mech-hint {
+  padding: var(--sp-2) var(--sp-2h);
+  border-radius: var(--r-md);
+  background: var(--ink-3);
+  border: 1px solid var(--line-1);
+  font-size: var(--fs-2xs);
+  line-height: 1.5;
+  color: var(--fg-3);
+}
+
+.mech-kv {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--sp-1h) var(--sp-3);
+  margin: 0;
+  font-size: var(--fs-xs);
+  color: var(--fg-3);
+}
+
+.mech-kv dt {
+  margin: 0;
+}
+
+.mech-kv dd {
+  margin: 0;
+  text-align: right;
+  font-weight: 700;
+  color: var(--fg-1);
+}

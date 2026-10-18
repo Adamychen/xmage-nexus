@@ -66,7 +66,7 @@ describe('RankingView Component', () => {
     render(<RankingView users={mockUsers} currentUsername="player1" onInspectUser={vi.fn()} />)
 
     const mine = document.querySelector('.rank-guide-tier.is-mine .rank-guide-name')
-    expect(mine?.textContent).toBe('Oro')
+    expect(mine?.textContent).toBe('Diamante')
   })
 
   it('filters the room by search query', () => {
@@ -136,7 +136,7 @@ describe('RankingView Component', () => {
 
     fireEvent.click(screen.getByRole('tab', { name: /Limit/i }))
     expect(order()).toEqual(['bravo', 'alpha'])
-    expect(document.querySelector('.rank-guide-tier.is-mine .rank-guide-name')?.textContent).toBe('Plata')
+    expect(document.querySelector('.rank-guide-tier.is-mine .rank-guide-name')?.textContent).toBe('Oro')
   })
 
   it('treats a missing rating as unrated, never as a fake 1500', () => {

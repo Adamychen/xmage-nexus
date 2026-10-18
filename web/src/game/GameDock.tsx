@@ -76,7 +76,11 @@ export default function GameDock({ action, rewind = null, onPromptSlot }: GameDo
     <div className="game-dock" data-testid="game-dock">
       <div className="game-dock-prompt" ref={onPromptSlot} />
       <div className="game-dock-row">
-        {rewind}
+        {rewind && (
+          <div className="game-dock-rewind" data-testid="game-dock-rewind">
+            {rewind}
+          </div>
+        )}
         {action}
       </div>
     </div>

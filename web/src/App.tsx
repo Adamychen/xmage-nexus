@@ -9,11 +9,15 @@ import { ZOOM_DEFAULT, stepZoom } from './appearance/zoom'
 import { applyFxRoot } from './board/fx'
 import { useTranslation } from './i18n'
 import { soundManager } from './audio/soundManager'
+import { useLobbyMusic } from './audio/useLobbyMusic'
+import { installUiClickSound } from './audio/uiClickSound'
 import { loadAudioSettings, loadMusicSettings, loadAppearanceSettings, applyAppearanceToDocument } from './state/persistence'
 import './ui/screenMotion.css'
 import LoginScreen from './lobby/LoginScreen'
 import ManaPips from './lobby/ManaPips'
 import LobbyScreen from './lobby/LobbyScreen'
+import PublicRankingScreen from './lobby/PublicRankingScreen'
+import { isPublicRankingHash } from './lobby/publicRankingRoute'
 import SpectatorStagingScreen from './lobby/SpectatorStagingScreen'
 import DeckIssuesDialog from './lobby/DeckIssuesDialog'
 import SetupWizard from './setup/SetupWizard'
@@ -43,17 +47,28 @@ export default function App() {
   const loginRetry = useStore((s) => s.loginRetry)
   const settings = useStore((s) => s.settings)
 
+  useLobbyMusic(phase !== 'game', settings.musicEnabled)
+
+  useEffect(() => installUiClickSound(), [])
+
   useEffect(() => {
     applyFxRoot()
   }, [settings.effects, settings.animationSpeed])
 
   const [showSetup, setShowSetup] = useState(() => bootPlanFromStorage().showWizard)
   const [gallery, setGallery] = useState(() => Boolean(GalleryScreen) && isGalleryHash(window.location.hash))
+  const [publicRanking, setPublicRanking] = useState(() => isPublicRankingHash(window.location.hash))
 
   useEffect(() => {
     if (!GalleryScreen) return
     const sync = () => setGallery(isGalleryHash(window.location.hash))
     sync()
+    window.addEventListener('hashchange', sync)
+    return () => window.removeEventListener('hashchange', sync)
+  }, [])
+
+  useEffect(() => {
+    const sync = () => setPublicRanking(isPublicRankingHash(window.location.hash))
     window.addEventListener('hashchange', sync)
     return () => window.removeEventListener('hashchange', sync)
   }, [])
@@ -87,6 +102,7 @@ export default function App() {
     // been completed is not part of this decision: see setup/bootRestore.ts.
     if (!bootPlanFromStorage().restore) return
     if (GalleryScreen && isGalleryHash(window.location.hash)) return
+    if (isPublicRankingHash(window.location.hash)) return
     const saved = loadConn()
     if (saved?.username && phase === 'idle') {
       void doConnect(saved.wsHost, saved.proxyPort, saved.serverHost, saved.port, saved.username, saved.password, saved.flagName, saved.avatarId)
@@ -133,6 +149,10 @@ export default function App() {
         <GalleryScreen />
       </Suspense>
     )
+  }
+
+  if (publicRanking) {
+    return <PublicRankingScreen />
   }
 
   const screenKey = phase === 'lobby'

@@ -221,3 +221,13 @@ ops), `docs/testing.md`, `web/AGENTS.md`, `Mage.Proxy/README.md`.
 - `width: min(Npx, 96vw)` on a panel inside a backdrop that has its own padding overflows by twice that padding on a phone (create-table dialog: 20..394 in a 390 px window). Cap the panel at `100vw - 2 × backdrop padding`, divided by `--ui-zoom`; guard in `e2e/mobile.spec.ts`, verified red with the cap removed.
 - **The engine skips a step with no stop set without asking whether you have a play.** `HumanPlayer.checkPassStep` passes any step whose `SkipPrioritySteps` flag is off, on an empty stack, before the client sees a `GAME_SELECT`; so a client "smart stops" layer can only ever pass *more*, never stop where the engine already skipped. With the Simple preset (every stop off) the land drop in main 1 never reached the client. The client now sends the engine every stop on while smart stops are active (`serverPhaseStops`) and decides itself (`decideStop`: playable → stop, marked stop → stop, else pass). The engine does list the land drop (`canPlayObjects[...].basicPlayAbilities = "Play Mountain"`, frame `recorded/land-drop.json`) and omits it once a land is played, so the old name-based hand heuristic was both redundant and a source of false stops.
 - Only `BasicManaAbility` lands in `canPlayObjects[...].basicManaAbilities`; Sol Ring (`{T}: Add {C}{C}.`), filter lands (`{U/R}, {T}: Add {U}{U}.`) and Treasures come under `other` (frame `recorded/mana-rocks.json`). `meaningfulPlayables` filters `other` by the `: Add {…}` text, otherwise any untapped rock turned every window into a stop.
+
+- **Two files whose names differ only by case are one file on macOS and Windows.** `game/combatLedger.ts`
+  (the model) next to `game/CombatLedger.tsx` (the component) made `tsc` fail with TS1261 ("already
+  included file name … differs only in casing") and the import resolve to the wrong one on this Mac, while
+  Linux CI would have built both. Give the model a different stem (`combatLedgerModel.ts`).
+- **`@testing-library/react` does not clean up between tests in this repo.** `getByTestId` is bound to
+  `document.body`, so a test that renders the same component after another one finds two matches
+  (`Found multiple elements by: [data-testid="stack-deck-toggle"]`) and passes alone but fails in the file.
+  Call `afterEach(cleanup)` in any spec that queries through the returned `getBy*`.
+
