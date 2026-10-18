@@ -26,6 +26,7 @@ describe('ranking.ts — MTG Arena Tier Calculation', () => {
     const rank = getRankInfo(1000)
     expect(rank.tier).toBe('BRONZE')
     expect(rank.name).toBe('Bronze')
+    expect(rank.icon).toBe('medal')
     expect(rank.nextTierName).toBe('Silver')
   })
 
@@ -33,6 +34,7 @@ describe('ranking.ts — MTG Arena Tier Calculation', () => {
     const rank = getRankInfo(1250)
     expect(rank.tier).toBe('SILVER')
     expect(rank.name).toBe('Silver')
+    expect(rank.icon).toBe('medal')
     expect(rank.nextTierName).toBe('Gold')
   })
 
@@ -40,6 +42,7 @@ describe('ranking.ts — MTG Arena Tier Calculation', () => {
     const rank = getRankInfo(1450)
     expect(rank.tier).toBe('GOLD')
     expect(rank.name).toBe('Gold')
+    expect(rank.icon).toBe('medal')
     expect(rank.nextTierName).toBe('Platinum')
   })
 
@@ -47,6 +50,7 @@ describe('ranking.ts — MTG Arena Tier Calculation', () => {
     const rank = getRankInfo(1580)
     expect(rank.tier).toBe('PLATINUM')
     expect(rank.name).toBe('Platinum')
+    expect(rank.icon).toBe('award')
     expect(rank.nextTierName).toBe('Diamond')
   })
 
@@ -54,6 +58,7 @@ describe('ranking.ts — MTG Arena Tier Calculation', () => {
     const rank = getRankInfo(1650)
     expect(rank.tier).toBe('DIAMOND')
     expect(rank.name).toBe('Diamond')
+    expect(rank.icon).toBe('gem')
     expect(rank.nextTierName).toBe('Mythic')
   })
 
@@ -76,6 +81,7 @@ describe('ranking.ts — MTG Arena Tier Calculation', () => {
     const rank = getRankInfo(2150)
     expect(rank.tier).toBe('MYTHIC')
     expect(rank.name).toBe('Mythic')
+    expect(rank.icon).toBe('crown')
     expect(rank.nextTierName).toBeNull()
     expect(rank.progressPercent).toBe(100)
   })
