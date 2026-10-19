@@ -1,0 +1,52 @@
+@keyframes drawSlide {
+  0% {
+    translate: var(--draw-dx, 0px) var(--draw-dy, 0px);
+    rotate: -5deg;
+    scale: 0.8;
+    opacity: 0.4;
+  }
+  73% {
+    translate: 0px 0px;
+    rotate: 0deg;
+    scale: 1;
+    opacity: 1;
+  }
+  86% {
+    translate: 0px 0px;
+    rotate: 0deg;
+    scale: 1.03;
+    opacity: 1;
+  }
+  100% {
+    translate: 0px 0px;
+    rotate: 0deg;
+    scale: 1;
+    opacity: 1;
+  }
+}
+
+@keyframes drawFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.hand-card-slot.draw-slide,
+.hand-rail-card.draw-slide,
+.hand-row-card.draw-slide {
+  animation: drawSlide var(--draw-ms, 550ms) var(--ease-out) backwards;
+}
+
+.hand-card-slot.draw-fade,
+.hand-rail-card.draw-fade,
+.hand-row-card.draw-fade {
+  animation: drawFade var(--draw-ms, 150ms) linear backwards;
+}
+
+.hand-card-slot.draw-slide .card-slot.entering,
+.hand-card-slot.draw-fade .card-slot.entering,
+.hand-rail-card.draw-slide .card-slot.entering,
+.hand-rail-card.draw-fade .card-slot.entering,
+.hand-row-card.draw-slide .card-slot.entering,
+.hand-row-card.draw-fade .card-slot.entering {
+  animation: none;
+}

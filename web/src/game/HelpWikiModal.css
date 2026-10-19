@@ -1,20 +1,63 @@
-
-
-/* Nav Tabs */
-.wiki-nav-tabs {
-  gap: var(--sp-2);
-  border-bottom: 1px solid var(--veil-2);
-  padding-bottom: var(--sp-2);
+.wiki-dialog {
+  display: flex;
+  flex-direction: column;
+  padding: var(--sp-4h) var(--sp-5) var(--sp-4);
 }
 
-/* Content Area */
+.wiki-dialog > * {
+  flex: none;
+}
+
+.wiki-dialog .dlg-message {
+  margin: 0 0 var(--sp-3);
+  color: var(--fg-2);
+  line-height: 1.4;
+}
+
+.wiki-nav-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--sp-1);
+  padding-bottom: 0;
+  border-bottom: 1px solid var(--line-2);
+}
+
+.ui-tabs.wiki-nav-tabs .ui-tab {
+  min-width: 0;
+  padding: var(--sp-2h) var(--sp-2);
+  margin-bottom: -1px;
+  line-height: 1.25;
+  text-align: center;
+  white-space: normal;
+  border-radius: var(--r-base) var(--r-base) 0 0;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+}
+
+.ui-tabs.wiki-nav-tabs .ui-tab:hover:not(:disabled) {
+  color: var(--fg-1);
+  background: var(--veil-2);
+}
+
+.ui-tabs.wiki-nav-tabs .ui-tab[aria-selected='true'] {
+  color: var(--fg-hi);
+  background: linear-gradient(180deg, transparent 0%, rgb(var(--brand-rgb) / 0.14) 100%);
+  border-bottom-color: var(--brand);
+}
+
+.ui-tabs.wiki-nav-tabs .ui-tab:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
 .wiki-content {
   flex: 1 1 auto;
-  min-height: 200px;
-  max-height: 56vh;
+  min-height: min(22rem, 45vh);
   overflow-y: auto;
-  margin-top: var(--sp-3h);
-  padding-right: var(--sp-1h);
+  overscroll-behavior: contain;
+  margin-top: var(--sp-4);
+  padding: var(--sp-1) var(--sp-2) var(--sp-1) 0;
+  scrollbar-width: thin;
+  scrollbar-color: rgb(var(--purple-rgb) / 0.45) transparent;
 }
 
 .wiki-content::-webkit-scrollbar {
@@ -26,7 +69,6 @@
   border-radius: var(--r-xs);
 }
 
-/* Search Bar */
 .wiki-search-bar-wrap {
   position: relative;
   display: flex;
@@ -35,20 +77,30 @@
 
 .wiki-search-icon {
   position: absolute;
-  left: 12px;
-  color: var(--fg-2);
-  font-size: var(--fs-md);
+  left: var(--sp-3);
+  display: inline-flex;
+  color: var(--fg-3);
+  pointer-events: none;
 }
 
 .wiki-search-input {
   width: 100%;
-  padding: var(--sp-2h) 38px var(--sp-2h) 36px;
+  padding: var(--sp-2h) var(--sp-6) var(--sp-2h) var(--sp-6);
   font-size: var(--fs-sm);
+  background: var(--ink-1);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-md);
+  transition: border-color 0.15s, box-shadow 0.15s;
 }
 
-.wiki-clear-search { position: absolute; right: 6px; }
+.wiki-search-input:focus-visible {
+  outline: none;
+  border-color: var(--brand);
+  box-shadow: var(--focus-ring);
+}
 
-/* Category Pills */
+.wiki-clear-search { position: absolute; right: var(--sp-1h); }
+
 .wiki-category-pills {
   display: flex;
   flex-wrap: wrap;
@@ -56,60 +108,70 @@
   margin: var(--sp-3) 0 var(--sp-4);
 }
 
-/* Keywords Grid */
 .wiki-keywords-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 16rem), 1fr));
   gap: var(--sp-3);
 }
 
 .wiki-kw-card {
-  background: rgb(var(--ink-2-rgb) / 0.7);
-  border: 1px solid var(--veil-2);
+  position: relative;
+  background: rgb(var(--ink-2-rgb) / 0.75);
+  border: 1px solid var(--line-1);
+  border-left-width: 3px;
   border-radius: var(--r-md);
   padding: var(--sp-3) var(--sp-3h);
   display: flex;
   flex-direction: column;
   gap: var(--sp-1h);
-  transition: transform 0.15s, border-color 0.15s;
+  transition: transform 0.15s, border-color 0.15s, background 0.15s, box-shadow 0.15s;
 }
 
 .wiki-kw-card:hover {
   transform: translateY(-2px);
   border-color: rgb(var(--purple-rgb) / 0.4);
   background: var(--ink-3);
+  box-shadow: 0 8px 20px var(--shade-2);
 }
 
-.wiki-kw-card.cat-combat { border-left: 3px solid var(--err); }
-.wiki-kw-card.cat-evasion { border-left: 3px solid var(--brand-fg); }
-.wiki-kw-card.cat-protection { border-left: 3px solid var(--purple); }
-.wiki-kw-card.cat-cards { border-left: 3px solid var(--brand); }
-.wiki-kw-card.cat-counters { border-left: 3px solid var(--ok); }
-.wiki-kw-card.cat-mana { border-left: 3px solid var(--warn); }
-.wiki-kw-card.cat-graveyard { border-left: 3px solid var(--purple); }
-.wiki-kw-card.cat-mechanic { border-left: 3px solid var(--warn); }
+.wiki-kw-card.cat-combat { border-left-color: var(--err); }
+.wiki-kw-card.cat-evasion { border-left-color: var(--brand-fg); }
+.wiki-kw-card.cat-protection { border-left-color: var(--purple); }
+.wiki-kw-card.cat-cards { border-left-color: var(--brand); }
+.wiki-kw-card.cat-counters { border-left-color: var(--ok); }
+.wiki-kw-card.cat-mana { border-left-color: var(--warn); }
+.wiki-kw-card.cat-graveyard { border-left-color: var(--purple); }
+.wiki-kw-card.cat-mechanic { border-left-color: var(--warn); }
 
 .wiki-kw-card-header {
   display: flex;
-  align-items: center;
+  flex-wrap: wrap;
+  align-items: flex-start;
   justify-content: space-between;
   gap: var(--sp-2);
 }
 
 .wiki-kw-card-title {
   display: flex;
-  align-items: center;
+  flex: 1 1 auto;
+  align-items: flex-start;
   gap: var(--sp-1h);
+  min-width: 0;
 }
 
 .wiki-kw-icon {
-  font-size: var(--fs-base);
+  display: inline-flex;
+  padding-top: var(--sp-0h);
+  color: var(--fg-3);
 }
 
 .wiki-kw-name-en {
   font-size: var(--fs-base);
+  line-height: 1.2;
   color: var(--gold-300);
   font-family: var(--font-display, serif);
+  letter-spacing: 0.02em;
+  overflow-wrap: break-word;
 }
 
 .wiki-kw-name-es {
@@ -120,7 +182,7 @@
 .wiki-kw-summary {
   margin: 0;
   font-size: var(--fs-md);
-  line-height: 1.35;
+  line-height: 1.4;
   color: var(--fg-2);
 }
 
@@ -128,62 +190,103 @@
   font-size: var(--fs-xs);
   color: var(--fg-3);
   font-family: monospace;
+  letter-spacing: 0.02em;
   margin-top: var(--sp-1);
-  padding-top: var(--sp-1);
-  border-top: 1px dashed var(--veil-2);
+  padding-top: var(--sp-1h);
+  border-top: 1px dashed var(--line-2);
 }
 
 .wiki-empty { grid-column: 1 / -1; }
 
-/* Phases Tab */
 .wiki-phases-tab {
   display: flex;
   flex-direction: column;
-  gap: var(--sp-4h);
+  gap: var(--sp-5);
 }
 
 .wiki-section h3 {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
   margin: 0 0 var(--sp-3);
-  font-size: 1.05rem;
+  padding-bottom: var(--sp-2);
+  border-bottom: 1px solid var(--line-1);
+  font-size: var(--fs-heading);
+  letter-spacing: 0.03em;
   color: var(--gold-300);
   font-family: var(--font-display, serif);
 }
 
+.wiki-section h3 > svg {
+  flex: none;
+  color: var(--gold-300);
+}
+
 .wiki-phases-timeline {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: var(--sp-2h);
+  padding-left: var(--sp-4);
+}
+
+.wiki-phases-timeline::before {
+  content: '';
+  position: absolute;
+  left: var(--sp-1h);
+  top: var(--sp-3);
+  bottom: var(--sp-3);
+  width: 2px;
+  border-radius: var(--r-pill);
+  background: var(--line-2);
 }
 
 .phase-block {
+  position: relative;
   border-radius: var(--r-base);
   padding: var(--sp-3) var(--sp-3h);
   background: rgb(var(--ink-2-rgb) / 0.6);
-  border: 1px solid var(--veil-2);
+  border: 1px solid var(--line-1);
 }
 
-.phase-block.phase-beginning { border-left: 4px solid var(--ok); }
-.phase-block.phase-main { border-left: 4px solid var(--brand); }
-.phase-block.phase-combat { border-left: 4px solid var(--err); }
-.phase-block.phase-ending { border-left: 4px solid var(--purple); }
+.phase-block::before {
+  content: '';
+  position: absolute;
+  left: calc(var(--sp-4) * -1 + var(--sp-0h));
+  top: var(--sp-3h);
+  width: 0.625rem;
+  height: 0.625rem;
+  border-radius: 50%;
+  background: var(--phase-accent, var(--brand));
+  box-shadow: 0 0 0 3px var(--ink-1);
+}
+
+.phase-block.phase-beginning { --phase-accent: var(--ok); }
+.phase-block.phase-main { --phase-accent: var(--brand); }
+.phase-block.phase-combat { --phase-accent: var(--err); }
+.phase-block.phase-ending { --phase-accent: var(--purple); }
 
 .phase-title {
   font-size: var(--fs-base);
   font-weight: 700;
-  color: var(--fg-1);
-  margin-bottom: var(--sp-1h);
+  color: var(--fg-hi);
+  margin-bottom: var(--sp-2);
 }
 
 .phase-steps {
   display: flex;
-  flex-direction: column;
-  gap: var(--sp-1);
+  flex-wrap: wrap;
+  gap: var(--sp-1) var(--sp-1h);
 }
 
 .phase-step {
+  padding: var(--sp-0h) var(--sp-2);
   font-size: var(--fs-sm);
   color: var(--fg-2);
-  line-height: 1.35;
+  line-height: 1.5;
+  background: var(--shade-1);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-pill);
 }
 
 .phase-step strong {
@@ -193,11 +296,12 @@
 .wiki-stack-card {
   background: rgb(var(--ink-2-rgb) / 0.6);
   border: 1px solid rgb(var(--purple-rgb) / 0.3);
+  border-left: 3px solid var(--purple);
   border-radius: var(--r-base);
-  padding: var(--sp-3h);
+  padding: var(--sp-3h) var(--sp-4);
   font-size: var(--fs-md);
   color: var(--fg-2);
-  line-height: 1.4;
+  line-height: 1.5;
 }
 
 .wiki-stack-card p {
@@ -208,10 +312,13 @@
   margin-bottom: 0;
 }
 
-/* Shortcuts Tab */
+.wiki-stack-card strong {
+  color: var(--fg-1);
+}
+
 .wiki-shortcuts-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 16rem), 1fr));
   gap: var(--sp-3);
 }
 
@@ -219,20 +326,27 @@
   display: flex;
   align-items: flex-start;
   gap: var(--sp-3);
-  background: rgb(var(--ink-2-rgb) / 0.7);
-  border: 1px solid var(--veil-2);
+  background: rgb(var(--ink-2-rgb) / 0.75);
+  border: 1px solid var(--line-1);
   border-radius: var(--r-md);
   padding: var(--sp-3) var(--sp-3h);
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.shortcut-card:hover {
+  border-color: rgb(var(--gold-rgb) / 0.3);
+  background: var(--ink-3);
 }
 
 .shortcut-key {
   background: var(--shade-2);
-  border: 1.5px solid rgb(var(--gold-rgb) / 0.6);
+  border: 1px solid rgb(var(--gold-rgb) / 0.55);
   color: var(--gold-300);
   font-weight: 800;
   font-size: var(--fs-sm);
   padding: var(--sp-1) var(--sp-2);
   border-radius: var(--r-sm);
+  box-shadow: inset 0 -2px 0 rgb(var(--gold-rgb) / 0.22);
   white-space: nowrap;
 }
 
@@ -247,18 +361,67 @@
   margin: 0;
   font-size: var(--fs-sm);
   color: var(--fg-2);
-  line-height: 1.3;
+  line-height: 1.35;
 }
 
-/* Footer */
 .wiki-footer {
   margin-top: var(--sp-4);
   padding-top: var(--sp-3);
-  border-top: 1px solid var(--veil-2);
+  border-top: 1px solid var(--line-1);
   display: flex;
   justify-content: flex-end;
 }
 
+@media (max-width: 520px) {
+  .wiki-dialog {
+    padding: var(--sp-3) var(--sp-3h) var(--sp-3);
+  }
+
+  .wiki-dialog .dlg-title {
+    font-size: var(--fs-xl);
+  }
+
+  .wiki-nav-tabs .ui-tab {
+    font-size: var(--fs-xs);
+  }
+
+  .wiki-nav-tabs .ui-tab svg {
+    display: none;
+  }
+
+  .wiki-content {
+    min-height: min(12rem, 30vh);
+  }
+
+  .wiki-category-pills {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    margin-left: calc(var(--sp-3h) * -1);
+    margin-right: calc(var(--sp-3h) * -1);
+    padding: 0 var(--sp-3h) var(--sp-1);
+  }
+
+  .wiki-category-pills > * {
+    flex: none;
+  }
+
+  .wiki-category-pills::-webkit-scrollbar {
+    display: none;
+  }
+
+  .wiki-footer .ui-btn,
+  .wiki-footer button {
+    width: 100%;
+  }
+
+  .wiki-footer {
+    justify-content: stretch;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .wiki-kw-card { transition: none; }
+  .wiki-kw-card,
+  .shortcut-card,
+  .ui-tabs.wiki-nav-tabs .ui-tab { transition: none; }
 }

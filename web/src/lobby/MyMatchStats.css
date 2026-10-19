@@ -5,7 +5,6 @@
   width: 100%;
   max-width: 1120px;
   margin-inline: auto;
-  padding-top: var(--sp-4);
 }
 
 .my-stats-summary {
@@ -13,6 +12,10 @@
   flex-wrap: wrap;
   align-items: center;
   gap: var(--sp-2);
+}
+
+.my-stats-grouping {
+  align-self: flex-start;
 }
 
 .my-stats-heading {
@@ -48,7 +51,7 @@
 }
 
 .my-stats-recent-item {
-  grid-template-columns: auto minmax(0, 2fr) minmax(0, 2fr) auto;
+  grid-template-columns: auto minmax(0, 2fr) minmax(0, 1fr) auto;
 }
 
 .my-stats-row-name,

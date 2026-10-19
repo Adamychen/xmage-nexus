@@ -2,6 +2,10 @@
   display: flex;
   align-items: center;
   gap: var(--sp-1);
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
   background: rgb(var(--ink-2-rgb) / 0.75);
   padding: var(--sp-1) var(--sp-2);
   border-radius: var(--r-base);
@@ -62,25 +66,18 @@
   box-shadow: 0 0 12px rgb(var(--brand-rgb) / 0.7), inset 0 1px 1px var(--veil-6);
   transform: scale(1.08);
   z-index: 2;
-  animation: phaseActiveIn calc(0.3s / var(--fx-speed, 1)) cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-@keyframes phaseActiveIn {
-  0% {
-    transform: scale(0.85);
-    box-shadow: 0 0 4px rgb(var(--brand-rgb) / 0.3);
-  }
-  60% {
-    transform: scale(1.22);
-    box-shadow: 0 0 20px rgb(var(--brand-rgb) / 0.9);
-  }
-  100% {
-    transform: scale(1.08);
-    box-shadow: 0 0 12px rgb(var(--brand-rgb) / 0.7);
-  }
+.phase-badge.active.phase-wipe {
+  animation: phaseWipe calc(0.25s / var(--fx-speed, 1)) cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-html.fx-off .phase-badge.active {
+@keyframes phaseWipe {
+  0% { transform: scaleX(0.8) scale(1.08); opacity: 0.8; }
+  100% { transform: scaleX(1) scale(1.08); opacity: 1; }
+}
+
+html.fx-off .phase-badge.active.phase-wipe {
   animation: none !important;
 }
 
@@ -116,9 +113,14 @@ html.fx-off .phase-badge.active {
     transition: none;
   }
 
-  .phase-badge.active {
-    animation: none;
+  .phase-badge.active.phase-wipe {
+    animation: phaseWipeFade 250ms ease-out;
   }
+}
+
+@keyframes phaseWipeFade {
+  from { opacity: 0.8; }
+  to { opacity: 1; }
 }
 
 .phase-name {
@@ -134,11 +136,11 @@ html.fx-off .phase-badge.active {
   color: var(--fg-hi);
   background: rgb(var(--brand-rgb) / 0.22);
   border: 1px solid rgb(var(--brand-rgb) / 0.5);
-  animation: phaseNameIn calc(0.25s / var(--fx-speed, 1)) ease-out;
+  animation: phaseNameIn calc(0.2s / var(--fx-speed, 1)) ease-out;
 }
 
 @keyframes phaseNameIn {
-  from { opacity: 0; transform: translateY(3px); }
+  from { opacity: 0; transform: translateY(4px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
@@ -154,6 +156,11 @@ html.fx-off .phase-name {
 
 @media (prefers-reduced-motion: reduce) {
   .phase-name {
-    animation: none;
+    animation: phaseNameFade 200ms ease-out;
   }
+}
+
+@keyframes phaseNameFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }

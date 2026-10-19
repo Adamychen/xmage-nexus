@@ -1,0 +1,45 @@
+.custom-options {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.mulligan-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-1h);
+}
+
+.custom-options-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: var(--sp-3);
+}
+
+.custom-number {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  padding: var(--sp-3);
+  border-radius: var(--r-md);
+  border: 1px solid var(--veil-2);
+  background: rgb(var(--ink-rgb) / 0.45);
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.custom-number.is-on {
+  border-color: rgb(var(--brand-rgb) / 0.4);
+  background: rgb(var(--brand-rgb) / 0.08);
+}
+
+.custom-number-input {
+  width: 100%;
+  text-align: center;
+  font-size: var(--fs-lg);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.custom-number-input:disabled {
+  opacity: 0.45;
+}

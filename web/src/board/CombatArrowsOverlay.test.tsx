@@ -1,6 +1,6 @@
 import { render } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
-import CombatArrowsOverlay from './CombatArrowsOverlay'
+import CombatArrowsOverlay, { liftedArcPath, rectEdgePoint } from './CombatArrowsOverlay'
 
 describe('CombatArrowsOverlay', () => {
   it('renders nothing when there are no arrows', () => {
@@ -176,5 +176,50 @@ describe('CombatArrowsOverlay', () => {
 
     unmount()
     boardDiv.remove()
+  })
+
+  it('v2 colours an attack arrow by the attacker\'s seat and lands it on the defender\'s edge', () => {
+    const boardDiv = document.createElement('div')
+    document.body.appendChild(boardDiv)
+    const rect = (left: number, top: number, width: number, height: number) =>
+      () => ({ left, top, width, height, right: left + width, bottom: top + height, x: left, y: top, toJSON: () => {} } as DOMRect)
+    const attCard = document.createElement('div')
+    attCard.setAttribute('data-card-id', 'opp-goblin')
+    attCard.getBoundingClientRect = rect(100, 100, 100, 70)
+    const meAvatar = document.createElement('div')
+    meAvatar.setAttribute('data-player-id', 'p-me')
+    meAvatar.getBoundingClientRect = rect(100, 600, 76, 76)
+    boardDiv.appendChild(attCard)
+    boardDiv.appendChild(meAvatar)
+    boardDiv.getBoundingClientRect = rect(0, 0, 1000, 800)
+    const game = {
+      step: 'DECLARE_BLOCKERS',
+      combat: [{ attackers: { 'opp-goblin': {} }, defenderId: 'p-me' }],
+      players: [
+        { playerId: 'p-me', name: 'Me', controlled: true, battlefield: {} },
+        { playerId: 'p-opp', name: 'Opp', controlled: false, battlefield: { 'opp-goblin': {} } },
+      ],
+    }
+    const { container, unmount } = render(<CombatArrowsOverlay game={game as any} boardRef={{ current: boardDiv }} variant="v2" />)
+    const path = container.querySelector('.arrow-group--v2 .arrow-path.arrow-v2') as SVGPathElement | null
+    expect(path).not.toBeNull()
+    expect(path!.style.stroke).toBe('var(--seat-1)')
+    const d = path!.getAttribute('d')!
+    expect(d).toMatch(/^M 149 170 Q /)
+    expect(d.endsWith(' 139 597')).toBe(true)
+    expect(container.querySelector('.arrow-shadow')).toBeNull()
+    unmount()
+    boardDiv.remove()
+  })
+
+  it('rectEdgePoint clips the centre line to the box edge', () => {
+    expect(rectEdgePoint({ x: 0, y: 0 }, 50, 20, { x: 0, y: 100 })).toEqual({ x: 0, y: 20 })
+    expect(rectEdgePoint({ x: 0, y: 0 }, 50, 20, { x: -200, y: 0 })).toEqual({ x: -50, y: 0 })
+    expect(rectEdgePoint({ x: 0, y: 0 }, 50, 20, { x: 10, y: 10 })).toEqual({ x: 10, y: 10 })
+  })
+
+  it('liftedArcPath always bows upward, by at most 90 px', () => {
+    expect(liftedArcPath({ x: 0, y: 100 }, { x: 100, y: 100 })).toBe('M 0 100 Q 50 82 100 100')
+    expect(liftedArcPath({ x: 0, y: 500 }, { x: 1000, y: 500 })).toBe('M 0 500 Q 500 410 1000 500')
   })
 })

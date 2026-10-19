@@ -60,6 +60,7 @@ test('every settings section has no WCAG A/AA violations @a11y', async ({ page }
 test('the about dialog has no WCAG A/AA violations @a11y', async ({ page }) => {
   await withFakeServer(scenario, async () => {
     await login(page, 'a11y-user')
+    await page.getByTestId('lobby-more-menu').click()
     await page.getByTestId('open-about').click()
     await expect(page.locator('.dlg-panel')).toBeVisible()
     expect(await violations(page, '.dlg-panel')).toEqual([])

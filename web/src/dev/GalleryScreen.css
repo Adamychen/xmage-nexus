@@ -80,6 +80,17 @@
 
 .gallery-action {
   margin: 0 var(--sp-3h) var(--sp-2h);
+  padding: var(--sp-1h) var(--sp-2);
+  border: 1px solid var(--brand);
+  border-radius: var(--r-sm);
+  background: var(--ink-3);
+  color: var(--fg-hi);
+  font-size: var(--fs-xs);
+  cursor: pointer;
+}
+
+.gallery-action:hover {
+  background: var(--ink-4);
 }
 
 .gallery-hint {

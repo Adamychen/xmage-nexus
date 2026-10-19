@@ -5,7 +5,7 @@ export type DemoTarget =
   | { kind: 'decks' }
   | { kind: 'builder' }
   | { kind: 'history' }
-  | { kind: 'leaderboard'; tab: 'room' | 'profile' | 'tiers' }
+  | { kind: 'ranking' }
   | { kind: 'settings' }
   | { kind: 'create' }
 

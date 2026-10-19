@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Tabs from '../ui/Tabs'
 import IconButton from '../ui/IconButton'
 import CloseButton from '../ui/CloseButton'
-import { clearError, doConnect, useStore, loadConn, clearActiveGame, clearActiveDraft, isSameAccount } from '../state/store'
+import { clearError, doConnect, useStore, loadConn, clearActiveGame, clearActiveDraft, clearActiveConstruct, isSameAccount } from '../state/store'
 import CountryFlag from './CountryFlag'
 import AvatarImage from './AvatarImage'
 import AvatarPickerModal from './AvatarPickerModal'
@@ -16,8 +16,34 @@ import { clickableProps } from '../ui/clickable'
 import { useTranslation } from '../i18n'
 import { SETUP_CONN_EVENT, openSetupWizard } from '../setup/setupFlag'
 import { parseAutoConnect } from './autoConnect'
+import { PUBLIC_RANKING_HASH } from './publicRankingRoute'
 import type { ConnectionInfo } from '../state/persistence'
+import ManaPips from './ManaPips'
+import { usePointerVars } from './usePointerVars'
 import './LoginScreen.css'
+
+const MOTES = [
+  { color: 'w', left: '8%', size: 10, duration: 19, delay: -4 },
+  { color: 'u', left: '18%', size: 6, duration: 23, delay: -11 },
+  { color: 'b', left: '29%', size: 8, duration: 17, delay: -2 },
+  { color: 'r', left: '41%', size: 12, duration: 26, delay: -9 },
+  { color: 'g', left: '53%', size: 7, duration: 21, delay: -15 },
+  { color: 'w', left: '64%', size: 9, duration: 18, delay: -7 },
+  { color: 'u', left: '75%', size: 11, duration: 24, delay: -13 },
+  { color: 'r', left: '86%', size: 6, duration: 20, delay: -5 },
+  { color: 'g', left: '94%', size: 8, duration: 27, delay: -17 },
+  { color: 'b', left: '13%', size: 7, duration: 22, delay: -21 },
+  { color: 'w', left: '36%', size: 5, duration: 16, delay: -10 },
+  { color: 'u', left: '58%', size: 9, duration: 25, delay: -6 },
+] as const
+
+const TAGLINE_KEYS = ['tagline_1', 'tagline_2', 'tagline_3'] as const
+const TAGLINE_MS = 4200
+
+function usePrefersReducedMotion() {
+  const [reduced] = useState(() => typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches)
+  return reduced
+}
 
 function urlProxyPort(): number | null {
   return parseAutoConnect(window.location.search).proxyPort ?? null
@@ -61,6 +87,20 @@ export default function LoginScreen() {
   const { unseen: unseenNews, refresh: refreshNews } = useNewsBadge()
   const [preset, setPreset] = useState<ServerPreset>(() => presetOf(BAKED_SERVER_HOST))
   const pendingDeepLink = useStore((s) => s.pendingDeepLink)
+  const wrapRef = useRef<HTMLDivElement>(null)
+  const avatarRef = useRef<HTMLDivElement>(null)
+  const submitRef = useRef<HTMLButtonElement>(null)
+  const reducedMotion = usePrefersReducedMotion()
+  const [taglineIdx, setTaglineIdx] = useState(0)
+  usePointerVars(wrapRef)
+  usePointerVars(avatarRef)
+  usePointerVars(submitRef)
+
+  useEffect(() => {
+    if (reducedMotion) return
+    const id = window.setInterval(() => setTaglineIdx((i) => (i + 1) % TAGLINE_KEYS.length), TAGLINE_MS)
+    return () => window.clearInterval(id)
+  }, [reducedMotion])
 
   useEffect(() => {
     const url = parseAutoConnect(window.location.search)
@@ -161,6 +201,7 @@ export default function LoginScreen() {
     if (!isSameAccount(loadConn(), serverHost.trim() || proxyHost.trim(), parseInt(port, 10) || 17171, username.trim())) {
       clearActiveGame()
       clearActiveDraft()
+      clearActiveConstruct()
     }
     void doConnect(
       proxyHost.trim(),
@@ -175,9 +216,31 @@ export default function LoginScreen() {
   }
 
   return (
-    <div className="login-wrap">
+    <div className="login-wrap" ref={wrapRef}>
+      <div className="login-mana-clip" aria-hidden="true">
+        <div className="login-mana-field">
+          {MOTES.map((m, i) => (
+            <span
+              key={i}
+              className="mana-mote"
+              data-color={m.color}
+              style={{
+                left: m.left,
+                width: `${m.size}px`,
+                height: `${m.size}px`,
+                animationDuration: `${m.duration}s`,
+                animationDelay: `${m.delay}s`,
+              }}
+            />
+          ))}
+        </div>
+      </div>
       <div className="login-top-bar">
         <LanguageSelector showCardLangToggle={true} />
+        <IconButton label={t('lobby', 'public_open_link')} icon="trophy" size="lg"
+          className="login-settings-btn"
+          onClick={() => { window.location.hash = PUBLIC_RANKING_HASH }}
+          data-testid="open-public-ranking" />
         <IconButton label={t('common', 'settings')} icon="settings" size="lg"
           className="login-settings-btn"
           onClick={() => setShowSettings(true)}
@@ -198,7 +261,15 @@ export default function LoginScreen() {
 
       <form className="login-card panel" onSubmit={submit}>
         <div className="login-header">
+          <div className="login-hero" aria-hidden="true">
+            <span className="hero-card hero-card-1" />
+            <span className="hero-card hero-card-2" />
+            <span className="hero-card hero-card-3" />
+          </div>
           <img src="/logo.jpeg" alt="XMage Nexus" className="login-logo-img" />
+          <p className="login-tagline" key={taglineIdx} data-testid="login-tagline">
+            {t('login', TAGLINE_KEYS[taglineIdx])}
+          </p>
           <p className="subtitle">{t('login.subtitle')}</p>
         </div>
 
@@ -229,6 +300,7 @@ export default function LoginScreen() {
         {/* User Identity Section */}
         <div className="login-user-section">
           <div
+            ref={avatarRef}
             className="user-avatar-preview"
             onClick={() => setShowAvatarPicker(true)}
             title={t('lobby', 'avatar_pick_title')}
@@ -336,10 +408,10 @@ export default function LoginScreen() {
           </div>
         )}
 
-        <Button variant="primary" className="login-submit-btn" disabled={busy} type="submit">
+        <Button ref={submitRef} variant="primary" className="login-submit-btn" disabled={busy} type="submit">
           {busy ? (
             <span className="btn-connecting-wrap">
-              <span className="btn-spinner" />
+              <ManaPips />
               <span>{t('login.connecting')}</span>
             </span>
           ) : (

@@ -6,7 +6,7 @@ export interface RankInfo {
   tier: RankTier
   name: string
   subTier: string // 'IV', 'III', 'II', 'I' or 'Top'
-  label: string // e.g. 'Oro II', 'Mítico'
+  label: string // e.g. 'Oro II', 'Mythic'
   icon: IconName
   color: string
   bg: string
@@ -28,12 +28,14 @@ export const RANK_TIERS_CONFIG: Array<{
   color: string
   bg: string
   border: string
+  subTierStarts: readonly number[]
 }> = [
   {
     tier: 'BRONZE',
-    name: 'Bronce',
+    name: 'Bronze',
     minElo: 0,
-    maxElo: 1399,
+    maxElo: 1135,
+    subTierStarts: [0, 885, 985, 1051],
     icon: 'medal',
     color: '#d97706',
     bg: 'rgba(217, 119, 6, 0.15)',
@@ -41,9 +43,10 @@ export const RANK_TIERS_CONFIG: Array<{
   },
   {
     tier: 'SILVER',
-    name: 'Plata',
-    minElo: 1400,
-    maxElo: 1549,
+    name: 'Silver',
+    minElo: 1136,
+    maxElo: 1359,
+    subTierStarts: [1136, 1177, 1250, 1298],
     icon: 'medal',
     color: '#e5e7eb',
     bg: 'rgba(229, 231, 235, 0.15)',
@@ -51,9 +54,10 @@ export const RANK_TIERS_CONFIG: Array<{
   },
   {
     tier: 'GOLD',
-    name: 'Oro',
-    minElo: 1550,
-    maxElo: 1699,
+    name: 'Gold',
+    minElo: 1360,
+    maxElo: 1519,
+    subTierStarts: [1360, 1401, 1429, 1473],
     icon: 'medal',
     color: '#facc15',
     bg: 'rgba(250, 204, 21, 0.15)',
@@ -61,9 +65,10 @@ export const RANK_TIERS_CONFIG: Array<{
   },
   {
     tier: 'PLATINUM',
-    name: 'Platino',
-    minElo: 1700,
-    maxElo: 1849,
+    name: 'Platinum',
+    minElo: 1520,
+    maxElo: 1610,
+    subTierStarts: [1520, 1541, 1557, 1580],
     icon: 'award',
     color: '#38bdf8',
     bg: 'rgba(56, 189, 248, 0.15)',
@@ -71,9 +76,10 @@ export const RANK_TIERS_CONFIG: Array<{
   },
   {
     tier: 'DIAMOND',
-    name: 'Diamante',
-    minElo: 1850,
-    maxElo: 1999,
+    name: 'Diamond',
+    minElo: 1611,
+    maxElo: 1687,
+    subTierStarts: [1611, 1628, 1648, 1662],
     icon: 'gem',
     color: '#818cf8',
     bg: 'rgba(129, 140, 248, 0.18)',
@@ -81,9 +87,10 @@ export const RANK_TIERS_CONFIG: Array<{
   },
   {
     tier: 'MYTHIC',
-    name: 'Mítico',
-    minElo: 2000,
+    name: 'Mythic',
+    minElo: 1688,
     maxElo: 3000,
+    subTierStarts: [],
     icon: 'crown',
     color: '#fb923c',
     bg: 'rgba(251, 146, 60, 0.2)',
@@ -95,17 +102,17 @@ export function getRankInfo(eloInput?: number | string | null): RankInfo {
   const elo = typeof eloInput === 'number' ? eloInput : parseInt(String(eloInput ?? '1500'), 10) || 1500
 
   // Mythic Tier
-  if (elo >= 2000) {
+  if (elo >= 1688) {
     return {
       tier: 'MYTHIC',
-      name: 'Mítico',
+      name: 'Mythic',
     subTier: 'Top',
-    label: 'Mítico',
+    label: 'Mythic',
     icon: 'crown',
       color: '#fb923c',
       bg: 'rgba(251, 146, 60, 0.2)',
       border: 'rgba(251, 146, 60, 0.6)',
-      minElo: 2000,
+      minElo: 1688,
       maxElo: 3000,
       nextTier: null,
       nextTierName: null,
@@ -120,9 +127,8 @@ export function getRankInfo(eloInput?: number | string | null): RankInfo {
     RANK_TIERS_CONFIG[1] // Silver default
 
   const tierSpan = config.maxElo - config.minElo + 1
-  const subSpan = tierSpan / 4
   const progressInTier = Math.max(0, elo - config.minElo)
-  const subTierIndex = Math.min(3, Math.floor(progressInTier / subSpan)) // 0: IV, 1: III, 2: II, 3: I
+  const subTierIndex = Math.max(0, config.subTierStarts.filter((start) => elo >= start).length - 1) // 0: IV, 1: III, 2: II, 3: I
   const subTierNumerals = ['IV', 'III', 'II', 'I']
   const subTier = subTierNumerals[subTierIndex]
 
@@ -151,12 +157,12 @@ export function getRankInfo(eloInput?: number | string | null): RankInfo {
 export function getTierName(tier: RankTier, t?: (ns: 'lobby', key: string) => string): string {
   if (!t) {
     const fallbackMap: Record<RankTier, string> = {
-      BRONZE: 'Bronce',
-      SILVER: 'Plata',
-      GOLD: 'Oro',
-      PLATINUM: 'Platino',
-      DIAMOND: 'Diamante',
-      MYTHIC: 'Mítico',
+      BRONZE: 'Bronze',
+      SILVER: 'Silver',
+      GOLD: 'Gold',
+      PLATINUM: 'Platinum',
+      DIAMOND: 'Diamond',
+      MYTHIC: 'Mythic',
     }
     return fallbackMap[tier] ?? tier
   }

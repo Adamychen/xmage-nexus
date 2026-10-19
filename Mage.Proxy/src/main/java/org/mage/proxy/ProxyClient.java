@@ -104,6 +104,7 @@ public class ProxyClient implements MageClient, CommandContext {
     static final long SUPERSEDED_WINDOW_MS = 120_000;
 
     private final SimManager simManager;
+    private volatile boolean service = false;
     private String accountKey = null;
     private volatile String activityUser = null;
 
@@ -116,6 +117,12 @@ public class ProxyClient implements MageClient, CommandContext {
     private final ServerMessageMailbox serverMessages = new ServerMessageMailbox();
 
     private ScheduledFuture<?> graceDisconnectTimer = null;
+    /**
+     * The session is drafting or building its deck for a tournament (see {@link #nextDraftPhase}).
+     * A page closed in this state gets the full grace period: a reload that outlasts the short one
+     * would drop the player from the tournament on the server.
+     */
+    private volatile boolean draftPhase = false;
     private volatile boolean released = false;
     /** dispose() is idempotent but reachable from several paths; the counter must be once-only. */
     private boolean disposeCounted = false;
@@ -383,13 +390,43 @@ public class ProxyClient implements MageClient, CommandContext {
         if (connections.count() != 0 || (!connected && !relinking) || released) {
             return;
         }
-        int secs = left ? config.getLeaveGraceSecs() : config.getGraceSecs();
-        logger.info("All WebSocket clients disconnected" + (left ? " (page closed)" : "") + ". Starting " + secs
+        int secs = graceSecs(config, left, draftPhase);
+        logger.info("All WebSocket clients disconnected" + (left ? " (page closed)" : "")
+                + (left && draftPhase ? " during draft/construction" : "") + ". Starting " + secs
                 + "s grace period before stopping session.");
         if (graceDisconnectTimer != null) {
             graceDisconnectTimer.cancel(false);
         }
         graceDisconnectTimer = pingTimer.schedule(this::expireGrace, secs, TimeUnit.SECONDS);
+    }
+
+    /**
+     * The grace for a session whose last page is gone. A page that announced it was closing gets
+     * the short grace, except while the session is drafting or building its deck: then it gets the
+     * full one, like a dropped connection.
+     */
+    static int graceSecs(Config config, boolean left, boolean inDraft) {
+        return left && !inDraft ? config.getLeaveGraceSecs() : config.getGraceSecs();
+    }
+
+    /**
+     * Tracks the draft/construction phase from the server's callbacks: it starts with the draft
+     * (or the construct phase of a sealed event) and ends when the first game of the tournament
+     * starts or the tournament is over. Other callbacks leave it unchanged.
+     */
+    static boolean nextDraftPhase(boolean inDraft, ClientCallbackMethod m) {
+        switch (m) {
+            case START_DRAFT:
+            case DRAFT_INIT:
+            case CONSTRUCT:
+                return true;
+            case START_GAME:
+            case GAME_INIT:
+            case TOURNAMENT_OVER:
+                return false;
+            default:
+                return inDraft;
+        }
     }
 
     /** Seconds left on the grace timer, or -1 when none is running. */
@@ -743,6 +780,7 @@ public class ProxyClient implements MageClient, CommandContext {
             // over the same channel; forwarding them floods the single-threaded callback queue
             // and starves real events of the new session (e.g. WATCHGAME arriving 60+ seconds late).
             ClientCallbackMethod m = callback.getMethod();
+            draftPhase = nextDraftPhase(draftPhase, m);
             UUID callbackObjectId = callback.getObjectId();
             boolean gameEvent = callbackObjectId != null && CallbackEvents.isGameRelated(m);
             if (gameEvent) {
@@ -1168,7 +1206,9 @@ public class ProxyClient implements MageClient, CommandContext {
             lobbyTimer = Executors.newSingleThreadScheduledExecutor();
             lobbyTimer.scheduleWithFixedDelay(this::publishLobby, 0, 2, TimeUnit.SECONDS);
             accountKey = host + "|" + username;
-            gateway.registerSession(accountKey, this);
+            if (!service) {
+                gateway.registerSession(accountKey, this);
+            }
             if (activityUser != null && !activityUser.equals(username)) {
                 gameActivity.closeAll("user_switch");
             }
@@ -1181,7 +1221,9 @@ public class ProxyClient implements MageClient, CommandContext {
             Activity.login(username, gateway.ipOf(conn), host, port, true, null, false);
             connections.finishLogin(conn, ProxyProtocol.resultJson("connect", requestId, true, null, connections.connectData(false, false)));
             simManager.setOwner(accountKey);
-            simManager.restoreSims();
+            if (!service) {
+                simManager.restoreSims();
+            }
         } else {
             connections.abandonLogin();
             // el servidor manda el detalle del fallo por un callback SHOW_USERMESSAGE
@@ -1193,7 +1235,7 @@ public class ProxyClient implements MageClient, CommandContext {
             if (detail == null || detail.isEmpty() || detail.equalsIgnoreCase("No message")) detail = ProxyProtocol.ERR_FAILED;
             Activity.login(username, gateway.ipOf(conn), host, port, false, detail, false);
             gateway.send(conn, ProxyProtocol.resultJson("connect", requestId, false, ErrorClassifier.classifyErrorCode(detail), detail));
-            if (lastConnection == null) {
+            if (lastConnection == null && !service) {
                 // never logged in: stop holding the account's slot for concurrent logins, and
                 // stop holding five non-daemon threads and their timers for a client that can
                 // never reach a session. A retry arrives on a new WebSocket, so this client
@@ -1206,6 +1248,34 @@ public class ProxyClient implements MageClient, CommandContext {
 
     public boolean isRelinking() {
         return relinking;
+    }
+
+    /**
+     * Marks this client as the proxy's own statistics session (see {@link StatsService}): it is
+     * never registered under an account key, so no WebSocket login can attach to it, and a failed
+     * login keeps the client for the supervisor's next attempt instead of releasing it.
+     */
+    void markService() {
+        service = true;
+    }
+
+    /** Logs the statistics session in anonymously, with no WebSocket to answer. */
+    synchronized void connectService(String host, int port, String username) {
+        connect(null, "", host, port, username, "", "world.png", 51, null, 0L);
+    }
+
+    /** Logs the statistics session out on the proxy's own initiative (proxy shutdown). */
+    synchronized void stopService() {
+        cancelGraceTimer();
+        Connection logged = lastConnection;
+        lastConnection = null;
+        if (logged != null) {
+            RestoreIds.clear(logged.getHost(), logged.getUsername());
+        }
+        stopSession(false);
+        connected = false;
+        Activity.sessionEnd(activityUser, "stats_service_stopped");
+        dispose();
     }
 
     /**

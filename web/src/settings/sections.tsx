@@ -6,22 +6,25 @@ import CustomSleeveTile from '../appearance/CustomSleeveTile'
 import CustomCardArtManager from '../appearance/CustomCardArtManager'
 import BoardDemo from './BoardDemo'
 import LayoutDemo from './LayoutDemo'
+import OptionChoice from './OptionChoice'
 import PlaymatPicker from '../appearance/PlaymatPicker'
 import { ZOOM_PRESETS, isZoomPreset, stepZoom, zoomPercent } from '../appearance/zoom'
 import SoundFxControls from './SoundFxControls'
 import PresetPicker from './PresetPicker'
 import Toggle from '../ui/Toggle'
 import RenderedCardsSettings from './RenderedCardsSettings'
+import { boardLayoutChoiceOf, chooseBoardLayout, type BoardLayoutChoice } from './boardLayoutChoice'
 import { PT_BADGE_MODES, SICKNESS_STYLES } from '../board/cardOverlays'
 import Button from '../ui/Button'
 import { CARD_STYLES, TAP_STYLES } from '../board/compactCard'
 import './SettingsModal.css'
 import '../appearance/SleevePickerModal.css'
 
-export const LAYOUTS: Array<{ id: 'standard' | 'pod' | 'arena'; labelKey: string; descKey: string }> = [
+export const LAYOUTS: Array<{ id: BoardLayoutChoice; labelKey: string; descKey: string }> = [
   { id: 'standard', labelKey: 'board_standard', descKey: 'board_standard_desc' },
   { id: 'pod', labelKey: 'board_pod', descKey: 'board_pod_desc' },
   { id: 'arena', labelKey: 'board_arena', descKey: 'board_arena_desc' },
+  { id: 'table', labelKey: 'board_table', descKey: 'board_table_desc' },
 ]
 
 export function LanguageSection() {
@@ -126,14 +129,14 @@ export function BoardSection() {
           <button
             key={l.id}
             type="button"
-            className={`settings-card ${settings.boardLayout === l.id ? 'selected' : ''}`}
-            onClick={() => setSetting('boardLayout', l.id)}
+            className={`settings-card ${boardLayoutChoiceOf(settings) === l.id ? 'selected' : ''}`}
+            onClick={() => chooseBoardLayout(l.id)}
             data-testid={`settings-layout-${l.id}`}
           >
             <LayoutDemo layout={l.id} />
             <span className="settings-card-label">{t('lobby', l.labelKey as 'board_standard')}</span>
             <span className="settings-card-desc">{t('lobby', l.descKey as 'board_standard_desc')}</span>
-            {settings.boardLayout === l.id && <span className="settings-card-check">✓</span>}
+            {boardLayoutChoiceOf(settings) === l.id && <span className="settings-card-check">✓</span>}
           </button>
         ))}
       </div>
@@ -178,11 +181,19 @@ export function BoardSection() {
       </div>
       <h3 className="settings-section-title">{t('lobby', 'card_overlays_title')}</h3>
       <p className="settings-hint">{t('lobby', 'card_overlays_hint')}</p>
-      <Toggle
-        checked={settings.showHandCost}
-        onChange={(v) => setSetting('showHandCost', v)}
+      <OptionChoice
+        kind="handCost"
         label={t('lobby', 'hand_cost_show')}
-        title={t('lobby', 'hand_cost_show_hint')}
+        hint={t('lobby', 'hand_cost_show_hint')}
+        value={settings.showHandCost}
+        onChange={(v) => setSetting('showHandCost', v)}
+      />
+      <OptionChoice
+        kind="manaSource"
+        label={t('lobby', 'mana_source_show')}
+        hint={t('lobby', 'mana_source_show_hint')}
+        value={settings.showManaSource}
+        onChange={(v) => setSetting('showManaSource', v)}
       />
       <RenderedCardsSettings />
       <h3 className="settings-section-title">{t('lobby', 'pt_badge_title')}</h3>

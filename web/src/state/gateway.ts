@@ -3,7 +3,7 @@ import * as cmds from '../net/commands'
 import { getState, setState, addLog, initialState } from './state'
 import { handleMessage } from './eventHandler'
 import { serverPhaseStops } from '../game/phaseStops'
-import { saveConn, loadActiveGame, clearActiveGame, loadActiveDraft, clearActiveDraft, saveResumeToken, loadResumeToken, clearResumeToken, type ConnectionInfo } from './persistence'
+import { saveConn, loadActiveGame, clearActiveGame, loadActiveDraft, clearActiveDraft, loadActiveConstruct, clearActiveConstruct, saveResumeToken, loadResumeToken, clearResumeToken, type ConnectionInfo } from './persistence'
 import { resetGameEventOrder } from './gameUtils'
 import { t } from '../i18n'
 import { versionMismatchOf, type VersionMismatch } from '../net/versionMismatch'
@@ -165,6 +165,11 @@ function resumeActiveGame(): void {
  *  re-une la sesión del draft para que el flujo siga. Si `joinDraft` falla
  *  (draft ya terminado), se descarta la instantánea para no reintentarla. */
 function restoreLimited(): void {
+  const construct = loadActiveConstruct()
+  if (!getState().construct && construct) {
+    addLog('conexión', 'Restaurando construcción del mazo…')
+    setState({ construct })
+  }
   const persisted = loadActiveDraft()
   if (!getState().draft && persisted?.draft) {
     addLog('conexión', 'Restaurando draft desde la última instantánea…')
@@ -336,6 +341,7 @@ export function reset() {
   clearResumeToken()
   clearActiveGame()
   clearActiveDraft()
+  clearActiveConstruct()
   resetGameEventOrder()
   setState(initialState)
 }

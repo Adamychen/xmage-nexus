@@ -190,6 +190,43 @@ describe('flightManager', () => {
   })
 })
 
+describe('flightManager trail and land variant (A1)', () => {
+  const spell: CardView = { id: 'spell-trail', name: 'Lightning Bolt', manaValue: 1, expansionSetCode: 'LEA', cardNumber: '161' }
+  const from = { left: 100, top: 600, right: 180, bottom: 712, width: 80, height: 112, x: 100, y: 600, toJSON: () => {} } as DOMRect
+  const to = { left: 400, top: 200, right: 480, bottom: 312, width: 80, height: 112, x: 400, y: 200, toJSON: () => {} } as DOMRect
+
+  beforeEach(() => {
+    vi.useFakeTimers()
+    clearFlights()
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('a spell flying to the stack carries the gold trail', () => {
+    const flightId = startCardFlight(spell, from, to, 380, undefined, { trail: 'gold' })
+    expect(getActiveFlights().find((f) => f.flightId === flightId)?.trail).toBe('gold')
+  })
+
+  it('a flight without the trail option has none', () => {
+    const flightId = startCardFlight(spell, from, to, 380)
+    expect(getActiveFlights().find((f) => f.flightId === flightId)?.trail).toBeUndefined()
+  })
+
+  it('a land flight records the land variant', () => {
+    const flightId = startCardFlight(spell, from, to, 350, undefined, { variant: 'land' })
+    expect(getActiveFlights().find((f) => f.flightId === flightId)?.variant).toBe('land')
+  })
+
+  it('a burst redirect onto a spell keeps the trail it was started with', () => {
+    startCardFlight(spell, from, to, 380, undefined, { trail: 'gold' })
+    startCardFlight(spell, from, { ...to, left: 420, right: 500 } as DOMRect, 380, undefined, { trail: 'gold' })
+    expect(getActiveFlights()).toHaveLength(1)
+    expect(getActiveFlights()[0].trail).toBe('gold')
+  })
+})
+
 describe('normalizeFlightRect', () => {
   const CENTER_TOLERANCE = 0.51
 

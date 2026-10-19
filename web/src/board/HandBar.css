@@ -9,7 +9,7 @@
   justify-content: center;
   align-items: flex-end;
   flex-shrink: 0;
-  width: 100%;
+  width: auto;
   min-width: 0;
   padding: var(--sp-1h) var(--sp-3) var(--sp-1h) var(--sp-3);
   z-index: 20;

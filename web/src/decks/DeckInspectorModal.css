@@ -11,8 +11,15 @@
 
 .deck-inspector-badges {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: var(--sp-1h);
+}
+
+.inspector-view-toggle {
+  display: flex;
+  gap: var(--sp-1h);
+  margin-left: auto;
 }
 
 .deck-inspector-body {
@@ -21,7 +28,23 @@
   gap: var(--sp-4);
   padding: var(--sp-4) var(--sp-1) var(--sp-1);
   overflow-y: auto;
-  max-height: min(62vh, 620px);
+  min-height: 0;
+}
+
+.dlg-panel.deck-inspector-modal {
+  display: flex;
+  flex-direction: column;
+  height: min(88vh, 900px);
+  max-height: none;
+  overflow: hidden;
+}
+
+.dlg-panel.deck-inspector-modal > * {
+  flex: none;
+}
+
+.dlg-panel.deck-inspector-modal > .deck-inspector-body {
+  flex: 1 1 0;
 }
 
 @media (max-width: 768px) {
@@ -34,8 +57,15 @@
   display: flex;
   flex-direction: column;
   gap: var(--sp-1h);
-  overflow-y: auto;
-  max-height: 55vh;
+}
+
+.inspector-stacks .arena-stack-board {
+  grid-template-columns: repeat(auto-fill, minmax(128px, 1fr));
+  gap: var(--sp-2);
+}
+
+.inspector-stacks .arena-stack-col-body {
+  --stack-peek: 36px;
 }
 
 .inspector-info-column {
@@ -79,4 +109,31 @@
   font-weight: 800;
   text-transform: uppercase;
   color: var(--fg-3);
+}
+.inspector-cover-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-1h);
+  margin-top: var(--sp-2);
+}
+.inspector-cover-btn {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: var(--sp-1) var(--sp-2h);
+  border-radius: var(--r-pill);
+  border: 1px solid var(--veil-3);
+  background: var(--ink-3);
+  color: var(--fg-2);
+  font-size: var(--fs-xs);
+  cursor: pointer;
+}
+.inspector-cover-btn[aria-pressed="true"] {
+  color: var(--gold-300);
+  border-color: var(--gold-300);
+}
+.inspector-cover-btn:focus-visible {
+  outline: 2px solid var(--gold-300);
+  outline-offset: 2px;
 }

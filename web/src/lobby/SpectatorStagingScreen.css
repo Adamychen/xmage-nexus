@@ -58,7 +58,7 @@
 .staging-main-container {
   flex: 1;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 380px;
+  grid-template-columns: minmax(0, 1fr) 320px;
   gap: var(--sp-4h);
   padding: var(--sp-5) clamp(var(--sp-4), 2.5vw, 44px);
   min-height: 0;
@@ -87,6 +87,59 @@
 .staging-arena-card.family-limited { --family: var(--mana-g); }
 .staging-arena-card.family-special { --family: var(--mana-r); }
 .staging-arena-card.family-unknown { --family: var(--fg-3); }
+
+/* Decorative format art (see tableArt.ts), same treatment as the lobby table
+   rows: it sits behind the content and fades toward the bottom, so the seats
+   and actions stay legible. */
+.staging-arena-card {
+  isolation: isolate;
+}
+.staging-arena-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background-image: var(--card-art, none);
+  background-size: cover;
+  background-position: center top;
+  opacity: 0.16;
+  mask-image: linear-gradient(to bottom, black 0%, transparent 70%);
+  -webkit-mask-image: linear-gradient(to bottom, black 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.staging-arena-card.all-ready {
+  animation: staging-all-ready 1.6s ease-out 1;
+}
+
+@keyframes staging-all-ready {
+  from { box-shadow: 0 16px 40px var(--shade-3), 0 0 0 0 rgb(var(--ok-rgb) / 0.55); }
+  to   { box-shadow: 0 16px 40px var(--shade-3), 0 0 0 22px rgb(var(--ok-rgb) / 0); }
+}
+
+/* A seat that just got a player: a short pop and a gold halo. `scale` (not
+   `transform`) so the ring seats keep their centring transform. */
+.seat-just-joined {
+  animation: staging-seat-joined 1.2s ease-out 1;
+}
+
+@keyframes staging-seat-joined {
+  0%   { scale: 0.92; box-shadow: 0 0 0 0 rgb(var(--gold-rgb) / 0.7); }
+  45%  { scale: 1.04; box-shadow: 0 0 0 12px rgb(var(--gold-rgb) / 0.12); }
+  100% { scale: 1;    box-shadow: 0 0 0 0 rgb(var(--gold-rgb) / 0); }
+}
+
+/* Open seats breathe so the invite is the first thing the eye lands on. */
+.staging-player-card.empty,
+.ring-seat.empty {
+  animation: staging-seat-invite 2.8s ease-in-out infinite;
+}
+
+@keyframes staging-seat-invite {
+  0%, 100% { border-color: var(--veil-5); }
+  50%      { border-color: rgb(var(--gold-rgb) / 0.55); }
+}
 
 .staging-card-header {
   display: flex;
@@ -165,12 +218,13 @@
 }
 
 .staging-roster-area {
-  flex: 1 0 auto;
+  flex: 1 1 auto;
   display: flex;
-  align-items: center;
+  align-items: safe center;
   justify-content: center;
   padding: var(--sp-4) 0;
-  min-height: 260px;
+  min-height: 0;
+  overflow: auto;
 }
 
 .staging-duel-roster {
@@ -587,7 +641,7 @@
 .staging-ring {
   position: relative;
   width: 100%;
-  height: clamp(360px, 50vh, 540px);
+  height: clamp(320px, 46vh, 520px);
 }
 
 .ring-table {
@@ -830,6 +884,7 @@
   --tone: rgb(var(--brand-rgb));
   display: flex;
   flex-direction: column;
+  flex-shrink: 0;
   gap: var(--sp-3);
   padding: var(--sp-3) var(--sp-4);
   border-radius: var(--r-lg);
@@ -958,14 +1013,9 @@
   justify-content: space-between;
   gap: var(--sp-3);
   flex-wrap: wrap;
-  margin-top: auto;
+  flex-shrink: 0;
   padding: var(--sp-3) 0 var(--sp-1);
   border-top: 1px solid var(--veil-2);
-  position: sticky;
-  bottom: 0;
-  background: var(--ink-2);
-  box-shadow: 0 -12px 16px -8px var(--shade-3);
-  z-index: 2;
 }
 
 .staging-actions-secondary,
@@ -1152,8 +1202,14 @@
   .staging-step-label {
     display: none;
   }
+  .staging-step.active {
+    flex: 1 1 auto;
+  }
   .staging-step.active .staging-step-label {
     display: inline;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   .staging-actions-primary,
   .staging-actions-secondary {
@@ -1177,7 +1233,11 @@
   .player-status-tag.preparing,
   .seat-avatar-wrap.preparing,
   .staging-step.active .staging-step-dot,
-  .pulse-spinner {
+  .pulse-spinner,
+  .staging-arena-card.all-ready,
+  .seat-just-joined,
+  .staging-player-card.empty,
+  .ring-seat.empty {
     animation: none;
   }
 }

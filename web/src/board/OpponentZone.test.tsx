@@ -3,13 +3,32 @@ import { afterEach, describe, expect, it } from 'vitest'
 import OpponentZone from './OpponentZone'
 import type { CardView, PlayerView } from '../net/types'
 import { commanderInfoRule } from '../__fixtures__/gameViews'
+import { setSetting } from '../state/store'
 
 describe('OpponentZone', () => {
   afterEach(() => {
     cleanup()
   })
 
+  it('shows the hand count on the portrait instead of face-down cards in the new interface', () => {
+    setSetting('gameUi', 'v2')
+    const oppPlayer: Partial<PlayerView> = {
+      playerId: 'p-opp',
+      name: 'Computer',
+      life: 20,
+      handCount: 3,
+      controlled: false,
+      libraryCount: 40,
+      battlefield: {},
+    }
+    const { container } = render(<OpponentZone player={oppPlayer as PlayerView} />)
+    expect(container.querySelectorAll('.card-slot.face-down').length).toBe(0)
+    expect(container.querySelector('[data-testid="pp-hand-count"]')?.textContent).toContain('3')
+    setSetting('gameUi', 'v1')
+  })
+
   it('renders face-down cards when no revealed cards are known', () => {
+    setSetting('gameUi', 'v1')
     const oppPlayer: Partial<PlayerView> = {
       playerId: 'p-opp',
       name: 'Computer',

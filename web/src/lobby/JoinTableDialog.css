@@ -303,9 +303,29 @@
   transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease, filter 160ms ease;
 }
 .join-deck-card:hover {
-  transform: translateY(-3px);
+  transform: perspective(700px) rotateX(calc((0.5 - var(--py, 0.5)) * 10deg)) rotateY(calc((var(--px, 0.5) - 0.5) * 12deg)) translateY(-4px);
   border-color: var(--veil-5);
-  box-shadow: 0 10px 26px var(--shade-3);
+  box-shadow: 0 14px 30px var(--shade-3);
+}
+.join-deck-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+  background: radial-gradient(circle at calc(var(--px, 0.5) * 100%) calc(var(--py, 0.5) * 100%), var(--veil-3), transparent 55%);
+  opacity: 0;
+  transition: opacity 160ms ease;
+  pointer-events: none;
+}
+.join-deck-card:hover::after {
+  opacity: 1;
+}
+html.fx-off .join-deck-card:hover {
+  transform: translateY(-3px);
+}
+html.fx-off .join-deck-card:hover::after {
+  opacity: 0;
 }
 .join-deck-card:focus-visible {
   outline: 2px solid rgb(var(--brand-rgb));
@@ -323,6 +343,9 @@
 .join-deck-card.selected {
   border-color: var(--gold-300);
   box-shadow: 0 0 0 2px var(--gold-300), 0 0 26px rgb(var(--gold-rgb) / 0.35), 0 10px 26px var(--shade-3);
+}
+.join-deck-card.selected:not(:hover) {
+  transform: translateY(-4px);
 }
 
 .join-deck-art {

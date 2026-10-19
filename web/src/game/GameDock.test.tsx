@@ -33,6 +33,16 @@ describe('GameDock', () => {
     expect(index(getByTestId('bar'))).toBeLessThan(index(getByTestId('action')))
   })
 
+  it('pone el control de rebobinado en la ranura izquierda, antes del control de turno', () => {
+    const { getByTestId } = render(
+      <GameDock action={<span data-testid="action" />} rewind={<span data-testid="rewind" />} onPromptSlot={() => {}} />,
+    )
+    const slot = getByTestId('game-dock-rewind')
+    expect(slot.contains(getByTestId('rewind'))).toBe(true)
+    expect(slot.parentElement?.className).toContain('game-dock-row')
+    expect(slot.nextElementSibling).toBe(getByTestId('action'))
+  })
+
   it('sin dock la barra se pinta en su sitio', () => {
     const { getByTestId, queryByTestId } = render(<Harness withDock={false} />)
     expect(queryByTestId('game-dock')).toBeNull()

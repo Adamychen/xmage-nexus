@@ -1,6 +1,6 @@
 // ── Re-exports ──────────────────────────────────────────────────────
 export type { ConnectionInfo } from './persistence'
-export { loadConn, saveActiveGame, clearActiveGame, clearActiveDraft, isSameAccount } from './persistence'
+export { loadConn, saveActiveGame, clearActiveGame, clearActiveDraft, clearActiveConstruct, isSameAccount } from './persistence'
 export type { LogEntry, CombatState, AppState } from './state'
 export { getState, setState } from './state'
 export { useStore, usePhase, useLobby, useGame, useSettings, isBlockingModal, isMulliganDecision } from './selectors'

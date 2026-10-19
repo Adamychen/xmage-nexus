@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
-import { useGame, useStore } from '../state/store'
+import { useGame, useSettings, useStore } from '../state/store'
 import { useTranslation } from '../i18n'
 import IconButton from '../ui/IconButton'
 import CloseButton from '../ui/CloseButton'
@@ -9,7 +9,9 @@ import ActionFeed from './ActionFeed'
 import GameChat, { isGameChatEntry } from './GameChat'
 import DeckTrackerPanel from './DeckTrackerPanel'
 import MechanicsTray from './MechanicsTray'
+import MechanicsOverview from './MechanicsOverview'
 import CommanderDamageMatrix from './CommanderDamageMatrix'
+import CommanderSeatMatrix from './CommanderSeatMatrix'
 import { DrawerHeadSlotContext } from './drawerHeadSlot'
 import './GameDrawer.css'
 
@@ -33,7 +35,7 @@ function useChatUnread(chatOpen: boolean): number {
   return chatOpen ? 0 : Math.max(0, total - seen)
 }
 
-function useDrawerTabs(active: DrawerTab | null, stackCount: number, hasCommanders: boolean, hasActiveMechanics: boolean): DrawerTabDef[] {
+export function useDrawerTabs(active: DrawerTab | null, stackCount: number, hasCommanders: boolean, hasActiveMechanics: boolean, mechanicsCount?: number): DrawerTabDef[] {
   const { t } = useTranslation()
   const unread = useChatUnread(active === 'chat')
   return [
@@ -59,7 +61,9 @@ function useDrawerTabs(active: DrawerTab | null, stackCount: number, hasCommande
       icon: 'gem',
       label: t('game', 'tab_mechanics'),
       title: t('game', 'tab_mechanics'),
-      badge: hasActiveMechanics && <span className="right-tab-badge active-mechanics">★</span>,
+      badge: hasActiveMechanics && (
+        <span className="right-tab-badge active-mechanics" data-testid="mechanics-count">{mechanicsCount ?? '★'}</span>
+      ),
     },
   ]
 }
@@ -70,10 +74,12 @@ interface DrawerTogglesProps {
   onToggle: (tab: DrawerTab) => void
   hasCommanders: boolean
   hasActiveMechanics: boolean
+  exclude?: readonly DrawerTab[]
+  mechanicsCount?: number
 }
 
-export function DrawerToggles({ active, stackCount, onToggle, hasCommanders, hasActiveMechanics }: DrawerTogglesProps) {
-  const tabs = useDrawerTabs(active, stackCount, hasCommanders, hasActiveMechanics)
+export function DrawerToggles({ active, stackCount, onToggle, hasCommanders, hasActiveMechanics, exclude = [], mechanicsCount }: DrawerTogglesProps) {
+  const tabs = useDrawerTabs(active, stackCount, hasCommanders, hasActiveMechanics, mechanicsCount).filter((tab) => !exclude.includes(tab.id))
   return (
     <div className="drawer-toggles" role="toolbar">
       {tabs.filter((tab) => !tab.hidden).map((tab) => (
@@ -95,9 +101,34 @@ export function DrawerToggles({ active, stackCount, onToggle, hasCommanders, has
   )
 }
 
+export function DrawerBody({ tab, stack = null }: { tab: DrawerTab; stack?: ReactNode }) {
+  const game = useGame()
+  const v2 = useSettings().gameUi === 'v2'
+  return (
+    <>
+      {tab === 'stack' ? (
+        stack
+      ) : tab === 'log' ? (
+        <ActionFeed />
+      ) : tab === 'chat' ? (
+        <GameChat />
+      ) : tab === 'tracker' ? (
+        <DeckTrackerPanel />
+      ) : tab === 'commander' ? (
+        <div className="sidebar-commander-tab">
+          {v2 ? <CommanderSeatMatrix game={game} /> : <CommanderDamageMatrix game={game} defaultView="cards" />}
+        </div>
+      ) : v2 ? (
+        <MechanicsOverview />
+      ) : (
+        <MechanicsTray />
+      )}
+    </>
+  )
+}
+
 export default function GameDrawer({ tab, stackCount, stack, onClose }: { tab: DrawerTab; stackCount: number; stack: ReactNode; onClose: () => void }) {
   const { t } = useTranslation()
-  const game = useGame()
   const [headSlot, setHeadSlot] = useState<HTMLElement | null>(null)
   const titles: Record<DrawerTab, string> = {
     stack: `${t('game', 'stack')} (${stackCount})`,
@@ -116,21 +147,7 @@ export default function GameDrawer({ tab, stackCount, stack, onClose }: { tab: D
       </header>
       <DrawerHeadSlotContext.Provider value={headSlot}>
       <div className="game-drawer-content">
-        {tab === 'stack' ? (
-          stack
-        ) : tab === 'log' ? (
-          <ActionFeed />
-        ) : tab === 'chat' ? (
-          <GameChat />
-        ) : tab === 'tracker' ? (
-          <DeckTrackerPanel />
-        ) : tab === 'commander' ? (
-          <div className="sidebar-commander-tab">
-            <CommanderDamageMatrix game={game} />
-          </div>
-        ) : (
-          <MechanicsTray />
-        )}
+        <DrawerBody tab={tab} stack={stack} />
       </div>
       </DrawerHeadSlotContext.Provider>
     </aside>

@@ -21,7 +21,7 @@ interface Props {
   unreadChat: number
   onMessageRead: () => void
   onSelectUser: (u: UsersView) => void
-  onOpenRoomLeaderboard: () => void
+  onOpenRanking: () => void
   open: boolean
   onOpenChange: (open: boolean) => void
 }
@@ -45,7 +45,7 @@ function loadPos(): Pos | null {
 
 export default function FloatingChat({
   users, chatPrefill, onPrefillUsed, unreadChat, onMessageRead,
-  onSelectUser, onOpenRoomLeaderboard, open, onOpenChange,
+  onSelectUser, onOpenRanking, open, onOpenChange,
 }: Props) {
   const { t } = useTranslation()
   const [tab, setTab] = useState<'chat' | 'users'>('chat')
@@ -194,7 +194,7 @@ export default function FloatingChat({
           <button
             type="button"
             className="view-leaderboard-btn"
-            onClick={onOpenRoomLeaderboard}
+            onClick={onOpenRanking}
             title={t('lobby', 'nav_ranking')}
           >
             <Icon name="trophy" size={13} />

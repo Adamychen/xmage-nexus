@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import HandBar from './HandBar'
 import type { CardView } from '../net/types'
 import { makeCard } from '../__fixtures__/gameViews'
-import { HAND_BAR_MAX_CARD_W, HAND_BAR_PEEK_RATIO, HAND_CARD_ASPECT, HAND_BAR_PADDING_Y } from './handSizing'
+import { HAND_BAR_MAX_CARD_W, HAND_BAR_MAX_SPAN, HAND_BAR_PADDING_X, HAND_BAR_PEEK_RATIO, HAND_BAR_REST_OVERLAP_RATIO, HAND_CARD_ASPECT, HAND_BAR_PADDING_Y } from './handSizing'
 import { setSetting } from '../state/store'
 
 vi.mock('./cardPositionRegistry', () => ({
@@ -90,6 +90,26 @@ describe('HandBar', () => {
     expect(bar.style.getPropertyValue('--hand-gap')).toBe('0px')
     expect(bar.style.getPropertyValue('--sink')).toBe(`${cardH * HAND_BAR_PEEK_RATIO}px`)
     expect(bar.style.height).toBe(`${cardH * HAND_BAR_PEEK_RATIO + HAND_BAR_PADDING_Y}px`)
+  })
+
+  it.each([12, 15])('%i cards spread the rendered row across the container width', (count) => {
+    const containerW = 1008
+    const spy = vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(
+      () => ({ x: 0, y: 0, left: 0, top: 0, right: containerW, bottom: 100, width: containerW, height: 100, toJSON: () => ({}) }) as DOMRect,
+    )
+    try {
+      const cards = Object.fromEntries(Array.from({ length: count }, (_, i) => [`c-${i}`, makeCard({ id: `c-${i}`, name: `Card ${i}`, parentId: `c-${i}` })]))
+      const { getByTestId } = render(<HandBar cards={cards} />)
+      const bar = getByTestId('hand-bar') as HTMLElement
+      const cardW = parseFloat(bar.style.getPropertyValue('--card-w'))
+      const gap = parseFloat(bar.style.getPropertyValue('--hand-gap'))
+      const pitch = cardW * (1 - HAND_BAR_REST_OVERLAP_RATIO) + gap
+      const rowW = cardW + (count - 1) * pitch
+      const usable = Math.min(containerW - HAND_BAR_PADDING_X, HAND_BAR_MAX_SPAN)
+      expect(rowW).toBeGreaterThanOrEqual(usable - 1)
+    } finally {
+      spy.mockRestore()
+    }
   })
 
   it('routes clicks through onCardClick', () => {

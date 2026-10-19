@@ -67,14 +67,22 @@ export function useDockOffset(wrapRef: RefObject<HTMLElement | null>, deps: read
 
 interface GameDockProps {
   action: ReactNode
+  rewind?: ReactNode
   onPromptSlot: (el: HTMLElement | null) => void
 }
 
-export default function GameDock({ action, onPromptSlot }: GameDockProps) {
+export default function GameDock({ action, rewind = null, onPromptSlot }: GameDockProps) {
   return (
     <div className="game-dock" data-testid="game-dock">
       <div className="game-dock-prompt" ref={onPromptSlot} />
-      {action}
+      <div className="game-dock-row">
+        {rewind && (
+          <div className="game-dock-rewind" data-testid="game-dock-rewind">
+            {rewind}
+          </div>
+        )}
+        {action}
+      </div>
     </div>
   )
 }

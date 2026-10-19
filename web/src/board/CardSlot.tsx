@@ -6,12 +6,14 @@ import RenderedCard from '../cards/rendered/RenderedCard'
 import { getPreviousCardPosition, getPreviousCardSize, getPreviousCardZone, recordCardPosition } from './cardPositionRegistry'
 import { startCardFlight, onFlightLanded, getActiveFlights, subscribeFlights, noteFlightEvent } from './flightManager'
 import { combatHoldRemaining, isOffBattlefield } from './combatStrikes'
+import { DamageNumbers } from './DamageNumber'
 import { useCombatHeld } from './useCombatHeld'
-import { fxDuration } from './fx'
+import { fxMotionAllowed, fxMotionDuration } from './fx'
 import { extractOwnedKeywords } from '../data/keywordExtractor'
 import { keywordDisplayName, keywordSummary } from '../data/keywordI18n'
 import { cardDesignations, pairedPartnerName, classLevelOf, evidenceCounts, protectorName, type Designation } from './designations'
 import { roomDoorKey, roomSidesLabel } from '../game/rooms'
+import { useChangeFlag } from '../game/useChangeFlag'
 import CardIcons from './CardIcons'
 import { basePtValue, ptTrend } from './ptTrend'
 import Icon from '../ui/Icon'
@@ -22,9 +24,11 @@ import { setState, useSettings, useStore } from '../state/store'
 import { useSleeveFor } from '../appearance/useSleeve'
 import { perfMark } from '../system/perfProbe'
 import { ManaPip } from '../decks/ArenaManaSymbols'
-import { artCropUrl, manaSourceSymbols, primaryCardType } from './compactCard'
+import { artCropUrl, landTapColor, manaSourceSymbols, primaryCardType } from './compactCard'
 import type { PtBadgeMode, SicknessStyle } from './cardOverlays'
+import { manaPoolElement, spawnManaParticle, type ManaSide } from './manaParticle'
 import './CardSlot.css'
+import './manaParticle.css'
 
 /** Cota del acuse optimista si el eco del servidor no llega nunca. */
 const PENDING_ACK_MS = 3000
@@ -50,6 +54,8 @@ interface CardSlotProps {
   showDamage?: boolean
   /** Compact battlefield tile: art crop with the name, type and mana source overlaid. */
   compact?: boolean
+  /** Classic battlefield card: overlay its mana source too (the compact tile always does). */
+  showManaSource?: boolean
   /** Settings previews only: local art (never a network lookup) and per-option overrides of the global overlay settings. */
   demo?: { artUrl: string | null; ptBadgeMode?: PtBadgeMode; sicknessStyle?: SicknessStyle }
 }
@@ -73,6 +79,7 @@ export default function CardSlot({
   showCounters = false,
   showDamage = false,
   compact = false,
+  showManaSource = false,
   demo,
 }: CardSlotProps) {
   const { t } = useTranslation()
@@ -88,6 +95,8 @@ export default function CardSlot({
   const cropUrl = compact ? (demo ? demo.artUrl : artCropUrl(imgUrl)) : null
   const [cropFailed, setCropFailed] = useState<string | null>(null)
   const [pendingAck, setPendingAck] = useState<'pending' | 'chosen-pending' | null>(null)
+  const [castPhase, setCastPhase] = useState<'press' | 'pop' | null>(null)
+  const [pendingRun, setPendingRun] = useState(0)
   const pendingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const slotRef = useRef<HTMLDivElement>(null)
   const isFirstMountRef = useRef(true)
@@ -103,6 +112,18 @@ export default function CardSlot({
   const recapMark = useStore((s) => (effectiveId ? s.turnRecap?.marks[effectiveId] : undefined))
   const enteredThisTurn = useStore((s) => (effectiveId ? s.enteredThisTurn[effectiveId] === true : false))
   const shownDamage = useCombatHeld(effectiveId ? String(effectiveId) : null, (card as PermanentView).damage ?? 0)
+  const targetOptional = useStore((s) => s.feedback?.method === 'GAME_TARGET' && s.feedback.required === false)
+  const [tapChanged] = useChangeFlag(tapped)
+  const tapManaColor = useMemo(() => landTapColor(card), [card])
+  const localPlayerId = useStore((s) => s.game?.players?.find((p) => p.controlled)?.playerId)
+
+  useEffect(() => {
+    if (!tapChanged || !tapped || !tapManaColor || !localPlayerId || !card.controllerId) return
+    const from = slotRef.current?.getBoundingClientRect()
+    const side: ManaSide = card.controllerId === localPlayerId ? 'my' : 'opp'
+    const pool = manaPoolElement(side)
+    if (from && pool && from.width > 0) spawnManaParticle(from, pool, tapManaColor)
+  }, [tapChanged, tapped, tapManaColor, localPlayerId, card.controllerId])
 
   const clearPending = useCallback(() => {
     if (pendingTimerRef.current) {
@@ -148,7 +169,8 @@ export default function CardSlot({
           if (!prevZone || !curZoneClass || prevZone !== curZoneClass) {
             const sourceSize = getPreviousCardSize(effectiveId)
             const flyIn = (toRect: DOMRect) => {
-              const flightId = startCardFlight(card, prev, toRect, 340, `[data-card-id="${effectiveId}"]`, { sourceSize, toCompact: compact })
+              const enteringLand = (card.cardTypes ?? []).some((t) => String(t).toUpperCase() === 'LAND')
+              const flightId = startCardFlight(card, prev, toRect, 340, `[data-card-id="${effectiveId}"]`, { sourceSize, toCompact: compact, variant: enteringLand ? 'land' : undefined })
               if (!flightId) return
               setFlightState('hidden')
               const land = () => {
@@ -210,7 +232,7 @@ export default function CardSlot({
     const holdMs = combatHoldRemaining(String(effectiveId))
     if (holdMs <= 0 || !isOffBattlefield(el)) return
     setHeld(true)
-    const release = setTimeout(() => setHeld(false), holdMs + 40 + fxDuration(420))
+    const release = setTimeout(() => setHeld(false), holdMs + 40 + fxMotionDuration(420))
     return () => clearTimeout(release)
   }, [effectiveId])
 
@@ -260,7 +282,8 @@ export default function CardSlot({
   const classLevel = useMemo(() => classLevelOf(card.rules), [card.rules])
   const evidence = useMemo(() => evidenceCounts(card.rules), [card.rules])
   const protector = useMemo(() => protectorName(card.rules), [card.rules])
-  const manaSymbols = useMemo(() => (compact ? manaSourceSymbols(card) : []), [compact, card.rules, card.subTypes])
+  const manaSymbols = useMemo(() => (compact || showManaSource ? manaSourceSymbols(card) : []), [compact, showManaSource, card.rules, card.subTypes])
+  const showManaPill = (compact || showManaSource) && !showBack && !renderedFace && manaSymbols.length > 0
   const tileType = compact ? primaryCardType(card) : null
   // In 'changed' mode the badge only appears when we can PROVE the P/T moved: an
 // unknown printed value (token, cloak, disguise — the server sends no
@@ -284,11 +307,13 @@ const showPtBadge =
     : counters
 
   const handleClick = onClick ? () => {
+    if (isPlayable && fxMotionAllowed()) setCastPhase('press')
     const ackKind = isTarget ? 'chosen-pending' : 'pending'
     // No reenviar el mismo objetivo mientras el eco no lo confirme; el resto
     // de selecciones (jugable/combate) pueden re-clicarse (toggle del servidor).
     if (pendingAck === 'chosen-pending' && !isChosen) return
     setPendingAck(ackKind)
+    setPendingRun((n) => n + 1)
     if (pendingTimerRef.current) clearTimeout(pendingTimerRef.current)
     pendingTimerRef.current = setTimeout(() => {
       pendingTimerRef.current = null
@@ -298,6 +323,11 @@ const showPtBadge =
     soundManager.play('tap', 'game')
     onClick()
   } : undefined
+
+  const handleCastAnimationEnd = (e: React.AnimationEvent<HTMLDivElement>) => {
+    if (e.animationName === 'castPress') setCastPhase('pop')
+    else if (e.animationName === 'castPop' || e.animationName === 'castFade') setCastPhase(null)
+  }
 
   const handleContextMenu = (e: React.MouseEvent) => {
     e.preventDefault()
@@ -350,13 +380,19 @@ const showPtBadge =
         attacking ? 'attacking' : '',
         blocking ? 'blocking' : '',
         isTarget ? 'targetable' : '',
+        isTarget && targetOptional && !isChosen ? 'target-optional' : '',
+        isTarget && !targetOptional && !isChosen && pendingAck !== 'chosen-pending' ? 'target-beacon' : '',
         isPlayable ? 'playable' : '',
         isChosen ? 'chosen' : '',
         pendingAck === 'pending' ? 'is-pending' : '',
+        tapChanged && tapped && tapManaColor ? `mana-${tapManaColor}` : '',
         pendingAck === 'chosen-pending' ? 'is-chosen-pending' : '',
+        castPhase === 'press' ? 'casting-press' : '',
+        castPhase === 'pop' ? 'casting-pop' : '',
         isFaceDownCard ? 'face-down' : '',
         isFlipped ? 'is-flipped-card' : '',
         compact ? 'is-compact' : '',
+        showManaPill && !compact ? 'has-mana-pill' : '',
         onClick ? 'clickable' : '',
         entering ? 'entering' : '',
         flightState === 'hidden' || held ? 'flight-hidden' : '',
@@ -364,6 +400,7 @@ const showPtBadge =
         className,
       ].filter(Boolean).join(' ')}
       onClick={handleClick}
+      onAnimationEnd={handleCastAnimationEnd}
       {...clickableProps(handleClick)}
       aria-label={onClick ? cardName(card) : undefined}
       aria-pressed={onClick && ariaPressed !== undefined ? ariaPressed : undefined}
@@ -405,17 +442,18 @@ const showPtBadge =
         </div>
       )}
 
+      {showManaPill && (
+        <div className="compact-mana-source" data-testid="compact-mana-source" data-mana={manaSymbols.join('')}>
+          {manaSymbols.map((sym) => (
+            sym === 'ANY'
+              ? <span key={sym} className="compact-mana-any" />
+              : <ManaPip key={sym} symbol={sym} size={16} className="compact-mana-pip" />
+          ))}
+        </div>
+      )}
+
       {compact && !showBack && (
         <>
-          {manaSymbols.length > 0 && (
-            <div className="compact-mana-source" data-testid="compact-mana-source" data-mana={manaSymbols.join('')}>
-              {manaSymbols.map((sym) => (
-                sym === 'ANY'
-                  ? <span key={sym} className="compact-mana-any" />
-                  : <ManaPip key={sym} symbol={sym} size={16} className="compact-mana-pip" />
-              ))}
-            </div>
-          )}
           {tapped && (
             <div className="compact-tap-badge" data-testid="compact-tap-badge" title={t('game', 'tapped')}>
               <ManaPip symbol="T" size={16} className="compact-tap-pip" />
@@ -585,6 +623,17 @@ const showPtBadge =
             </span>
           ))}
         </div>
+      )}
+
+      <DamageNumbers targetKey={`card:${effectiveId}`} />
+
+      {pendingAck === 'pending' && (
+        <span
+          key={pendingRun}
+          className="pending-ack-bar"
+          aria-hidden="true"
+          style={{ animationDuration: `${PENDING_ACK_MS}ms` }}
+        />
       )}
     </div>
   )

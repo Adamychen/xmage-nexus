@@ -1,7 +1,8 @@
-import { act, fireEvent, render } from '@testing-library/react'
+import { act, fireEvent, render, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import StackZone from './StackZone'
 import { DrawerHeadSlotContext } from '../game/drawerHeadSlot'
+import { awaitImageUrl } from '../cards/cardImages'
 import type { CardView, PlayerView } from '../net/types'
 
 vi.mock('../cards/cardImages', async (importOriginal) => ({
@@ -229,7 +230,7 @@ describe('StackZone', () => {
     expect(entries[1].querySelector('[data-testid="stack-group-count"]')).toBeNull()
   })
 
-  it('no agrupa habilidades no consecutivas, con distintas reglas ni hechizos iguales', () => {
+  it('no agrupa habilidades no consecutivas ni con distintas reglas; agrupa hechizos iguales consecutivos', () => {
     const stack: Record<string, CardView> = {
       a1: trigger('You gain 1 life.'),
       s1: { name: 'Shock', cardTypes: ['INSTANT'], manaValue: 1 },
@@ -240,8 +241,28 @@ describe('StackZone', () => {
     }
 
     const { container } = render(<StackZone stack={stack} />)
-    expect(container.querySelectorAll('.stack-tl-entry').length).toBe(6)
-    expect(container.querySelector('[data-testid="stack-group-count"]')).toBeNull()
+    const entries = container.querySelectorAll('.stack-tl-entry')
+    expect(entries.length).toBe(5)
+    expect(entries[4].querySelector('[data-testid="stack-group-count"]')?.textContent).toBe('×2')
+    expect(entries[4].querySelector('.stack-tl-pos')?.textContent).toContain('#5–6')
+  })
+
+  it('despliega una pila de hechizos iguales y permite elegir una copia concreta', () => {
+    const onCardClick = vi.fn()
+    const stack: Record<string, CardView> = {
+      s1: { name: 'Shock', cardTypes: ['INSTANT'], manaValue: 1 },
+      s2: { name: 'Shock', cardTypes: ['INSTANT'], manaValue: 1 },
+      s3: { name: 'Shock', cardTypes: ['INSTANT'], manaValue: 1 },
+    }
+
+    const { container } = render(<StackZone stack={stack} onCardClick={onCardClick} />)
+    expect(container.querySelectorAll('.stack-tl-entry').length).toBe(1)
+    fireEvent.click(container.querySelector('.stack-tl-entry')!)
+    const subs = container.querySelectorAll('.stack-tl-sub')
+    expect(subs.length).toBe(3)
+    fireEvent.click(subs[1])
+    expect(onCardClick).toHaveBeenCalledWith('s2')
+    expect(onCardClick).not.toHaveBeenCalledWith('s1')
   })
 
   it('no agrupa entradas que son objetivo elegible, para poder elegir una concreta', () => {
@@ -627,5 +648,57 @@ describe('StackZone', () => {
       />,
     )
     expect(container.querySelector('.floating-card-preview')).toBeTruthy()
+  })
+})
+
+describe('StackZone countdown (C2)', () => {
+  const spell = (name: string) => ({ name, cardTypes: ['INSTANT'], manaValue: 1 }) as unknown as CardView
+
+  it('only the top entry pulses (a finite run, 3 iterations in CSS) and carries the wait bar', () => {
+    const stack = { 'spell-1': spell('Counterspell'), 'spell-2': spell('Lightning Bolt') }
+    const { container } = render(<StackZone stack={stack} />)
+    const entries = container.querySelectorAll('.stack-tl-entry')
+    expect(container.querySelectorAll('.stack-top-pulse')).toHaveLength(1)
+    expect(entries[0].classList.contains('stack-top-pulse')).toBe(true)
+    expect(entries[1].classList.contains('stack-top-pulse')).toBe(false)
+    expect(container.querySelectorAll('.stack-top-wait-bar')).toHaveLength(1)
+    expect(entries[0].querySelector('.stack-top-wait-bar')).not.toBeNull()
+  })
+
+  it('the pulse and the bar disappear when the stack empties', () => {
+    const stack = { 'spell-1': spell('Counterspell') }
+    const view = render(<StackZone stack={stack} />)
+    expect(view.container.querySelector('.stack-top-wait-bar')).not.toBeNull()
+    view.rerender(<StackZone stack={{}} />)
+    expect(view.container.querySelector('.ui-empty')).toBeTruthy()
+    expect(view.container.querySelector('.stack-top-pulse')).toBeNull()
+    expect(view.container.querySelector('.stack-top-wait-bar')).toBeNull()
+  })
+
+  it('the bar restarts only when the top card changes', () => {
+    const view = render(<StackZone stack={{ 'spell-1': spell('Counterspell') }} />)
+    const first = view.container.querySelector('.stack-top-wait-bar')
+
+    view.rerender(<StackZone stack={{ 'spell-1': spell('Counterspell'), 'spell-2': spell('Lightning Bolt') }} />)
+    expect(view.container.querySelector('.stack-top-wait-bar')).toBe(first)
+
+    view.rerender(<StackZone stack={{ 'spell-3': spell('Giant Growth'), 'spell-1': spell('Counterspell'), 'spell-2': spell('Lightning Bolt') }} />)
+    const restarted = view.container.querySelector('.stack-top-wait-bar')
+    expect(restarted).not.toBeNull()
+    expect(restarted).not.toBe(first)
+  })
+
+  it('compact rows show the card art as an art-crop thumbnail', async () => {
+    vi.mocked(awaitImageUrl).mockResolvedValueOnce('https://cards.scryfall.io/normal/front/a/b/bolt.jpg')
+    const stack: Record<string, CardView> = {
+      'spell-1': { name: 'Lightning Bolt', cardTypes: ['INSTANT'], manaValue: 1 },
+    }
+    const { container } = render(<StackZone stack={stack} />)
+    const img = await waitFor(() => {
+      const el = container.querySelector<HTMLImageElement>('.stack-thumb .stack-thumb-img')
+      expect(el).not.toBeNull()
+      return el as HTMLImageElement
+    })
+    expect(img.getAttribute('src')).toBe('https://cards.scryfall.io/art_crop/front/a/b/bolt.jpg')
   })
 })

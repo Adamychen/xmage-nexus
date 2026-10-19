@@ -67,6 +67,18 @@ export function manaSourceSymbols(card: CardView): string[] {
   return COLORED.filter((c) => found.has(c))
 }
 
+/**
+ * Color a land taps for, used by the mana tap pulse: its first known color
+ * (a dual reads as its first color). Null for non-lands and for "any color"
+ * sources, whose color is not known until the player chooses one.
+ */
+export function landTapColor(card: CardView): string | null {
+  const isLand = (card.cardTypes ?? []).some((t) => String(t).toLowerCase() === 'land')
+  if (!isLand) return null
+  const first = manaSourceSymbols(card)[0]
+  return first && first !== 'ANY' ? first : null
+}
+
 const TYPE_PRIORITY = ['creature', 'planeswalker', 'battle', 'land', 'artifact', 'enchantment', 'instant', 'sorcery'] as const
 export type TileType = typeof TYPE_PRIORITY[number]
 

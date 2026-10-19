@@ -4,15 +4,19 @@ import Checkbox from '../../ui/Checkbox'
 import Icon from '../../ui/Icon'
 import type { CreateTableForm } from './useCreateTableForm'
 import Field from '../../ui/Field'
+import Collapsible from './Collapsible'
 
 export default function SecurityTab({ form }: { form: CreateTableForm }) {
   const { t } = useTranslation()
+  const restricted = form.minimumRating > 0 || form.quitRatio < 100 || (form.isMultiplayerGame && form.edhPowerLevel < 100)
+  const restrictionSummary = [
+    form.minimumRating > 0 ? `${t('lobby','create_field_min_rating')} ≥ ${form.minimumRating}` : null,
+    form.quitRatio < 100 ? `${t('lobby','create_field_quit_ratio')} ${form.quitRatio}%` : null,
+    form.isMultiplayerGame && form.edhPowerLevel < 100 ? `EDH ${form.edhPowerLevel}` : null,
+  ].filter(Boolean).join(' · ')
+
   return (
     <div className="create-tab-content">
-      <div className="wizard-step-heading">
-        <h3><Icon name="shield" size={15} /> {t('lobby','create_tab_restrictions')}</h3>
-        <p>{t('lobby','create_step_desc_security')}</p>
-      </div>
       <Field label={t('lobby','create_field_password')}>
         <div className="password-field-wrap">
           <input
@@ -27,36 +31,39 @@ export default function SecurityTab({ form }: { form: CreateTableForm }) {
         </div>
       </Field>
 
-      <div className="create-restrictions-box">
-        <span className="restrictions-box-title"><Icon name="shield" size={13} /> {t('lobby','create_tab_restrictions')}</span>
-        <div className="create-grid-2col">
-          <Field label={t('lobby','create_field_min_rating')} hint={form.minimumRating > 0 ? `${t('lobby','create_field_min_rating')}: ≥ ${form.minimumRating}` : t('common','all')}>
-            <input
-              type="number"
-              min={0}
-              max={3000}
-              step={50}
-              value={form.minimumRating}
-              onChange={(e) => form.setMinimumRating(Math.max(0, parseInt(e.target.value, 10) || 0))}
-              placeholder={t('common','all')}
-            />
-          </Field>
+      <Collapsible
+        title={<><Icon name="shield" size={13} /> {t('lobby','create_tab_restrictions')}</>}
+        summary={restricted ? restrictionSummary : t('common','all')}
+        defaultOpen={restricted}
+      >
+        <div className="create-restrictions-box">
+          <div className="create-grid-2col">
+            <Field label={t('lobby','create_field_min_rating')} hint={form.minimumRating > 0 ? `${t('lobby','create_field_min_rating')}: ≥ ${form.minimumRating}` : t('common','all')}>
+              <input
+                type="number"
+                min={0}
+                max={3000}
+                step={50}
+                value={form.minimumRating}
+                onChange={(e) => form.setMinimumRating(Math.max(0, parseInt(e.target.value, 10) || 0))}
+                placeholder={t('common','all')}
+              />
+            </Field>
 
-          <Field label={t('lobby','create_field_quit_ratio')} hint={form.quitRatio < 100 ? `${t('lobby','create_field_quit_ratio')}: ${form.quitRatio}%` : t('common','all')}>
-            <input
-              type="number"
-              min={0}
-              max={100}
-              step={5}
-              value={form.quitRatio}
-              onChange={(e) => form.setQuitRatio(Math.min(100, Math.max(0, parseInt(e.target.value, 10) || 0)))}
-              placeholder={t('common','all')}
-            />
-          </Field>
-        </div>
+            <Field label={t('lobby','create_field_quit_ratio')} hint={form.quitRatio < 100 ? `${t('lobby','create_field_quit_ratio')}: ${form.quitRatio}%` : t('common','all')}>
+              <input
+                type="number"
+                min={0}
+                max={100}
+                step={5}
+                value={form.quitRatio}
+                onChange={(e) => form.setQuitRatio(Math.min(100, Math.max(0, parseInt(e.target.value, 10) || 0)))}
+                placeholder={t('common','all')}
+              />
+            </Field>
+          </div>
 
-        {form.isMultiplayerGame && (
-          <div className="create-edh-power">
+          {form.isMultiplayerGame && (
             <Field label={t('lobby','create_field_edh_power')} hint={form.edhPowerLevel < 100 ? `EDH Power: ${form.edhPowerLevel}` : `${t('common','all')} ${t('lobby','create_edh_no_limit')}`}>
               <input
                 type="number"
@@ -68,9 +75,9 @@ export default function SecurityTab({ form }: { form: CreateTableForm }) {
                 placeholder={t('common','all')}
               />
             </Field>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      </Collapsible>
 
       <Field label={t('lobby','create_field_banned_users')}>
         <input

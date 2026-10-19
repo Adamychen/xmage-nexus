@@ -1,4 +1,5 @@
 import { useLayoutEffect, useRef } from 'react'
+import { fxMotionAllowed } from './fx'
 
 const DURATION_MS = 260
 const STAGGER_MS = 30
@@ -43,8 +44,7 @@ export function useTapFlip(el: HTMLElement | null): void {
       if (dist >= MIN_MOVE_PX && dist <= MAX_MOVE_PX) moves.push({ node, dx, dy, tapChanged })
     })
     previous.current = next
-    if (!anyTapChanged || moves.length === 0) return
-    if (typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    if (!anyTapChanged || moves.length === 0 || !fxMotionAllowed()) return
     let order = 0
     for (const { node, dx, dy, tapChanged } of moves) {
       if (typeof node.animate !== 'function') return

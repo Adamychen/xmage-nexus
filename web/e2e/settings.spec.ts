@@ -65,9 +65,11 @@ test.describe('Global settings modal', () => {
       await expect(soundCard).toBeVisible()
       const toggleBox = await soundCard.locator('.ui-toggle').first().boundingBox()
       expect(toggleBox?.width).toBeGreaterThanOrEqual(30)
-      const labelBox = await soundCard.locator('.fx-popover-label').first().boundingBox()
-      const hintBox = await soundCard.locator('.fx-popover-hint').first().boundingBox()
-      expect(labelBox && hintBox && hintBox.y).toBeGreaterThan(labelBox.y)
+      const { labelY, hintY } = await soundCard.evaluate((el) => ({
+        labelY: el.querySelector('.fx-popover-label')!.getBoundingClientRect().y,
+        hintY: el.querySelector('.fx-popover-hint')!.getBoundingClientRect().y,
+      }))
+      expect(hintY).toBeGreaterThan(labelY)
 
       await page.getByTestId('settings-nav-board').click()
       const sleeveGrid = page.locator('.appearance-sleeve-grid').first()

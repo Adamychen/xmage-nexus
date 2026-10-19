@@ -2,7 +2,6 @@ import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import { getState, setState } from '../state/state'
 import { getGateway, setGateway } from '../net/commands'
 import type { Gateway } from '../net/Gateway'
-import Button from '../ui/Button'
 import { buildGalleryEntries, type GalleryAction, type GalleryEntry } from './galleryFixtures'
 import { getLanguage, setLanguage, t } from '../i18n'
 import GameScreen from '../game/GameScreen'
@@ -225,9 +224,9 @@ export default function GalleryScreen() {
           ))}
         </nav>
         {action && (
-          <Button className="gallery-action" data-gallery-action onClick={() => runAction(action)}>
+          <button type="button" className="gallery-action" data-gallery-action onClick={() => runAction(action)}>
             {action.label}
-          </Button>
+          </button>
         )}
         <p className="gallery-hint">
           Solo disponible en dev. Cambia el estado del store; al salir se restaura el estado previo.

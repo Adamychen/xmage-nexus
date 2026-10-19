@@ -25,6 +25,12 @@
   min-width: 0;
 }
 
+.arena-opp-cell .bz-status-row > .player-info-bar {
+  min-width: 0;
+  max-width: 100%;
+  flex-shrink: 1;
+}
+
 /* ── Mi zona: resto de la altura, ancho completo ──────────────────── */
 .arena-board > .player-zone {
   flex: 1 1 0;
@@ -33,3 +39,12 @@
 }
 
 /* La mano overlay ancla al fondo de .arena-board (position: relative) */
+
+.board-wrap[data-ui='v2'] .arena-opp-cell .bz-status-row {
+  justify-content: center;
+}
+
+.board-wrap[data-ui='v2'] .arena-board > .zone-bottom {
+  flex: 1 1 0;
+  min-height: 0;
+}

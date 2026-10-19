@@ -380,6 +380,26 @@ describe('SpectatorStagingScreen', () => {
     expect(up.title).toMatch(/completa/i)
   })
 
+  it('anima solo la plaza que acaba de ocuparse, no las que ya estaban', () => {
+    const { container, rerender } = render(<SpectatorStagingScreen table={MOCK_DUEL_TABLE} />)
+    expect(container.querySelectorAll('.seat-just-joined').length).toBe(0)
+
+    const withJoiner: TableView = {
+      ...MOCK_DUEL_TABLE,
+      seats: [MOCK_DUEL_TABLE.seats[0], { playerName: 'Zoe', seatIndex: 1, playerType: 'HUMAN' }],
+    }
+    rerender(<SpectatorStagingScreen table={withJoiner} />)
+
+    const joined = container.querySelectorAll('.seat-just-joined')
+    expect(joined.length).toBe(1)
+    expect(joined[0].textContent).toContain('Zoe')
+  })
+
+  it('no anima las plazas ya ocupadas al montar la sala', () => {
+    const { container } = render(<SpectatorStagingScreen table={MOCK_COMMANDER_TABLE} />)
+    expect(container.querySelectorAll('.seat-just-joined').length).toBe(0)
+  })
+
   it('muestra rating, historial y bandera de cada asiento ocupado', () => {
     const richTable: TableView = {
       ...MOCK_COMMANDER_TABLE,

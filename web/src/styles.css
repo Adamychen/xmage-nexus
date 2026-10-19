@@ -104,6 +104,13 @@ html.fx-off .fx-popover .ui-toggle-knob {
   transition: none !important;
 }
 
+html.fx-off *,
+html.fx-off *::before,
+html.fx-off *::after {
+  animation: none !important;
+  transition: none !important;
+}
+
 html, body, #root {
   margin: 0;
   height: 100%;
@@ -132,6 +139,7 @@ button:active { transform: scale(0.97); }
 button:disabled { opacity: 0.5; cursor: not-allowed; }
 button:focus-visible,
 a:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+.ui-tabs--underline .ui-tab:focus-visible { box-shadow: none; background: var(--veil-1); }
 
 input, select, textarea {
   font: inherit;

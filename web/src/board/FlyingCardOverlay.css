@@ -116,6 +116,15 @@
   border-color: rgb(var(--gold-rgb) / 0.9);
 }
 
+.flying-card-item.flight-trail-gold {
+  border-color: rgb(var(--gold-rgb) / 0.9);
+  box-shadow:
+    calc(var(--trail-ux, 0) * -12px) calc(var(--trail-uy, 0) * -12px) 14px 2px rgb(var(--gold-rgb) / 0.6),
+    calc(var(--trail-ux, 0) * -28px) calc(var(--trail-uy, 0) * -28px) 22px 0 rgb(var(--gold-rgb) / 0.38),
+    calc(var(--trail-ux, 0) * -46px) calc(var(--trail-uy, 0) * -46px) 30px -4px rgb(var(--gold-rgb) / 0.18),
+    0 24px 48px var(--shade-4);
+}
+
 html.fx-off .flight-destroy .flying-card-img,
 html.fx-off .flight-exile .flying-card-img {
   animation: none !important;

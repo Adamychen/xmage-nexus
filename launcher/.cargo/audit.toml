@@ -1,0 +1,12 @@
+# cargo audit configuration for the launcher (read by the web-ci.yml audit job).
+#
+# RUSTSEC-2026-0367/0368/0369 (zip 4.6.1): pulled in transitively by
+# tauri-plugin-updater 2.11–2.14, which all still require `zip ^4`. The advisories
+# only fire on upstream fixes in zip >= 9, which the Tauri plugin cannot take yet.
+# Revisit when tauri-plugin-updater moves to zip 9 (or the plugin is replaced).
+[advisories]
+ignore = [
+    "RUSTSEC-2026-0367",
+    "RUSTSEC-2026-0368",
+    "RUSTSEC-2026-0369",
+]

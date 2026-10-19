@@ -19,9 +19,12 @@ import { downloadBlob } from '../utils/download'
 import DraftHelper from './DraftHelper'
 import { adviseDraftPick, type AdvisorCard } from './draftAdvisor'
 import { loadDraftHelper, saveDraftHelper } from '../state/persistence'
+import { flyCardTo, landingRow } from '../ui/flyCard'
+import { usePointerTilt } from '../ui/usePointerTilt'
 import './DraftScreen.css'
 
 const PICK_PROTECTION_MS = 1500
+const PICKS_FLY_TARGET = '[data-fly-target="picks"]'
 const PICK_TIMEOUT_MS = 15000
 const COUNTDOWN_WARN_SECS = 30
 const COUNTDOWN_AUDIO_SECS = 6
@@ -146,6 +149,8 @@ export default function DraftScreen() {
   const [hiddenIds, setHiddenIds] = useState<Set<string>>(new Set())
   const [hoverPreview, setHoverPreview] = useState<{ url: string; backUrl?: string | null; x: number; y: number; name?: string } | null>(null)
   const lastPickAt = useRef(0)
+  const boosterAreaRef = useRef<HTMLDivElement>(null)
+  usePointerTilt(boosterAreaRef, '.draft-card')
   const audioFiredFor = useRef('')
   const logRef = useRef<DraftLogData | null>(null)
 
@@ -269,12 +274,13 @@ export default function DraftScreen() {
 
   const handleLeave = useCallback(() => setHoverPreview(null), [])
 
-  const handlePick = useCallback(async (cardId: string) => {
+  const handlePick = useCallback(async (cardId: string, source?: HTMLElement) => {
     if (!draftId || !freshPick || busyPick || pickAck) return
     if (timeout > 0 && timeLeft <= 0) return
     const now = Date.now()
     if (now - lastPickAt.current < PICK_PROTECTION_MS) return
     lastPickAt.current = now
+    if (source) flyCardTo(source, landingRow(PICKS_FLY_TARGET, '[data-testid="draft-pick-card"]', (row) => row.dataset.cardId === cardId), { pop: true })
     const picked = boosterCards.find((c) => c.id === cardId)
     const pickName = picked ? cardLabel(picked, metaFor(picked, metaMap)) : cardId
     const sentKey = { boosterNum: draftView?.boosterNum ?? 0, cardNum: draftView?.cardNum ?? 0 }
@@ -517,13 +523,13 @@ export default function DraftScreen() {
           </Button>
         )}
 
-        <div className="draft-booster-area">
+        <div className="draft-booster-area" ref={boosterAreaRef}>
           <h3 className="draft-section-title">{t('game', 'booster_label')}</h3>
           {boosterCards.length === 0 ? (
             <EmptyState>{t('game', 'draft_loading')}</EmptyState>
           ) : (
             <div className="draft-grid" data-testid="draft-booster">
-              {boosterCards.map((card) => {
+              {boosterCards.map((card, index) => {
                 const set = card.expansionSetCode ?? ''
                 const num = card.cardNumber ?? ''
                 const key = card.id
@@ -539,7 +545,8 @@ export default function DraftScreen() {
                     type="button"
                     className={`draft-card ${helperOn && advice.ranked[0]?.id === key ? 'is-advised' : ''} ${marked ? 'is-marked' : ''} ${!canPick ? 'is-disabled' : ''} ${isBusy ? 'is-busy' : ''} ${isPicked ? 'is-picked' : ''}`}
                     disabled={!canPick}
-                    onClick={() => void handlePick(key)}
+                    onClick={(e) => void handlePick(key, e.currentTarget)}
+                    style={{ animationDelay: `${Math.min(index, 12) * 45}ms` }}
                     onContextMenu={(e) => { e.preventDefault(); void handleMark(key) }}
                     onMouseEnter={(e) => handleHover(card, e.currentTarget.getBoundingClientRect())}
                     onMouseLeave={handleLeave}
@@ -566,7 +573,7 @@ export default function DraftScreen() {
           )}
         </div>
 
-        <div className="draft-picks-area" onContextMenu={(e) => { if (hiddenCount > 0) { e.preventDefault(); handleShowAllHidden() } }}>
+        <div className="draft-picks-area" data-fly-target="picks" onContextMenu={(e) => { if (hiddenCount > 0) { e.preventDefault(); handleShowAllHidden() } }}>
           <h3 className="draft-section-title">{t('game', 'draft_picks_title', { count: String(pickCards.length) })}</h3>
           {hiddenCount > 0 && (
             <Button variant="ghost" size="sm" className="draft-hidden-link" onClick={() => handleShowAllHidden()} title={t('game', 'draft_show_all')}>
