@@ -544,14 +544,25 @@ const showPtBadge =
               label = `+${c.count}`
             }
 
+            const pulse = counterPulses[c.name]
             return (
               <div
                 key={c.name}
-                className={`counter-badge ${customClass}${pulseClass(counterPulses[c.name])}`}
+                className={`counter-badge ${customClass}${pulseClass(pulse)}`}
                 title={`${c.name}: ${c.count}`}
               >
                 {iconElement && <span className="counter-icon-symbol">{iconElement}</span>}
-                {label && <span className={`counter-text-val${counterPulses[c.name]?.tick ? ` counter-tick is-${counterPulses[c.name]?.direction}` : ''}`}>{label}</span>}
+                {label && <span className={`counter-text-val${pulse?.tick ? ` counter-tick is-${pulse.direction}` : ''}`}>{label}</span>}
+                {pulse?.scale && <span key={`ring-${pulse.seq}`} className="counter-change-ring" aria-hidden="true" />}
+                {pulse?.label && (
+                  <span
+                    key={`label-${pulse.seq}`}
+                    className={`counter-change-label is-${pulse.direction}${pulse.scale ? ' counter-change-rise' : ''}`}
+                    aria-hidden="true"
+                  >
+                    {pulse.delta > 0 ? `+${pulse.delta}` : `${pulse.delta}`}
+                  </span>
+                )}
               </div>
             )
           })}

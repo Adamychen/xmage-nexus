@@ -1779,7 +1779,7 @@ export function buildGalleryEntries(): GalleryEntry[] {
       id: 'anim:counter-change',
       group: 'Animaciones',
       label: 'Counter: +1/+1 added, pulse and tick',
-      description: 'Press "Replay" to reset the creature to one +1/+1 counter and then put a second one on it: the badge pulses with a gold flash for about 400 ms and the number ticks up.',
+      description: 'Press "Replay" to reset the creature to one +1/+1 counter and then put a second one on it: the badge pulses with a gold flash and an expanding ring, a "+1" rises above it, and the number ticks up.',
       phase: 'game',
       game: counterBase,
       gameId,

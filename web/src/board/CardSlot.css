@@ -555,40 +555,99 @@ html.fx-off .counter-badge {
 .counter-badge.counter-badge-changed::after {
   content: '';
   position: absolute;
-  inset: -2px;
+  inset: -3px;
   border-radius: inherit;
-  box-shadow: 0 0 8px 2px rgb(var(--gold-rgb) / 0.9);
+  background: rgb(var(--gold-rgb) / 0.55);
+  box-shadow: 0 0 12px 4px rgb(var(--gold-rgb) / 0.95);
   opacity: 0;
   pointer-events: none;
-  animation: counterFlash calc(0.4s / var(--fx-speed, 1)) ease-out;
+  animation: counterFlash calc(0.5s / var(--fx-speed, 1)) ease-out;
 }
 
 .counter-badge.counter-badge-pulse {
   animation: badgePop calc(0.28s / var(--fx-speed, 1)) cubic-bezier(0.34, 1.56, 0.64, 1),
-    counterPulse calc(0.4s / var(--fx-speed, 1)) ease-in-out;
+    counterPulse calc(0.5s / var(--fx-speed, 1)) linear;
 }
 
 @keyframes counterFlash {
-  0% { opacity: 1; }
+  0% { opacity: 0; }
+  60% { opacity: 0.9; }
   100% { opacity: 0; }
 }
 
 @keyframes counterPulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.18); }
+  0% { transform: scale(1); animation-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1); }
+  40% { transform: scale(1.45); animation-timing-function: ease-in-out; }
+  70% { transform: scale(0.96); animation-timing-function: ease-out; }
   100% { transform: scale(1); }
 }
 
+.counter-change-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  border: 3px solid rgb(var(--gold-rgb) / 0.95);
+  box-shadow: 0 0 10px 1px rgb(var(--gold-rgb) / 0.8);
+  pointer-events: none;
+  animation: counterRing calc(0.5s / var(--fx-speed, 1)) var(--ease-out) both;
+}
+
+@keyframes counterRing {
+  0% { transform: scale(1); opacity: 0.95; }
+  100% { transform: scale(2.2); opacity: 0; }
+}
+
+.counter-change-label {
+  position: absolute;
+  bottom: calc(100% + 2px);
+  left: 50%;
+  translate: -50% 0;
+  white-space: nowrap;
+  pointer-events: none;
+  font-family: var(--font-display);
+  padding: 1px 4px;
+  border-radius: var(--r-xs);
+  background: var(--shade-5);
+  border: 1px solid rgb(var(--gold-rgb) / 0.8);
+  font-size: var(--fs-sm);
+  font-weight: 800;
+  line-height: 1.2;
+  color: var(--gold-300);
+  animation: counterChangeFade calc(0.8s / var(--fx-speed, 1)) linear both;
+}
+
+.counter-change-label.is-down {
+  color: var(--err);
+}
+
+.counter-change-label.counter-change-rise {
+  animation: counterChangeRise calc(0.8s / var(--fx-speed, 1)) linear both;
+}
+
+@keyframes counterChangeFade {
+  0% { opacity: 0; }
+  12% { opacity: 1; }
+  60% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@keyframes counterChangeRise {
+  0% { opacity: 0; transform: translateY(0); animation-timing-function: var(--ease-out); }
+  12% { opacity: 1; transform: translateY(-6px); animation-timing-function: linear; }
+  60% { opacity: 1; transform: translateY(-16px); animation-timing-function: var(--ease-out); }
+  100% { opacity: 0; transform: translateY(-24px); }
+}
+
 .counter-badge .counter-tick {
-  animation: counterTickFade calc(0.2s / var(--fx-speed, 1)) ease-out;
+  animation: counterTickFade calc(0.3s / var(--fx-speed, 1)) ease-out;
 }
 
 .counter-badge-pulse.counter-badge-up .counter-tick {
-  animation: counterTickUp calc(0.2s / var(--fx-speed, 1)) ease-out;
+  animation: counterTickUp calc(0.3s / var(--fx-speed, 1)) ease-out;
 }
 
 .counter-badge-pulse.counter-badge-down .counter-tick {
-  animation: counterTickDown calc(0.2s / var(--fx-speed, 1)) ease-out;
+  animation: counterTickDown calc(0.3s / var(--fx-speed, 1)) ease-out;
 }
 
 @keyframes counterTickFade {
@@ -607,6 +666,11 @@ html.fx-off .counter-badge {
 }
 
 html.fx-off .counter-badge.counter-badge-changed::after,
+html.fx-off .counter-change-ring,
+html.fx-off .counter-change-label {
+  display: none;
+}
+
 html.fx-off .counter-badge .counter-tick {
   animation: none !important;
 }

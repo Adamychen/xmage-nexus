@@ -1,13 +1,17 @@
 import { useEffect, useRef, useState } from 'react'
-import { fxMotionAllowed } from './fx'
+import { fxMotionAllowed, fxOpacityAllowed } from './fx'
 
-export const COUNTER_TICK_MS = 200
-export const COUNTER_PULSE_MS = 400
+export const COUNTER_TICK_MS = 300
+export const COUNTER_PULSE_MS = 800
 
 export interface CounterPulse {
+  seq: number
   direction: 'up' | 'down'
-  /** Whether the badge may scale; false under reduced motion or with effects off. */
+  delta: number
+  /** Whether the badge may scale and the ring and label may rise; false under reduced motion or with effects off. */
   scale: boolean
+  /** Whether the floating change label may show; false with effects off. */
+  label: boolean
   /** True for the first COUNTER_TICK_MS of the change, while the number ticks. */
   tick: boolean
 }
@@ -16,6 +20,8 @@ export interface CounterSample {
   name: string
   count: number
 }
+
+let pulseSeq = 0
 
 /** Reports the counters whose count changed since the previous render of the same permanent,
  *  keyed by counter name. The first sample is the baseline and never pulses, so a counter that
@@ -36,7 +42,14 @@ export function useCounterPulse(counters: ReadonlyArray<CounterSample>): Record<
     for (const [name, count] of now) {
       const prev = before.get(name)
       if (prev === undefined || prev === count) continue
-      changes[name] = { direction: count > prev ? 'up' : 'down', scale: fxMotionAllowed(), tick: true }
+      changes[name] = {
+        seq: ++pulseSeq,
+        direction: count > prev ? 'up' : 'down',
+        delta: count - prev,
+        scale: fxMotionAllowed(),
+        label: fxOpacityAllowed(),
+        tick: true,
+      }
     }
     if (Object.keys(changes).length === 0) return
 

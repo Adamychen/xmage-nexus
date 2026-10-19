@@ -86,13 +86,54 @@ describe('CardSlot counter change pulse', () => {
     expect(badge(container)?.classList.contains('counter-badge-changed')).toBe(false)
   })
 
-  it('under reduced motion the change keeps the colour but adds no scale', () => {
+  it('under reduced motion the change keeps the colour but adds no scale, ring or rise', () => {
     setReducedMotion(true)
     const { container, rerender } = render(<CardSlot card={bear(1)} showCounters />)
     rerender(<CardSlot card={bear(2)} showCounters />)
     const el = badge(container)
     expect(el?.classList.contains('counter-badge-changed')).toBe(true)
     expect(el?.classList.contains('counter-badge-pulse')).toBe(false)
+    expect(el?.querySelector('.counter-change-ring')).toBeNull()
+    const label = el?.querySelector('.counter-change-label')
+    expect(label?.textContent).toBe('+1')
+    expect(label?.classList.contains('counter-change-rise')).toBe(false)
+  })
+
+  it('a count increase shows a +delta label that rises and is removed after its window', () => {
+    const { container, rerender } = render(<CardSlot card={bear(1)} showCounters />)
+    rerender(<CardSlot card={bear(2)} showCounters />)
+    const el = badge(container)!
+    const label = el.querySelector('.counter-change-label')
+    expect(label?.textContent).toBe('+1')
+    expect(label?.classList.contains('is-up')).toBe(true)
+    expect(label?.classList.contains('counter-change-rise')).toBe(true)
+    expect(el.querySelector('.counter-change-ring')).not.toBeNull()
+    act(() => { vi.advanceTimersByTime(COUNTER_PULSE_MS) })
+    expect(el.querySelector('.counter-change-label')).toBeNull()
+    expect(el.querySelector('.counter-change-ring')).toBeNull()
+  })
+
+  it('a count decrease shows a -delta label', () => {
+    const { container, rerender } = render(<CardSlot card={bear(3)} showCounters />)
+    rerender(<CardSlot card={bear(1)} showCounters />)
+    const label = badge(container)?.querySelector('.counter-change-label')
+    expect(label?.textContent).toBe('-2')
+    expect(label?.classList.contains('is-down')).toBe(true)
+  })
+
+  it('a first appearance of a counter shows no change label', () => {
+    const { container, rerender } = render(<CardSlot card={bear(1, { counters: [] })} showCounters />)
+    rerender(<CardSlot card={bear(2)} showCounters />)
+    expect(badge(container)?.querySelector('.counter-change-label')).toBeNull()
+    expect(badge(container)?.querySelector('.counter-change-ring')).toBeNull()
+  })
+
+  it('with effects off the change shows no label or ring', () => {
+    setState({ settings: { ...getState().settings, effects: false } })
+    const { container, rerender } = render(<CardSlot card={bear(1)} showCounters />)
+    rerender(<CardSlot card={bear(2)} showCounters />)
+    expect(badge(container)?.querySelector('.counter-change-label')).toBeNull()
+    expect(badge(container)?.querySelector('.counter-change-ring')).toBeNull()
   })
 
   it('with effects off the change keeps the colour but adds no scale', () => {
@@ -103,7 +144,7 @@ describe('CardSlot counter change pulse', () => {
     expect(badge(container)?.classList.contains('counter-badge-pulse')).toBe(false)
   })
 
-  it('the tick ends after about 200 ms and the changed class after about 400 ms', () => {
+  it('the tick ends after about 300 ms and the changed class after about 800 ms', () => {
     const { container, rerender } = render(<CardSlot card={bear(1)} showCounters />)
     rerender(<CardSlot card={bear(2)} showCounters />)
     const el = badge(container)!
