@@ -38,7 +38,6 @@ describe('galería de estados (P3)', () => {
       'Tablero',
       'Dialogs',
       'Global',
-      'Animaciones',
     ])
   })
 
