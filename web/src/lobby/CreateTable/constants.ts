@@ -239,6 +239,9 @@ export const CONSTRUCTED_TOURNAMENT_TYPES = [
 
 export const DEFAULT_DRAFT_TOURNAMENT_TYPE = 'Booster Draft Elimination'
 
+export const DEFAULT_ATTACK_OPTION = 'MULTIPLE'
+export const DEFAULT_RANGE = 'ALL'
+
 export function tournamentTypeNameOf(t: unknown): string {
   if (typeof t === 'string') return t
   if (t && typeof t === 'object' && 'name' in t && typeof (t as { name: unknown }).name === 'string') {
