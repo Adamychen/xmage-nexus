@@ -11,6 +11,7 @@ Environment=STATUS_PORT=8790
 Environment=STATUS_BIND=0.0.0.0
 Environment=STATUS_ALLOW=192.168.1.0/24
 Environment=STATUS_DB=/home/adam/xmage-status/data/status.db
+Environment=REPORTS_DIR=/home/adam/Escritorio/xmage-nexus/reports
 ExecStart=/usr/bin/node --no-warnings /home/adam/xmage-status/server.mjs
 Restart=always
 RestartSec=5

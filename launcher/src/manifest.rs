@@ -66,4 +66,28 @@ mod tests {
     fn rejects_garbage() {
         assert!(ComponentsManifest::parse("not json").is_err());
     }
+
+    #[test]
+    fn a_manifest_missing_required_fields_is_rejected() {
+        assert!(ComponentsManifest::parse("{}").is_err());
+        assert!(ComponentsManifest::parse(r#"{"schema":1,"release":"r","xmage":"x"}"#).is_err());
+        let no_hash = r#"{"schema":1,"release":"r","xmage":"x","components":{"jre":{"t":{"url":"https://x","bytes":1}}}}"#;
+        assert!(ComponentsManifest::parse(no_hash).is_err());
+    }
+
+    #[test]
+    fn optional_fields_default_to_empty() {
+        let m = ComponentsManifest::parse(r#"{"schema":1,"release":"r","xmage":"x","components":{}}"#).unwrap();
+        assert_eq!(m.git_sha, "");
+        assert_eq!(m.min_launcher, "");
+        assert!(m.component_names().is_empty());
+    }
+
+    #[test]
+    fn wrong_types_are_rejected() {
+        let bad = r#"{"schema":"one","release":"r","xmage":"x","components":{}}"#;
+        assert!(ComponentsManifest::parse(bad).is_err());
+        let neg = r#"{"schema":1,"release":"r","xmage":"x","components":{"jre":{"t":{"url":"u","sha256":"s","bytes":-1}}}}"#;
+        assert!(ComponentsManifest::parse(neg).is_err());
+    }
 }

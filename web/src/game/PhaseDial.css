@@ -1,0 +1,259 @@
+.phase-dial {
+  position: relative;
+  width: var(--dial-w);
+  height: var(--dial-h);
+  pointer-events: none;
+}
+
+.phase-dial::before {
+  content: '';
+  position: absolute;
+  left: var(--dial-cx);
+  top: var(--dial-cy);
+  width: 190px;
+  height: 190px;
+  margin: -95px 0 0 -95px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgb(var(--gold-rgb) / 0.26), transparent 68%);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.phase-dial.is-mine::before {
+  opacity: 1;
+  animation: dialHalo 2.4s ease-in-out infinite;
+}
+
+@keyframes dialHalo {
+  50% {
+    transform: scale(1.1);
+    opacity: 0.55;
+  }
+}
+
+.phase-dial-arc {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.phase-dial-arc path {
+  fill: none;
+  stroke: var(--line-2);
+  stroke-width: 2;
+  stroke-dasharray: 2 5;
+}
+
+.phase-dial .phase-dial-pip {
+  position: absolute;
+  width: 38px;
+  height: 38px;
+  min-width: 0;
+  margin: -19px 0 0 -19px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1px solid var(--line-2);
+  background: rgb(var(--ink-1-rgb, 11 16 27) / 0.92);
+  color: var(--fg-3);
+  font-family: var(--font-display, sans-serif);
+  font-size: var(--fs-3xs);
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  pointer-events: auto;
+  transition: transform 0.15s var(--ease-out), color 0.15s, border-color 0.15s;
+}
+
+.phase-dial .phase-dial-pip:hover {
+  color: var(--fg-hi);
+  border-color: var(--line-3);
+  transform: scale(1.1);
+}
+
+.phase-dial .phase-dial-pip.past {
+  color: var(--dial-past);
+  border-color: var(--line-1);
+}
+
+.phase-dial .phase-dial-pip.active {
+  color: var(--ink-0);
+  background: radial-gradient(circle at 30% 25%, var(--gold-300), var(--gold-500));
+  border-color: var(--gold-300);
+  box-shadow: 0 0 0 3px rgb(var(--gold-rgb) / 0.25), 0 0 20px rgb(var(--gold-rgb) / 0.65);
+  transform: scale(1.18);
+  opacity: 1;
+  z-index: 2;
+}
+
+.phase-dial-pip .stop-dot {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid var(--ink-gap);
+}
+
+.phase-dial-pip .stop-dot-you {
+  right: -2px;
+  top: -2px;
+  background: var(--brand);
+}
+
+.phase-dial-pip .stop-dot-opp {
+  left: -2px;
+  top: -2px;
+  background: var(--warn);
+}
+
+.phase-dial-core {
+  position: absolute;
+  left: var(--dial-cx);
+  top: var(--dial-cy);
+  width: 112px;
+  height: 112px;
+  margin: -56px 0 0 -56px;
+  pointer-events: auto;
+}
+
+.phase-dial .action-button-container--dial {
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  background: transparent;
+  border: 0;
+}
+
+.phase-dial .action-button-container--dial .big-action-split {
+  width: 100%;
+  height: 100%;
+}
+
+.phase-dial .action-button-container--dial .big-action-btn {
+  width: 112px;
+  height: 112px;
+  min-height: 0;
+  padding: var(--sp-2);
+  flex-direction: column;
+  justify-content: center;
+  text-align: center;
+  border-radius: 50%;
+  border: 0;
+  color: var(--fg-hi);
+  background: var(--dial-pass);
+  box-shadow: 0 0 0 4px var(--ink-gap), 0 0 0 5px var(--dial-pass-ring), 0 10px 28px var(--dial-pass-glow);
+}
+
+.phase-dial .action-button-container--dial .big-action-btn.action-resolve {
+  color: var(--dial-resolve-ink);
+  background: var(--dial-resolve);
+  box-shadow: 0 0 0 4px var(--ink-gap), 0 0 0 5px var(--dial-resolve-ring), 0 10px 28px var(--dial-resolve-glow);
+}
+
+.phase-dial .action-button-container--dial .big-action-btn.action-combat {
+  background: var(--dial-combat);
+  box-shadow: 0 0 0 4px var(--ink-gap), 0 0 0 5px var(--dial-combat-ring), 0 10px 28px var(--dial-combat-glow);
+}
+
+.phase-dial .action-button-container--dial .big-action-btn.action-waiting,
+.phase-dial .action-button-container--dial .big-action-btn.disabled {
+  opacity: 1;
+  color: var(--fg-2);
+  background: var(--dial-wait);
+  box-shadow: 0 0 0 4px var(--ink-gap), 0 0 0 5px var(--line-3);
+}
+
+.phase-dial .action-button-container--dial .big-action-btn:hover.interactive {
+  transform: scale(1.04);
+}
+
+.phase-dial .action-button-container--dial .action-btn-content {
+  align-items: center;
+  text-align: center;
+  gap: var(--sp-0h);
+}
+
+.phase-dial .action-button-container--dial .action-btn-label {
+  display: block;
+  font-family: var(--font-display);
+  font-size: var(--fs-lg);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  max-width: 96px;
+  color: inherit;
+}
+
+.phase-dial .action-button-container--dial .big-action-btn .action-btn-label {
+  color: inherit;
+}
+
+.phase-dial .action-button-container--dial .action-btn-icon {
+  display: none;
+}
+
+.phase-dial .action-button-container--dial .action-btn-sublabel {
+  max-width: 84px;
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: 0.02em;
+  opacity: 0.85;
+  color: inherit;
+}
+
+.phase-dial .action-button-container--dial .action-btn-shortcut {
+  display: none;
+}
+
+.phase-dial .action-button-container--dial .big-action-toggle {
+  position: absolute;
+  right: -6px;
+  bottom: -4px;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border-radius: 50%;
+  z-index: 3;
+}
+
+.phase-dial .action-button-container--dial .pass-menu {
+  left: auto;
+  right: calc(100% + 14px);
+  bottom: -20px;
+  width: 260px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .phase-dial.is-mine::before {
+    animation: none;
+  }
+  .phase-dial .phase-dial-pip {
+    transition: none;
+  }
+}
+
+.phase-dial-pip .stop-dot.stop-dot-opp {
+  width: 8px;
+  height: 8px;
+}
+
+.phase-dial .action-button-container--dial .big-action-btn.action-waiting .action-btn-label,
+.phase-dial .action-button-container--dial .big-action-btn.disabled .action-btn-label {
+  font-size: var(--fs-sm);
+  letter-spacing: 0.02em;
+  max-width: 92px;
+  overflow-wrap: anywhere;
+  text-align: center;
+}
+
+.phase-dial .action-button-container--dial .big-action-btn.action-waiting .action-btn-sublabel,
+.phase-dial .action-button-container--dial .big-action-btn.disabled .action-btn-sublabel {
+  max-width: 92px;
+  overflow-wrap: anywhere;
+  text-align: center;
+}

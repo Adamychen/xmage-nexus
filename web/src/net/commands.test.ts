@@ -128,6 +128,15 @@ describe('commands', () => {
     expect(await commands.getTournament('t-1')).toBeNull()
   })
 
+  it('getFinishedMatches never hands the history panel anything but an array', async () => {
+    send.mockResolvedValue({ ok: true, data: { not: 'a list' } })
+    expect(await commands.getFinishedMatches()).toEqual([])
+    send.mockResolvedValue({ ok: true, data: true })
+    expect(await commands.getFinishedMatches()).toEqual([])
+    send.mockResolvedValue({ ok: true, data: [{ matchId: 'm1' }] })
+    expect(await commands.getFinishedMatches()).toEqual([{ matchId: 'm1' }])
+  })
+
   it('getTournamentTypes accepts plain names or objects and drops empty ones', async () => {
     send.mockResolvedValue({ ok: true, data: ['Booster Draft Elimination', { name: 'Sealed Elimination' }, { name: '' }, {}, null] })
     expect(await commands.getTournamentTypes()).toEqual(['Booster Draft Elimination', 'Sealed Elimination'])

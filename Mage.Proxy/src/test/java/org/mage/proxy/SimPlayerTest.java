@@ -2,6 +2,7 @@ package org.mage.proxy;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import mage.choices.ChoiceImpl;
 import mage.constants.PlayerAction;
 import mage.players.PlayerType;
 import mage.game.match.MatchOptions;
@@ -14,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
@@ -24,6 +26,32 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class SimPlayerTest {
+
+    @Test
+    void choiceAnswerPicksAKeyFromKeyChoicesAndRotatesOnRetries() {
+        ChoiceImpl choice = new ChoiceImpl(true);
+        Map<String, String> keys = new LinkedHashMap<>();
+        keys.put("Human", "Human");
+        keys.put("Elf", "Elf");
+        choice.setKeyChoices(keys);
+        assertEquals("Human", SimPlayer.choiceAnswer(choice, 0));
+        assertEquals("Elf", SimPlayer.choiceAnswer(choice, 1));
+        assertEquals("Human", SimPlayer.choiceAnswer(choice, 2));
+    }
+
+    @Test
+    void choiceAnswerFallsBackToTextChoicesWhenThereAreNoKeys() {
+        ChoiceImpl choice = new ChoiceImpl(true);
+        choice.setChoices(new LinkedHashSet<>(Arrays.asList("Yes", "No")));
+        assertEquals("Yes", SimPlayer.choiceAnswer(choice, 0));
+        assertEquals("No", SimPlayer.choiceAnswer(choice, 1));
+    }
+
+    @Test
+    void choiceAnswerIsNullWhenThereIsNothingToChoose() {
+        assertNull(SimPlayer.choiceAnswer(null, 0));
+        assertNull(SimPlayer.choiceAnswer(new ChoiceImpl(true), 0));
+    }
 
     @Test
     void nextBlockerSkipsBlockersTheServerAlreadyRejected() {

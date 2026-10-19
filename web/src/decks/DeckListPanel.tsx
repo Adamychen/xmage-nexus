@@ -8,6 +8,7 @@ import type { DeckFormat } from './types'
 import { commanderCardsFor } from './deckUtils'
 import { commanderEligibleFor } from './useCommanderEligibility'
 import { aggregateCards } from './deckCardOps'
+import { categorizeCard } from './cardCategory'
 import { ArenaCardStrip } from './ArenaCardStrip'
 import Icon from '../ui/Icon'
 import { useTranslation } from '../i18n'
@@ -15,19 +16,6 @@ import './DeckListPanel.css'
 
 function getCardKey(c: DeckCard): string {
   return `${c.setCode}:${c.cardNumber}:${c.cardName}`
-}
-
-function categorizeCard(typeLine?: string): string {
-  if (!typeLine) return 'other'
-  const tl = typeLine.toLowerCase()
-  if (tl.includes('creature') || tl.includes('criatura')) return 'creatures'
-  if (tl.includes('planeswalker')) return 'planeswalkers'
-  if (tl.includes('instant') || tl.includes('instantáneo')) return 'instants'
-  if (tl.includes('sorcery') || tl.includes('conjuro')) return 'sorceries'
-  if (tl.includes('enchantment') || tl.includes('encantamiento')) return 'enchantments'
-  if (tl.includes('artifact') || tl.includes('artefacto')) return 'artifacts'
-  if (tl.includes('land') || tl.includes('tierra')) return 'lands'
-  return 'other'
 }
 
 export default function DeckListPanel({

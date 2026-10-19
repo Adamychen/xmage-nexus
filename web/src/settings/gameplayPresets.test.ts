@@ -21,15 +21,16 @@ describe('gameplay presets', () => {
     expect(allValues(bundle.phaseStops.opponentTurn).every((v) => v === false)).toBe(true)
   })
 
-  it('balanced: smart automation, but pool confirmation and default phase stops', () => {
+  it('balanced: smart automation, pool confirmation, and stops on your mains and their end step', () => {
     const { bundle } = gameplayPreset('balanced')
     expect(bundle.smartStops).toBe(true)
     expect(bundle.manaPayment.auto).toBe(true)
     expect(bundle.manaPayment.smart).toBe(true)
     expect(bundle.manaPayment.restricted).toBe(true)
     expect(bundle.manaPayment.confirmEmptyPool).toBe(true)
-    expect(allValues(bundle.phaseStops.yourTurn).every((v) => v === true)).toBe(true)
-    expect(allValues(bundle.phaseStops.opponentTurn).every((v) => v === true)).toBe(true)
+    const on = (row: Record<string, boolean>) => Object.keys(row).filter((k) => row[k])
+    expect(on(bundle.phaseStops.yourTurn)).toEqual(['main1', 'main2'])
+    expect(on(bundle.phaseStops.opponentTurn)).toEqual(['endStep'])
   })
 
   it('manual: no automation and default phase stops', () => {

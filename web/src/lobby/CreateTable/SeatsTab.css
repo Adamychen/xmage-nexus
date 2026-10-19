@@ -1,0 +1,294 @@
+.seats-stage {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding-bottom: var(--sp-3);
+}
+
+.seats-stage-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2) var(--sp-3);
+}
+
+.seats-stage-meta {
+  flex: 1 1 auto;
+  font-size: var(--fs-xs);
+  color: var(--veil-7);
+}
+
+.seats-stage-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: var(--sp-3);
+}
+
+@media (min-width: 880px) {
+  .seats-stage-body {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: var(--sp-4);
+  }
+}
+
+.seat-table {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 3 / 2;
+  min-height: 230px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--veil-2);
+  background:
+    radial-gradient(70% 90% at 50% 40%, rgb(var(--brand-rgb) / 0.08) 0%, transparent 70%),
+    rgb(var(--ink-rgb) / 0.6);
+}
+
+.seat-table-felt {
+  position: absolute;
+  inset: 22% 16%;
+  border-radius: 50%;
+  border: 1px solid var(--veil-2);
+  background: radial-gradient(ellipse at center, rgb(var(--ink-2-rgb) / 0.9) 0%, rgb(var(--ink-rgb) / 0.9) 100%);
+  box-shadow: inset 0 0 40px rgb(var(--ink-rgb) / 0.5);
+}
+
+.seat-node {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: 7.5rem;
+  max-width: 28%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-0h);
+  padding: var(--sp-1h) var(--sp-2);
+  border-radius: var(--r-md);
+  border: 1px solid var(--veil-3);
+  background: rgb(var(--ink-2-rgb) / 0.95);
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.seat-node:hover {
+  border-color: var(--veil-5);
+}
+
+.seat-node.active {
+  transform: translate(-50%, -50%) scale(1.06);
+  border-color: var(--brand-line);
+  box-shadow: 0 0 0 3px var(--brand-soft), 0 8px 24px rgb(var(--ink-rgb) / 0.4);
+}
+
+.seat-node:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 3px;
+}
+
+.seat-node-avatar {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--veil-2);
+  color: var(--veil-8);
+}
+
+.seat-node--you .seat-node-avatar {
+  background: var(--brand-soft);
+  color: var(--brand-fg);
+}
+
+.seat-node--bot .seat-node-avatar {
+  background: var(--gold-soft);
+  color: var(--gold-300);
+}
+
+.seat-node--human .seat-node-avatar {
+  border: 1px dashed var(--veil-5);
+  background: transparent;
+}
+
+.seat-node-label {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+.seat-node-sub {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--fs-2xs);
+  color: var(--veil-7);
+}
+
+.seat-node.warn .seat-node-sub {
+  color: var(--warn);
+}
+
+.seat-editor {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2h);
+  padding: var(--sp-3);
+  border-radius: var(--r-md);
+  border: 1px solid var(--veil-2);
+  background: rgb(var(--ink-2-rgb) / 0.5);
+  animation: seat-editor-in 0.22s ease both;
+}
+
+@keyframes seat-editor-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .seat-editor { animation: none; }
+  .seat-node, .seat-node.active { transition: none; }
+}
+
+.seat-editor-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.seat-editor-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+}
+
+.seat-type-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-1h);
+}
+
+.deck-carousel {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.deck-carousel.is-disabled {
+  opacity: 0.5;
+}
+
+.deck-carousel-nav {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border-radius: 50%;
+  font-size: var(--fs-xl);
+  line-height: 1;
+}
+
+.deck-carousel-track {
+  position: relative;
+  display: flex;
+  gap: var(--sp-2h);
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  padding: var(--sp-2) var(--sp-1h) var(--sp-3);
+  scrollbar-width: thin;
+}
+
+.deck-carousel-card {
+  flex: 0 0 9.5rem;
+  scroll-snap-align: center;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  text-align: left;
+  color: inherit;
+  cursor: pointer;
+  border-radius: var(--r-md);
+  border: 1px solid var(--veil-3);
+  background: rgb(var(--ink-3-rgb, 24 32 51) / 0.8);
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+  opacity: 0.8;
+}
+
+.deck-carousel-card:hover {
+  opacity: 1;
+  border-color: var(--veil-5);
+}
+
+.deck-carousel-card.selected {
+  opacity: 1;
+  transform: translateY(-3px);
+  border-color: var(--brand-line);
+  box-shadow: 0 0 0 2px var(--brand-soft), 0 10px 24px rgb(var(--ink-rgb) / 0.4);
+}
+
+.deck-carousel-card:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+.deck-carousel-card[aria-disabled="true"] {
+  cursor: default;
+}
+
+.deck-carousel-art {
+  display: block;
+  aspect-ratio: 16 / 10;
+  background: var(--veil-1);
+  overflow: hidden;
+}
+
+.deck-carousel-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+}
+
+.deck-carousel-fallback {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  font-size: var(--fs-lg);
+  font-weight: 800;
+  color: var(--veil-8);
+  background: linear-gradient(135deg, var(--brand-soft), var(--gold-soft));
+}
+
+.deck-carousel-name {
+  padding: var(--sp-2) var(--sp-2) 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--fs-sm);
+  font-weight: 700;
+}
+
+.deck-carousel-count {
+  padding: var(--sp-0h) var(--sp-2) var(--sp-2);
+  font-size: var(--fs-2xs);
+  color: var(--veil-7);
+}
+
+@media (max-width: 640px) {
+  .seat-node {
+    width: 6rem;
+  }
+  .seat-node-sub {
+    display: none;
+  }
+}

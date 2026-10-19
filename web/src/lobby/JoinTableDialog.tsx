@@ -39,6 +39,7 @@ import StarterDecksOffer from '../decks/StarterDecksOffer'
 import { starterDeckItems } from '../decks/starterDecks'
 import Button from '../ui/Button'
 import Input from '../ui/Input'
+import { usePointerVars } from './usePointerVars'
 
 const SEARCH_THRESHOLD = 6
 
@@ -94,8 +95,11 @@ function DeckTile({
   const art = useCardArtUrl(deckCoverCard(deck))
   const colors = deckColors(deck)
   const highlights = deckHighlights(deck)
+  const tileRef = useRef<HTMLButtonElement>(null)
+  usePointerVars(tileRef)
   return (
     <Button
+      ref={tileRef}
       variant="ghost"
       role="radio"
       aria-checked={selected}

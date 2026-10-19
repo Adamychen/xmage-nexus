@@ -1,6 +1,7 @@
 import { render, screen, cleanup } from '@testing-library/react'
 import { describe, expect, it, vi, afterEach } from 'vitest'
-import GeneralTab from './GeneralTab'
+import TourneyTab from './TourneyTab'
+import DraftTab from './DraftTab'
 
 vi.mock('../../net/commands', () => ({
   getExpansionsWithBoosters: vi.fn().mockResolvedValue([]),
@@ -55,11 +56,11 @@ const stubForm = (over: Record<string, unknown> = {}) => ({
   ...over,
 }) as any
 
-describe('GeneralTab player-count chips', () => {
+describe('TourneyTab player-count chips', () => {
   afterEach(() => cleanup())
 
   it('muestra "N plazas" una sola vez (sin número duplicado)', () => {
-    render(<GeneralTab form={stubForm()} />)
+    render(<TourneyTab form={stubForm()} />)
     for (const n of [2, 4, 8, 16, 32]) {
       expect(screen.getByRole('button', { name: new RegExp(`^${n} plazas$`) })).toBeDefined()
       expect(screen.queryByText(new RegExp(`^${n} ${n} plazas$`))).toBeNull()
@@ -67,7 +68,7 @@ describe('GeneralTab player-count chips', () => {
   })
 
   it('en rama limited el desplegable de tipo excluye construidos', () => {
-    render(<GeneralTab form={stubForm({
+    render(<TourneyTab form={stubForm({
       tournamentCategory: 'limited',
       useDraftTournament: true,
       deckType: 'Limited',
@@ -87,7 +88,7 @@ describe('GeneralTab player-count chips', () => {
   })
 
   it('en rama constructed el desplegable solo ofrece construidos', () => {
-    render(<GeneralTab form={stubForm()} />)
+    render(<TourneyTab form={stubForm()} />)
     const selects = screen.getAllByRole('combobox') as HTMLSelectElement[]
     const typeSelect = selects.find((s) =>
       Array.from(s.options).some((o) => o.value === 'Constructed Swiss'),
@@ -97,21 +98,8 @@ describe('GeneralTab player-count chips', () => {
     expect(values).toEqual(['Constructed Swiss', 'Constructed Elimination'])
   })
 
-  it('match Limited sin draft: oculta sobres y guía al draft', () => {
-    render(<GeneralTab form={stubForm({
-      tableCategory: 'duel',
-      deckType: 'Limited',
-      tournamentCategory: 'limited',
-      useDraftTournament: false,
-      isLimited: true,
-      isDraftLimited: false,
-    })} />)
-    expect(screen.queryByPlaceholderText(/Ej\. M21, MH3, BLB/)).toBeNull()
-    expect(screen.getByText(/no genera sobres/)).toBeDefined()
-  })
-
   it('duelo Limited con draft: muestra sobres y no avisa', () => {
-    render(<GeneralTab form={stubForm({
+    render(<DraftTab form={stubForm({
       tableCategory: 'duel',
       deckType: 'Limited',
       tournamentCategory: 'limited',

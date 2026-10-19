@@ -20,6 +20,18 @@ import { getFakePort, setFakePort } from './support/fake-port'
 const SHOTS_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), 'shots')
 
 export const test = base.extend<{ fakeServer: FakeServer | null; autoShot: void }>({
+  page: async ({ page }, use) => {
+    await page.addInitScript(() => {
+      try {
+        if (!window.localStorage.getItem('mage-web-appearance')) {
+          window.localStorage.setItem('mage-web-appearance', JSON.stringify({ gameUi: 'v1' }))
+        }
+      } catch {
+        // storage unavailable: the app default applies
+      }
+    })
+    await use(page)
+  },
   fakeServer: [
     async ({}, use) => {
       if (!FAKE_MODE) {

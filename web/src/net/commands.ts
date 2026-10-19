@@ -376,7 +376,7 @@ export async function disconnect() {
 
 export async function getFinishedMatches(roomId?: string): Promise<import('./types').MatchView[]> {
   const res = await getGateway().send<import('./types').MatchView[]>('getFinishedMatches', { roomId })
-  return res.ok ? (res.data ?? []) : []
+  return res.ok && Array.isArray(res.data) ? res.data : []
 }
 
 export async function replayGame(gameId: string) {

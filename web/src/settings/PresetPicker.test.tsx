@@ -56,7 +56,7 @@ describe('PresetPicker', () => {
         .getByTestId(`preset-demo-${id}`)
         .querySelectorAll('.preset-phase:not([data-stop="none"])').length
     expect(stops('simple')).toBe(0)
-    expect(stops('balanced')).toBe(7)
+    expect(stops('balanced')).toBe(2)
     expect(stops('manual')).toBe(7)
   })
 })

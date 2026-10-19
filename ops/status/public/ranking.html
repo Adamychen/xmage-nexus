@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Nexus Ranking</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="ranking.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8"/><path d="M7 20h4l3-9 4 13 3-8h4"/></svg>
+        <div>
+          <div class="brand-name">XMage Nexus</div>
+          <div class="brand-sub">Ranking (beta, observed in lobby)</div>
+        </div>
+      </div>
+      <nav class="topbar-nav"><a href="index.html">Server status</a></nav>
+    </div>
+  </header>
+
+  <main class="rk-main">
+    <p class="rk-note" id="note">Loading…</p>
+
+    <section class="rk-cards" id="cards"></section>
+
+    <div class="rk-controls">
+      <div class="rk-tabs" role="tablist">
+        <button type="button" role="tab" data-format="constructed" aria-selected="true">Constructed</button>
+        <button type="button" role="tab" data-format="limited" aria-selected="false">Limited</button>
+      </div>
+      <input type="search" id="search" placeholder="Search player" aria-label="Search player">
+      <label class="rk-check"><input type="checkbox" id="onlyPop"> Only active population (<span id="minLabel"></span>)</label>
+    </div>
+
+    <div class="rk-table-wrap">
+      <table class="rk-table">
+        <thead>
+          <tr>
+            <th class="col-pos">#</th>
+            <th>Player</th>
+            <th class="num">Rating now</th>
+            <th class="num">Best seen</th>
+            <th class="num">Matches</th>
+            <th class="num">Tourneys</th>
+            <th>Last seen</th>
+            <th class="num">Samples</th>
+          </tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+  </main>
+  <script src="ranking.js"></script>
+</body>
+</html>

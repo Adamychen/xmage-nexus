@@ -11,6 +11,7 @@ export type BoardDemoSpec =
   | { kind: 'tapStyle'; value: TapStyle }
   | { kind: 'ptBadge'; value: PtBadgeMode }
   | { kind: 'sickness'; value: SicknessStyle }
+  | { kind: 'manaSource'; value: boolean }
 
 interface Tile {
   perm: PermanentView
@@ -55,6 +56,12 @@ function tilesFor(spec: BoardDemoSpec): Tile[] {
         { perm: creature('Shivan Dragon', { power: '5', toughness: '5', originalPower: '5', originalToughness: '5' }), showPt: true },
         { perm: creature('Sentinel Spider', { summoningSickness: true }), showPt: true },
       ]
+    case 'manaSource':
+      return [
+        { perm: land('Forest', { rules: ['{T}: Add {G}.'] }) },
+        { perm: creature('Birds of Paradise', { power: '0', toughness: '1', originalPower: '0', originalToughness: '1', rules: ['{T}: Add one mana of any color.'] }) },
+        { perm: creature('Shivan Dragon', { power: '5', toughness: '5', originalPower: '5', originalToughness: '5' }), showPt: true },
+      ]
   }
 }
 
@@ -67,6 +74,7 @@ function tilesFor(spec: BoardDemoSpec): Tile[] {
 export default function BoardDemo({ spec }: { spec: BoardDemoSpec }) {
   const compact = spec.kind === 'cardStyle' ? spec.value === 'compact' : false
   const tilted = spec.kind === 'tapStyle' && spec.value === 'tilted'
+  const showManaSource = spec.kind === 'manaSource' && spec.value
   const demo = (name: string) => ({
     artUrl: showcaseArtUrl(name),
     ptBadgeMode: spec.kind === 'ptBadge' ? spec.value : undefined,
@@ -87,6 +95,7 @@ export default function BoardDemo({ spec }: { spec: BoardDemoSpec }) {
             tapped={perm.tapped === true}
             showPt={showPt}
             compact={compact}
+            showManaSource={showManaSource}
             demo={demo(perm.name)}
           />
         ))}

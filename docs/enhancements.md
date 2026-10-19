@@ -4,32 +4,35 @@
 > need no server or rules-engine change. The full historic catalog (built and
 > dropped ideas with rationale) is archived in
 > `docs/history/enhancements-catalog.md`; the live pending list is `ROADMAP.md`
-> §4.2. Two ideas stay open.
+> §4.2. Only the replay-file follow-up of the rewind stays open.
 
-## 1. Board rewind (scrub the match by turn)
+## 1. Board rewind (scrub the match by step)
 
-**Constraint: no optimistic state** (`ROADMAP.md` §6 rule 1). Rewind is a read
-mode over *recorded* views with its own store slice, never a mutated live
-store: entering rewind must not leave an action sendable against a past state.
+Built 2026-10-15. Opt-in (`settings.boardRewind`, Settings → Gameplay). `game/rewind.ts`
+is its own module store, separate from the live store: one snapshot per
+`(turn, step)` (the latest view of that step replaces the earlier one), at most 40 per game,
+in memory only, cleared on a new game, on a rollback past the snapshot's turn, or when the
+setting goes off. `GameScreen` swaps the displayed `GameView` for the viewed snapshot and
+disables board/dock pointer events plus Space and the skip keys while viewing; auto-pass and
+attention alerts keep reading the live view, and live updates keep streaming behind it.
+`RewindBar` (slider, arrows, Esc to return) is the only control.
 
-- **What**: opt-in ring keeping the views the game received, so you can scrub
-  back to any earlier turn and read the board as it was — for reviewing a line,
-  screenshotting a moment, and as the substrate for a future replay file.
-- **Data**: everything already in `GAME_UPDATE`; `web/src/net/frameBuffer.ts`
-  is the hook, but it is bounded for diagnostics (60 frames, whole frames only
-  up to 8 KB shipped / 64 KB dev) while a `GAME_UPDATE` is 200-800 KB, so this
-  needs its own capture: a per-turn snapshot per game, or a delta against the
-  previous one, kept out of the diagnostics bundle.
-- **Shape**: separate read mode (own store slice), disabled against a live
-  opponent by default; the live game keeps streaming behind it and any input
-  exits rewind first.
-- **Verify**: unit tests on the capture/derivation (no browser), then replay
-  two recorded frames as turns 5 and 12 of one game and assert rewind paints
-  both.
+Replay file (2026-10-15): **Save replay** in the bar downloads the snapshots as
+`nexus-replay_*.json.gz` (`game/replayFile.ts`); **Open replay file** in Lobby → History loads it
+with no server connection (`startReplay` puts the last snapshot in the store with `gameId: null`,
+`RewindBar` is then always open and its Close button leaves the replay). Files are validated
+(`parseReplayFile`: format, version, at most 40 unique-key snapshots). Still open: a per-turn delta
+to shrink files (a `GAME_UPDATE` is 200-800 KB), loading a replay in the demo, and exporting a
+moment as an image.
 
 ## 2. Draft pick helper
 
-Not started. Spec stays in `ROADMAP.md` §4.2 (High / ~2 d).
+Built 2026-10-15. `game/draftAdvisor.ts` scores the cards of the current booster against the
+pool so far (rarity prior, colour fit once the pool is committed to two colours, the creature
+curve slot it fills, a creature-count nudge, basic lands last) and `DraftHelper` shows the top
+three with their reasons. It is a client-side heuristic over Scryfall metadata the screen already
+loads: nothing is sent, nothing is picked for the player, and it can be hidden (remembered).
+Open: ratings per set (17Lands-style win-rate data) would need an external source.
 
 ## Dropped, not deferred
 

@@ -277,4 +277,45 @@ mod tests {
         let mut noop = |_: u64, _: Option<u64>| {};
         assert!(download("ftp://x/y", &dir.path().join("o"), &mut noop).is_err());
     }
+
+    #[test]
+    fn an_empty_or_malformed_expected_hash_never_verifies() {
+        let dir = tempfile::tempdir().unwrap();
+        let f = dir.path().join("f");
+        std::fs::write(&f, b"data").unwrap();
+        let good = sha256_file(&f).unwrap();
+        assert!(verify(&f, "").is_err());
+        assert!(verify(&f, &good[..good.len() - 1]).is_err());
+        assert!(verify(&f, &format!("{good} ")).is_err());
+        assert!(verify(&f, &good.to_uppercase()).is_ok());
+    }
+
+    #[test]
+    fn the_mismatch_error_names_the_file_and_both_hashes() {
+        let dir = tempfile::tempdir().unwrap();
+        let f = dir.path().join("jre.tar.gz");
+        std::fs::write(&f, b"data").unwrap();
+        let want = "0".repeat(64);
+        let msg = verify(&f, &want).unwrap_err().to_string();
+        assert!(msg.contains("jre.tar.gz") && msg.contains(&want) && msg.contains(&sha256_file(&f).unwrap()));
+    }
+
+    #[test]
+    fn verifying_a_missing_file_is_an_io_error() {
+        let dir = tempfile::tempdir().unwrap();
+        assert!(matches!(verify(&dir.path().join("nope"), &"0".repeat(64)), Err(FetchError::Io(_))));
+    }
+
+    #[test]
+    fn a_missing_local_file_url_is_an_error() {
+        let dir = tempfile::tempdir().unwrap();
+        let mut noop = |_: u64, _: Option<u64>| {};
+        assert!(download("file:///definitely/not/here.bin", &dir.path().join("o"), &mut noop).is_err());
+        assert!(download_text("file:///definitely/not/here.txt", Duration::from_secs(1)).is_err());
+    }
+
+    #[test]
+    fn download_text_rejects_unknown_schemes() {
+        assert!(matches!(download_text("gopher://x", Duration::from_secs(1)), Err(FetchError::Scheme(_))));
+    }
 }

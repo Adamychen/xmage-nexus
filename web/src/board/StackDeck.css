@@ -1,0 +1,463 @@
+.stack-deck {
+  --card-w: 232px;
+  position: absolute;
+  top: var(--sp-4);
+  right: var(--sp-3);
+  z-index: 28;
+  width: 256px;
+  display: flex;
+  flex-direction: column;
+  pointer-events: none;
+  transition: width 0.3s var(--ease-out);
+}
+
+.stack-deck > * {
+  pointer-events: auto;
+}
+
+.stack-deck.is-open {
+  width: 352px;
+}
+
+.stack-deck-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--sp-0h) var(--sp-2);
+}
+
+.stack-deck-title {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-family: var(--font-display, serif);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gold-300);
+}
+
+.stack-deck-count {
+  font-family: var(--font-ui);
+  font-size: var(--fs-2xs);
+  font-weight: 800;
+  letter-spacing: 0;
+  min-width: 18px;
+  padding: 0 var(--sp-1h);
+  border-radius: var(--r-pill);
+  background: var(--gold-500);
+  color: var(--ink-0);
+  text-align: center;
+}
+
+.stack-deck .stack-deck-toggle {
+  background: rgb(var(--ink-2-rgb) / 0.85);
+  border: 1px solid var(--line-2);
+}
+
+.stack-deck-top {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1h);
+  margin-top: var(--sp-2);
+  z-index: 3;
+}
+
+.stack-deck-ctrl {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1h);
+  padding: var(--sp-0h) var(--sp-2h) var(--sp-0h) var(--sp-1h);
+  border-radius: var(--r-pill);
+  font-size: var(--fs-2xs);
+  font-weight: 700;
+  background: var(--ink-0);
+  border: 1px solid var(--seat, var(--brand));
+  max-width: 100%;
+}
+
+
+.stack-deck-ctrl span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stack-deck-ctrl b {
+  color: var(--gold-300);
+}
+
+.stack-deck-face {
+  position: relative;
+  width: var(--card-w);
+  border-radius: var(--r-mid);
+  box-shadow: 0 0 0 2px var(--seat, var(--brand)), 0 0 26px color-mix(in srgb, var(--seat, var(--brand)) 55%, transparent), 0 12px 28px var(--shade-3);
+}
+
+.stack-deck-face.targetable {
+  cursor: pointer;
+  outline: 2px solid var(--err);
+  outline-offset: 3px;
+}
+
+.stack-deck-card {
+  width: var(--card-w);
+}
+
+.stack-deck-art {
+  display: block;
+  height: auto;
+  aspect-ratio: 5 / 7;
+  object-fit: cover;
+  border-radius: var(--r-mid);
+  pointer-events: none;
+}
+
+.stack-deck-caption {
+  position: absolute;
+  left: var(--sp-2);
+  right: var(--sp-2);
+  bottom: var(--sp-2);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sp-1);
+  padding: var(--sp-2);
+  border-radius: var(--r-mid);
+  background: var(--shade-5);
+  border: 1px solid var(--line-1, var(--shade-3));
+  color: var(--fg-1);
+  pointer-events: none;
+}
+
+.stack-deck-caption-kind {
+  padding: 1px var(--sp-2);
+  border-radius: var(--r-pill);
+  background: var(--ink-0);
+  border: 1px solid var(--gold-300);
+  font-size: var(--fs-3xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--gold-300);
+}
+
+.stack-deck-caption-rules {
+  font-size: var(--fs-2xs);
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.stack-deck-art-placeholder {
+  height: auto;
+  aspect-ratio: 5 / 7;
+  border-radius: var(--r-mid);
+  background: var(--shade-3);
+}
+
+.stack-deck-targets {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1h);
+  width: var(--card-w);
+  padding: var(--sp-1h) var(--sp-2);
+  border-radius: var(--r-sm);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  background: var(--err-soft);
+  border: 1px solid var(--err-line);
+  color: var(--err);
+}
+
+.stack-deck-targets span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stack-deck-tabs {
+  display: flex;
+  flex-direction: column;
+  margin-top: var(--sp-2);
+  position: relative;
+  z-index: 2;
+  overflow: visible;
+}
+
+.stack-deck-tab {
+  display: block;
+  margin-top: -2px;
+  position: relative;
+  z-index: var(--z, 1);
+  cursor: pointer;
+}
+
+/* Arena-style column: each entry tucks under the one above it, so every
+   name strip stays readable and the last entry shows in full. Hover lifts it. */
+.stack-deck-tab + .stack-deck-tab {
+  margin-top: -4px;
+}
+
+.stack-deck-tab:hover,
+.stack-deck-tab.is-hover {
+  z-index: 60;
+}
+
+.stack-deck-tab-inner {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  height: 32px;
+  margin: 0 var(--inset, 0);
+  padding: 0 var(--sp-2h);
+  border-radius: var(--r-md);
+  background: var(--surface-raised);
+  border: 1px solid var(--line-2);
+  border-left: 3px solid var(--seat, var(--brand));
+  box-shadow: 0 6px 12px var(--shade-2);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  transition: transform 0.15s, background 0.15s;
+}
+
+.stack-deck-tab:hover .stack-deck-tab-inner,
+.stack-deck-tab.is-hover .stack-deck-tab-inner {
+  transform: translateX(-8px);
+  background: var(--ink-4);
+}
+
+.stack-deck-tab.targetable .stack-deck-tab-inner {
+  outline: 2px solid var(--err);
+  outline-offset: -2px;
+}
+
+.stack-deck-thumb {
+  flex: 0 0 auto;
+  width: 40px;
+  height: 26px;
+  object-fit: cover;
+  border-radius: var(--r-xs);
+  background: var(--ink-4);
+}
+
+.stack-deck-tab-pos {
+  width: 14px;
+  color: var(--fg-3);
+  font-size: var(--fs-2xs);
+  font-variant-numeric: tabular-nums;
+}
+
+.stack-deck-tab-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  line-height: 1.1;
+}
+
+.stack-deck-tab-name .stack-tl-name {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  white-space: normal;
+  overflow: hidden;
+  text-overflow: clip;
+  overflow-wrap: anywhere;
+}
+
+.stack-deck-tab-by {
+  flex: 0 1 auto;
+  max-width: 40%;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--fs-4xs);
+  font-weight: 600;
+  color: var(--fg-3);
+}
+
+.stack-deck-tab-x {
+  padding: 0 var(--sp-1h);
+  border-radius: var(--r-base);
+  background: var(--ink-4);
+  font-size: var(--fs-2xs);
+  font-weight: 800;
+}
+
+.stack-deck-tab-target {
+  display: inline-flex;
+  color: var(--err);
+}
+
+.stack-deck-tab-kind {
+  font-size: var(--fs-4xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+}
+
+.stack-deck .stack-deck-more {
+  margin-top: var(--sp-1h);
+  align-self: center;
+}
+
+.stack-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  max-height: min(560px, calc(var(--deck-avail, 700px) - 48px));
+  padding-bottom: var(--sp-5);
+  overflow: auto;
+  -webkit-mask-image: linear-gradient(180deg, var(--ink-0) 88%, transparent);
+  mask-image: linear-gradient(180deg, var(--ink-0) 88%, transparent);
+}
+
+.stack-trow {
+  display: block;
+  flex: none;
+}
+
+.stack-trow.targetable {
+  cursor: pointer;
+}
+
+.stack-trow-inner {
+  display: flex;
+  gap: var(--sp-2h);
+  padding: var(--sp-2h);
+  border-radius: var(--r-md);
+  background: var(--surface-raised);
+  border: 1px solid var(--line-2);
+  border-left: 3px solid var(--seat, var(--brand));
+}
+
+.stack-trow.is-first .stack-trow-inner {
+  box-shadow: 0 0 0 1px var(--gold-line), 0 0 18px rgb(var(--gold-rgb) / 0.15);
+}
+
+.stack-trow.is-hover .stack-trow-inner {
+  background: var(--ink-4);
+}
+
+.stack-trow.targetable .stack-trow-inner {
+  outline: 2px solid var(--err);
+  outline-offset: -2px;
+}
+
+.stack-trow-pos {
+  width: 22px;
+  padding-top: 1px;
+  font-family: var(--font-display);
+  font-size: var(--fs-md);
+  font-weight: 800;
+  color: var(--gold-300);
+}
+
+.stack-trow-body {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  gap: var(--sp-1);
+}
+
+.stack-trow-name {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+}
+
+.stack-trow-cost {
+  display: inline-flex;
+  gap: var(--sp-0h);
+  margin-left: auto;
+}
+
+.stack-trow-pip {
+  width: 14px;
+  height: 14px;
+}
+
+.stack-trow-by {
+  font-size: var(--fs-2xs);
+  color: var(--fg-3);
+}
+
+.stack-trow-text {
+  font-size: var(--fs-xs);
+  line-height: 1.35;
+  color: var(--fg-2);
+}
+
+.stack-trow-target {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1h);
+  font-size: var(--fs-2xs);
+  font-weight: 700;
+  color: var(--err);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stack-deck,
+  .stack-deck-tab-inner {
+    transition: none;
+  }
+}
+
+/* A group of identical entries reads as a pile: the cards beneath peek out
+   below the bottom edge of the row, so ×N is visible at a glance. */
+.stack-deck-tab.is-group {
+  margin-bottom: var(--sp-3);
+}
+
+.stack-deck-tab.is-group .stack-deck-tab-inner {
+  box-shadow: 0 var(--sp-1) 0 var(--veil-5), 0 var(--sp-2) 0 var(--veil-4), 0 var(--sp-3) 0 var(--veil-3);
+}
+
+
+/* A grouped top card sits on a pile: three copies peek out below it. */
+.stack-deck-face.is-group {
+  margin-bottom: var(--sp-3);
+  box-shadow: 0 0 0 2px var(--seat, var(--brand)), 0 0 26px color-mix(in srgb, var(--seat, var(--brand)) 55%, transparent), 0 var(--sp-1) 0 var(--veil-5), 0 var(--sp-2) 0 var(--veil-4), 0 var(--sp-3) 0 var(--veil-3), 0 12px 28px var(--shade-3);
+}
+
+/* New stack entries ease in: the top card and each tab fade and settle. */
+@keyframes stackDeckIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.stack-deck-face,
+.stack-deck-tab {
+  animation: stackDeckIn calc(0.25s / var(--fx-speed, 1)) ease-out;
+}
+
+html.fx-off .stack-deck-face,
+html.fx-off .stack-deck-tab {
+  animation: none !important;
+}
+
+/* Copies of the top card: the count sits in the card corner, not in the controller pill. */
+.stack-deck-count {
+  position: absolute;
+  top: var(--sp-1);
+  right: var(--sp-1);
+  z-index: 2;
+  padding: var(--sp-0h) var(--sp-1h);
+  border-radius: var(--r-pill);
+  background: var(--ink-0);
+  border: 1px solid var(--seat, var(--brand));
+  color: var(--gold-300);
+  font-size: var(--fs-2xs);
+  font-weight: 700;
+  pointer-events: none;
+}

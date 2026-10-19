@@ -33,7 +33,6 @@ async function live(page: Page): Promise<Live> {
     for (const [id, st] of Object.entries<any>(g?.canPlayObjects?.objects ?? {})) {
       if ((st?.basicPlayAbilities?.length ?? 0) + (st?.basicCastAbilities?.length ?? 0) + (st?.other?.length ?? 0) > 0) meaningful.push(id)
     }
-    for (const id of s?.playableIds ?? []) if (g?.myHand?.[id] && !meaningful.includes(id)) meaningful.push(id)
     const lands = Object.values<any>(me?.battlefield ?? {}).filter((c) => (c.cardTypes ?? []).includes('LAND')).length
     return {
       turn: g?.turn ?? 0,
@@ -55,7 +54,12 @@ function autoPasses(page: Page): number {
 test('smart stops pass empty windows and hold castable ones (real engine)', { tag: '@smart-stops-real' }, async ({ page }) => {
   const session = await startGame(page, { prefix: 'ss', deck: DECK.bolt, simDeck: DECK.aiLands })
   await session.helper.stop()
-  await page.evaluate(() => (globalThis as any).__mageStore.setSetting('smartStops', true))
+  await page.evaluate(() => {
+    const store = (globalThis as any).__mageStore
+    store.setSetting('smartStops', true)
+    const none = () => ({ upkeep: false, draw: false, main1: false, beginCombat: false, endCombat: false, main2: false, endStep: false })
+    store.setState({ phaseStops: { yourTurn: none(), opponentTurn: none() } })
+  })
 
   const passBtn = page.locator('.big-action-btn.interactive')
   const stops: Array<{ phase: 1 | 2; turn: number; step: string; mine: boolean }> = []
@@ -133,6 +137,19 @@ test('smart stops pass empty windows and hold castable ones (real engine)', { ta
       rows.sort((a, b) => a[0] - b[0])
       writeFileSync(process.env.SS_DUMP, rows.map(([t, l]) => `${t} ${l}`).join('\n'))
     }
+  }
+
+  const mainWindowsByTurn = new Map<number, boolean>()
+  for (const f of framesOf(page)) {
+    if (!f || f.type !== 'event' || f.method !== 'GAME_SELECT') continue
+    const gv = (f.data as any)?.gameView
+    const me = gv?.players?.find((p: any) => p.controlled)
+    if (!gv || !me?.isActive || !me?.hasPriority || gv.step !== 'PRECOMBAT_MAIN') continue
+    mainWindowsByTurn.set(gv.turn, true)
+  }
+  const myTurns = [...new Set(stops.filter((s) => s.mine).map((s) => s.turn))]
+  for (const turn of myTurns) {
+    expect(mainWindowsByTurn.get(turn), `the engine never offered my first main phase on turn ${turn}: it skipped it on its own`).toBe(true)
   }
 
   const phase1 = stops.filter((s) => s.phase === 1)

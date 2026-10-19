@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
 import PodBoard from './PodBoard'
+import { setSetting } from '../state/store'
 import TurnOrderRing from './TurnOrderRing'
 import CommanderDamageMatrix, { COMMANDER_LETHAL } from '../game/CommanderDamageMatrix'
 import { commanderDamageRule, commanderInfoRule, makeCard, makeGameView, makePermanent, makePlayer } from '../__fixtures__/gameViews'
@@ -102,6 +103,7 @@ describe('PodBoard', () => {
   })
 
   it('keeps opponent mini-hands inside their pod cells', () => {
+    setSetting('gameUi', 'v1')
     const game = fourPlayerGame({
       myPlayerId: 'p1',
       myHand: {
@@ -125,6 +127,7 @@ describe('PodBoard', () => {
     expect(container.querySelectorAll('.board-zone .hand-card-slot').length).toBe(3)
     expect(container.querySelector('.pod-cell--me .hand-card-slot')).toBeNull()
     expect(container.querySelectorAll('.board-zone .hand-zone.compact').length).toBe(3)
+    setSetting('gameUi', 'v2')
   })
 
   it('hides the hand bar for spectators', () => {

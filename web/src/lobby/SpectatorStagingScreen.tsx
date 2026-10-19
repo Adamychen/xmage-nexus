@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import IconButton from '../ui/IconButton'
 import { hideStaging, leaveStagingTable, removeStagingTable, returnToLobby, setMyDeck, startStagedMatch, useStore, clearError } from '../state/store'
 import { setState } from '../state/state'
@@ -24,6 +24,7 @@ import AvatarImage from './AvatarImage'
 import { extractLobbyUsers } from './lobbyUtils'
 import { tableFormatProfile, deckCoverCard, deckMainSize, type JoinDeck } from './joinDeckFit'
 import { useCardArtUrl } from '../decks/useCardArtUrl'
+import { tableArtCard } from './tableArt'
 import { colorIdentityFromCards } from '../decks/types'
 import { ManaPip } from '../decks/ArenaManaSymbols'
 import './SpectatorStagingScreen.css'
@@ -98,6 +99,7 @@ export default function SpectatorStagingScreen({
     [mode, stagingTableId, lobby?.tables],
   )
   const activeTable = table || stagedTable || storeTable
+  const tableArt = useCardArtUrl(tableArtCard(activeTable?.deckType))
   const hostName = activeTable?.controllerName ? activeTable.controllerName.split(',')[0].trim() : ''
   const isOwner = !!hostName && !!conn?.username
     && hostName.toLowerCase() === conn.username.toLowerCase()
@@ -223,6 +225,20 @@ export default function SpectatorStagingScreen({
 
   const seats = useMemo(() => activeTable?.seats ?? [], [activeTable?.seats])
   const filledSeats = seats.filter((s) => !!s.playerName).length
+
+  const prevSeatNames = useRef<string[] | null>(null)
+  const [joinedSeats, setJoinedSeats] = useState<number[]>([])
+  useEffect(() => {
+    const names = seats.map((s) => s.playerName ?? '')
+    const prev = prevSeatNames.current
+    prevSeatNames.current = names
+    if (!prev) return
+    const joined = names.flatMap((n, i) => (n && !prev.includes(n) ? [i] : []))
+    if (!joined.length) return
+    setJoinedSeats(joined)
+    window.setTimeout(() => setJoinedSeats([]), 1400)
+  }, [seats])
+  const joinedClass = (idx: number) => (joinedSeats.includes(idx) ? ' seat-just-joined' : '')
   const is1v1 = (activeTable?.seats.length ?? 0) <= 2 && !activeTable?.gameType?.toLowerCase().includes('commander')
   const hasEmptySeats = seats.some((s) => !s.playerName)
 
@@ -409,7 +425,7 @@ export default function SpectatorStagingScreen({
     return (
       <div
         key={idx}
-        className={`staging-player-card ${occupied ? 'occupied' : 'empty'} ${readiness}${isMe ? ' my-seat' : ''}${swappedClass(idx)}${dropClass(idx)}`}
+        className={`staging-player-card ${occupied ? 'occupied' : 'empty'} ${readiness}${isMe ? ' my-seat' : ''}${swappedClass(idx)}${joinedClass(idx)}${dropClass(idx)}`}
         {...seatDnD(idx, occupied)}
       >
         <span className="seat-index" title={t('lobby', 'staging_seat_number', { number: idx + 1 })}>{idx + 1}</span>
@@ -456,7 +472,10 @@ export default function SpectatorStagingScreen({
       </header>
 
       <main className="staging-main-container">
-        <div className={`staging-arena-card panel family-${profile.family}`}>
+        <div
+          className={`staging-arena-card panel family-${profile.family}${allPlayersReady ? ' all-ready' : ''}`}
+          style={tableArt ? { ['--card-art' as string]: `url("${tableArt}")` } : undefined}
+        >
           <div className="staging-card-header">
             <span className="staging-emblem" aria-hidden="true"><Icon name={profile.icon} size={26} /></span>
             <div className="staging-heading">
@@ -535,7 +554,7 @@ export default function SpectatorStagingScreen({
                   return (
                     <div
                       key={idx}
-                      className={`ring-seat occupied ${readiness}${isMe ? ' my-seat' : ''}${swappedClass(idx)}${dropClass(idx)}`}
+                      className={`ring-seat occupied ${readiness}${isMe ? ' my-seat' : ''}${swappedClass(idx)}${joinedClass(idx)}${dropClass(idx)}`}
                       style={{ left: `${x}%`, top: `${y}%` }}
                       title={s.playerName}
                       {...seatDnD(idx, true)}
@@ -671,6 +690,7 @@ export default function SpectatorStagingScreen({
               </div>
               <div className="staging-actions-primary">
                 <Button
+                  variant="subtle"
                   className="staging-action-btn"
                   data-testid="staging-change-deck"
                   onClick={() => setShowChangeDeck(true)}

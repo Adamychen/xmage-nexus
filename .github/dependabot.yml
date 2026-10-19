@@ -8,3 +8,17 @@ updates:
     directory: '/'
     schedule:
       interval: 'weekly'
+  - package-ecosystem: 'npm'
+    directory: '/web'
+    schedule:
+      interval: 'weekly'
+    open-pull-requests-limit: 5
+  - package-ecosystem: 'npm'
+    directory: '/mcp'
+    schedule:
+      interval: 'weekly'
+    open-pull-requests-limit: 5
+  - package-ecosystem: 'cargo'
+    directory: '/launcher'
+    schedule:
+      interval: 'weekly'

@@ -16,9 +16,15 @@ import Modal from '../ui/Modal'
 import { fetchCardJson } from '../cards/scryfallCards'
 import { hoverPreviewPosition } from '../decks/DeckHoverPreview'
 import { downloadBlob } from '../utils/download'
+import DraftHelper from './DraftHelper'
+import { adviseDraftPick, type AdvisorCard } from './draftAdvisor'
+import { loadDraftHelper, saveDraftHelper } from '../state/persistence'
+import { flyCardTo, landingRow } from '../ui/flyCard'
+import { usePointerTilt } from '../ui/usePointerTilt'
 import './DraftScreen.css'
 
 const PICK_PROTECTION_MS = 1500
+const PICKS_FLY_TARGET = '[data-fly-target="picks"]'
 const PICK_TIMEOUT_MS = 15000
 const COUNTDOWN_WARN_SECS = 30
 const COUNTDOWN_AUDIO_SECS = 6
@@ -138,10 +144,13 @@ export default function DraftScreen() {
       setRetrying(false)
     }
   }, [retrying])
+  const [helperOn, setHelperOn] = useState(loadDraftHelper)
   const [markedIds, setMarkedIds] = useState<Set<string>>(new Set())
   const [hiddenIds, setHiddenIds] = useState<Set<string>>(new Set())
   const [hoverPreview, setHoverPreview] = useState<{ url: string; backUrl?: string | null; x: number; y: number; name?: string } | null>(null)
   const lastPickAt = useRef(0)
+  const boosterAreaRef = useRef<HTMLDivElement>(null)
+  usePointerTilt(boosterAreaRef, '.draft-card')
   const audioFiredFor = useRef('')
   const logRef = useRef<DraftLogData | null>(null)
 
@@ -229,6 +238,30 @@ export default function DraftScreen() {
     fetchMeta([...boosterCards, ...pickCards])
   }, [boosterCards.length, pickCards.length])
 
+  const toAdvisorCard = useCallback((card: SimpleCardView): AdvisorCard | null => {
+    const meta = metaFor(card, metaMap)
+    if (!meta?.typeLine) return null
+    return { id: card.id, cmc: meta.cmc ?? 0, colors: meta.colors ?? [], typeLine: meta.typeLine, rarity: meta.rarity ?? '' }
+  }, [metaMap])
+
+  const advice = useMemo(() => {
+    if (!helperOn || boosterCards.length === 0) return { ranked: [], pending: false, names: {} as Record<string, string> }
+    const boosterKnown = boosterCards.map(toAdvisorCard).filter((c): c is AdvisorCard => c !== null)
+    const picksKnown = pickCards.map(toAdvisorCard).filter((c): c is AdvisorCard => c !== null)
+    const names: Record<string, string> = {}
+    for (const c of boosterCards) names[c.id] = cardLabel(c, metaFor(c, metaMap))
+    return {
+      ranked: adviseDraftPick(boosterKnown, picksKnown),
+      pending: boosterKnown.length < boosterCards.length,
+      names,
+    }
+  }, [helperOn, boosterCards, pickCards, toAdvisorCard, metaMap])
+
+  const toggleHelper = useCallback((on: boolean) => {
+    setHelperOn(on)
+    saveDraftHelper(on)
+  }, [])
+
   const handleHover = useCallback((card: SimpleCardView, rect?: DOMRect) => {
     const meta = metaFor(card, metaMap)
     const img = meta?.imageUrl ?? null
@@ -241,12 +274,13 @@ export default function DraftScreen() {
 
   const handleLeave = useCallback(() => setHoverPreview(null), [])
 
-  const handlePick = useCallback(async (cardId: string) => {
+  const handlePick = useCallback(async (cardId: string, source?: HTMLElement) => {
     if (!draftId || !freshPick || busyPick || pickAck) return
     if (timeout > 0 && timeLeft <= 0) return
     const now = Date.now()
     if (now - lastPickAt.current < PICK_PROTECTION_MS) return
     lastPickAt.current = now
+    if (source) flyCardTo(source, landingRow(PICKS_FLY_TARGET, '[data-testid="draft-pick-card"]', (row) => row.dataset.cardId === cardId), { pop: true })
     const picked = boosterCards.find((c) => c.id === cardId)
     const pickName = picked ? cardLabel(picked, metaFor(picked, metaMap)) : cardId
     const sentKey = { boosterNum: draftView?.boosterNum ?? 0, cardNum: draftView?.cardNum ?? 0 }
@@ -480,13 +514,22 @@ export default function DraftScreen() {
           </div>
         )}
 
-        <div className="draft-booster-area">
+        {helperOn && boosterCards.length > 0 && advice.ranked.length > 0 && (
+          <DraftHelper advice={advice.ranked} names={advice.names} pending={advice.pending} onHide={() => toggleHelper(false)} />
+        )}
+        {!helperOn && boosterCards.length > 0 && (
+          <Button variant="ghost" size="sm" data-testid="draft-helper-show" onClick={() => toggleHelper(true)}>
+            {t('game', 'draft_helper_show')}
+          </Button>
+        )}
+
+        <div className="draft-booster-area" ref={boosterAreaRef}>
           <h3 className="draft-section-title">{t('game', 'booster_label')}</h3>
           {boosterCards.length === 0 ? (
             <EmptyState>{t('game', 'draft_loading')}</EmptyState>
           ) : (
             <div className="draft-grid" data-testid="draft-booster">
-              {boosterCards.map((card) => {
+              {boosterCards.map((card, index) => {
                 const set = card.expansionSetCode ?? ''
                 const num = card.cardNumber ?? ''
                 const key = card.id
@@ -500,9 +543,10 @@ export default function DraftScreen() {
                   <button
                     key={key}
                     type="button"
-                    className={`draft-card ${marked ? 'is-marked' : ''} ${!canPick ? 'is-disabled' : ''} ${isBusy ? 'is-busy' : ''} ${isPicked ? 'is-picked' : ''}`}
+                    className={`draft-card ${helperOn && advice.ranked[0]?.id === key ? 'is-advised' : ''} ${marked ? 'is-marked' : ''} ${!canPick ? 'is-disabled' : ''} ${isBusy ? 'is-busy' : ''} ${isPicked ? 'is-picked' : ''}`}
                     disabled={!canPick}
-                    onClick={() => void handlePick(key)}
+                    onClick={(e) => void handlePick(key, e.currentTarget)}
+                    style={{ animationDelay: `${Math.min(index, 12) * 45}ms` }}
                     onContextMenu={(e) => { e.preventDefault(); void handleMark(key) }}
                     onMouseEnter={(e) => handleHover(card, e.currentTarget.getBoundingClientRect())}
                     onMouseLeave={handleLeave}
@@ -529,7 +573,7 @@ export default function DraftScreen() {
           )}
         </div>
 
-        <div className="draft-picks-area" onContextMenu={(e) => { if (hiddenCount > 0) { e.preventDefault(); handleShowAllHidden() } }}>
+        <div className="draft-picks-area" data-fly-target="picks" onContextMenu={(e) => { if (hiddenCount > 0) { e.preventDefault(); handleShowAllHidden() } }}>
           <h3 className="draft-section-title">{t('game', 'draft_picks_title', { count: String(pickCards.length) })}</h3>
           {hiddenCount > 0 && (
             <Button variant="ghost" size="sm" className="draft-hidden-link" onClick={() => handleShowAllHidden()} title={t('game', 'draft_show_all')}>

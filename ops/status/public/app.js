@@ -6,6 +6,7 @@ const DICT = {
     'tab.players': 'Players',
     'tab.logs': 'Logs',
     'tab.system': 'System',
+    'tab.reports': 'Reports',
     'pill.proxy': 'Proxy',
     'pill.tunnel': 'Tunnel',
     'pill.xmage': 'XMage server',
@@ -118,6 +119,24 @@ const DICT = {
     more: 'More',
     table: 'Table',
     chart: 'Chart',
+    'reports.title': '{n} problems reported',
+    'reports.sub': '{stored} stored · {refused} refused by the proxy',
+    'reports.refused': 'Refused: {list}',
+    'reports.col.fp': 'Problem (fingerprint)',
+    'reports.col.kind': 'Kind',
+    'reports.col.count': 'Reports',
+    'reports.col.users': 'Players',
+    'reports.col.last': 'Last',
+    'reports.col.text': 'Latest words',
+    'reports.noFiles': 'Details need REPORTS_DIR (the proxy reports folder) in this service environment.',
+    'reports.promote': 'Open an issue: node scripts/issue-from-report.mjs --open {fp}',
+    'reports.detail': 'Detail',
+    'reports.notFound': 'Report file not found on this host.',
+    'reports.errors': 'Errors',
+    'reports.noErrors': 'none recorded',
+    'reports.game': 'Game',
+    'reports.client': 'Client',
+    'reports.log': 'Last log lines',
     searchPlayers: 'Search players…',
     playersCount: '{n} players',
     onlineBadge: 'online',
@@ -209,6 +228,7 @@ const DICT = {
     'tab.players': 'Jugadores',
     'tab.logs': 'Registros',
     'tab.system': 'Sistema',
+    'tab.reports': 'Informes',
     'pill.proxy': 'Proxy',
     'pill.tunnel': 'Túnel',
     'pill.xmage': 'Servidor XMage',
@@ -321,6 +341,24 @@ const DICT = {
     more: 'Más',
     table: 'Tabla',
     chart: 'Gráfico',
+    'reports.title': '{n} problemas reportados',
+    'reports.sub': '{stored} guardados · {refused} rechazados por el proxy',
+    'reports.refused': 'Rechazados: {list}',
+    'reports.col.fp': 'Problema (huella)',
+    'reports.col.kind': 'Tipo',
+    'reports.col.count': 'Informes',
+    'reports.col.users': 'Jugadores',
+    'reports.col.last': 'Último',
+    'reports.col.text': 'Últimas palabras',
+    'reports.noFiles': 'Para ver el detalle hace falta REPORTS_DIR (la carpeta de informes del proxy) en el entorno de este servicio.',
+    'reports.promote': 'Abrir issue: node scripts/issue-from-report.mjs --open {fp}',
+    'reports.detail': 'Detalle',
+    'reports.notFound': 'No se encuentra el fichero del informe en este host.',
+    'reports.errors': 'Errores',
+    'reports.noErrors': 'ninguno registrado',
+    'reports.game': 'Partida',
+    'reports.client': 'Cliente',
+    'reports.log': 'Últimas líneas del log',
     searchPlayers: 'Buscar jugadores…',
     playersCount: '{n} jugadores',
     onlineBadge: 'conectado',
@@ -856,6 +894,8 @@ const state = {
   liveError: false,
   stats: null,
   players: null,
+  reports: null,
+  reportOpen: null,
   system: null,
   playerSort: { key: 'seconds', dir: -1 },
   playerQ: '',
@@ -1166,6 +1206,101 @@ function renderPlayers() {
   view.replaceChildren(filters, holder);
 }
 
+async function openReport(ref, holder) {
+  state.reportOpen = { ref, data: null };
+  drawReportDetail(holder);
+  try {
+    state.reportOpen.data = await api(`/api/report?id=${encodeURIComponent(ref)}`);
+  } catch {
+    state.reportOpen.data = { found: false };
+  }
+  drawReportDetail(holder);
+}
+
+function drawReportDetail(holder) {
+  const o = state.reportOpen;
+  if (!o) return holder.replaceChildren();
+  const d = o.data;
+  const close = h('button', { type: 'button', class: 'icon-btn', 'aria-label': 'Close' }, '×');
+  close.addEventListener('click', () => {
+    state.reportOpen = null;
+    holder.replaceChildren();
+  });
+  const head = h('header', { class: 'card-head' }, h('h3', null, `${t('reports.detail')} ${o.ref}`), close);
+  if (!d) return holder.replaceChildren(head, h('div', { class: 'empty' }, '…'));
+  if (!d.found) return holder.replaceChildren(head, h('div', { class: 'empty' }, t('reports.notFound')));
+  const pre = text => h('pre', { class: 'report-pre' }, text);
+  holder.replaceChildren(
+    head,
+    h('div', { class: 'report-detail' },
+      h('p', null, d.text || '–'),
+      h('h4', null, t('reports.client')),
+      pre(JSON.stringify({ appVersion: d.appVersion, language: d.language, userAgent: d.userAgent, viewport: d.viewport, conn: d.conn }, null, 2)),
+      h('h4', null, t('reports.game')),
+      pre(d.game ? JSON.stringify(d.game, null, 2) : '–'),
+      h('h4', null, t('reports.errors')),
+      d.errors.length ? pre(d.errors.map(e => `${new Date(e.at).toISOString()} [${e.source}] ${e.text}`).join('\n')) : h('p', { class: 'muted' }, t('reports.noErrors')),
+      h('h4', null, t('reports.log')),
+      pre(d.log.map(l => (typeof l === 'string' ? l : `${l.channel || ''} ${l.text || ''}`)).join('\n') || '–')));
+}
+
+function renderReports() {
+  const view = document.getElementById('view-reports');
+  const R = state.reports;
+  const filters = h('div', { class: 'filters' }, rangeFilter(state.range, ['24h', '7d', '30d', '90d', 'all'], r => {
+    state.range = r;
+    pref.set('range', r);
+    loadReports();
+  }));
+  const detail = h('section', { class: 'card' });
+  const holder = h('section', { class: 'card' });
+  if (!R) {
+    holder.replaceChildren(h('div', { class: 'empty' }, '…'));
+    return view.replaceChildren(filters, holder);
+  }
+  const refusedList = Object.entries(R.refused).map(([why, n]) => `${why} ×${n}`).join(', ');
+  const cols = [
+    { label: t('reports.col.fp'), get: g => h('code', { title: g.fp }, g.fp) },
+    { label: t('reports.col.kind'), get: g => g.kind },
+    { label: t('reports.col.count'), r: true, get: g => fmt.int(g.count) },
+    { label: t('reports.col.users'), r: true, get: g => fmt.int(g.users) },
+    { label: t('reports.col.last'), r: true, get: g => h('span', { title: fmt.dateTime(g.last) }, fmt.ago(g.last)) },
+    {
+      label: t('reports.col.text'),
+      get: g => {
+        const open = h('button', { type: 'button', class: 'link-btn' }, g.latest.text || g.latest.ref);
+        open.addEventListener('click', () => (R.files ? openReport(g.latest.ref, detail) : null));
+        return open;
+      },
+    },
+  ];
+  const head = h('tr', null, cols.map(c => h('th', { class: c.r ? 'r' : null }, c.label)));
+  holder.replaceChildren(...[
+    h('header', { class: 'card-head' },
+      h('h3', null, t('reports.title', { n: fmt.int(R.groups.length) })),
+      h('span', { class: 'sub' }, t('reports.sub', { stored: fmt.int(R.stored), refused: fmt.int(R.total - R.stored) }))),
+    refusedList ? h('p', { class: 'muted' }, t('reports.refused', { list: refusedList })) : null,
+    R.files ? null : h('p', { class: 'muted' }, t('reports.noFiles')),
+    R.groups.length
+      ? h('div', { class: 'table-wrap' }, h('table', null, h('thead', null, head),
+        h('tbody', null, R.groups.map(g => h('tr', null, cols.map(c => h('td', { class: c.r ? 'r' : null }, c.get(g))))))))
+      : h('div', { class: 'empty' }, t('noData')),
+    R.groups.length ? h('p', { class: 'muted' }, t('reports.promote', { fp: R.groups[0].latest.ref })) : null].filter(Boolean));
+  view.replaceChildren(filters, holder, detail);
+  if (state.reportOpen) drawReportDetail(detail);
+}
+
+async function loadReports() {
+  const view = document.getElementById('view-reports');
+  view.classList.add('loading');
+  try {
+    state.reports = await api(`/api/reports?range=${state.range}`);
+  } catch {
+  }
+  view.classList.remove('loading');
+  if (state.tab === 'reports') renderReports();
+}
+
 const logsUi = { list: null, status: null, built: false };
 
 function buildLogs() {
@@ -1436,7 +1571,7 @@ async function loadSystem() {
 }
 
 function setTab(tab) {
-  if (!['now', 'stats', 'players', 'logs', 'system'].includes(tab)) tab = 'now';
+  if (!['now', 'stats', 'players', 'reports', 'logs', 'system'].includes(tab)) tab = 'now';
   state.tab = tab;
   for (const b of document.querySelectorAll('#tabs button')) b.setAttribute('aria-selected', String(b.dataset.tab === tab));
   for (const v of document.querySelectorAll('.view')) v.hidden = v.id !== `view-${tab}`;
@@ -1450,6 +1585,10 @@ function setTab(tab) {
   if (tab === 'players') {
     renderPlayers();
     loadPlayers();
+  }
+  if (tab === 'reports') {
+    renderReports();
+    loadReports();
   }
   if (tab === 'logs') {
     if (!logsUi.built) {
@@ -1506,6 +1645,7 @@ setInterval(renderUpdated, 1000);
 setInterval(() => {
   if (state.tab === 'stats') loadStats();
   if (state.tab === 'players') loadPlayers();
+  if (state.tab === 'reports') loadReports();
 }, 60000);
 setInterval(() => {
   if (state.tab === 'system') loadSystem();

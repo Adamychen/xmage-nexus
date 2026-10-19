@@ -6,6 +6,7 @@ import { crossZoneCounts } from '../board/crossZone'
 import type { CrossZonePlayable } from '../board/crossZone'
 import { cardsContainTarget, EMPTY_TARGET_IDS, EMPTY_TARGET_ZONES, type TargetZoneKind } from '../board/targetZones'
 import CardSlot from '../board/CardSlot'
+import { CountFlash, useCountFlash } from './useCountFlash'
 import Icon from '../ui/Icon'
 import { useTranslation } from '../i18n'
 import ManaPoolView, { type ManaPoolKey } from './ManaPoolView'
@@ -24,6 +25,8 @@ interface ResourceBarProps {
   side: 'opp' | 'my'
   compact?: boolean
   micro?: boolean
+  stats?: boolean
+  poolOnly?: boolean
   crossZonePlayables?: CrossZonePlayable[]
   onPlayCrossZone?: (id: string) => void
   onCardHover?: (card: CardView | PermanentView | null, rect?: DOMRect) => void
@@ -43,7 +46,9 @@ export default function ResourceBar({
   player,
   side,
   compact = false,
-  micro = false,
+  micro: microProp = false,
+  stats = false,
+  poolOnly = false,
   crossZonePlayables,
   onPlayCrossZone,
   onCardHover,
@@ -53,6 +58,7 @@ export default function ResourceBar({
   onTargetClick,
 }: ResourceBarProps) {
   const { t } = useTranslation()
+  const micro = microProp || stats
   const [openPile, setOpenPile] = useState<'graveyard' | 'exile' | 'crosszone' | 'library' | null>(null)
   const gameId = useStore((s) => s.gameId)
   const librarySleeve = useSleeveFor(side === 'my' ? player.playerId : null)
@@ -97,6 +103,10 @@ export default function ResourceBar({
   const exileCards = useMemo(() => extractCards(player.exile), [player.exile])
   const exileCount = exileCards.length
   const topExileCard = useMemo(() => (exileCards.length > 0 ? exileCards[exileCards.length - 1] : null), [exileCards])
+
+  const libraryFlash = useCountFlash(player.libraryCount ?? 0)
+  const graveyardFlash = useCountFlash(graveyardCount)
+  const exileFlash = useCountFlash(exileCount)
 
   const crossZone = crossZonePlayables ?? []
   const counts = useMemo(() => crossZoneCounts(crossZone), [crossZone])
@@ -182,11 +192,22 @@ export default function ResourceBar({
     }
   }, [autoOpenPile])
 
-  return (
-    <div className={`resource-bar ${side} ${compact ? 'compact' : ''} ${micro ? 'micro' : ''}`}>
-      <div className="resource-mana-wrap">
-        <ManaPoolView pool={pool} canPay={canPayMana} onPay={payMana} showAll={manaPromptOpen && side === 'my'} />
+  if (poolOnly) {
+    return (
+      <div className="resource-bar-pool" data-side={side} data-testid="resource-pool">
+        <ManaPoolView pool={pool} canPay={canPayMana} onPay={payMana} showAll={manaPromptOpen && side === 'my'} size={14} />
+        {Object.values(pool).every((n) => !n) && !manaPromptOpen && <em className="resource-pool-label">{t('game', 'mana_pool_label')}</em>}
       </div>
+    )
+  }
+
+  return (
+    <div className={`resource-bar ${side} ${compact ? 'compact' : ''} ${micro ? 'micro' : ''} ${stats ? 'stats' : ''}`}>
+      {!stats && (
+        <div className="resource-mana-wrap">
+          <ManaPoolView pool={pool} canPay={canPayMana} onPay={payMana} showAll={manaPromptOpen && side === 'my'} />
+        </div>
+      )}
 
       <div className={`resource-piles ${micro ? 'micro' : ''}`}>
         {micro ? (
@@ -210,6 +231,7 @@ export default function ResourceBar({
             >
               <span className="chip-icon"><Icon name="bookOpen" size={12} /></span>
               <span className="chip-count">{player.libraryCount}</span>
+              {stats && <CountFlash flash={libraryFlash} />}
               {player.topCard && (
                 <span className="chip-indicator" title={t('board', 'zone_revealed')}>
                   <Icon name="target" size={10} />
@@ -236,6 +258,7 @@ export default function ResourceBar({
                 <Icon name="skull" size={12} />
               </span>
               <span className="chip-count">{graveyardCount}</span>
+              {stats && <CountFlash flash={graveyardFlash} />}
               {counts.graveyard > 0 && <span className="chip-playable-dot" />}
             </button>
 
@@ -258,10 +281,11 @@ export default function ResourceBar({
                 <Icon name="portal" size={12} />
               </span>
               <span className="chip-count">{exileCount}</span>
+              {stats && <CountFlash flash={exileFlash} />}
               {counts.exile > 0 && <span className="chip-playable-dot" />}
             </button>
 
-            {side === 'my' && (
+            {side === 'my' && (!stats || crossZone.length > 0) && (
               <button
                 type="button"
                 className={`resource-chip ray-chip clickable-pile ${crossZone.length > 0 ? 'has-playable' : ''}`}

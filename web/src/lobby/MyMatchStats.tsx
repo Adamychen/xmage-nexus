@@ -70,6 +70,7 @@ export default function MyMatchStats() {
       <Tabs<Grouping>
         variant="segmented"
         size="sm"
+        className="my-stats-grouping"
         value={grouping}
         onChange={setGrouping}
         items={[

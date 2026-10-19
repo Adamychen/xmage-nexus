@@ -11,6 +11,9 @@ import { useZoneScale } from './useZoneScale'
 import { useDragScroll } from './useDragScroll'
 import { useBandFit } from './useBandFit'
 import { useTapFlip } from './useTapFlip'
+import { useUntapWave } from './useUntapWave'
+import { useTokenPop } from './useTokenPop'
+import { useBattlefieldDissolve } from './useBattlefieldDissolve'
 import { hasVigilance } from '../cards/cardImages'
 import type { CrossZonePlayable } from './crossZone'
 import { switchedHandCards, switchableHandKeys } from './handSwitch'
@@ -25,7 +28,9 @@ import { bandFill, bandShares, permanentKind } from './bandWeights'
 import { cardAspectFor } from './compactCard'
 import { EMPTY_TARGET_ZONES, type TargetZoneKind } from './targetZones'
 import { isPlayerDefeated, isPlayerOut } from './boardShared'
+import { useSeatColor } from './seatColor'
 import './BoardZone.css'
+import './PortraitBoard.css'
 import './targetZone.css'
 
 export interface BoardZoneProps {
@@ -87,7 +92,11 @@ export default function BoardZone({
   const isTop = effectivePosition === 'top'
 
   const rendered = useStore((s) => s.settings.cardRender) === 'rendered'
+  const portrait = useStore((s) => s.settings.gameUi) === 'v2'
+  const seatColor = useSeatColor(player?.playerId)
+  const isTurnZone = useStore((s) => (s.game?.activePlayerId ? s.game.activePlayerId === player?.playerId : !!player?.isActive))
   const cardStyle = useStore((s) => s.settings.cardStyle)
+  const showManaSource = useStore((s) => s.settings.showManaSource)
   const compactCards = cardStyle === 'compact' && !rendered
   const tiltedTaps = useStore((s) => s.settings.tapStyle) === 'tilted'
   const cardAspect = cardAspectFor(compactCards ? 'compact' : 'classic')
@@ -115,11 +124,17 @@ export default function BoardZone({
   useBandFit(creaturesBandEl, cardW, compactPod, cardAspect)
   useBandFit(permanentsBandEl, cardW, compactPod, cardAspect)
   useTapFlip(permanentsBandEl)
+  const gameId = useStore((s) => s.gameId)
+  const gamePlayers = useStore((s) => s.game?.players)
+  const gameCycle = useStore((s) => s.game?.gameCycle)
+  const bandEls = [permanentsBandEl, creaturesBandEl]
+  useUntapWave(bandEls, tiltedTaps)
+  useTokenPop(bandEls, player)
+  useBattlefieldDissolve(bandEls, gameId, player, { players: gamePlayers, gameCycle })
   const { t } = useTranslation()
 
   // Switch Hands (Mindslaver & cía.): el servidor envía la mano controlada en `opponentHands`.
   const opponentHands = useStore((s) => s.game?.opponentHands)
-  const gamePlayers = useStore((s) => s.game?.players)
   const switchKeys = useMemo(() => switchableHandKeys(opponentHands), [opponentHands])
   const switchedHandKey = useStore((s) => s.switchedHandKey)
   const canSwitchHands = effectiveControlled && switchKeys.length > 0
@@ -141,6 +156,8 @@ export default function BoardZone({
 
   const combatSelectableSet = useMemo(() => new Set(combatSelectable), [combatSelectable])
   const combatChosenSet = useMemo(() => new Set(combatChosen), [combatChosen])
+  const promptChosenTargets = useStore((s) => (s.feedback?.method === 'GAME_TARGET' ? s.feedback.chosenTargets : undefined))
+  const promptChosenSet = useMemo(() => new Set(promptChosenTargets ?? []), [promptChosenTargets])
   const attackingSet = useMemo(() => new Set(attackingIds), [attackingIds])
   const blockingSet = useMemo(() => new Set(blockingIds), [blockingIds])
   const busyIds = useMemo(() => {
@@ -326,6 +343,7 @@ export default function BoardZone({
               isPlayable={playableIds.has(attId)}
               className="attachment-subcard"
               compact={compactCards}
+              showManaSource={showManaSource}
               style={{ left: `calc(${offsetPx}px + ${ai + 1} * var(--attach-step))`, zIndex: attachments.length - ai }}
             />
           )
@@ -351,6 +369,7 @@ export default function BoardZone({
                 card={part}
                 className="mutate-part"
                 compact={compactCards}
+                showManaSource={showManaSource}
                 style={{ left: `${(mi + 1) * 12}px`, top: `${(mi + 1) * 6}px` }}
               />
             ))}
@@ -363,7 +382,7 @@ export default function BoardZone({
             onHover={onCardHover}
             isTarget={isTarget}
             isPlayable={isPlayable}
-            isChosen={isChosen}
+            isChosen={isChosen || promptChosenSet.has(id)}
             tapped={isTapped}
             attacking={isAttacking}
             blocking={isBlocking}
@@ -371,6 +390,7 @@ export default function BoardZone({
             showCounters
             showDamage={isCreature}
             compact={compactCards}
+            showManaSource={showManaSource}
           />
         </div>
       )
@@ -392,7 +412,7 @@ export default function BoardZone({
             onHover={onCardHover}
             isTarget={isTarget}
             isPlayable={isPlayable}
-            isChosen={isChosen}
+            isChosen={isChosen || promptChosenSet.has(id)}
             tapped={isTapped}
             attacking={isAttacking}
             blocking={isBlocking}
@@ -400,6 +420,7 @@ export default function BoardZone({
             showCounters
             showDamage={isCreature}
             compact={compactCards}
+            showManaSource={showManaSource}
           />
         </div>
       )
@@ -414,7 +435,7 @@ export default function BoardZone({
         onHover={onCardHover}
         isTarget={isTarget}
         isPlayable={isPlayable}
-        isChosen={isChosen}
+        isChosen={isChosen || promptChosenSet.has(id)}
         tapped={isTapped}
         attacking={isAttacking}
         blocking={isBlocking}
@@ -422,6 +443,7 @@ export default function BoardZone({
         showCounters
         showDamage={isCreature}
         compact={compactCards}
+        showManaSource={showManaSource}
       />
     )
   }
@@ -472,8 +494,28 @@ export default function BoardZone({
           e.preventDefault()
           setState({ playerMenu: { playerId: player.playerId, x: e.clientX, y: e.clientY } })
         }}
+        stats={portrait ? (
+          <>
+          <ResourceBar
+            player={player}
+            side={statusSide}
+            compact
+            stats
+            crossZonePlayables={effectiveControlled ? crossZonePlayables : undefined}
+            onPlayCrossZone={effectiveControlled ? onPlayCrossZone : undefined}
+            onCardHover={onCardHover}
+            targetIds={targetIds}
+            targetZone={targetZone}
+            targetZones={targetZones}
+            onTargetClick={onCardClick}
+          />
+          {effectiveControlled && compactPod && <ResourceBar player={player} side="my" poolOnly />}
+          </>
+        ) : undefined}
+        handView={portrait && handViewable ? { known: knownHandEntries.length, onOpen: () => setHandViewerOpen(true) } : undefined}
+        pool={portrait && effectiveControlled && !compactPod ? <ResourceBar player={player} side="my" poolOnly /> : undefined}
       />
-      {showHand && (
+      {showHand && (!portrait || handTargeted || effectiveControlled) && (
         <HandZone
           cards={finalHand}
           onCardClick={onHandCardClick ?? onCardClick}
@@ -492,7 +534,7 @@ export default function BoardZone({
         (shellEl
           ? createPortal(handSwitchButton, shellEl)
           : handSwitchButton)}
-      <ResourceBar
+      {!portrait && <ResourceBar
         player={player}
         side={statusSide}
         compact
@@ -504,7 +546,7 @@ export default function BoardZone({
         targetZone={targetZone}
         targetZones={targetZones}
         onTargetClick={onCardClick}
-      />
+      />}
     </div>
   )
 
@@ -580,8 +622,10 @@ export default function BoardZone({
       data-player-id={player.playerId}
       data-player-name={player.name}
       data-role={isTop ? 'opponent' : 'player'}
+      data-turn={isTurnZone || undefined}
       style={{
         '--card-w': `${cardW}px`,
+        '--seat': seatColor,
         ...(shares.uneven
           ? { gridTemplateRows: isTop ? `auto ${shares.permanentsFr}fr ${shares.creaturesFr}fr` : `${shares.creaturesFr}fr ${shares.permanentsFr}fr auto` }
           : null),

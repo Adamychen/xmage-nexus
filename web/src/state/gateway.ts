@@ -2,8 +2,8 @@ import { Gateway } from '../net/Gateway'
 import * as cmds from '../net/commands'
 import { getState, setState, addLog, initialState } from './state'
 import { handleMessage } from './eventHandler'
-import { clonePhaseStops } from '../game/phaseStops'
-import { saveConn, loadActiveGame, clearActiveGame, loadActiveDraft, clearActiveDraft, saveResumeToken, loadResumeToken, clearResumeToken, type ConnectionInfo } from './persistence'
+import { serverPhaseStops } from '../game/phaseStops'
+import { saveConn, loadActiveGame, clearActiveGame, loadActiveDraft, clearActiveDraft, loadActiveConstruct, clearActiveConstruct, saveResumeToken, loadResumeToken, clearResumeToken, type ConnectionInfo } from './persistence'
 import { resetGameEventOrder } from './gameUtils'
 import { t } from '../i18n'
 import { versionMismatchOf, type VersionMismatch } from '../net/versionMismatch'
@@ -165,6 +165,11 @@ function resumeActiveGame(): void {
  *  re-une la sesión del draft para que el flujo siga. Si `joinDraft` falla
  *  (draft ya terminado), se descarta la instantánea para no reintentarla. */
 function restoreLimited(): void {
+  const construct = loadActiveConstruct()
+  if (!getState().construct && construct) {
+    addLog('conexión', 'Restaurando construcción del mazo…')
+    setState({ construct })
+  }
   const persisted = loadActiveDraft()
   if (!getState().draft && persisted?.draft) {
     addLog('conexión', 'Restaurando draft desde la última instantánea…')
@@ -313,7 +318,7 @@ async function runConnect(
     const chatId = await cmds.getRoomChatId()
     if (stale()) return
     setState({ roomChatId: chatId ?? null })
-    void cmds.updatePreferences(clonePhaseStops(getState().settings.phaseStops))
+    void cmds.updatePreferences(serverPhaseStops(getState().settings.smartStops, getState().settings.phaseStops))
   } else {
     // final failure: the retries ran out with the server still holding the old session, which
     // no amount of waiting-here fixes — the user needs to know what to do (wait it out, close
@@ -336,6 +341,7 @@ export function reset() {
   clearResumeToken()
   clearActiveGame()
   clearActiveDraft()
+  clearActiveConstruct()
   resetGameEventOrder()
   setState(initialState)
 }

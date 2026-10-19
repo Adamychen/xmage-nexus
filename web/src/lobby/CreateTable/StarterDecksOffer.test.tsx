@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import CreateTableDialog from '../CreateTableDialog'
 import { STORAGE_KEY } from './constants'
 import { setState } from '../../state/state'
+import { formatValue, pickFormat } from './formatGalleryTestUtils'
 import type { DeckV2 } from '../../decks/types'
 
 const stored = vi.hoisted(() => ({ decks: [] as DeckV2[] }))
@@ -30,6 +31,12 @@ vi.mock('../../net/commands', () => ({
   getExpansionsWithBoosters: vi.fn().mockResolvedValue([]),
 }))
 
+/** The deck the carousel marks as chosen: the card with `aria-checked="true"` in the named radiogroup. */
+function selectedCard(name: RegExp, group?: HTMLElement): HTMLElement | null {
+  const radiogroup = group ?? screen.getByRole('radiogroup', { name })
+  return radiogroup.querySelector<HTMLElement>('[aria-checked="true"]')
+}
+
 describe('Create Table for a player with no decks', () => {
   beforeEach(() => {
     stored.decks = []
@@ -54,32 +61,29 @@ describe('Create Table for a player with no decks', () => {
 
     await waitFor(() => expect(screen.queryByTestId('starter-decks-offer')).toBeNull())
     expect(stored.decks.map((d) => d.name)).toEqual(['Mono Red Burn', 'Mono White Humans', 'Krenko: Goblin Mob Army'])
-    const deckSelect = screen.getByLabelText(/Mazo activo|Active deck/i) as HTMLSelectElement
-    expect(deckSelect.selectedOptions[0].textContent).toMatch(/^Mono Red Burn/)
+    expect(selectedCard(/Mazo activo|Active deck/i)?.textContent).toContain('Mono Red Burn')
     // the default extra seat waits for a human rival: no bot, no bot-deck picker
-    expect(screen.queryByLabelText(/Mazo plaza 2|Seat 2 deck/i)).toBeNull()
+    fireEvent.click(screen.getByTestId('seat-node-1'))
+    expect(screen.queryByRole('radiogroup', { name: /Mazo plaza 2|Seat 2 deck/i })).toBeNull()
     // opting into the Mad AI gives the seat a valid (non-empty) deck without a "need a deck" warning
-    const seatType = screen.getByTestId('seat-type-0') as HTMLSelectElement
-    fireEvent.change(seatType, { target: { value: 'COMPUTER_MAD' } })
-    const botDeck = await screen.findByLabelText(/Mazo plaza 2|Seat 2 deck/i) as HTMLSelectElement
-    expect(botDeck.value).toBeTruthy()
+    fireEvent.click(screen.getByRole('radio', { name: /Mad/ }))
+    const botDeck = await screen.findByRole('radiogroup', { name: /Mazo plaza 2|Seat 2 deck/i })
+    expect(selectedCard(/Mazo plaza 2|Seat 2 deck/i, botDeck)).not.toBeNull()
     expect(screen.queryByText(/Necesitas un mazo|You need a deck/i)).toBeNull()
   })
 
   it('seats me with the Commander starter at a Commander table', async () => {
     render(<CreateTableDialog onClose={() => {}} />)
-    await waitFor(() => expect((screen.getAllByRole('combobox')[0] as HTMLSelectElement).options.length).toBe(2))
-    fireEvent.change(screen.getAllByRole('combobox')[0], { target: { value: 'Commander Two Player Duel' } })
-    fireEvent.change(screen.getAllByRole('combobox')[1], { target: { value: 'Variant Magic - Commander' } })
-    expect((screen.getAllByRole('combobox')[1] as HTMLSelectElement).value).toBe('Variant Magic - Commander')
+    await pickFormat('format-game-type', 'Commander Two Player Duel')
+    await pickFormat('format-deck-type', 'Variant Magic - Commander')
+    expect(formatValue('format-deck-type')).toBe('Variant Magic - Commander')
     fireEvent.click(
       screen.getAllByRole('button', { name: /Multijugador|Multiplayer/ })
         .find((b) => (b as HTMLElement).classList.contains('wizard-step'))!,
     )
     fireEvent.click(await screen.findByTestId('starter-decks-add'))
     await waitFor(() => expect(screen.queryByTestId('starter-decks-offer')).toBeNull())
-    const deckSelect = screen.getByLabelText(/Mazo activo|Active deck/i) as HTMLSelectElement
-    expect(deckSelect.selectedOptions[0].textContent).toMatch(/^Krenko/)
+    expect(selectedCard(/Mazo activo|Active deck/i)?.textContent).toContain('Krenko')
   })
 
   it('stays out of the way once the player has decks', async () => {
@@ -89,7 +93,7 @@ describe('Create Table for a player with no decks', () => {
       screen.getAllByRole('button', { name: /Multijugador|Multiplayer/ })
         .find((b) => (b as HTMLElement).classList.contains('wizard-step'))!,
     )
-    await waitFor(() => expect((screen.getByLabelText(/Mazo activo|Active deck/i) as HTMLSelectElement).value).not.toBe(''))
+    await waitFor(() => expect(selectedCard(/Mazo activo|Active deck/i)).not.toBeNull())
     expect(screen.queryByTestId('starter-decks-offer')).toBeNull()
   })
 })

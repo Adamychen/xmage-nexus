@@ -31,6 +31,11 @@
   to   { opacity: 1; scale: 1; translate: 0 0; }
 }
 
+@keyframes cardAppearFade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
 .card-slot.entering {
   /* Anima `scale`/`translate` (propiedades independientes), NUNCA `transform`:
      el giro de `.tapped` vive en `transform` y una animación gana a la cascada
@@ -38,6 +43,12 @@
      0.22 s. Las independientes se componen con el giro en vez de pisarlo.
      `backwards` (no `both`) por el mismo motivo en el fotograma final. */
   animation: cardAppear 0.22s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-slot.entering {
+    animation: cardAppearFade 150ms ease-out backwards;
+  }
 }
 
 /* Card hidden while its flying clone is in the air */
@@ -69,6 +80,38 @@
   margin: 0 calc(var(--card-w, 100px) * 0.2);
 }
 
+/* Mana tap pulse (A2): a ring in the land's color plus a brief brightness
+   flash, starting once the rotation has begun. The class is only added on the
+   untapped to tapped edge (CardSlot `useChangeFlag`). `box-shadow` and `filter`
+   only: the tap rotation lives in `transform` and must not be touched. */
+@keyframes manaTapPulse {
+  from {
+    box-shadow: 0 0 0 0 rgb(var(--mana-rgb) / 0.9);
+    filter: brightness(1.35);
+  }
+  to {
+    box-shadow: 0 0 0 12px rgb(var(--mana-rgb) / 0);
+    filter: brightness(1);
+  }
+}
+
+.card-slot.mana-W { --mana-rgb: var(--mana-w-rgb); }
+.card-slot.mana-U { --mana-rgb: var(--mana-u-rgb); }
+.card-slot.mana-B { --mana-rgb: var(--mana-b-rgb); }
+.card-slot.mana-R { --mana-rgb: var(--mana-r-rgb); }
+.card-slot.mana-G { --mana-rgb: var(--mana-g-rgb); }
+.card-slot.mana-C { --mana-rgb: var(--mana-c-rgb); }
+
+.card-slot:is(.mana-W, .mana-U, .mana-B, .mana-R, .mana-G, .mana-C) {
+  animation: manaTapPulse calc(120ms / var(--fx-speed, 1)) ease-out calc(150ms / var(--fx-speed, 1));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-slot:is(.mana-W, .mana-U, .mana-B, .mana-R, .mana-G, .mana-C) {
+    animation: none;
+  }
+}
+
 /* Attacker nudges toward the defender (translate composes with the tap
    rotation: `translate` applies in screen space before `transform`). */
 .card-slot.attacking {
@@ -87,6 +130,15 @@
 .opponent-zone .card-slot.attacking {
   translate: 0 12px;
   animation: attackLungeDown calc(0.45s / var(--fx-speed, 1)) cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .zone-bottom .card-slot.attacking,
+  .player-zone .card-slot.attacking,
+  .zone-top .card-slot.attacking,
+  .opponent-zone .card-slot.attacking {
+    animation: none;
+  }
 }
 
 @keyframes attackLungeUp {
@@ -128,18 +180,31 @@ html.fx-off .card-slot.attacking {
   box-shadow: 0 0 14px 2px rgb(var(--brand-rgb) / 0.65), 0 4px 12px var(--shade-2);
 }
 
-/* Combat damage feedback */
+/* Combat damage feedback. `translate` (not `transform`) so the shake composes
+   with the `.tapped` rotation instead of replacing it. */
 @keyframes shakeHit {
-  0%, 100% { margin-left: 0; }
-  20% { margin-left: -4px; }
-  40% { margin-left: var(--sp-1); }
-  60% { margin-left: -3px; }
-  80% { margin-left: var(--sp-1); }
+  0%, 100% { translate: 0 0; }
+  20% { translate: -4px 0; }
+  40% { translate: 4px 0; }
+  60% { translate: -2px 0; }
+  80% { translate: 2px 0; }
+}
+
+@keyframes damageFlash {
+  0%, 100% { filter: brightness(1) saturate(1); }
+  40% { filter: brightness(1.5) saturate(1.8); }
 }
 
 .card-slot.took-damage,
 .player-info-bar.took-damage {
-  animation: shakeHit 0.38s ease-in-out;
+  animation: shakeHit 300ms ease-in-out, damageFlash 120ms var(--ease-out);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-slot.took-damage,
+  .player-info-bar.took-damage {
+    animation: damageFlash 120ms var(--ease-out);
+  }
 }
 
 @keyframes stackSourcePulse {
@@ -179,30 +244,90 @@ html.fx-off .card-slot.stack-source-pulse {
   box-shadow: 0 0 20px 4px rgb(var(--ok-rgb) / 0.9), 0 10px 24px var(--shade-3);
 }
 
-/* Targetable glow (orange pulse) */
-@keyframes targetPulse {
-  0%, 100% {
-    box-shadow: 0 0 12px 2px rgb(var(--gold-rgb) / 0.6), 0 4px 12px var(--shade-2);
-    border-color: var(--gold-500);
+/* Cast press on a playable card: an 80 ms squeeze, then a spring pop back.
+   `scale` (not `transform`) so it composes with the `.tapped` rotation. Under
+   reduced motion both steps fade opacity instead. */
+.card-slot.casting-press {
+  animation: castPress 80ms var(--ease-out) forwards !important;
+}
+
+.card-slot.casting-pop {
+  animation: castPop 120ms var(--ease-spring) !important;
+}
+
+html.fx-off .card-slot.casting-press,
+html.fx-off .card-slot.casting-pop {
+  animation: none !important;
+}
+
+@keyframes castPress {
+  from { scale: 1; }
+  to { scale: 0.92; }
+}
+
+@keyframes castPop {
+  0% { scale: 0.92; }
+  60% { scale: 1.08; }
+  100% { scale: 1; }
+}
+
+@keyframes castFade {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.8; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-slot.casting-press,
+  .card-slot.casting-pop {
+    animation: castFade 120ms var(--ease-out);
   }
-  50% {
-    box-shadow: 0 0 24px 6px rgb(var(--gold-rgb) / 0.95), 0 4px 12px var(--shade-2);
-    border-color: var(--line-3);
+}
+
+/* Target feedback (C1). Every target gets the gold border and the steady glow.
+   A required target (`.target-beacon`: the choice is mandatory) also pings a
+   gold ring once per 1.5 s and rests the rest of the cycle while the choice is
+   pending. An optional target (`.target-optional`, the player may skip) keeps
+   the static border and never animates. A chosen target (`.chosen`) drops the
+   beacon and keeps its static error border (below). */
+@keyframes targetBeacon {
+  0%, 50%, 100% {
+    box-shadow: 0 0 12px 2px rgb(var(--gold-rgb) / 0.6), 0 4px 12px var(--shade-2);
+  }
+  20% {
+    box-shadow: 0 0 26px 8px rgb(var(--gold-rgb) / 0.95), 0 4px 12px var(--shade-2);
   }
 }
 
 .card-slot.targetable {
-  animation: targetPulse 1.2s ease-in-out infinite;
+  box-shadow: 0 0 12px 2px rgb(var(--gold-rgb) / 0.6), 0 4px 12px var(--shade-2);
   cursor: crosshair;
   border-color: var(--gold-500);
 }
 
-/* Pulso infinito de objetivo: la fase no es reproducible en capturas (WebKit). */
+.card-slot.target-beacon {
+  animation: targetBeacon 1.5s ease-out infinite;
+}
+
+/* Infinite beacon: reduced motion keeps the static gold glow. */
 @media (prefers-reduced-motion: reduce) {
-  .card-slot.targetable,
+  .card-slot.target-beacon,
   .sickness-badge,
   .sickness-veil {
     animation: none;
+  }
+}
+
+/* A required target that also took damage runs the beacon and the hit feedback
+   together. They animate different properties (box-shadow, translate, filter),
+   so the list composes; the shorthand on .card-slot.target-beacon would otherwise
+   drop the shake. */
+.card-slot.target-beacon.took-damage {
+  animation: targetBeacon 1.5s ease-out infinite, shakeHit 300ms ease-in-out, damageFlash 120ms var(--ease-out);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-slot.target-beacon.took-damage {
+    animation: damageFlash 120ms var(--ease-out);
   }
 }
 
@@ -218,48 +343,67 @@ html.fx-off .card-slot.stack-source-pulse {
   cursor: pointer;
 }
 
-/* Acuse optimista (<100 ms) mientras el eco del servidor no llega:
-   atenuación + spinner para jugable/combate, anillo ámbar para objetivo. */
+/* Optimistic ack (<100 ms) while the server echo has not arrived: scale 0.98
+   and opacity 0.85 (`scale`, not `transform`, so it composes with the `.tapped`
+   rotation) plus a 2 px bar that fills over PENDING_ACK_MS, the same time as
+   the timer that clears the ack. */
 .card-slot.is-pending {
-  opacity: 0.72;
-  filter: saturate(0.7);
+  scale: 0.98;
+  opacity: 0.85;
+  transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1),
+              translate 0.28s cubic-bezier(0.34, 1.56, 0.64, 1),
+              scale var(--dur-quick) var(--ease-out),
+              box-shadow 0.2s ease,
+              border-color 0.2s ease,
+              margin 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+              opacity var(--dur-quick) var(--ease-out);
 }
 
-.card-slot.is-pending::after {
-  content: '';
+.pending-ack-bar {
   position: absolute;
-  inset: 0;
-  margin: auto;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  border: 2px solid var(--veil-6);
-  border-top-color: transparent;
-  animation: pendingSpin 0.7s linear infinite;
-  z-index: 8;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: var(--gold-300);
+  transform: scaleX(0);
+  transform-origin: left center;
   pointer-events: none;
+  z-index: 8;
 }
 
-@keyframes pendingSpin {
-  to { transform: rotate(360deg); }
+.card-slot.is-pending .pending-ack-bar {
+  animation: pendingAckFill linear forwards;
 }
 
+@keyframes pendingAckFill {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+/* One-shot confirmation ring while the chosen target awaits the server echo. */
 .card-slot.is-chosen-pending {
-  animation: chosenPendingPulse 0.6s ease-in-out infinite alternate;
+  animation: chosenPendingRing 0.6s var(--ease-out) both;
   border-color: var(--gold-300);
 }
 
-@keyframes chosenPendingPulse {
+@keyframes chosenPendingRing {
   from {
-    box-shadow: 0 0 12px 2px rgb(var(--gold-rgb) / 0.7), 0 4px 12px var(--shade-2);
+    box-shadow: 0 0 26px 8px rgb(var(--gold-rgb) / 0.95), 0 4px 12px var(--shade-2);
   }
   to {
-    box-shadow: 0 0 24px 6px rgb(var(--gold-rgb) / 0.95), 0 4px 12px var(--shade-2);
+    box-shadow: 0 0 12px 2px rgb(var(--gold-rgb) / 0.7), 0 4px 12px var(--shade-2);
   }
 }
 
+/* Reduced motion: the pending state keeps its opacity change only; the bar
+   stays at its base scaleX(0), so it is not shown. */
 @media (prefers-reduced-motion: reduce) {
-  .card-slot.is-pending::after,
+  .card-slot.is-pending {
+    scale: 1;
+  }
+
+  .card-slot.is-pending .pending-ack-bar,
   .card-slot.is-chosen-pending {
     animation: none;
   }
@@ -1047,6 +1191,19 @@ html.fx-off .entered-glow {
 .card-slot.is-compact .card-transform-badge {
   top: auto;
   bottom: calc(var(--plate-h) + 3px);
+  left: auto;
+  right: 4px;
+}
+
+/* Classic cards with the mana pill (settings → show mana sources): the pill
+   takes the top-left corner, so the sickness badge moves to the top centre
+   and the transform badge to the top right, as on compact tiles. */
+.card-slot.has-mana-pill .sickness-badge {
+  left: 50%;
+  margin-left: -10px;
+}
+
+.card-slot.has-mana-pill .card-transform-badge {
   left: auto;
   right: 4px;
 }

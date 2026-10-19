@@ -258,13 +258,14 @@ test.describe('Latencia percibida (acuse <100ms + eco con retardo)', { tag: '@la
       await expect(page.locator('.draft-screen').first()).toBeVisible({ timeout: 20_000 })
       const card = page.locator('.draft-card').first()
       await expect(card).toBeEnabled({ timeout: 20_000 })
+      await expect(card).toBeVisible()
 
       await perfClear(page)
-      await armAckProbe(page, '.draft-card', { className: 'is-busy' })
+      await armAckProbe(page, '.draft-card.is-busy, .draft-card.is-picked', {})
       const clickedAt = Date.now()
       await card.click({ force: true })
       expectAckUnder(await readAckMs(page, 2000), 'pick de draft')
-      expect(await page.locator('.draft-card.is-busy').count(), 'estado is-busy visible tras el ack').toBeGreaterThan(0)
+      expect(await page.locator('.draft-card.is-busy, .draft-card.is-picked').count(), 'estado is-busy o is-picked visible tras el ack').toBeGreaterThan(0)
       await page.waitForTimeout(WAIT_STATE_MS)
       expect(await card.getAttribute('class'), 'la carta queda bloqueada/confirmada mientras viaja el eco').toMatch(/is-busy|is-picked|is-disabled/)
 

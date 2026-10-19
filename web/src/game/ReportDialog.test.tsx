@@ -7,6 +7,7 @@ import { getState, setState } from '../state/state'
 import { clearErrors, recordError } from '../system/errorLog'
 import { clearFrames, recordFrame } from '../net/frameBuffer'
 import type { Gateway } from '../net/Gateway'
+import { setLanguage } from '../i18n'
 
 function gatewayReturning(result: { ok: boolean; data?: unknown; error?: string }) {
   const send = vi.fn(async () => ({ type: 'result', action: 'report_issue', requestId: '1', ...result }))
@@ -22,9 +23,10 @@ function status(): HTMLElement {
 }
 
 beforeEach(() => {
+  setLanguage('en')
   clearFrames()
   clearErrors()
-  setState({ wsAlive: true, phase: 'game' })
+  setState({ wsAlive: true, wsUrl: null, phase: 'game' })
 })
 
 afterEach(() => {
@@ -87,7 +89,26 @@ describe('ReportDialog', () => {
 
     fireEvent.click(screen.getByTestId('report-send'))
 
-    await waitFor(() => expect(status().textContent).toContain('quota'))
+    await waitFor(() => expect(status().textContent).toContain('limit'))
+    expect(status().textContent).not.toBe('quota')
+  })
+
+  it('tells the player to wait when the proxy rate-limited the report', async () => {
+    setGateway(gatewayReturning({ ok: true, data: { stored: false, reason: 'rate' } }))
+    render(<ReportDialog onClose={() => {}} />)
+
+    fireEvent.click(screen.getByTestId('report-send'))
+
+    await waitFor(() => expect(status().textContent).toContain('30 seconds'))
+  })
+
+  it('explains an oversized report instead of echoing the proxy text', async () => {
+    setGateway(gatewayReturning({ ok: false, error: 'report too large (120000 bytes, limit 98304)' }))
+    render(<ReportDialog onClose={() => {}} />)
+
+    fireEvent.click(screen.getByTestId('report-send'))
+
+    await waitFor(() => expect(status().textContent).toContain('too large to send'))
   })
 
   it('shows the transport error when there was no channel at all', async () => {
@@ -97,6 +118,29 @@ describe('ReportDialog', () => {
     fireEvent.click(screen.getByTestId('report-send'))
 
     await waitFor(() => expect(status().textContent).toContain('not connected'))
+  })
+
+  it('says plainly that a report kept by a proxy on this machine reached nobody', async () => {
+    setState({ wsUrl: 'ws://127.0.0.1:8787' })
+    setGateway(gatewayReturning({ ok: true, data: { stored: true, id: 'abcd1234' } }))
+    render(<ReportDialog onClose={() => {}} />)
+
+    fireEvent.click(screen.getByTestId('report-send'))
+
+    await waitFor(() => expect(status().textContent).toContain('Nobody has received it'))
+    const link = screen.getByTestId('report-github') as HTMLAnchorElement
+    expect(link.href).toContain('github.com/Adamychen/xmage-nexus/issues/new')
+  })
+
+  it('keeps the GitHub route out of the way when the host received the report', async () => {
+    setState({ wsUrl: 'wss://play.example.com' })
+    setGateway(gatewayReturning({ ok: true, data: { stored: true, id: 'abcd1234' } }))
+    render(<ReportDialog onClose={() => {}} />)
+
+    fireEvent.click(screen.getByTestId('report-send'))
+
+    await waitFor(() => expect(status().textContent).toContain('abcd1234'))
+    expect(screen.queryByTestId('report-github')).toBeNull()
   })
 
   it('puts the same report on the clipboard when there is nowhere to send it', async () => {

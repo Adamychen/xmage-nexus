@@ -29,5 +29,6 @@ export default function LowLifeVignette({ game }: { game: GameView | null }) {
   }, [life, poison, level])
 
   if (level === 0) return null
-  return <div className="low-life-vignette" data-level={level} data-testid="low-life-vignette" aria-hidden="true" />
+  const className = level === 2 ? 'low-life-vignette active critical' : 'low-life-vignette active'
+  return <div className={className} data-level={level} data-testid="low-life-vignette" aria-hidden="true" />
 }

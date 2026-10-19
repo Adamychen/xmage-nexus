@@ -1,10 +1,11 @@
 import type { Dispatch, SetStateAction } from 'react'
 import type { GameTypeInfo } from '../../net/commands'
 import type { Deck } from '../decks'
-import type { CreateTab, DraftTiming, SeatConfig, TableCategory, TournamentCategory, WizardStep } from './constants'
+import type { CreateKind, CreateTab, DraftTiming, SeatConfig, TableCategory, TournamentCategory, WizardStep } from './constants'
 
 /** Everything the Create Table wizard tabs read and change (see `useCreateTableForm`). */
 export interface CreateTableForm {
+  kind: CreateKind
   wizardSteps: WizardStep[]
   activeTab: CreateTab
   setActiveTab: (t: CreateTab) => void
@@ -18,7 +19,6 @@ export interface CreateTableForm {
   setTableCategory: (v: TableCategory) => void
   tournamentCategory: TournamentCategory
   setTournamentCategory: (v: TournamentCategory) => void
-  applyMode: (cat: TableCategory) => void
   applyPreset: (key: string) => void
   gameTypes: GameTypeInfo[]
   deckTypes: string[]
@@ -133,5 +133,6 @@ export interface CreateTableForm {
   compatibilityError: string | null
   validateStep: (tab: CreateTab) => string | null
   submit: () => Promise<void>
+  resetToDefaults: () => void
   runDemoTable: () => Promise<void>
 }

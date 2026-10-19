@@ -1,0 +1,462 @@
+import { test, expect } from './fixtures'
+import { fakeOnly } from './support/fake-mode'
+import { dismissSetupWizard } from './support/start-game'
+import { richCommanderGame, showGame } from './support/rich-game'
+
+fakeOnly()
+
+const V1 = { gameUi: 'v1', boardLayout: 'arena', boardLayoutManual: true }
+const V2 = { gameUi: 'v2', boardLayout: 'arena', boardLayoutManual: true }
+
+test.beforeEach(async ({ page }) => {
+  await page.goto('/')
+  await dismissSetupWizard(page)
+  await expect(page.locator('body')).toBeVisible({ timeout: 10_000 })
+  await page.waitForTimeout(300)
+})
+
+test('the classic interface can still be chosen: strip and drawer, no dial @gameui', async ({ page }) => {
+  await showGame(page, richCommanderGame(), V1)
+  await expect(page.getByTestId('arena-board')).toBeVisible({ timeout: 10_000 })
+  await expect(page.getByTestId('game-strip')).toBeVisible()
+  await expect(page.getByTestId('phase-dial')).toHaveCount(0)
+  await expect(page.getByTestId('game-topbar')).toHaveCount(0)
+})
+
+test('v2 renders the top bar, phase dial and dial action button @gameui', async ({ page }, testInfo) => {
+  await showGame(page, richCommanderGame(), V2)
+  await expect(page.getByTestId('arena-board')).toBeVisible({ timeout: 10_000 })
+  await expect(page.getByTestId('game-topbar')).toBeVisible()
+  await expect(page.getByTestId('game-strip')).toHaveCount(0)
+  await expect(page.getByTestId('phase-dial')).toBeVisible()
+  await expect(page.locator('.phase-dial-pip')).toHaveText(['UPK', 'DRW', 'M1', 'CMB', 'M2', 'END'])
+  await expect(page.getByTestId('phase-bar-step-PRECOMBAT_MAIN')).toHaveAttribute('data-active', 'true')
+  await expect(page.locator('.pz-bottom-row .pp-stats .resource-chip .chip-icon')).toHaveCount(3)
+  await expect(page.getByTestId('pp-pool')).toBeVisible()
+  await expect(page.locator('.action-button-container--dial .big-action-btn')).toBeVisible()
+  await page.waitForTimeout(500)
+  await page.screenshot({ path: testInfo.outputPath('v2-quiet.png') })
+})
+
+test('v2 stack deck: top card, tabs, expand and collapse @gameui', async ({ page }, testInfo) => {
+  const stack = [
+    { id: 's-fow', name: 'Force of Will', controllerId: 'p-mira', targets: ['s-pact'] },
+    { id: 's-pact', name: 'Pact of Negation', controllerId: 'p-adam', targets: ['s-cs'] },
+    { id: 's-cs', name: 'Counterspell', controllerId: 'p-mira', targets: ['s-bolt'] },
+    { id: 's-bolt', name: 'Lightning Bolt', controllerId: 'p-adam', targets: ['tobias-edgar'] },
+    { id: 's-rs', name: 'Rhystic Study', controllerId: 'p-mira', ability: true, targets: ['p-adam'], rules: ['Whenever an opponent casts a spell, you may draw a card unless that player pays {1}.'] },
+  ]
+  await showGame(page, richCommanderGame({ stack }), V2)
+  const deck = page.getByTestId('stack-deck')
+  await expect(deck).toBeVisible({ timeout: 10_000 })
+  await expect(deck).toHaveAttribute('data-state', 'collapsed')
+  await expect(page.getByTestId('stack-count')).toHaveText('5')
+  await expect(page.getByTestId('stack-deck-top')).toContainText('Mira')
+  await expect(page.locator('.stack-deck-tab')).toHaveCount(4)
+  await expect(page.locator('.action-btn-label').first()).toContainText(/resolve/i)
+  await page.waitForTimeout(600)
+  await page.screenshot({ path: testInfo.outputPath('v2-stack-collapsed.png') })
+
+  await page.getByTestId('stack-deck-toggle').click()
+  await expect(deck).toHaveAttribute('data-state', 'open')
+  await expect(page.locator('.stack-trow')).toHaveCount(5)
+  await page.waitForTimeout(600)
+  await page.screenshot({ path: testInfo.outputPath('v2-stack-open.png') })
+
+  await page.getByTestId('stack-deck-toggle').click()
+  await expect(deck).toHaveAttribute('data-state', 'collapsed')
+})
+
+test('v2 side panel opens from the top bar and pushes the board @gameui', async ({ page }, testInfo) => {
+  await showGame(page, richCommanderGame(), V2)
+  await expect(page.getByTestId('game-topbar')).toBeVisible({ timeout: 10_000 })
+  const board = page.getByTestId('arena-board')
+  const before = await board.boundingBox()
+  await page.getByTestId('drawer-tab-commander').click()
+  await expect(page.getByTestId('side-panel')).toBeVisible()
+  await expect(page.getByTestId('side-panel')).toHaveAttribute('data-tab', 'commander')
+  await page.waitForTimeout(600)
+  const after = await board.boundingBox()
+  expect(after!.width).toBeLessThan(before!.width - 300)
+  await page.screenshot({ path: testInfo.outputPath('v2-panel.png') })
+  await page.getByTestId('side-panel-tab-log').click()
+  await expect(page.getByTestId('side-panel')).toHaveAttribute('data-tab', 'log')
+  await page.getByTestId('drawer-tab-log').click()
+  await expect(page.getByTestId('side-panel')).toHaveCount(0)
+})
+
+test('v2 portraits show the hand count, mechanic chips and commander damage @gameui', async ({ page }, testInfo) => {
+  await showGame(page, richCommanderGame(), V2)
+  await expect(page.getByTestId('arena-board')).toBeVisible({ timeout: 10_000 })
+  const counts = page.getByTestId('pp-hand-count')
+  await expect(counts).toHaveCount(4)
+  await expect(counts.filter({ hasText: '5' })).toHaveCount(1)
+  await expect(counts.filter({ hasText: '3' })).toHaveCount(1)
+  const mira = page.locator('.player-info-bar[data-player-id="p-mira"]')
+  await expect(mira.getByTestId('commander-chip')).toHaveCount(2)
+  await expect(mira.locator('.commander-chip.tone-lethal')).toContainText('21/21')
+  await expect(mira.locator('.commander-chip.tone-normal')).toContainText('6/21')
+  await expect(page.locator('.player-info-bar[data-player-id="p-adam"]').getByTestId('commander-chip')).toHaveCount(2)
+  await expect(page.locator('.player-info-bar[data-player-id="p-tobias"] .badge-monarch .badge-label')).toBeVisible()
+  await expect(page.locator('.player-info-bar[data-player-id="p-ilse"] .badge-initiative .badge-label')).toBeVisible()
+  await page.waitForTimeout(500)
+  await page.screenshot({ path: testInfo.outputPath('v2-portraits.png') })
+})
+
+test('v2 hand badge opens a visible hand and announces card count changes @gameui', async ({ page }, testInfo) => {
+  const game = richCommanderGame() as { players: Array<Record<string, unknown>>; opponentHands: Record<string, unknown> }
+  const mira = game.players.find((p) => p.playerId === 'p-mira') as Record<string, unknown>
+  mira.handCount = 5
+  game.opponentHands = { Mira: { k1: { id: 'k1', name: 'Counterspell', manaValue: 2, expansionSetCode: 'lea', cardNumber: '1' } } }
+  await showGame(page, game, V2)
+  const portrait = page.locator('.player-info-bar[data-player-id="p-mira"]')
+  const badge = portrait.getByTestId('pp-hand-count')
+  await expect(badge).toBeVisible({ timeout: 10_000 })
+  await expect(badge).toHaveClass(/is-viewable/)
+  await expect(badge).toContainText('1/5')
+  await expect(page.getByTestId('opp-hand-stack')).toHaveCount(0)
+  await badge.click()
+  await expect(page.getByTestId('hand-viewer')).toBeVisible()
+  await page.keyboard.press('Escape')
+
+  mira.handCount = 4
+  await showGame(page, game, V2)
+  await expect(portrait.getByTestId('count-flash').first()).toHaveText('-1')
+  await page.waitForTimeout(500)
+  await page.screenshot({ path: testInfo.outputPath('v2-hand-badge.png'), clip: { x: 0, y: 40, width: 700, height: 140 } })
+})
+
+test('v2 log ticker shows the latest actions and opens the log panel @gameui', async ({ page }) => {
+  await showGame(page, richCommanderGame(), V2, ['Adam plays Forest', 'Adam plays Swamp', 'Mira casts Counterspell', 'Tobias casts Lightning Bolt targeting Adam', 'Adam casts Pact of Negation'])
+  const ticker = page.getByTestId('log-ticker')
+  await expect(ticker).toBeVisible({ timeout: 10_000 })
+  await expect(page.getByTestId('log-ticker-line')).toHaveCount(4)
+  await expect(ticker).toHaveCSS('position', 'absolute')
+  await ticker.click()
+  await expect(page.getByTestId('side-panel')).toHaveAttribute('data-tab', 'log')
+})
+
+test('v2 combat ledger lists the damage of the combat and totals per player @gameui', async ({ page }, testInfo) => {
+  const log = [
+    'Turn 7 Adam',
+    'Tobias attacks Adam with Edgar Markov',
+    'Edgar Markov deals 4 damage to Adam',
+    'Vampire deals 1 damage to Adam',
+    'Vampire deals 1 damage to Adam',
+    'Korvold, Fae-Cursed King deals 7 damage to Cathar Commando',
+  ]
+  await showGame(page, richCommanderGame({ step: 'COMBAT_DAMAGE' }), V2, log)
+  const ledger = page.getByTestId('combat-ledger')
+  await expect(ledger).toBeVisible({ timeout: 10_000 })
+  await expect(page.getByTestId('combat-ledger-row')).toHaveCount(3)
+  await expect(page.getByTestId('combat-ledger-total')).toContainText('Adam')
+  await expect(page.getByTestId('combat-ledger-total')).toContainText('6')
+  await page.waitForTimeout(500)
+  await page.screenshot({ path: testInfo.outputPath('v2-ledger.png') })
+  await ledger.getByRole('button').click()
+  await expect(ledger).toHaveCount(0)
+})
+
+test('v2 mechanic chips open the mechanics tab of the side panel @gameui', async ({ page }) => {
+  await showGame(page, richCommanderGame(), V2)
+  await expect(page.getByTestId('arena-board')).toBeVisible({ timeout: 10_000 })
+  await page.locator('.player-info-bar[data-player-id="p-tobias"] .badge-monarch').click()
+  await expect(page.getByTestId('side-panel')).toHaveAttribute('data-tab', 'mechanics')
+  await expect(page.getByTestId('mechanics-overview')).toBeVisible()
+  await expect(page.getByTestId('mech-ring')).toContainText('Adam')
+  await expect(page.getByTestId('mech-dungeon')).toContainText('Lost Mine of Phandelver')
+  await expect(page.getByTestId('mech-table-state')).toContainText('Tobias')
+})
+
+test('v2 arrows take the seat colour of their source and stay thin and dashed @gameui', async ({ page }) => {
+  const game = richCommanderGame({ step: 'DECLARE_BLOCKERS' }) as { players: Array<Record<string, any>>; combat: unknown[]; activePlayerId: string }
+  game.activePlayerId = 'p-tobias'
+  game.combat = [{ attackers: { 'tobias-edgar': game.players[2].battlefield['tobias-edgar'] }, blockers: {}, defenderId: 'p-adam' }]
+  await showGame(page, game, V2)
+  const arrow = page.locator('.arrow-group--v2[data-arrow-from="tobias-edgar"][data-arrow-to="p-adam"] .arrow-path')
+  await expect(arrow).toHaveCount(1, { timeout: 10_000 })
+  await expect(arrow).toHaveAttribute('style', /--seat-2/)
+  await expect(arrow).toHaveCSS('stroke-width', '2.2px')
+  await expect(page.locator('.arrow-shadow')).toHaveCount(0)
+})
+
+test('v2 hand column gives way to the fan while the side panel is open @gameui', async ({ page }) => {
+  await showGame(page, richCommanderGame(), { ...V2, handRail: true, cardRender: 'rendered' })
+  await expect(page.getByTestId('hand-rail')).toBeVisible({ timeout: 10_000 })
+  await expect(page.getByTestId('hand-bar')).toHaveCount(0)
+  await page.getByTestId('drawer-tab-log').click()
+  await expect(page.getByTestId('side-panel')).toBeVisible()
+  await expect(page.getByTestId('hand-bar')).toBeVisible()
+  await expect(page.getByTestId('hand-rail')).toHaveCount(0)
+  await page.getByTestId('drawer-tab-log').click()
+  await expect(page.getByTestId('hand-rail')).toBeVisible()
+})
+
+test.describe('narrow window', () => {
+  test.use({ viewport: { width: 1280, height: 720 } })
+
+  test('v2 keeps the dial, the stack deck and the top bar inside a 1280x720 window @gameui', async ({ page }, testInfo) => {
+    const stack = [
+      { id: 's-cs', name: 'Counterspell', controllerId: 'p-mira', targets: ['s-bolt'] },
+      { id: 's-bolt', name: 'Lightning Bolt', controllerId: 'p-adam', targets: ['tobias-edgar'] },
+    ]
+    await showGame(page, richCommanderGame({ stack }), V2)
+    await expect(page.getByTestId('stack-deck')).toBeVisible({ timeout: 10_000 })
+    await page.waitForTimeout(600)
+    const inside = await page.evaluate(() => {
+      const vw = window.innerWidth
+      const vh = window.innerHeight
+      const ids = ['phase-dial', 'stack-deck', 'game-topbar']
+      return ids.map((id) => {
+        const r = document.querySelector(`[data-testid="${id}"]`)!.getBoundingClientRect()
+        return { id, ok: r.left >= -1 && r.top >= -1 && r.right <= vw + 1 && r.bottom <= vh + 1 }
+      })
+    })
+    for (const entry of inside) expect(entry.ok, `${entry.id} stays inside the window`).toBe(true)
+    const gap = await page.evaluate(() => {
+      const deck = document.querySelector('[data-testid="stack-deck"]')!.getBoundingClientRect()
+      const dial = document.querySelector('[data-testid="phase-dial"]')!.getBoundingClientRect()
+      return dial.top - deck.bottom
+    })
+    expect(gap, 'the stack deck ends above the phase dial').toBeGreaterThanOrEqual(0)
+    await page.screenshot({ path: testInfo.outputPath('v2-1280.png') })
+  })
+})
+
+test('v2 always uses the arena layout, whatever the board layout setting says @gameui', async ({ page }, testInfo) => {
+  await showGame(page, richCommanderGame(), { gameUi: 'v2', boardLayout: 'pod', boardLayoutManual: true })
+  await expect(page.getByTestId('arena-board')).toBeVisible({ timeout: 10_000 })
+  await expect(page.getByTestId('pod-board')).toHaveCount(0)
+  await page.waitForTimeout(500)
+  const vh = page.viewportSize()!.height
+  const bars = page.locator('.arena-board .player-info-bar')
+  expect(await bars.count()).toBeGreaterThan(0)
+  for (let i = 0; i < (await bars.count()); i++) {
+    const box = await bars.nth(i).boundingBox()
+    expect(box!.y + box!.height).toBeLessThanOrEqual(vh + 1)
+  }
+  await page.screenshot({ path: testInfo.outputPath('v2-forced-arena.png') })
+})
+
+async function boardCardsUnderOverlays(page: import('@playwright/test').Page) {
+  return page.evaluate(() => {
+    const visible = (el: Element): DOMRect | null => {
+      const box = el.getBoundingClientRect()
+      let l = box.left
+      let t = box.top
+      let r = box.right
+      let b = box.bottom
+      for (let p = el.parentElement; p; p = p.parentElement) {
+        const o = getComputedStyle(p)
+        if (o.overflowX === 'visible' && o.overflowY === 'visible') continue
+        const pb = p.getBoundingClientRect()
+        l = Math.max(l, pb.left)
+        t = Math.max(t, pb.top)
+        r = Math.min(r, pb.right)
+        b = Math.min(b, pb.bottom)
+      }
+      return r > l && b > t ? new DOMRect(l, t, r - l, b - t) : null
+    }
+    const cards = [...document.querySelectorAll('.arena-board .bz-band .card-slot, .arena-board .bz-commander .card-slot, .arena-board .bz-marquee .card-slot')]
+    const overlays = [
+      ...document.querySelectorAll('.arena-board .player-info-bar, [data-testid="log-ticker"], [data-testid="combat-ledger"], [data-testid="stack-deck"], [data-testid="game-dock"]'),
+    ]
+    const label = (el: Element) => el.getAttribute('data-testid') ?? el.className.toString().split(' ')[0]
+    const hit: string[] = []
+    for (const o of overlays) {
+      const r = o.getBoundingClientRect()
+      if (r.width === 0) continue
+      for (const c of cards) {
+        const b = visible(c)
+        if (!b) continue
+        if (b.left < r.right - 1 && b.right > r.left + 1 && b.top < r.bottom - 1 && b.bottom > r.top + 1) hit.push(`${label(o)} <- ${c.textContent?.slice(0, 20)}`)
+      }
+    }
+    return { hit, cards: cards.length, overlays: overlays.length }
+  })
+}
+
+const STACK = [
+  { id: 's-cs', name: 'Counterspell', controllerId: 'p-mira', targets: ['s-bolt'] },
+  { id: 's-bolt', name: 'Lightning Bolt', controllerId: 'p-adam', targets: ['tobias-edgar'] },
+  { id: 's-rs', name: 'Rhystic Study', controllerId: 'p-mira', ability: true, targets: ['p-adam'], rules: ['Whenever an opponent casts a spell, you may draw a card unless that player pays {1}.'] },
+]
+const LOG = ['Turn 7 Adam', 'Tobias attacks Adam with Edgar Markov', 'Edgar Markov deals 4 damage to Adam', 'Korvold, Fae-Cursed King deals 7 damage to Cathar Commando']
+
+for (const vp of [{ width: 1600, height: 900 }, { width: 1280, height: 720 }]) {
+  test.describe(`no overlap ${vp.width}x${vp.height}`, () => {
+    test.use({ viewport: vp })
+
+    for (const scenario of ['quiet', 'combat', 'stack', 'stack-open', 'spectator-quiet', 'spectator-combat']) {
+      test(`v2 no battlefield card touches a portrait, the log, the ledger, the stack or the dial: ${scenario} @gameui`, async ({ page }, testInfo) => {
+        const base = scenario.replace('spectator-', '')
+        const game =
+          base === 'combat'
+            ? richCommanderGame({ step: 'COMBAT_DAMAGE' })
+            : base.startsWith('stack')
+              ? richCommanderGame({ stack: STACK })
+              : richCommanderGame()
+        if (scenario.startsWith('spectator-')) {
+          for (const p of (game as { players: Array<Record<string, unknown>> }).players) p.controlled = false
+        }
+        await showGame(page, game, V2, LOG)
+        if (base === 'combat') await expect(page.getByTestId('combat-ledger')).toBeVisible({ timeout: 10_000 })
+        else if (base === 'quiet') await expect(page.getByTestId('log-ticker')).toBeVisible({ timeout: 10_000 })
+        else await expect(page.getByTestId('stack-deck')).toBeVisible({ timeout: 10_000 })
+        if (scenario === 'stack-open') await page.getByTestId('stack-deck-toggle').click()
+        await page.mouse.move(2, 400)
+        await page.waitForTimeout(900)
+        const result = await boardCardsUnderOverlays(page)
+        expect(result.cards).toBeGreaterThan(0)
+        expect(result.hit).toEqual([])
+        const crossing = await page.evaluate(() => {
+          const floor = document.querySelector('.arena-board > .board-shell-divider')!.getBoundingClientRect().bottom
+          return ['log-ticker', 'combat-ledger']
+            .map((id) => ({ id, rect: document.querySelector(`[data-testid="${id}"]`)?.getBoundingClientRect() }))
+            .filter((o) => o.rect && o.rect.width > 0 && o.rect.top < floor - 1)
+            .map((o) => ({ id: o.id, top: o.rect!.top }))
+        })
+        expect(crossing, 'floating windows stay below the divider').toEqual([])
+        await page.screenshot({ path: testInfo.outputPath(`v2-${scenario}-${vp.width}.png`) })
+      })
+    }
+  })
+}
+
+test('v2 mana pool keeps every mana type and its label readable @gameui', async ({ page }, testInfo) => {
+  const game = richCommanderGame() as { players: Array<Record<string, unknown>> }
+  const me = game.players.find((p) => p.controlled) as Record<string, unknown>
+  me.manaPool = { white: 1, blue: 3, black: 2, red: 2, green: 1, colorless: 2 }
+  await showGame(page, game, V2)
+  const pool = page.getByTestId('pp-pool')
+  await expect(pool).toBeVisible({ timeout: 10_000 })
+  await page.waitForTimeout(500)
+  const box = await pool.boundingBox()
+  const inner = await pool.locator('.mana-inline').boundingBox()
+  expect(inner!.x + inner!.width).toBeLessThanOrEqual(box!.x + box!.width + 1)
+  expect(inner!.height).toBeLessThan(60)
+  const pips = pool.locator('.mana-inline-pip')
+  for (let i = 0; i < (await pips.count()); i++) {
+    const b = await pips.nth(i).boundingBox()
+    expect(b!.x + b!.width).toBeLessThanOrEqual(box!.x + box!.width)
+  }
+  await expect(pool.locator('.resource-pool-label')).toHaveCount(0)
+  await pool.screenshot({ path: testInfo.outputPath('v2-pool.png') })
+})
+
+for (const layout of ['pod', 'arena']) {
+  test(`v2 with board layout ${layout}: last actions and the combat ledger stay inside the board and off the player boxes @gameui`, async ({ page }, testInfo) => {
+    const log = [
+      'Turn 7 Adam',
+      'Tobias attacks Adam with Edgar Markov',
+      'Edgar Markov deals 4 damage to Adam',
+      'Vampire deals 1 damage to Adam',
+      'Korvold, Fae-Cursed King deals 7 damage to Cathar Commando',
+    ]
+    await showGame(page, richCommanderGame({ step: 'COMBAT_DAMAGE' }), { gameUi: 'v2', boardLayout: layout, boardLayoutManual: true }, log)
+    const ledger = page.getByTestId('combat-ledger')
+    await expect(ledger).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByTestId('log-ticker')).toBeHidden()
+    await page.mouse.move(2, 400)
+    await page.waitForTimeout(600)
+    await page.screenshot({ path: testInfo.outputPath(`v2-${layout}-ledger.png`) })
+    const lb = (await ledger.boundingBox())!
+    const vp = page.viewportSize()!
+    expect(lb.x).toBeGreaterThanOrEqual(0)
+    expect(lb.y + lb.height).toBeLessThanOrEqual(vp.height)
+    for (const bar of await page.locator('.player-info-bar').all()) {
+      const b = await bar.boundingBox()
+      if (!b) continue
+      const overlap = lb.x < b.x + b.width && lb.x + lb.width > b.x && lb.y < b.y + b.height && lb.y + lb.height > b.y
+      expect(overlap, 'ledger covers a player box').toBe(false)
+    }
+    await ledger.getByRole('button').click()
+    const ticker = page.getByTestId('log-ticker')
+    await expect(ticker).toBeVisible()
+    await page.waitForTimeout(300)
+    const tb = (await ticker.boundingBox())!
+    expect(tb.y + tb.height).toBeLessThanOrEqual(vp.height)
+    for (const bar of await page.locator('.player-info-bar').all()) {
+      const b = await bar.boundingBox()
+      if (!b) continue
+      const overlap = tb.x < b.x + b.width && tb.x + tb.width > b.x && tb.y < b.y + b.height && tb.y + tb.height > b.y
+      expect(overlap, 'log ticker covers a player box').toBe(false)
+    }
+    await page.screenshot({ path: testInfo.outputPath(`v2-${layout}-ticker.png`) })
+  })
+}
+
+test('v2 rewind sits on the left of the phase dial and the two do not overlap @gameui', async ({ page }, testInfo) => {
+  await page.setViewportSize({ width: 1280, height: 800 })
+  await showGame(page, richCommanderGame(), { ...V2, boardRewind: true })
+  await expect(page.getByTestId('phase-dial')).toBeVisible({ timeout: 10_000 })
+  for (const [id, step] of [[1, 'UPKEEP'], [2, 'DRAW']] as const) {
+    await page.evaluate(
+      ({ gameView, id }) => {
+        const store = (globalThis as unknown as { __mageStore: { handleMessage: (m: unknown) => void } }).__mageStore
+        store.handleMessage({ type: 'event', method: 'GAME_UPDATE', messageId: id, objectId: 'g-v2', data: { gameView } })
+      },
+      { gameView: richCommanderGame({ step }), id },
+    )
+  }
+  const rewind = page.getByTestId('rewind-open')
+  const dial = page.getByTestId('phase-dial')
+  await expect(rewind).toBeVisible()
+  await page.waitForTimeout(400)
+  const r = (await rewind.boundingBox())!
+  const d = (await dial.boundingBox())!
+  expect(r.x + r.width).toBeLessThanOrEqual(d.x)
+  expect(r.x + r.width / 2).toBeLessThan(d.x + d.width / 2)
+  const pips = page.locator('.phase-dial-pip')
+  for (let i = 0; i < (await pips.count()); i++) {
+    const p = (await pips.nth(i).boundingBox())!
+    expect(p.x + p.width).toBeLessThanOrEqual(1280)
+  }
+  await page.screenshot({ path: testInfo.outputPath('v2-rewind-left.png') })
+})
+
+test('tapping an untapped land in v2 flies a mana particle into the pool @gameui', async ({ page }) => {
+  const game = richCommanderGame()
+  const me = (game.players as Array<{ playerId: string; battlefield: Record<string, Record<string, unknown>> }>).find((p) => p.playerId === 'p-adam')
+  if (me) me.battlefield['adam-l1'] = { ...me.battlefield['adam-l1'], rules: ['{T}: Add {B}.'], controllerId: 'p-adam' }
+  await showGame(page, game, V2)
+  await expect(page.getByTestId('arena-board')).toBeVisible({ timeout: 10_000 })
+  await expect(page.locator('[data-card-id="adam-l1"]')).toHaveAttribute('data-tapped', '0')
+  await page.waitForTimeout(1200)
+  await page.evaluate(() => {
+    const w = window as unknown as { __manaLanded?: boolean }
+    w.__manaLanded = false
+    new MutationObserver(() => {
+      if (document.querySelector('.mana-pool-landed')) w.__manaLanded = true
+    }).observe(document.body, { subtree: true, attributes: true, childList: true, attributeFilter: ['class'] })
+  })
+
+  const tapped = richCommanderGame()
+  const tappedMe = (tapped.players as Array<{ playerId: string; battlefield: Record<string, Record<string, unknown>> }>).find((p) => p.playerId === 'p-adam')
+  if (tappedMe) tappedMe.battlefield['adam-l1'] = { ...tappedMe.battlefield['adam-l1'], rules: ['{T}: Add {B}.'], controllerId: 'p-adam', tapped: true }
+  await showGame(page, tapped, V2)
+
+  const flight = await page.waitForFunction(() => {
+    const particle = document.querySelector<HTMLElement>('.mana-particle')
+    const pool = document.querySelector<HTMLElement>('.pp-pool [data-testid="resource-pool"]')
+    if (!particle || !pool) return null
+    const r = particle.getBoundingClientRect()
+    const p = pool.getBoundingClientRect()
+    const dx = parseFloat(particle.style.getPropertyValue('--particle-dx'))
+    const dy = parseFloat(particle.style.getPropertyValue('--particle-dy'))
+    return {
+      startInside: r.width > 0,
+      endX: r.left + r.width / 2 + dx,
+      endY: r.top + r.height / 2 + dy,
+      poolLeft: p.left, poolRight: p.right, poolTop: p.top, poolBottom: p.bottom,
+    }
+  }, undefined, { polling: 'raf', timeout: 2000 })
+  const box = await flight.jsonValue() as { startInside: boolean; endX: number; endY: number; poolLeft: number; poolRight: number; poolTop: number; poolBottom: number }
+  expect(box.startInside).toBe(true)
+  expect(box.endX).toBeGreaterThanOrEqual(box.poolLeft)
+  expect(box.endX).toBeLessThanOrEqual(box.poolRight)
+  expect(box.endY).toBeGreaterThanOrEqual(box.poolTop)
+  expect(box.endY).toBeLessThanOrEqual(box.poolBottom)
+
+  await page.waitForFunction(() => (window as unknown as { __manaLanded?: boolean }).__manaLanded === true, undefined, { polling: 'raf', timeout: 5000 })
+})

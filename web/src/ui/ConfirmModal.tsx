@@ -20,6 +20,7 @@ export default function ConfirmModal({ request }: ConfirmModalProps) {
       titleId="confirm-modal-title"
       testId="confirm-modal"
       size="sm"
+      ornate
       zIndex={2000}
       legacyBackdropClass="confirm-backdrop"
       legacyPanelClass="confirm-modal"

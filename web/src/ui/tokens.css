@@ -114,6 +114,8 @@
   --fs-heading: 1.125rem;
   --fs-xl: 1.25rem;
   --fs-2xl: 1.625rem;
+  --fs-life: 2.375rem;
+  --fs-life-lg: 3.375rem;
 
   --sp-0h: 2px;
   --sp-1: 4px;
@@ -146,7 +148,34 @@
   --surface-raised: linear-gradient(180deg, #1b2439 0%, #131b2d 100%);
   --focus-ring: 0 0 0 2px var(--ink-1), 0 0 0 4px var(--brand);
 
+  --seat-0: #4c8dff;
+  --seat-1: #b36bff;
+  --seat-2: #ff8a4c;
+  --seat-3: #3ddc97;
+  --ink-gap: #0a0f1a;
+  --dial-past: #5d6a88;
+  --dial-pass: radial-gradient(circle at 32% 24%, #6aa3ff, #2457c9 62%, #153a8f);
+  --dial-pass-ring: rgb(125 176 255 / 0.7);
+  --dial-pass-glow: rgb(36 87 201 / 0.6);
+  --dial-resolve: radial-gradient(circle at 32% 24%, #ffd98a, #d8962a 62%, #8f5d10);
+  --dial-resolve-ring: rgb(243 212 136 / 0.8);
+  --dial-resolve-glow: rgb(216 150 42 / 0.55);
+  --dial-resolve-ink: #2a1a02;
+  --dial-combat: radial-gradient(circle at 32% 24%, #ff8a9a, #d63a52 62%, #7c1224);
+  --dial-combat-ring: rgb(255 93 115 / 0.7);
+  --dial-combat-glow: rgb(255 93 115 / 0.45);
+  --dial-wait: radial-gradient(circle at 32% 24%, #3a4561, #232c42 62%, #171d2e);
+  --ledger-line: rgb(255 93 115 / 0.5);
+
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
   --dur-fast: 0.12s;
   --dur-med: 0.2s;
+  --dur-instant: 0.08s;
+  --dur-quick: 0.15s;
+  --dur-base: 0.25s;
+  --dur-slow: 0.4s;
+  --dur-slower: 0.6s;
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
 }

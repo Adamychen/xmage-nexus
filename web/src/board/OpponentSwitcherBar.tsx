@@ -3,6 +3,7 @@ import IconButton from '../ui/IconButton'
 import Icon from '../ui/Icon'
 import { useTranslation } from '../i18n'
 import { isPlayerDefeated, isPlayerOut } from './boardShared'
+import { useStore } from '../state/store'
 import './OpponentSwitcherBar.css'
 
 interface OpponentSwitcherBarProps {
@@ -29,6 +30,7 @@ export default function OpponentSwitcherBar({
   combat = [],
 }: OpponentSwitcherBarProps) {
   const { t } = useTranslation()
+  const targetOptional = useStore((s) => s.feedback?.method === 'GAME_TARGET' && s.feedback.required === false)
   // El servidor lista a los jugadores en orden de mapa (table added order),
   // pero los turnos avanzan en orden inverso: PlayerList se construye con
   // CircularList.add(), que inserta en cabeza e invierte la lista. La tira
@@ -95,6 +97,7 @@ export default function OpponentSwitcherBar({
                 isSelected ? 'is-selected' : '',
                 isTurn ? 'is-turn' : '',
                 isTargetable && !isSelf ? 'is-targetable' : '',
+                isTargetable && !isSelf && !targetOptional ? 'is-target-beacon' : '',
                 isDefeated ? 'is-defeated' : '',
                 isSelf ? 'is-self' : '',
               ].filter(Boolean).join(' ')}

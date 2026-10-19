@@ -42,8 +42,22 @@
   width: 100%;
 }
 
-.game-dock > .action-button-container {
+.game-dock-row {
+  display: flex;
+  align-items: stretch;
+  gap: var(--sp-1);
   width: 100%;
+}
+
+.game-dock-rewind {
+  display: flex;
+  flex-shrink: 0;
+}
+
+.game-dock-row > .action-button-container {
+  flex: 1;
+  min-width: 0;
+  width: auto;
   padding: 0;
   background: transparent;
   border-top: 0;

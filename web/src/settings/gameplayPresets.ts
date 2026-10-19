@@ -23,6 +23,14 @@ function uniformStops(value: boolean): PhaseStops {
   return { yourTurn: row(), opponentTurn: row() }
 }
 
+function balancedStops(): PhaseStops {
+  const stops = uniformStops(false)
+  stops.yourTurn.main1 = true
+  stops.yourTurn.main2 = true
+  stops.opponentTurn.endStep = true
+  return stops
+}
+
 export const GAMEPLAY_PRESETS: GameplayPreset[] = [
   {
     id: 'simple',
@@ -43,7 +51,7 @@ export const GAMEPLAY_PRESETS: GameplayPreset[] = [
       smartStops: true,
       holdPriority: false,
       manaPayment: { auto: true, restricted: true, useFirstAbility: false, confirmEmptyPool: true, smart: true },
-      phaseStops: uniformStops(true),
+      phaseStops: balancedStops(),
     },
   },
   {

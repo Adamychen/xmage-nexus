@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react'
-import { fxDuration } from './fx'
+import { fxMotionDuration } from './fx'
 
 export type FeedbackTone = 'bad' | 'good' | 'poison'
 
@@ -69,7 +69,7 @@ export function spawnFloater(
   text: string,
   tone: FeedbackTone
 ): void {
-  const duration = fxDuration(1150)
+  const duration = fxMotionDuration(1150)
   if (!duration || !rect || rect.width <= 0 || rect.height <= 0) return
   const now = Date.now()
   if (now - (lastSpawnAt.get(dedupeKey) ?? 0) < MIN_INTERVAL_MS) return
@@ -93,7 +93,7 @@ export function spawnFloater(
 
 /** Banner centrado (anuncio de turno) con auto-cierre. */
 export function announceBanner(text: string, sub?: string): void {
-  const duration = fxDuration(1900)
+  const duration = fxMotionDuration(1900)
   if (!duration) return
   const item: BannerFx = { id: ++counter, text, sub, duration }
   state = { ...state, banner: item }

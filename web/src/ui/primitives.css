@@ -27,6 +27,28 @@
     background: linear-gradient(180deg, var(--brand) 0%, var(--brand-strong) 100%);
     box-shadow: var(--sheen), 0 6px 18px rgb(var(--brand-rgb) / 0.28);
     font-weight: 700;
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+  }
+  .ui-btn--primary::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: linear-gradient(105deg, transparent 40%, var(--veil-6) 50%, transparent 60%);
+    translate: -100% 0;
+    pointer-events: none;
+  }
+  .ui-btn--primary:hover:not(:disabled)::after {
+    translate: 100% 0;
+    transition: translate 0.7s var(--ease-out);
+  }
+  html.fx-off .ui-btn--primary::after {
+    display: none;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .ui-btn--primary::after { display: none; }
   }
   .ui-btn--success {
     color: var(--fg-hi);

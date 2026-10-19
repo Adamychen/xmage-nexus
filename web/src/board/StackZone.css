@@ -275,8 +275,8 @@ html.fx-off .stack-tl-node.node-top {
 
 /* ── Thumbnail ── */
 .stack-thumb {
-  width: 34px;
-  height: 48px;
+  width: calc(var(--sp-6) * 3);
+  aspect-ratio: 2 / 1;
   border-radius: var(--r-xs);
   overflow: hidden;
   flex-shrink: 0;
@@ -451,6 +451,48 @@ html.fx-off .stack-tl-node.node-top {
   font-size: var(--fs-sm);
 }
 
+/* Stack countdown (C2): while the stack has items, the top entry pulses three
+   times (1 s each) and then rests, and a 2 px bar under it fills over 3 s to show
+   how long the stack has waited. The bar is keyed on the top card id, so it
+   restarts when the top changes. Neither resolves or hides the card: the server
+   decides when it leaves the stack. The pulse is finite (no infinite feedback
+   loop); the rest state is scale 1. `scale` on the body (not `transform`) keeps
+   the card's own animations free. */
+@keyframes stackTopPulse {
+  0%, 100% { scale: 1; }
+  50% { scale: 1.02; }
+}
+
+.stack-tl-entry.stack-top-pulse > .stack-tl-body {
+  animation: stackTopPulse calc(1s / var(--fx-speed, 1)) ease-in-out 3;
+}
+
+.stack-top-wait-bar {
+  display: block;
+  height: 2px;
+  margin-top: var(--sp-1);
+  border-radius: var(--r-2xs);
+  background: var(--ok);
+  transform: scaleX(0);
+  transform-origin: left center;
+}
+
+@keyframes stackTopFill {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+.stack-tl-entry.stack-top-pulse .stack-top-wait-bar {
+  animation: stackTopFill calc(3s / var(--fx-speed, 1)) linear forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stack-tl-entry.stack-top-pulse > .stack-tl-body,
+  .stack-tl-entry.stack-top-pulse .stack-top-wait-bar {
+    animation: none;
+  }
+}
+
 /* ── Deprecated selectors kept for test compatibility ── */
 .stack-item--top,
 .stack-item.is-top,
@@ -459,4 +501,26 @@ html.fx-off .stack-tl-node.node-top {
 
 .stack-tl-entry.is-top {
   /* Also acts as .stack-item--top for tests */
+}
+
+/* Identical entries stack into one row with ×N; clicking it fans the copies out
+   below so each one stays selectable. */
+.stack-tl-entry.is-group {
+  cursor: pointer;
+}
+
+.stack-tl-entry.stack-tl-sub {
+  opacity: 0.9;
+  margin-left: var(--sp-3h);
+}
+
+.stack-tl-entry.stack-tl-sub .stack-tl-card {
+  padding: var(--sp-1) var(--sp-2h);
+}
+
+/* A collapsed group reads as a pile: the cards beneath peek out below the
+   bottom edge of the top card, so ×N is visible at a glance. */
+.stack-tl-entry.is-group:not(.is-open) .stack-tl-card {
+  margin-bottom: var(--sp-3);
+  box-shadow: 0 var(--sp-1) 0 var(--veil-5), 0 var(--sp-2) 0 var(--veil-4), 0 var(--sp-3) 0 var(--veil-3);
 }

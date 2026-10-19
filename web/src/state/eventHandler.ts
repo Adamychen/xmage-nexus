@@ -1,3 +1,4 @@
+import { captureRewind } from '../game/rewind'
 import type { ProxyMessage } from '../net/types'
 import { parseFeedback } from '../game/feedback'
 import { getState, setState, addLog } from './state'
@@ -184,6 +185,7 @@ function handleEvent(method: string, objectId: string | null, data: unknown, mes
         // combate viejos hay que tirarlos para que lleguen los frescos.
         ...(rollbackRestored ? { feedback: null, playableIds: [], playableWindow: null, combat: null } : null),
       })
+      if (s.settings.boardRewind) captureRewind(objectId ?? s.gameId ?? null, getState().game)
       if (rollbackRestored) {
         addLog('partida', `Rollback aplicado: la mesa vuelve al turno ${embeddedGame.turn}`)
         applyRollbackOutcome(objectId ?? s.gameId, embeddedGame.turn)

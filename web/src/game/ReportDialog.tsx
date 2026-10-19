@@ -10,7 +10,7 @@ import { useTranslation } from '../i18n'
 import { addLog, getState } from '../state/state'
 import { sendReport } from '../net/commands'
 import { downloadBlob } from '../utils/download'
-import { buildReport, reportToMarkdown, type ReportKind } from '../system/report'
+import { buildReport, githubIssueUrl, isLocalProxy, reportToMarkdown, type ReportKind } from '../system/report'
 import './ReportDialog.css'
 
 export interface ReportDialogProps {
@@ -38,6 +38,7 @@ export default function ReportDialog({ initialText = '', kind = 'bug', onClose }
   useEscape(onClose)
 
   const connected = getState().wsAlive === true
+  const localProxy = isLocalProxy(getState().wsUrl)
 
   const draft = () => {
     const built = buildReport(tab, text.trim())
@@ -52,11 +53,20 @@ export default function ReportDialog({ initialText = '', kind = 'bug', onClose }
     const res = await sendReport(built)
     if (res.ok && res.ack.stored) {
       addLog('system', `report sent (${res.ack.id ?? '?'})`)
-      setStatus({ phase: 'sent', stored: true, detail: `${t('system', 'report_sent')} ${res.ack.id ?? ''}`.trim() })
+      const key = localProxy ? 'report_saved_local' : 'report_sent'
+      setStatus({ phase: 'sent', stored: true, detail: `${t('system', key)} ${res.ack.id ?? ''}`.trim() })
       return
     }
     const reason = res.ok ? (res.ack.reason ?? 'not stored') : (res.error ?? 'not sent')
-    setStatus({ phase: 'sent', stored: false, detail: reason })
+    setStatus({ phase: 'sent', stored: false, detail: refusalMessage(reason) })
+  }
+
+  const refusalMessage = (reason: string): string => {
+    if (reason === 'rate') return t('system', 'report_rate')
+    if (reason === 'duplicate') return t('system', 'report_duplicate')
+    if (reason === 'quota') return t('system', 'report_quota')
+    if (reason === 'too-large' || reason.startsWith('report too large')) return t('system', 'report_too_large')
+    return reason
   }
 
   const copy = async () => {
@@ -71,6 +81,12 @@ export default function ReportDialog({ initialText = '', kind = 'bug', onClose }
       setStatus({ phase: 'idle' })
     }
   }
+
+  const openGithub = () => {
+    void navigator.clipboard?.writeText(reportToMarkdown(draft())).catch(() => undefined)
+  }
+
+  const showGithub = localProxy || (status.phase === 'sent' && !status.stored)
 
   const download = () => {
     const built = draft()
@@ -101,6 +117,19 @@ export default function ReportDialog({ initialText = '', kind = 'bug', onClose }
             <Button size="sm" variant="ghost" data-testid="report-download" onClick={download}>
               <Icon name="download" size={12} /> {t('system', 'report_download')}
             </Button>
+            {showGithub && (
+              <a
+                className="ui-btn ui-btn--ghost ui-btn--sm"
+                data-testid="report-github"
+                href={githubIssueUrl(draft())}
+                target="_blank"
+                rel="noreferrer"
+                title={t('system', 'report_github_hint')}
+                onClick={openGithub}
+              >
+                <Icon name="send" size={12} /> {t('system', 'report_github')}
+              </a>
+            )}
           </div>
           <div className="report-actions-primary">
             <Button size="sm" variant="ghost" onClick={onClose}>

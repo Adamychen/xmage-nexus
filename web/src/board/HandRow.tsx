@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import type { CardView } from '../net/types'
 import CardSlot from './CardSlot'
 import IconButton from '../ui/IconButton'
@@ -6,7 +6,9 @@ import { activeCardFace } from './cardFaces'
 import RenderedCard from '../cards/rendered/RenderedCard'
 import { useSettings } from '../state/store'
 import { useTranslation } from '../i18n'
+import { useDrawSlide } from './useDrawSlide'
 import './HandRow.css'
+import './drawSlide.css'
 
 interface HandRowProps {
   cards: Record<string, CardView>
@@ -30,9 +32,12 @@ export default function HandRow({ cards, onCardClick, playableIds = new Set(), t
       if (!next.delete(id)) next.add(id)
       return next
     })
+  const rootRef = useRef<HTMLDivElement>(null)
+  const drawn = useDrawSlide(rootRef, entries.map(([id]) => id), true, { scope: '.board-shell', select: '.resource-bar.my .library-chip, .resource-bar.my .library-stack' })
   if (entries.length === 0) return null
   return (
     <div
+      ref={rootRef}
       className="hand-row"
       data-testid="hand-row"
       data-hand-count={entries.length}
@@ -44,13 +49,15 @@ export default function HandRow({ cards, onCardClick, playableIds = new Set(), t
         const playable = playableIds.has(id)
         const target = targetIds.has(id)
         const state = `${playable ? ' playable' : ''}${target ? ' targetable' : ''}`
+        const draw = drawn.get(id)
+        const drawClass = draw ? ` draw-${draw}` : ''
         if (cardRender === 'rendered') {
           return (
             <div
               key={id}
               role={onCardClick ? 'button' : 'listitem'}
               tabIndex={onCardClick ? 0 : undefined}
-              className={`hand-row-card hand-row-card--rendered${state}`}
+              className={`hand-row-card hand-row-card--rendered${state}${drawClass}`}
               data-hand-id={id}
               onClick={onCardClick ? () => onCardClick(id) : undefined}
               onKeyDown={onCardClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onCardClick(id) } } : undefined}
@@ -73,7 +80,7 @@ export default function HandRow({ cards, onCardClick, playableIds = new Set(), t
           )
         }
         return (
-          <div key={id} role="listitem" className={`hand-row-card${state}`} data-hand-id={id}>
+          <div key={id} role="listitem" className={`hand-row-card${state}${drawClass}`} data-hand-id={id}>
             <CardSlot
               cardId={id}
               card={card}

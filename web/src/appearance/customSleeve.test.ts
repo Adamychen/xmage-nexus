@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { CUSTOM_SLEEVE_KEY, clearCustomSleeve, coverCrop, getCustomSleeve, setCustomSleeve } from './customSleeve'
 import { getSleeveDef, isValidSleeveId } from './sleeves'
-import { resolveSleeveFor } from './useSleeve'
+import { ownPlayerId, resolveSleeveFor } from './useSleeve'
 
 const PNG = 'data:image/png;base64,iVBORw0KGgo='
 
@@ -84,5 +84,24 @@ describe('coverCrop', () => {
     expect(c.sh).toBeCloseTo(500 * 520 / 372)
     expect(c.sx).toBe(0)
     expect(c.sy).toBeCloseTo((2000 - c.sh) / 2)
+  })
+})
+
+describe('own player id fallback', () => {
+  it('uses myPlayerId when the server sends it', () => {
+    expect(ownPlayerId({ myPlayerId: 'me', players: [{ playerId: 'x', controlled: true }] })).toBe('me')
+  })
+
+  it('falls back to the controlled player when myPlayerId is missing', () => {
+    const game = { myPlayerId: null, players: [{ playerId: 'opp' }, { playerId: 'me', controlled: true }] }
+    const id = ownPlayerId(game)
+    expect(id).toBe('me')
+    expect(resolveSleeveFor('me', id, 'custom', PNG).imageUrl).toBe(PNG)
+    expect(resolveSleeveFor('opp', id, 'custom', PNG).id).toBe('classic')
+  })
+
+  it('yields no id for spectators', () => {
+    expect(ownPlayerId({ myPlayerId: null, players: [{ playerId: 'a' }] })).toBeUndefined()
+    expect(ownPlayerId(null)).toBeUndefined()
   })
 })

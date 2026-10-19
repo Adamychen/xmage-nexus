@@ -218,8 +218,29 @@
 }
 
 .player-slot.winner {
+  position: relative;
+  overflow: hidden;
   border-color: rgb(var(--gold-rgb) / 0.3);
   background: rgb(var(--gold-rgb) / 0.04);
+  box-shadow: inset 0 0 0 1px rgb(var(--gold-rgb) / 0.12), 0 0 18px rgb(var(--gold-rgb) / 0.12);
+}
+.player-slot.winner::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 40%, rgb(var(--gold-rgb) / 0.22) 50%, transparent 60%);
+  translate: -100% 0;
+  animation: winnerSheen 1.1s var(--ease-out) 0.2s 1 both;
+  pointer-events: none;
+}
+@keyframes winnerSheen {
+  to { translate: 100% 0; }
+}
+html.fx-off .player-slot.winner::after {
+  display: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .player-slot.winner::after { display: none; }
 }
 
 .player-slot.right {
@@ -352,3 +373,15 @@
   font-size: var(--fs-sm);
 }
 
+
+.matches-replay-open {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+
+.matches-replay-error {
+  color: var(--err-strong);
+  font-size: var(--fs-xs);
+}

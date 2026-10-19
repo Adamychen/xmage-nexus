@@ -1,5 +1,7 @@
+import { getState, setState } from '../state/state'
 import { parseFeedback, type FeedbackCard, type FeedbackPrompt } from '../game/feedback'
 import { TOP_CARD_PEEK_NAME } from '../game/topCardPeek'
+import { landTapColor } from '../board/compactCard'
 import type {
   CardView,
   GameView,
@@ -77,10 +79,20 @@ export type GalleryScreenName =
   | 'gameend'
   | 'cards'
 
+/** Acción de dev de una entrada: un botón en el sidebar que modifica el estado de la galería. */
+export interface GalleryAction {
+  label: string
+  /** Transforma el `game` del store (p. ej. añadir una carta a la mano). */
+  apply?: (game: GameView) => GameView
+  /** Efecto directo sobre el DOM o el store cuando no basta con `apply`. */
+  run?: () => void
+}
+
 export interface GalleryEntry {
   id: string
   group: string
   label: string
+  action?: GalleryAction
   description?: string
   phase?: 'idle' | 'connecting' | 'lobby' | 'game'
   /** Pantalla no cubierta por `game`/`login`: lobby, editor de mazos, draft, construct, torneo… */
@@ -455,8 +467,8 @@ function withClonedOpponent(game: GameView, src: PlayerView | undefined, suffix:
 function withHandSize(game: GameView, size: number): GameView {
   const hand = (game.myHand ?? {}) as Record<string, unknown>
   const entries = Object.entries(hand)
-  if (entries.length === 0 || entries.length >= size) return game
-  const next: Record<string, unknown> = { ...hand }
+  if (entries.length === 0 || entries.length === size) return game
+  const next: Record<string, unknown> = entries.length > size ? Object.fromEntries(entries.slice(0, size)) : { ...hand }
   let i = 0
   while (Object.keys(next).length < size) {
     const [id, card] = entries[i % entries.length]
@@ -536,8 +548,300 @@ const FOUR_PLAYER_GAME = GANG_BLOCK_FRAME
 const CROWDED_POD_GAME = FOUR_PLAYER_GAME ? withCrowdedBattlefields(FOUR_PLAYER_GAME, 16, 14) : null
 const THREE_PLAYER_COMMANDER = COMMANDER_FRAME?.gameView ?? null
 const HAND_15_GAME = GANG_BLOCK_FRAME ? withHandSize(GANG_BLOCK_FRAME.gameView, 15) : null
+const HAND_12_GAME = GANG_BLOCK_FRAME ? withHandSize(GANG_BLOCK_FRAME.gameView, 12) : null
+const HAND_3_GAME = GANG_BLOCK_FRAME ? withHandSize(GANG_BLOCK_FRAME.gameView, 3) : null
+const HAND_8_GAME = GANG_BLOCK_FRAME ? withHandSize(GANG_BLOCK_FRAME.gameView, 8) : null
 const LONG_NAMES_GAME = GANG_BLOCK_FRAME ? withLongNames(GANG_BLOCK_FRAME.gameView) : null
 const TOP_CARD_PEEK_GAME = GANG_BLOCK_FRAME ? withTopCardPeek(GANG_BLOCK_FRAME.gameView) : null
+
+function drawOneCard(game: GameView): GameView {
+  const hand = (game.myHand ?? {}) as Record<string, unknown>
+  const sample = Object.values(hand)[0]
+  if (!sample) return game
+  const sampleId = String((sample as { id?: unknown }).id ?? '')
+  const id = `gallery-drawn-${Date.now()}`
+  const card = { ...(remapIds(sample, (v) => (v === sampleId ? id : undefined)) as MutableRecord), id }
+  const me = controlledPlayer(game)
+  return {
+    ...game,
+    myHand: { ...hand, [id]: card } as GameView['myHand'],
+    players: players(game).map((p) => (p === me ? { ...p, handCount: (p.handCount ?? 0) + 1 } : p)),
+  }
+}
+
+function passPriority(game: GameView): GameView {
+  const all = players(game)
+  const holder = all.find((p) => p.hasPriority)
+  const next = all.find((p) => p !== holder)
+  if (!next) return game
+  return {
+    ...game,
+    priorityPlayerName: next.name,
+    players: all.map((p) => (p === holder ? { ...p, hasPriority: false } : p === next ? { ...p, hasPriority: true } : p)),
+  }
+}
+
+const LAND_POOL_KEY: Record<string, keyof PlayerView['manaPool']> = {
+  W: 'white', U: 'blue', B: 'black', R: 'red', G: 'green', C: 'colorless',
+}
+
+function tapOneLand(game: GameView): GameView {
+  const me = controlledPlayer(game)
+  const landId = landIds(me).find((id) => !me?.battlefield?.[id]?.tapped)
+  if (!me || !landId) return game
+  const land = me.battlefield?.[landId]
+  const color = land ? landTapColor(land as CardView) : null
+  const poolKey = color ? LAND_POOL_KEY[color] : undefined
+  const pool = poolKey
+    ? { ...me.manaPool, [poolKey]: (me.manaPool?.[poolKey] ?? 0) + 1 }
+    : me.manaPool
+  return {
+    ...game,
+    players: players(game).map((p) => (p === me
+      ? { ...p, manaPool: pool, battlefield: { ...p.battlefield, [landId]: { ...p.battlefield?.[landId], tapped: true } } }
+      : p)) as PlayerView[],
+  }
+}
+
+function withIdenticalSpellPile(game: GameView): GameView {
+  const me = controlledPlayer(game)
+  const controller = { controllerId: me?.playerId, controllerName: me?.name }
+  const copy = (id: string) => ({ id, name: 'Lightning Bolt', expansionSetCode: '2XM', cardNumber: '129', cardTypes: ['INSTANT'], ...controller })
+  return {
+    ...game,
+    stack: {
+      'gallery-pile-1': copy('gallery-pile-1'),
+      'gallery-pile-2': copy('gallery-pile-2'),
+      'gallery-pile-3': copy('gallery-pile-3'),
+    } as unknown as GameView['stack'],
+  }
+}
+
+function pushStackEntry(game: GameView): GameView {
+  const me = controlledPlayer(game)
+  const id = 'gallery-push-' + Date.now()
+  const spell = { id, name: 'Lightning Bolt', expansionSetCode: '2XM', cardNumber: '129', cardTypes: ['INSTANT'], controllerId: me?.playerId, controllerName: me?.name }
+  return { ...game, stack: { [id]: spell, ...(game.stack ?? {}) } as unknown as GameView['stack'] }
+}
+
+function withMixedStackKinds(game: GameView): GameView {
+  const me = controlledPlayer(game)
+  const controller = { controllerId: me?.playerId, controllerName: me?.name }
+  const stack = {
+    'gallery-kind-trigger': { id: 'gallery-kind-trigger', name: 'Soul Warden', mageObjectType: 'TRIGGERED_ABILITY', abilityType: 'Triggered', rules: ['You gain 1 life.'], sourceCard: { name: 'Soul Warden', ...controller }, ...controller },
+    'gallery-kind-spell': { id: 'gallery-kind-spell', name: 'Lightning Bolt', expansionSetCode: '2XM', cardNumber: '129', cardTypes: ['INSTANT'], ...controller },
+    'gallery-kind-creature': { id: 'gallery-kind-creature', name: 'Mystic Snake', expansionSetCode: 'MH2', cardNumber: '50', cardTypes: ['CREATURE'], power: 2, toughness: 2, ...controller },
+  }
+  return { ...game, stack: stack as unknown as GameView['stack'] }
+}
+
+function withSpellStack(game: GameView): GameView {
+  const spell = (id: string, name: string) => ({ id, name, expansionSetCode: '2XM', cardNumber: '129', cardTypes: ['Instant'] })
+  return {
+    ...game,
+    stack: {
+      'gallery-stack-top': spell('gallery-stack-top', 'Lightning Bolt'),
+      'gallery-stack-below': spell('gallery-stack-below', 'Counterspell'),
+    } as unknown as GameView['stack'],
+  }
+}
+
+function simulateTargetDamage(): void {
+  const card = document.querySelector<HTMLElement>('[data-gallery-stage] .card-slot.targetable')
+  if (!card) return
+  card.classList.remove('took-damage')
+  void card.offsetWidth
+  card.classList.add('took-damage')
+  window.setTimeout(() => card.classList.remove('took-damage'), 1500)
+}
+
+/** Sin combate: ningún atacante mueve ni tapa cartas por su cuenta, así cada acción de galería es la única causa. */
+function calmGame(game: GameView): GameView {
+  return { ...game, combat: [] }
+}
+
+function mapControlled(game: GameView, fn: (player: PlayerView) => PlayerView): GameView {
+  const me = controlledPlayer(game)
+  return { ...game, players: players(game).map((p) => (p === me ? fn(p) : p)) }
+}
+
+function setControlledTapped(game: GameView, tapped: boolean): GameView {
+  return mapControlled(game, (p) => ({
+    ...p,
+    battlefield: Object.fromEntries(
+      Object.entries(p.battlefield ?? {}).map(([id, perm]) => [id, { ...perm, tapped }]),
+    ),
+  }))
+}
+
+function withLife(game: GameView, life: number): GameView {
+  return mapControlled(game, (p) => ({ ...p, life }))
+}
+
+function loseLife(game: GameView, amount: number): GameView {
+  return mapControlled(game, (p) => ({ ...p, life: (p.life ?? 0) - amount }))
+}
+
+function addSoldierToken(game: GameView): GameView {
+  const id = `gallery-token-${Date.now()}`
+  const token = {
+    id,
+    name: 'Soldier',
+    displayName: 'Soldier',
+    manaValue: 0,
+    cardTypes: ['Creature'],
+    subtypes: ['Soldier'],
+    power: '1',
+    toughness: '1',
+    isToken: true,
+    tapped: false,
+  }
+  return mapControlled(game, (p) => ({
+    ...p,
+    battlefield: { ...p.battlefield, [id]: token },
+  }))
+}
+
+let galleryCreatureSeq = 0
+
+function addSickCreature(game: GameView): { game: GameView; id: string } {
+  galleryCreatureSeq += 1
+  const id = `gallery-creature-${galleryCreatureSeq}`
+  const creature = {
+    id,
+    name: 'Grizzly Bears',
+    displayName: 'Grizzly Bears',
+    manaValue: 2,
+    cardTypes: ['Creature'],
+    subtypes: ['Bear'],
+    power: '2',
+    toughness: '2',
+    tapped: false,
+    summoningSickness: true,
+  }
+  return {
+    id,
+    game: mapControlled(game, (p) => ({
+      ...p,
+      battlefield: { ...p.battlefield, [id]: creature },
+    })),
+  }
+}
+
+function sendToGraveyard(game: GameView, id: string): GameView {
+  return mapControlled(game, (p) => {
+    const perm = p.battlefield?.[id]
+    if (!perm) return p
+    const battlefield = { ...p.battlefield }
+    delete battlefield[id]
+    return { ...p, battlefield, graveyard: { ...p.graveyard, [id]: perm } }
+  })
+}
+
+function addDamage(game: GameView, id: string, amount: number): GameView {
+  return mapControlled(game, (p) => {
+    const perm = p.battlefield?.[id]
+    if (!perm) return p
+    return { ...p, battlefield: { ...p.battlefield, [id]: { ...perm, damage: (perm.damage ?? 0) + amount } } }
+  })
+}
+
+function bolt(id: string, controller: PlayerView | undefined): CardView {
+  return {
+    id,
+    name: 'Lightning Bolt',
+    displayName: 'Lightning Bolt',
+    expansionSetCode: '2XM',
+    cardNumber: '129',
+    manaValue: 1,
+    cardTypes: ['Instant'],
+    rules: ['Lightning Bolt deals 3 damage to any target.'],
+    controllerId: controller?.playerId,
+    controllerName: controller?.name,
+  }
+}
+
+/** Resuelve un hechizo de daño contra el jugador controlado: sale de la pila, va al cementerio de su controlador y la vida baja 3. */
+function resolveDamageSpellAtMe(game: GameView, spellId: string, amount: number): GameView {
+  const spell = game.stack?.[spellId]
+  const me = controlledPlayer(game)
+  if (!spell || !me) return game
+  const stack = { ...(game.stack ?? {}) }
+  delete stack[spellId]
+  return {
+    ...game,
+    stack,
+    players: players(game).map((p) => {
+      if (p === me) return { ...p, life: (p.life ?? 0) - amount }
+      if (p.playerId === spell.controllerId) return { ...p, graveyard: { ...p.graveyard, [spellId]: spell } }
+      return p
+    }),
+  }
+}
+
+function withInstantInHand(game: GameView): GameView {
+  const me = controlledPlayer(game)
+  const id = 'gallery-instant-hand'
+  return {
+    ...game,
+    myHand: { ...(game.myHand ?? {}), [id]: bolt(id, me) },
+    players: players(game).map((p) => (p === me ? { ...p, handCount: (p.handCount ?? 0) + 1 } : p)),
+  }
+}
+
+function removeFromHand(game: GameView, predicate: (card: CardView) => boolean): { id: string; hand: GameView['myHand']; card: CardView } | null {
+  const hand = { ...(game.myHand ?? {}) }
+  const id = Object.keys(hand).find((key) => hand[key] && predicate(hand[key]))
+  if (!id) return null
+  const card = hand[id]
+  delete hand[id]
+  return { id, hand, card }
+}
+
+const isType = (type: string) => (card: CardView) => (card.cardTypes ?? []).some((t) => String(t).toLowerCase() === type)
+
+/** Mueve la primera instantánea de la mano a la pila, con controller = yo. */
+function castFirstInstant(game: GameView): GameView {
+  const me = controlledPlayer(game)
+  const taken = removeFromHand(game, isType('instant'))
+  if (!me || !taken) return game
+  return {
+    ...game,
+    myHand: taken.hand,
+    stack: { ...(game.stack ?? {}), [taken.id]: { ...taken.card, controllerId: me.playerId, controllerName: me.name } },
+    players: players(game).map((p) => (p === me ? { ...p, handCount: Math.max(0, (p.handCount ?? 0) - 1) } : p)),
+  }
+}
+
+/** Mueve la primera tierra de la mano al campo del jugador controlado. */
+function playFirstLand(game: GameView): GameView {
+  const me = controlledPlayer(game)
+  const taken = removeFromHand(game, isType('land'))
+  if (!me || !taken) return game
+  return {
+    ...game,
+    myHand: taken.hand,
+    players: players(game).map((p) => (p === me
+      ? { ...p, handCount: Math.max(0, (p.handCount ?? 0) - 1), battlefield: { ...p.battlefield, [taken.id]: { ...taken.card, tapped: false } } }
+      : p)),
+  }
+}
+
+function targetPlayerPrompt(game: GameView, gameId: string, playerId: string, required: boolean): FeedbackPrompt {
+  const target = players(game).find((p) => p.playerId === playerId)
+  return {
+    method: 'GAME_TARGET',
+    gameId,
+    title: 'Select target player',
+    message: required ? 'Select target player' : 'Select up to one target player',
+    mode: 'uuid',
+    options: [{ id: playerId, label: target?.name ?? playerId, value: playerId }],
+    min: 1,
+    max: 1,
+    required,
+    sourceName: 'Lightning Bolt',
+  }
+}
 
 function withTopCardPeek(gv: GameView): GameView {
   const top = Object.values(gv.myHand ?? {})[0]
@@ -1028,6 +1332,265 @@ export function buildGalleryEntries(): GalleryEntry[] {
         playableIds: p.playableIds,
       })
     }
+
+    entries.push({
+      id: 'anim:draw-slide',
+      group: 'Animaciones',
+      label: 'Robo: deslizar desde biblioteca',
+      description: 'Pulsa "Robar carta": aparece una carta nueva en tu mano y debe deslizar desde la biblioteca.',
+      phase: 'game',
+      game,
+      gameId,
+      action: { label: 'Robar carta', apply: drawOneCard },
+    })
+    entries.push({
+      id: 'anim:priority-orb',
+      group: 'Animaciones',
+      label: 'Prioridad: orbe',
+      description: 'Pulsa "Pasar prioridad": el orbe dorado debe viajar del avatar que tenía prioridad al nuevo.',
+      phase: 'game',
+      game,
+      gameId,
+      action: { label: 'Pasar prioridad', apply: passPriority },
+    })
+    entries.push({
+      id: 'anim:target-damage',
+      group: 'Animaciones',
+      label: 'Objetivo: daño (beacon + shake)',
+      description: 'Pulsa el botón: la carta objetivo recibe la clase took-damage y debe mostrar beacon, shake y flash a la vez.',
+      phase: 'game',
+      game,
+      gameId,
+      feedback: targetPrompt(game, gameId, true),
+      action: { label: 'Simular daño en objetivo', run: simulateTargetDamage },
+    })
+    entries.push({
+      id: 'anim:mana-tap',
+      group: 'Animaciones',
+      label: 'Land: mana pulse + particle (A2)',
+      description: 'Press "Tap land": an untapped land turns tapped, shows a ring in its color (one pulse) and sends one particle to its controller\'s mana pool.',
+      phase: 'game',
+      game,
+      gameId,
+      action: { label: 'Tap land', apply: tapOneLand },
+    })
+    entries.push({
+      id: 'stack:identical-pile',
+      group: 'Pila',
+      label: 'Stack: identical spells pile',
+      description: 'Three identical instants from the same controller, no targets: they fold into one row with ×3 and the cards beneath peek out below the top one.',
+      phase: 'game',
+      game: withIdenticalSpellPile(game),
+      gameId,
+    })
+    entries.push({
+      id: 'stack:entry-animation',
+      group: 'Pila',
+      label: 'Stack: entry animation (press the button)',
+      description: 'Each press puts a new spell on top of the pile: the new top card and its tab ease in. Press it to replay the entry animation.',
+      phase: 'game',
+      game: withIdenticalSpellPile(game),
+      gameId,
+      action: { label: 'Lanzar hechizo a la pila', apply: pushStackEntry },
+    })
+    entries.push({
+      id: 'stack:mixed-kinds',
+      group: 'Pila',
+      label: 'Stack: triggered ability, spell, creature cast',
+      description: 'One triggered ability, one instant and one creature spell: each row names its kind (habilidad disparada, hechizo, criatura).',
+      phase: 'game',
+      game: withMixedStackKinds(game),
+      gameId,
+    })
+    entries.push({
+      id: 'anim:stack-countdown',
+      group: 'Animaciones',
+      label: 'Stack: top-card countdown',
+      description: 'Two spells on the stack: the top card pulses and a 2 px bar fills over 3 s. Nothing resolves visually.',
+      phase: 'game',
+      game: withSpellStack(game),
+      gameId,
+    })
+
+    const animBase = calmGame(game)
+    const mystic = creatureIds(me)[0] ?? ''
+    const tappedBoard = setControlledTapped(animBase, true)
+    const opponentOfBase = opponentPlayer(animBase)
+    const fourPlayers = calmGame(FOUR_PLAYER_GAME ?? game)
+    const opponentOfFour = opponentPlayer(fourPlayers)?.playerId ?? ''
+
+    entries.push({
+      id: 'anim:untap-wave',
+      group: 'Animaciones',
+      label: 'Board: untap wave (B5)',
+      description: 'Press "Untap all": every tapped permanent of yours untaps in a 40 ms stagger (the wave), no attacker involved.',
+      phase: 'game',
+      game: tappedBoard,
+      gameId,
+      action: { label: 'Untap all', apply: (g) => setControlledTapped(g, false) },
+    })
+    entries.push({
+      id: 'anim:life-5',
+      group: 'Animaciones',
+      label: 'Life: 5 (low-life vignette)',
+      description: 'Press to set your life to 5: the low-life vignette turns on (active, slow pulse).',
+      phase: 'game',
+      game: animBase,
+      gameId,
+      action: { label: 'Poner mi vida a 5', apply: (g) => withLife(g, 5) },
+    })
+    entries.push({
+      id: 'anim:life-2',
+      group: 'Animaciones',
+      label: 'Life: 2 (critical vignette)',
+      description: 'Press to set your life to 2: the vignette turns critical (stronger, faster pulse).',
+      phase: 'game',
+      game: animBase,
+      gameId,
+      action: { label: 'Poner mi vida a 2', apply: (g) => withLife(g, 2) },
+    })
+    entries.push({
+      id: 'anim:life-6',
+      group: 'Animaciones',
+      label: 'Life: 6 (no vignette)',
+      description: 'Your life is 6: nothing should render. No action.',
+      phase: 'game',
+      game: withLife(animBase, 6),
+      gameId,
+    })
+    entries.push({
+      id: 'anim:token-pop',
+      group: 'Animaciones',
+      label: 'Token: pop (D3)',
+      description: 'Press "Añadir ficha Soldado": only the new token pops (spring scale) and a burst of six dots flies out of it. Existing permanents stay still.',
+      phase: 'game',
+      game: animBase,
+      gameId,
+      action: { label: 'Añadir ficha Soldado', apply: addSoldierToken },
+    })
+    entries.push({
+      id: 'anim:sickness',
+      group: 'Animaciones',
+      label: 'Sickness: badge on a new creature (summoning sickness)',
+      description: 'Press "Invocar criatura": a new creature with summoning sickness enters your battlefield and its badge floats (sicknessFloat loops forever).',
+      phase: 'game',
+      game: animBase,
+      gameId,
+      action: { label: 'Invocar criatura', apply: (g) => addSickCreature(g).game },
+    })
+    entries.push({
+      id: 'anim:entered-glow',
+      group: 'Animaciones',
+      label: 'Entered: gold glow on a new creature (enteredGlow)',
+      description: 'Press "Entrar criatura": a new creature enters your battlefield marked as entered this turn, so it shows the gold glow (enteredGlow loops forever).',
+      phase: 'game',
+      game: animBase,
+      gameId,
+      action: {
+        label: 'Entrar criatura',
+        run: () => {
+          const game = getState().game
+          if (!game) return
+          const { id, game: next } = addSickCreature(game)
+          setState({ game: next, enteredThisTurn: { [id]: true as const } })
+        },
+      },
+    })
+    entries.push({
+      id: 'anim:dissolve',
+      group: 'Animaciones',
+      label: 'Graveyard: dissolve (D4)',
+      description: 'Press to send Elvish Mystic to your graveyard: a ghost copy fades out over 300 ms where it stood.',
+      phase: 'game',
+      game: animBase,
+      gameId,
+      action: { label: 'Enviar Elvish Mystic al cementerio', apply: (g) => sendToGraveyard(g, mystic) },
+    })
+    entries.push({
+      id: 'anim:stack-trail',
+      group: 'Animaciones',
+      label: 'Stack: gold trail (A1 spell)',
+      description: 'Press to cast the first instant from your hand: it flies to the stack with the gold trail.',
+      phase: 'game',
+      game: withInstantInHand(animBase),
+      gameId,
+      action: { label: 'Lanzar primer instantáneo', apply: castFirstInstant },
+    })
+    entries.push({
+      id: 'anim:land-slide',
+      group: 'Animaciones',
+      label: 'Land: slide (A1 land)',
+      description: 'Press to play a land from your hand: it slides sideways onto the battlefield (flight-land).',
+      phase: 'game',
+      game: animBase,
+      gameId,
+      action: { label: 'Jugar tierra', apply: playFirstLand },
+    })
+    entries.push({
+      id: 'anim:creature-damage',
+      group: 'Animaciones',
+      label: 'Creature: damage number (A3)',
+      description: 'Press to deal 3 damage to your creature: a "-3" floats over it for about 700 ms.',
+      phase: 'game',
+      game: animBase,
+      gameId,
+      action: { label: 'Causar 3 de daño a criatura', apply: (g) => addDamage(g, mystic, 3) },
+    })
+    entries.push({
+      id: 'anim:player-damage',
+      group: 'Animaciones',
+      label: 'Player: damage spell (A3, -3)',
+      description: 'A Lightning Bolt leaves the stack while your life drops by 3: one "-3" inside your info bar.',
+      phase: 'game',
+      game: { ...animBase, stack: { 'gallery-bolt-stack': bolt('gallery-bolt-stack', opponentOfBase) } },
+      gameId,
+      action: { label: 'Resolver hechizo de daño', apply: (g) => resolveDamageSpellAtMe(g, 'gallery-bolt-stack', 3) },
+    })
+    entries.push({
+      id: 'anim:player-life-loss',
+      group: 'Animaciones',
+      label: 'Player: life loss without spell (A3, none)',
+      description: 'Life drops by 2 with no spell on the stack: no "-2" and no took-damage shake.',
+      phase: 'game',
+      game: animBase,
+      gameId,
+      action: { label: 'Perder 2 de vida (sin hechizo)', apply: (g) => loseLife(g, 2) },
+    })
+    entries.push({
+      id: 'anim:chosen-target',
+      group: 'Animaciones',
+      label: 'Target: chosen creature (static)',
+      description: 'A required target already chosen: static error border, no beacon. Shown on open, no action.',
+      phase: 'game',
+      game: animBase,
+      gameId,
+      feedback: (() => {
+        const prompt = targetPrompt(animBase, gameId, true)
+        return { ...prompt, chosenTargets: [prompt.options[0]?.id ?? ''] }
+      })(),
+    })
+    entries.push({
+      id: 'anim:opp-pill-required',
+      group: 'Animaciones',
+      label: 'Opponent pill: required target (beacon)',
+      description: 'Required GAME_TARGET on an opponent player: the pill in the switcher pulses the gold beacon. Shown on open.',
+      phase: 'game',
+      game: fourPlayers,
+      gameId,
+      boardLayout: 'arena',
+      feedback: targetPlayerPrompt(fourPlayers, gameId, opponentOfFour, true),
+    })
+    entries.push({
+      id: 'anim:opp-pill-optional',
+      group: 'Animaciones',
+      label: 'Opponent pill: optional target (static)',
+      description: 'Optional GAME_TARGET on an opponent player: the pill gets the static targetable border, no beacon. Shown on open.',
+      phase: 'game',
+      game: fourPlayers,
+      gameId,
+      boardLayout: 'arena',
+      feedback: targetPlayerPrompt(fourPlayers, gameId, opponentOfFour, false),
+    })
   }
 
   const slicerFrame = recordedFrames.find((frame) => frame.file === 'slicer.json')
@@ -1447,6 +2010,33 @@ export function buildGalleryEntries(): GalleryEntry[] {
     game: THREE_PLAYER_COMMANDER,
     gameId: COMMANDER_FRAME?.gameId ?? null,
     boardLayout: 'pod',
+  })
+  entries.push({
+    id: 'game:hand-3',
+    group: 'Tablero',
+    label: 'Mano de 3 cartas',
+    description: 'Mano corta (3 cartas) sobre el frame gang-block.',
+    phase: 'game',
+    game: HAND_3_GAME,
+    gameId: GANG_BLOCK_FRAME?.gameId ?? null,
+  })
+  entries.push({
+    id: 'game:hand-8',
+    group: 'Tablero',
+    label: 'Mano de 8 cartas',
+    description: 'Mano media (8 cartas) sobre el frame gang-block.',
+    phase: 'game',
+    game: HAND_8_GAME,
+    gameId: GANG_BLOCK_FRAME?.gameId ?? null,
+  })
+  entries.push({
+    id: 'game:hand-12',
+    group: 'Tablero',
+    label: 'Mano de 12 cartas',
+    description: 'Mano larga (12 cartas) sobre el frame gang-block.',
+    phase: 'game',
+    game: HAND_12_GAME,
+    gameId: GANG_BLOCK_FRAME?.gameId ?? null,
   })
   entries.push({
     id: 'game:hand-15',

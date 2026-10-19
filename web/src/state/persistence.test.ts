@@ -2,6 +2,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   clearActiveDraft,
   clearActiveGame,
+  clearActiveConstruct,
+  loadActiveConstruct,
+  saveActiveConstruct,
+  saveConstructSelection,
+  loadConstructSelection,
   loadActiveDraft,
   loadActiveGame,
   loadConn,
@@ -86,6 +91,64 @@ describe('persistence', () => {
       expect(loadConn()).not.toBeNull()
       saveConn(null)
       expect(loadConn()).toBeNull()
+    })
+
+    it('follows the build quick tunnel when the saved one is a different tunnel', () => {
+      vi.stubEnv('VITE_DEFAULT_PROXY_HOST', 'wss://live-tunnel.trycloudflare.com')
+      try {
+        saveConn({
+          wsHost: 'wss://dead-tunnel.trycloudflare.com',
+          proxyPort: 443,
+          serverHost: 'beta.xmage.today',
+          port: 17171,
+          username: 'alice',
+          password: '',
+          flagName: 'es',
+        })
+        expect(loadConn()).toMatchObject({
+          wsHost: 'wss://live-tunnel.trycloudflare.com',
+          serverHost: 'beta.xmage.today',
+          username: 'alice',
+          flagName: 'es',
+        })
+        expect(JSON.parse(mockStorage['mage-web-conn']).wsHost).toBe('wss://live-tunnel.trycloudflare.com')
+      } finally {
+        vi.unstubAllEnvs()
+      }
+    })
+
+    it('keeps a saved host that is not a quick tunnel', () => {
+      vi.stubEnv('VITE_DEFAULT_PROXY_HOST', 'wss://live-tunnel.trycloudflare.com')
+      try {
+        saveConn({
+          wsHost: 'wss://my-own-proxy.example.org',
+          proxyPort: 443,
+          serverHost: 'beta.xmage.today',
+          port: 17171,
+          username: 'alice',
+          password: '',
+        })
+        expect(loadConn()?.wsHost).toBe('wss://my-own-proxy.example.org')
+      } finally {
+        vi.unstubAllEnvs()
+      }
+    })
+
+    it('keeps a saved tunnel when the build default is not a quick tunnel', () => {
+      vi.stubEnv('VITE_DEFAULT_PROXY_HOST', 'wss://my-own-proxy.example.org')
+      try {
+        saveConn({
+          wsHost: 'wss://dead-tunnel.trycloudflare.com',
+          proxyPort: 443,
+          serverHost: 'beta.xmage.today',
+          port: 17171,
+          username: 'alice',
+          password: '',
+        })
+        expect(loadConn()?.wsHost).toBe('wss://dead-tunnel.trycloudflare.com')
+      } finally {
+        vi.unstubAllEnvs()
+      }
     })
 
     it('migrates legacy format with single host property', () => {
@@ -206,6 +269,117 @@ describe('persistence', () => {
 
       expect(loadActiveDraft()).toBeNull()
       expect(mockStorage['mage-web-active-draft']).toBeUndefined()
+    })
+  })
+
+  describe('active construct persistence', () => {
+    const construct = {
+      deckName: 'Draft Pool',
+      pool: { 'c-1': { id: 'c-1', name: 'Forest' } },
+      tableId: 'table-1',
+      parentTableId: null,
+      timeLeft: 600,
+    }
+
+    afterEach(() => {
+      vi.useRealTimers()
+    })
+
+    it('restores the pending construct with the time left since it was saved', () => {
+      vi.useFakeTimers()
+      vi.setSystemTime(new Date('2026-10-17T10:00:00Z'))
+      saveActiveConstruct(construct)
+      vi.setSystemTime(new Date('2026-10-17T10:02:00Z'))
+      expect(loadActiveConstruct()).toMatchObject({ tableId: 'table-1', deckName: 'Draft Pool', timeLeft: 480 })
+    })
+
+    it('discards a construct whose timer already ran out', () => {
+      vi.useFakeTimers()
+      vi.setSystemTime(new Date('2026-10-17T10:00:00Z'))
+      saveActiveConstruct(construct)
+      vi.setSystemTime(new Date('2026-10-17T10:11:00Z'))
+      expect(loadActiveConstruct()).toBeNull()
+      expect(localStorage.getItem('mage-web-active-construct')).toBeNull()
+    })
+
+    it('discards a construct saved more than an hour ago', () => {
+      vi.useFakeTimers()
+      vi.setSystemTime(new Date('2026-10-17T10:00:00Z'))
+      saveActiveConstruct({ ...construct, timeLeft: 100000 })
+      vi.setSystemTime(new Date('2026-10-17T11:00:01Z'))
+      expect(loadActiveConstruct()).toBeNull()
+    })
+
+    it('clears a snapshot without a table id instead of restoring it', () => {
+      localStorage.setItem('mage-web-active-construct', JSON.stringify({ construct: { ...construct, tableId: '' }, savedAt: Date.now() }))
+      expect(loadActiveConstruct()).toBeNull()
+      expect(localStorage.getItem('mage-web-active-construct')).toBeNull()
+    })
+
+    it('saving null or clearing removes the snapshot', () => {
+      saveActiveConstruct(construct)
+      saveActiveConstruct(null)
+      expect(loadActiveConstruct()).toBeNull()
+      saveActiveConstruct(construct)
+      clearActiveConstruct()
+      expect(loadActiveConstruct()).toBeNull()
+    })
+
+    describe('construct selection', () => {
+      const selection = {
+        main: [{ cardName: 'Forest', setCode: 'DMU', cardNumber: '277', amount: 3 }],
+        pool: [{ cardName: 'Pool Card 100', setCode: 'M21', cardNumber: '101', amount: 1 }],
+      }
+
+      it('restores the saved selection for the same construct table', () => {
+        saveConstructSelection('table-1', selection)
+        expect(loadConstructSelection('table-1')).toEqual(selection)
+      })
+
+      it('returns nothing for a different construct table', () => {
+        saveConstructSelection('table-1', selection)
+        expect(loadConstructSelection('table-2')).toBeNull()
+        expect(loadConstructSelection('')).toBeNull()
+      })
+
+      it('returns nothing when no selection was saved', () => {
+        expect(loadConstructSelection('table-1')).toBeNull()
+      })
+
+      it('drops malformed entries instead of restoring them', () => {
+        localStorage.setItem('mage-web-construct-selection', JSON.stringify({
+          tableId: 'table-1',
+          main: [
+            { cardName: 'Forest', setCode: 'DMU', cardNumber: '277', amount: 2 },
+            { cardName: 'Broken', setCode: 'DMU', cardNumber: '1', amount: 0 },
+            { cardName: 42, setCode: 'DMU', cardNumber: '1', amount: 1 },
+            null,
+          ],
+          pool: 'nope',
+        }))
+        expect(loadConstructSelection('table-1')).toEqual({
+          main: [{ cardName: 'Forest', setCode: 'DMU', cardNumber: '277', amount: 2 }],
+          pool: [],
+        })
+      })
+
+      it('is removed together with the construct snapshot', () => {
+        saveActiveConstruct(construct)
+        saveConstructSelection('table-1', selection)
+        clearActiveConstruct()
+        expect(loadConstructSelection('table-1')).toBeNull()
+        expect(localStorage.getItem('mage-web-construct-selection')).toBeNull()
+      })
+
+      it('is removed when the construct timer ran out', () => {
+        vi.useFakeTimers()
+        vi.setSystemTime(new Date('2026-10-17T10:00:00Z'))
+        saveActiveConstruct(construct)
+        saveConstructSelection('table-1', selection)
+        vi.setSystemTime(new Date('2026-10-17T10:11:00Z'))
+        expect(loadActiveConstruct()).toBeNull()
+        expect(loadConstructSelection('table-1')).toBeNull()
+      })
     })
   })
 

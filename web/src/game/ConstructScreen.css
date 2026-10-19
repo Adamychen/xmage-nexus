@@ -251,3 +251,22 @@
     transition: none;
   }
 }
+
+.construct-col-count {
+  animation: constructCountPop 0.32s var(--ease-out);
+}
+
+@keyframes constructCountPop {
+  from { scale: 1.35; }
+  to { scale: 1; }
+}
+
+html.fx-off .construct-col-count {
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .construct-col-count {
+    animation: none;
+  }
+}

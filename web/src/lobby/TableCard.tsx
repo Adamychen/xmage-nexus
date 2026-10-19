@@ -1,3 +1,4 @@
+import { useRef } from 'react'
 import { openStagingTable } from '../state/store'
 import type { TableView, UsersView } from '../net/types'
 import Icon from '../ui/Icon'
@@ -10,6 +11,9 @@ import { clickableProps } from '../ui/clickable'
 import { fallbackActionUser, formatDeckTypeName, formatSeatHistory, formatTimeAgo, getSkillBadge, isMyTable, stateLabel } from './lobbyUtils'
 import Button from '../ui/Button'
 import { tableOwnerName } from './TableFilterBar'
+import { useCardArtUrl } from '../decks/useCardArtUrl'
+import { tableArtCard } from './tableArt'
+import { usePointerVars } from './usePointerVars'
 
 interface Props {
   tTable: TableView
@@ -66,12 +70,19 @@ export default function TableCard({
     && seats.some((s) => s.playerName?.toLowerCase() === username.toLowerCase())
   const canReenter = isMine || mySeat || stagingTableId === tTable.tableId
   const ownerName = tableOwnerName(tTable)
+  const inActiveBar = isMine && tTable.tableState !== 'FINISHED'
   const canRemove = !!onRemove && !isPlaying && tTable.tableState !== 'FINISHED'
     && !!ownerName && !!username && ownerName.toLowerCase() === username.toLowerCase()
 
+  const artUrl = useCardArtUrl(tableArtCard(tTable.deckType))
+  const cardRef = useRef<HTMLDivElement>(null)
+  usePointerVars(cardRef)
+
   return (
     <div
+      ref={cardRef}
       className={`table-card table-row ${statusClass}${isMine ? ' is-my-table' : ''}`}
+      style={artUrl ? { ['--card-art' as string]: `url("${artUrl}")` } : undefined}
       onDoubleClick={() => {
         if (isPlaying) {
           if (isMine || mySeat) {
@@ -103,10 +114,18 @@ export default function TableCard({
             {tTable.isTournament ? (
               <Chip solid tone="gold" icon="trophy" className="table-type-badge tourney" title={t('lobby.tournament_badge')}>{t('lobby.tournament_badge')}</Chip>
             ) : (
-              <Chip solid icon="swords" className="table-type-badge match" title={t('lobby','match_badge')}>{t('lobby','match_badge')}</Chip>
+              <Chip solid icon="swords" className="table-type-badge match" title={t('lobby','match_badge')} role="img" aria-label={t('lobby','match_badge')} />
             )}
             {tTable.passworded && (
               <Chip solid tone="warn" icon="lock" className="table-badge-lock" title={t('lobby','tag_private')}>{t('lobby','tag_private')}</Chip>
+            )}
+            {skill && (
+              <Chip className={`table-skill-badge ${skill.className}`} title={`${t('lobby','create_field_skill')}: ${skill.label}`}>
+                <span className="table-skill-stars">
+                  {Array.from({ length: skill.stars }, (_, i) => <Icon key={i} name="star" size={11} />)}
+                </span>
+                {skill.label}
+              </Chip>
             )}
           </div>
           <div className="table-header-right">
@@ -129,14 +148,6 @@ export default function TableCard({
             {formatDeckTypeName(tTable.deckType).short}
           </Chip>
           <Chip icon="users" className="table-seats-count table-seats">{tTable.seatsInfo}</Chip>
-          {skill && (
-            <Chip className={`table-skill-badge ${skill.className}`} title={`${t('lobby','create_field_skill')}: ${skill.label}`}>
-              <span className="table-skill-stars">
-                {Array.from({ length: skill.stars }, (_, i) => <Icon key={i} name="star" size={11} />)}
-              </span>
-              {skill.label}
-            </Chip>
-          )}
           {tTable.rated ? (
             <Chip tone="gold" icon="medal" className="table-tag-rated" title={t('lobby','tag_rated')} role="img" aria-label={t('lobby','tag_rated')} />
           ) : (
@@ -159,7 +170,7 @@ export default function TableCard({
           )}
         </div>
 
-        {tTable.additionalInfoShort && (
+        {tTable.additionalInfoShort && tTable.additionalInfoShort.trim() !== tTable.seatsInfo?.trim() && (
           <div className="table-info-strip" title={tTable.additionalInfoFull || tTable.additionalInfoShort}>
             <span className="info-strip-icon"><Icon name="info" size={12} /></span>
             <span className="info-strip-text">{tTable.additionalInfoShort}</span>
@@ -215,9 +226,9 @@ export default function TableCard({
 
                  <div className="seat-part-main">
                   <div className="seat-name-row">
-                    <span className="seat-player-name">
-                      {s.playerName || t('lobby.open_seat')}
-                    </span>
+                    {s.playerName && (
+                      <span className="seat-player-name">{s.playerName}</span>
+                    )}
                     {isOwner && <Chip tone="gold" icon="crown" className="seat-crown" title={t('lobby.host')}>{t('lobby.host')}</Chip>}
                     {!isHuman && <Chip icon="bot" className="seat-bot-tag" title={t('lobby.ai')}>{s.playerType || t('lobby.ai')}</Chip>}
                   </div>
@@ -241,7 +252,7 @@ export default function TableCard({
                       <span className="seat-ready-text">{t('lobby.ready_status')}</span>
                     </span>
                   ) : (
-                    <Chip tone="brand">{t('lobby.open_seat')}</Chip>
+                    <span className="seat-open-label">{t('lobby.open_seat')}</span>
                   )}
                 </div>
               </div>
@@ -268,7 +279,7 @@ export default function TableCard({
             <Icon name="chair" size={13} /> {t('lobby','staging_return_table')}
           </Button>
         )}
-        {isReady && (
+        {isReady && !inActiveBar && (
           <Button variant="primary" size="sm"
             disabled={busyTable === tTable.tableId}
             onClick={() => onStart(tTable)}
@@ -303,7 +314,7 @@ export default function TableCard({
             <Icon name="trophy" size={13} /> {t('lobby.view_bracket')}
           </Button>
         )}
-        {canRemove && (
+        {canRemove && !inActiveBar && (
           <Button variant="soft-danger" size="sm" data-testid="remove-table"
             disabled={busyTable === tTable.tableId}
             title={t('lobby', 'staging_remove_table')}

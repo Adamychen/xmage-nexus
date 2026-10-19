@@ -6,7 +6,7 @@ import { withFakeServer } from './support/fake-backend'
 import { dismissInfoWindows } from './support/info-windows'
 import { spellsScenario } from '../fixtures/scenarios/spells'
 import { mechanicsScenario } from '../fixtures/scenarios/mechanics'
-import { HAND_BAR_REST_OVERLAP_RATIO } from '../src/board/handSizing'
+import { HAND_BAR_MIN_VISIBLE_RATIO } from '../src/board/handSizing'
 import type { Page } from '@playwright/test'
 
 async function waitHandStable(page: Page, quietMs = 1_200, timeoutMs = 15_000) {
@@ -37,8 +37,8 @@ interface Box {
   height: number
 }
 
-/** Visible horizontal ratio per card at rest = 1 - rest overlap (mirrors the HandBar CSS token). */
-const MIN_VISIBLE_RATIO = 1 - HAND_BAR_REST_OVERLAP_RATIO
+/** Smallest visible horizontal ratio per card at the maximum overlap (token in handSizing.ts). */
+const MIN_VISIBLE_RATIO = HAND_BAR_MIN_VISIBLE_RATIO
 
 const RECT_OF = 'const rectOf = (el) => { const r = el.getBoundingClientRect(); return { x: r.x, y: r.y, width: r.width, height: r.height } };'
 

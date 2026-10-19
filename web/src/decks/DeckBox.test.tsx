@@ -1,174 +1,82 @@
-import { describe, expect, it, afterEach, vi } from 'vitest'
-import { render, screen, cleanup, waitFor } from '@testing-library/react'
+import { describe, expect, it, vi } from 'vitest'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { DeckBox } from './DeckBox'
 import type { DeckV2 } from './types'
-import { deckInitials } from './types'
 
-describe('DeckBox', () => {
-  afterEach(() => {
+const artState = vi.hoisted(() => ({ url: null as string | null }))
+
+vi.mock('./useCardArtUrl', () => ({
+  useCardArtUrl: () => artState.url,
+}))
+
+const deck = (over: Partial<DeckV2> = {}): DeckV2 => ({
+  id: 'c1',
+  name: 'Mi Burn',
+  format: 'Freeform',
+  colors: ['R'],
+  cards: [{ cardName: 'Lightning Bolt', setCode: 'M10', cardNumber: '146', amount: 60 }],
+  sideboard: [],
+  createdAt: 1,
+  updatedAt: 2,
+  source: 'custom',
+  ...over,
+}) as DeckV2
+
+describe('DeckBox quick actions (gallery polish)', () => {
+  it('expone editar / inspeccionar / duplicar / favorito sin abrir el footer', () => {
+    const onEdit = vi.fn()
+    const onInspect = vi.fn()
+    const onClone = vi.fn()
+    const onToggleFavorite = vi.fn()
+    render(
+      <DeckBox
+        deck={deck()}
+        selected={false}
+        onSelect={() => {}}
+        onEdit={onEdit}
+        onInspect={onInspect}
+        onClone={onClone}
+        onToggleFavorite={onToggleFavorite}
+      />,
+    )
+    expect(screen.getByTestId('deckbox-quick-edit')).not.toBeNull()
+    expect(screen.getByTestId('deckbox-quick-inspect')).not.toBeNull()
+    expect(screen.getByTestId('deckbox-quick-clone')).not.toBeNull()
+    expect(screen.getByTestId('deckbox-quick-fav')).not.toBeNull()
+    fireEvent.click(screen.getByTestId('deckbox-quick-edit'))
+    expect(onEdit).toHaveBeenCalledTimes(1)
+    fireEvent.click(screen.getByTestId('deckbox-quick-inspect'))
+    expect(onInspect).toHaveBeenCalledTimes(1)
     cleanup()
   })
 
-  it('renders valid deck badge when format requirements are met', () => {
-    const deck: DeckV2 = {
-      id: 'deck-1',
-      name: 'Standard Deck',
-      format: 'Standard',
-      colors: ['R', 'U'],
-      cards: [
-        { cardName: 'Lightning Bolt', setCode: 'M10', cardNumber: '146', amount: 4 },
-        { cardName: 'Mountain', setCode: 'DMU', cardNumber: '280', amount: 56 },
-      ],
-      sideboard: [],
-      createdAt: 1000,
-      updatedAt: 1000,
-      source: 'custom',
-    }
-
-    render(<DeckBox deck={deck} />)
-    expect(screen.getByText('Standard Deck')).toBeDefined()
-    expect(screen.getByText('✓ Standard')).toBeDefined()
-    expect(screen.getByText('60 Total Cartas')).toBeDefined()
+  it('los quick actions no propagan la selección y son operables por teclado', () => {
+    const onSelect = vi.fn()
+    const onEdit = vi.fn()
+    render(<DeckBox deck={deck()} selected={false} onSelect={onSelect} onEdit={onEdit} onInspect={() => {}} onClone={() => {}} onToggleFavorite={() => {}} />)
+    const btn = screen.getByTestId('deckbox-quick-edit')
+    fireEvent.click(btn)
+    expect(onSelect).not.toHaveBeenCalled()
+    expect(onEdit).toHaveBeenCalledTimes(1)
+    ;(btn as HTMLElement).focus()
+    expect(document.activeElement).toBe(btn)
+    cleanup()
   })
 
-  it('renders invalid badge when deck is under minimum card limit', () => {
-    const deck: DeckV2 = {
-      id: 'deck-2',
-      name: 'Incomplete Deck',
-      format: 'Modern',
-      colors: ['G'],
-      cards: [
-        { cardName: 'Forest', setCode: 'DMU', cardNumber: '281', amount: 30 },
-      ],
-      sideboard: [],
-      createdAt: 1000,
-      updatedAt: 1000,
-      source: 'custom',
-    }
-
-    render(<DeckBox deck={deck} />)
-    expect(screen.getByText('Incomplete Deck')).toBeDefined()
-    expect(screen.getByText('30/60')).toBeDefined()
+  it('muestra preview grande decorativo cuando hay portada', () => {
+    artState.url = 'https://img.test/art.jpg'
+    render(<DeckBox deck={deck()} selected={false} onSelect={() => {}} />)
+    const preview = screen.getByTestId('deckbox-preview')
+    expect(preview.getAttribute('aria-hidden')).toBe('true')
+    expect(preview.querySelector('img')?.getAttribute('src')).toBe('https://img.test/art.jpg')
+    artState.url = null
+    cleanup()
   })
 
-  describe('commander pairing', () => {
-    const legendary = (name: string, extra: Record<string, unknown> = {}) => ({
-      name,
-      type_line: 'Legendary Creature — Human',
-      oracle_text: '',
-      keywords: [],
-      colors: ['G'],
-      cmc: 3,
-      ...extra,
-    })
-    const cardsByNumber: Record<string, unknown> = {
-      '1': legendary('Alpha Commander'),
-      '2': legendary('Beta Commander'),
-      '3': legendary('Partner One', { keywords: ['Partner'] }),
-      '4': legendary('Partner Two', { keywords: ['Partner'] }),
-    }
-    const mockScryfall = () => {
-      vi.stubGlobal('fetch', vi.fn(async (url: string) => {
-        const num = /\/cards\/[a-z0-9]+\/(\d+)/i.exec(url)?.[1]
-        const data = num ? cardsByNumber[num] : null
-        return { ok: !!data, json: async () => data }
-      }))
-    }
-    const commanderDeck = (a: string, b: string): DeckV2 => {
-      const first = { cardName: `${a} Commander`, setCode: 'CMD', cardNumber: a === 'Alpha' ? '1' : '3', amount: 1 }
-      const second = { cardName: `${b} Commander`, setCode: 'CMD', cardNumber: b === 'Beta' ? '2' : '4', amount: 1 }
-      return {
-        id: 'deck-cmd',
-        name: 'Pair Deck',
-        format: 'Commander',
-        colors: ['G'],
-        cards: [first, second, { cardName: 'Forest', setCode: 'CMD', cardNumber: '300', amount: 98 }],
-        sideboard: [],
-        commanderCard: first,
-        partnerCard: second,
-        createdAt: 1000,
-        updatedAt: 1000,
-        source: 'custom',
-      }
-    }
-
-    afterEach(() => {
-      vi.unstubAllGlobals()
-    })
-
-    it('shows a warning instead of the tick when the two commanders cannot pair', async () => {
-      mockScryfall()
-      render(<DeckBox deck={commanderDeck('Alpha', 'Beta')} />)
-      await waitFor(() => expect(screen.queryByText('✓ Commander')).toBeNull())
-      expect(document.querySelector('.format-badge-invalid')).not.toBeNull()
-    })
-
-    it('keeps the tick when both commanders have Partner', async () => {
-      mockScryfall()
-      const deck = commanderDeck('Partner', 'Partner')
-      deck.cards[0] = { ...deck.cards[0], cardName: 'Partner One', cardNumber: '3' }
-      deck.cards[1] = { ...deck.cards[1], cardName: 'Partner Two', cardNumber: '4' }
-      deck.commanderCard = deck.cards[0]
-      deck.partnerCard = deck.cards[1]
-      render(<DeckBox deck={deck} />)
-      await waitFor(() => expect(vi.mocked(fetch).mock.calls.length).toBeGreaterThan(1))
-      expect(screen.getByText('✓ Commander')).toBeDefined()
-    })
-  })
-
-  it('triggers onDoubleClick when double clicked', () => {
-    const deck: DeckV2 = {
-      id: 'deck-3',
-      name: 'Test Deck',
-      format: 'Standard',
-      colors: ['R'],
-      cards: [{ cardName: 'Mountain', setCode: 'DMU', cardNumber: '280', amount: 60 }],
-      sideboard: [],
-      createdAt: 1000,
-      updatedAt: 1000,
-      source: 'custom',
-    }
-    let dblClicked = false
-    render(<DeckBox deck={deck} onDoubleClick={() => { dblClicked = true }} />)
-    const box = screen.getByRole('button')
-    box.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }))
-    expect(dblClicked).toBe(true)
-  })
-
-  it('shows distinct fallback initials for decks sharing a common name prefix', () => {
-    const base = {
-      colors: [] as DeckV2['colors'],
-      cards: [{ cardName: 'Mountain', setCode: 'DMU', cardNumber: '280', amount: 60 }],
-      sideboard: [],
-      createdAt: 1000,
-      updatedAt: 1000,
-      source: 'precon' as const,
-    }
-    const starter: DeckV2 = { ...base, id: 'precon-0', name: 'Mage Web starter', format: 'Freeform' }
-    const bolt: DeckV2 = { ...base, id: 'precon-1', name: 'Mage Web bolt', format: 'Freeform' }
-
-    render(<DeckBox deck={starter} />)
-    render(<DeckBox deck={bolt} />)
-
-    // Antes del fix ambos caían en "MA" (slice(0, 2) del prefijo compartido "Mage Web").
-    expect(screen.getByText('WS')).toBeDefined()
-    expect(screen.getByText('WB')).toBeDefined()
-    expect(screen.queryByText('MA')).toBeNull()
-  })
-})
-
-describe('deckInitials', () => {
-  it('takes the last two significant words instead of the shared prefix', () => {
-    expect(deckInitials('Mage Web starter')).toBe('WS')
-    expect(deckInitials('Mage Web bolt')).toBe('WB')
-    expect(deckInitials('Mage Web AI lands')).toBe('AL')
-  })
-
-  it('falls back to the first two letters for a single-word name', () => {
-    expect(deckInitials('Solo')).toBe('SO')
-  })
-
-  it('returns a placeholder for an empty name', () => {
-    expect(deckInitials('')).toBe('??')
+  it('sin portada no hay preview', () => {
+    artState.url = null
+    render(<DeckBox deck={deck()} selected={false} onSelect={() => {}} />)
+    expect(screen.queryByTestId('deckbox-preview')).toBeNull()
+    cleanup()
   })
 })

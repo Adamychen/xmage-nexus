@@ -7,6 +7,7 @@ import { useDeckMetadata } from './useDeckMetadata'
 import { useCardArtUrl } from './useCardArtUrl'
 import { ManaPip } from './ArenaManaSymbols'
 import Icon from '../ui/Icon'
+import IconButton from '../ui/IconButton'
 import { useTranslation } from '../i18n'
 import './DeckBox.css'
 
@@ -27,11 +28,19 @@ export function DeckBox({
   selected,
   onSelect,
   onDoubleClick,
+  onEdit,
+  onInspect,
+  onClone,
+  onToggleFavorite,
 }: {
   deck: DeckV2
   selected?: boolean
   onSelect?: () => void
   onDoubleClick?: () => void
+  onEdit?: () => void
+  onInspect?: () => void
+  onClone?: () => void
+  onToggleFavorite?: () => void
 }) {
   const { t } = useTranslation()
   const coverUrl = useDeckCoverUrl(deck)
@@ -54,13 +63,38 @@ export function DeckBox({
       className={`deck-box ${selected ? 'selected' : ''}`}
       onClick={onSelect}
       onDoubleClick={onDoubleClick}
-      role="button"
       tabIndex={0}
+      aria-label={deck.name}
+      aria-selected={!!selected}
       onKeyDown={(e) => e.key === 'Enter' && onSelect?.()}
     >
       <div className="deck-box-art">
         {coverUrl ? <img src={coverUrl} alt={deck.name} loading="lazy" /> : <div className="deck-box-art-fallback" style={identityStyle(colors)}>{deckInitials(deck.name)}</div>}
         <div className="deck-box-art-scrim" />
+        {(onEdit || onInspect || onClone || onToggleFavorite) && (
+          <div className="deck-box-actions" onClick={(e) => e.stopPropagation()} onDoubleClick={(e) => e.stopPropagation()}>
+            {onEdit && (
+              <IconButton label={t('common', 'edit')} data-testid="deckbox-quick-edit" className="deck-box-action" onClick={(e) => { e.stopPropagation(); onEdit() }}>
+                <Icon name="pencil" size={14} />
+              </IconButton>
+            )}
+            {onInspect && (
+              <IconButton label={t('decks', 'inspect_double_click')} data-testid="deckbox-quick-inspect" className="deck-box-action" onClick={(e) => { e.stopPropagation(); onInspect() }}>
+                <Icon name="eye" size={14} />
+              </IconButton>
+            )}
+            {onClone && (
+              <IconButton label={t('common', 'copy')} data-testid="deckbox-quick-clone" className="deck-box-action" onClick={(e) => { e.stopPropagation(); onClone() }}>
+                <Icon name="copy" size={14} />
+              </IconButton>
+            )}
+            {onToggleFavorite && (
+              <IconButton label={t('decks', 'favorite')} data-testid="deckbox-quick-fav" className={`deck-box-action ${deck.favorite ? 'fav-active' : ''}`} aria-pressed={!!deck.favorite} onClick={(e) => { e.stopPropagation(); onToggleFavorite() }}>
+                <Icon name="star" size={14} />
+              </IconButton>
+            )}
+          </div>
+        )}
         <div className="deck-box-format-badge" title={issueTooltip || `${deck.format} ${t('decks', 'format_legal')}`}>
           {isValid ? (
             <span className="format-badge-valid">✓ {deck.format}</span>
@@ -92,6 +126,11 @@ export function DeckBox({
         {deck.source === 'precon' && <span className="deck-box-precon">Precon</span>}
       </div>
       {selected && <div className="deck-box-ring" />}
+      {coverUrl && (
+        <div className="deckbox-preview" data-testid="deckbox-preview" aria-hidden="true">
+          <img src={coverUrl} alt="" loading="lazy" />
+        </div>
+      )}
     </div>
   )
 }

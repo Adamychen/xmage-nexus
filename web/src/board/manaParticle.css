@@ -1,0 +1,63 @@
+/* Mana particle (A2, optional): the mana symbol of the tapped land flies from
+   the land to its controller's mana pool. `transform` and `opacity` only, so it
+   stays off the layout and paint path. Spawned by manaParticle.ts; the effects
+   setting and reduced motion are checked there, before the node exists. */
+.mana-particle {
+  position: fixed;
+  width: 28px;
+  height: 28px;
+  margin: -14px 0 0 -14px;
+  pointer-events: none;
+  z-index: 900;
+  animation: manaParticleFloat var(--particle-ms, 400ms) ease-in forwards;
+}
+
+.mana-particle img,
+.mana-particle span {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+}
+
+.mana-particle span {
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  color: var(--fg-hi);
+  background: var(--ink-1);
+}
+
+.mana-pool-landed {
+  animation: manaPoolLand 220ms ease-out;
+}
+
+@keyframes manaPoolLand {
+  0% {
+    transform: scale(1);
+  }
+  35% {
+    transform: scale(1.18);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes manaParticleFloat {
+  0% {
+    transform: translate(0, 0) scale(0.5);
+    opacity: 0;
+  }
+  15% {
+    transform: translate(0, 0) scale(1.15);
+    opacity: 1;
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--particle-dx), var(--particle-dy)) scale(0.7);
+    opacity: 0;
+  }
+}

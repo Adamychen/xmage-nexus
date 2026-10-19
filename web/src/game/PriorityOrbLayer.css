@@ -1,0 +1,41 @@
+.priority-orb {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 14px;
+  height: 14px;
+  margin: -7px 0 0 -7px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 90;
+  background: radial-gradient(circle at 35% 35%, var(--gold-300), var(--gold-500) 70%);
+  box-shadow: 0 0 12px 3px rgb(var(--gold-rgb) / 0.55);
+  opacity: 0;
+  translate: var(--orb-x0) var(--orb-y0);
+  animation: priorityOrbFly var(--orb-ms, 400ms) var(--ease-in-out) forwards;
+}
+
+@keyframes priorityOrbFly {
+  0% {
+    translate: var(--orb-x0) var(--orb-y0);
+    scale: 0.6;
+    opacity: 0;
+  }
+  12% {
+    scale: 1;
+    opacity: 1;
+  }
+  50% {
+    translate: var(--orb-xm) var(--orb-ym);
+  }
+  85% {
+    translate: var(--orb-x1) var(--orb-y1);
+    scale: 1;
+    opacity: 1;
+  }
+  100% {
+    translate: var(--orb-x1) var(--orb-y1);
+    scale: 1.8;
+    opacity: 0;
+  }
+}

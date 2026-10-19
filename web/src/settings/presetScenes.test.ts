@@ -9,10 +9,10 @@ describe('preset demo scenes', () => {
   it('derives the phase-stop story from the actual preset bundle', () => {
     const stops = (id: 'simple' | 'balanced' | 'manual') =>
       GAMEPLAY_PRESETS.find((p) => p.id === id)!.bundle.phaseStops.yourTurn
-    // Simple runs the whole turn without a stop; the others stop everywhere.
+    // Simple runs the whole turn without a stop; balanced holds your mains; manual stops everywhere.
     expect(PRESET_DEMO_SCENES.simple.stopKeys).toEqual([])
     expect(stops('simple').main1).toBe(false)
-    expect(PRESET_DEMO_SCENES.balanced.stopKeys).toEqual(PHASES.map((p) => p.key))
+    expect(PRESET_DEMO_SCENES.balanced.stopKeys).toEqual(['main1', 'main2'])
     expect(PRESET_DEMO_SCENES.manual.stopKeys).toEqual(PHASES.map((p) => p.key))
   })
 

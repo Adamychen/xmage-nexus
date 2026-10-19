@@ -91,6 +91,9 @@ chatTest(
       const r = el.getBoundingClientRect()
       return { width: r.width, marginRight: getComputedStyle(el).marginRight }
     })
+    await page.evaluate(() => Promise.all(
+      (document.querySelector('.lobby')?.getAnimations() ?? []).map((a) => a.finished.catch(() => undefined)),
+    ))
     const before = await mainBox()
     expect(before).not.toBeNull()
 

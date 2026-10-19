@@ -1,4 +1,4 @@
-import { loadAutoAnswers, loadChoiceMemory, loadFxSettings, loadAudioSettings, loadMusicSettings, loadAppearanceSettings, loadManaPayment, loadHandRequestsAllowed, loadPhaseStops, loadGameLogAutoSave, loadBrowserNotifications, loadSmartStops, loadGameplayPreset } from '../persistence'
+import { loadAutoAnswers, loadChoiceMemory, loadFxSettings, loadAudioSettings, loadMusicSettings, loadAppearanceSettings, loadManaPayment, loadHandRequestsAllowed, loadPhaseStops, loadGameLogAutoSave, loadBrowserNotifications, loadBoardRewind, loadSmartStops, loadGameplayPreset } from '../persistence'
 import type { ZoomLevel, ManaPaymentStored } from '../persistence'
 import type { PhaseStops } from '../../net/commands'
 import type { PrioritySoundMode } from '../../audio/prioritySound'
@@ -6,7 +6,8 @@ import type { AutoAnswerRule } from '../../game/autoAnswers'
 import type { ChoiceMemoryRule } from '../../game/choiceMemory'
 import { normalizePlaymat, type PlaymatId } from '../../appearance/playmats'
 import { normalizeCardStyle, normalizeTapStyle, type CardStyle, type TapStyle } from '../../board/compactCard'
-import { normalizeBoardFill, normalizeCardRender, normalizeHandRail, normalizeHandRailWidth, normalizeHandRow, normalizePtBadgeMode, normalizeShowHandCost, normalizeSicknessStyle, type CardRender, type PtBadgeMode, type SicknessStyle } from '../../board/cardOverlays'
+import { normalizeBoardFill, normalizeStackCaption, normalizeCardRender, normalizeHandRail, normalizeHandRailWidth, normalizeHandRow, normalizePtBadgeMode, normalizeShowHandCost, normalizeShowManaSource, normalizeSicknessStyle, type CardRender, type PtBadgeMode, type SicknessStyle } from '../../board/cardOverlays'
+import { normalizeGameUi, type GameUi } from '../../game/gameUi'
 import { gameplayPreset, isGameplayPresetId, type GameplayPresetId } from '../../settings/gameplayPresets'
 
 export interface SettingsState {
@@ -22,6 +23,7 @@ export interface SettingsState {
   phaseStops: PhaseStops
   gameLogAutoSave: boolean
   browserNotifications: boolean
+  boardRewind: boolean
   boardLayout: 'standard' | 'pod' | 'arena'
   boardLayoutManual: boolean
   effects: boolean
@@ -38,12 +40,15 @@ export interface SettingsState {
   cardStyle: CardStyle
   tapStyle: TapStyle
   showHandCost: boolean
+  showManaSource: boolean
   ptBadgeMode: PtBadgeMode
   cardRender: CardRender
   handRail: boolean
   handRailWidth: number
   handRow: boolean
   boardFill: boolean
+  stackCaption: boolean
+  gameUi: GameUi
   sicknessStyle: SicknessStyle
   uiScale: ZoomLevel
   cjkBoost: boolean
@@ -70,6 +75,7 @@ export const initialSettings: SettingsSlice = {
     phaseStops: loadPhaseStops(),
     gameLogAutoSave: loadGameLogAutoSave(),
     browserNotifications: loadBrowserNotifications(),
+    boardRewind: loadBoardRewind(),
     ...loadFxSettings(),
     ...loadAudioSettings(),
     ...loadMusicSettings(),
@@ -80,12 +86,15 @@ export const initialSettings: SettingsSlice = {
     cardStyle: normalizeCardStyle(loadAppearanceSettings().cardStyle),
     tapStyle: normalizeTapStyle(loadAppearanceSettings().tapStyle),
     showHandCost: normalizeShowHandCost(loadAppearanceSettings().showHandCost),
+    showManaSource: normalizeShowManaSource(loadAppearanceSettings().showManaSource),
     ptBadgeMode: normalizePtBadgeMode(loadAppearanceSettings().ptBadgeMode),
     cardRender: normalizeCardRender(loadAppearanceSettings().cardRender),
     handRail: normalizeHandRail(loadAppearanceSettings().handRail),
     handRailWidth: normalizeHandRailWidth(loadAppearanceSettings().handRailWidth),
     handRow: normalizeHandRow(loadAppearanceSettings().handRow),
     boardFill: normalizeBoardFill(loadAppearanceSettings().boardFill),
+    stackCaption: normalizeStackCaption(loadAppearanceSettings().stackCaption),
+    gameUi: normalizeGameUi(loadAppearanceSettings().gameUi),
     sicknessStyle: normalizeSicknessStyle(loadAppearanceSettings().sicknessStyle),
     ...(storedPreset ? storedPreset.bundle : null),
   },

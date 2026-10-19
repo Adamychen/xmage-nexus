@@ -19,8 +19,7 @@ interface ExploreItem {
 
 const EXPLORE: ExploreItem[] = [
   { icon: 'castle', label: 'Lobby and tables', hint: 'Open tables, a live match and a Commander pod', target: { kind: 'tables' } },
-  { icon: 'trophy', label: 'Ranks and ELO', hint: 'Room ranking with tiers and rating', target: { kind: 'leaderboard', tab: 'room' } },
-  { icon: 'medal', label: 'Tier ladder', hint: 'Bronze to Mythic and your progress', target: { kind: 'leaderboard', tab: 'tiers' } },
+  { icon: 'trophy', label: 'Ranks and ratings', hint: 'Tier ladder and the room ranking', target: { kind: 'ranking' } },
   { icon: 'layers', label: 'Deck gallery', hint: 'Your decks, formats and colours', target: { kind: 'decks' } },
   { icon: 'pencil', label: 'Deck builder and EDHREC', hint: 'Opens the Krenko deck: curve, mana, sample hand, EDHREC suggestions', target: { kind: 'builder' } },
   { icon: 'history', label: 'Match history', hint: 'Finished matches and replays', target: { kind: 'history' } },

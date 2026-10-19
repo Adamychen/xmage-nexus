@@ -1,0 +1,55 @@
+.damage-number {
+  position: absolute;
+  left: 50%;
+  top: 34%;
+  translate: -50% 0;
+  z-index: 12;
+  pointer-events: none;
+  white-space: nowrap;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--fs-2xl);
+  line-height: 1;
+  letter-spacing: 0.02em;
+  color: var(--err);
+  text-shadow: 0 2px 10px var(--shade-4), 0 0 14px currentColor;
+  will-change: transform, opacity;
+  animation: damageNumberFloat calc(600ms / var(--fx-speed, 1)) var(--ease-out) both;
+}
+
+@keyframes damageNumberFloat {
+  0% {
+    opacity: 0;
+    transform: translateY(0) scale(0.8);
+  }
+  12% {
+    opacity: 1;
+  }
+  40% {
+    transform: translateY(-14px) scale(1.2);
+  }
+  55% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-44px) scale(1.2);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .damage-number {
+    animation: damageNumberFade calc(700ms / var(--fx-speed, 1)) linear both;
+  }
+}
+
+@keyframes damageNumberFade {
+  0% { opacity: 0; }
+  21% { opacity: 1; }
+  79% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+html.fx-off .damage-number {
+  display: none;
+}

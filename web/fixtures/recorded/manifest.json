@@ -859,5 +859,19 @@
     "kind": "sequence",
     "assert": "hasTopCardPeekSequence",
     "note": "WITH → WITHOUT → WITH triple of consecutive views around the \"Top card of your library\" lookedAt group (Sphinx of Jwar Isle cast for real, same setup as top-card-peek.json): proves the group alternates with empty views on the wire (effect pass re-adds it, lookAtCards clears it after sending), so the client is right to keep it as persistent library-side state instead of an event. Stale pin: each WITH group holds exactly one SimpleCardView pointer, and the id tracks the library (same libraryCount on both WITH ends → same id, changed library → changed id), so LookedAt.add never accumulates a stale card under the title."
+  },
+  {
+    "file": "land-drop.json",
+    "mechanic": "land-drop",
+    "kind": "game",
+    "assert": "hasLandDropWindow",
+    "note": "First own PRECOMBAT_MAIN priority window with a land in hand and none on the battlefield. Proves the engine lists the land drop in canPlayObjects (basicPlayAbilities 'Play Mountain', one entry per hand land), so smart stops can trust the server instead of guessing from card names."
+  },
+  {
+    "file": "mana-rocks.json",
+    "mechanic": "mana-rocks",
+    "kind": "game",
+    "assert": "hasManaRocks",
+    "note": "Untapped Sol Ring and Cascade Bluffs (filter land) with priority. Proves the engine files non-basic mana abilities under canPlayObjects `other` (\"{T}: Add {C}{C}.\", \"{U/R}, {T}: Add {U}{U}.\"), not `basicManaAbilities`, so smart stops must recognise them by text or they count as a playable window."
   }
 ]

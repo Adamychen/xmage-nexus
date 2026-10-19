@@ -312,12 +312,52 @@
   padding: 0;
   transition: transform 0.12s, border-color 0.12s, box-shadow 0.12s;
   aspect-ratio: 2.5 / 3.5;
+  animation: draftCardDeal 0.45s var(--ease-out) backwards;
+}
+
+@keyframes draftCardDeal {
+  from { opacity: 0; translate: 0 18px; scale: 0.94; }
+  to { opacity: 1; translate: 0 0; scale: 1; }
 }
 
 .draft-card:hover:not(:disabled) {
-  transform: translateY(-3px);
+  transform: perspective(700px) rotateX(calc((0.5 - var(--py, 0.5)) * 12deg)) rotateY(calc((var(--px, 0.5) - 0.5) * 14deg)) translateY(-4px);
   border-color: var(--accent, var(--brand));
-  box-shadow: 0 8px 24px rgb(var(--brand-rgb) / 0.3);
+  box-shadow: 0 12px 28px rgb(var(--brand-rgb) / 0.32);
+}
+
+.draft-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border-radius: inherit;
+  background: radial-gradient(circle at calc(var(--px, 0.5) * 100%) calc(var(--py, 0.5) * 100%), var(--veil-3), transparent 55%);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  pointer-events: none;
+}
+
+.draft-card:hover:not(:disabled)::after {
+  opacity: 1;
+}
+
+html.fx-off .draft-card {
+  animation: none;
+}
+
+html.fx-off .draft-card:hover:not(:disabled) {
+  transform: translateY(-3px);
+}
+
+html.fx-off .draft-card:hover:not(:disabled)::after {
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .draft-card {
+    animation: none;
+  }
 }
 
 .draft-card.is-disabled {
@@ -468,5 +508,20 @@
 @media (prefers-reduced-motion: reduce) {
   .draft-waiting-dot {
     animation: none;
+  }
+}
+
+@media (max-width: 600px) {
+  .draft-header {
+    flex-wrap: wrap;
+    padding: var(--sp-3);
+  }
+  .draft-subtitle {
+    letter-spacing: 0.04em;
+  }
+  .draft-header-right {
+    flex-wrap: wrap;
+    width: 100%;
+    min-width: 0;
   }
 }

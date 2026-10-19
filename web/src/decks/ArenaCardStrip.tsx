@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { memo, useRef, useState } from 'react'
 import IconButton from '../ui/IconButton'
 import CloseButton from '../ui/CloseButton'
 import type { DeckCard } from '../lobby/decks'
@@ -9,6 +9,7 @@ import Icon from '../ui/Icon'
 import { confirmDialog } from '../ui/confirmDialog'
 import { useTranslation } from '../i18n'
 import { useCustomCardArt } from '../cards/customCardArt'
+import { flyCardTo, landingRow } from '../ui/flyCard'
 import './ArenaCardStrip.css'
 
 export interface CardStripMeta {
@@ -51,7 +52,7 @@ function getColorClass(colors?: string[]): string {
   return 'color-colorless'
 }
 
-export function ArenaCardStrip({
+function ArenaCardStripView({
   card,
   meta,
   isCommander = false,
@@ -69,6 +70,7 @@ export function ArenaCardStrip({
   sideboard = false,
   onSwap,
   swapLabel,
+  flyTo,
 }: {
   card: DeckCard
   meta?: CardStripMeta
@@ -87,6 +89,7 @@ export function ArenaCardStrip({
   sideboard?: boolean
   onSwap?: (key: string) => void
   swapLabel?: string
+  flyTo?: string
 }) {
   const { t } = useTranslation()
   const { displayName, originalName } = useLocalizedCardName(card)
@@ -128,9 +131,14 @@ export function ArenaCardStrip({
     setIsDraggingSelf(false)
   }
 
+  const swap = () => {
+    if (flyTo && ref.current) flyCardTo(ref.current, landingRow(flyTo, '.arena-card-strip', (row) => row.dataset.cardKey === cardKey), { pop: true })
+    onSwap?.(actionKey)
+  }
+
   const handleClick = (e: React.MouseEvent) => {
     if (onSwap) {
-      onSwap(actionKey)
+      swap()
       return
     }
     // Left-click decreases count (like Arena), unless shift is held
@@ -160,7 +168,7 @@ export function ArenaCardStrip({
   const handleContextMenu = (e: React.MouseEvent) => {
     e.preventDefault()
     if (onSwap) {
-      onSwap(actionKey)
+      swap()
       return
     }
     // Right-click increases count (like Arena)
@@ -170,7 +178,7 @@ export function ArenaCardStrip({
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault()
-      if (onSwap) onSwap(actionKey)
+      if (onSwap) swap()
       else {
         focusNeighborAfterRemoval()
         onDec?.(actionKey)
@@ -200,6 +208,8 @@ export function ArenaCardStrip({
   return (
     <div
       ref={ref}
+      data-card-key={cardKey}
+      data-zone={sideboard ? 'sideboard' : 'main'}
       className={`arena-card-strip ${isCommander ? 'is-commander' : ''} ${isCover ? 'is-cover' : ''} ${isDraggingSelf ? 'is-dragging' : ''} ${issue ? 'has-issue' : ''}`}
       draggable
       onDragStart={handleDragStart}
@@ -252,7 +262,7 @@ export function ArenaCardStrip({
         {onSwap && (
           <IconButton label={swapLabel ?? (sideboard ? t('decks', 'strip_move_to_main') : t('decks', 'strip_move_to_side'))} icon="swap" size="sm"
             className="strip-btn swap"
-            onClick={() => onSwap(actionKey)} />
+            onClick={swap} />
         )}
         <IconButton label={t('decks', 'strip_remove_one')} size="sm"
           className="strip-btn"
@@ -301,3 +311,24 @@ export function ArenaCardStrip({
     </div>
   )
 }
+
+type StripProps = Parameters<typeof ArenaCardStripView>[0]
+
+function sameCard(a: DeckCard, b: DeckCard): boolean {
+  const keys = Object.keys(a) as (keyof DeckCard)[]
+  return keys.length === Object.keys(b).length && keys.every((k) => a[k] === b[k])
+}
+
+function sameStripProps(prev: StripProps, next: StripProps): boolean {
+  const keys = new Set([...Object.keys(prev), ...Object.keys(next)]) as Set<keyof StripProps>
+  for (const k of keys) {
+    if (k === 'card') {
+      if (!sameCard(prev.card, next.card)) return false
+    } else if (prev[k] !== next[k]) {
+      return false
+    }
+  }
+  return true
+}
+
+export const ArenaCardStrip = memo(ArenaCardStripView, sameStripProps)

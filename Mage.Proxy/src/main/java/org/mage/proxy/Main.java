@@ -276,14 +276,16 @@ public class Main {
      * Fingerprinted build assets may be cached forever; {@code index.html} and the splash may not,
      * or a deploy would keep serving the old client.
      */
+    static final String CONTENT_SECURITY_POLICY =
+            "default-src 'self'; connect-src 'self' ws: wss: http: https:; "
+                    + "img-src 'self' data: blob: https:; style-src 'self' 'unsafe-inline'; "
+                    + "script-src 'self'; media-src 'self' data: blob:";
+
     private static void applySecurityHeaders(HttpExchange exchange, String name) {
         exchange.getResponseHeaders().add("X-Content-Type-Options", "nosniff");
         exchange.getResponseHeaders().add("X-Frame-Options", "DENY");
         exchange.getResponseHeaders().add("Referrer-Policy", "same-origin");
-        exchange.getResponseHeaders().add("Content-Security-Policy",
-                "default-src 'self'; connect-src 'self' ws: wss: http: https:; "
-                        + "img-src 'self' data: blob: https:; style-src 'self' 'unsafe-inline'; "
-                        + "script-src 'self' 'unsafe-inline'; media-src 'self' data: blob:");
+        exchange.getResponseHeaders().add("Content-Security-Policy", CONTENT_SECURITY_POLICY);
         if (isFingerprinted(name)) {
             exchange.getResponseHeaders().add("Cache-Control", "public, max-age=31536000, immutable");
         } else {

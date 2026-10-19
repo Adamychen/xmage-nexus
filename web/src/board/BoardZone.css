@@ -591,3 +591,25 @@
 .board-zone.card-style-compact.tap-tilted .stack-group .card-slot.tapped + .card-slot.tapped {
   margin-left: calc(-1 * var(--card-w) * 0.725);
 }
+
+/* Graveyard/exile dissolve (D4): a detached clone of a card that just left the
+   battlefield. It sits in the board shell (or on <body> outside one) and carries
+   its own size and transform; the positioning is set inline. */
+.card-dissolve-ghost {
+  position: absolute;
+  z-index: 40;
+  margin: 0;
+  pointer-events: none;
+  animation: cardDissolve calc(300ms / var(--fx-speed, 1)) ease-out forwards;
+}
+
+@keyframes cardDissolve {
+  from { scale: 1; opacity: 1; filter: grayscale(0); }
+  to   { scale: 0.9; opacity: 0; filter: grayscale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-dissolve-ghost {
+    animation: none;
+  }
+}

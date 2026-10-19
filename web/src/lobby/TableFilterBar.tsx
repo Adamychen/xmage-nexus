@@ -375,6 +375,7 @@ export default function TableFilterBar({ tables, filters, onChange, onReset, cla
           <div className="tfb-more-formats-wrap">
             <select
               className={`tfb-more-select ${isOtherFormatSelected ? 'active' : ''}`}
+              aria-label={t('lobby', 'filter_more_formats')}
               value={isOtherFormatSelected ? filters.format : ''}
               onChange={(e) => {
                 if (e.target.value) {

@@ -1,0 +1,83 @@
+.draft-helper {
+  display: grid;
+  gap: var(--sp-2);
+  padding: var(--sp-3);
+  border-radius: var(--r-md);
+  border: 1px solid var(--line-2);
+  background: var(--surface-card);
+}
+
+.draft-helper-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+}
+
+.draft-helper-hint {
+  margin: 0;
+  color: var(--fg-3);
+  font-size: var(--fs-xs);
+}
+
+.draft-helper-list {
+  display: grid;
+  gap: var(--sp-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.draft-helper-list li {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+
+.draft-helper-rank {
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: var(--r-pill);
+  background: var(--warn-soft);
+  color: var(--warn-strong);
+  font-size: var(--fs-2xs);
+  font-weight: 800;
+}
+
+.draft-helper-name {
+  font-weight: 700;
+}
+
+.draft-helper-reasons {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: var(--sp-1);
+}
+
+.draft-helper-chip {
+  padding: 1px var(--sp-2);
+  border-radius: var(--r-pill);
+  border: 1px solid var(--line-2);
+  color: var(--fg-2);
+  font-size: var(--fs-2xs);
+}
+
+.draft-helper-chip.is-on_colors,
+.draft-helper-chip.is-curve,
+.draft-helper-chip.is-creatures {
+  border-color: var(--ok-line);
+  color: var(--ok-strong);
+}
+
+.draft-helper-chip.is-off_colors {
+  border-color: var(--err-line);
+  color: var(--err-strong);
+}
+
+.draft-card.is-advised {
+  outline: 2px solid var(--warn-line);
+  outline-offset: 2px;
+}

@@ -24,8 +24,8 @@
 }
 
 .player-info-bar.opp.has-priority {
-  border-color: rgb(var(--warn-rgb) / 0.7);
-  box-shadow: 0 0 20px rgb(var(--warn-rgb) / 0.35), 0 8px 24px var(--shade-3);
+  border-color: rgb(var(--err-rgb) / 0.7);
+  box-shadow: 0 0 20px rgb(var(--err-rgb) / 0.35), 0 8px 24px var(--shade-3);
 }
 
 /* Active turn (who is playing) and priority (who can act) are two channels and
@@ -33,7 +33,7 @@
    properties as priority (`border-color` + `box-shadow`), so only one ever
    reached the screen — and on the top bar `.opp.has-priority` (three classes)
    also beat `.is-turn` (two) on specificity, so during the rival's turn the
-   border stayed the priority orange `rgba(245,165,36,.7)` (measured in real
+   border stayed the priority colour (measured in real
    Chromium). Fill and accent bar are a different property family, so both
    channels show at once. */
 .player-info-bar.is-turn {
@@ -144,7 +144,7 @@
 }
 
 .opp .avatar-priority-ring {
-  border-color: var(--warn);
+  border-color: var(--err);
 }
 
 @keyframes priorityPulse {
@@ -222,9 +222,13 @@
   font-size: var(--fs-md);
 }
 
-.life-counter.life-danger {
+.life-counter.low-life {
   color: var(--err);
-  animation: dangerPulse 1s infinite alternate;
+  animation: lifeLowPulse calc(1.2s / var(--fx-speed, 1)) ease-in-out 3;
+}
+
+.life-counter.low-life.critical {
+  animation: lifeCriticalPulse calc(0.6s / var(--fx-speed, 1)) ease-in-out 3;
 }
 
 .life-value {
@@ -243,9 +247,14 @@ html.fx-off .life-value {
   animation: none !important;
 }
 
-@keyframes dangerPulse {
-  from { transform: scale(1); }
-  to { transform: scale(1.1); text-shadow: 0 0 8px var(--err); }
+@keyframes lifeLowPulse {
+  0%, 100% { scale: 1; }
+  50% { scale: 1.08; }
+}
+
+@keyframes lifeCriticalPulse {
+  0%, 100% { scale: 1; }
+  50% { scale: 1.16; }
 }
 
 .player-counter-badge {
@@ -298,6 +307,7 @@ html.fx-off .life-value {
   border: 1px solid var(--veil-5);
   color: var(--fg-2);
   font-family: var(--font-mono, monospace);
+  transition: color 200ms cubic-bezier(0.16, 1, 0.3, 1), border-color 200ms cubic-bezier(0.16, 1, 0.3, 1), transform 200ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .player-timer-badge.timer-active {
@@ -309,12 +319,46 @@ html.fx-off .life-value {
 .player-timer-badge.timer-low {
   border-color: var(--err);
   color: var(--err);
-  animation: timerWarning 0.8s infinite alternate;
 }
 
-@keyframes timerWarning {
-  from { opacity: 0.7; }
-  to { opacity: 1; text-shadow: 0 0 6px var(--err); }
+/* Urgency tiers: 30-10s warn, 10-5s urgent, 5-0s critical. The number re-keys
+   on every tick (PlayerInfoBar), so the one-shot pulse on `.timer-value` lands
+   once per second instead of free-running. */
+.player-timer-badge.warn {
+  color: var(--warn);
+  border-color: var(--warn);
+  transform: scale(1.02);
+}
+
+.player-timer-badge.urgent {
+  color: var(--err);
+  border-color: var(--err);
+}
+
+.player-timer-badge.urgent .timer-value {
+  animation: timerTick 1s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes timerTick {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+.player-timer-badge.critical {
+  color: var(--err);
+  border-color: var(--err);
+  transform: scale(1.1);
+}
+
+.player-timer-badge.critical .timer-value {
+  animation: timerShake 1s linear;
+}
+
+@keyframes timerShake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-1px); }
+  75% { transform: translateX(1px); }
 }
 
 .player-badges {
@@ -386,7 +430,7 @@ html.fx-off .life-value {
 }
 
 .player-info-bar.targetable {
-  animation: playerTargetPulse 1.2s ease-in-out infinite;
+  animation: playerTargetPulse 1.2s ease-in-out 3;
   cursor: pointer;
   border-color: var(--gold-300);
   z-index: 30;
@@ -399,8 +443,34 @@ html.fx-off .life-value {
     box-shadow: 0 0 16px 2px rgb(var(--gold-rgb) / 0.5), 0 8px 24px var(--shade-3);
   }
   .avatar-priority-ring,
-  .life-counter.life-danger,
-  .player-timer-badge.timer-low {
+  .life-counter.low-life,
+  .life-counter.low-life.critical {
+    animation: none;
+  }
+  .player-timer-badge.urgent .timer-value,
+  .player-timer-badge.critical .timer-value {
+    animation: none;
+  }
+  .player-timer-badge.warn,
+  .player-timer-badge.critical {
+    transform: none;
+  }
+}
+
+.player-info-bar.active-glow {
+  animation: activeGlow 300ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes activeGlow {
+  50% { border-color: var(--gold-500); transform: scale(1.02); }
+}
+
+html.fx-off .player-info-bar.active-glow {
+  animation: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .player-info-bar.active-glow {
     animation: none;
   }
 }
@@ -442,3 +512,494 @@ html.fx-off .life-value {
   color: var(--fg-2);
   border: 1px solid var(--line-3);
 }
+
+/* ── Portrait (new table interface) ─────────────────────────────────────── */
+.player-info-bar.is-portrait {
+  display: grid;
+  grid-template-columns: auto auto auto;
+  grid-template-areas:
+    'av who life'
+    'chips chips chips'
+    'pool pool pool';
+  justify-content: start;
+  column-gap: var(--sp-3);
+  row-gap: var(--sp-2);
+  align-items: center;
+  width: fit-content;
+  max-width: 100%;
+  min-width: 0;
+  height: auto;
+  padding: var(--sp-2) var(--sp-3h) var(--sp-2) var(--sp-2);
+  border: 1px solid var(--line-1);
+  border-radius: var(--r-xl);
+  background: rgb(var(--ink-2-rgb) / 0.55);
+  box-sizing: border-box;
+}
+
+.player-info-bar.is-portrait::before,
+.player-info-bar.is-portrait::after {
+  display: none;
+}
+
+.is-portrait .player-avatar {
+  grid-area: av;
+  position: relative;
+  margin: 0;
+}
+
+.is-portrait .player-avatar .avatar-image {
+  width: 56px;
+  height: 56px;
+  border: 0;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px var(--ink-gap), 0 0 0 3px color-mix(in srgb, var(--seat) 70%, transparent);
+}
+
+.is-portrait.is-turn .player-avatar .avatar-image {
+  box-shadow: 0 0 0 2px var(--ink-gap), 0 0 0 4px var(--gold-300), 0 0 22px rgb(var(--gold-rgb) / 0.6);
+}
+
+.is-portrait .player-details {
+  grid-area: who;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  min-width: 0;
+}
+
+.is-portrait .player-name-row {
+  min-width: 0;
+}
+
+.is-portrait .player-name {
+  font-size: var(--fs-md);
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pp-hand-badge {
+  position: absolute;
+  right: -8px;
+  bottom: -4px;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-0h);
+  height: 22px;
+  padding: 0 var(--sp-1h) 0 var(--sp-1);
+  border-radius: var(--r-mid);
+  background: var(--ink-gap);
+  border: 1.5px solid var(--gold-500);
+  color: var(--gold-300);
+  font-family: var(--font-ui);
+  font-size: var(--fs-xs);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  text-shadow: none;
+  box-shadow: 0 2px 8px var(--shade-2);
+  pointer-events: none;
+}
+
+.rank-badge.pp-rank-icon {
+  position: absolute;
+  left: -8px;
+  top: -4px;
+  padding: 0;
+  justify-content: center;
+  border-radius: 50%;
+  border-width: 1.5px;
+  background: var(--ink-gap);
+  box-shadow: 0 2px 8px var(--shade-2);
+  pointer-events: auto;
+}
+
+.rank-badge.pp-rank-icon-lg {
+  font-size: var(--fs-lg);
+  width: 2.2em;
+  height: 2.2em;
+}
+
+.rank-badge.pp-rank-icon-lg .rank-badge-icon {
+  font-size: 1em;
+}
+
+.arena-board > .zone-bottom .pz-bottom-row > .player-info-bar.is-portrait .rank-badge.pp-rank-icon-lg {
+  font-size: var(--fs-xl);
+  left: -10px;
+}
+
+.pp-hand-badge.is-viewable {
+  cursor: pointer;
+  pointer-events: auto;
+  font-family: var(--font-ui);
+  animation: pp-hand-reveal 1.8s ease-in-out infinite;
+}
+
+.pp-hand-badge.is-viewable:hover {
+  background: var(--gold-soft);
+}
+
+@keyframes pp-hand-reveal {
+  50% {
+    box-shadow: 0 0 0 4px rgb(var(--gold-rgb) / 0.35), 0 2px 8px var(--shade-2);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pp-hand-badge.is-viewable {
+    animation: none;
+  }
+}
+
+.count-flash {
+  position: absolute;
+  right: 0;
+  top: -16px;
+  font-family: var(--font-ui);
+  font-size: var(--fs-xs);
+  font-weight: 800;
+  line-height: 1;
+  pointer-events: none;
+  text-shadow: 0 1px 3px var(--shade-3);
+  animation: count-flash-rise 2.2s ease-out both;
+}
+
+.count-flash.count-flash--hand {
+  right: -8px;
+  top: auto;
+  bottom: 20px;
+}
+
+.count-flash.is-up {
+  color: var(--ok);
+}
+
+.count-flash.is-down {
+  color: var(--err);
+}
+
+@keyframes count-flash-rise {
+  0% {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  12% {
+    opacity: 1;
+    transform: none;
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .count-flash {
+    animation: none;
+  }
+}
+
+.pp-stats .resource-chip {
+  position: relative;
+}
+
+.pp-stats {
+  display: flex;
+  min-width: 0;
+}
+
+.pp-stats .resource-bar.stats {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  align-self: auto;
+  gap: var(--sp-1);
+  padding: 0;
+  min-width: 0;
+}
+
+.pp-stats .resource-piles {
+  display: grid;
+  grid-template-columns: repeat(2, max-content);
+  align-items: center;
+  gap: var(--sp-1);
+}
+
+.pp-stats .resource-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  height: auto;
+  padding: var(--sp-0h) var(--sp-1h) var(--sp-0h) var(--sp-1);
+  border-radius: var(--r-sm);
+  border: 1px solid var(--line-1);
+  background: rgb(var(--ink-2-rgb) / 0.7);
+  color: var(--fg-2);
+  box-shadow: none;
+  font-family: var(--font-ui);
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.pp-stats .resource-chip .chip-icon {
+  display: inline-flex;
+  font-size: var(--fs-md);
+  color: var(--fg-3);
+}
+
+.pp-stats .resource-chip .chip-icon svg {
+  width: 1.375em;
+  height: 1.375em;
+}
+
+.pp-stats .resource-chip.has-playable {
+  border-color: rgb(var(--ok-rgb) / 0.8);
+}
+
+.pp-life {
+  grid-area: life;
+  position: relative;
+  font-family: var(--font-display);
+  font-size: var(--fs-life);
+  font-weight: 800;
+  line-height: 0.9;
+  font-variant-numeric: tabular-nums;
+  color: var(--fg-hi);
+  text-shadow: 0 2px 10px var(--shade-3);
+}
+
+.pp-life.life-danger {
+  color: var(--err);
+}
+
+.player-chips {
+  grid-area: chips;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--sp-1);
+  min-width: 0;
+}
+
+.player-chips:empty {
+  display: none;
+}
+
+.is-portrait .player-badges {
+  display: contents;
+}
+
+.is-portrait .player-badges .badge,
+.commander-chip,
+.is-portrait .player-chips .counter,
+.is-portrait .player-chips .player-timer-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  height: auto;
+  padding: var(--sp-0h) var(--sp-2) var(--sp-0h) var(--sp-1h);
+  border-radius: var(--r-pill);
+  border: 1px solid var(--line-2);
+  background: rgb(var(--ink-2-rgb) / 0.8);
+  color: var(--fg-2);
+  font-size: var(--fs-2xs);
+  font-weight: 700;
+  line-height: 1.2;
+  filter: none;
+  max-width: 100%;
+}
+
+.is-portrait .badge-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 120px;
+}
+
+.is-portrait .badge-monarch,
+.is-portrait .badge-ring {
+  color: var(--gold-300);
+  border-color: var(--gold-line);
+  background: var(--gold-soft);
+}
+
+.is-portrait .badge-initiative {
+  color: var(--warn);
+  border-color: var(--warn-line);
+  background: var(--warn-soft);
+}
+
+.is-portrait .badge[role='button'],
+.is-portrait .badge.interactive-badge {
+  cursor: default;
+}
+
+.is-portrait .badge[role='button'] {
+  cursor: pointer;
+}
+
+.commander-chip {
+  color: var(--fg-2);
+  padding-left: var(--sp-0h);
+}
+
+.commander-chip-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--chip-seat, var(--fg-3));
+  box-shadow: 0 0 0 1px var(--shade-3) inset;
+}
+
+.commander-chip.tone-warning {
+  color: var(--warn);
+  border-color: var(--warn-line);
+  background: var(--warn-soft);
+}
+
+.commander-chip.tone-lethal {
+  color: var(--err);
+  border-color: var(--err-line);
+  background: var(--err-soft);
+}
+
+.pp-pool {
+  grid-area: pool;
+  min-width: 0;
+}
+
+.pp-pool .mana-inline {
+  justify-content: flex-start;
+  min-height: 30px;
+  padding: var(--sp-1) var(--sp-2);
+  border-radius: var(--r-md);
+  border: 1px solid var(--line-2);
+  background: rgb(var(--ink-2-rgb) / 0.82);
+}
+
+.bz-status-row > .player-info-bar.is-portrait,
+.pz-bottom-row > .player-info-bar.is-portrait,
+.oz-top-row > .player-info-bar.is-portrait {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.arena-board > .zone-bottom .pz-bottom-row > .player-info-bar.is-portrait .player-avatar .avatar-image {
+  width: 76px;
+  height: 76px;
+}
+
+.arena-board > .zone-bottom .pz-bottom-row > .player-info-bar.is-portrait {
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-areas:
+    'chips chips'
+    'av name'
+    'av life'
+    'stats stats'
+    'pool pool';
+  row-gap: var(--sp-1h);
+  width: 100%;
+}
+
+.arena-board > .zone-bottom .pz-bottom-row > .player-info-bar.is-portrait .player-details {
+  display: contents;
+}
+
+.arena-board > .zone-bottom .pz-bottom-row > .player-info-bar.is-portrait .player-name-row {
+  grid-area: name;
+  align-self: end;
+}
+
+.arena-board > .zone-bottom .pz-bottom-row > .player-info-bar.is-portrait .player-name {
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+}
+
+.arena-board > .zone-bottom .pz-bottom-row > .player-info-bar.is-portrait .pp-stats {
+  grid-area: stats;
+}
+
+.arena-board > .zone-bottom .pz-bottom-row > .player-info-bar.is-portrait .pp-life {
+  font-size: var(--fs-life-lg);
+  align-self: start;
+}
+
+.arena-board > .zone-bottom .pz-bottom-row > .player-info-bar.is-portrait .pp-hand-badge {
+  height: 26px;
+  font-size: var(--fs-md);
+  right: -10px;
+}
+
+.pp-pool .resource-bar-pool {
+  --pool-label-w: 96px;
+  position: relative;
+}
+
+.pp-pool .resource-bar-pool .mana-inline {
+  flex-wrap: wrap;
+  gap: var(--sp-0h) var(--sp-1h);
+  padding-inline: var(--sp-1h);
+}
+
+.pp-pool .resource-bar-pool .mana-inline.is-empty {
+  padding-right: var(--pool-label-w);
+}
+
+.pp-pool .mana-inline-pip {
+  gap: var(--sp-0h);
+  font-size: var(--fs-xs);
+}
+
+.pp-pool .mana-inline-count {
+  min-width: 0;
+}
+
+.pp-pool .resource-pool-label {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-style: normal;
+  font-size: var(--fs-3xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+  pointer-events: none;
+}
+
+.pp-av {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  font-family: var(--font-display);
+  font-size: var(--fs-xl);
+  font-weight: 800;
+  color: var(--fg-hi);
+  text-shadow: 0 1px 3px var(--shade-3);
+  background: radial-gradient(circle at 30% 25%, color-mix(in srgb, var(--seat) 80%, var(--fg-hi) 20%), color-mix(in srgb, var(--seat) 55%, var(--ink-0) 45%));
+  box-shadow: 0 0 0 2px var(--ink-gap), 0 0 0 3px color-mix(in srgb, var(--seat) 70%, transparent);
+}
+
+.is-portrait.is-turn .pp-av {
+  box-shadow: 0 0 0 2px var(--ink-gap), 0 0 0 4px var(--gold-300), 0 0 22px rgb(var(--gold-rgb) / 0.6);
+}
+
+.arena-board > .zone-bottom .pz-bottom-row > .player-info-bar.is-portrait .pp-av {
+  width: 76px;
+  height: 76px;
+  font-size: var(--fs-2xl);
+}
+
+

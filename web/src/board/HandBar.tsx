@@ -6,8 +6,10 @@ import {
   computeHandArc,
   computeHandBarSizing,
   computeHandHoverScale,
+  computeHandSideReserve,
   computeCostPipSize,
   handRestStripWidth,
+  type HandSideReserve,
   HAND_ARC_PLAYABLE_RISE_PX,
   HAND_BAR_MAX_CARD_W,
   HAND_BAR_PEEK_RATIO,
@@ -16,10 +18,14 @@ import {
   HAND_BAR_PADDING_Y,
 } from './handSizing'
 import { handDropIndex, moveHandCard, reconcileHandOrder } from './handOrder'
+import { useDrawSlide } from './useDrawSlide'
 import { useSettings } from '../state/store'
 import './HandBar.css'
+import './drawSlide.css'
 
 const HAND_DRAG_THRESHOLD_PX = 8
+/** Side panels the hand must not cover: the bottom-left player panel (its mana pool row) and the command wheel. */
+const HAND_SIDE_PANELS = '.pz-bottom-row, [data-testid="game-dock"]'
 import './targetZone.css'
 
 /** Printed mana cost as bubbles over the card's top edge (split cards show
@@ -73,6 +79,7 @@ export default function HandBar({
   const dragRef = useRef<{ id: string; pointerId: number; startX: number; startY: number; active: boolean } | null>(null)
   const suppressClickRef = useRef(false)
   const [draggingId, setDraggingId] = useState<string | null>(null)
+  const drawn = useDrawSlide(zoneRef, serverIds, !raised, { scope: '.board-shell', select: '.resource-bar.my .library-chip, .resource-bar.my .library-stack' })
 
   useEffect(() => {
     orderedIdsRef.current = orderedIds
@@ -124,17 +131,28 @@ export default function HandBar({
   }, [])
   const [cardW, setCardW] = useState(HAND_BAR_MAX_CARD_W)
   const [gap, setGap] = useState(0)
+  const [sideReserve, setSideReserve] = useState<HandSideReserve>({ left: 0, right: 0 })
   const [hoverScale, setHoverScale] = useState(1.5)
   const arcEntries = useMemo(() => computeHandArc(entries.length, cardW), [entries.length, cardW])
 
   useEffect(() => {
     const el = zoneRef.current
     if (!el || entries.length === 0) return
+    const host = el.parentElement ?? el
+    const scope = el.closest<HTMLElement>('.board-wrap') ?? host
 
     const measure = () => {
-      const availW = el.getBoundingClientRect().width
+      const hostRect = host.getBoundingClientRect()
+      if (hostRect.width <= 0) return
+      const barRect = el.getBoundingClientRect()
+      const panels = Array.from(scope.querySelectorAll<HTMLElement>(HAND_SIDE_PANELS))
+        .map((panel) => panel.getBoundingClientRect())
+        .filter((r) => r.width > 0 && r.top < barRect.bottom && r.bottom > barRect.top)
+      const reserve = computeHandSideReserve({ left: hostRect.left, right: hostRect.right }, panels)
+      const availW = hostRect.width - reserve.left - reserve.right
       if (availW <= 0) return
       const sizing = computeHandBarSizing(availW, entries.length)
+      setSideReserve(reserve)
       setCardW(sizing.cardW)
       setGap(sizing.gap)
       setHoverScale(computeHandHoverScale(sizing.cardW, window.innerHeight))
@@ -143,10 +161,14 @@ export default function HandBar({
     measure()
     window.addEventListener('resize', measure)
     const ro = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(measure)
-    ro?.observe(el)
+    ro?.observe(host)
+    scope.querySelectorAll(HAND_SIDE_PANELS).forEach((panel) => ro?.observe(panel))
+    const mo = typeof MutationObserver === 'undefined' ? null : new MutationObserver(measure)
+    mo?.observe(scope, { childList: true })
     return () => {
       window.removeEventListener('resize', measure)
       ro?.disconnect()
+      mo?.disconnect()
     }
   }, [entries.length])
 
@@ -165,6 +187,8 @@ export default function HandBar({
       data-hand-count={entries.length}
       style={
         {
+          left: `${sideReserve.left}px`,
+          right: `${sideReserve.right}px`,
           '--card-w': `${cardW}px`,
           '--hand-gap': `${gap}px`,
           '--hand-rest-overlap': HAND_BAR_REST_OVERLAP_RATIO,
@@ -176,12 +200,13 @@ export default function HandBar({
     >
       {entries.map(([id, card], i) => {
         const arc = arcEntries[i] ?? { rot: 0, rise: 0 }
+        const draw = drawn.get(id)
         const isInteractive = playableIds.has(id) || targetIds.has(id)
         const rise = arc.rise + (isInteractive ? HAND_ARC_PLAYABLE_RISE_PX : 0)
         return (
           <div
             key={id}
-            className={`hand-card-slot${draggingId === id ? ' is-dragging' : ''}`}
+            className={`hand-card-slot${draggingId === id ? ' is-dragging' : ''}${draw ? ` draw-${draw}` : ''}`}
             data-hand-id={id}
             style={{ '--rot': `${arc.rot}deg`, '--rise': `${rise}px` } as React.CSSProperties}
             onMouseEnter={onHover ? (e) => onHover(card, e.currentTarget.getBoundingClientRect()) : undefined}
