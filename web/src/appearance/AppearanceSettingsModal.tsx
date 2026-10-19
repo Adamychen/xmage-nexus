@@ -10,7 +10,7 @@ import CustomSleeveTile from './CustomSleeveTile'
 import CustomCardArtManager from './CustomCardArtManager'
 import PlaymatPicker from './PlaymatPicker'
 import { CARD_STYLES, TAP_STYLES } from '../board/compactCard'
-import { PT_BADGE_MODES, SICKNESS_STYLES } from '../board/cardOverlays'
+import { KEYWORD_ICON_SETS, PT_BADGE_MODES, SICKNESS_STYLES } from '../board/cardOverlays'
 import { ZOOM_PRESETS, isZoomPreset, stepZoom, zoomPercent } from './zoom'
 import { useTranslation } from '../i18n'
 import { useSettings } from '../state/selectors'
@@ -194,6 +194,22 @@ export default function AppearanceSettingsModal({ onClose }: Props) {
                 <span className="board-layout-label">{t('lobby', `sickness_style_${style}`)}</span>
                 <span className="board-layout-desc">{t('lobby', `sickness_style_${style}_desc`)}</span>
                 {settings.sicknessStyle === style && <span className="board-layout-check">✓</span>}
+              </Button>
+            ))}
+          </div>
+          <div className="board-layout-grid">
+            {KEYWORD_ICON_SETS.map((set) => (
+              <Button
+                key={set}
+                variant="ghost"
+                className={`board-layout-item ${settings.keywordIcons === set ? 'selected' : ''}`}
+                onClick={() => setSetting('keywordIcons', set)}
+                aria-pressed={settings.keywordIcons === set}
+                data-testid={`appearance-keyword-icons-${set}`}
+              >
+                <span className="board-layout-label">{t('lobby', `keyword_icons_${set}`)}</span>
+                <span className="board-layout-desc">{t('lobby', `keyword_icons_${set}_desc`)}</span>
+                {settings.keywordIcons === set && <span className="board-layout-check">✓</span>}
               </Button>
             ))}
           </div>

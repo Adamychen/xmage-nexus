@@ -27,6 +27,14 @@ export const SICKNESS_STYLES: readonly SicknessStyle[] = ['badge', 'veil']
 export function normalizeSicknessStyle(value: unknown): SicknessStyle {
   return SICKNESS_STYLES.includes(value as SicknessStyle) ? (value as SicknessStyle) : 'badge'
 }
+
+export type KeywordIconSet = 'coins' | 'outline'
+
+export const KEYWORD_ICON_SETS: readonly KeywordIconSet[] = ['coins', 'outline']
+
+export function normalizeKeywordIconSet(value: unknown): KeywordIconSet {
+  return KEYWORD_ICON_SETS.includes(value as KeywordIconSet) ? (value as KeywordIconSet) : 'coins'
+}
 export type CardRender = 'image' | 'rendered'
 
 export const CARD_RENDERS: readonly CardRender[] = ['image', 'rendered']
