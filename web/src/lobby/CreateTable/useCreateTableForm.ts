@@ -37,6 +37,8 @@ import {
   type TournamentCategory,
   buildWizardSteps,
   type CreateKind,
+  DEFAULT_ATTACK_OPTION,
+  DEFAULT_RANGE,
 } from './constants'
 import {
   resolveTableKind,
@@ -232,8 +234,8 @@ export function useCreateTableForm(onClose: () => void, kind: CreateKind = 'matc
   const [customStartHandSizeEnabled, setCustomStartHandSizeEnabled] = useState(false)
   const [customStartHandSize, setCustomStartHandSize] = useState(7)
   const [planeChase, setPlaneChase] = useState(false)
-  const [attackOption, setAttackOption] = useState('MULTIPLE')
-  const [range, setRange] = useState('ALL')
+  const [attackOption, setAttackOption] = useState(DEFAULT_ATTACK_OPTION)
+  const [range, setRange] = useState(DEFAULT_RANGE)
 
   // Security & Permissions tab
   const [password, setPassword] = useState('')

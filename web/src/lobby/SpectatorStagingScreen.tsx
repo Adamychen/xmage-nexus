@@ -4,6 +4,7 @@ import { hideStaging, leaveStagingTable, removeStagingTable, returnToLobby, setM
 import { setState } from '../state/state'
 import type { SeatView, TableView } from '../net/types'
 import * as cmds from '../net/commands'
+import { recreateTableArgs } from './stagingRecreate'
 import ChatBox, { parseReadyMarker } from './ChatBox'
 import JoinTableDialog from './JoinTableDialog'
 import CountryFlag from './CountryFlag'
@@ -305,20 +306,7 @@ export default function SpectatorStagingScreen({
         if (!ok) return
       }
       await cmds.removeTable(tTable.tableId)
-      const simSeats = seats.filter((s) => s.playerType === 'SIM').length
-      const playerTypes = seats.map((s) => s.playerType || 'HUMAN')
-      const createRes = await cmds.createTable({
-        name: tTable.tableName,
-        gameType: tTable.gameType,
-        deckType: tTable.deckType,
-        winsNeeded: 1,
-        playerTypes,
-        password: password?.trim() || undefined,
-        skillLevel: tTable.skillLevel || 'CASUAL',
-        rated: tTable.rated,
-        spectatorsAllowed: tTable.spectatorsAllowed,
-        simDecks: simSeats > 0 ? Array.from({ length: simSeats }, () => finalDeck) : undefined,
-      })
+      const createRes = await cmds.createTable(recreateTableArgs({ ...tTable, seats }, finalDeck, password))
       if (!createRes.ok) {
         const code = (createRes as { errorCode?: string }).errorCode
         const raw = createRes.error || code || ''
