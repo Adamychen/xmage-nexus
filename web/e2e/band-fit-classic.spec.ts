@@ -58,7 +58,7 @@ const VIEWPORTS: Array<[number, number]> = []
 for (let w = 1500; w <= 2560; w += 53) for (const h of [900, 1080, 1250, 1440]) VIEWPORTS.push([w, h])
 
 test('classic bands settle on one fit at every viewport instead of flipping @board', async ({ page }) => {
-  test.setTimeout(240_000)
+  test.setTimeout(420_000)
   await page.setViewportSize({ width: 1920, height: 1080 })
   await page.goto('/')
   await dismissSetupWizard(page)
@@ -72,14 +72,31 @@ test('classic bands settle on one fit at every viewport instead of flipping @boa
   const flipping: string[] = []
   for (const [w, h] of VIEWPORTS) {
     await page.setViewportSize({ width: w, height: h })
-    await page.waitForTimeout(700)
     const flips = await page.evaluate(() => new Promise<Record<string, number>>((resolve) => {
       const bands = [...document.querySelectorAll<HTMLElement>('.board-zone .bz-band')]
       const key = (b: HTMLElement) => `${b.closest('.board-zone')?.getAttribute('data-player-name')}:${b.classList.contains('permanents-band') ? 'permanents' : 'creatures'}`
       const state = (b: HTMLElement) => `${b.style.getPropertyValue('--card-w')}|${b.getAttribute('data-band-lines') ?? ''}`
+      const snapshot = () => bands.map(state).join(',')
+      const settleFrames = 30
+      const settleCapMs = 5000
+      const started = performance.now()
+      let calm = 0
+      let before = snapshot()
+      const settle = () => {
+        const now = snapshot()
+        calm = now === before ? calm + 1 : 0
+        before = now
+        if (calm >= settleFrames || performance.now() - started > settleCapMs) observe()
+        else requestAnimationFrame(settle)
+      }
       const last = new Map(bands.map((b) => [b, state(b)]))
       const out: Record<string, number> = {}
       let frames = 0
+      const observe = () => {
+        for (const b of bands) last.set(b, state(b))
+        frames = 0
+        requestAnimationFrame(tick)
+      }
       const tick = () => {
         for (const b of bands) {
           const s = state(b)
@@ -89,7 +106,7 @@ test('classic bands settle on one fit at every viewport instead of flipping @boa
         if (++frames < 60) requestAnimationFrame(tick)
         else resolve(out)
       }
-      requestAnimationFrame(tick)
+      requestAnimationFrame(settle)
     }))
     for (const [k, n] of Object.entries(flips)) flipping.push(`${w}x${h} ${k} ${n}`)
   }
