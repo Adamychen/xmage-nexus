@@ -40,6 +40,7 @@ import { targetsStackObject } from './stackTargeting'
 import CombatArrowsOverlay from '../board/CombatArrowsOverlay'
 import FeedbackOverlay from '../board/FeedbackOverlay'
 import ImpactOverlay from '../board/ImpactOverlay'
+import ProjectileOverlay from '../board/ProjectileOverlay'
 import LowLifeVignette from '../board/LowLifeVignette'
 import TurnRecapStrip from './TurnRecapStrip'
 import { useAttentionAlerts } from './attentionAlerts'
@@ -555,6 +556,7 @@ export default function GameScreen() {
               <TurnRecapStrip />
               <FeedbackOverlay />
               <ImpactOverlay />
+              <ProjectileOverlay />
               {v2 && stackCount > 0 && (
                 <StackDeck
                   stack={game?.stack ?? null}

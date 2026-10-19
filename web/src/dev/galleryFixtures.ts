@@ -26,6 +26,7 @@ import type { Deck } from '../lobby/decks'
 import type { RollbackVote } from '../state/rollbackVote'
 import { STORAGE_KEY as CREATE_TABLE_STORAGE_KEY } from '../lobby/CreateTable/constants'
 import manifest from '../../fixtures/recorded/manifest.json'
+import { replayProjectileDemo } from './projectileDemo'
 
 interface FrameModule {
   default: { gameId: string; gameView: GameView }
@@ -78,6 +79,7 @@ export type GalleryScreenName =
   | 'help'
   | 'gameend'
   | 'cards'
+  | 'projectile'
 
 /** Acción de dev de una entrada: un botón en el sidebar que modifica el estado de la galería. */
 export interface GalleryAction {
@@ -633,6 +635,43 @@ function withMixedStackKinds(game: GameView): GameView {
     'gallery-kind-creature': { id: 'gallery-kind-creature', name: 'Mystic Snake', expansionSetCode: 'MH2', cardNumber: '50', cardTypes: ['CREATURE'], power: 2, toughness: 2, ...controller },
   }
   return { ...game, stack: stack as unknown as GameView['stack'] }
+}
+
+const BOLT_ON_STACK_ID = 'gallery-bolt-targeting'
+
+function withBoltTargeting(game: GameView, targetId: string): GameView {
+  const me = controlledPlayer(game)
+  const bolt = {
+    id: BOLT_ON_STACK_ID,
+    name: 'Lightning Bolt',
+    expansionSetCode: '2XM',
+    cardNumber: '129',
+    cardTypes: ['INSTANT'],
+    controllerId: me?.playerId,
+    controllerName: me?.name,
+    rules: ['Lightning Bolt deals 3 damage to any target.'],
+    targets: [targetId],
+  }
+  return { ...game, stack: { [BOLT_ON_STACK_ID]: bolt } as unknown as GameView['stack'] }
+}
+
+/** Resolves the bolt the way the server would; the store update runs the transition engine on the diff. */
+function resolveBoltOn(targetId: string): (game: GameView) => GameView {
+  return (game) => {
+    const next: GameView = {
+      ...game,
+      stack: {} as unknown as GameView['stack'],
+      players: players(game).map((p) => {
+        const perm = p.battlefield?.[targetId]
+        if (perm) {
+          return { ...p, battlefield: { ...p.battlefield, [targetId]: { ...perm, damage: (perm.damage ?? 0) + 3 } } }
+        }
+        if (p.playerId === targetId) return { ...p, life: (p.life ?? 0) - 3 }
+        return p
+      }) as PlayerView[],
+    }
+    return next
+  }
 }
 
 function withSpellStack(game: GameView): GameView {
@@ -1402,6 +1441,41 @@ export function buildGalleryEntries(): GalleryEntry[] {
       game: withMixedStackKinds(game),
       gameId,
     })
+    entries.push({
+      id: 'anim:projectile',
+      group: 'Animaciones',
+      label: 'Stack: spell projectile to target',
+      description: 'The orb flies from the stack card box to the target box on mount and on each "Replay" press (260-480 ms by distance; nothing when effects are off).',
+      screen: 'projectile',
+      action: { label: 'Replay', run: replayProjectileDemo },
+    })
+    const bolted = calmGame(game)
+    const opponent = opponentPlayer(bolted)
+    const opponentCreature = creatureIds(opponent)[0]
+    if (opponentCreature) {
+      entries.push({
+        id: 'anim:spell-hit-creature',
+        group: 'Animaciones',
+        label: 'Stack: Bolt hits a creature (projectile → shake → -3)',
+        description: 'Press "Resolve": the spell leaves the stack, the projectile flies to the creature, and the shake, sparks and -3 land on arrival. Reselect the entry to play it again.',
+        phase: 'game',
+        game: withBoltTargeting(bolted, opponentCreature),
+        gameId,
+        action: { label: 'Resolve Bolt', apply: resolveBoltOn(opponentCreature) },
+      })
+    }
+    if (opponent) {
+      entries.push({
+        id: 'anim:spell-hit-player',
+        group: 'Animaciones',
+        label: 'Stack: Bolt hits a player (projectile → shake → -3)',
+        description: 'Press "Resolve": the projectile flies to the opponent info bar, and the shake and -3 land on arrival. Reselect the entry to play it again.',
+        phase: 'game',
+        game: withBoltTargeting(bolted, opponent.playerId),
+        gameId,
+        action: { label: 'Resolve Bolt', apply: resolveBoltOn(opponent.playerId) },
+      })
+    }
     entries.push({
       id: 'anim:stack-countdown',
       group: 'Animaciones',

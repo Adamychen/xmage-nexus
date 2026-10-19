@@ -138,3 +138,36 @@
   flex: 0 0 352px;
   height: 352px;
 }
+
+.projectile-stage {
+  position: relative;
+  height: 100%;
+  background: var(--ink-2);
+}
+
+.projectile-stage-source,
+.projectile-stage-target {
+  position: absolute;
+  top: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--brand);
+  border-radius: var(--r-sm);
+  background: var(--ink-3);
+  color: var(--fg-2);
+  font-size: var(--fs-xs);
+  transform: translate(-50%, -50%);
+}
+
+.projectile-stage-source {
+  left: 35%;
+  width: 100px;
+  height: 140px;
+}
+
+.projectile-stage-target {
+  left: 70%;
+  width: 120px;
+  height: 48px;
+}

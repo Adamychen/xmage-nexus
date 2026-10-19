@@ -361,5 +361,40 @@ export function synthesizeSound(ctx: AudioContext, key: SoundKey): AudioBuffer {
       }
       return buf
     }
+
+    case 'projectile_launch': {
+      const duration = 0.24
+      const buf = makeBuffer(ctx, duration)
+      const data = buf.getChannelData(0)
+      const sr = ctx.sampleRate
+      let hp = 0
+      let prev = 0
+      for (let i = 0; i < data.length; i++) {
+        const t = i / sr
+        const env = Math.min(1, t / 0.006) * Math.exp(-t * 9)
+        const rise = 320 + 780 * Math.min(1, t / 0.12)
+        const tone = Math.sin(2 * Math.PI * rise * t) * 0.45 + Math.sin(2 * Math.PI * rise * 2.01 * t) * 0.12
+        const white = Math.random() * 2 - 1
+        hp = 0.85 * (hp + white - prev)
+        prev = white
+        data[i] = (tone + hp * 0.3) * env * 0.5
+      }
+      return buf
+    }
+
+    case 'projectile_impact': {
+      const duration = 0.3
+      const buf = makeBuffer(ctx, duration)
+      const data = buf.getChannelData(0)
+      const sr = ctx.sampleRate
+      for (let i = 0; i < data.length; i++) {
+        const t = i / sr
+        const body = Math.sin(2 * Math.PI * (90 + 150 * Math.exp(-t * 30)) * t) * Math.exp(-t * 18) * 0.8
+        const click = (Math.random() * 2 - 1) * Math.exp(-t * 400) * 0.5
+        const shimmer = Math.sin(2 * Math.PI * 1320 * t) * Math.exp(-t * 30) * 0.15
+        data[i] = Math.tanh((body + click + shimmer) * 1.4) * 0.6
+      }
+      return buf
+    }
   }
 }
