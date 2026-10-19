@@ -831,3 +831,43 @@ describe('CardSlot ptBadgeMode con base desconocida', () => {
     }
   })
 })
+
+describe('CardSlot keywordIcons', () => {
+  const beast = (rules: string[]) =>
+    ({ id: 'kw1', name: 'Keyword Beast', cardTypes: ['Creature'], power: '4', toughness: '4', rules }) as unknown as PermanentView
+
+  const withSet = (set: 'coins' | 'outline', card: PermanentView) => {
+    setSetting('keywordIcons', set)
+    try {
+      return render(<CardSlot card={card} showPt />)
+    } finally {
+      setSetting('keywordIcons', 'coins')
+    }
+  }
+
+  it('coins (default): draws the seven keywords as solid glyphs instead of emoji', () => {
+    const { container } = withSet('coins', beast(['Flying, deathtouch, lifelink, haste']))
+    const badges = [...container.querySelectorAll('.keyword-badge')]
+    expect(badges).toHaveLength(4)
+    for (const b of badges) {
+      expect(b.classList.contains('icons-coins')).toBe(true)
+      expect(b.querySelector('svg')).not.toBeNull()
+    }
+    expect(container.querySelector('.keyword-badge.kw-flying')).not.toBeNull()
+  })
+
+  it('outline: switches the same badges to the line set', () => {
+    const { container } = withSet('outline', beast(['Trample, hexproof, indestructible']))
+    const badges = [...container.querySelectorAll('.keyword-badge')]
+    expect(badges).toHaveLength(3)
+    for (const b of badges) expect(b.classList.contains('icons-outline')).toBe(true)
+  })
+
+  it('keeps the emoji for badge keywords outside the set', () => {
+    const { container } = withSet('outline', beast(['Menace']))
+    const badge = container.querySelector('.keyword-badge') as HTMLElement
+    expect(badge).not.toBeNull()
+    expect(badge.classList.contains('is-glyph')).toBe(false)
+    expect(badge.querySelector('svg')).toBeNull()
+  })
+})

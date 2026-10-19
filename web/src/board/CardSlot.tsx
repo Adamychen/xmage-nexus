@@ -25,7 +25,8 @@ import { useSleeveFor } from '../appearance/useSleeve'
 import { perfMark } from '../system/perfProbe'
 import { ManaPip } from '../decks/ArenaManaSymbols'
 import { artCropUrl, landTapColor, manaSourceSymbols, primaryCardType } from './compactCard'
-import type { PtBadgeMode, SicknessStyle } from './cardOverlays'
+import type { KeywordIconSet, PtBadgeMode, SicknessStyle } from './cardOverlays'
+import KeywordGlyph, { isGlyphKeyword } from './KeywordGlyph'
 import { manaPoolElement, spawnManaParticle, type ManaSide } from './manaParticle'
 import './CardSlot.css'
 import './manaParticle.css'
@@ -57,7 +58,7 @@ interface CardSlotProps {
   /** Classic battlefield card: overlay its mana source too (the compact tile always does). */
   showManaSource?: boolean
   /** Settings previews only: local art (never a network lookup) and per-option overrides of the global overlay settings. */
-  demo?: { artUrl: string | null; ptBadgeMode?: PtBadgeMode; sicknessStyle?: SicknessStyle }
+  demo?: { artUrl: string | null; ptBadgeMode?: PtBadgeMode; sicknessStyle?: SicknessStyle; keywordIcons?: KeywordIconSet }
 }
 
 export default function CardSlot({
@@ -86,6 +87,7 @@ export default function CardSlot({
   const settings = useSettings()
   const ptBadgeMode = demo?.ptBadgeMode ?? settings.ptBadgeMode
   const sicknessStyle = demo?.sicknessStyle ?? settings.sicknessStyle
+  const keywordIcons = demo?.keywordIcons ?? settings.keywordIcons
   const sleeve = useSleeveFor(card.controllerId)
   const resolvedImgUrl = useCardImageUrl(card, !faceDown && !demo)
   const imgUrl = demo ? demo.artUrl : resolvedImgUrl
@@ -616,10 +618,10 @@ const showPtBadge =
           {keywordBadges.map((kw) => (
             <span
               key={kw.id}
-              className={`keyword-badge cat-${kw.category}`}
+              className={isGlyphKeyword(kw.id) ? `keyword-badge is-glyph icons-${keywordIcons} kw-${kw.id}` : `keyword-badge cat-${kw.category}`}
               title={`${keywordDisplayName(kw.id, kw.name, (k) => t('keywords', k), kw.parameter)} — ${keywordSummary(kw.id, (k) => t('keywords', k), kw.parameter)}`}
             >
-              {kw.icon}
+              {isGlyphKeyword(kw.id) ? <KeywordGlyph keyword={kw.id} set={keywordIcons} /> : kw.icon}
             </span>
           ))}
         </div>
