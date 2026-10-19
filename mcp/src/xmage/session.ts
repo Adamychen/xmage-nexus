@@ -644,9 +644,9 @@ export function registerSessionTools(server: McpServer): void {
       const client = requireClient(state)
       const id = tableId ?? state.tableId
       if (!id) throw new Error('sin tableId — pasa uno o crea/únete a una mesa primero')
+      state.gameId = null
       await client.requestOk('startMatch', { tableId: id }, 30_000)
       state.tableId = id
-      state.gameId = null
       const gameId = await waitFor(() => state.gameId, waitMs, 'START_GAME')
       return textResult(`partida arrancada\n\n${json({ tableId: id, gameId, session: sessionSnapshot(state) })}`)
     },
@@ -868,11 +868,11 @@ export function registerSessionTools(server: McpServer): void {
       const client = requireClient(state)
       const id = gameId ?? state.gameId
       if (!id) throw new Error('sin gameId — arranca una partida o pasa uno')
-      await client.requestOk('joinGame', { gameId: id }, 20_000)
-      state.gameId = id
       state.lastGameView = null
       state.pendingPrompt = null
       state.gameOver = null
+      await client.requestOk('joinGame', { gameId: id }, 20_000)
+      state.gameId = id
       let fresh = false
       if (waitMs > 0) {
         try {
