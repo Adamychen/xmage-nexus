@@ -99,8 +99,18 @@ describe('galería de estados (P3)', () => {
     expect(entry(entries, 'anim:entered-glow').group).toBe('Animaciones')
     expect(entry(entries, 'anim:spell-cast-own').group).toBe('Animaciones')
     expect(entry(entries, 'anim:spell-cast-opp').group).toBe('Animaciones')
+    expect(entry(entries, 'anim:coin-flip').group).toBe('Animaciones')
+    expect(entry(entries, 'anim:coin-flip').action?.label).toBe('Replay')
     expect(entry(entries, 'anim:sickness').action?.label).toBe('Invocar criatura')
     expect(entry(entries, 'anim:entered-glow').action?.label).toBe('Entrar criatura')
+  })
+
+  it('anim:coin-flip starts at turn 0 with nobody active and no mulligan prompt', () => {
+    const coin = entry(entries, 'anim:coin-flip')
+    expect(coin.game?.turn).toBe(0)
+    expect(coin.game?.players?.some((p) => p.isActive)).toBe(false)
+    expect(coin.feedback ?? null).toBeNull()
+    expect(coin.gameId).toBeTruthy()
   })
 
   it('la entrada de instantáneo del rival empieza con el instantáneo en su mano y la pila vacía', () => {

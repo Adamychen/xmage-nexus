@@ -1,0 +1,118 @@
+.coin-flip-overlay {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  z-index: 999991;
+}
+
+.coin-flip-coin {
+  position: relative;
+  width: 112px;
+  height: 112px;
+  animation-duration: var(--coin-dur);
+  animation-timing-function: linear;
+  animation-fill-mode: both;
+}
+
+/* The fade lives on this wrapper, the 3D spin on `.coin-body`: a running opacity
+   animation on a preserve-3d element flattens its faces (the back then shows mirrored). */
+.coin-flip-coin.is-spin {
+  animation-name: coinAppear;
+}
+
+.coin-flip-coin.is-fade {
+  animation-name: coinFade;
+}
+
+.coin-body {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  animation-duration: var(--coin-dur);
+  animation-timing-function: var(--ease-out);
+  animation-fill-mode: both;
+}
+
+.is-spin .coin-body {
+  animation-name: coinToss;
+}
+
+.coin-face {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  backface-visibility: hidden;
+  box-shadow: 0 8px 28px var(--shade-4), inset 0 0 0 2px rgb(var(--gold-rgb) / 0.5);
+}
+
+.coin-front {
+  background: radial-gradient(circle at 35% 30%, var(--ink-3), var(--ink-0) 80%);
+  border: 4px solid var(--coin-color);
+  padding: var(--sp-1);
+}
+
+.coin-back {
+  transform: rotateY(180deg);
+  background: radial-gradient(circle at 65% 70%, rgb(var(--gold-rgb)), rgb(var(--gold-rgb) / 0.55) 80%);
+  border: 4px solid rgb(var(--gold-rgb) / 0.8);
+}
+
+.coin-name {
+  max-width: 92%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 800;
+  font-size: var(--fs-sm);
+  color: var(--fg-1);
+  text-align: center;
+}
+
+@keyframes coinToss {
+  0% {
+    transform: translateY(40px) rotateY(0deg) scale(0.6);
+  }
+  45% {
+    transform: translateY(-120px) rotateY(540deg) scale(1.08);
+  }
+  75% {
+    transform: translateY(0) rotateY(900deg) scale(1);
+  }
+  88% {
+    transform: translateY(-14px) rotateY(1020deg) scale(1);
+  }
+  100% {
+    transform: translateY(0) rotateY(1080deg) scale(1);
+  }
+}
+
+@keyframes coinAppear {
+  0% {
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes coinFade {
+  0% {
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}

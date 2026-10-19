@@ -411,5 +411,27 @@ export function synthesizeSound(ctx: AudioContext, key: SoundKey): AudioBuffer {
       }
       return buf
     }
+
+    case 'coin_flip': {
+      const duration = 1.5
+      const buf = makeBuffer(ctx, duration)
+      const data = buf.getChannelData(0)
+      const sr = ctx.sampleRate
+      const clinks = [1.05, 1.17]
+      for (let i = 0; i < data.length; i++) {
+        const t = i / sr
+        const wobble = 0.6 + 0.4 * Math.sin(2 * Math.PI * 28 * t)
+        const ring = (Math.sin(2 * Math.PI * 2650 * t) + Math.sin(2 * Math.PI * 4100 * t) * 0.3) * Math.exp(-t * 4.5) * wobble * 0.35
+        let clink = 0
+        for (const at of clinks) {
+          if (t < at) continue
+          const dt = t - at
+          clink += Math.sin(2 * Math.PI * 3520 * dt) * Math.exp(-dt * 60) * 0.5
+          clink += (Math.random() * 2 - 1) * Math.exp(-dt * 900) * 0.4
+        }
+        data[i] = Math.tanh((ring + clink) * 1.2) * 0.8
+      }
+      return buf
+    }
   }
 }

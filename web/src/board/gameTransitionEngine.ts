@@ -14,6 +14,7 @@ import { stackTargetIds } from './stackEntries'
 import { clearCombatSnapshots, combatantIds, planDamageStrikes, playDamageStrikes, primeCombatHolds, snapshotCombatants } from './combatStrikes'
 import { spawnDamageNumber } from './DamageNumber'
 import { restingRect } from './restingRect'
+import { observeCoinFlip } from './coinFlipFx'
 
 const pendingSlams = new Map<string, CardView>()
 const DAMAGE_TEXT = /\bdamage\b/i
@@ -196,7 +197,7 @@ function pulseStackSource(cardId: string): void {
   setTimeout(() => el.classList.remove('stack-source-pulse'), ms)
 }
 
-export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameView) {
+export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameView, bannerDelayMs = 0) {
   if (!prevGame || !nextGame) return
   const combatants = new Set(combatantIds(prevGame))
   const strikes = playDamageStrikes(planDamageStrikes(prevGame, nextGame), [...combatants])
@@ -216,11 +217,11 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
   }
   const deathDelay = (id: string) => (combatants.has(id) ? strikes.holdMs : 0)
 
-  // 0. Turn change → banner centrado con el jugador activo
-  if (nextGame.turn !== prevGame.turn) {
+  // 0. Turn change → banner centrado con el jugador activo (tras la moneda del turno 1, si sale)
+  if (nextGame.turn !== prevGame.turn && nextGame.turn > 0) {
     const active = nextGame.players?.find((p) => p.isActive)
     const playerName = active?.name ?? nextGame.activePlayerName ?? ''
-    announceBanner(t('game', 'turn_banner_player', { turn: nextGame.turn, player: playerName }))
+    later(bannerDelayMs, () => announceBanner(t('game', 'turn_banner_player', { turn: nextGame.turn, player: playerName })))
   }
 
   const stackEl = document.querySelector('.stack-zone, .stack-deck, .stack-list, [data-testid="drawer-tab-stack"]') as HTMLElement | null
@@ -618,6 +619,7 @@ export function useGameTransitions(game: GameView | null, gameId: string | null)
 
     const prevGame = prevGameRef.current
     if (prevGame === game) return
+    const coinMs = observeCoinFlip(game, gameId)
     if (prevGame) {
       const prevId = prevGameIdRef.current
       if (gameId && prevId && gameId !== prevId) {
@@ -625,7 +627,7 @@ export function useGameTransitions(game: GameView | null, gameId: string | null)
         clearPendingSlams()
         clearCombatSnapshots()
       } else {
-        detectAndAnimateTransitions(prevGame, game)
+        detectAndAnimateTransitions(prevGame, game, coinMs)
       }
     }
 

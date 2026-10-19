@@ -31,6 +31,7 @@ const ALL_SOUND_KEYS: SoundKey[] = [
   'heartbeat',
   'exile',
   'card_land',
+  'coin_flip',
 ]
 
 function createMockAudioContext(sampleRate = 44100): AudioContext {
