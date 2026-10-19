@@ -6,8 +6,21 @@ import { announceBanner, spawnFloater } from './feedbackFx'
 import { t } from '../i18n'
 import { isAbilityCard } from '../cards/cardImages'
 import { fxDuration } from './fx'
-import { slamSpell, spawnImpact, spellWeight } from './impactFx'
+import { cardManaColors, slamSpell, spawnImpact, spellWeight } from './impactFx'
 import { clearCombatSnapshots, combatantIds, planDamageStrikes, playDamageStrikes, primeCombatHolds, snapshotCombatants } from './combatStrikes'
+import { spawnProjectile } from './projectileFx'
+
+function spellTargetIds(card: CardView): string[] {
+  const obj = card as unknown as Record<string, unknown>
+  const raw = obj.targets ?? obj.targetIds ?? obj.chosenTargets ?? []
+  if (Array.isArray(raw)) {
+    return raw
+      .map((t) => (typeof t === 'string' ? t : (t as { id?: unknown } | null)?.id))
+      .filter((v): v is string => typeof v === 'string' && v.length > 0)
+  }
+  if (raw && typeof raw === 'object') return Object.keys(raw)
+  return []
+}
 
 const pendingSlams = new Map<string, CardView>()
 
@@ -135,6 +148,18 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
   const combatants = new Set(combatantIds(prevGame))
   const strikes = playDamageStrikes(planDamageStrikes(prevGame, nextGame), [...combatants])
   const later = (ms: number, fn: () => void) => (ms > 0 ? void setTimeout(fn, ms) : fn())
+  const pendingLandings = new Map<string, { count: number; queue: Array<() => void> }>()
+  const landed = (id: string) => {
+    const pending = pendingLandings.get(id)
+    if (!pending || --pending.count > 0) return
+    pendingLandings.delete(id)
+    pending.queue.forEach((fn) => fn())
+  }
+  const afterLanding = (id: string, fallbackMs: number, fn: () => void) => {
+    const pending = pendingLandings.get(id)
+    if (pending) pending.queue.push(fn)
+    else later(fallbackMs, fn)
+  }
   const deathDelay = (id: string) => (combatants.has(id) ? strikes.holdMs : 0)
 
   // 0. Turn change → banner centrado con el jugador activo
@@ -360,7 +385,7 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
       if (!inGrave && !inExile && !bouncedToHand) {
         if ((perm as { isToken?: boolean }).isToken) {
           const fadeRect = registered ?? getRect(`[data-card-id="${permId}"]`)
-          later(deathDelay(permId), () => spawnImpact('token-fade', fadeRect))
+          afterLanding(permId, deathDelay(permId), () => spawnImpact('token-fade', fadeRect))
         }
         continue
       }
@@ -370,7 +395,7 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
         continue
       }
       const prevSize = registered ? getPreviousCardSize(permId) : null
-      later(deathDelay(permId), () => {
+      afterLanding(permId, deathDelay(permId), () => {
         if (inExile) {
           spawnImpact('exile', prevCardRect)
           flyAfterLayout(permId, perm, prevCardRect, [
@@ -395,6 +420,25 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
       })
     }
 
+    // C) Targeted spells/abilities leaving the stack: a projectile flies from the
+    //    spell to each target. The target is measured after the layout settles (the
+    //    stack leaving the screen moves the board), and its hit waits for the landing.
+    for (const [spellId, spell] of Object.entries(prevStack)) {
+      if (spellId in nextStack) continue
+      const from = getPreviousCardPosition(spellId)
+      if (!from) continue
+      const colors = cardManaColors(spell)
+      for (const targetId of spellTargetIds(spell)) {
+        const pending = pendingLandings.get(targetId) ?? { count: 0, queue: [] }
+        pending.count++
+        pendingLandings.set(targetId, pending)
+        scheduleAfterLayout(() => {
+          const measure = () => getRect(`[data-card-id="${targetId}"]`) ?? getRect(`.player-info-bar[data-player-id="${targetId}"]`)
+          if (!spawnProjectile(from, measure, colors, () => landed(targetId))) landed(targetId)
+        })
+      }
+    }
+
     // D) Combat/ability damage feedback: creatures and players that lost life shake
     //    + floating damage numbers on top of the hit element.
     for (const [permId, nextPerm] of Object.entries(nextBattlefield)) {
@@ -406,21 +450,23 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
       if (nextDamage > prevDamage) {
         const sel = `[data-card-id="${permId}"]`
         const struckAt = strikes.impactAt.get(permId)
-        later(struckAt ?? 0, () => {
+        const hit = () => {
           if (struckAt === undefined) shakeElement(sel)
           const el = document.querySelector(sel) as HTMLElement | null
           if (!el) return
           const rect = el.getBoundingClientRect()
           spawnFloater(`card:${permId}`, rect, `-${nextDamage - prevDamage}`, 'bad')
           if (struckAt === undefined) spawnImpact('sparks', rect)
-        })
+        }
+        if (struckAt === undefined) afterLanding(permId, 0, hit)
+        else later(struckAt, hit)
       }
     }
 
     const prevLife = prevP.life ?? 0
     const nextLife = nextP.life ?? 0
     const lifeStruckAt = strikes.impactAt.get(nextP.playerId)
-    if (nextLife !== prevLife) later(lifeStruckAt ?? 0, () => {
+    const lifeHit = () => {
       const playerEls = Array.from(document.querySelectorAll(`[data-player-id="${nextP.playerId}"]`))
       const deepest = playerEls.reduce<Element | null>((acc, el) => (!acc || acc.contains(el) ? el : acc), null)
       if (deepest) {
@@ -438,7 +484,11 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
           nextLife < prevLife ? 'bad' : 'good'
         )
       }
-    })
+    }
+    if (nextLife !== prevLife) {
+      if (lifeStruckAt === undefined) afterLanding(nextP.playerId, 0, lifeHit)
+      else later(lifeStruckAt, lifeHit)
+    }
   }
 
   // E) Stack resolution: items que salen del stack sin entrar en battlefield.

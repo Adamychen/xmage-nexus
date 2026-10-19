@@ -1,0 +1,23 @@
+.projectile-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 999970;
+  overflow: hidden;
+}
+
+.projectile {
+  position: fixed;
+  width: 38px;
+  height: 8px;
+  margin: -4px 0 0 -19px;
+  border-radius: var(--r-pill);
+  background: linear-gradient(90deg, rgb(var(--proj-rgb) / 0) 0%, rgb(var(--proj-rgb) / 0.9) 60%, var(--fg-1) 100%);
+  box-shadow: 0 0 12px 2px rgb(var(--proj-rgb) / 0.6);
+  opacity: 0;
+  will-change: transform, opacity;
+}
+
+html.fx-off .projectile-overlay {
+  display: none;
+}

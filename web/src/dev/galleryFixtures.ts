@@ -24,6 +24,7 @@ import type { Deck } from '../lobby/decks'
 import type { RollbackVote } from '../state/rollbackVote'
 import { STORAGE_KEY as CREATE_TABLE_STORAGE_KEY } from '../lobby/CreateTable/constants'
 import manifest from '../../fixtures/recorded/manifest.json'
+import { replayProjectileDemo } from './projectileDemo'
 
 interface FrameModule {
   default: { gameId: string; gameView: GameView }
@@ -76,6 +77,15 @@ export type GalleryScreenName =
   | 'help'
   | 'gameend'
   | 'cards'
+  | 'projectile'
+
+export interface GalleryAction {
+  label: string
+  /** Transforma el `game` del store (p. ej. resolver un hechizo). */
+  apply?: (game: GameView) => GameView
+  /** Efecto directo sobre el DOM o el store cuando no basta con `apply`. */
+  run?: () => void
+}
 
 export interface GalleryEntry {
   id: string
@@ -99,6 +109,7 @@ export interface GalleryEntry {
   /** Error del slice de sesión (banner de lobby / caja de LoginScreen). */
   error?: string | null
   gameEnd?: GameEndInfo | null
+  action?: GalleryAction
   /** Watchdog de cuña del draft (`lastDraftEventAt`); 0 = cuñado siempre. */
   lastDraftEventAt?: number | null
   /** `table` explícita de SpectatorStagingScreen (modo jugador). */
@@ -660,6 +671,48 @@ const WIZARD_DRAFT_FORM = JSON.stringify({
   numPlayers: 8,
   seatConfigs: Array.from({ length: 7 }, () => ({ type: 'SIM', deckName: '', skill: 2 })),
 })
+
+/** Sin combate: ningún atacante mueve ni tapa cartas por su cuenta, así cada acción de galería es la única causa. */
+function calmGame(game: GameView): GameView {
+  return { ...game, combat: [] }
+}
+
+const BOLT_ON_STACK_ID = 'gallery-bolt-targeting'
+
+function withBoltTargeting(game: GameView, targetId: string): GameView {
+  const me = controlledPlayer(game)
+  const bolt = {
+    id: BOLT_ON_STACK_ID,
+    name: 'Lightning Bolt',
+    expansionSetCode: '2XM',
+    cardNumber: '129',
+    cardTypes: ['INSTANT'],
+    controllerId: me?.playerId,
+    controllerName: me?.name,
+    rules: ['Lightning Bolt deals 3 damage to any target.'],
+    targets: [targetId],
+  }
+  return { ...game, stack: { [BOLT_ON_STACK_ID]: bolt } as unknown as GameView['stack'] }
+}
+
+/** Resolves the bolt the way the server would; the store update runs the transition engine on the diff. */
+function resolveBoltOn(targetId: string): (game: GameView) => GameView {
+  return (game) => {
+    const next: GameView = {
+      ...game,
+      stack: {} as unknown as GameView['stack'],
+      players: players(game).map((p) => {
+        const perm = p.battlefield?.[targetId]
+        if (perm) {
+          return { ...p, battlefield: { ...p.battlefield, [targetId]: { ...perm, damage: (perm.damage ?? 0) + 3 } } }
+        }
+        if (p.playerId === targetId) return { ...p, life: (p.life ?? 0) - 3 }
+        return p
+      }) as PlayerView[],
+    }
+    return next
+  }
+}
 
 export function buildGalleryEntries(): GalleryEntry[] {
   const entries: GalleryEntry[] = recordedFrames.map((frame) => ({
@@ -1518,6 +1571,46 @@ export function buildGalleryEntries(): GalleryEntry[] {
     conn: GALLERY_CONN,
     connecting: true,
   })
+
+  entries.push({
+    id: 'anim:projectile',
+    group: 'Animaciones',
+    label: 'Stack: spell projectile to target',
+    description: 'The orb flies from the stack card box to the target box on mount and on each "Replay" press (260-480 ms by distance; nothing when effects are off).',
+    screen: 'projectile',
+    action: { label: 'Replay', run: replayProjectileDemo },
+  })
+
+  if (base) {
+    const game = calmGame(base.gameView)
+    const gameId = base.gameId
+    const opponent = opponentPlayer(game)
+    const opponentCreature = creatureIds(opponent)[0]
+    if (opponentCreature) {
+      entries.push({
+        id: 'anim:spell-hit-creature',
+        group: 'Animaciones',
+        label: 'Stack: Bolt hits a creature (projectile → shake → -3)',
+        description: 'Press "Resolve": the spell leaves the stack, the projectile flies to the creature, and the shake, sparks and -3 land on arrival. Reselect the entry to play it again.',
+        phase: 'game',
+        game: withBoltTargeting(game, opponentCreature),
+        gameId,
+        action: { label: 'Resolve Bolt', apply: resolveBoltOn(opponentCreature) },
+      })
+    }
+    if (opponent) {
+      entries.push({
+        id: 'anim:spell-hit-player',
+        group: 'Animaciones',
+        label: 'Stack: Bolt hits a player (projectile → shake → -3)',
+        description: 'Press "Resolve": the projectile flies to the opponent info bar, and the shake and -3 land on arrival. Reselect the entry to play it again.',
+        phase: 'game',
+        game: withBoltTargeting(game, opponent.playerId),
+        gameId,
+        action: { label: 'Resolve Bolt', apply: resolveBoltOn(opponent.playerId) },
+      })
+    }
+  }
 
   return entries
 }

@@ -38,6 +38,10 @@ export function fxDuration(ms: number): number {
   return Math.max(60, Math.round(ms / speed))
 }
 
+export function fxMotionDuration(ms: number): number {
+  return fxDuration(ms)
+}
+
 /** Refleja los ajustes de efectos en el root del documento: clase `fx-off`
  *  (apaga animaciones decorativas CSS) + variable `--fx-speed`. */
 export function applyFxRoot(): void {
