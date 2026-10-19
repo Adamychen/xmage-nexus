@@ -72,6 +72,13 @@ function ImpactItem({ fx }: { fx: ImpactFx }) {
           <Particles fx={fx} count={8} spread={Math.max(34, fx.w * 0.65)} className="fx-sparkle" />
         </div>
       )
+    case 'enter-ring':
+      return (
+        <div className="fx-burst fx-enter-ring" data-testid="fx-enter-ring" style={at}>
+          <span className="fx-enter-ring-wave" />
+          <span className="fx-enter-ring-wave fx-enter-ring-wave--late" />
+        </div>
+      )
     case 'token-fade':
       return (
         <div className="fx-burst fx-token-fade" style={at}>

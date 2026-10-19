@@ -125,6 +125,27 @@
     0 24px 48px var(--shade-4);
 }
 
+.flying-card-item.flight-legendary {
+  border-color: rgb(var(--gold-rgb) / 0.9);
+}
+
+.flying-card-item.flight-mythic {
+  border-color: rgb(var(--ember-rgb) / 0.9);
+  box-shadow: 0 30px 60px var(--shade-5), 0 0 40px rgb(var(--ember-rgb) / 0.8);
+}
+
+.flight-legendary .flying-card-glow,
+.flight-mythic .flying-card-glow {
+  background: linear-gradient(115deg, transparent 35%, rgb(var(--gold-rgb) / 0.55) 50%, transparent 65%);
+  background-size: 260% 100%;
+  animation: flightFoilSheen var(--flight-dur, 1100ms) ease-in-out both;
+}
+
+@keyframes flightFoilSheen {
+  0% { background-position: 130% 0; }
+  100% { background-position: -30% 0; }
+}
+
 html.fx-off .flight-destroy .flying-card-img,
 html.fx-off .flight-exile .flying-card-img {
   animation: none !important;

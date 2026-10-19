@@ -1,7 +1,9 @@
 import { useLayoutEffect, useRef, useState } from 'react'
-import { useActiveFlights, markFlightLanded, normalizeFlightRect, FLIGHT_CARD_ASPECT, type FlightRecord } from './flightManager'
+import { useActiveFlights, markFlightLanded, normalizeFlightRect, FLIGHT_CARD_ASPECT, ENTER_LAND_AT, type FlightRecord } from './flightManager'
 import { useCardImageUrl } from '../cards/useCardImageUrl'
 import { soundManager } from '../audio/soundManager'
+import type { CardView, PermanentView } from '../net/types'
+import { spawnImpact } from './impactFx'
 import { artCropUrl } from './compactCard'
 import { restingRect } from './restingRect'
 import './FlyingCardOverlay.css'
@@ -10,12 +12,20 @@ const CARD_BACK_URL = 'https://cards.scryfall.io/back.png'
 
 const ENTER_RISE_AT = 0.27
 const ENTER_HOLD_AT = 0.5
-const ENTER_SETTLE_AT = 0.8
+const ENTER_SETTLE_AT = ENTER_LAND_AT
 const ENTER_SHOW_MAX_H = 440
 const ENTER_RISE_EASE = 'cubic-bezier(0.2, 0.7, 0.4, 1)'
 const ENTER_DROP_EASE = 'cubic-bezier(0.55, 0, 1, 0.45)'
 const ENTER_SETTLE_EASE = 'cubic-bezier(0.2, 0.6, 0.4, 1)'
 const ENTER_SHOW_SHADOW = '0 60px 110px var(--shade-5), 0 0 40px rgb(var(--brand-rgb) / 0.7)'
+const ENTER_SHOW_SHADOW_RARE = '0 60px 120px var(--shade-5), 0 0 64px rgb(var(--gold-rgb) / 0.9)'
+
+/** Legendarios y míticos: al entrar muestran un brillo de foil al quedarse en el centro. */
+function enterRank(card: CardView | PermanentView): 'mythic' | 'legendary' | null {
+  if (String(card.rarity ?? '').toUpperCase() === 'MYTHIC') return 'mythic'
+  if ((card.superTypes ?? []).some((t) => String(t).toUpperCase() === 'LEGENDARY')) return 'legendary'
+  return null
+}
 
 function unitDirection(fromRect: DOMRect, toRect: DOMRect): { x: number; y: number } {
   const dx = toRect.left + toRect.width / 2 - (fromRect.left + fromRect.width / 2)
@@ -30,7 +40,7 @@ function unitDirection(fromRect: DOMRect, toRect: DOMRect): { x: number; y: numb
 function liftAndDropKeyframes(p: {
   fromCx: number; fromCy: number; toCx: number; toCy: number
   w: number; h: number; endW: number; endH: number
-  startRot: number; endRot: number; restShadow: string
+  startRot: number; endRot: number; restShadow: string; showShadow: string
 }): Keyframe[] {
   const showH = Math.min(window.innerHeight * 0.5, ENTER_SHOW_MAX_H)
   const showW = showH * FLIGHT_CARD_ASPECT
@@ -38,7 +48,7 @@ function liftAndDropKeyframes(p: {
   const showCy = window.innerHeight / 2
   const pose = (cx: number, cy: number, w: number, h: number, rot: number, scale: number) =>
     `translate3d(${cx - w / 2}px, ${cy - h / 2}px, 0) rotate(${rot}deg) scale(${scale})`
-  const shown = { width: `${showW}px`, height: `${showH}px`, boxShadow: ENTER_SHOW_SHADOW, opacity: 1,
+  const shown = { width: `${showW}px`, height: `${showH}px`, boxShadow: p.showShadow, opacity: 1,
     transform: pose(showCx, showCy, showW, showH, 0, 1) }
   return [
     { offset: 0, easing: ENTER_RISE_EASE, width: `${p.w}px`, height: `${p.h}px`, boxShadow: p.restShadow, opacity: 0.9,
@@ -81,6 +91,7 @@ function FlyingCardItem({ flight }: { flight: FlightRecord }) {
 
     const entering = flight.variant === 'enter' || flight.variant === 'land'
     const restShadow = getComputedStyle(el).boxShadow
+    const rank = entering ? enterRank(flight.card) : null
 
     const keyframes = (): Keyframe[] => {
       const w = fromRect.width
@@ -108,6 +119,7 @@ function FlyingCardItem({ flight }: { flight: FlightRecord }) {
       if (entering) {
         return liftAndDropKeyframes({
           fromCx, fromCy, toCx, toCy, w, h, endW, endH, startRot, endRot, restShadow,
+          showShadow: rank === 'mythic' ? ENTER_SHOW_SHADOW_RARE : ENTER_SHOW_SHADOW,
         })
       }
 
@@ -129,7 +141,10 @@ function FlyingCardItem({ flight }: { flight: FlightRecord }) {
 
     const anim = el.animate(keyframes(), timing)
     // El golpe suena cuando la caída toca el suelo (fin del tramo de caída).
-    const landSound = entering ? setTimeout(() => soundManager.play('card_land', 'game'), duration * ENTER_SETTLE_AT) : null
+    const landSound = entering ? setTimeout(() => {
+      soundManager.play('card_land', 'game')
+      if (rank === 'mythic') spawnImpact('enter-ring', toRect)
+    }, duration * ENTER_SETTLE_AT) : null
 
     // Retarget: si el destino real se mueve durante el vuelo (reacomodo del fan
     // de la mano, scroll del stack, resoluciones simultáneas), re-ancla el tramo
@@ -195,6 +210,8 @@ function FlyingCardItem({ flight }: { flight: FlightRecord }) {
   }, [flight, cropUrl])
 
   const dir = flight.trail ? unitDirection(flight.fromRect, flight.toRect) : null
+  const rank = enterRank(flight.card)
+  const rankClass = rank && (flight.variant === 'enter' || flight.variant === 'land') ? ` flight-${rank}` : ''
   const flightStyle = {
     '--flight-dur': `${flight.duration}ms`,
     ...(dir ? { '--trail-ux': dir.x, '--trail-uy': dir.y } : null),
@@ -203,7 +220,7 @@ function FlyingCardItem({ flight }: { flight: FlightRecord }) {
   return (
     <div
       ref={elRef}
-      className={`flying-card-item${flight.variant ? ` flight-${flight.variant}` : ''}${flight.trail ? ` flight-trail-${flight.trail}` : ''}`}
+      className={`flying-card-item${flight.variant ? ` flight-${flight.variant}` : ''}${flight.trail ? ` flight-trail-${flight.trail}` : ''}${rankClass}`}
       data-flight-id={flight.flightId}
       style={flightStyle}
     >

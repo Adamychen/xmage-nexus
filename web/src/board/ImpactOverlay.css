@@ -242,3 +242,25 @@ html.fx-off .board-shell.fx-quake-2 {
     animation: none !important;
   }
 }
+
+.fx-enter-ring-wave {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  translate: -50% -50%;
+  border: 3px solid rgb(var(--gold-rgb) / 0.9);
+  box-shadow: 0 0 22px rgb(var(--gold-rgb) / 0.7);
+  animation: fxEnterRing var(--fx-dur) cubic-bezier(0.15, 0.7, 0.3, 1) both;
+}
+
+.fx-enter-ring-wave--late {
+  animation-delay: 140ms;
+}
+
+@keyframes fxEnterRing {
+  0% { opacity: 0.95; scale: 1; }
+  100% { opacity: 0; scale: 2.8; }
+}

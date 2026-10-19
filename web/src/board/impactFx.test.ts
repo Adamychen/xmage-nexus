@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cardManaColors, clearImpacts, getImpacts, particleVectors, slamSpell, spawnImpact, spellWeight } from './impactFx'
 import { clearPendingSlams, detectAndAnimateTransitions } from './gameTransitionEngine'
-import { clearFlights, getActiveFlights } from './flightManager'
+import { clearFlights, getActiveFlights, ENTER_FLIGHT_MS, ENTER_LAND_AT } from './flightManager'
 import { clearCardPositionRegistry } from './cardPositionRegistry'
 import { makeCard, makeGameView, makePermanent, makePlayer } from '../__fixtures__/gameViews'
 import type { CardView } from '../net/types'
@@ -193,6 +193,8 @@ describe('transition engine impacts', () => {
       detectAndAnimateTransitions(view({}), view({ 's-titan': titan }))
       detectAndAnimateTransitions(view({ 's-titan': titan }), view({}, { battlefield: { 's-titan': makePermanent({ id: 's-titan', name: 'Titan' }) } }))
       vi.advanceTimersByTime(400)
+      expect(slams()).toHaveLength(0)
+      vi.advanceTimersByTime(ENTER_FLIGHT_MS * ENTER_LAND_AT)
       expect(slams()).toEqual([expect.objectContaining({ weight: 2 })])
     })
 

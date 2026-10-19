@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef } from 'react'
 import type { CardView, GameView, PlayerView } from '../net/types'
-import { startCardFlight, noteFlightEvent, ENTER_FLIGHT_MS, type FlightTrail, type FlightVariant } from './flightManager'
+import { startCardFlight, noteFlightEvent, ENTER_FLIGHT_MS, ENTER_LAND_AT, type FlightTrail, type FlightVariant } from './flightManager'
 import { enqueueStackResolve } from './stackHold'
 import { releaseHeldHit } from './damageHold'
 import { getPreviousCardPosition, getPreviousCardSize, clearCardPositionRegistry, type CardSourceSize } from './cardPositionRegistry'
@@ -55,7 +55,9 @@ function slamResolvedSpells(nextGame: GameView): void {
     if (spellId in nextStack) continue
     pendingSlams.delete(spellId)
     const destination = resolvedTo(spellId, nextGame)
-    if (destination === 'battlefield' || (destination === 'graveyard' && !isPermanentSpell(spell))) slamSpell(spell, 320)
+    // Un permanente que entra al campo golpea al tocar el suelo, no al resolverse.
+    if (destination === 'battlefield') slamSpell(spell, ENTER_FLIGHT_MS * ENTER_LAND_AT)
+    else if (destination === 'graveyard' && !isPermanentSpell(spell)) slamSpell(spell, 320)
   }
 }
 

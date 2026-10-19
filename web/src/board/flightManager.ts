@@ -28,6 +28,8 @@ export interface FlightRecord {
 
 /** Entrada al campo: subida al centro, pausa y caída (ver FlyingCardOverlay). */
 export const ENTER_FLIGHT_MS = 1100
+/** Fracción de ENTER_FLIGHT_MS en la que la carta toca el suelo. */
+export const ENTER_LAND_AT = 0.8
 
 export type FlightVariant = 'destroy' | 'exile' | 'heavy' | 'land' | 'enter'
 

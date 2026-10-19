@@ -893,7 +893,7 @@ function castFirstInstant(game: GameView): GameView {
 const CREATURE_STACK_ID = 'gallery-creature-stack'
 
 /** Pone una criatura en la pila con el controlador dado; al resolver entra al campo con el mismo id. */
-function withCreatureOnStack(game: GameView, owner: PlayerView | undefined): GameView {
+function withCreatureOnStack(game: GameView, owner: PlayerView | undefined, extra: Partial<CardView> = {}): GameView {
   const creature: CardView = {
     id: CREATURE_STACK_ID,
     name: 'Elvish Mystic',
@@ -904,6 +904,7 @@ function withCreatureOnStack(game: GameView, owner: PlayerView | undefined): Gam
     cardTypes: ['Creature'],
     controllerId: owner?.playerId,
     controllerName: owner?.name,
+    ...extra,
   }
   return { ...game, stack: { ...(game.stack ?? {}), [CREATURE_STACK_ID]: creature } }
 }
@@ -1703,6 +1704,26 @@ export function buildGalleryEntries(): GalleryEntry[] {
       game: withCreatureOnStack(animBase, opponentOfBase),
       gameId,
       action: { label: 'Resolver criatura rival', apply: resolveCreatureSpell },
+    })
+    entries.push({
+      id: 'anim:legend-enter',
+      group: 'Animaciones',
+      label: 'Legendary creature: gold foil sheen',
+      description: 'Press to resolve a legendary creature: it rises with a gold foil sheen and drops onto the battlefield. No ring, no impact.',
+      phase: 'game',
+      game: withCreatureOnStack(animBase, me, { name: 'Omnath, Locus of Creation', superTypes: ['Legendary'], rarity: 'RARE' }),
+      gameId,
+      action: { label: 'Resolver legendaria', apply: resolveCreatureSpell },
+    })
+    entries.push({
+      id: 'anim:mythic-enter',
+      group: 'Animaciones',
+      label: 'Mythic creature: ember foil, gold ring and impact',
+      description: 'Press to resolve a mythic creature: ember border and gold shadow while it rises, then on landing a gold ring spreads out and the heavy impact plays.',
+      phase: 'game',
+      game: withCreatureOnStack(animBase, me, { name: 'Omnath, Locus of Creation', superTypes: ['Legendary'], rarity: 'MYTHIC' }),
+      gameId,
+      action: { label: 'Resolver mítica', apply: resolveCreatureSpell },
     })
     entries.push({
       id: 'anim:creature-damage',
