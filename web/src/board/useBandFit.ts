@@ -25,6 +25,8 @@ export function useBandFit(el: HTMLElement | null, baseW: number, compact: boole
     let rafId: number | null = null
     let applied = -1
     let initialized = false
+    let ceiling = Infinity
+    let ceilingKey = ''
     const minW = compact ? MIN_BAND_CARD_W_POD : MIN_BAND_CARD_W
 
     const apply = (cardW: number, lines: number) => {
@@ -82,7 +84,16 @@ export function useBandFit(el: HTMLElement | null, baseW: number, compact: boole
         minW,
         aspect,
       })
-      apply(fit.cardW, fit.lines)
+
+      const key = `${children.length}|${availW}|${el.offsetHeight}|${baseW}`
+      if (key !== ceilingKey) {
+        ceilingKey = key
+        ceiling = Infinity
+      }
+      if (!el.hasAttribute('data-band-lines') && el.scrollWidth > el.clientWidth) ceiling = Math.min(ceiling, measuredW)
+      const floor = Math.min(minW, baseW)
+      const cardW = fit.lines === 1 && fit.cardW >= ceiling ? Math.max(floor, ceiling - 1) : fit.cardW
+      apply(cardW, fit.lines)
     }
 
     const schedule = () => {
