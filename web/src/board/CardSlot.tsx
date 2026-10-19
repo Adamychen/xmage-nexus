@@ -263,6 +263,11 @@ export default function CardSlot({
   const isFlipped = perm.flipped === true
 
   const loyaltyVal = perm.loyalty ? parseInt(String(perm.loyalty), 10) : 0
+  const loyaltySamples = useMemo(
+    () => (Number.isFinite(loyaltyVal) && loyaltyVal > 0 ? [{ name: 'loyalty', count: loyaltyVal }] : []),
+    [loyaltyVal],
+  )
+  const loyaltyPulse = useCounterPulse(loyaltySamples).loyalty
   const defenseVal = perm.defense ? parseInt(String(perm.defense), 10) : 0
 
   const hasSummoningSickness = isRealCreature && !tapped && perm.summoningSickness === true
@@ -488,9 +493,19 @@ const showPtBadge =
       )}
 
       {isPlaneswalker && loyaltyVal > 0 && !renderedFace && (
-        <div className="loyalty-badge" title={`${t('game', 'ability_loyalty')}: ${perm.loyalty}`}>
+        <div className={`loyalty-badge${pulseClass(loyaltyPulse)}`} title={`${t('game', 'ability_loyalty')}: ${perm.loyalty}`}>
           <span className="loyalty-icon"><Icon name="shield" size={11} /></span>
-          <span className="loyalty-val">{perm.loyalty}</span>
+          <span className={`loyalty-val${loyaltyPulse?.tick ? ` counter-tick is-${loyaltyPulse.direction}` : ''}`}>{perm.loyalty}</span>
+          {loyaltyPulse?.scale && <span key={`ring-${loyaltyPulse.seq}`} className="counter-change-ring" aria-hidden="true" />}
+          {loyaltyPulse?.label && (
+            <span
+              key={`label-${loyaltyPulse.seq}`}
+              className={`counter-change-label is-${loyaltyPulse.direction}${loyaltyPulse.scale ? ' counter-change-rise' : ''}`}
+              aria-hidden="true"
+            >
+              {loyaltyPulse.delta > 0 ? `+${loyaltyPulse.delta}` : `${loyaltyPulse.delta}`}
+            </span>
+          )}
         </div>
       )}
 

@@ -98,6 +98,36 @@ function scheduleAfterLayout(fn: () => void): void {
 }
 
 const STACK_EXIT_MS = 380
+const REATTACH_FLIGHT_MS = 520
+
+function attachmentHosts(game: GameView): Map<string, { hostId: string | null; card: CardView }> {
+  const hosts = new Map<string, { hostId: string | null; card: CardView }>()
+  for (const p of game.players ?? []) {
+    for (const [id, perm] of Object.entries(p.battlefield ?? {})) hosts.set(id, { hostId: null, card: perm })
+  }
+  for (const p of game.players ?? []) {
+    for (const [id, perm] of Object.entries(p.battlefield ?? {})) {
+      for (const attId of perm.attachments ?? []) {
+        const entry = hosts.get(attId)
+        if (entry) entry.hostId = id
+      }
+    }
+  }
+  return hosts
+}
+
+/** An aura or equipment that stays on the battlefield but changes host (equip, re-enchant, unattach) flies to its new slot. */
+function flyReattached(prevGame: GameView, nextGame: GameView): void {
+  if (!fxMotionAllowed()) return
+  const before = attachmentHosts(prevGame)
+  for (const [attId, now] of attachmentHosts(nextGame)) {
+    const was = before.get(attId)
+    if (!was || was.hostId === now.hostId) continue
+    const from = getPreviousCardPosition(attId)
+    if (!from) continue
+    flyAfterLayout(attId, now.card, from, [`[data-card-id="${attId}"]`], null, REATTACH_FLIGHT_MS, getPreviousCardSize(attId), undefined, 'gold')
+  }
+}
 
 /**
  * Where a spell is drawn right now: its large top card or its tab. Read when the spell resolves,
@@ -119,8 +149,8 @@ function playStackSpellExit(spellId: string, spell: CardView, prevRect: DOMRect,
     const ps = getPlayerSelector(p.playerId, p.name)
     if (!ps) continue
     if (p.graveyard && spellId in p.graveyard) {
-      destSelectors = [`${ps} .graveyard-stack [data-card-id="${spellId}"]`, `${ps} .graveyard-stack`]
-      fallbackRect = getRect(`${ps} .graveyard-stack`)
+      destSelectors = [`${ps} :is(.graveyard-stack, .graveyard-chip) [data-card-id="${spellId}"]`, `${ps} :is(.graveyard-stack, .graveyard-chip)`]
+      fallbackRect = getRect(`${ps} :is(.graveyard-stack, .graveyard-chip)`)
       break
     }
     if (p.exile && spellId in p.exile) {
@@ -294,6 +324,7 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
     }
   }
   slamResolvedSpells(nextGame)
+  flyReattached(prevGame, nextGame)
 
   // 2. Detect Player-specific Transitions (Draws, Lands, Battlefield Resolves, Graveyard)
   const nextPlayers = nextGame.players ?? []
@@ -306,8 +337,8 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
     const pSel = getPlayerSelector(nextP.playerId, nextP.name)
     if (!pSel) continue
 
-    const libRect = getRect(`${pSel} .library-stack`)
-    const graveRect = getRect(`${pSel} .graveyard-stack`)
+    const libRect = getRect(`${pSel} :is(.library-stack, .library-chip)`)
+    const graveRect = getRect(`${pSel} :is(.graveyard-stack, .graveyard-chip)`)
 
     // A) Card Draws (Library -> Hand)
     // Use real hand IDs when available (controlled player), else fall back to handCount delta
@@ -372,24 +403,24 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
     const prevGraveIds = prevP.graveyard ?? {}
     const nextGraveIds = nextP.graveyard ?? {}
     const graveArrivals = Object.keys(nextGraveIds).filter((id) => !(id in prevGraveIds))
+    const handShrank = (nextP.handCount ?? 0) < (prevP.handCount ?? 0)
     if (graveArrivals.length > 0 && graveRect) {
       graveArrivals.slice(0, 3).forEach((id, i) => {
         if (id in (prevP.battlefield ?? {}) || id in prevStack) return
         const arrived = (nextGraveIds as Record<string, CardView>)[id]
         setTimeout(() => {
           const registered = getPreviousCardPosition(id)
+          const fromHand = isControlled ? id in (prevGame.myHand ?? {}) : handShrank
           const originRect =
             registered ??
-            getRect(`[data-card-id="${id}"]`) ??
-            handRect ??
-            libRect
+            (fromHand ? (getRect(`[data-card-id="${id}"]`) ?? handRect ?? libRect) : (libRect ?? handRect))
           if (!originRect) {
             noteFlightEvent({ kind: 'skip', reason: 'no-source', cardId: id, detail: 'discard' })
             return
           }
           flyAfterLayout(id, arrived, originRect, [
-            `${pSel} .graveyard-stack [data-card-id="${id}"]`,
-            `${pSel} .graveyard-stack`,
+            `${pSel} :is(.graveyard-stack, .graveyard-chip) [data-card-id="${id}"]`,
+            `${pSel} :is(.graveyard-stack, .graveyard-chip)`,
           ], graveRect, 350, registered ? getPreviousCardSize(id) : null)
         }, i * 70)
       })
@@ -481,7 +512,7 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
           const isLand = (perm.cardTypes ?? []).some((t) => String(t).toUpperCase() === 'LAND')
           if (!isLand) spawnImpact('destroy', prevCardRect)
           flyAfterLayout(permId, perm, prevCardRect, [
-            `${pSel} .graveyard-stack [data-card-id="${permId}"]`,
+            `${pSel} :is(.graveyard-stack, .graveyard-chip) [data-card-id="${permId}"]`,
           ], graveRect, isLand ? 350 : 420, prevSize, isLand ? undefined : 'destroy')
         }
       })

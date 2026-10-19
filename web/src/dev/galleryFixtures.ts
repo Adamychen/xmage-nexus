@@ -918,6 +918,63 @@ function withPlusCounter(game: GameView, id: string, count: number): GameView {
   })
 }
 
+/** Turns one controlled permanent into a planeswalker with the given loyalty; the server sends loyalty as a plain string field. */
+function withLoyalty(game: GameView, id: string, loyalty: number): GameView {
+  return mapControlled(game, (p) => {
+    const perm = p.battlefield?.[id]
+    if (!perm) return p
+    return { ...p, battlefield: { ...p.battlefield, [id]: { ...perm, cardTypes: ['PLANESWALKER'], counters: [], loyalty: String(loyalty) } } }
+  })
+}
+
+const GALLERY_BLADE_ID = 'gallery-blade'
+const GALLERY_HOST_ID = 'gallery-host'
+
+/** Adds a second creature, a copy of `templateId`, so equipment has somewhere to move. */
+function withSecondHost(game: GameView, templateId: string): GameView {
+  return mapControlled(game, (p) => {
+    const template = p.battlefield?.[templateId]
+    if (!template) return p
+    return { ...p, battlefield: { ...p.battlefield, [GALLERY_HOST_ID]: { ...template, id: GALLERY_HOST_ID, name: 'Second Host', attachments: [], counters: [] } } }
+  })
+}
+
+/** Puts a synthetic equipment on the controlled battlefield, attached to `hostId`; the server lists attachments on the host. */
+function withEquipmentOn(game: GameView, templateId: string, hostId: string): GameView {
+  return mapControlled(game, (p) => {
+    const template = p.battlefield?.[templateId]
+    if (!template) return p
+    const battlefield = { ...p.battlefield }
+    for (const [id, perm] of Object.entries(battlefield)) {
+      const rest = (perm.attachments ?? []).filter((a) => a !== GALLERY_BLADE_ID)
+      if (id === hostId) battlefield[id] = { ...perm, attachments: [...rest, GALLERY_BLADE_ID] }
+      else if (rest.length !== (perm.attachments ?? []).length) battlefield[id] = { ...perm, attachments: rest }
+    }
+    battlefield[GALLERY_BLADE_ID] = {
+      ...template,
+      id: GALLERY_BLADE_ID,
+      name: 'Gallery Blade',
+      cardTypes: ['ARTIFACT'],
+      subTypes: ['Equipment'],
+      counters: [],
+      attachments: [],
+      attachedTo: hostId,
+      power: '',
+      toughness: '',
+    }
+    return { ...p, battlefield }
+  })
+}
+
+/** Adds a copy of a battlefield card to the controlled graveyard without removing anything, as a mill does. */
+function withMilledCard(game: GameView, templateId: string): GameView {
+  return mapControlled(game, (p) => {
+    const template = p.battlefield?.[templateId]
+    if (!template) return p
+    return { ...p, graveyard: { ...p.graveyard, 'gallery-milled': { ...template, id: 'gallery-milled', name: 'Milled Card' } } }
+  })
+}
+
 const COIN_GAME_ID = 'gallery-coin-flip'
 
 /** Pre-game view: turn 0, nobody active, the mulligan already over. */
@@ -1784,6 +1841,41 @@ export function buildGalleryEntries(): GalleryEntry[] {
       game: counterBase,
       gameId,
       action: { label: 'Replay', run: replayCast(counterBase, (g) => withPlusCounter(g, mystic, 2)) },
+    })
+    const loyaltyBase = withLoyalty(animBase, mystic, 4)
+    entries.push({
+      id: 'anim:loyalty-change',
+      group: 'Animaciones',
+      label: 'Planeswalker: loyalty change, pulse and tick',
+      description: 'Press "Replay" to reset the planeswalker to 4 loyalty and then activate a minus ability: the loyalty badge pulses with a purple flash and an expanding ring, a "-2" falls above it, and the number ticks down.',
+      phase: 'game',
+      game: loyaltyBase,
+      gameId,
+      action: { label: 'Replay', run: replayCast(loyaltyBase, (g) => withLoyalty(g, mystic, 2)) },
+    })
+    const hostIds = [mystic, GALLERY_HOST_ID]
+    {
+      const equipBase = withEquipmentOn(withSecondHost(animBase, mystic), hostIds[0], hostIds[0])
+      entries.push({
+        id: 'anim:equip-move',
+        group: 'Animaciones',
+        label: 'Equipment: moves to another creature',
+        description: 'Press "Replay" to reset the equipment onto the first creature and then equip the second: the equipment flies with a gold trail from beside the first creature to its new slot.',
+        phase: 'game',
+        game: equipBase,
+        gameId,
+        action: { label: 'Replay', run: replayCast(equipBase, (g) => withEquipmentOn(g, hostIds[0], hostIds[1])) },
+      })
+    }
+    entries.push({
+      id: 'anim:mill',
+      group: 'Animaciones',
+      label: 'Mill: card flies from the library to the graveyard',
+      description: 'Press "Replay" to mill a card: it leaves the library stack and flies to the graveyard pile.',
+      phase: 'game',
+      game: animBase,
+      gameId,
+      action: { label: 'Replay', run: replayCast(animBase, (g) => withMilledCard(g, mystic)) },
     })
     const coinPre = coinPregame(animBase)
     entries.push({

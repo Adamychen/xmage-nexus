@@ -159,3 +159,71 @@ describe('CardSlot counter change pulse', () => {
     expect(badge(container)).toBe(el)
   })
 })
+
+function walker(loyalty: number): PermanentView {
+  return {
+    id: 'walker-1',
+    name: 'Jace',
+    cardTypes: ['Planeswalker'],
+    subTypes: ['Jace'],
+    loyalty: String(loyalty),
+  } as unknown as PermanentView
+}
+
+function loyaltyBadge(container: HTMLElement): HTMLElement | null {
+  return container.querySelector<HTMLElement>('.loyalty-badge')
+}
+
+describe('CardSlot loyalty change pulse', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+    setState({ settings: { ...getState().settings, effects: true } })
+    setReducedMotion(false)
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+    delete (window as { matchMedia?: unknown }).matchMedia
+    document.documentElement.classList.remove('fx-off')
+  })
+
+  it('a planeswalker mounted with loyalty does not pulse', () => {
+    const { container } = render(<CardSlot card={walker(4)} />)
+    expect(loyaltyBadge(container)?.classList.contains('counter-badge-changed')).toBe(false)
+  })
+
+  it('a loyalty decrease pulses down with a -delta label and a ticking number', () => {
+    const { container, rerender } = render(<CardSlot card={walker(4)} />)
+    const first = loyaltyBadge(container)
+    rerender(<CardSlot card={walker(2)} />)
+    const el = loyaltyBadge(container)!
+    expect(el).toBe(first)
+    expect(el.classList.contains('counter-badge-down')).toBe(true)
+    expect(el.classList.contains('counter-badge-pulse')).toBe(true)
+    expect(el.querySelector('.loyalty-val')?.textContent).toBe('2')
+    expect(el.querySelector('.loyalty-val')?.classList.contains('counter-tick')).toBe(true)
+    expect(el.querySelector('.counter-change-label')?.textContent).toBe('-2')
+    expect(el.querySelector('.counter-change-ring')).not.toBeNull()
+  })
+
+  it('a loyalty increase pulses up and clears after the change window', () => {
+    const { container, rerender } = render(<CardSlot card={walker(3)} />)
+    rerender(<CardSlot card={walker(4)} />)
+    const el = loyaltyBadge(container)!
+    expect(el.classList.contains('counter-badge-up')).toBe(true)
+    expect(el.querySelector('.counter-change-label')?.textContent).toBe('+1')
+    act(() => { vi.advanceTimersByTime(COUNTER_PULSE_MS) })
+    expect(el.classList.contains('counter-badge-changed')).toBe(false)
+    expect(el.querySelector('.counter-change-label')).toBeNull()
+  })
+
+  it('under reduced motion the loyalty change adds no scale or ring', () => {
+    setReducedMotion(true)
+    const { container, rerender } = render(<CardSlot card={walker(4)} />)
+    rerender(<CardSlot card={walker(3)} />)
+    const el = loyaltyBadge(container)!
+    expect(el.classList.contains('counter-badge-changed')).toBe(true)
+    expect(el.classList.contains('counter-badge-pulse')).toBe(false)
+    expect(el.querySelector('.counter-change-ring')).toBeNull()
+  })
+})

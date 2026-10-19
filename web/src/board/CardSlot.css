@@ -548,17 +548,28 @@ html.fx-off .counter-badge {
 /* A count change keeps the badge element (keyed by counter name) and marks it for
    COUNTER_PULSE_MS. The scale is a separate animation so the mount pop (badgePop) is not
    replayed when the class goes away. Reduced motion and fx-off keep only the colour. */
-.counter-badge.counter-badge-changed:not(.counter-badge-pulse) {
+.counter-badge.counter-badge-changed:not(.counter-badge-pulse),
+.loyalty-badge.counter-badge-changed:not(.counter-badge-pulse) {
   filter: brightness(1.35);
 }
 
-.counter-badge.counter-badge-changed::after {
+.loyalty-badge {
+  --pulse-rgb: var(--purple-rgb);
+  --pulse-fg: var(--purple-fg);
+}
+
+.loyalty-badge.counter-badge-pulse {
+  animation: counterPulse calc(0.5s / var(--fx-speed, 1)) linear;
+}
+
+.counter-badge.counter-badge-changed::after,
+.loyalty-badge.counter-badge-changed::after {
   content: '';
   position: absolute;
   inset: -3px;
   border-radius: inherit;
-  background: rgb(var(--gold-rgb) / 0.55);
-  box-shadow: 0 0 12px 4px rgb(var(--gold-rgb) / 0.95);
+  background: rgb(var(--pulse-rgb, var(--gold-rgb)) / 0.55);
+  box-shadow: 0 0 12px 4px rgb(var(--pulse-rgb, var(--gold-rgb)) / 0.95);
   opacity: 0;
   pointer-events: none;
   animation: counterFlash calc(0.5s / var(--fx-speed, 1)) ease-out;
@@ -586,8 +597,8 @@ html.fx-off .counter-badge {
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  border: 3px solid rgb(var(--gold-rgb) / 0.95);
-  box-shadow: 0 0 10px 1px rgb(var(--gold-rgb) / 0.8);
+  border: 3px solid rgb(var(--pulse-rgb, var(--gold-rgb)) / 0.95);
+  box-shadow: 0 0 10px 1px rgb(var(--pulse-rgb, var(--gold-rgb)) / 0.8);
   pointer-events: none;
   animation: counterRing calc(0.5s / var(--fx-speed, 1)) var(--ease-out) both;
 }
@@ -605,14 +616,14 @@ html.fx-off .counter-badge {
   white-space: nowrap;
   pointer-events: none;
   font-family: var(--font-display);
-  padding: 1px 4px;
+  padding: var(--sp-0h) var(--sp-1);
   border-radius: var(--r-xs);
   background: var(--shade-5);
-  border: 1px solid rgb(var(--gold-rgb) / 0.8);
+  border: 1px solid rgb(var(--pulse-rgb, var(--gold-rgb)) / 0.8);
   font-size: var(--fs-sm);
   font-weight: 800;
   line-height: 1.2;
-  color: var(--gold-300);
+  color: var(--pulse-fg, var(--gold-300));
   animation: counterChangeFade calc(0.8s / var(--fx-speed, 1)) linear both;
 }
 
@@ -638,15 +649,18 @@ html.fx-off .counter-badge {
   100% { opacity: 0; transform: translateY(-24px); }
 }
 
-.counter-badge .counter-tick {
+.counter-badge .counter-tick,
+.loyalty-badge .counter-tick {
   animation: counterTickFade calc(0.3s / var(--fx-speed, 1)) ease-out;
 }
 
-.counter-badge-pulse.counter-badge-up .counter-tick {
+.counter-badge-pulse.counter-badge-up .counter-tick,
+.loyalty-badge.counter-badge-pulse.counter-badge-up .counter-tick {
   animation: counterTickUp calc(0.3s / var(--fx-speed, 1)) ease-out;
 }
 
-.counter-badge-pulse.counter-badge-down .counter-tick {
+.counter-badge-pulse.counter-badge-down .counter-tick,
+.loyalty-badge.counter-badge-pulse.counter-badge-down .counter-tick {
   animation: counterTickDown calc(0.3s / var(--fx-speed, 1)) ease-out;
 }
 
@@ -666,12 +680,14 @@ html.fx-off .counter-badge {
 }
 
 html.fx-off .counter-badge.counter-badge-changed::after,
+html.fx-off .loyalty-badge.counter-badge-changed::after,
 html.fx-off .counter-change-ring,
 html.fx-off .counter-change-label {
   display: none;
 }
 
-html.fx-off .counter-badge .counter-tick {
+html.fx-off .counter-badge .counter-tick,
+html.fx-off .loyalty-badge .counter-tick {
   animation: none !important;
 }
 

@@ -75,6 +75,8 @@ describe('galería de estados (P3)', () => {
       'anim:player-damage',
       'anim:player-life-loss',
       'anim:counter-change',
+      'anim:loyalty-change',
+      'anim:mill',
     ]
     for (const id of withAction) expect(entry(entries, id).action?.label, id).toBeTruthy()
     const staticStates = ['anim:life-6', 'anim:chosen-target', 'anim:opp-pill-required', 'anim:opp-pill-optional']
@@ -105,6 +107,12 @@ describe('galería de estados (P3)', () => {
     const counterMe = entry(entries, 'anim:counter-change').game?.players?.find((p) => p.controlled)
     const counterBattlefield = Object.values(counterMe?.battlefield ?? {})
     expect(counterBattlefield.some((perm) => perm.counters?.some((c) => c.name === '+1/+1' && c.count === 1))).toBe(true)
+    expect(entry(entries, 'anim:loyalty-change').group).toBe('Animaciones')
+    const loyaltyMe = entry(entries, 'anim:loyalty-change').game?.players?.find((p) => p.controlled)
+    expect(Object.values(loyaltyMe?.battlefield ?? {}).some((perm) => perm.loyalty === '4')).toBe(true)
+    expect(entry(entries, 'anim:mill').group).toBe('Animaciones')
+    expect(entry(entries, 'anim:equip-move').group).toBe('Animaciones')
+    expect(entry(entries, 'anim:equip-move').action?.label).toBe('Replay')
     expect(entry(entries, 'anim:coin-flip').group).toBe('Animaciones')
     expect(entry(entries, 'anim:coin-flip').action?.label).toBe('Replay')
     expect(entry(entries, 'anim:sickness').action?.label).toBe('Invocar criatura')

@@ -657,4 +657,73 @@ describe('gameTransitionEngine', () => {
 
     expect(infoBar.classList.contains('took-damage')).toBe(false)
   })
+  describe('equipment changing host', () => {
+    const sword = () => makePermanent({ name: 'Sword', cardTypes: ['Artifact'] })
+    const board = (swordOn: string) => {
+      const bear = makePermanent({ name: 'Bear', attachments: swordOn === 'bear' ? ['sword'] : [] })
+      const wolf = makePermanent({ name: 'Wolf', attachments: swordOn === 'wolf' ? ['sword'] : [] })
+      return makeGameView({
+        players: [makePlayer({ playerId: 'p-alice', name: 'Alice', battlefield: { bear, wolf, sword: sword() } })],
+      })
+    }
+
+    beforeEach(() => {
+      const el = document.createElement('div')
+      el.setAttribute('data-card-id', 'sword')
+      el.style.width = '80px'
+      el.style.height = '112px'
+      document.querySelector('.creatures-band')!.appendChild(el)
+      vi.spyOn(el, 'getBoundingClientRect').mockReturnValue(mockRect(600, 400))
+      recordCardPosition('sword', mockRect(300, 400))
+    })
+
+    it('flies from the previous slot to the new one when the host changes', () => {
+      detectAndAnimateTransitions(board('bear'), board('wolf'))
+      vi.advanceTimersByTime(200)
+      const flight = getActiveFlights().find((f) => f.card.name === 'Sword')
+      expect(flight).toBeDefined()
+      expect(flight?.fromRect.left).toBe(300)
+      expect(flight?.toRect.left).toBe(600)
+    })
+
+    it('does not fly when the host stays the same', () => {
+      detectAndAnimateTransitions(board('bear'), board('bear'))
+      vi.advanceTimersByTime(200)
+      expect(getActiveFlights().find((f) => f.card.name === 'Sword')).toBeUndefined()
+    })
+  })
+  describe('cards arriving in the graveyard', () => {
+    const grave = (id: string) => ({ [id]: makeCard({ name: 'Milled' }) })
+
+    it('a milled card flies from the library', () => {
+      const prev = makeGameView({ players: [makePlayer({ playerId: 'p-alice', name: 'Alice', controlled: true, handCount: 2 })] })
+      const next = makeGameView({ players: [makePlayer({ playerId: 'p-alice', name: 'Alice', controlled: true, handCount: 2, graveyard: grave('milled') })] })
+      detectAndAnimateTransitions(prev, next)
+      vi.advanceTimersByTime(200)
+      const flight = getActiveFlights().find((f) => f.card.name === 'Milled')
+      expect(flight?.fromRect.left).toBe(100)
+      expect(flight?.fromRect.top).toBe(100)
+    })
+
+    it('a discarded card flies from the hand', () => {
+      const prev = makeGameView({
+        players: [makePlayer({ playerId: 'p-alice', name: 'Alice', controlled: true, handCount: 2 })],
+        myHand: { discarded: makeCard({ name: 'Milled' }) },
+      })
+      const next = makeGameView({ players: [makePlayer({ playerId: 'p-alice', name: 'Alice', controlled: true, handCount: 1, graveyard: grave('discarded') })] })
+      detectAndAnimateTransitions(prev, next)
+      vi.advanceTimersByTime(200)
+      const flight = getActiveFlights().find((f) => f.card.name === 'Milled')
+      expect(flight).toBeDefined()
+      expect(flight?.fromRect.left).not.toBe(100)
+    })
+
+    it('an opponent card that leaves the graveyard-bound hand count unchanged is a mill', () => {
+      const prev = makeGameView({ players: [makePlayer({ playerId: 'p-alice', name: 'Alice', handCount: 3 })] })
+      const next = makeGameView({ players: [makePlayer({ playerId: 'p-alice', name: 'Alice', handCount: 3, graveyard: grave('milled') })] })
+      detectAndAnimateTransitions(prev, next)
+      vi.advanceTimersByTime(200)
+      expect(getActiveFlights().find((f) => f.card.name === 'Milled')?.fromRect.left).toBe(100)
+    })
+  })
 })
