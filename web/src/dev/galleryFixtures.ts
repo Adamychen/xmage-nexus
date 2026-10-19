@@ -890,6 +890,41 @@ function castFirstInstant(game: GameView): GameView {
   }
 }
 
+const CREATURE_STACK_ID = 'gallery-creature-stack'
+
+/** Pone una criatura en la pila con controller = yo; al resolver entra al campo con el mismo id. */
+function withCreatureOnStack(game: GameView): GameView {
+  const me = controlledPlayer(game)
+  const creature: CardView = {
+    id: CREATURE_STACK_ID,
+    name: 'Elvish Mystic',
+    displayName: 'Elvish Mystic',
+    expansionSetCode: 'M14',
+    cardNumber: '169',
+    manaValue: 1,
+    cardTypes: ['Creature'],
+    controllerId: me?.playerId,
+    controllerName: me?.name,
+  }
+  return { ...game, stack: { ...(game.stack ?? {}), [CREATURE_STACK_ID]: creature } }
+}
+
+/** Resuelve la criatura de la pila: sale de la pila y entra al campo del jugador controlado. */
+function resolveCreatureSpell(game: GameView): GameView {
+  const me = controlledPlayer(game)
+  const spell = game.stack?.[CREATURE_STACK_ID]
+  if (!me || !spell) return game
+  const stack = { ...game.stack }
+  delete stack[CREATURE_STACK_ID]
+  return {
+    ...game,
+    stack,
+    players: players(game).map((p) => (p === me
+      ? { ...p, battlefield: { ...p.battlefield, [CREATURE_STACK_ID]: { ...spell, tapped: false } } }
+      : p)),
+  }
+}
+
 /** Mueve la primera tierra de la mano al campo del jugador controlado. */
 function playFirstLand(game: GameView): GameView {
   const me = controlledPlayer(game)
@@ -1645,11 +1680,21 @@ export function buildGalleryEntries(): GalleryEntry[] {
       id: 'anim:land-slide',
       group: 'Animaciones',
       label: 'Land: slide (A1 land)',
-      description: 'Press to play a land from your hand: it slides sideways onto the battlefield (flight-land).',
+      description: 'Press to play a land from your hand: it rises to the middle of the screen, holds, then drops onto the battlefield (flight-land).',
       phase: 'game',
       game: animBase,
       gameId,
       action: { label: 'Jugar tierra', apply: playFirstLand },
+    })
+    entries.push({
+      id: 'anim:creature-enter',
+      group: 'Animaciones',
+      label: 'Creature: enters from stack (lift and drop)',
+      description: 'Press to resolve a creature spell: it leaves the stack, rises to the middle of the screen, holds, then drops onto the battlefield.',
+      phase: 'game',
+      game: withCreatureOnStack(animBase),
+      gameId,
+      action: { label: 'Resolver criatura', apply: resolveCreatureSpell },
     })
     entries.push({
       id: 'anim:creature-damage',

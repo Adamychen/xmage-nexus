@@ -4,7 +4,7 @@ import { cardName, hiddenFaceDownName } from '../cards/cardImages'
 import { useCardImageUrl } from '../cards/useCardImageUrl'
 import RenderedCard from '../cards/rendered/RenderedCard'
 import { getPreviousCardPosition, getPreviousCardSize, getPreviousCardZone, recordCardPosition } from './cardPositionRegistry'
-import { startCardFlight, onFlightLanded, getActiveFlights, subscribeFlights, noteFlightEvent } from './flightManager'
+import { startCardFlight, onFlightLanded, getActiveFlights, subscribeFlights, noteFlightEvent, ENTER_FLIGHT_MS } from './flightManager'
 import { combatHoldRemaining, isOffBattlefield } from './combatStrikes'
 import { DamageNumbers } from './DamageNumber'
 import { useCombatHeld } from './useCombatHeld'
@@ -170,7 +170,9 @@ export default function CardSlot({
             const sourceSize = getPreviousCardSize(effectiveId)
             const flyIn = (toRect: DOMRect) => {
               const enteringLand = (card.cardTypes ?? []).some((t) => String(t).toUpperCase() === 'LAND')
-              const flightId = startCardFlight(card, prev, toRect, 340, `[data-card-id="${effectiveId}"]`, { sourceSize, toCompact: compact, variant: enteringLand ? 'land' : undefined })
+              const onBattlefield = !!el.closest('.creatures-band, .permanents-band')
+              const variant = !onBattlefield ? undefined : enteringLand ? 'land' : 'enter'
+              const flightId = startCardFlight(card, prev, toRect, onBattlefield ? ENTER_FLIGHT_MS : 340, `[data-card-id="${effectiveId}"]`, { sourceSize, toCompact: compact, variant })
               if (!flightId) return
               setFlightState('hidden')
               const land = () => {

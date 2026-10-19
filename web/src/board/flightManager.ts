@@ -26,7 +26,10 @@ export interface FlightRecord {
   toCompact?: boolean
 }
 
-export type FlightVariant = 'destroy' | 'exile' | 'heavy' | 'land'
+/** Entrada al campo: subida al centro, pausa y caída (ver FlyingCardOverlay). */
+export const ENTER_FLIGHT_MS = 1100
+
+export type FlightVariant = 'destroy' | 'exile' | 'heavy' | 'land' | 'enter'
 
 export type FlightTrail = 'gold'
 

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef } from 'react'
 import type { CardView, GameView, PlayerView } from '../net/types'
-import { startCardFlight, noteFlightEvent, type FlightTrail, type FlightVariant } from './flightManager'
+import { startCardFlight, noteFlightEvent, ENTER_FLIGHT_MS, type FlightTrail, type FlightVariant } from './flightManager'
 import { enqueueStackResolve } from './stackHold'
 import { releaseHeldHit } from './damageHold'
 import { getPreviousCardPosition, getPreviousCardSize, clearCardPositionRegistry, type CardSourceSize } from './cardPositionRegistry'
@@ -420,7 +420,7 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
             `${pSel} .creatures-band [data-card-id="${permId}"]`,
             `${pSel} .creatures-band`,
             `${pSel} .permanents-band`,
-          ], getRect(`${pSel} .creatures-band`) ?? getRect(`${pSel} .permanents-band`), 350, originSize, enteringLand ? 'land' : undefined)
+          ], getRect(`${pSel} .creatures-band`) ?? getRect(`${pSel} .permanents-band`), ENTER_FLIGHT_MS, originSize, enteringLand ? 'land' : 'enter')
         } else {
           noteFlightEvent({ kind: 'skip', reason: 'no-source', cardId: permId, detail: `bf-enter:${(perm as { name?: string }).name ?? ''}` })
         }

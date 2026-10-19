@@ -379,6 +379,24 @@ export function synthesizeSound(ctx: AudioContext, key: SoundKey): AudioBuffer {
       return buf
     }
 
+    case 'card_land': {
+      const duration = 0.32
+      const buf = makeBuffer(ctx, duration)
+      const data = buf.getChannelData(0)
+      const sr = ctx.sampleRate
+      let lp = 0
+      for (let i = 0; i < data.length; i++) {
+        const t = i / sr
+        const body = Math.sin(2 * Math.PI * (55 + 110 * Math.exp(-t * 28)) * t) * Math.exp(-t * 16)
+        const wood = Math.sin(2 * Math.PI * 240 * t) * Math.exp(-t * 55) * 0.25
+        const white = Math.random() * 2 - 1
+        lp = lp * 0.7 + white * 0.3
+        const tuff = lp * Math.exp(-t * 45) * 0.45
+        data[i] = Math.tanh((body * 1.1 + wood + tuff) * 1.5) * 0.7
+      }
+      return buf
+    }
+
     case 'projectile_impact': {
       const duration = 0.3
       const buf = makeBuffer(ctx, duration)

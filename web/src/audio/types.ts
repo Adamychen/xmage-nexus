@@ -23,6 +23,7 @@ export type SoundKey =
   | 'exile'
   | 'projectile_launch'
   | 'projectile_impact'
+  | 'card_land'
 
 export type SoundCategory = 'game' | 'ui'
 
