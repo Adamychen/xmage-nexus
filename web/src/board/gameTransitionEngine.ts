@@ -217,8 +217,8 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
   }
   const deathDelay = (id: string) => (combatants.has(id) ? strikes.holdMs : 0)
 
-  // 0. Turn change → banner centrado con el jugador activo (tras la moneda del turno 1, si sale)
-  if (nextGame.turn !== prevGame.turn && nextGame.turn > 0) {
+  // 0. Turn start (first phased view of a turn) → banner centred on the active player, after the turn-1 coin when it runs
+  if (nextGame.turn > 0 && nextGame.phase != null && (nextGame.turn !== prevGame.turn || prevGame.phase == null)) {
     const active = nextGame.players?.find((p) => p.isActive)
     const playerName = active?.name ?? nextGame.activePlayerName ?? ''
     later(bannerDelayMs, () => announceBanner(t('game', 'turn_banner_player', { turn: nextGame.turn, player: playerName })))

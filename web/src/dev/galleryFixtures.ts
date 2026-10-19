@@ -916,24 +916,32 @@ function coinPregame(game: GameView): GameView {
   return { ...game, turn: 0, activePlayerId: null, activePlayerName: '', players: players(game).map((p) => ({ ...p, isActive: false })) }
 }
 
-/** Turn 1 with `who` active: the transition engine flips the coin for that player. */
+/** Turn 1 during the mulligan: phase and step are null, nobody is active yet (the server's first turn-1 view). */
+function coinMulligan(game: GameView): GameView {
+  return { ...game, turn: 1, phase: null, step: null, activePlayerId: null, activePlayerName: '', players: players(game).map((p) => ({ ...p, isActive: false })) }
+}
+
+/** Turn 1 upkeep with `who` active: the transition engine flips the coin for that player. */
 function coinFirstTurn(game: GameView, who: PlayerView | undefined): GameView {
   return {
     ...game,
     turn: 1,
+    phase: 'BEGINNING',
+    step: 'UPKEEP',
     activePlayerId: who?.playerId ?? null,
     activePlayerName: who?.name ?? '',
     players: players(game).map((p) => ({ ...p, isActive: p === who })),
   }
 }
 
-/** Re-arms the coin for this game, then feeds turn 0 and turn 1 in two updates (a macrotask apart). */
-function replayCoinFlip(pregame: GameView, firstTurn: GameView): () => void {
+/** Re-arms the coin for this game, then feeds the pre-game, mulligan and first-turn views in order. */
+function replayCoinFlip(pregame: GameView, mulligan: GameView, firstTurn: GameView): () => void {
   return () => {
     forgetCoinFlip(COIN_GAME_ID)
-    // A copy: the engine skips a view it already holds, and the store may hold `pregame` itself.
+    // Copies: the engine skips a view it already holds, and the store may hold these objects itself.
     setState({ game: { ...pregame } })
-    setTimeout(() => setState({ game: firstTurn }), 0)
+    setTimeout(() => setState({ game: { ...mulligan } }), 0)
+    setTimeout(() => setState({ game: { ...firstTurn } }), 600)
   }
 }
 
@@ -1762,11 +1770,11 @@ export function buildGalleryEntries(): GalleryEntry[] {
       id: 'anim:coin-flip',
       group: 'Animaciones',
       label: 'Coin flip: who plays first',
-      description: 'Starts at turn 0 with the mulligan over; nothing runs on mount. "Replay" moves the game to turn 1 with the opponent active: a coin spins at the centre, lands showing that player, then the turn banner follows.',
+      description: 'Starts at turn 0 with the mulligan over; nothing runs on mount. "Replay" feeds the real server order: a turn-1 view with no phase (mulligan), then the turn-1 upkeep with the opponent active. A coin spins at the centre, lands showing that player, then the turn banner follows.',
       phase: 'game',
       game: coinPre,
       gameId: COIN_GAME_ID,
-      action: { label: 'Replay', run: replayCoinFlip(coinPre, coinFirstTurn(animBase, opponentOfBase)) },
+      action: { label: 'Replay', run: replayCoinFlip(coinPre, coinMulligan(animBase), coinFirstTurn(animBase, opponentOfBase)) },
     })
     entries.push({
       id: 'anim:land-slide',

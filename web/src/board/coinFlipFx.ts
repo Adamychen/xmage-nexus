@@ -1,7 +1,6 @@
 import { useSyncExternalStore } from 'react'
 import type { GameView } from '../net/types'
 import { soundManager } from '../audio/soundManager'
-import { getState } from '../state/state'
 import { fxDuration, fxEnabled, fxMotionAllowed } from './fx'
 import { seatColorVar, seatIndexOf } from './seatColor'
 
@@ -19,8 +18,8 @@ let state: CoinFlipFx | null = null
 let counter = 0
 let timer: ReturnType<typeof setTimeout> | undefined
 const listeners = new Set<() => void>()
-/** Per game id: 'pregame' once turn 0 was seen, 'done' once the coin has run or was skipped. */
-const phases = new Map<string, 'pregame' | 'done'>()
+/** Game ids whose coin already ran or was skipped. */
+const flipped = new Set<string>()
 
 function notify() {
   listeners.forEach((fn) => fn())
@@ -65,25 +64,15 @@ export function startCoinFlip(name: string, color: string): number {
 }
 
 /**
- * Called on every game view. Runs the coin once per game, when the first turn (1) follows the
- * pre-game view (0) and the mulligan is closed. The winner is the active player at turn 1: the
- * server does not send the real flip, so the coin is cosmetic. Returns the coin duration when it
- * starts for this view (so the turn banner can wait for it), else 0.
+ * Called on every game view. Runs the coin once per game, on the first view with turn >= 1 and a
+ * phase and step set (the mulligan views have both null). The winner is the active player at that
+ * view: the server does not send the real flip, so the coin is cosmetic. Returns the coin duration
+ * when it starts for this view (so the turn banner can wait for it), else 0.
  */
 export function observeCoinFlip(game: GameView | null, gameId: string | null): number {
-  if (!game || !gameId) return 0
-  const phase = phases.get(gameId)
-  if (phase === 'done') return 0
-  if (game.turn < 1) {
-    phases.set(gameId, 'pregame')
-    return 0
-  }
-  if (phase !== 'pregame') {
-    phases.set(gameId, 'done')
-    return 0
-  }
-  if (getState().feedback?.isMulligan === true) return 0
-  phases.set(gameId, 'done')
+  if (!game || !gameId || flipped.has(gameId)) return 0
+  if (game.turn !== 1 || game.phase == null || game.step == null) return 0
+  flipped.add(gameId)
   const players = game.players ?? []
   const first = players.find((p) => p.playerId === game.activePlayerId) ?? players.find((p) => p.isActive)
   const name = first?.name ?? game.activePlayerName ?? ''
@@ -93,5 +82,5 @@ export function observeCoinFlip(game: GameView | null, gameId: string | null): n
 
 /** Lets the same game run its coin again (the gallery replays it). */
 export function forgetCoinFlip(gameId: string): void {
-  phases.delete(gameId)
+  flipped.delete(gameId)
 }
