@@ -334,12 +334,19 @@ test('v2 mana pool keeps every mana type and its label readable @gameui', async 
   const box = await pool.boundingBox()
   const inner = await pool.locator('.mana-inline').boundingBox()
   expect(inner!.x + inner!.width).toBeLessThanOrEqual(box!.x + box!.width + 1)
-  expect(inner!.height).toBeLessThan(60)
   const pips = pool.locator('.mana-inline-pip')
-  for (let i = 0; i < (await pips.count()); i++) {
+  expect(await pips.count()).toBe(6)
+  for (let i = 0; i < 6; i++) {
     const b = await pips.nth(i).boundingBox()
     expect(b!.x + b!.width).toBeLessThanOrEqual(box!.x + box!.width)
+    expect(b!.x).toBeGreaterThanOrEqual(inner!.x - 1)
+    expect(b!.y).toBeGreaterThanOrEqual(inner!.y - 1)
+    expect(b!.y + b!.height).toBeLessThanOrEqual(inner!.y + inner!.height + 1)
   }
+  const overflow = await pool.locator('.mana-inline').evaluate((el) => el.scrollHeight - el.clientHeight)
+  expect(overflow).toBeLessThanOrEqual(1)
+  const counts = await pool.locator('.mana-inline-count').evaluateAll((els) => els.map((el) => el.scrollWidth - el.clientWidth))
+  expect(counts.every((d) => d <= 1)).toBe(true)
   await expect(pool.locator('.resource-pool-label')).toHaveCount(0)
   await pool.screenshot({ path: testInfo.outputPath('v2-pool.png') })
 })
