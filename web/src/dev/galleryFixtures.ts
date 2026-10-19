@@ -909,6 +909,15 @@ function replayCast(base: GameView, cast: (game: GameView) => GameView): () => v
   }
 }
 
+/** Sets the count of one +1/+1 counter on a permanent; the server sends counters as {name, count} pairs. */
+function withPlusCounter(game: GameView, id: string, count: number): GameView {
+  return mapControlled(game, (p) => {
+    const perm = p.battlefield?.[id]
+    if (!perm) return p
+    return { ...p, battlefield: { ...p.battlefield, [id]: { ...perm, counters: [{ name: '+1/+1', count }] } } }
+  })
+}
+
 const COIN_GAME_ID = 'gallery-coin-flip'
 
 /** Pre-game view: turn 0, nobody active, the mulligan already over. */
@@ -1764,6 +1773,17 @@ export function buildGalleryEntries(): GalleryEntry[] {
       game: opponentHandBase,
       gameId,
       action: { label: 'Replay', run: replayCast(opponentHandBase, (g) => castOpponentBolt(g, opponentOfBase)) },
+    })
+    const counterBase = withPlusCounter(animBase, mystic, 1)
+    entries.push({
+      id: 'anim:counter-change',
+      group: 'Animaciones',
+      label: 'Counter: +1/+1 added, pulse and tick',
+      description: 'Press "Replay" to reset the creature to one +1/+1 counter and then put a second one on it: the badge pulses with a gold flash for about 400 ms and the number ticks up.',
+      phase: 'game',
+      game: counterBase,
+      gameId,
+      action: { label: 'Replay', run: replayCast(counterBase, (g) => withPlusCounter(g, mystic, 2)) },
     })
     const coinPre = coinPregame(animBase)
     entries.push({

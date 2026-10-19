@@ -9,6 +9,7 @@ import { combatHoldRemaining, isOffBattlefield } from './combatStrikes'
 import { DamageNumbers } from './DamageNumber'
 import { useCombatHeld } from './useCombatHeld'
 import { fxMotionAllowed, fxMotionDuration } from './fx'
+import { useCounterPulse, type CounterPulse } from './useCounterPulse'
 import { extractOwnedKeywords } from '../data/keywordExtractor'
 import { keywordDisplayName, keywordSummary } from '../data/keywordI18n'
 import { cardDesignations, pairedPartnerName, classLevelOf, evidenceCounts, protectorName, type Designation } from './designations'
@@ -32,6 +33,11 @@ import './manaParticle.css'
 
 /** Cota del acuse optimista si el eco del servidor no llega nunca. */
 const PENDING_ACK_MS = 3000
+
+function pulseClass(pulse: CounterPulse | undefined): string {
+  if (!pulse) return ''
+  return ` counter-badge-changed counter-badge-${pulse.direction}${pulse.scale ? ' counter-badge-pulse' : ''}`
+}
 
 interface CardSlotProps {
   cardId?: string
@@ -246,6 +252,7 @@ export default function CardSlot({
 
   const perm = card as PermanentView
   const counters = card.counters ?? []
+  const counterPulses = useCounterPulse(counters)
 
   const types = (card.cardTypes ?? []).map((t) => String(t).toLowerCase())
   const isCreature = types.includes('creature') || String(card.mageObjectType ?? '').toUpperCase().includes('CREATURE')
@@ -502,7 +509,7 @@ const showPtBadge =
 
       {showCounters && visibleCounters.length > 0 && !renderedFace && (
         <div className="card-counters-wrap">
-          {visibleCounters.map((c, ci) => {
+          {visibleCounters.map((c) => {
             const n = c.name.toLowerCase()
             let iconElement: React.ReactNode = null
             let customClass = ''
@@ -539,12 +546,12 @@ const showPtBadge =
 
             return (
               <div
-                key={`${ci}:${c.count}`}
-                className={`counter-badge ${customClass}`}
+                key={c.name}
+                className={`counter-badge ${customClass}${pulseClass(counterPulses[c.name])}`}
                 title={`${c.name}: ${c.count}`}
               >
                 {iconElement && <span className="counter-icon-symbol">{iconElement}</span>}
-                {label && <span className="counter-text-val">{label}</span>}
+                {label && <span className={`counter-text-val${counterPulses[c.name]?.tick ? ` counter-tick is-${counterPulses[c.name]?.direction}` : ''}`}>{label}</span>}
               </div>
             )
           })}

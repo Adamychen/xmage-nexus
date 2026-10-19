@@ -545,6 +545,72 @@ html.fx-off .counter-badge {
   animation: none !important;
 }
 
+/* A count change keeps the badge element (keyed by counter name) and marks it for
+   COUNTER_PULSE_MS. The scale is a separate animation so the mount pop (badgePop) is not
+   replayed when the class goes away. Reduced motion and fx-off keep only the colour. */
+.counter-badge.counter-badge-changed:not(.counter-badge-pulse) {
+  filter: brightness(1.35);
+}
+
+.counter-badge.counter-badge-changed::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  box-shadow: 0 0 8px 2px rgb(var(--gold-rgb) / 0.9);
+  opacity: 0;
+  pointer-events: none;
+  animation: counterFlash calc(0.4s / var(--fx-speed, 1)) ease-out;
+}
+
+.counter-badge.counter-badge-pulse {
+  animation: badgePop calc(0.28s / var(--fx-speed, 1)) cubic-bezier(0.34, 1.56, 0.64, 1),
+    counterPulse calc(0.4s / var(--fx-speed, 1)) ease-in-out;
+}
+
+@keyframes counterFlash {
+  0% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@keyframes counterPulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.18); }
+  100% { transform: scale(1); }
+}
+
+.counter-badge .counter-tick {
+  animation: counterTickFade calc(0.2s / var(--fx-speed, 1)) ease-out;
+}
+
+.counter-badge-pulse.counter-badge-up .counter-tick {
+  animation: counterTickUp calc(0.2s / var(--fx-speed, 1)) ease-out;
+}
+
+.counter-badge-pulse.counter-badge-down .counter-tick {
+  animation: counterTickDown calc(0.2s / var(--fx-speed, 1)) ease-out;
+}
+
+@keyframes counterTickFade {
+  from { opacity: 0.4; }
+  to { opacity: 1; }
+}
+
+@keyframes counterTickUp {
+  from { opacity: 0; transform: translateY(0.6em); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes counterTickDown {
+  from { opacity: 0; transform: translateY(-0.6em); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+html.fx-off .counter-badge.counter-badge-changed::after,
+html.fx-off .counter-badge .counter-tick {
+  animation: none !important;
+}
+
 .counter-badge.p1p1 {
   background: rgb(var(--ok-rgb) / 0.95);
   color: var(--fg-hi);
