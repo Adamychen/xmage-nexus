@@ -91,6 +91,18 @@ function scheduleAfterLayout(fn: () => void): void {
 
 const STACK_EXIT_MS = 380
 
+/**
+ * Where a spell is drawn right now: its large top card or its tab. Read when the spell resolves,
+ * because its position was recorded before it became the top card and is stale by then.
+ */
+function stackSpellSource(spellId: string): { rect: DOMRect; size: CardSourceSize } | null {
+  const el = (document.querySelector(`[data-card-id="${spellId}"] .stack-thumb`) ?? document.querySelector(`[data-card-id="${spellId}"]`)) as HTMLElement | null
+  if (!el) return null
+  const rect = el.getBoundingClientRect()
+  if (rect.width <= 0 || rect.height <= 0) return null
+  return { rect, size: { w: el.offsetWidth, h: el.offsetHeight } }
+}
+
 /** A spell leaving the stack for its graveyard/exile flies there; otherwise it flashes in place. */
 function playStackSpellExit(spellId: string, spell: CardView, prevRect: DOMRect, prevSize: CardSourceSize | null, players: PlayerView[]) {
   let destSelectors: string[] = []
@@ -539,7 +551,10 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
     const entersBattlefield = nextPlayers.some((p) => spellId in (p.battlefield ?? {}))
     enqueueStackResolve(spellId, (done) => {
       const exit = () => {
-        if (prevRect && !entersBattlefield) playStackSpellExit(spellId, spell, prevRect, prevSize, nextPlayers)
+        if (prevRect && !entersBattlefield) {
+          const source = stackSpellSource(spellId)
+          playStackSpellExit(spellId, spell, source?.rect ?? prevRect, source?.size ?? prevSize, nextPlayers)
+        }
         later(STACK_EXIT_MS, done)
       }
       if (!prevRect) {
@@ -560,7 +575,7 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
             landed(targetId)
             if (--inFlight === 0) exit()
           }
-          if (!spawnProjectile(prevRect, measure, colors, arrived)) arrived()
+          if (!spawnProjectile(stackSpellSource(spellId)?.rect ?? prevRect, measure, colors, arrived)) arrived()
         }
       })
     }, () => {
