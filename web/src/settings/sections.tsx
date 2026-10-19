@@ -14,7 +14,7 @@ import PresetPicker from './PresetPicker'
 import Toggle from '../ui/Toggle'
 import RenderedCardsSettings from './RenderedCardsSettings'
 import { boardLayoutChoiceOf, chooseBoardLayout, type BoardLayoutChoice } from './boardLayoutChoice'
-import { PT_BADGE_MODES, SICKNESS_STYLES } from '../board/cardOverlays'
+import { KEYWORD_ICON_SETS, PT_BADGE_MODES, SICKNESS_STYLES } from '../board/cardOverlays'
 import Button from '../ui/Button'
 import { CARD_STYLES, TAP_STYLES } from '../board/compactCard'
 import './SettingsModal.css'
@@ -231,6 +231,25 @@ export function BoardSection() {
             <span className="settings-card-label">{t('lobby', `sickness_style_${style}`)}</span>
             <span className="settings-card-desc">{t('lobby', `sickness_style_${style}_desc`)}</span>
             {settings.sicknessStyle === style && <span className="settings-card-check">✓</span>}
+          </Button>
+        ))}
+      </div>
+      <h3 className="settings-section-title">{t('lobby', 'keyword_icons_title')}</h3>
+      <p className="settings-hint">{t('lobby', 'keyword_icons_hint')}</p>
+      <div className="settings-cards">
+        {KEYWORD_ICON_SETS.map((set) => (
+          <Button
+            key={set}
+            variant="ghost"
+            className={`settings-card ${settings.keywordIcons === set ? 'selected' : ''}`}
+            onClick={() => setSetting('keywordIcons', set)}
+            aria-pressed={settings.keywordIcons === set}
+            data-testid={`settings-keyword-icons-${set}`}
+          >
+            <BoardDemo spec={{ kind: 'keywordIcons', value: set }} />
+            <span className="settings-card-label">{t('lobby', `keyword_icons_${set}`)}</span>
+            <span className="settings-card-desc">{t('lobby', `keyword_icons_${set}_desc`)}</span>
+            {settings.keywordIcons === set && <span className="settings-card-check">✓</span>}
           </Button>
         ))}
       </div>

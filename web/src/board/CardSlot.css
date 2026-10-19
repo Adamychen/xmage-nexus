@@ -943,6 +943,38 @@ html.fx-off .counter-badge {
   border-color: rgb(var(--brand-rgb) / 0.7);
 }
 
+.keyword-badge.kw-haste { --kw-rgb: var(--ember-rgb); }
+.keyword-badge.kw-deathtouch { --kw-rgb: var(--purple-rgb); }
+.keyword-badge.kw-flying { --kw-rgb: var(--mana-u-rgb); }
+.keyword-badge.kw-lifelink { --kw-rgb: var(--gold-rgb); }
+.keyword-badge.kw-trample { --kw-rgb: var(--mana-g-rgb); }
+.keyword-badge.kw-indestructible { --kw-rgb: var(--mana-c-rgb); }
+.keyword-badge.kw-hexproof { --kw-rgb: var(--ok-rgb); }
+
+.keyword-badge.is-glyph svg {
+  display: block;
+  width: 72%;
+  height: 72%;
+}
+
+.keyword-badge.is-glyph.icons-coins {
+  border-radius: 50%;
+  background: rgb(var(--kw-rgb));
+  border-color: rgb(var(--ink-rgb) / 0.8);
+  color: rgb(var(--ink-rgb));
+}
+
+.keyword-badge.is-glyph.icons-outline {
+  background: rgb(var(--ink-2-rgb) / 0.92);
+  border-color: rgb(var(--kw-rgb) / 0.65);
+  color: rgb(var(--kw-rgb));
+}
+
+.keyword-badge.is-glyph.icons-outline svg {
+  width: 80%;
+  height: 80%;
+}
+
 .card-slot[data-recap] {
   outline: 2px solid var(--brand);
   outline-offset: 2px;

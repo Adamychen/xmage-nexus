@@ -412,12 +412,13 @@ describe('persistence', () => {
     it('reads the three overlay flags a player turned off', () => {
       mockStorage['mage-web-appearance'] = JSON.stringify({
         sleeveId: 'classic', boardLayout: 'standard', uiScale: 1, cjkBoost: true,
-        showHandCost: false, ptBadgeMode: 'changed', sicknessStyle: 'veil',
+        showHandCost: false, ptBadgeMode: 'changed', sicknessStyle: 'veil', keywordIcons: 'outline',
       })
       const loaded = loadAppearanceSettings()
       expect(loaded.showHandCost).toBe(false)
       expect(loaded.ptBadgeMode).toBe('changed')
       expect(loaded.sicknessStyle).toBe('veil')
+      expect(loaded.keywordIcons).toBe('outline')
     })
 
     it('falls back to today\'s behaviour for a blob written before the flags existed', () => {
@@ -428,17 +429,19 @@ describe('persistence', () => {
       expect(loaded.showHandCost).toBe(true)
       expect(loaded.ptBadgeMode).toBe('always')
       expect(loaded.sicknessStyle).toBe('badge')
+      expect(loaded.keywordIcons).toBe('coins')
     })
 
     it('normalizes a hand-edited or corrupt value instead of leaking it into the UI', () => {
       mockStorage['mage-web-appearance'] = JSON.stringify({
         sleeveId: 'classic', boardLayout: 'standard', uiScale: 1, cjkBoost: true,
-        showHandCost: 'false', ptBadgeMode: 'sometimes', sicknessStyle: 'hourglass',
+        showHandCost: 'false', ptBadgeMode: 'sometimes', sicknessStyle: 'hourglass', keywordIcons: 'emoji',
       })
       const loaded = loadAppearanceSettings()
       expect(loaded.showHandCost).toBe(true)
       expect(loaded.ptBadgeMode).toBe('always')
       expect(loaded.sicknessStyle).toBe('badge')
+      expect(loaded.keywordIcons).toBe('coins')
     })
   })
 
