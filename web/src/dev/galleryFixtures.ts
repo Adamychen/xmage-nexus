@@ -195,7 +195,7 @@ function targetPrompt(game: GameView, gameId: string, required: boolean): Feedba
 const LIBRARY_CARDS: FeedbackCard[] = [
   { id: 'g1', name: 'Opt', expansionSetCode: 'M21', cardNumber: '59', cardTypes: ['Instant'] },
   { id: 'g2', name: 'Consider', expansionSetCode: 'MID', cardNumber: '44', cardTypes: ['Instant'] },
-  { id: 'g3', name: 'Lightning Bolt', expansionSetCode: '2XM', cardNumber: '129', cardTypes: ['Instant'] },
+  { id: 'g3', name: 'Lightning Bolt', expansionSetCode: 'M10', cardNumber: '146', cardTypes: ['Instant'] },
   { id: 'g4', name: 'Counterspell', expansionSetCode: 'MH2', cardNumber: '267', cardTypes: ['Instant'] },
   { id: 'g5', name: 'Elvish Mystic', expansionSetCode: 'M14', cardNumber: '169', cardTypes: ['Creature'] },
   { id: 'g6', name: 'Forest', expansionSetCode: 'M21', cardNumber: '277', cardTypes: ['Land'] },
@@ -608,7 +608,7 @@ function tapOneLand(game: GameView): GameView {
 function withIdenticalSpellPile(game: GameView): GameView {
   const me = controlledPlayer(game)
   const controller = { controllerId: me?.playerId, controllerName: me?.name }
-  const copy = (id: string) => ({ id, name: 'Lightning Bolt', expansionSetCode: '2XM', cardNumber: '129', cardTypes: ['INSTANT'], ...controller })
+  const copy = (id: string) => ({ id, name: 'Lightning Bolt', expansionSetCode: 'M10', cardNumber: '146', cardTypes: ['INSTANT'], ...controller })
   return {
     ...game,
     stack: {
@@ -622,7 +622,7 @@ function withIdenticalSpellPile(game: GameView): GameView {
 function pushStackEntry(game: GameView): GameView {
   const me = controlledPlayer(game)
   const id = 'gallery-push-' + Date.now()
-  const spell = { id, name: 'Lightning Bolt', expansionSetCode: '2XM', cardNumber: '129', cardTypes: ['INSTANT'], controllerId: me?.playerId, controllerName: me?.name }
+  const spell = { id, name: 'Lightning Bolt', expansionSetCode: 'M10', cardNumber: '146', cardTypes: ['INSTANT'], controllerId: me?.playerId, controllerName: me?.name }
   return { ...game, stack: { [id]: spell, ...(game.stack ?? {}) } as unknown as GameView['stack'] }
 }
 
@@ -631,7 +631,7 @@ function withMixedStackKinds(game: GameView): GameView {
   const controller = { controllerId: me?.playerId, controllerName: me?.name }
   const stack = {
     'gallery-kind-trigger': { id: 'gallery-kind-trigger', name: 'Soul Warden', mageObjectType: 'TRIGGERED_ABILITY', abilityType: 'Triggered', rules: ['You gain 1 life.'], sourceCard: { name: 'Soul Warden', ...controller }, ...controller },
-    'gallery-kind-spell': { id: 'gallery-kind-spell', name: 'Lightning Bolt', expansionSetCode: '2XM', cardNumber: '129', cardTypes: ['INSTANT'], ...controller },
+    'gallery-kind-spell': { id: 'gallery-kind-spell', name: 'Lightning Bolt', expansionSetCode: 'M10', cardNumber: '146', cardTypes: ['INSTANT'], ...controller },
     'gallery-kind-creature': { id: 'gallery-kind-creature', name: 'Mystic Snake', expansionSetCode: 'MH2', cardNumber: '50', cardTypes: ['CREATURE'], power: 2, toughness: 2, ...controller },
   }
   return { ...game, stack: stack as unknown as GameView['stack'] }
@@ -644,8 +644,8 @@ function withBoltTargeting(game: GameView, targetId: string): GameView {
   const bolt = {
     id: BOLT_ON_STACK_ID,
     name: 'Lightning Bolt',
-    expansionSetCode: '2XM',
-    cardNumber: '129',
+    expansionSetCode: 'M10',
+    cardNumber: '146',
     cardTypes: ['INSTANT'],
     controllerId: me?.playerId,
     controllerName: me?.name,
@@ -678,10 +678,10 @@ function resolveBoltOn(targetId: string): (game: GameView) => GameView {
 function withFourStackSpells(game: GameView, creatureId: string, playerId: string): GameView {
   const me = controlledPlayer(game)
   const controller = { controllerId: me?.playerId, controllerName: me?.name }
-  const spell = (id: string, name: string, cardNumber: string, target: string) => ({
+  const spell = (id: string, name: string, set: string, cardNumber: string, target: string) => ({
     id,
     name,
-    expansionSetCode: '2XM',
+    expansionSetCode: set,
     cardNumber,
     cardTypes: ['INSTANT'],
     rules: [`${name} deals 3 damage to any target.`],
@@ -689,10 +689,10 @@ function withFourStackSpells(game: GameView, creatureId: string, playerId: strin
     ...controller,
   })
   const stack = {
-    'gallery-seq-1': spell('gallery-seq-1', 'Lightning Bolt', '129', creatureId),
-    'gallery-seq-2': spell('gallery-seq-2', 'Shock', '135', playerId),
-    'gallery-seq-3': spell('gallery-seq-3', 'Lightning Strike', '140', creatureId),
-    'gallery-seq-4': spell('gallery-seq-4', 'Searing Spear', '146', playerId),
+    'gallery-seq-1': spell('gallery-seq-1', 'Lightning Bolt', 'M10', '146', creatureId),
+    'gallery-seq-2': spell('gallery-seq-2', 'Shock', '2XM', '135', playerId),
+    'gallery-seq-3': spell('gallery-seq-3', 'Lightning Strike', '2XM', '140', creatureId),
+    'gallery-seq-4': spell('gallery-seq-4', 'Searing Spear', '2XM', '146', playerId),
   }
   return { ...game, stack: stack as unknown as GameView['stack'] }
 }
@@ -713,12 +713,12 @@ function replayStackSequence(full: GameView): () => void {
 }
 
 function withSpellStack(game: GameView): GameView {
-  const spell = (id: string, name: string) => ({ id, name, expansionSetCode: '2XM', cardNumber: '129', cardTypes: ['Instant'] })
+  const spell = (id: string, name: string, set: string, cardNumber: string) => ({ id, name, expansionSetCode: set, cardNumber, cardTypes: ['Instant'] })
   return {
     ...game,
     stack: {
-      'gallery-stack-top': spell('gallery-stack-top', 'Lightning Bolt'),
-      'gallery-stack-below': spell('gallery-stack-below', 'Counterspell'),
+      'gallery-stack-top': spell('gallery-stack-top', 'Lightning Bolt', 'M10', '146'),
+      'gallery-stack-below': spell('gallery-stack-below', 'Counterspell', 'MH2', '267'),
     } as unknown as GameView['stack'],
   }
 }
@@ -828,8 +828,8 @@ function bolt(id: string, controller: PlayerView | undefined): CardView {
     id,
     name: 'Lightning Bolt',
     displayName: 'Lightning Bolt',
-    expansionSetCode: '2XM',
-    cardNumber: '129',
+    expansionSetCode: 'M10',
+    cardNumber: '146',
     manaValue: 1,
     cardTypes: ['Instant'],
     rules: ['Lightning Bolt deals 3 damage to any target.'],
@@ -876,6 +876,37 @@ function removeFromHand(game: GameView, predicate: (card: CardView) => boolean):
 }
 
 const isType = (type: string) => (card: CardView) => (card.cardTypes ?? []).some((t) => String(t).toLowerCase() === type)
+
+const OPP_SPELL_ID = 'gallery-opp-spell'
+
+/** Adds (delta +1) or removes (delta -1) one card from an opponent's hand; the server only sends the count. */
+function withOpponentHandDelta(game: GameView, owner: PlayerView | undefined, delta: number): GameView {
+  if (!owner) return game
+  return {
+    ...game,
+    players: players(game).map((p) => (p.playerId === owner.playerId
+      ? { ...p, handCount: Math.max(0, (p.handCount ?? 0) + delta) }
+      : p)) as PlayerView[],
+  }
+}
+
+/** Casts the opponent's instant from their hand: the hand count drops and the spell goes on the stack. */
+function castOpponentBolt(game: GameView, owner: PlayerView | undefined): GameView {
+  if (!owner) return game
+  const next = withOpponentHandDelta(game, owner, -1)
+  return { ...next, stack: { ...(next.stack ?? {}), [OPP_SPELL_ID]: bolt(OPP_SPELL_ID, owner) } as unknown as GameView['stack'] }
+}
+
+/** Restores the pre-cast state, then casts in the next macrotask so the engine sees a fresh diff. */
+function replayCast(base: GameView, cast: (game: GameView) => GameView): () => void {
+  return () => {
+    setState({ game: base })
+    setTimeout(() => {
+      const current = getState().game
+      if (current) setState({ game: cast(current) })
+    }, 0)
+  }
+}
 
 /** Mueve la primera instantánea de la mano a la pila, con controller = yo. */
 function castFirstInstant(game: GameView): GameView {
@@ -1575,6 +1606,7 @@ export function buildGalleryEntries(): GalleryEntry[] {
     const mystic = creatureIds(me)[0] ?? ''
     const tappedBoard = setControlledTapped(animBase, true)
     const opponentOfBase = opponentPlayer(animBase)
+    const opponentHandBase = withOpponentHandDelta(animBase, opponentOfBase, +1)
     const fourPlayers = calmGame(FOUR_PLAYER_GAME ?? game)
     const opponentOfFour = opponentPlayer(fourPlayers)?.playerId ?? ''
 
@@ -1674,6 +1706,27 @@ export function buildGalleryEntries(): GalleryEntry[] {
       game: withInstantInHand(animBase),
       gameId,
       action: { label: 'Lanzar primer instantáneo', apply: castFirstInstant },
+    })
+    const ownCastBase = withInstantInHand(animBase)
+    entries.push({
+      id: 'anim:spell-cast-own',
+      group: 'Animaciones',
+      label: 'Spell: cast from hand, lift and fly to the stack',
+      description: 'Press to cast the first instant from your hand: it rises to the middle of the screen, holds, then flies to the stack with the gold trail. "Replay" puts it back in your hand and casts it again.',
+      phase: 'game',
+      game: ownCastBase,
+      gameId,
+      action: { label: 'Replay', run: replayCast(ownCastBase, castFirstInstant) },
+    })
+    entries.push({
+      id: 'anim:spell-cast-opp',
+      group: 'Animaciones',
+      label: 'Opponent spell: lift and fly to the stack',
+      description: 'Press to cast an instant from the opponent: it rises to the middle of the screen, holds, then flies from their hand to the stack. "Replay" puts it back in their hand and casts it again.',
+      phase: 'game',
+      game: opponentHandBase,
+      gameId,
+      action: { label: 'Replay', run: replayCast(opponentHandBase, (g) => castOpponentBolt(g, opponentOfBase)) },
     })
     entries.push({
       id: 'anim:land-slide',

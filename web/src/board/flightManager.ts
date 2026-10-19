@@ -20,6 +20,7 @@ export interface FlightRecord {
   timers?: Array<ReturnType<typeof setTimeout>>
   variant?: FlightVariant
   trail?: FlightTrail
+  lift?: boolean
   /** The clone leaves a compact art-crop tile: it starts as that landscape art crop. */
   fromCompact?: boolean
   /** The clone lands on a compact art-crop tile: it ends as that landscape art crop. */
@@ -30,6 +31,7 @@ export interface FlightRecord {
 export const ENTER_FLIGHT_MS = 1100
 /** Fracción de ENTER_FLIGHT_MS en la que la carta toca el suelo. */
 export const ENTER_LAND_AT = 0.8
+export const CAST_FLIGHT_MS = 900
 
 export type FlightVariant = 'destroy' | 'exile' | 'heavy' | 'land' | 'enter'
 
@@ -130,6 +132,7 @@ export interface FlightOptions {
   sourceSize?: CardSourceSize | null
   variant?: FlightVariant
   trail?: FlightTrail
+  lift?: boolean
   /** The source is a compact art-crop tile. Defaults to `sourceSize.compact`. */
   fromCompact?: boolean
   /** The destination is a compact art-crop tile. Defaults to probing `toSelector` in the DOM. */
@@ -293,6 +296,7 @@ export function startCardFlight(
     rotated90: from.rotated90 || undefined,
     variant: options?.variant,
     trail: options?.trail,
+    lift: options?.lift,
     fromCompact: fromCompact || undefined,
     toCompact: toCompact || undefined,
   }

@@ -16,6 +16,7 @@ const ENTER_SETTLE_AT = ENTER_LAND_AT
 const ENTER_SHOW_MAX_H = 440
 const ENTER_RISE_EASE = 'cubic-bezier(0.2, 0.7, 0.4, 1)'
 const ENTER_DROP_EASE = 'cubic-bezier(0.55, 0, 1, 0.45)'
+const CAST_FLY_EASE = 'cubic-bezier(0.4, 0, 0.2, 1)'
 const ENTER_SETTLE_EASE = 'cubic-bezier(0.2, 0.6, 0.4, 1)'
 const ENTER_SHOW_SHADOW = '0 60px 110px var(--shade-5), 0 0 40px rgb(var(--brand-rgb) / 0.7)'
 const ENTER_SHOW_SHADOW_RARE = '0 60px 120px var(--shade-5), 0 0 64px rgb(var(--gold-rgb) / 0.9)'
@@ -36,11 +37,13 @@ function unitDirection(fromRect: DOMRect, toRect: DOMRect): { x: number; y: numb
 
 /** Entrada al campo con peso, en tres tiempos: la carta sube hasta el centro de
  *  la pantalla y crece para mostrarse, se queda un instante, y luego cae
- *  acelerando hasta su sitio, donde asienta antes de quedar plana. */
+ *  acelerando hasta su sitio, donde asienta antes de quedar plana. Un hechizo
+ *  lanzado usa la misma subida y pausa, pero el último tramo vuela a la pila. */
 function liftAndDropKeyframes(p: {
   fromCx: number; fromCy: number; toCx: number; toCy: number
   w: number; h: number; endW: number; endH: number
   startRot: number; endRot: number; restShadow: string; showShadow: string
+  arrival: 'drop' | 'fly'
 }): Keyframe[] {
   const showH = Math.min(window.innerHeight * 0.5, ENTER_SHOW_MAX_H)
   const showW = showH * FLIGHT_CARD_ASPECT
@@ -50,10 +53,21 @@ function liftAndDropKeyframes(p: {
     `translate3d(${cx - w / 2}px, ${cy - h / 2}px, 0) rotate(${rot}deg) scale(${scale})`
   const shown = { width: `${showW}px`, height: `${showH}px`, boxShadow: p.showShadow, opacity: 1,
     transform: pose(showCx, showCy, showW, showH, 0, 1) }
-  return [
+  const rise: Keyframe[] = [
     { offset: 0, easing: ENTER_RISE_EASE, width: `${p.w}px`, height: `${p.h}px`, boxShadow: p.restShadow, opacity: 0.9,
       transform: pose(p.fromCx, p.fromCy, p.w, p.h, p.startRot, 1) },
     { offset: ENTER_RISE_AT, easing: 'linear', ...shown },
+  ]
+  if (p.arrival === 'fly') {
+    return [
+      ...rise,
+      { offset: ENTER_HOLD_AT, easing: CAST_FLY_EASE, ...shown },
+      { offset: 1, width: `${p.endW}px`, height: `${p.endH}px`, boxShadow: p.restShadow, opacity: 0.95,
+        transform: pose(p.toCx, p.toCy, p.endW, p.endH, p.endRot, 1) },
+    ]
+  }
+  return [
+    ...rise,
     { offset: ENTER_HOLD_AT, easing: ENTER_DROP_EASE, ...shown },
     { offset: ENTER_SETTLE_AT, easing: ENTER_SETTLE_EASE, width: `${p.endW}px`, height: `${p.endH}px`, boxShadow: p.restShadow, opacity: 0.95,
       transform: pose(p.toCx, p.toCy, p.endW, p.endH, p.endRot, 0.97) },
@@ -90,6 +104,7 @@ function FlyingCardItem({ flight }: { flight: FlightRecord }) {
     }
 
     const entering = flight.variant === 'enter' || flight.variant === 'land'
+    const lifted = entering || flight.lift === true
     const restShadow = getComputedStyle(el).boxShadow
     const rank = entering ? enterRank(flight.card) : null
 
@@ -116,10 +131,11 @@ function FlyingCardItem({ flight }: { flight: FlightRecord }) {
       // Tilt 3D sutil en vuelos largos: la carta "gira en la mano" mientras cruza.
       const tilt = dist > 80 ? 14 : dist > 40 ? 8 : 0
 
-      if (entering) {
+      if (lifted) {
         return liftAndDropKeyframes({
           fromCx, fromCy, toCx, toCy, w, h, endW, endH, startRot, endRot, restShadow,
           showShadow: rank === 'mythic' ? ENTER_SHOW_SHADOW_RARE : ENTER_SHOW_SHADOW,
+          arrival: entering ? 'drop' : 'fly',
         })
       }
 
@@ -135,7 +151,7 @@ function FlyingCardItem({ flight }: { flight: FlightRecord }) {
 
     const timing: KeyframeAnimationOptions = {
       duration,
-      easing: entering ? 'linear' : 'cubic-bezier(0.3, 0.9, 0.35, 1)',
+      easing: lifted ? 'linear' : 'cubic-bezier(0.3, 0.9, 0.35, 1)',
       fill: 'forwards',
     }
 

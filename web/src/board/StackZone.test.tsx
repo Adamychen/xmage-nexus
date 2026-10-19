@@ -1,7 +1,8 @@
 import { act, fireEvent, render, waitFor } from '@testing-library/react'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import StackZone from './StackZone'
 import { DrawerHeadSlotContext } from '../game/drawerHeadSlot'
+import { clearFlights, startCardFlight } from './flightManager'
 import { awaitImageUrl } from '../cards/cardImages'
 import type { CardView, PlayerView } from '../net/types'
 
@@ -700,5 +701,47 @@ describe('StackZone countdown (C2)', () => {
       return el as HTMLImageElement
     })
     expect(img.getAttribute('src')).toBe('https://cards.scryfall.io/art_crop/front/a/b/bolt.jpg')
+  })
+})
+
+describe('StackZone arriving spells', () => {
+  const rectAt = (left: number, top: number, width = 100, height = 140) =>
+    ({ left, top, width, height, right: left + width, bottom: top + height, x: left, y: top, toJSON: () => {} }) as DOMRect
+
+  afterEach(() => {
+    clearFlights()
+  })
+
+  it('hides an arriving spell in its slot while its flight to the stack is active, then shows it', () => {
+    const stack: Record<string, CardView> = {
+      'spell-1': { name: 'Lightning Bolt', cardTypes: ['INSTANT'], manaValue: 1 },
+    }
+    const { container } = render(<StackZone stack={stack} />)
+    const entry = container.querySelector<HTMLElement>('[data-card-id="spell-1"]')
+    expect(entry).toBeTruthy()
+    expect(entry!.classList.contains('stack-entry-arriving')).toBe(false)
+
+    act(() => {
+      startCardFlight({ ...stack['spell-1'], id: 'spell-1' }, rectAt(50, 600), rectAt(900, 120), 900, '[data-card-id="spell-1"] .stack-tl-card')
+    })
+    expect(container.querySelector('[data-card-id="spell-1"]')!.classList.contains('stack-entry-arriving')).toBe(true)
+    expect(container.querySelectorAll('.stack-tl-entry').length).toBe(1)
+
+    act(() => {
+      clearFlights()
+    })
+    expect(container.querySelector('[data-card-id="spell-1"]')!.classList.contains('stack-entry-arriving')).toBe(false)
+  })
+
+  it('does not hide a spell that is leaving the stack for its graveyard', () => {
+    const stack: Record<string, CardView> = {
+      'spell-2': { name: 'Giant Growth', cardTypes: ['INSTANT'], manaValue: 1 },
+    }
+    const { container } = render(<StackZone stack={stack} />)
+
+    act(() => {
+      startCardFlight({ ...stack['spell-2'], id: 'spell-2' }, rectAt(900, 120), rectAt(50, 600), 380, '[data-player-name="a"] .graveyard-stack [data-card-id="spell-2"]')
+    })
+    expect(container.querySelector('[data-card-id="spell-2"]')!.classList.contains('stack-entry-arriving')).toBe(false)
   })
 })

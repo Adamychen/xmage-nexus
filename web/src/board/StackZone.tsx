@@ -11,6 +11,7 @@ import FloatingCardPreview from './FloatingCardPreview'
 import FormattedText from '../game/FormattedText'
 import { useStore, isBlockingModal } from '../state/store'
 import { recordCardPosition } from './cardPositionRegistry'
+import { useActiveFlights } from './flightManager'
 import { useTranslation } from '../i18n'
 import Icon from '../ui/Icon'
 import { clickableProps } from '../ui/clickable'
@@ -93,6 +94,8 @@ export function RecordedStackEntry({
   children: ReactNode
 }) {
   const ref = useRef<HTMLDivElement>(null)
+  const flights = useActiveFlights()
+  const arriving = flights.some((f) => f.cardId === id && f.toSelector?.startsWith(`[data-card-id="${id}"]`))
   useLayoutEffect(() => {
     const el = ref.current
     return () => {
@@ -111,7 +114,7 @@ export function RecordedStackEntry({
   }, [id])
 
   return (
-    <div ref={ref} data-card-id={id} className={className} style={style} onClick={onClick} onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave} {...clickableProps(onClick)}>
+    <div ref={ref} data-card-id={id} className={arriving ? `${className} stack-entry-arriving` : className} style={style} onClick={onClick} onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave} {...clickableProps(onClick)}>
       {children}
     </div>
   )

@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useRef } from 'react'
 import type { CardView, GameView, PlayerView } from '../net/types'
-import { startCardFlight, noteFlightEvent, ENTER_FLIGHT_MS, ENTER_LAND_AT, type FlightTrail, type FlightVariant } from './flightManager'
+import { startCardFlight, noteFlightEvent, CAST_FLIGHT_MS, ENTER_FLIGHT_MS, ENTER_LAND_AT, type FlightTrail, type FlightVariant } from './flightManager'
 import { enqueueStackResolve } from './stackHold'
 import { releaseHeldHit } from './damageHold'
 import { getPreviousCardPosition, getPreviousCardSize, clearCardPositionRegistry, type CardSourceSize } from './cardPositionRegistry'
 import { announceBanner, spawnFloater } from './feedbackFx'
 import { t } from '../i18n'
 import { isAbilityCard } from '../cards/cardImages'
-import { fxMotionDuration } from './fx'
+import { fxMotionAllowed, fxMotionDuration } from './fx'
 import { cardManaColors, slamSpell, spawnImpact, spellWeight } from './impactFx'
 import { spawnProjectile } from './projectileFx'
 import { stackTargetIds } from './stackEntries'
@@ -61,13 +61,18 @@ function slamResolvedSpells(nextGame: GameView): void {
   }
 }
 
-function getRect(selector: string): DOMRect | null {
-  const el = document.querySelector(selector) as HTMLElement | null
+function rectOf(el: Element | null | undefined): DOMRect | null {
   if (!el) return null
   const rect = el.getBoundingClientRect()
   if (rect.width <= 0 || rect.height <= 0) return null
   return rect
 }
+
+function getRect(selector: string): DOMRect | null {
+  return rectOf(document.querySelector(selector))
+}
+
+const STACK_SELECTOR = '.stack-zone, .stack-deck, .stack-list'
 
 /** Resuelve el destino real probando selectores concretos (slot de la carta)
  *  antes de caer al rect del contenedor de zona. Devuelve también el selector
@@ -152,7 +157,8 @@ function flyAfterLayout(
   duration: number,
   sourceSize?: CardSourceSize | null,
   variant?: FlightVariant,
-  trail?: FlightTrail
+  trail?: FlightTrail,
+  lift?: boolean
 ): void {
   if (!fromRect) {
     noteFlightEvent({ kind: 'skip', reason: 'no-source', cardId, detail: `engine:${card.name ?? ''}` })
@@ -165,7 +171,7 @@ function flyAfterLayout(
       noteFlightEvent({ kind: 'skip', reason: 'no-dest', cardId, detail: `engine:${card.name ?? ''}:${destSelectors[0] ?? '?'}` })
       return
     }
-    startCardFlight(card, fromRect, toRect, duration, dest?.selector, { sourceSize, variant, trail })
+    startCardFlight(card, fromRect, toRect, duration, dest?.selector, { sourceSize, variant, trail, lift })
   })
 }
 
@@ -256,10 +262,11 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
         }
       }
 
-      // 1b. Check if source card is still visible on battlefield
+      // 1b. Check if source card is still visible on battlefield (its copy already drawn in the stack is the destination, not the source)
       if (!sourceRect && srcId) {
-        sourceRect = getRect(`[data-card-id="${srcId}"]`)
-        const tile = sourceRect ? document.querySelector<HTMLElement>(`[data-card-id="${srcId}"]`)?.closest<HTMLElement>('.card-slot.is-compact') : null
+        const sourceEl = [...document.querySelectorAll<HTMLElement>(`[data-card-id="${srcId}"]`)].find((el) => !el.closest(STACK_SELECTOR))
+        sourceRect = rectOf(sourceEl)
+        const tile = sourceRect ? sourceEl?.closest<HTMLElement>('.card-slot.is-compact') : null
         if (tile && tile.offsetWidth > 0 && tile.offsetHeight > 0) sourceSize = { w: tile.offsetWidth, h: tile.offsetHeight, compact: true }
       }
 
@@ -274,11 +281,12 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
       }
 
       if (sourceRect && stackRect) {
+        const lift = !isAbilityCard(spell) && fxMotionAllowed()
         flyAfterLayout(spellId, spell, sourceRect, [
           `[data-card-id="${spellId}"] .stack-thumb`,
           `[data-card-id="${spellId}"] .stack-tl-card`,
           `[data-card-id="${spellId}"]`,
-        ], stackRect, 380, sourceSize, weight > 0 ? 'heavy' : undefined, isAbilityCard(spell) ? undefined : 'gold')
+        ], stackRect, lift ? CAST_FLIGHT_MS : 380, sourceSize, weight > 0 ? 'heavy' : undefined, isAbilityCard(spell) ? undefined : 'gold', lift)
       } else if (!sourceRect) {
         noteFlightEvent({ kind: 'skip', reason: 'no-source', cardId: spellId, detail: `stack-enter:${spell.name ?? ''}` })
       }

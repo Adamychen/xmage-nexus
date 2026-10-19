@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { detectAndAnimateTransitions } from './gameTransitionEngine'
-import { getActiveFlights, startCardFlight, clearFlights } from './flightManager'
+import { getActiveFlights, startCardFlight, clearFlights, CAST_FLIGHT_MS } from './flightManager'
 import { recordCardPosition, clearCardPositionRegistry } from './cardPositionRegistry'
 import { makeGameView, makePlayer, makePermanent, makeCard } from '../__fixtures__/gameViews'
 
@@ -248,6 +248,120 @@ describe('gameTransitionEngine', () => {
     expect(flights.find((f) => f.card.name === 'Lightning Bolt')?.trail).toBe('gold')
   })
 
+  it('a cast spell is lifted to the middle of the screen before it flies to the stack', () => {
+    const bolt = makeCard({
+      id: 'spell-bolt',
+      name: 'Lightning Bolt',
+      controllerId: 'p-alice',
+      sourceCard: makeCard({ id: 'hand-bolt', name: 'Lightning Bolt' }),
+    })
+    const alice = makePlayer({ playerId: 'p-alice', name: 'Alice' })
+    recordCardPosition('hand-bolt', mockRect(400, 600), 'hand-zone')
+
+    detectAndAnimateTransitions(makeGameView({ players: [alice], stack: {} }), makeGameView({ players: [alice], stack: { 'spell-bolt': bolt } }))
+    vi.advanceTimersByTime(200)
+
+    const flight = getActiveFlights().find((f) => f.card.name === 'Lightning Bolt')
+    expect(flight?.lift).toBe(true)
+    expect(flight?.duration).toBe(CAST_FLIGHT_MS)
+    expect(flight?.toSelector).toBe('[data-card-id="spell-bolt"] .stack-thumb')
+  })
+
+  it('a cast spell from an opponent is lifted from its player zone', () => {
+    const bolt = makeCard({
+      id: 'spell-bob-bolt',
+      name: 'Lightning Bolt',
+      controllerId: 'p-bob',
+      sourceCard: makeCard({ id: 'hand-bob-bolt', name: 'Lightning Bolt' }),
+    })
+    const alice = makePlayer({ playerId: 'p-alice', name: 'Alice' })
+    const bob = makePlayer({ playerId: 'p-bob', name: 'Bob' })
+    const bobZone = document.createElement('div')
+    bobZone.setAttribute('data-player-id', 'p-bob')
+    bobZone.innerHTML = '<div class="hand-zone"></div>'
+    document.body.appendChild(bobZone)
+    vi.spyOn(bobZone.querySelector('.hand-zone') as HTMLElement, 'getBoundingClientRect').mockReturnValue(mockRect(100, 700, 300, 112))
+
+    detectAndAnimateTransitions(
+      makeGameView({ players: [alice, bob], stack: {} }),
+      makeGameView({ players: [alice, bob], stack: { 'spell-bob-bolt': bolt } }),
+    )
+    vi.advanceTimersByTime(200)
+
+    const flight = getActiveFlights().find((f) => f.card.name === 'Lightning Bolt')
+    expect(flight?.lift).toBe(true)
+    expect(flight?.toRect.left).toBe(800)
+    bobZone.remove()
+  })
+
+  it('a cast spell with no source rect is skipped and starts no flight', () => {
+    const bolt = makeCard({ id: 'spell-ghost', name: 'Lightning Bolt', controllerId: 'p-nobody' })
+    const alice = makePlayer({ playerId: 'p-alice', name: 'Alice' })
+
+    detectAndAnimateTransitions(
+      makeGameView({ players: [alice], stack: {} }),
+      makeGameView({ players: [alice], stack: { 'spell-ghost': bolt } }),
+    )
+    vi.advanceTimersByTime(200)
+
+    expect(getActiveFlights()).toHaveLength(0)
+  })
+
+  it('an ability on the stack does not lift its source card', () => {
+    const ability = makeCard({
+      id: 'ab-lift',
+      name: 'Ability',
+      mageObjectType: 'TRIGGERED_ABILITY',
+      controllerId: 'p-alice',
+      sourceCard: makeCard({ id: 'perm-grizzly', name: 'Grizzly Bears' }),
+    })
+    const alice = makePlayer({ playerId: 'p-alice', name: 'Alice' })
+    recordCardPosition('perm-grizzly', mockRect(450, 400), 'creatures-band')
+
+    detectAndAnimateTransitions(makeGameView({ players: [alice], stack: {} }), makeGameView({ players: [alice], stack: { 'ab-lift': ability } }))
+    vi.advanceTimersByTime(200)
+
+    const flight = getActiveFlights().find((f) => f.card.name === 'Ability')
+    expect(flight).toBeDefined()
+    expect(flight?.lift).toBeFalsy()
+    expect(flight?.duration).toBe(380)
+  })
+
+  it('a cast spell starts no flight under reduced motion', () => {
+    const original = window.matchMedia
+    window.matchMedia = vi.fn().mockReturnValue({ matches: true }) as unknown as typeof window.matchMedia
+    try {
+      const bolt = makeCard({ id: 'spell-bolt', name: 'Lightning Bolt', controllerId: 'p-alice', sourceCard: makeCard({ id: 'hand-bolt', name: 'Lightning Bolt' }) })
+      const alice = makePlayer({ playerId: 'p-alice', name: 'Alice' })
+      recordCardPosition('hand-bolt', mockRect(400, 600), 'hand-zone')
+
+      detectAndAnimateTransitions(makeGameView({ players: [alice], stack: {} }), makeGameView({ players: [alice], stack: { 'spell-bolt': bolt } }))
+      vi.advanceTimersByTime(200)
+
+      expect(getActiveFlights()).toHaveLength(0)
+    } finally {
+      window.matchMedia = original
+    }
+  })
+
+  it('a cast spell starts no flight when effects are disabled', async () => {
+    const { setState, getState } = await import('../state/state')
+    const prev = getState().settings
+    setState({ settings: { ...prev, effects: false } } as never)
+    try {
+      const bolt = makeCard({ id: 'spell-bolt', name: 'Lightning Bolt', controllerId: 'p-alice', sourceCard: makeCard({ id: 'hand-bolt', name: 'Lightning Bolt' }) })
+      const alice = makePlayer({ playerId: 'p-alice', name: 'Alice' })
+      recordCardPosition('hand-bolt', mockRect(400, 600), 'hand-zone')
+
+      detectAndAnimateTransitions(makeGameView({ players: [alice], stack: {} }), makeGameView({ players: [alice], stack: { 'spell-bolt': bolt } }))
+      vi.advanceTimersByTime(200)
+
+      expect(getActiveFlights()).toHaveLength(0)
+    } finally {
+      setState({ settings: prev } as never)
+    }
+  })
+
   it('a land entering the battlefield from hand flies with the land variant', () => {
     const forest = makePermanent({ id: 'perm-forest', name: 'Forest', cardTypes: ['Land'] })
     const alice1 = makePlayer({ playerId: 'p-alice', name: 'Alice' })
@@ -263,17 +377,27 @@ describe('gameTransitionEngine', () => {
     expect(getActiveFlights().find((f) => f.card.name === 'Forest')?.variant).toBe('land')
   })
 
-  it('skips the flight when the only source available is the stack entry itself', () => {
-    const bolt = makeCard({ id: 'spell-bolt', name: 'Lightning Bolt', controllerId: 'p-alice' })
-    const alice = makePlayer({ playerId: 'p-alice', name: 'Alice' })
+  it('an opponent spell with no drawn hand flies from the opponent zone, not from its own stack entry', () => {
+    const bob = makePlayer({ playerId: 'p-bob', name: 'Bob' })
+    const bolt = makeCard({ id: 'spell-bolt', name: 'Lightning Bolt', controllerId: 'p-bob' })
+    const zone = document.createElement('div')
+    zone.setAttribute('data-player-id', 'p-bob')
+    document.body.appendChild(zone)
+    vi.spyOn(zone, 'getBoundingClientRect').mockReturnValue(mockRect(300, 40, 860, 336))
 
-    const prevGame = makeGameView({ players: [alice], stack: {} })
-    const nextGame = makeGameView({ players: [alice], stack: { 'spell-bolt': bolt } })
+    try {
+      detectAndAnimateTransitions(
+        makeGameView({ players: [bob], stack: {} }),
+        makeGameView({ players: [bob], stack: { 'spell-bolt': bolt } }),
+      )
+      vi.advanceTimersByTime(200)
 
-    detectAndAnimateTransitions(prevGame, nextGame)
-    vi.advanceTimersByTime(200)
-
-    expect(getActiveFlights()).toHaveLength(0)
+      const flight = getActiveFlights().find((f) => f.card.name === 'Lightning Bolt')
+      expect(flight).toBeTruthy()
+      expect(flight!.fromRect.left + flight!.fromRect.width / 2).toBeCloseTo(730, 0)
+    } finally {
+      zone.remove()
+    }
   })
 
   it('flies a cast spell to the StackDeck when the stack is shown as a deck', () => {

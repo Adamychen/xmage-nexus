@@ -524,3 +524,8 @@ html.fx-off .stack-tl-node.node-top {
   margin-bottom: var(--sp-3);
   box-shadow: 0 var(--sp-1) 0 var(--veil-5), 0 var(--sp-2) 0 var(--veil-4), 0 var(--sp-3) 0 var(--veil-3);
 }
+
+/* A spell still flying to the stack: its entry keeps its space until the clone lands */
+.stack-entry-arriving {
+  visibility: hidden;
+}
