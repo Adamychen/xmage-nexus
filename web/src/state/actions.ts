@@ -10,7 +10,8 @@ import { decideStop } from '../game/stopPolicy'
 import { manaPaymentActions } from '../game/manaPayment'
 import { serverAutoAnswerActions } from '../game/autoAnswers'
 import { gameplayPreset, PRESET_OWNED_KEYS, type GameplayPresetId } from '../settings/gameplayPresets'
-import { clearActiveGame, saveSmartStops, saveActiveDeck, saveFxSettings, saveAudioSettings, saveMusicSettings, saveAppearanceSettings, saveAutoAnswers, saveChoiceMemory, saveManaPayment, savePhaseStops, saveGameplayPreset, applyAppearanceToDocument, rememberEquippedDeckId } from './persistence'
+import { clearActiveGame, saveSmartStops, saveActiveDeck, saveFxSettings, saveAudioSettings, saveMusicSettings, saveAppearanceSettings, saveAutoAnswers, saveChoiceMemory, saveManaPayment, savePhaseStops, saveGameplayPreset, applyAppearanceToDocument, rememberEquippedDeckId, APPEARANCE_KEY } from './persistence'
+import { loadAppearanceSlice } from './slices/settings'
 import { getLanguage } from '../i18n'
 import { translateError } from '../i18n'
 import { isControllingPriority } from './control'
@@ -409,6 +410,18 @@ function persistClientSettings(settings: AppState['settings']) {
   try { applyAppearanceToDocument({ sleeveId, boardLayout, uiScale, cjkBoost, transparentDialogs }, getLanguage()) } catch {}
   soundManager.setSettings({ soundEnabled, masterVolume, sfxVolume, uiVolume })
   soundManager.setMusicVolume(musicEnabled ? musicVolume : 0)
+}
+
+export function syncAppearanceFromStorage() {
+  setState({ settings: { ...getState().settings, ...loadAppearanceSlice() } })
+}
+
+export function watchAppearanceStorage(): () => void {
+  const onStorage = (event: StorageEvent) => {
+    if (event.key === null || event.key === APPEARANCE_KEY) syncAppearanceFromStorage()
+  }
+  window.addEventListener('storage', onStorage)
+  return () => window.removeEventListener('storage', onStorage)
 }
 
 export function setSetting<K extends keyof AppState['settings']>(key: K, value: AppState['settings'][K]) {

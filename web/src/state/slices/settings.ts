@@ -59,6 +59,29 @@ export interface SettingsSlice {
   settings: SettingsState
 }
 
+export function loadAppearanceSlice() {
+  const appearance = loadAppearanceSettings()
+  return {
+    ...appearance,
+    boardLayoutManual: appearance.boardLayoutManual ?? false,
+    transparentDialogs: appearance.transparentDialogs ?? false,
+    playmatId: normalizePlaymat(appearance.playmatId),
+    cardStyle: normalizeCardStyle(appearance.cardStyle),
+    tapStyle: normalizeTapStyle(appearance.tapStyle),
+    showHandCost: normalizeShowHandCost(appearance.showHandCost),
+    showManaSource: normalizeShowManaSource(appearance.showManaSource),
+    ptBadgeMode: normalizePtBadgeMode(appearance.ptBadgeMode),
+    cardRender: normalizeCardRender(appearance.cardRender),
+    handRail: normalizeHandRail(appearance.handRail),
+    handRailWidth: normalizeHandRailWidth(appearance.handRailWidth),
+    handRow: normalizeHandRow(appearance.handRow),
+    boardFill: normalizeBoardFill(appearance.boardFill),
+    stackCaption: normalizeStackCaption(appearance.stackCaption),
+    gameUi: normalizeGameUi(appearance.gameUi),
+    sicknessStyle: normalizeSicknessStyle(appearance.sicknessStyle),
+  }
+}
+
 const storedPresetId = loadGameplayPreset()
 const storedPreset = isGameplayPresetId(storedPresetId) ? gameplayPreset(storedPresetId) : null
 
@@ -79,23 +102,7 @@ export const initialSettings: SettingsSlice = {
     ...loadFxSettings(),
     ...loadAudioSettings(),
     ...loadMusicSettings(),
-    ...loadAppearanceSettings(),
-    boardLayoutManual: loadAppearanceSettings().boardLayoutManual ?? false,
-    transparentDialogs: loadAppearanceSettings().transparentDialogs ?? false,
-    playmatId: normalizePlaymat(loadAppearanceSettings().playmatId),
-    cardStyle: normalizeCardStyle(loadAppearanceSettings().cardStyle),
-    tapStyle: normalizeTapStyle(loadAppearanceSettings().tapStyle),
-    showHandCost: normalizeShowHandCost(loadAppearanceSettings().showHandCost),
-    showManaSource: normalizeShowManaSource(loadAppearanceSettings().showManaSource),
-    ptBadgeMode: normalizePtBadgeMode(loadAppearanceSettings().ptBadgeMode),
-    cardRender: normalizeCardRender(loadAppearanceSettings().cardRender),
-    handRail: normalizeHandRail(loadAppearanceSettings().handRail),
-    handRailWidth: normalizeHandRailWidth(loadAppearanceSettings().handRailWidth),
-    handRow: normalizeHandRow(loadAppearanceSettings().handRow),
-    boardFill: normalizeBoardFill(loadAppearanceSettings().boardFill),
-    stackCaption: normalizeStackCaption(loadAppearanceSettings().stackCaption),
-    gameUi: normalizeGameUi(loadAppearanceSettings().gameUi),
-    sicknessStyle: normalizeSicknessStyle(loadAppearanceSettings().sicknessStyle),
+    ...loadAppearanceSlice(),
     ...(storedPreset ? storedPreset.bundle : null),
   },
 }

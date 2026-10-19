@@ -4,7 +4,7 @@ import { linkBanner } from './system/linkBanner'
 import { isGalleryHash } from './dev/galleryRoute'
 import { setState } from './state/state'
 import { parseDeepLink } from './lobby/deepLink'
-import { setSetting } from './state/actions'
+import { setSetting, watchAppearanceStorage } from './state/actions'
 import { ZOOM_DEFAULT, stepZoom } from './appearance/zoom'
 import { applyFxRoot } from './board/fx'
 import { useTranslation } from './i18n'
@@ -116,6 +116,8 @@ export default function App() {
   useEffect(() => {
     applyAppearanceToDocument(loadAppearanceSettings(), lang)
   }, [lang])
+
+  useEffect(() => watchAppearanceStorage(), [])
 
   useEffect(() => {
     const onBeforeUnload = () => undefined

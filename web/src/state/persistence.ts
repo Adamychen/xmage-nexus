@@ -742,7 +742,7 @@ export interface AppearanceSettings {
   gameUi?: GameUi
 }
 
-const APPEARANCE_KEY = 'mage-web-appearance'
+export const APPEARANCE_KEY = 'mage-web-appearance'
 export const DEFAULT_APPEARANCE: AppearanceSettings = { sleeveId: 'classic', boardLayout: 'standard', uiScale: ZOOM_DEFAULT, cjkBoost: true, boardLayoutManual: false, transparentDialogs: false, showHandCost: true, showManaSource: false, ptBadgeMode: 'always', sicknessStyle: 'badge', cardRender: 'image', handRail: false, handRailWidth: 260, handRow: false, boardFill: true, stackCaption: true, gameUi: DEFAULT_GAME_UI }
 
 const VALID_LAYOUTS: BoardLayoutPref[] = ['standard', 'pod', 'arena']
