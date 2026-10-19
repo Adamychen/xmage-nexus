@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef } from 'react'
-import type { CardView, GameView } from '../net/types'
+import type { CardView, GameView, PlayerView } from '../net/types'
 import { startCardFlight, noteFlightEvent, type FlightTrail, type FlightVariant } from './flightManager'
+import { enqueueStackResolve } from './stackHold'
+import { releaseHeldHit } from './damageHold'
 import { getPreviousCardPosition, getPreviousCardSize, clearCardPositionRegistry, type CardSourceSize } from './cardPositionRegistry'
 import { announceBanner, spawnFloater } from './feedbackFx'
 import { t } from '../i18n'
@@ -87,6 +89,34 @@ function scheduleAfterLayout(fn: () => void): void {
   }
 }
 
+const STACK_EXIT_MS = 380
+
+/** A spell leaving the stack for its graveyard/exile flies there; otherwise it flashes in place. */
+function playStackSpellExit(spellId: string, spell: CardView, prevRect: DOMRect, prevSize: CardSourceSize | null, players: PlayerView[]) {
+  let destSelectors: string[] = []
+  let fallbackRect: DOMRect | null = null
+  for (const p of players) {
+    const ps = getPlayerSelector(p.playerId, p.name)
+    if (!ps) continue
+    if (p.graveyard && spellId in p.graveyard) {
+      destSelectors = [`${ps} .graveyard-stack [data-card-id="${spellId}"]`, `${ps} .graveyard-stack`]
+      fallbackRect = getRect(`${ps} .graveyard-stack`)
+      break
+    }
+    if (p.exile && spellId in p.exile) {
+      destSelectors = [`${ps} .exile-stack [data-card-id="${spellId}"]`, `${ps} .exile-stack`]
+      fallbackRect = getRect(`${ps} .exile-stack`)
+      break
+    }
+  }
+
+  if (destSelectors.length > 0) {
+    flyAfterLayout(spellId, spell, prevRect, destSelectors, fallbackRect, STACK_EXIT_MS, prevSize)
+  } else {
+    startCardFlight(spell, prevRect, prevRect, 340, undefined, { static: true, sourceSize: prevSize })
+  }
+}
+
 function getPlayerSelector(playerId?: string, playerName?: string): string {
   if (playerId && playerName) {
     return `:is([data-player-id="${playerId}"], [data-player-name="${playerName}"])`
@@ -156,6 +186,7 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
     const pending = pendingLandings.get(id)
     if (!pending || --pending.count > 0) return
     pendingLandings.delete(id)
+    releaseHeldHit(id)
     pending.queue.forEach((fn) => fn())
   }
   const afterLanding = (id: string, fallbackMs: number, fn: () => void) => {
@@ -179,6 +210,14 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
   const prevStack = prevGame.stack ?? {}
   const nextStack = nextGame.stack ?? {}
   const damageSpellResolved = resolvedDamageSpell(prevStack, nextStack)
+  for (const [spellId, spell] of Object.entries(prevStack)) {
+    if (spellId in nextStack) continue
+    for (const targetId of stackTargetIds(spell)) {
+      const pending = pendingLandings.get(targetId) ?? { count: 0, queue: [] }
+      pending.count++
+      pendingLandings.set(targetId, pending)
+    }
+  }
 
   for (const [spellId, spell] of Object.entries(nextStack)) {
     if (!(spellId in prevStack)) {
@@ -425,25 +464,6 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
       })
     }
 
-    // C) Targeted spells/abilities leaving the stack: a projectile flies from the
-    //    spell to each target. The target is measured after the layout settles (the
-    //    stack leaving the screen moves the board), and its hit waits for the landing.
-    for (const [spellId, spell] of Object.entries(prevStack)) {
-      if (spellId in nextStack) continue
-      const from = getPreviousCardPosition(spellId)
-      if (!from) continue
-      const colors = cardManaColors(spell)
-      for (const targetId of stackTargetIds(spell)) {
-        const pending = pendingLandings.get(targetId) ?? { count: 0, queue: [] }
-        pending.count++
-        pendingLandings.set(targetId, pending)
-        scheduleAfterLayout(() => {
-          const measure = () => getRect(`[data-card-id="${targetId}"]`) ?? getRect(`.player-info-bar[data-player-id="${targetId}"]`)
-          if (!spawnProjectile(from, measure, colors, () => landed(targetId))) landed(targetId)
-        })
-      }
-    }
-
     // D) Combat/ability damage feedback: creatures and players that lost life shake
     //    + floating damage numbers on top of the hit element.
     for (const [permId, nextPerm] of Object.entries(nextBattlefield)) {
@@ -505,44 +525,47 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
     }
   }
 
-  // E) Stack resolution: items que salen del stack sin entrar en battlefield.
-  //    - Si aparecen en el graveyard/exile de un jugador → vuelo hasta el montón.
-  //    - Si desaparecen sin destino visible (resolución sin permanente) → flash
-  //      de resolución en sitio (clon estático que aparece y se desvanece).
+  // C) Spells that left the stack resolve one at a time: stackHold keeps each one on display
+  //    until its turn ends. Its projectiles fly to its targets (each target's hit waits for the
+  //    landing), then it exits to the graveyard/exile or flashes in place. Positions are read
+  //    now, while the spell is still on display.
   for (const [spellId, spell] of Object.entries(prevStack)) {
     if (spellId in nextStack) continue
-    if (nextPlayers.some((p) => spellId in (p.battlefield ?? {}))) continue
-
     const registered = getPreviousCardPosition(spellId)
     const prevRect = registered ?? getRect(`[data-card-id="${spellId}"]`)
-    if (!prevRect) {
-      noteFlightEvent({ kind: 'skip', reason: 'no-source', cardId: spellId, detail: 'stack-resolve' })
-      continue
-    }
     const prevSize = registered ? getPreviousCardSize(spellId) : null
-
-    let destSelectors: string[] = []
-    let fallbackRect: DOMRect | null = null
-    for (const p of nextPlayers) {
-      const ps = getPlayerSelector(p.playerId, p.name)
-      if (!ps) continue
-      if (p.graveyard && spellId in p.graveyard) {
-        destSelectors = [`${ps} .graveyard-stack [data-card-id="${spellId}"]`, `${ps} .graveyard-stack`]
-        fallbackRect = getRect(`${ps} .graveyard-stack`)
-        break
+    const colors = cardManaColors(spell)
+    const targetIds = stackTargetIds(spell)
+    const entersBattlefield = nextPlayers.some((p) => spellId in (p.battlefield ?? {}))
+    enqueueStackResolve(spellId, (done) => {
+      const exit = () => {
+        if (prevRect && !entersBattlefield) playStackSpellExit(spellId, spell, prevRect, prevSize, nextPlayers)
+        later(STACK_EXIT_MS, done)
       }
-      if (p.exile && spellId in p.exile) {
-        destSelectors = [`${ps} .exile-stack [data-card-id="${spellId}"]`, `${ps} .exile-stack`]
-        fallbackRect = getRect(`${ps} .exile-stack`)
-        break
+      if (!prevRect) {
+        noteFlightEvent({ kind: 'skip', reason: 'no-source', cardId: spellId, detail: 'stack-resolve' })
+        for (const targetId of targetIds) landed(targetId)
+        done()
+        return
       }
-    }
-
-    if (destSelectors.length > 0) {
-      flyAfterLayout(spellId, spell, prevRect, destSelectors, fallbackRect, 380, prevSize)
-    } else {
-      startCardFlight(spell, prevRect, prevRect, 340, undefined, { static: true, sourceSize: prevSize })
-    }
+      if (targetIds.length === 0) {
+        exit()
+        return
+      }
+      let inFlight = targetIds.length
+      scheduleAfterLayout(() => {
+        for (const targetId of targetIds) {
+          const measure = () => getRect(`[data-card-id="${targetId}"]`) ?? getRect(`.player-info-bar[data-player-id="${targetId}"]`)
+          const arrived = () => {
+            landed(targetId)
+            if (--inFlight === 0) exit()
+          }
+          if (!spawnProjectile(prevRect, measure, colors, arrived)) arrived()
+        }
+      })
+    }, () => {
+      for (const targetId of targetIds) landed(targetId)
+    })
   }
 
   snapshotCombatants(nextGame)

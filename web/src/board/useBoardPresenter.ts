@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { CardView, GameView, PermanentView, PlayerView } from '../net/types'
 import { useSceneBridge } from './sceneBridge'
-import { useGameTransitions } from './gameTransitionEngine'
 import type { CrossZonePlayable } from './crossZone'
 import { findCardViewInGame, looksLikeBattlefieldPermanent } from './boardShared'
 import { useStore, isBlockingModal } from '../state/store'
@@ -227,9 +226,6 @@ export function useBoardPresenter(args: BoardPresenterArgs): BoardPresenter {
     combatChosen,
     crossZonePlayables,
   })
-
-  const gameId = useStore((s) => s.gameId)
-  useGameTransitions(game, gameId)
 
   return {
     boardRef,

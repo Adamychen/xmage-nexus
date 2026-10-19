@@ -41,6 +41,9 @@ import CombatArrowsOverlay from '../board/CombatArrowsOverlay'
 import FeedbackOverlay from '../board/FeedbackOverlay'
 import ImpactOverlay from '../board/ImpactOverlay'
 import ProjectileOverlay from '../board/ProjectileOverlay'
+import { useDisplayedStack } from '../board/stackHold'
+import { useDisplayedGame } from '../board/damageHold'
+import { useGameTransitions } from '../board/gameTransitionEngine'
 import LowLifeVignette from '../board/LowLifeVignette'
 import TurnRecapStrip from './TurnRecapStrip'
 import { useAttentionAlerts } from './attentionAlerts'
@@ -122,6 +125,8 @@ export default function GameScreen() {
   const game = rewindView?.game ?? liveGame
   const settings = useSettings()
   const gameId = useStore((s) => s.gameId)
+  useGameTransitions(game, gameId)
+  const displayGame = useDisplayedGame(game, gameId, rewindView != null)
   const feedback = useStore((s) => s.feedback)
   const playableIds = useStore((s) => s.playableIds)
   const combat = useStore((s) => s.combat)
@@ -138,7 +143,8 @@ export default function GameScreen() {
   const [dividerSlot, setDividerSlot] = useState<HTMLElement | null>(null)
   const [handPromptSlot, setHandPromptSlot] = useState<HTMLElement | null>(null)
   const [busy, setBusy] = useState(false)
-  const stackCount = Object.keys(game?.stack ?? {}).length
+  const displayStack = useDisplayedStack(game, gameId)
+  const stackCount = Object.keys(displayStack).length
   const prevStackCountRef = useRef(0)
 
   useEffect(() => {
@@ -213,7 +219,7 @@ export default function GameScreen() {
     pendingTargetsRef.current.clear()
   }, [game, feedback])
 
-  const stackTargeted = targetsStackObject(game?.stack, targetIds)
+  const stackTargeted = targetsStackObject(displayStack, targetIds)
   useEffect(() => {
     if (!stackTargeted) return
     if (v2) setDeckOpen(true)
@@ -252,7 +258,7 @@ export default function GameScreen() {
   }
 
   const boardProps = {
-    game,
+    game: displayGame,
     targetIds,
     chosenTargetIds,
     onTargetClick,
@@ -452,7 +458,7 @@ export default function GameScreen() {
             onClose={() => setDrawerTab(null)}
             stack={
               <StackZone
-                stack={game?.stack ?? null}
+                stack={displayStack}
                 onCardClick={onTargetClick}
                 targetIds={new Set(targetIds)}
                 onResolveClick={onResolveClick}
@@ -552,14 +558,14 @@ export default function GameScreen() {
               ) : (
                 <GameBoard {...boardProps} focusedOpponentId={currentOpp?.playerId} />
               )}
-              <LowLifeVignette game={game} />
+              <LowLifeVignette game={displayGame} />
               <TurnRecapStrip />
               <FeedbackOverlay />
               <ImpactOverlay />
               <ProjectileOverlay />
               {v2 && stackCount > 0 && (
                 <StackDeck
-                  stack={game?.stack ?? null}
+                  stack={displayStack}
                   open={deckOpen}
                   onOpenChange={setDeckOpen}
                   onCardClick={onTargetClick}

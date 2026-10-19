@@ -363,21 +363,18 @@ export function synthesizeSound(ctx: AudioContext, key: SoundKey): AudioBuffer {
     }
 
     case 'projectile_launch': {
-      const duration = 0.24
+      const duration = 0.32
       const buf = makeBuffer(ctx, duration)
       const data = buf.getChannelData(0)
       const sr = ctx.sampleRate
-      let hp = 0
-      let prev = 0
+      let low = 0
       for (let i = 0; i < data.length; i++) {
         const t = i / sr
-        const env = Math.min(1, t / 0.006) * Math.exp(-t * 9)
-        const rise = 320 + 780 * Math.min(1, t / 0.12)
-        const tone = Math.sin(2 * Math.PI * rise * t) * 0.45 + Math.sin(2 * Math.PI * rise * 2.01 * t) * 0.12
-        const white = Math.random() * 2 - 1
-        hp = 0.85 * (hp + white - prev)
-        prev = white
-        data[i] = (tone + hp * 0.3) * env * 0.5
+        const env = Math.min(1, t / 0.03) * Math.exp(-t * 8)
+        const cutoff = 350 + 700 * Math.sin((Math.PI * t) / duration)
+        low += (1 - Math.exp((-2 * Math.PI * cutoff) / sr)) * (Math.random() * 2 - 1 - low)
+        const body = Math.sin(2 * Math.PI * (170 + 60 * (t / duration)) * t) * 0.3
+        data[i] = (low * 0.9 + body) * env * 0.35
       }
       return buf
     }

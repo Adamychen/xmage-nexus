@@ -3,6 +3,7 @@ import { detectAndAnimateTransitions } from './gameTransitionEngine'
 import { clearCardPositionRegistry, recordCardPosition } from './cardPositionRegistry'
 import { clearFlights, getActiveFlights, hasFlightFor } from './flightManager'
 import { clearFeedbackFx, getFeedbackFxState } from './feedbackFx'
+import { clearStackHold } from './stackHold'
 import { damageNumbersFor } from './DamageNumber'
 import type { CardView, GameView, PlayerView } from '../net/types'
 
@@ -118,6 +119,7 @@ describe('gameTransitionEngine — stack resolution and feedback', () => {
     clearFlights()
     clearCardPositionRegistry()
     clearFeedbackFx()
+    clearStackHold()
     document.body.innerHTML = ''
     vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(() => {
       const rect = domRect(200 * (rectCounter++ % 20), 300)
@@ -191,6 +193,23 @@ describe('gameTransitionEngine — stack resolution and feedback', () => {
 
     expect(damageNumbersFor('card:c1').map((n) => n.amount)).toEqual([3])
     expect(getFeedbackFxState().floaters.some((f) => f.text === '-3')).toBe(false)
+  })
+
+  it('shows a creature hit only when the spell projectile lands', async () => {
+    const damaged = { id: 'c9', name: 'Grizzly Bears', cardTypes: ['Creature'], damage: 3 }
+    const intact = { id: 'c9', name: 'Grizzly Bears', cardTypes: ['Creature'], damage: 0 }
+    document.body.innerHTML = '<div data-player-id="p1"><div class="card-slot" data-card-id="c9"></div></div>'
+    const targetedBolt = { ...bolt, targets: ['c9'] } as unknown as CardView
+    const prev = baseGame({ players: [player({ battlefield: { c9: intact as never } })], stack: { 'bolt-1': targetedBolt } })
+    const next = baseGame({ players: [player({ battlefield: { c9: damaged as never } })], stack: {} })
+    recordCardPosition('bolt-1', domRect(1000, 500), 'stack-zone')
+
+    detectAndAnimateTransitions(prev, next)
+    await afterLayout()
+    expect(damageNumbersFor('card:c9')).toHaveLength(0)
+
+    await new Promise((resolve) => setTimeout(resolve, 700))
+    expect(damageNumbersFor('card:c9').map((n) => n.amount)).toEqual([3])
   })
 
   it('records a damage number for life lost to a resolved damage spell, not for life lost to an effect', () => {

@@ -674,6 +674,44 @@ function resolveBoltOn(targetId: string): (game: GameView) => GameView {
   }
 }
 
+/** Four spells on the stack, top first: the top and third target the creature, the other two the player. */
+function withFourStackSpells(game: GameView, creatureId: string, playerId: string): GameView {
+  const me = controlledPlayer(game)
+  const controller = { controllerId: me?.playerId, controllerName: me?.name }
+  const spell = (id: string, name: string, cardNumber: string, target: string) => ({
+    id,
+    name,
+    expansionSetCode: '2XM',
+    cardNumber,
+    cardTypes: ['INSTANT'],
+    rules: [`${name} deals 3 damage to any target.`],
+    targets: [target],
+    ...controller,
+  })
+  const stack = {
+    'gallery-seq-1': spell('gallery-seq-1', 'Lightning Bolt', '129', creatureId),
+    'gallery-seq-2': spell('gallery-seq-2', 'Shock', '135', playerId),
+    'gallery-seq-3': spell('gallery-seq-3', 'Lightning Strike', '140', creatureId),
+    'gallery-seq-4': spell('gallery-seq-4', 'Searing Spear', '146', playerId),
+  }
+  return { ...game, stack: stack as unknown as GameView['stack'] }
+}
+
+/**
+ * Removes the whole stack in one update (the diff the transition engine launches from). The stack is
+ * first re-created in its own update, so a press always produces a fresh diff; the two updates are
+ * split by a macrotask so the engine sees each one.
+ */
+function replayStackSequence(full: GameView): () => void {
+  return () => {
+    setState({ game: full })
+    setTimeout(() => {
+      const current = getState().game
+      if (current) setState({ game: { ...current, stack: {} as unknown as GameView['stack'] } })
+    }, 0)
+  }
+}
+
 function withSpellStack(game: GameView): GameView {
   const spell = (id: string, name: string) => ({ id, name, expansionSetCode: '2XM', cardNumber: '129', cardTypes: ['Instant'] })
   return {
@@ -1462,6 +1500,19 @@ export function buildGalleryEntries(): GalleryEntry[] {
         game: withBoltTargeting(bolted, opponentCreature),
         gameId,
         action: { label: 'Resolve Bolt', apply: resolveBoltOn(opponentCreature) },
+      })
+    }
+    if (opponent && opponentCreature) {
+      const sequenceGame = withFourStackSpells(calmGame(game), opponentCreature, opponent.playerId)
+      entries.push({
+        id: 'anim:stack-sequence',
+        group: 'Animaciones',
+        label: 'Stack: projectile sequence (4 spells, one update)',
+        description: 'Four spells on the stack, top first, targeting a creature and a player. "Replay" removes them all in one update: each projectile leaves 220 ms after the previous one and lands on its target. Each press re-creates the stack first, so it can be replayed.',
+        phase: 'game',
+        game: sequenceGame,
+        gameId,
+        action: { label: 'Replay', run: replayStackSequence(sequenceGame) },
       })
     }
     if (opponent) {
