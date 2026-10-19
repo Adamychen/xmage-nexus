@@ -38,11 +38,10 @@ export function spawnManaParticle(from: DOMRect, pool: HTMLElement, color: strin
   particle.style.setProperty('--particle-dy', `${toY - fromY}px`)
   particle.style.setProperty('--particle-ms', `${ms}ms`)
   document.body.appendChild(particle)
-  particle.addEventListener('animationend', () => {
+  setTimeout(() => {
     particle.remove()
     landManaPool(pool)
-  })
-  setTimeout(() => particle.remove(), ms + 100)
+  }, ms)
 }
 
 function landManaPool(pool: HTMLElement): void {

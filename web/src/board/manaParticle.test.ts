@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { manaPoolElement, spawnManaParticle, MANA_PARTICLE_MS, MANA_POOL_LAND_CLASS } from './manaParticle'
 import { getState, setState } from '../state/state'
 
@@ -41,14 +41,16 @@ describe('spawnManaParticle', () => {
   })
 
   it('removes the particle and pulses the pool when the particle lands', () => {
+    vi.useFakeTimers()
     const pool = makePool()
     spawnManaParticle(FROM, pool, 'U')
-    const particle = document.querySelector<HTMLElement>('.mana-particle')
-    particle?.dispatchEvent(new Event('animationend'))
+    expect(document.querySelector('.mana-particle')).not.toBeNull()
+    vi.runOnlyPendingTimers()
     expect(document.querySelector('.mana-particle')).toBeNull()
     expect(pool.classList.contains(MANA_POOL_LAND_CLASS)).toBe(true)
     pool.dispatchEvent(new Event('animationend'))
     expect(pool.classList.contains(MANA_POOL_LAND_CLASS)).toBe(false)
+    vi.useRealTimers()
   })
 
   it('spawns nothing while effects are off', () => {
