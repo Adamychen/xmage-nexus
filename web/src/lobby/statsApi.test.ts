@@ -19,11 +19,22 @@ describe('statsApi', () => {
   })
 
   describe('fetchRanking', () => {
-    it('returns the parsed ranking and requests the relative API path', async () => {
+    it('accepts the ops generator shape that names the player user', async () => {
+      fetchMock.mockResolvedValueOnce(jsonResponse(200, {
+        generatedAt: '2026-10-17T10:00:00Z',
+        players: [{ user: 'bob', constructed: 1200, limited: null, matches: 3, lastSeen: null }],
+      }))
+
+      const result = await fetchRanking('limited')
+
+      expect(result.players).toEqual([{ username: 'bob', rating: 0, matches: 3, lastSeen: null }])
+    })
+
+    it('returns the parsed ranking and requests the relative ranking file', async () => {
       const file = {
         generatedAt: '2026-10-17T10:00:00Z',
         players: [
-          { username: 'alice', constructed: 1650, limited: 800, general: 1600, matches: 30, tourneys: 0, lastSeen: null },
+          { username: 'alice', constructed: 1650, limited: 800, general: 1600, matches: 30, tourneys: 0, lastSeen: '2026-10-16T09:00:00Z' },
         ],
       }
       fetchMock.mockResolvedValueOnce(jsonResponse(200, file))
@@ -33,10 +44,10 @@ describe('statsApi', () => {
       expect(result).toEqual({
         format: 'constructed',
         updatedAt: '2026-10-17T10:00:00Z',
-        players: [{ username: 'alice', rating: 1650 }],
+        players: [{ username: 'alice', rating: 1650, matches: 30, lastSeen: '2026-10-16T09:00:00Z' }],
       })
       const url = String(fetchMock.mock.calls[0][0])
-      expect(url).toMatch(/^\/ranking\.json/)
+      expect(url).toMatch(/^\/ranking\.json$/)
     })
 
     it('throws not_ready on 503 with the error code', async () => {

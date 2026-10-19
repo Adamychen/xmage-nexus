@@ -383,3 +383,13 @@ html.fx-off .leaderboard-row.is-podium {
   color: var(--warn-strong);
   font-size: var(--fs-xs);
 }
+
+.rank-history-note {
+  margin: 0;
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--r-md);
+  border: 1px solid var(--veil-3);
+  background: rgb(var(--ink-rgb) / 0.5);
+  color: var(--fg-2);
+  font-size: var(--fs-xs);
+}

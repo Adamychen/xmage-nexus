@@ -5,12 +5,19 @@ export type RankingFormat = 'constructed' | 'limited'
 export interface RankingPlayer {
   username: string
   rating: number
+  matches: number
+  lastSeen: string | null
 }
 
+// Entries of the published ranking.json. The deployed file names the player `username`;
+// ops/status/ranking.mjs names it `user`, so both are accepted.
 interface RankingFileEntry {
-  username: string
+  username?: string
+  user?: string
   constructed: number | null
   limited: number | null
+  matches: number
+  lastSeen: string | null
 }
 
 export interface RankingResponse {
@@ -40,7 +47,8 @@ export class StatsApiError extends Error {
 
 function statsUrl(path: string, query: URLSearchParams): string {
   const base = ((import.meta.env.VITE_STATS_API_BASE as string | undefined) ?? '').replace(/\/+$/, '')
-  return `${base}${path}?${query.toString()}`
+  const qs = query.toString()
+  return qs ? `${base}${path}?${qs}` : `${base}${path}`
 }
 
 function errorCode(body: unknown): string | null {
@@ -82,8 +90,14 @@ export async function fetchRanking(format: RankingFormat): Promise<RankingRespon
   const players = (body.players as RankingFileEntry[])
     .map((entry): RankingPlayer => {
       const value = format === 'limited' ? entry.limited : entry.constructed
-      return { username: entry.username, rating: typeof value === 'number' ? value : 0 }
+      return {
+        username: entry.username ?? entry.user ?? '',
+        rating: typeof value === 'number' ? value : 0,
+        matches: typeof entry.matches === 'number' ? entry.matches : 0,
+        lastSeen: entry.lastSeen ?? null,
+      }
     })
+    .filter((player) => player.username !== '')
     .sort((a, b) => b.rating - a.rating || a.username.localeCompare(b.username, undefined, { sensitivity: 'base' }))
   return { format, updatedAt: generatedAt, players }
 }

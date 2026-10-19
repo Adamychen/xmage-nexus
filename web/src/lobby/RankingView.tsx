@@ -7,6 +7,7 @@ import { getRankInfo, getTierName, playerRankRating, RANK_TIERS_CONFIG, type Ran
 import { parseMatchHistory } from './matchHistory'
 import RankBadge from './RankBadge'
 import RankEmblem from './RankEmblem'
+import RankingHistory from './RankingHistory'
 import CountryFlag from './CountryFlag'
 import AvatarImage from './AvatarImage'
 import PingBadge from './PingBadge'
@@ -30,11 +31,13 @@ const TIER_DESC_KEYS = {
 } as const satisfies Record<RankTier, string>
 
 type RankFormat = 'constructed' | 'limited'
+type RankSource = 'room' | 'history'
 
 export default function RankingView({ users, currentUsername, onInspectUser }: RankingViewProps) {
   const { t } = useTranslation()
   const [searchQuery, setSearchQuery] = useState('')
   const [format, setFormat] = useState<RankFormat>('constructed')
+  const [source, setSource] = useState<RankSource>('room')
   const limited = format === 'limited'
 
   // Each player has one ELO per format; unrated players (null) have no tier
@@ -125,7 +128,16 @@ export default function RankingView({ users, currentUsername, onInspectUser }: R
 
       <section className="panel rank-table-panel">
         <div className="rank-table-header">
-          <h3>{t('lobby', 'leaderboard_top_room')} ({users.length})</h3>
+          <Tabs<RankSource>
+            variant="segmented"
+            size="sm"
+            value={source}
+            onChange={setSource}
+            items={[
+              { id: 'room', label: `${t('lobby', 'leaderboard_top_room')} (${users.length})` },
+              { id: 'history', label: t('lobby', 'leaderboard_source_history') },
+            ]}
+          />
           <div className="leaderboard-search-bar">
             <input
               type="text"
@@ -136,99 +148,105 @@ export default function RankingView({ users, currentUsername, onInspectUser }: R
           </div>
         </div>
 
-        {__DEMO__ && (
-          <p className="leaderboard-demo-note" data-testid="leaderboard-demo-note">
-            {t('lobby', 'demo_sample_data')}
-          </p>
-        )}
+        {source === 'history' ? (
+          <RankingHistory format={format} searchQuery={searchQuery} />
+        ) : (
+          <>
+            {__DEMO__ && (
+              <p className="leaderboard-demo-note" data-testid="leaderboard-demo-note">
+                {t('lobby', 'demo_sample_data')}
+              </p>
+            )}
 
-        <div className="leaderboard-table-wrap">
-          <table className="leaderboard-table">
-            <thead>
-              <tr>
-                <th className="col-pos">{t('lobby', 'leaderboard_col_pos')}</th>
-                <th>{t('lobby', 'leaderboard_col_player')}</th>
-                <th>{t('lobby', 'leaderboard_col_tier')}</th>
-                <th className="col-center">{t('lobby', 'leaderboard_col_elo')}</th>
-                <th className="col-center">{t('lobby', 'leaderboard_col_history')}</th>
-                <th className="col-center">{t('lobby', 'leaderboard_fair_play')}</th>
-                <th>{t('lobby', 'leaderboard_col_status')}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {sortedUsers.map((u, index) => {
-                const isMe = u.userName.toLowerCase() === currentUsername.toLowerCase()
-                const pos = index + 1
-                const medalRank = u.rating !== null && pos <= 3 ? pos : null
-
-                return (
-                  <tr
-                    key={u.userName}
-                    className={`leaderboard-row ${isMe ? 'is-me' : ''}${medalRank ? ` is-podium is-podium-${medalRank}` : ''}`}
-                    onClick={() => onInspectUser(u.userName)}
-                    title={`${t('lobby', 'view_profile_hint')} ${u.userName}`}
-                  >
-                    <td className="pos-cell">
-                      {medalRank ? <span className={`pos-medal pos-medal--${medalRank}`}><Icon name="medal" size={14} /></span> : u.rating === null ? '—' : `#${pos}`}
-                    </td>
-                    <td className="user-cell">
-                      <div className="user-cell-wrap">
-                        <AvatarImage avatarId={u.avatarId} username={u.userName} size="small" />
-                        <CountryFlag flagName={u.flagName} />
-                        <span className="leaderboard-user-name">
-                          {u.userName}
-                          {isMe && <span className="me-badge">{t('game', 'you')}</span>}
-                        </span>
-                        {u.infoPing && <PingBadge infoPing={u.infoPing} compact />}
-                      </div>
-                    </td>
-                    <td>
-                      {u.rating !== null ? (
-                        <RankBadge elo={u.rating} />
-                      ) : (
-                        <span className="winrate-na" title={t('lobby', 'leaderboard_no_games_hint')}>—</span>
-                      )}
-                    </td>
-                    <td className="elo-cell">
-                      {u.rating !== null ? <><Icon name="star" size={12} /> {u.rating}</> : '—'}
-                    </td>
-                    <td className="history-cell">{u.stats.formattedHistory}</td>
-                    <td className="winrate-cell">
-                      {u.stats.total > 0 ? (
-                        <div
-                          className="winrate-bar-container"
-                          title={t('lobby', 'leaderboard_fair_play_hint', { ratio: String(u.matchQuitRatio ?? 0) })}
-                        >
-                          <span className="winrate-text">{u.fairPlay}%</span>
-                          <div className="winrate-mini-track">
-                            <div className="winrate-mini-fill" style={{ width: `${u.fairPlay}%` }} />
-                          </div>
-                        </div>
-                      ) : (
-                        <span className="winrate-na" title={t('lobby', 'leaderboard_no_games_hint')}>—</span>
-                      )}
-                    </td>
-                    <td>
-                      {isUserInGame(u.infoGames) ? (
-                        <span className="status-playing"><Icon name="swords" size={12} /> {t('lobby', 'in_game')}</span>
-                      ) : (
-                        <span className="status-idle">{t('lobby', 'in_lobby')}</span>
-                      )}
-                    </td>
+            <div className="leaderboard-table-wrap">
+              <table className="leaderboard-table">
+                <thead>
+                  <tr>
+                    <th className="col-pos">{t('lobby', 'leaderboard_col_pos')}</th>
+                    <th>{t('lobby', 'leaderboard_col_player')}</th>
+                    <th>{t('lobby', 'leaderboard_col_tier')}</th>
+                    <th className="col-center">{t('lobby', 'leaderboard_col_elo')}</th>
+                    <th className="col-center">{t('lobby', 'leaderboard_col_history')}</th>
+                    <th className="col-center">{t('lobby', 'leaderboard_fair_play')}</th>
+                    <th>{t('lobby', 'leaderboard_col_status')}</th>
                   </tr>
-                )
-              })}
+                </thead>
+                <tbody>
+                  {sortedUsers.map((u, index) => {
+                    const isMe = u.userName.toLowerCase() === currentUsername.toLowerCase()
+                    const pos = index + 1
+                    const medalRank = u.rating !== null && pos <= 3 ? pos : null
 
-              {sortedUsers.length === 0 && (
-                <tr>
-                  <td colSpan={7}>
-                    <EmptyState italic>{t('lobby', 'leaderboard_no_results')}</EmptyState>
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+                    return (
+                      <tr
+                        key={u.userName}
+                        className={`leaderboard-row ${isMe ? 'is-me' : ''}${medalRank ? ` is-podium is-podium-${medalRank}` : ''}`}
+                        onClick={() => onInspectUser(u.userName)}
+                        title={`${t('lobby', 'view_profile_hint')} ${u.userName}`}
+                      >
+                        <td className="pos-cell">
+                          {medalRank ? <span className={`pos-medal pos-medal--${medalRank}`}><Icon name="medal" size={14} /></span> : u.rating === null ? '—' : `#${pos}`}
+                        </td>
+                        <td className="user-cell">
+                          <div className="user-cell-wrap">
+                            <AvatarImage avatarId={u.avatarId} username={u.userName} size="small" />
+                            <CountryFlag flagName={u.flagName} />
+                            <span className="leaderboard-user-name">
+                              {u.userName}
+                              {isMe && <span className="me-badge">{t('game', 'you')}</span>}
+                            </span>
+                            {u.infoPing && <PingBadge infoPing={u.infoPing} compact />}
+                          </div>
+                        </td>
+                        <td>
+                          {u.rating !== null ? (
+                            <RankBadge elo={u.rating} />
+                          ) : (
+                            <span className="winrate-na" title={t('lobby', 'leaderboard_no_games_hint')}>—</span>
+                          )}
+                        </td>
+                        <td className="elo-cell">
+                          {u.rating !== null ? <><Icon name="star" size={12} /> {u.rating}</> : '—'}
+                        </td>
+                        <td className="history-cell">{u.stats.formattedHistory}</td>
+                        <td className="winrate-cell">
+                          {u.stats.total > 0 ? (
+                            <div
+                              className="winrate-bar-container"
+                              title={t('lobby', 'leaderboard_fair_play_hint', { ratio: String(u.matchQuitRatio ?? 0) })}
+                            >
+                              <span className="winrate-text">{u.fairPlay}%</span>
+                              <div className="winrate-mini-track">
+                                <div className="winrate-mini-fill" style={{ width: `${u.fairPlay}%` }} />
+                              </div>
+                            </div>
+                          ) : (
+                            <span className="winrate-na" title={t('lobby', 'leaderboard_no_games_hint')}>—</span>
+                          )}
+                        </td>
+                        <td>
+                          {isUserInGame(u.infoGames) ? (
+                            <span className="status-playing"><Icon name="swords" size={12} /> {t('lobby', 'in_game')}</span>
+                          ) : (
+                            <span className="status-idle">{t('lobby', 'in_lobby')}</span>
+                          )}
+                        </td>
+                      </tr>
+                    )
+                  })}
+
+                  {sortedUsers.length === 0 && (
+                    <tr>
+                      <td colSpan={7}>
+                        <EmptyState italic>{t('lobby', 'leaderboard_no_results')}</EmptyState>
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </>
+        )}
       </section>
     </div>
   )
