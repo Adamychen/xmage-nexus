@@ -7,6 +7,7 @@ import mage.constants.PlayerAction;
 import mage.players.PlayerType;
 import mage.game.match.MatchOptions;
 import mage.remote.SessionImpl;
+import mage.view.AbilityPickerView;
 import mage.view.CardsView;
 import mage.view.GameClientMessage;
 import mage.view.UserRequestMessage;
@@ -174,6 +175,14 @@ class SimPlayerTest {
     }
 
     @Test
+    void repeatableCostAsksAreDeclined() {
+        assertTrue(SimPlayer.isRepeatableCostAsk("pay 999 times replicate {1}{r} ?"));
+        assertTrue(SimPlayer.isRepeatableCostAsk("pay 3 times multikicker {1}{g} ?"));
+        assertTrue(!SimPlayer.isRepeatableCostAsk("pay 2 life? (otherwise steam vents becomes tapped)"));
+        assertTrue(!SimPlayer.isRepeatableCostAsk(null));
+    }
+
+    @Test
     void requiredColorsParsesManaSymbols() {
         assertEquals(setOf('R', 'W'), SimPlayer.requiredColors("Pay {R}{W}"));
         assertEquals(setOf('U'), SimPlayer.requiredColors("Pay {U}{2}"));
@@ -244,6 +253,42 @@ class SimPlayerTest {
         sim.onTarget(prompt);
 
         assertEquals(Boolean.FALSE, session.lastBoolean);
+    }
+
+    @Test
+    void requiredTargetRepeatedWithTheSameSignatureKeepsAnsweringWithATarget() {
+        RecordingSession session = new RecordingSession();
+        SimPlayer sim = new SimPlayer("sim-test", session);
+        UUID a = UUID.fromString("00000000-0000-0000-0000-00000000000a");
+        GameClientMessage prompt = new GameClientMessage(null, new HashMap<>(), "Select an opponent", new CardsView(), new LinkedHashSet<>(Arrays.asList(a)), true);
+
+        for (int i = 0; i < 4; i++) {
+            session.lastUuid = null;
+            sim.onTarget(prompt);
+            assertEquals(a, session.lastUuid);
+        }
+    }
+
+    @Test
+    void abilityPickSendsAChoiceInsteadOfCancellingAndRotatesOnRepeat() {
+        RecordingSession session = new RecordingSession();
+        SimPlayer sim = new SimPlayer("sim-test", session);
+        UUID a = UUID.fromString("00000000-0000-0000-0000-00000000000a");
+        UUID b = UUID.fromString("00000000-0000-0000-0000-00000000000b");
+        Map<UUID, String> choices = new LinkedHashMap<>();
+        choices.put(a, "1. Cast");
+        choices.put(b, "2. Activate");
+        AbilityPickerView view = new AbilityPickerView(null, choices, "Choose ability");
+
+        sim.onAbilityPick(view);
+        assertEquals(a, session.lastUuid);
+
+        sim.onAbilityPick(view);
+        assertEquals(b, session.lastUuid);
+
+        session.lastUuid = null;
+        sim.onAbilityPick(view);
+        assertNull(session.lastUuid);
     }
 
     @Test

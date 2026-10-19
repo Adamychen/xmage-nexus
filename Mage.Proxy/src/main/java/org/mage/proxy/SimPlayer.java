@@ -15,6 +15,7 @@ import mage.remote.Connection;
 import mage.remote.SessionImpl;
 import mage.util.MultiAmountMessage;
 import mage.utils.MageVersion;
+import mage.view.AbilityPickerView;
 import mage.view.CardView;
 import mage.view.CardsView;
 import mage.view.GameClientMessage;
@@ -101,11 +102,17 @@ public class SimPlayer implements MageClient {
     private final Retry choiceRetry = new Retry();
     private final Retry targetRetry = new Retry();
     private final Retry amountRetry = new Retry();
+    private final Retry abilityRetry = new Retry();
 
     /** Cuántas veces seguidas el servidor repite el mismo prompt: 0 la primera vez. */
     private static final class Retry {
         private String signature = null;
         private int attempts = 0;
+
+        void reset() {
+            signature = null;
+            attempts = 0;
+        }
 
         int attempt(String next) {
             attempts = next != null && next.equals(signature) ? attempts + 1 : 0;
@@ -375,12 +382,16 @@ public class SimPlayer implements MageClient {
                     // mulligan: false = mantener la mano; el resto de preguntas ("pass
                     // anyway", opciones de elección) se aceptan con true
                     String msg = lower(data instanceof GameClientMessage ? ((GameClientMessage) data).getMessage() : null);
-                    boolean answer = !isMulliganAsk(msg);
+                    boolean answer = !isMulliganAsk(msg) && !isRepeatableCostAsk(msg);
                     logger.info("sim " + username + " ask msg='" + msg + "' -> sendPlayerBoolean(" + answer + ")");
                     session.sendPlayerBoolean(gameId, answer);
                     break;
                 }
                 case GAME_SELECT: {
+                    choiceRetry.reset();
+                    targetRetry.reset();
+                    amountRetry.reset();
+                    abilityRetry.reset();
                     if (data instanceof GameClientMessage) {
                         onSelect((GameClientMessage) data);
                     }
@@ -422,8 +433,15 @@ public class SimPlayer implements MageClient {
                     }
                     break;
                 }
+                case GAME_CHOOSE_ABILITY: {
+                    if (data instanceof AbilityPickerView) {
+                        onAbilityPick((AbilityPickerView) data);
+                    } else {
+                        pass();
+                    }
+                    break;
+                }
                 case GAME_PLAY_XMANA:
-                case GAME_CHOOSE_ABILITY:
                 case GAME_CHOOSE_PILE:
                     // el guion nunca las provoca; por seguridad, cancelar
                     pass();
@@ -757,6 +775,37 @@ public class SimPlayer implements MageClient {
         }
     }
 
+    private static String targetNames(GameView view, List<UUID> ids) {
+        List<String> names = new ArrayList<>();
+        for (UUID id : ids) {
+            String name = id.toString();
+            if (view != null) {
+                for (PlayerView p : view.getPlayers()) {
+                    if (id.equals(p.getPlayerId())) {
+                        name = "player:" + p.getName();
+                    }
+                    PermanentView perm = p.getBattlefield().get(id);
+                    if (perm != null) {
+                        name = "perm:" + perm.getName() + (perm.isTapped() ? "(T)" : "");
+                    }
+                }
+            }
+            names.add(name);
+        }
+        return names.toString();
+    }
+
+    void onAbilityPick(AbilityPickerView view) {
+        List<UUID> ids = new ArrayList<>(view.getChoices().keySet());
+        int attempt = abilityRetry.attempt(view.getMessage() + "|" + ids);
+        if (attempt >= ids.size()) {
+            pass();
+            return;
+        }
+        logger.info("sim " + username + " choose ability: elijo " + ids.get(attempt) + " (intento " + attempt + ")");
+        session.sendPlayerUUID(gameId, ids.get(attempt));
+    }
+
     void onTarget(GameClientMessage gcm) {
         Set<UUID> targets = gcm.getTargets();
         if (targets == null || targets.isEmpty()) {
@@ -816,6 +865,14 @@ public class SimPlayer implements MageClient {
         }
         int attempt = targetRetry.attempt(gcm.getMessage() + "|" + ordered);
         if (attempt >= ordered.size()) {
+            if (attempt == ordered.size() || attempt % 500 == 0) {
+                logger.info("sim " + username + " target exhausted after " + attempt + " retries msg='" + msg + "' targets=" + ordered
+                        + " names=" + targetNames(gcm.getGameView(), ordered) + " options=" + gcm.getOptions() + " flag=" + gcm.isFlag());
+            }
+            if (gcm.isFlag()) {
+                session.sendPlayerUUID(gameId, ordered.get(attempt % ordered.size()));
+                return;
+            }
             pass();
             return;
         }
@@ -865,6 +922,10 @@ public class SimPlayer implements MageClient {
         if (gameId != null) {
             session.sendPlayerBoolean(gameId, false);
         }
+    }
+
+    static boolean isRepeatableCostAsk(String msg) {
+        return msg != null && msg.contains("times") && (msg.contains("replicate") || msg.contains("multikicker"));
     }
 
     static boolean isMulliganAsk(String msg) {
