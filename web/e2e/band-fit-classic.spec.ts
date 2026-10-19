@@ -79,6 +79,19 @@ test('classic bands settle on one fit at every viewport instead of flipping @boa
       const state = (b: HTMLElement) => `${b.style.getPropertyValue('--card-w')}|${b.getAttribute('data-band-lines') ?? ''}`
       const last = new Map(bands.map((b) => [b, state(b)]))
       const out: Record<string, number> = {}
+      let stable = 0
+      let settleFrames = 0
+      const settle = () => {
+        let changed = false
+        for (const b of bands) {
+          const s = state(b)
+          if (s !== last.get(b)) changed = true
+          last.set(b, s)
+        }
+        stable = changed ? 0 : stable + 1
+        if (stable < 20 && ++settleFrames < 180) requestAnimationFrame(settle)
+        else requestAnimationFrame(tick)
+      }
       let frames = 0
       const tick = () => {
         for (const b of bands) {
@@ -89,7 +102,7 @@ test('classic bands settle on one fit at every viewport instead of flipping @boa
         if (++frames < 60) requestAnimationFrame(tick)
         else resolve(out)
       }
-      requestAnimationFrame(tick)
+      requestAnimationFrame(settle)
     }))
     for (const [k, n] of Object.entries(flips)) flipping.push(`${w}x${h} ${k} ${n}`)
   }
