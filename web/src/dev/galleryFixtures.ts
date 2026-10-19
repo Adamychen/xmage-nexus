@@ -90,6 +90,15 @@ export interface GalleryAction {
   run?: () => void
 }
 
+/** Acción de dev de una entrada: un botón en el sidebar que modifica el estado de la galería. */
+export interface GalleryAction {
+  label: string
+  /** Transforma el `game` del store (p. ej. añadir una carta a la mano). */
+  apply?: (game: GameView) => GameView
+  /** Efecto directo sobre el DOM o el store cuando no basta con `apply`. */
+  run?: () => void
+}
+
 export interface GalleryEntry {
   id: string
   group: string
