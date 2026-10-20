@@ -36,6 +36,10 @@
   --ember-rgb: 255 138 76;
   --ash-rgb: 58 52 50;
   --blood-rgb: 150 16 24;
+  --toxic-rgb: 140 232 62;
+  --toxic: #8ce83e;
+  --volt-rgb: 255 214 51;
+  --volt: #ffd633;
   --rarity-common: #718096;
   --rarity-uncommon: #a0aec0;
   --rarity-rare: #ecc94b;

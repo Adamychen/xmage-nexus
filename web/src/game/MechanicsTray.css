@@ -275,6 +275,27 @@
   color: var(--ok);
 }
 
+/* The room a venture just entered lights up, so the step through the dungeon reads at a glance. */
+@keyframes dungeonRoomEntered {
+  0% { scale: 0.92; box-shadow: 0 0 0 0 rgb(var(--ember-rgb) / 0.9); filter: brightness(1.8); }
+  35% { scale: 1.05; box-shadow: 0 0 18px 4px rgb(var(--ember-rgb) / 0.8); }
+  100% { scale: 1; box-shadow: 0 0 10px rgb(var(--ok-rgb) / 0.4); filter: none; }
+}
+
+.dungeon-room-node.room-entered {
+  animation: dungeonRoomEntered calc(0.9s / var(--fx-speed, 1)) cubic-bezier(0.2, 0.9, 0.3, 1.2);
+}
+
+html.fx-off .dungeon-room-node.room-entered {
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dungeon-room-node.room-entered {
+    animation: none;
+  }
+}
+
 .room-step {
   font-weight: 800;
   color: var(--fg-2);

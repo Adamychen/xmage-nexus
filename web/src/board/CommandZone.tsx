@@ -28,6 +28,7 @@ interface CommandObject {
   id: string
   card: CardView
   isEmblem: boolean
+  isPlane: boolean
   isCommander: boolean
   isCompanion: boolean
   castCount: number
@@ -97,6 +98,8 @@ export function parseCommandList(
       nameLower.startsWith('emblem ') ||
       (Array.isArray(card.cardTypes) && card.cardTypes.some((t) => String(t).toLowerCase() === 'emblem'))
 
+    const isPlane = card.mageObjectType === 'PLANE' || nameLower.startsWith('plane - ')
+
     const isCompanion =
       card.mageObjectType === 'COMPANION' ||
       card.isCompanion === true ||
@@ -108,9 +111,9 @@ export function parseCommandList(
       (Array.isArray(card.cardTypes) && card.cardTypes.some((t) => ['creature', 'planeswalker'].includes(String(t).toLowerCase()))) ||
       (Array.isArray(card.superTypes) && card.superTypes.some((t) => String(t).toLowerCase() === 'legendary'))
 
-    const isCommander = !isEmblem && !isCompanion && (isExplicitCommander || isAuthenticCard)
+    const isCommander = !isEmblem && !isPlane && !isCompanion && (isExplicitCommander || isAuthenticCard)
 
-    if (!isEmblem && !isCompanion && !isCommander) {
+    if (!isEmblem && !isPlane && !isCompanion && !isCommander) {
       return
     }
 
@@ -120,6 +123,7 @@ export function parseCommandList(
       id,
       card,
       isEmblem,
+      isPlane,
       isCommander,
       isCompanion,
       castCount,
@@ -139,6 +143,11 @@ export function parseCommandList(
   return items
 }
 
+/** A plane is universal: every player's command list carries it, so only my side's command zone draws it. */
+function shownOn(item: CommandObject, side: 'my' | 'opp' | undefined): boolean {
+  return !item.isPlane || side === 'my'
+}
+
 export function hasCommandObjects(
   player: PlayerView | undefined,
   helperEmblems?: Record<string, CardView>,
@@ -149,7 +158,7 @@ export function hasCommandObjects(
     ...(player.helperCards ?? {}),
     ...(side === 'my' ? (helperEmblems ?? {}) : {}),
   })
-  return items.length > 0
+  return items.some((item) => shownOn(item, side))
 }
 
 export default function CommandZone({
@@ -171,7 +180,7 @@ export default function CommandZone({
     return parseCommandList(player?.commandList, {
       ...(player?.helperCards ?? {}),
       ...(side === 'my' ? (helperEmblems ?? {}) : {}),
-    })
+    }).filter((item) => shownOn(item, side))
   }, [player?.commandList, player?.helperCards, helperEmblems, side])
 
   if (items.length === 0) {
@@ -180,6 +189,7 @@ export default function CommandZone({
 
   const commanders = items.filter((item) => item.isCommander || item.isCompanion)
   const emblems = items.filter((item) => item.isEmblem)
+  const planes = items.filter((item) => item.isPlane)
   const isMulti = commanders.length > 1
 
   return (
@@ -224,6 +234,18 @@ export default function CommandZone({
           </div>
         )
       })}
+
+      {planes.map((item) => (
+        <CardSlot
+          key={item.id}
+          cardId={item.id}
+          card={item.card}
+          onClick={onCardClick ? () => onCardClick(item.id) : undefined}
+          onHover={hoverHandler}
+          className="plane-slot"
+          compact={compactCards}
+        />
+      ))}
 
       {emblems.length > 0 && (
         <div className="emblems-wrap">

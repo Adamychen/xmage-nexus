@@ -1,6 +1,16 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { buildGalleryEntries, recordedFrames, type GalleryEntry } from './galleryFixtures'
+import { getState, setState } from '../state/state'
 import { STORAGE_KEY as CREATE_TABLE_STORAGE_KEY } from '../lobby/CreateTable/constants'
+import { BOARD_WIPE_MIN, boardWipeIds } from '../board/boardWipe'
+import { controlChanges } from '../board/controlFx'
+import { auraAttachments, flippedChanges, libraryTucks, mutateMerges, playerCounterChanges, turnedFaceUp } from '../board/gameTransitionEngine'
+import { creatureShifts } from '../board/creatureShiftFx'
+import { commandArrivals } from '../board/commandObjectsFx'
+import { handReveals } from '../board/handRevealFx'
+import { permanentKind } from '../board/bandWeights'
+import { castFromCommand, commanderReturns } from '../board/commandFx'
+import type { GameView } from '../net/types'
 
 function entry(entries: GalleryEntry[], id: string): GalleryEntry {
   const found = entries.find((e) => e.id === id)
@@ -80,6 +90,7 @@ describe('galería de estados (P3)', () => {
       'anim:countered',
       'anim:transform',
       'anim:bounce',
+      'anim:opp-bounce',
       'anim:life-gain',
       'anim:shuffle',
       'anim:shuffle-opp',
@@ -101,6 +112,78 @@ describe('galería de estados (P3)', () => {
       'anim:spell-copy',
       'anim:pw-ultimate',
       'anim:revealed-flip',
+      'anim:attack-lunge',
+      'anim:combat-strikes',
+      'anim:destroy',
+      'anim:exile',
+      'anim:discard',
+      'anim:token-fade',
+      'anim:reanimate',
+      'anim:spell-slam',
+      'anim:ability-source',
+      'anim:turn-banner',
+      'anim:phase-wipe',
+      'anim:count-flash',
+      'anim:timer-low',
+      'anim:turn-recap',
+      'anim:commander-lethal',
+      'anim:end-victory',
+      'anim:end-defeat',
+      'anim:exile-v2',
+      'anim:pt-pump',
+      'anim:pt-shrink',
+      'anim:pt-mixed',
+      'anim:regrowth',
+      'anim:opp-regrowth',
+      'anim:exile-from-hand',
+      'anim:exile-from-graveyard',
+      'anim:exile-from-library',
+      'anim:flashback',
+      'anim:cast-from-exile',
+      'anim:board-wipe',
+      'anim:board-wipe-pod',
+      'anim:morph-face-up',
+      'anim:manifest-face-up',
+      'anim:poison',
+      'anim:poison-lethal',
+      'anim:poison-pod',
+      'anim:energy',
+      'anim:player-counter',
+      'anim:speed',
+      'anim:gain-control',
+      'anim:control-return',
+      'anim:gain-control-pod',
+      'anim:commander-to-command',
+      'anim:commander-to-command-v2',
+      'anim:commander-grave-to-command',
+      'anim:commander-cast',
+      'anim:commander-to-command-pod',
+      'anim:tuck',
+      'anim:tuck-classic',
+      'anim:hand-to-library',
+      'anim:opp-hand-to-library',
+      'anim:aura-attach',
+      'anim:aura-attach-classic',
+      'anim:mutate',
+      'anim:mutate-under',
+      'anim:land-animate',
+      'anim:land-animate-v2',
+      'anim:land-unanimate',
+      'anim:vehicle-crew',
+      'anim:emblem',
+      'anim:dungeon',
+      'anim:planeswalk',
+      'anim:hand-revealed',
+      'anim:hand-revealed-v2',
+      'anim:mana-spent',
+      'anim:goad',
+      'anim:card-icon-gain',
+      'anim:library-low',
+      'anim:library-empty',
+      'anim:library-empty-classic',
+      'anim:block-lunge',
+      'anim:block-lunge-opp',
+      'anim:flip-card',
     ]
     for (const id of withAction) expect(entry(entries, id).action?.label, id).toBeTruthy()
     const staticStates = ['anim:life-6', 'anim:chosen-target', 'anim:opp-pill-required', 'anim:opp-pill-optional']
@@ -119,6 +202,203 @@ describe('galería de estados (P3)', () => {
     expect(entry(entries, 'anim:opp-pill-required').feedback?.required).toBe(true)
     expect(entry(entries, 'anim:opp-pill-optional').feedback?.required).toBe(false)
     expect(entry(entries, 'anim:chosen-target').feedback?.chosenTargets?.length).toBe(1)
+  })
+
+  it('the gallery-gap animation entries start from a base that can play them', () => {
+    const meOf = (e: GalleryEntry) => e.game?.players?.find((p) => p.controlled)
+
+    const strikes = entry(entries, 'anim:combat-strikes').game
+    expect(strikes?.step).toBe('DECLARE_BLOCKERS')
+    expect(strikes?.combat ?? []).toHaveLength(2)
+
+    const lunge = entry(entries, 'anim:attack-lunge').game
+    expect(lunge?.combat ?? []).toHaveLength(0)
+
+    const reanimate = entry(entries, 'anim:reanimate')
+    const reanimateMe = meOf(reanimate)
+    const buried = Object.keys(reanimateMe?.graveyard ?? {}).find((id) => !(id in (reanimateMe?.battlefield ?? {})))
+    expect(buried).toBeTruthy()
+
+    expect(Object.values(meOf(entry(entries, 'anim:token-fade'))?.battlefield ?? {}).some((perm) => perm.isToken === true)).toBe(true)
+    expect(Object.values(entry(entries, 'anim:spell-slam').game?.myHand ?? {}).some((card) => (card.manaValue ?? 0) >= 7)).toBe(true)
+    expect(meOf(entry(entries, 'anim:timer-low'))?.hasPriority).toBe(true)
+    expect(entry(entries, 'anim:exile').gameUi).toBe('v1')
+
+    const wipe = entry(entries, 'anim:phase-wipe')
+    expect(wipe.gameUi).toBe('v1')
+    expect(wipe.action?.apply?.(wipe.game!).step).toBe('BEGIN_COMBAT')
+
+    const commander = entry(entries, 'anim:commander-lethal')
+    expect(commander.gameUi).toBe('v1')
+    const rules = (commander.game?.players ?? []).flatMap((p) => (p.commandList ?? []).flatMap((item) => (item as { rules?: string[] }).rules ?? []))
+    expect(rules.some((rule) => rule.includes('did 18 combat damage to player'))).toBe(true)
+
+    expect(entry(entries, 'anim:end-victory').gameEnd?.won).toBe(true)
+    expect(entry(entries, 'anim:end-defeat').gameEnd?.won).toBe(false)
+    expect(entry(entries, 'anim:end-victory').screen).toBe('gameend')
+  })
+
+  it('the wipe, face-up, player-counter and control entries start from a base that can play them', () => {
+    const changeOf = (id: string) => {
+      const e = entry(entries, id)
+      let next: GalleryEntry['game'] = null
+      vi.useFakeTimers()
+      try {
+        setState({ game: null })
+        e.action!.run!()
+        vi.advanceTimersByTime(100)
+        next = getState().game
+      } finally {
+        vi.useRealTimers()
+      }
+      return { base: e.game!, next: next! }
+    }
+
+    for (const id of ['anim:board-wipe', 'anim:board-wipe-pod']) {
+      const { base, next } = changeOf(id)
+      expect(boardWipeIds(base, next).length, id).toBeGreaterThanOrEqual(BOARD_WIPE_MIN)
+    }
+    expect(entry(entries, 'anim:board-wipe-pod').boardLayout).toBe('pod')
+
+    for (const [id, kind] of [['anim:morph-face-up', 'morph'], ['anim:manifest-face-up', 'manifest']] as const) {
+      const { base, next } = changeOf(id)
+      const me = (g: GameView) => (g.players ?? []).find((p) => p.controlled)!
+      expect(turnedFaceUp(me(base), me(next)).map((c) => c.kind), id).toEqual([kind])
+    }
+
+    const counterOf = (id: string) => {
+      const { base, next } = changeOf(id)
+      return (base.players ?? []).flatMap((p) => playerCounterChanges(p, (next.players ?? []).find((n) => n.playerId === p.playerId)!))
+    }
+    expect(counterOf('anim:poison')).toEqual([{ name: 'poison', from: 2, to: 3 }])
+    expect(counterOf('anim:poison-lethal')).toEqual([{ name: 'poison', from: 9, to: 10 }])
+    expect(counterOf('anim:poison-pod')).toEqual([{ name: 'poison', from: 4, to: 5 }])
+    expect(counterOf('anim:energy')).toEqual([{ name: 'energy', from: 1, to: 3 }])
+    expect(counterOf('anim:player-counter')).toEqual([{ name: 'experience', from: 1, to: 2 }])
+    expect(counterOf('anim:speed')).toEqual([{ name: 'speed', from: 1, to: 2 }])
+
+    for (const id of ['anim:gain-control', 'anim:control-return', 'anim:gain-control-pod']) {
+      const { base, next } = changeOf(id)
+      expect(controlChanges(base, next), id).toHaveLength(1)
+    }
+    const taken = changeOf('anim:gain-control')
+    expect(controlChanges(taken.base, taken.next)[0].to).toBe((taken.base.players ?? []).find((p) => p.controlled)?.playerId)
+    const pod = changeOf('anim:gain-control-pod')
+    const podChange = controlChanges(pod.base, pod.next)[0]
+    expect((pod.base.players ?? []).filter((p) => !p.controlled).map((p) => p.playerId)).toEqual(expect.arrayContaining([podChange.from, podChange.to]))
+  })
+
+  it('the commander, library, aura and mutate entries start from a base that can play them', () => {
+    const changeOf = (id: string) => {
+      const e = entry(entries, id)
+      let next: GalleryEntry['game'] = null
+      vi.useFakeTimers()
+      try {
+        setState({ game: null })
+        e.action!.run!()
+        vi.advanceTimersByTime(100)
+        next = getState().game
+      } finally {
+        vi.useRealTimers()
+      }
+      return { base: e.game!, next: next! }
+    }
+    const pair = (base: GameView, next: GameView) => (base.players ?? []).map((p) => [p, (next.players ?? []).find((n) => n.playerId === p.playerId)!] as const)
+
+    for (const [id, origin] of [['anim:commander-to-command', 'battlefield'], ['anim:commander-to-command-v2', 'battlefield'], ['anim:commander-grave-to-command', 'graveyard'], ['anim:commander-to-command-pod', 'battlefield']] as const) {
+      const { base, next } = changeOf(id)
+      expect(commanderReturns(base, next).map((r) => r.origin), id).toEqual([origin])
+    }
+    const pod = changeOf('anim:commander-to-command-pod')
+    expect(commanderReturns(pod.base, pod.next)[0].playerId).not.toBe((pod.base.players ?? []).find((p) => p.controlled)?.playerId)
+    expect(entry(entries, 'anim:commander-to-command').gameUi).toBe('v1')
+    expect(entry(entries, 'anim:commander-to-command-v2').gameUi).toBe('v2')
+    expect(entry(entries, 'anim:commander-to-command-pod').boardLayout).toBe('pod')
+
+    const cast = changeOf('anim:commander-cast')
+    const [spellId, spell] = Object.entries(cast.next.stack ?? {})[0]
+    expect(castFromCommand(spell, spellId, cast.base, cast.next)).toBeTruthy()
+
+    const tucksOf = (id: string) => {
+      const { base, next } = changeOf(id)
+      return pair(base, next).map(([p, n]) => libraryTucks(p, n, base, next))
+    }
+    for (const id of ['anim:tuck', 'anim:tuck-classic']) expect(tucksOf(id).flatMap((t) => t.permanents), id).toHaveLength(1)
+    expect(tucksOf('anim:hand-to-library').flatMap((t) => t.hand)).toHaveLength(2)
+    expect(tucksOf('anim:opp-hand-to-library').map((t) => t.hidden)).toContain(2)
+
+    for (const id of ['anim:aura-attach', 'anim:aura-attach-classic']) {
+      const { base, next } = changeOf(id)
+      expect(pair(base, next).flatMap(([p, n]) => auraAttachments(p, n, next)), id).toHaveLength(1)
+    }
+    for (const id of ['anim:mutate', 'anim:mutate-under']) {
+      const { base, next } = changeOf(id)
+      expect(mutateMerges(base, next).size, id).toBe(1)
+    }
+  })
+
+  it('the band-change, command-zone, hand-reveal and flip entries start from a base that can play them', () => {
+    const changeOf = (id: string) => {
+      const e = entry(entries, id)
+      let next: GalleryEntry['game'] = null
+      vi.useFakeTimers()
+      try {
+        setState({ game: null })
+        e.action!.run!()
+        vi.advanceTimersByTime(100)
+        next = getState().game
+      } finally {
+        vi.useRealTimers()
+      }
+      return { base: e.game!, next: next! }
+    }
+    const pair = (base: GameView, next: GameView) => (base.players ?? []).map((p) => [p, (next.players ?? []).find((n) => n.playerId === p.playerId)!] as const)
+
+    for (const [id, rises] of [['anim:land-animate', true], ['anim:land-animate-v2', true], ['anim:land-unanimate', false], ['anim:vehicle-crew', true]] as const) {
+      const { base, next } = changeOf(id)
+      const shifts = pair(base, next).flatMap(([p, n]) => creatureShifts(p, n))
+      expect(shifts.map((s) => s.rises), id).toEqual([rises])
+      const before = base.players!.flatMap((p) => Object.entries(p.battlefield ?? {})).find(([pid]) => pid === shifts[0].id)![1]
+      const after = next.players!.flatMap((p) => Object.entries(p.battlefield ?? {})).find(([pid]) => pid === shifts[0].id)![1]
+      expect(permanentKind(before), id).not.toBe(permanentKind(after))
+    }
+    expect(entry(entries, 'anim:land-animate').gameUi).toBe('v1')
+    expect(entry(entries, 'anim:land-animate-v2').gameUi).toBe('v2')
+
+    const emblem = changeOf('anim:emblem')
+    expect(commandArrivals(emblem.base, emblem.next).emblems).toHaveLength(1)
+    const dungeon = changeOf('anim:dungeon')
+    expect(commandArrivals(dungeon.base, dungeon.next).dungeons.map((d) => [d.entered, d.dungeon.room])).toEqual([[false, 'Goblin Lair']])
+    const plane = changeOf('anim:planeswalk')
+    expect(commandArrivals(plane.base, plane.next).planes.map((p) => p.replaced)).toEqual([true])
+
+    for (const id of ['anim:hand-revealed', 'anim:hand-revealed-v2']) {
+      const { base, next } = changeOf(id)
+      expect(handReveals(base, next).map((r) => r.cards.length), id).toEqual([3])
+    }
+    expect(entry(entries, 'anim:hand-revealed').gameUi).toBe('v1')
+    expect(entry(entries, 'anim:hand-revealed-v2').gameUi).toBe('v2')
+
+    const flip = changeOf('anim:flip-card')
+    expect(pair(flip.base, flip.next).flatMap(([p, n]) => flippedChanges(p, n))).toHaveLength(1)
+  })
+
+  it('anim:turn-recap closes a recap through the real observer', () => {
+    vi.useFakeTimers()
+    try {
+      setState({ turnRecap: null })
+      entry(entries, 'anim:turn-recap').action!.run!()
+      vi.advanceTimersByTime(100)
+      const recap = getState().turnRecap
+      expect(recap).toBeTruthy()
+      expect(recap!.actors[0]?.played).toContain('Grizzly Bears')
+      expect(recap!.actors[0]?.attackedWith.length).toBe(1)
+      expect(recap!.departures.some((d) => d.mine && d.dest === 'graveyard')).toBe(true)
+      expect(recap!.life.some((l) => l.mine && l.delta === -1)).toBe(true)
+    } finally {
+      setState({ turnRecap: null })
+      vi.useRealTimers()
+    }
   })
 
   it('las entradas de sickness y entered-glow pertenecen a Animaciones', () => {

@@ -257,7 +257,7 @@ describe('gameTransitionEngine — stack resolution and feedback', () => {
     recordCardPosition('cs-1', domRect(1000, 500), 'stack-zone')
     recordCardPosition('bolt-1', domRect(1000, 520), 'stack-zone')
 
-    expect([...counteredSpellIds(prev.stack, next.stack, next)]).toEqual(['bolt-1'])
+    expect([...counteredSpellIds(prev, next)]).toEqual(['bolt-1'])
     detectAndAnimateTransitions(prev, next)
     // The fall to the graveyard starts ~1.4 s in (counterspell projectile, then the shatter): wait for it, not for a fixed time.
     await vi.waitFor(() => expect(hasFlightFor('bolt-1')).toBe(true), { timeout: 3000, interval: 25 })
@@ -269,7 +269,7 @@ describe('gameTransitionEngine — stack resolution and feedback', () => {
     const aimed = { ...bolt, targets: ['c1'] } as unknown as CardView
     const prev = baseGame({ stack: { 'bolt-1': aimed } })
     const next = baseGame({ stack: {}, players: [player({ graveyard: { 'bolt-1': aimed } })] })
-    expect(counteredSpellIds(prev.stack, next.stack, next).size).toBe(0)
+    expect(counteredSpellIds(prev, next).size).toBe(0)
   })
 
   it('reads an opponent permanent that vanished while their hand grew as bounced, never a token', () => {
@@ -321,5 +321,62 @@ describe('gameTransitionEngine — stack resolution and feedback', () => {
     expect(getFeedbackFxState().banner).not.toBeNull()
     expect(getFeedbackFxState().banner?.text).toContain('2')
     expect(getFeedbackFxState().banner?.text).toContain('Alice')
+  })
+})
+
+describe('gameTransitionEngine — the server keys a stack spell by its spell ability id', () => {
+  const SPELL = '23dc62a1-90a2-479e-ba3c-ad8e9cd159fb'
+  const CARD = 'a4a1784a-e68b-426e-9903-f9d95b7bbcbc'
+  const mystic = (id: string) => ({ id, name: 'Elvish Mystic', expansionSetCode: 'M14', cardNumber: '169', manaValue: 1, cardTypes: ['CREATURE'], controllerId: 'p1' }) as unknown as CardView
+
+  beforeEach(() => {
+    clearFlights()
+    clearCardPositionRegistry()
+    clearStackHold()
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
+      if (this.closest('.stack-zone')) return domRect(900, 100)
+      if (this.closest('.hand-zone')) return domRect(100, 800)
+      if (this.closest('.library-stack')) return domRect(1200, 600)
+      return domRect(400, 400)
+    })
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+    document.body.innerHTML = ''
+  })
+
+  it('a creature spell resolving onto the battlefield under its card id flies from the stack and plays no exit flash', async () => {
+    document.body.innerHTML = `<div class="stack-zone"><div class="card-slot" data-card-id="${SPELL}"></div></div>`
+      + `<div data-player-id="p1" data-player-name="Alice"><div class="hand-zone"></div><div class="creatures-band"><div class="card-slot" data-card-id="${CARD}"></div></div></div>`
+    const prev = baseGame({ stack: { [SPELL]: mystic(SPELL) } })
+    const next = baseGame({ stack: {}, players: [player({ battlefield: { [CARD]: mystic(CARD) as never } })] })
+    recordCardPosition(SPELL, domRect(900, 100), 'stack-zone')
+
+    detectAndAnimateTransitions(prev, next)
+    await afterLayout()
+
+    expect(hasFlightFor(SPELL)).toBe(false)
+    const enter = getActiveFlights().find((f) => f.cardId === CARD)
+    expect(enter?.fromRect.left).toBe(900)
+  })
+
+  it('a resolved instant flies to the card it left in the graveyard, and its arrival is not read as a mill', async () => {
+    const BOLT_SPELL = 'ccd21b07-d753-4e67-bf6a-f87982041ef4'
+    const BOLT_CARD = 'c927fa19-dc9c-4a43-8986-48cc11a2a9a5'
+    document.body.innerHTML = `<div class="stack-zone"><div class="card-slot" data-card-id="${BOLT_SPELL}"></div></div>`
+      + '<div data-player-id="p1" data-player-name="Alice"><div class="library-stack"></div><div class="graveyard-stack"></div></div>'
+    const prev = baseGame({ stack: { [BOLT_SPELL]: { ...bolt, id: BOLT_SPELL } } })
+    const next = baseGame({ stack: {}, players: [player({ graveyard: { [BOLT_CARD]: { ...bolt, id: BOLT_CARD } } })] })
+    recordCardPosition(BOLT_SPELL, domRect(900, 100), 'stack-zone')
+
+    detectAndAnimateTransitions(prev, next)
+    await afterLayout()
+    await new Promise((resolve) => setTimeout(resolve, 80))
+
+    const exit = getActiveFlights().find((f) => f.cardId === BOLT_SPELL)
+    expect(exit?.toSelector).toContain('.graveyard-stack')
+    expect(exit?.fromRect.left).not.toBe(exit?.toRect.left)
+    expect(hasFlightFor(BOLT_CARD)).toBe(false)
   })
 })

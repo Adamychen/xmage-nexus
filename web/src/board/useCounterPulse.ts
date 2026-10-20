@@ -23,10 +23,18 @@ export interface CounterSample {
 
 let pulseSeq = 0
 
+/** The classes a counter badge wears while its count changes. */
+export function counterPulseClass(pulse: CounterPulse | undefined): string {
+  if (!pulse) return ''
+  return ` counter-badge-changed counter-badge-${pulse.direction}${pulse.scale ? ' counter-badge-pulse' : ''}`
+}
+
 /** Reports the counters whose count changed since the previous render of the same permanent,
  *  keyed by counter name. The first sample is the baseline and never pulses, so a counter that
- *  appears with a card (or a card that enters) keeps its mount animation only. */
-export function useCounterPulse(counters: ReadonlyArray<CounterSample>): Record<string, CounterPulse> {
+ *  appears with a card (or a card that enters) keeps its mount animation only. With `fromZero`
+ *  (a player's counters) a counter missing from the previous sample counts as 0, so the first
+ *  poison counter pulses too. */
+export function useCounterPulse(counters: ReadonlyArray<CounterSample>, fromZero = false): Record<string, CounterPulse> {
   const previous = useRef<Map<string, number> | null>(null)
   const tickTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const pulseTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -40,7 +48,7 @@ export function useCounterPulse(counters: ReadonlyArray<CounterSample>): Record<
 
     const changes: Record<string, CounterPulse> = {}
     for (const [name, count] of now) {
-      const prev = before.get(name)
+      const prev = before.get(name) ?? (fromZero ? 0 : undefined)
       if (prev === undefined || prev === count) continue
       changes[name] = {
         seq: ++pulseSeq,
@@ -64,7 +72,7 @@ export function useCounterPulse(counters: ReadonlyArray<CounterSample>): Record<
       pulseTimer.current = null
       setPulses({})
     }, COUNTER_PULSE_MS)
-  }, [counters])
+  }, [counters, fromZero])
 
   useEffect(() => () => {
     if (tickTimer.current) clearTimeout(tickTimer.current)

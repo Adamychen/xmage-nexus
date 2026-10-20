@@ -141,3 +141,9 @@
 .commander-tax-badge .commander-tax-pip {
   filter: drop-shadow(0 0 1px var(--shade-4));
 }
+
+.plane-slot {
+  flex-shrink: 0;
+  border-color: rgb(var(--mana-u-rgb) / 0.6);
+  box-shadow: 0 0 12px rgb(var(--mana-u-rgb) / 0.4);
+}

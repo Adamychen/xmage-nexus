@@ -18,6 +18,9 @@ const ENTER_RISE_EASE = 'cubic-bezier(0.2, 0.7, 0.4, 1)'
 const ENTER_DROP_EASE = 'cubic-bezier(0.55, 0, 1, 0.45)'
 const CAST_FLY_EASE = 'cubic-bezier(0.4, 0, 0.2, 1)'
 const ENTER_SETTLE_EASE = 'cubic-bezier(0.2, 0.6, 0.4, 1)'
+const CONTROL_GRAB_AT = 0.28
+const CONTROL_PULL_EASE = 'cubic-bezier(0.55, 0, 0.25, 1)'
+const ANIMATE_RISE_EASE = 'cubic-bezier(0.45, 0, 0.3, 1)'
 const ENTER_SHOW_SHADOW = '0 60px 110px var(--shade-5), 0 0 40px rgb(var(--brand-rgb) / 0.7)'
 const ENTER_SHOW_SHADOW_RARE = '0 60px 120px var(--shade-5), 0 0 64px rgb(var(--gold-rgb) / 0.9)'
 
@@ -139,8 +142,20 @@ function FlyingCardItem({ flight }: { flight: FlightRecord }) {
         })
       }
 
-      const arcLift = Math.min(110, dist * 0.22)
       const midRot = (startRot + endRot) / 2
+
+      if (flight.variant === 'control') {
+        // Seized where it stood, then hauled across by the tether: it lifts a little and is pulled in.
+        const pose = (cx: number, cy: number, cw: number, ch: number, rot: number, scale: number) =>
+          `translate3d(${cx - cw / 2}px, ${cy - ch / 2}px, 0) rotate(${rot}deg) scale(${scale})`
+        return [
+          { offset: 0, width: `${w}px`, height: `${h}px`, opacity: 0.95, transform: pose(fromCx, fromCy, w, h, startRot, 1) },
+          { offset: CONTROL_GRAB_AT, easing: CONTROL_PULL_EASE, width: `${w}px`, height: `${h}px`, opacity: 1, transform: pose(fromCx, fromCy, w, h, startRot, 1.08) },
+          { offset: 1, width: `${endW}px`, height: `${endH}px`, opacity: 0.95, transform: pose(toCx, toCy, endW, endH, endRot, 1) },
+        ]
+      }
+
+      const arcLift = Math.min(110, dist * 0.22)
 
       return [
         { width: `${w}px`, height: `${h}px`, transform: `translate3d(${fromCx - w / 2}px, ${fromCy - h / 2}px, 0) rotate(${startRot}deg) rotateY(0deg)`, opacity: 0.9 },
@@ -151,7 +166,7 @@ function FlyingCardItem({ flight }: { flight: FlightRecord }) {
 
     const timing: KeyframeAnimationOptions = {
       duration,
-      easing: lifted ? 'linear' : 'cubic-bezier(0.3, 0.9, 0.35, 1)',
+      easing: lifted || flight.variant === 'control' ? 'linear' : flight.variant === 'animate' ? ANIMATE_RISE_EASE : 'cubic-bezier(0.3, 0.9, 0.35, 1)',
       fill: 'forwards',
     }
 
@@ -225,18 +240,29 @@ function FlyingCardItem({ flight }: { flight: FlightRecord }) {
     return () => anim.cancel()
   }, [flight, cropUrl])
 
-  const dir = flight.trail ? unitDirection(flight.fromRect, flight.toRect) : null
+  const turns = flight.reveal || flight.conceal
+  useLayoutEffect(() => {
+    if (!turns || !elRef.current) return
+    const elapsed = Math.min(flight.duration, Math.max(0, performance.now() - flight.startTime))
+    for (const el of elRef.current.querySelectorAll('.flying-card-face, .flying-card-back-cover')) {
+      if (typeof el.getAnimations !== 'function') continue
+      for (const anim of el.getAnimations()) anim.currentTime = elapsed
+    }
+  }, [flight, imgUrl, turns])
+
+  const dir = flight.trail || flight.variant === 'control' ? unitDirection(flight.fromRect, flight.toRect) : null
   const rank = enterRank(flight.card)
   const rankClass = rank && (flight.variant === 'enter' || flight.variant === 'land') ? ` flight-${rank}` : ''
   const flightStyle = {
     '--flight-dur': `${flight.duration}ms`,
     ...(dir ? { '--trail-ux': dir.x, '--trail-uy': dir.y } : null),
+    ...(flight.tint ? { '--flight-tint': flight.tint } : null),
   } as React.CSSProperties
 
   return (
     <div
       ref={elRef}
-      className={`flying-card-item${flight.variant ? ` flight-${flight.variant}` : ''}${flight.trail ? ` flight-trail-${flight.trail}` : ''}${rankClass}`}
+      className={`flying-card-item${flight.variant ? ` flight-${flight.variant}` : ''}${flight.trail ? ` flight-trail-${flight.trail}` : ''}${rankClass}${flight.reveal ? ' flight-reveal' : ''}${flight.conceal ? ' flight-conceal' : ''}`}
       data-flight-id={flight.flightId}
       style={flightStyle}
     >
@@ -244,7 +270,7 @@ function FlyingCardItem({ flight }: { flight: FlightRecord }) {
         <img src={CARD_BACK_URL} alt="" className="flying-card-img" draggable={false} />
       ) : imgUrl ? (
         <>
-          <img src={imgUrl} alt={flight.card.name || 'Card'} className="flying-card-img" />
+          <img src={imgUrl} alt={flight.card.name || 'Card'} className={`flying-card-img${turns ? ' flying-card-face' : ''}`} />
           {cropUrl && (
             <img
               ref={cropRef}
@@ -258,8 +284,9 @@ function FlyingCardItem({ flight }: { flight: FlightRecord }) {
           )}
         </>
       ) : (
-        <div className="flying-card-fallback">{flight.card.name || 'Magic Card'}</div>
+        <div className={`flying-card-fallback${turns ? ' flying-card-face' : ''}`}>{flight.card.name || 'Magic Card'}</div>
       )}
+      {turns && <img src={CARD_BACK_URL} alt="" className="flying-card-img flying-card-back-cover" draggable={false} />}
       <div className="flying-card-glow" />
     </div>
   )

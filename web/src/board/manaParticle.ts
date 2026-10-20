@@ -13,8 +13,11 @@ export function manaPoolElement(side: ManaSide): HTMLElement | null {
 }
 
 export function spawnManaParticle(from: DOMRect, pool: HTMLElement, color: string): void {
+  flyManaOrb(from, pool.getBoundingClientRect(), color, () => landManaPool(pool))
+}
+
+export function flyManaOrb(from: DOMRect, to: DOMRect, color: string, onLand?: () => void): void {
   if (typeof document === 'undefined' || !fxMotionAllowed()) return
-  const to = pool.getBoundingClientRect()
   const fromX = from.left + from.width / 2
   const fromY = from.top + from.height / 2
   const toX = to.left + to.width / 2
@@ -40,7 +43,7 @@ export function spawnManaParticle(from: DOMRect, pool: HTMLElement, color: strin
   document.body.appendChild(particle)
   setTimeout(() => {
     particle.remove()
-    landManaPool(pool)
+    onLand?.()
   }, ms)
 }
 

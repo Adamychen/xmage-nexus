@@ -10,7 +10,7 @@ export default function FeedbackOverlay() {
       {floaters.map((f) => (
         <span
           key={f.id}
-          className={`fx-floater fx-decorate ${f.tone}`}
+          className={`fx-floater fx-decorate ${f.tone}${f.boxed ? ' is-boxed' : ''}`}
           style={{ left: f.x, top: f.y, animationDuration: `${f.duration}ms` }}
         >
           {f.text}

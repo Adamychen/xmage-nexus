@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useRef } from 'react'
 import type { PlayerView } from '../net/types'
 import { fxMotionAllowed, fxMotionDuration } from './fx'
 import { cardNodesIn } from './cardNodes'
+import { boardWipeDelay } from './boardWipe'
 
 export const DISSOLVE_MS = 300
 export const DISSOLVE_GHOST_TAIL_MS = 100
@@ -52,7 +53,7 @@ function hostOf(scopes: ReadonlyArray<HTMLElement | null>): HTMLElement | null {
   return null
 }
 
-function spawnGhost(node: HTMLElement, box: Box, host: HTMLElement | null, ghosts: Ghosts): void {
+function spawnGhost(node: HTMLElement, box: Box, host: HTMLElement | null, ghosts: Ghosts, delayMs = 0): void {
   const ghost = node.cloneNode(true) as HTMLElement
   for (const attr of GHOST_DROP_ATTRIBUTES) ghost.removeAttribute(attr)
   ghost.classList.remove(...GHOST_DROP_CLASSES)
@@ -77,6 +78,7 @@ function spawnGhost(node: HTMLElement, box: Box, host: HTMLElement | null, ghost
   ghost.style.height = `${box.height}px`
   ghost.style.setProperty('--card-w', `${box.width}px`)
   ghost.style.transform = box.transform
+  if (delayMs > 0) ghost.style.animationDelay = `${delayMs}ms`
   ;(inHost && host ? host : document.body).appendChild(ghost)
 
   const remove = () => {
@@ -88,7 +90,7 @@ function spawnGhost(node: HTMLElement, box: Box, host: HTMLElement | null, ghost
   ghost.addEventListener('animationend', (event) => {
     if (event.target === ghost) remove()
   })
-  ghosts.set(ghost, setTimeout(remove, fxMotionDuration(DISSOLVE_MS) + DISSOLVE_GHOST_TAIL_MS))
+  ghosts.set(ghost, setTimeout(remove, delayMs + fxMotionDuration(DISSOLVE_MS) + DISSOLVE_GHOST_TAIL_MS))
 }
 
 export function useBattlefieldDissolve(
@@ -127,7 +129,7 @@ export function useBattlefieldDissolve(
       const zonePlayers = context?.players ?? [player]
       const toZone = new Set(zonePlayers.flatMap((p) => [...Object.keys(p.graveyard ?? {}), ...Object.keys(p.exile ?? {})]))
       for (const [id, entry] of prev.cards) {
-        if (!onField.has(id) && toZone.has(id)) spawnGhost(entry.node, entry.box, prev.host, ghostsRef.current)
+        if (!onField.has(id) && toZone.has(id)) spawnGhost(entry.node, entry.box, prev.host, ghostsRef.current, boardWipeDelay(id))
       }
     }
 

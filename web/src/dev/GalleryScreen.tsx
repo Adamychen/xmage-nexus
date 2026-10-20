@@ -128,6 +128,7 @@ export default function GalleryScreen() {
       playableIds: active.playableIds ?? [],
       combat: null,
       gameEnd: active.gameEnd ?? null,
+      turnRecap: null,
       userRequest: null,
       viewer: null,
       sideboardScreen: null,

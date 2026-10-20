@@ -271,4 +271,11 @@ describe('CommandZone commander tax pip (real server shape)', () => {
     expect(container.querySelector('.commander-badge')).not.toBeNull()
     expect(container.querySelector('[data-testid="commander-tax"]')).toBeNull()
   })
+  it('draws a plane (a PlaneView, universal) only on my side', () => {
+    const player = { name: 'Player1', commandList: [{ id: 'pl', name: 'Plane - Akoum', expansionSetCode: 'PCA', rules: [] }] } as unknown as PlayerView
+    const mine = render(<CommandZone player={player} side="my" />)
+    expect(mine.container.querySelector('.plane-slot[data-card-id="pl"]')).not.toBeNull()
+    const theirs = render(<CommandZone player={player} side="opp" />)
+    expect(theirs.container.firstChild).toBeNull()
+  })
 })

@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react'
 import type { DungeonGraph } from './dungeons'
 import { nextRooms, roomLabel } from './dungeons'
 import Icon from '../ui/Icon'
@@ -16,6 +17,14 @@ export default function DungeonMap({ graph, dungeonName, playerName, visited }: 
   const tt = t as unknown as (ns: string, key: string) => string
   const visitedSet = new Set(visited)
   const current = visited[visited.length - 1]
+  const shownRef = useRef(current)
+  const [entered, setEntered] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (shownRef.current === current) return
+    shownRef.current = current
+    setEntered(current ?? null)
+  }, [current])
 
   return (
     <div className="mechanic-panel panel-dungeon">
@@ -42,8 +51,8 @@ export default function DungeonMap({ graph, dungeonName, playerName, visited }: 
                 const leads = nextRooms(graph, room.name)
                 return (
                   <div
-                    key={room.name}
-                    className={`dungeon-room-node ${isCurrent ? 'active-room' : ''} ${isVisited && !isCurrent ? 'visited-room' : ''}`}
+                    key={isCurrent && entered === room.name ? `${room.name}:entered` : room.name}
+                    className={`dungeon-room-node ${isCurrent ? 'active-room' : ''} ${isVisited && !isCurrent ? 'visited-room' : ''} ${isCurrent && entered === room.name ? 'room-entered' : ''}`}
                   >
                     <span className="room-name">{roomLabel(tt('game', room.labelKey), room)}</span>
                     {leads.length > 0 && (

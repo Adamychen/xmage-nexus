@@ -614,3 +614,672 @@ html.fx-off .board-shell.fx-quake-2 {
   box-shadow: 0 0 10px rgb(var(--mana-g-rgb) / 0.9), 0 0 3px rgb(var(--gold-rgb));
   animation-timing-function: cubic-bezier(0.3, 0.1, 0.4, 1);
 }
+
+/* Board wipe: the board darkens and one wave of searing light crosses it left to right; each
+   permanent it takes dies as the wave reaches it (boardWipe.ts, WIPE_WAVE_LEAD / WIPE_WAVE_SPAN). */
+.fx-burst.fx-wipe {
+  overflow: hidden;
+  border-radius: var(--r-base);
+}
+
+.fx-burst.fx-wipe > span {
+  left: 0;
+  top: 0;
+  height: 100%;
+}
+
+.fx-wipe-dim {
+  width: 100%;
+  background: linear-gradient(90deg, rgb(var(--ash-rgb) / 0.55) 0%, rgb(var(--ink-rgb) / 0.45) 100%);
+  animation: fxWipeDim var(--fx-dur) ease-out both;
+}
+
+@keyframes fxWipeDim {
+  0% { opacity: 0; }
+  14% { opacity: 1; }
+  75% { opacity: 0.8; }
+  100% { opacity: 0; }
+}
+
+.fx-wipe-flash {
+  width: 100%;
+  mix-blend-mode: screen;
+  background: radial-gradient(ellipse 40% 90% at 0% 50%, rgb(var(--mana-w-rgb) / 0.75) 0%, rgb(var(--gold-rgb) / 0.25) 45%, transparent 75%);
+  animation: fxWipeFlash var(--fx-dur) ease-out both;
+}
+
+@keyframes fxWipeFlash {
+  0% { opacity: 0; }
+  12% { opacity: 1; }
+  32% { opacity: 0; }
+  100% { opacity: 0; }
+}
+
+.fx-wipe-wave {
+  width: 26%;
+  translate: -50% 0;
+  mix-blend-mode: screen;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgb(var(--ember-rgb) / 0.35) 30%,
+    rgb(var(--gold-rgb) / 0.7) 46%,
+    rgb(var(--mana-w-rgb) / 0.95) 50%,
+    rgb(var(--gold-rgb) / 0.55) 56%,
+    transparent 100%);
+  box-shadow: 0 0 60px 12px rgb(var(--mana-w-rgb) / 0.35);
+  filter: blur(2px);
+  animation: fxWipeWave var(--fx-dur) linear both;
+}
+
+@keyframes fxWipeWave {
+  0% { left: -14%; opacity: 0; }
+  14% { left: 0%; opacity: 1; }
+  70% { left: 100%; opacity: 1; }
+  100% { left: 114%; opacity: 0; }
+}
+
+/* Turned face up: a dark shroud closes over the card while it turns edge-on, then its face bursts
+   out lit in its own colours. */
+.fx-face-up-shroud {
+  width: 112%;
+  height: 112%;
+  translate: -50% -50%;
+  border-radius: var(--r-base);
+  background: radial-gradient(ellipse, rgb(var(--ink-rgb) / 0.9) 0%, rgb(var(--mana-b-rgb) / 0.6) 55%, transparent 80%);
+  box-shadow: 0 0 22px 6px rgb(var(--ink-rgb) / 0.7);
+  animation: fxFaceUpShroud var(--fx-dur) ease-in-out both;
+}
+
+@keyframes fxFaceUpShroud {
+  0% { opacity: 0; scale: 1.25; }
+  25% { opacity: 1; scale: 1; }
+  48% { opacity: 1; scale: 0.9; }
+  60% { opacity: 0; scale: 1.3; }
+  100% { opacity: 0; }
+}
+
+.fx-face-up-burst {
+  width: 150%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  translate: -50% -50%;
+  mix-blend-mode: screen;
+  background: radial-gradient(circle, rgb(var(--mana-w-rgb) / 0.95) 0%, rgb(var(--reveal-rgb) / 0.6) 30%, transparent 68%);
+  animation: fxFaceUpBurst var(--fx-dur) ease-out both;
+}
+
+@keyframes fxFaceUpBurst {
+  0%, 46% { opacity: 0; scale: 0.3; }
+  58% { opacity: 1; scale: 1; }
+  100% { opacity: 0; scale: 1.35; }
+}
+
+.fx-face-up-ring {
+  width: 115%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  translate: -50% -50%;
+  border: 2px solid rgb(var(--reveal-rgb) / 0.9);
+  box-shadow: 0 0 18px rgb(var(--reveal-rgb) / 0.8), inset 0 0 12px rgb(var(--mana-w-rgb) / 0.5);
+  animation: fxRing calc(var(--fx-dur) * 0.5) cubic-bezier(0.2, 0.8, 0.3, 1) calc(var(--fx-dur) * 0.5) both;
+}
+
+.fx-face-up-mote {
+  width: calc(7px * var(--s));
+  height: calc(7px * var(--s));
+  border-radius: 50%;
+  translate: -50% -50%;
+  background: radial-gradient(circle, rgb(var(--mana-w-rgb)) 0%, rgb(var(--reveal-rgb) / 0.7) 60%, transparent 100%);
+  box-shadow: 0 0 10px rgb(var(--reveal-rgb) / 0.9);
+  animation: fxFaceUpMote var(--fx-dur) cubic-bezier(0.15, 0.7, 0.3, 1) both;
+}
+
+@keyframes fxFaceUpMote {
+  0%, 50% { opacity: 0; transform: translate(0, 0) scale(0.6); }
+  58% { opacity: 1; transform: translate(calc(var(--dx) * 0.25), calc(var(--dy) * 0.25)) scale(1.3); }
+  85% { opacity: 0.9; }
+  100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(0.5); }
+}
+
+/* Poison counter: a toxic splash on the badge and green drops dripping off it. */
+.fx-poison-splash {
+  width: 160%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  translate: -50% -50%;
+  background: radial-gradient(circle, rgb(var(--toxic-rgb) / 0.85) 0%, rgb(var(--toxic-rgb) / 0.3) 40%, transparent 70%);
+  mix-blend-mode: screen;
+  animation: fxHitFlash calc(var(--fx-dur) * 0.6) ease-out both;
+}
+
+.fx-poison-drop {
+  width: calc(6px * var(--s));
+  height: calc(9px * var(--s));
+  border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+  translate: -50% -50%;
+  background: radial-gradient(circle at 40% 35%, rgb(var(--mana-w-rgb) / 0.9) 0%, rgb(var(--toxic-rgb)) 45%, rgb(var(--mana-g-rgb) / 0.8) 100%);
+  box-shadow: 0 0 8px rgb(var(--toxic-rgb) / 0.9);
+  animation: fxParticle var(--fx-dur) cubic-bezier(0.55, 0, 0.9, 0.5) both;
+}
+
+/* Ten poison counters: a toxic cloud billows over the seat and a green shockwave rolls out. */
+.fx-poison-cloud {
+  width: 150%;
+  height: 260%;
+  translate: -50% -50%;
+  border-radius: 50%;
+  background:
+    radial-gradient(ellipse 45% 40% at 35% 55%, rgb(var(--toxic-rgb) / 0.7) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 45% at 65% 45%, rgb(var(--mana-g-rgb) / 0.65) 0%, transparent 70%),
+    radial-gradient(ellipse 60% 55% at 50% 50%, rgb(var(--ink-rgb) / 0.55) 0%, transparent 75%);
+  filter: blur(6px);
+  animation: fxPoisonCloud var(--fx-dur) ease-out both;
+}
+
+@keyframes fxPoisonCloud {
+  0% { opacity: 0; scale: 0.4; }
+  25% { opacity: 1; scale: 1; }
+  70% { opacity: 0.85; scale: 1.15; }
+  100% { opacity: 0; scale: 1.3; }
+}
+
+.fx-poison-ring {
+  width: 120%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  translate: -50% -50%;
+  border: 3px solid rgb(var(--toxic-rgb) / 0.95);
+  box-shadow: 0 0 26px rgb(var(--toxic-rgb) / 0.8), inset 0 0 18px rgb(var(--toxic-rgb) / 0.5);
+  animation: fxRing calc(var(--fx-dur) * 0.6) cubic-bezier(0.1, 0.7, 0.3, 1) both;
+}
+
+/* Energy counter: a yellow bolt cracks over the badge and sparks fly off it. */
+.fx-energy-flash {
+  width: 180%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  translate: -50% -50%;
+  background: radial-gradient(circle, rgb(var(--volt-rgb) / 0.85) 0%, rgb(var(--volt-rgb) / 0.25) 40%, transparent 70%);
+  mix-blend-mode: screen;
+  animation: fxHitFlash calc(var(--fx-dur) * 0.55) ease-out both;
+}
+
+.fx-energy-bolt {
+  width: 22px;
+  height: 34px;
+  translate: -50% -60%;
+  background: linear-gradient(180deg, rgb(var(--mana-w-rgb)) 0%, rgb(var(--volt-rgb)) 55%, rgb(var(--ember-rgb)) 100%);
+  clip-path: polygon(58% 0%, 12% 56%, 44% 56%, 30% 100%, 88% 38%, 54% 38%, 72% 0%);
+  filter: drop-shadow(0 0 6px rgb(var(--volt-rgb)));
+  animation: fxEnergyBolt var(--fx-dur) ease-out both;
+}
+
+@keyframes fxEnergyBolt {
+  0% { opacity: 0; scale: 0.4; }
+  15% { opacity: 1; scale: 1.25; }
+  30% { opacity: 0.6; scale: 1; }
+  45% { opacity: 1; scale: 1.1; }
+  100% { opacity: 0; scale: 0.9; translate: -50% -110%; }
+}
+
+.fx-energy-spark {
+  width: calc(4px * var(--s));
+  height: calc(4px * var(--s));
+  border-radius: 50%;
+  translate: -50% -50%;
+  background: rgb(var(--volt-rgb));
+  box-shadow: 0 0 8px 2px rgb(var(--volt-rgb) / 0.9);
+  animation: fxParticle var(--fx-dur) cubic-bezier(0.1, 0.8, 0.25, 1) both;
+}
+
+/* Control change: a tether in the new controller's seat colour seizes the permanent where it stood
+   and reels it in to its new slot, which the anchor ring marks. */
+.fx-control-grip {
+  width: 118%;
+  height: 112%;
+  translate: -50% -50%;
+  border-radius: var(--r-base);
+  border: 2px solid var(--tint);
+  box-shadow: 0 0 16px 2px color-mix(in srgb, var(--tint) 80%, transparent), inset 0 0 14px color-mix(in srgb, var(--tint) 55%, transparent);
+  animation: fxControlGrip var(--fx-dur) ease-out both;
+}
+
+@keyframes fxControlGrip {
+  0% { opacity: 0; scale: 1.35; }
+  22% { opacity: 1; scale: 1; }
+  32% { opacity: 1; scale: 0.96; }
+  55% { opacity: 0; scale: 0.9; }
+  100% { opacity: 0; }
+}
+
+.fx-control-tether {
+  width: var(--len);
+  height: 0;
+  transform-origin: 0 50%;
+  rotate: var(--angle);
+}
+
+.fx-control-beam {
+  position: absolute;
+  left: 0;
+  top: -2px;
+  width: 100%;
+  height: 4px;
+  border-radius: var(--r-pill);
+  transform-origin: 100% 50%;
+  background: linear-gradient(90deg, var(--tint) 0%, color-mix(in srgb, var(--tint) 70%, var(--fg-hi)) 50%, var(--tint) 100%);
+  box-shadow: 0 0 10px 2px color-mix(in srgb, var(--tint) 75%, transparent);
+  animation: fxControlBeam var(--fx-dur) cubic-bezier(0.55, 0, 0.25, 1) both;
+}
+
+@keyframes fxControlBeam {
+  0% { opacity: 0; scale: 0 1; animation-timing-function: cubic-bezier(0.2, 0.7, 0.3, 1); }
+  10% { opacity: 1; }
+  28% { opacity: 1; scale: 1 1; animation-timing-function: cubic-bezier(0.55, 0, 0.25, 1); }
+  92% { opacity: 1; }
+  100% { opacity: 0; scale: 0 1; }
+}
+
+.fx-control-anchor {
+  width: 46px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  translate: calc(-50% + var(--ax)) calc(-50% + var(--ay));
+  border: 2px solid var(--tint);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--tint) 80%, transparent);
+  animation: fxControlAnchor var(--fx-dur) ease-out both;
+}
+
+@keyframes fxControlAnchor {
+  0% { opacity: 0; scale: 0.3; }
+  20% { opacity: 1; scale: 1; }
+  80% { opacity: 0.8; scale: 0.8; }
+  100% { opacity: 0; scale: 1.8; }
+}
+
+/* Back to the command zone: a column of gold light lifts off the commander where it stood and a
+   crown rises out of it. */
+.fx-command-column {
+  width: 90%;
+  height: 200%;
+  translate: -50% -78%;
+  border-radius: 50% 50% 0 0 / 30% 30% 0 0;
+  mix-blend-mode: screen;
+  background: linear-gradient(0deg, rgb(var(--gold-rgb) / 0.75) 0%, rgb(var(--gold-rgb) / 0.35) 40%, rgb(var(--mana-b-rgb) / 0.2) 70%, transparent 100%);
+  filter: blur(3px);
+  animation: fxCommandColumn var(--fx-dur) ease-out both;
+}
+
+@keyframes fxCommandColumn {
+  0% { opacity: 0; scale: 0.4 0.2; }
+  25% { opacity: 1; scale: 1 1; }
+  70% { opacity: 0.6; }
+  100% { opacity: 0; scale: 0.7 1.15; }
+}
+
+.fx-command-ring {
+  width: 115%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  translate: -50% -50%;
+  border: 3px solid rgb(var(--gold-rgb) / 0.95);
+  box-shadow: 0 0 20px rgb(var(--gold-rgb) / 0.8), inset 0 0 14px rgb(var(--mana-b-rgb) / 0.6);
+  animation: fxRing calc(var(--fx-dur) * 0.6) cubic-bezier(0.2, 0.8, 0.3, 1) both;
+}
+
+.fx-command-crown {
+  width: 46px;
+  height: 32px;
+  translate: -50% -50%;
+  background: linear-gradient(180deg, rgb(var(--mana-w-rgb)) 0%, rgb(var(--gold-rgb)) 55%, rgb(var(--ember-rgb)) 100%);
+  clip-path: polygon(0% 100%, 0% 25%, 25% 60%, 50% 0%, 75% 60%, 100% 25%, 100% 100%);
+  filter: drop-shadow(0 0 8px rgb(var(--gold-rgb)));
+  animation: fxCommandCrown var(--fx-dur) cubic-bezier(0.2, 0.7, 0.3, 1) both;
+}
+
+@keyframes fxCommandCrown {
+  0% { opacity: 0; scale: 0.3; translate: -50% -10%; }
+  25% { opacity: 1; scale: 1.15; translate: -50% -60%; }
+  70% { opacity: 1; scale: 1; translate: -50% -110%; }
+  100% { opacity: 0; scale: 0.8; translate: -50% -150%; }
+}
+
+.fx-command-mote {
+  width: calc(6px * var(--s));
+  height: calc(6px * var(--s));
+  border-radius: 50%;
+  translate: -50% -50%;
+  background: radial-gradient(circle, rgb(var(--mana-w-rgb)) 0%, rgb(var(--gold-rgb) / 0.85) 55%, transparent 100%);
+  box-shadow: 0 0 8px rgb(var(--gold-rgb) / 0.9);
+  animation: fxParticle var(--fx-dur) cubic-bezier(0.2, 0.6, 0.4, 1) both;
+}
+
+/* Put on the library: the permanent is drawn down into a cool vortex where it stood. */
+.fx-tuck-vortex {
+  width: 120%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  translate: -50% -50%;
+  background: conic-gradient(from 0deg, transparent 0deg, rgb(var(--mana-u-rgb) / 0.6) 120deg, transparent 200deg, rgb(var(--ink-rgb) / 0.7) 300deg, transparent 360deg);
+  mask: radial-gradient(circle, transparent 30%, rgb(var(--ink-rgb)) 36%, rgb(var(--ink-rgb)) 60%, transparent 66%);
+  filter: drop-shadow(0 0 6px rgb(var(--mana-u-rgb) / 0.7));
+  animation: fxTuckVortex var(--fx-dur) cubic-bezier(0.5, 0, 0.7, 1) both;
+}
+
+@keyframes fxTuckVortex {
+  0% { opacity: 0; scale: 1.3; rotate: 0deg; }
+  25% { opacity: 1; }
+  100% { opacity: 0; scale: 0.2; rotate: -300deg; }
+}
+
+.fx-tuck-mote {
+  width: calc(5px * var(--s));
+  height: calc(5px * var(--s));
+  border-radius: 50%;
+  translate: -50% -50%;
+  background: rgb(var(--mana-u-rgb) / 0.9);
+  box-shadow: 0 0 6px rgb(var(--mana-u-rgb) / 0.8);
+  animation: fxImplode var(--fx-dur) cubic-bezier(0.6, 0, 0.8, 0.6) both;
+}
+
+@keyframes fxImplode {
+  0% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(1.2); }
+  20% { opacity: 1; }
+  100% { opacity: 0; transform: translate(0, 0) scale(0.3); }
+}
+
+/* Aura attached: a glowing thread binds the aura to its host, a ring closes round the host and its
+   frame lights up in the aura's colour. */
+.fx-attach-frame {
+  width: 112%;
+  height: 108%;
+  translate: -50% -50%;
+  border-radius: var(--r-base);
+  border: 2px solid rgb(var(--attach-rgb) / 0.95);
+  box-shadow: 0 0 18px 3px rgb(var(--attach-rgb) / 0.75), inset 0 0 16px rgb(var(--attach-rgb) / 0.5);
+  animation: fxAttachFrame var(--fx-dur) ease-out both;
+}
+
+@keyframes fxAttachFrame {
+  0%, 18% { opacity: 0; scale: 1.15; }
+  38% { opacity: 1; scale: 1; }
+  75% { opacity: 0.8; }
+  100% { opacity: 0; scale: 1.02; }
+}
+
+.fx-attach-ring {
+  width: 104%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  translate: -50% -50%;
+  border: 2px solid rgb(var(--attach-rgb) / 0.9);
+  box-shadow: 0 0 16px rgb(var(--attach-rgb) / 0.8);
+  animation: fxAttachRing calc(var(--fx-dur) * 0.6) cubic-bezier(0.3, 0, 0.3, 1) calc(var(--fx-dur) * 0.15) both;
+}
+
+@keyframes fxAttachRing {
+  0% { opacity: 0; scale: 1.5; }
+  30% { opacity: 1; }
+  100% { opacity: 0; scale: 0.75; }
+}
+
+.fx-attach-tether {
+  width: var(--len);
+  height: 0;
+  transform-origin: 0 50%;
+  rotate: var(--angle);
+}
+
+.fx-attach-beam {
+  position: absolute;
+  left: 0;
+  top: -1.5px;
+  width: 100%;
+  height: 3px;
+  border-radius: var(--r-pill);
+  transform-origin: 100% 50%;
+  background: linear-gradient(90deg, rgb(var(--attach-rgb)) 0%, rgb(var(--mana-w-rgb) / 0.95) 50%, rgb(var(--attach-rgb)) 100%);
+  box-shadow: 0 0 10px 2px rgb(var(--attach-rgb) / 0.8);
+  animation: fxAttachBeam var(--fx-dur) cubic-bezier(0.3, 0.7, 0.3, 1) both;
+}
+
+@keyframes fxAttachBeam {
+  0% { opacity: 0; scale: 0 1; }
+  30% { opacity: 1; scale: 1 1; }
+  70% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.fx-attach-knot {
+  width: 22px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  translate: calc(-50% + var(--ax)) calc(-50% + var(--ay));
+  background: radial-gradient(circle, rgb(var(--mana-w-rgb)) 0%, rgb(var(--attach-rgb) / 0.8) 45%, transparent 70%);
+  animation: fxAttachKnot var(--fx-dur) ease-out both;
+}
+
+@keyframes fxAttachKnot {
+  0% { opacity: 0; scale: 0.3; }
+  15% { opacity: 1; scale: 1.4; }
+  60% { opacity: 0.7; scale: 1; }
+  100% { opacity: 0; scale: 0.6; }
+}
+
+/* Mutate: the spell merges into its host; organic ripples wobble out of it in the spell's colours. */
+.fx-mutate-flash {
+  width: 120%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  translate: -50% -50%;
+  mix-blend-mode: screen;
+  background: radial-gradient(circle, rgb(var(--mana-w-rgb) / 0.85) 0%, rgb(var(--mutate-a-rgb) / 0.55) 35%, transparent 70%);
+  animation: fxHitFlash calc(var(--fx-dur) * 0.6) ease-out both;
+}
+
+.fx-mutate-ripple {
+  width: 110%;
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  border: 3px solid rgb(var(--mutate-a-rgb) / 0.9);
+  box-shadow: 0 0 16px rgb(var(--mutate-a-rgb) / 0.7), inset 0 0 12px rgb(var(--mutate-b-rgb) / 0.6);
+  animation: fxMutateRipple var(--fx-dur) cubic-bezier(0.2, 0.7, 0.3, 1) both;
+}
+
+.fx-mutate-ripple--2 {
+  border-color: rgb(var(--mutate-b-rgb) / 0.85);
+  animation-delay: calc(var(--fx-dur) * 0.12);
+}
+
+.fx-mutate-ripple--3 {
+  animation-delay: calc(var(--fx-dur) * 0.24);
+}
+
+@keyframes fxMutateRipple {
+  0% { opacity: 0; scale: 0.35; border-radius: 42% 58% 55% 45% / 50% 40% 60% 50%; rotate: 0deg; }
+  15% { opacity: 1; }
+  50% { border-radius: 58% 42% 45% 55% / 40% 60% 40% 60%; }
+  100% { opacity: 0; scale: 1.9; border-radius: 45% 55% 60% 40% / 55% 45% 55% 45%; rotate: 40deg; }
+}
+
+.fx-mutate-mote {
+  width: calc(7px * var(--s));
+  height: calc(7px * var(--s));
+  border-radius: 50% 50% 50% 0;
+  translate: -50% -50%;
+  background: radial-gradient(circle, rgb(var(--mana-w-rgb)) 0%, rgb(var(--mutate-a-rgb) / 0.85) 50%, rgb(var(--mutate-b-rgb) / 0.6) 100%);
+  box-shadow: 0 0 8px rgb(var(--mutate-a-rgb) / 0.85);
+  animation: fxParticle var(--fx-dur) cubic-bezier(0.15, 0.7, 0.3, 1) both;
+}
+
+/* Becomes a creature (an animated land, a crewed vehicle): a column of light in its colour lifts it
+   off the ground into the creature band and motes rise with it. */
+.fx-animate-column {
+  width: 80%;
+  height: 170%;
+  translate: -50% -70%;
+  border-radius: 50% 50% 0 0 / 26% 26% 0 0;
+  mix-blend-mode: screen;
+  background: linear-gradient(0deg, rgb(var(--animate-rgb) / 0.8) 0%, rgb(var(--animate-rgb) / 0.35) 45%, transparent 100%);
+  filter: blur(3px);
+  animation: fxAnimateColumn var(--fx-dur) ease-out both;
+}
+
+@keyframes fxAnimateColumn {
+  0% { opacity: 0; scale: 0.5 0.2; }
+  30% { opacity: 1; scale: 1 1; }
+  100% { opacity: 0; scale: 0.8 1.2; }
+}
+
+.fx-animate-ring {
+  width: 120%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  translate: -50% -50%;
+  border: 3px solid rgb(var(--animate-rgb) / 0.9);
+  box-shadow: 0 0 20px rgb(var(--animate-rgb) / 0.75), inset 0 0 12px rgb(var(--animate-rgb) / 0.5);
+  animation: fxRing calc(var(--fx-dur) * 0.7) cubic-bezier(0.2, 0.8, 0.3, 1) calc(var(--fx-dur) * 0.2) both;
+}
+
+.fx-animate-mote {
+  width: calc(7px * var(--s));
+  height: calc(7px * var(--s));
+  border-radius: 50%;
+  translate: -50% -50%;
+  background: radial-gradient(circle, rgb(var(--mana-w-rgb)) 0%, rgb(var(--animate-rgb) / 0.9) 55%, transparent 100%);
+  box-shadow: 0 0 8px rgb(var(--animate-rgb) / 0.9);
+  animation: fxParticle var(--fx-dur) cubic-bezier(0.2, 0.6, 0.4, 1) both;
+}
+
+/* An emblem arrives in the command zone: a violet flash, two rings and gold sparks. */
+.fx-emblem-flash {
+  width: 150%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  translate: -50% -50%;
+  mix-blend-mode: screen;
+  background: radial-gradient(circle, rgb(var(--mana-w-rgb) / 0.9) 0%, rgb(var(--purple-rgb) / 0.6) 30%, transparent 68%);
+  animation: fxHitFlash calc(var(--fx-dur) * 0.6) ease-out both;
+}
+
+.fx-emblem-ring {
+  width: 110%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  translate: -50% -50%;
+  border: 3px solid rgb(var(--purple-rgb) / 0.95);
+  box-shadow: 0 0 22px rgb(var(--purple-rgb) / 0.8), inset 0 0 14px rgb(var(--gold-rgb) / 0.55);
+  animation: fxEnterRing var(--fx-dur) cubic-bezier(0.15, 0.7, 0.3, 1) both;
+}
+
+.fx-emblem-ring--late {
+  border-color: rgb(var(--gold-rgb) / 0.9);
+  animation-delay: 160ms;
+}
+
+.fx-emblem-spark {
+  width: calc(8px * var(--s));
+  height: calc(8px * var(--s));
+  translate: -50% -50%;
+  clip-path: polygon(50% 0%, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0% 50%, 38% 38%);
+  background: linear-gradient(135deg, rgb(var(--mana-w-rgb)) 0%, rgb(var(--gold-rgb)) 60%);
+  filter: drop-shadow(0 0 4px rgb(var(--purple-rgb)));
+  animation: fxParticle var(--fx-dur) cubic-bezier(0.15, 0.7, 0.3, 1) both;
+}
+
+/* A dungeon room entered: a torchlit glow and a ring round the dungeon badge, embers rising. */
+.fx-dungeon-glow {
+  width: 220%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  translate: -50% -50%;
+  mix-blend-mode: screen;
+  background: radial-gradient(circle, rgb(var(--ember-rgb) / 0.75) 0%, rgb(var(--gold-rgb) / 0.35) 35%, transparent 70%);
+  animation: fxHitFlash var(--fx-dur) ease-out both;
+}
+
+.fx-dungeon-ring {
+  width: 160%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  translate: -50% -50%;
+  border: 2px solid rgb(var(--ember-rgb) / 0.95);
+  box-shadow: 0 0 16px rgb(var(--ember-rgb) / 0.8);
+  animation: fxEnterRing var(--fx-dur) cubic-bezier(0.15, 0.7, 0.3, 1) both;
+}
+
+.fx-dungeon-ember {
+  width: calc(5px * var(--s));
+  height: calc(5px * var(--s));
+  border-radius: 50%;
+  translate: -50% -50%;
+  background: rgb(var(--ember-rgb));
+  box-shadow: 0 0 6px rgb(var(--ember-rgb) / 0.9);
+  animation: fxParticle var(--fx-dur) cubic-bezier(0.2, 0.6, 0.4, 1) both;
+}
+
+/* Planeswalk: a planar portal swirls open where the new plane rolls in. */
+.fx-planeswalk-portal {
+  width: 180%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  translate: -50% -50%;
+  background: conic-gradient(from 0deg, transparent 0deg, rgb(var(--mana-u-rgb) / 0.8) 80deg, rgb(var(--purple-rgb) / 0.7) 160deg, transparent 220deg, rgb(var(--mana-w-rgb) / 0.6) 300deg, transparent 360deg);
+  mask: radial-gradient(circle, transparent 24%, rgb(var(--ink-rgb)) 32%, rgb(var(--ink-rgb)) 62%, transparent 70%);
+  filter: drop-shadow(0 0 10px rgb(var(--purple-rgb) / 0.8));
+  animation: fxPlaneswalkPortal var(--fx-dur) cubic-bezier(0.3, 0, 0.5, 1) both;
+}
+
+@keyframes fxPlaneswalkPortal {
+  0% { opacity: 0; scale: 0.2; rotate: 0deg; }
+  25% { opacity: 1; scale: 1; }
+  75% { opacity: 0.9; }
+  100% { opacity: 0; scale: 1.5; rotate: 420deg; }
+}
+
+.fx-planeswalk-flash {
+  width: 130%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  translate: -50% -50%;
+  mix-blend-mode: screen;
+  background: radial-gradient(circle, rgb(var(--mana-w-rgb) / 0.9) 0%, rgb(var(--mana-u-rgb) / 0.5) 35%, transparent 70%);
+  animation: fxHitFlash calc(var(--fx-dur) * 0.5) ease-out calc(var(--fx-dur) * 0.3) both;
+}
+
+.fx-planeswalk-mote {
+  width: calc(6px * var(--s));
+  height: calc(6px * var(--s));
+  border-radius: 50%;
+  translate: -50% -50%;
+  background: radial-gradient(circle, rgb(var(--mana-w-rgb)) 0%, rgb(var(--purple-rgb) / 0.85) 60%, transparent 100%);
+  animation: fxImplode var(--fx-dur) cubic-bezier(0.6, 0, 0.8, 0.6) both;
+}
+
+/* A Kamigawa flip card turns over: a bright flash and an arc of light following the half turn. */
+.fx-flip-flash {
+  width: 120%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  translate: -50% -50%;
+  mix-blend-mode: screen;
+  background: radial-gradient(circle, rgb(var(--mana-w-rgb) / 0.95) 0%, rgb(var(--flip-rgb) / 0.55) 32%, transparent 68%);
+  animation: fxHitFlash calc(var(--fx-dur) * 0.6) ease-out calc(var(--fx-dur) * 0.25) both;
+}
+
+.fx-flip-arc {
+  width: 135%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  translate: -50% -50%;
+  background: conic-gradient(from 0deg, transparent 0deg, rgb(var(--mana-w-rgb) / 0.95) 30deg, rgb(var(--flip-rgb) / 0.6) 120deg, transparent 180deg, transparent 360deg);
+  mask: radial-gradient(circle, transparent 56%, rgb(var(--ink-rgb)) 60%, rgb(var(--ink-rgb)) 66%, transparent 70%);
+  animation: fxFlipArc var(--fx-dur) cubic-bezier(0.45, 0, 0.55, 1) both;
+}
+
+@keyframes fxFlipArc {
+  0% { opacity: 0; rotate: 0deg; }
+  20% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { opacity: 0; rotate: 180deg; }
+}

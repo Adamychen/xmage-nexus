@@ -6,16 +6,22 @@ import RenderedCard from '../cards/rendered/RenderedCard'
 import { getPreviousCardPosition, getPreviousCardSize, getPreviousCardZone, recordCardPosition } from './cardPositionRegistry'
 import { startCardFlight, onFlightLanded, getActiveFlights, subscribeFlights, noteFlightEvent, ENTER_FLIGHT_MS } from './flightManager'
 import { combatHoldRemaining, isOffBattlefield } from './combatStrikes'
+import { CONTROL_FLIGHT_MS, controlChangeTint } from './controlFx'
+import { COMMAND_FLIGHT_MS, commandReturnSource } from './commandFx'
+import { ANIMATE_FLIGHT_MS, SETTLE_FLIGHT_MS, animateTint, creatureShiftOf } from './creatureShiftFx'
 import { DamageNumbers } from './DamageNumber'
 import { useCombatHeld } from './useCombatHeld'
 import { fxMotionAllowed, fxMotionDuration } from './fx'
-import { useCounterPulse, type CounterPulse } from './useCounterPulse'
+import { counterPulseClass as pulseClass, useCounterPulse } from './useCounterPulse'
 import { extractOwnedKeywords } from '../data/keywordExtractor'
 import { keywordDisplayName, keywordSummary } from '../data/keywordI18n'
 import { cardDesignations, pairedPartnerName, classLevelOf, evidenceCounts, protectorName, type Designation } from './designations'
 import { roomDoorKey, roomSidesLabel } from '../game/rooms'
 import { useChangeFlag } from '../game/useChangeFlag'
 import CardIcons from './CardIcons'
+import BadgeTip from '../ui/BadgeTip'
+import { mergeBadgeKeywords } from './cardBadges'
+import { useBadgeFit } from './useBadgeFit'
 import { basePtValue, ptTrend } from './ptTrend'
 import Icon from '../ui/Icon'
 import { clickableProps } from '../ui/clickable'
@@ -27,18 +33,13 @@ import { perfMark } from '../system/perfProbe'
 import { ManaPip } from '../decks/ArenaManaSymbols'
 import { artCropUrl, landTapColor, manaSourceSymbols, primaryCardType } from './compactCard'
 import type { KeywordIconSet, PtBadgeMode, SicknessStyle } from './cardOverlays'
-import KeywordGlyph, { isGlyphKeyword } from './KeywordGlyph'
+import KeywordGlyph, { badgeGlyphKey } from './KeywordGlyph'
 import { manaPoolElement, spawnManaParticle, type ManaSide } from './manaParticle'
 import './CardSlot.css'
 import './manaParticle.css'
 
 /** Cota del acuse optimista si el eco del servidor no llega nunca. */
 const PENDING_ACK_MS = 3000
-
-function pulseClass(pulse: CounterPulse | undefined): string {
-  if (!pulse) return ''
-  return ` counter-badge-changed counter-badge-${pulse.direction}${pulse.scale ? ' counter-badge-pulse' : ''}`
-}
 
 interface CardSlotProps {
   cardId?: string
@@ -169,18 +170,23 @@ export default function CardSlot({
       }
       const lastRect = el.getBoundingClientRect()
       if (lastRect.width > 0 && lastRect.height > 0) {
-        const prev = getPreviousCardPosition(effectiveId)
+        const commandFrom = el.closest('.command-zone') ? commandReturnSource(String(effectiveId)) : null
+        const prev = commandFrom?.rect ?? getPreviousCardPosition(effectiveId)
         const prevZone = getPreviousCardZone(effectiveId)
         if (prev && prev.width > 0) {
           const curZone = el.closest('.opponent-zone, .player-zone, .stack-zone, .hand-zone')
           const curZoneClass = curZone ? curZone.className.split(' ')[0] : ''
-          if (!prevZone || !curZoneClass || prevZone !== curZoneClass) {
-            const sourceSize = getPreviousCardSize(effectiveId)
+          const controlTint = controlChangeTint(String(effectiveId))
+          const shift = el.closest('.creatures-band, .permanents-band, .bz-marquee') ? creatureShiftOf(String(effectiveId)) : null
+          if (commandFrom || !prevZone || !curZoneClass || prevZone !== curZoneClass || controlTint || shift) {
+            const sourceSize = commandFrom ? commandFrom.size : getPreviousCardSize(effectiveId)
             const flyIn = (toRect: DOMRect) => {
               const enteringLand = (card.cardTypes ?? []).some((t) => String(t).toUpperCase() === 'LAND')
               const onBattlefield = !!el.closest('.creatures-band, .permanents-band')
-              const variant = !onBattlefield ? undefined : enteringLand ? 'land' : 'enter'
-              const flightId = startCardFlight(card, prev, toRect, onBattlefield ? ENTER_FLIGHT_MS : 340, `[data-card-id="${effectiveId}"]`, { sourceSize, toCompact: compact, variant })
+              const variant = commandFrom ? 'command' : !onBattlefield ? undefined : controlTint ? 'control' : shift === 'rise' ? 'animate' : shift ? undefined : enteringLand ? 'land' : 'enter'
+              const duration = commandFrom ? COMMAND_FLIGHT_MS : !onBattlefield ? 340 : controlTint ? CONTROL_FLIGHT_MS : shift === 'rise' ? ANIMATE_FLIGHT_MS : shift ? SETTLE_FLIGHT_MS : ENTER_FLIGHT_MS
+              const tint = controlTint ?? (shift === 'rise' ? animateTint(card) : null)
+              const flightId = startCardFlight(card, prev, toRect, duration, `[data-card-id="${effectiveId}"]`, { sourceSize, toCompact: compact, variant, tint: tint ?? undefined })
               if (!flightId) return
               setFlightState('hidden')
               const land = () => {
@@ -281,9 +287,12 @@ export default function CardSlot({
     : undefined
 
   const keywordBadges = useMemo(() => {
-    const kws = extractOwnedKeywords(card)
-    return kws.filter((k) => ['combat', 'evasion', 'protection'].includes(k.category)).slice(0, 4)
-  }, [card.rules, (card as unknown as { abilities?: unknown }).abilities, card.name])
+    return mergeBadgeKeywords(card.cardIcons, extractOwnedKeywords(card))
+  }, [card.rules, card.cardIcons, (card as unknown as { abilities?: unknown }).abilities, card.name])
+
+  const badgeRowRef = useRef<HTMLDivElement>(null)
+  const shownBadges = useBadgeFit(badgeRowRef, keywordBadges.length)
+  const hiddenBadges = keywordBadges.slice(shownBadges)
 
   const designations = useMemo(() => cardDesignations(card.rules), [card.rules])
   // Duskmourn Room doors never travel in the DTO; the unlocked sides are
@@ -649,16 +658,29 @@ const showPtBadge =
       )}
 
       {keywordBadges.length > 0 && (
-        <div className="keyword-badges" aria-label={t('wiki', 'tab_keywords')}>
-          {keywordBadges.map((kw) => (
-            <span
+        <div className="keyword-badges" ref={badgeRowRef} aria-label={t('wiki', 'tab_keywords')}>
+          {keywordBadges.slice(0, shownBadges).map((kw) => (
+            <BadgeTip
               key={kw.id}
-              className={isGlyphKeyword(kw.id) ? `keyword-badge is-glyph icons-${keywordIcons} kw-${kw.id}` : `keyword-badge cat-${kw.category}`}
-              title={`${keywordDisplayName(kw.id, kw.name, (k) => t('keywords', k), kw.parameter)} — ${keywordSummary(kw.id, (k) => t('keywords', k), kw.parameter)}`}
+              className={`keyword-badge is-glyph cat-${kw.category} icons-${keywordIcons} kw-${kw.id}`}
+              tip={{
+                title: keywordDisplayName(kw.id, kw.name, (k) => t('keywords', k), kw.parameter),
+                body: keywordSummary(kw.id, (k) => t('keywords', k), kw.parameter),
+              }}
             >
-              {isGlyphKeyword(kw.id) ? <KeywordGlyph keyword={kw.id} set={keywordIcons} /> : kw.icon}
-            </span>
+              <KeywordGlyph keyword={badgeGlyphKey(kw.id, kw.category)} set={keywordIcons} />
+            </BadgeTip>
           ))}
+          {hiddenBadges.length > 0 && (
+            <BadgeTip
+              className="keyword-badge keyword-badge-more"
+              tip={{
+                title: hiddenBadges.map((kw) => keywordDisplayName(kw.id, kw.name, (k) => t('keywords', k), kw.parameter)).join(', '),
+              }}
+            >
+              {`+${hiddenBadges.length}`}
+            </BadgeTip>
+          )}
         </div>
       )}
 

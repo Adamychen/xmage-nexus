@@ -25,6 +25,9 @@ import { playerRankRating } from '../lobby/ranking'
 import { speedLevelKey } from './speed'
 import { useChangeFlag } from './useChangeFlag'
 import { DamageNumbers } from '../board/DamageNumber'
+import { counterPulseClass } from '../board/useCounterPulse'
+import { POISON_LETHAL } from '../board/gameTransitionEngine'
+import { usePlayerCounters } from './usePlayerCounters'
 import './PlayerInfoBar.css'
 import type { CommandEntry } from './commandItems'
 
@@ -295,7 +298,8 @@ export default function PlayerInfoBar({
   const shownLife = useCombatHeld(player.playerId, player.life ?? 0)
   const life = useTweenNumber(shownLife)
 
-  const activeCounters = player.counters?.filter((c) => c.count > 0) ?? []
+  const { counters: activeCounters, pulses: counterPulses } = usePlayerCounters(player)
+  const speedPulse = Object.entries(counterPulses).find(([name]) => name.toLowerCase().includes('speed'))?.[1]
   const isDefeated = isPlayerOut(player)
   const wasDefeated = isPlayerDefeated(player)
   const showTurn = isTurnActive && !isDefeated
@@ -436,7 +440,8 @@ export default function PlayerInfoBar({
 
           {portraitSpeed != null && (
             <span
-              className="badge badge-designation badge-speed interactive-badge"
+              className={`badge badge-designation badge-speed interactive-badge${counterPulseClass(speedPulse)}`}
+              data-counter="speed"
               onClick={openMechanics}
               {...clickableProps(openMechanics)}
               title={t('game', 'mechanics_speed_title')}
@@ -444,7 +449,8 @@ export default function PlayerInfoBar({
               onMouseLeave={handleMouseLeave}
             >
               <Icon name="gauge" size={12} />
-              <span className="badge-label">{t('game', 'chip_speed', { speed: portraitSpeed })}</span>
+              <span className={`badge-label${speedPulse?.tick ? ` counter-tick is-${speedPulse.direction}` : ''}`}>{t('game', 'chip_speed', { speed: portraitSpeed })}</span>
+              {speedPulse?.scale && <span key={`ring-${speedPulse.seq}`} className="counter-change-ring" aria-hidden="true" />}
             </span>
           )}
 
@@ -474,16 +480,21 @@ export default function PlayerInfoBar({
     <>
       {activeCounters.filter((c) => !(portrait && c.name.toLowerCase().includes('speed'))).map((c) => {
             const tokenCard = getCounterTokenCard(c.name, c.count)
+            const kind = c.name.toLowerCase()
+            const pulse = counterPulses[c.name]
+            const lethal = kind === 'poison' && c.count >= POISON_LETHAL
             return (
               <span
                 key={c.name}
-                className={`counter player-counter-badge counter-${c.name.toLowerCase()} interactive-badge`}
-                title={`${c.name}: ${c.count}${c.name.toLowerCase() === 'poison' ? '/10' : ''}`}
+                className={`counter player-counter-badge counter-${kind} interactive-badge${counterPulseClass(pulse)}${lethal ? ' is-lethal' : ''}`}
+                data-counter={kind}
+                title={`${c.name}: ${c.count}${kind === 'poison' ? '/10' : ''}`}
                 onMouseEnter={(e) => handleMouseEnter(tokenCard, e)}
                 onMouseLeave={handleMouseLeave}
               >
                 <span className="counter-emoji">{renderCounterIcon(c.name)}</span>
-                <span className="counter-val">{c.count}</span>
+                <span className={`counter-val${pulse?.tick ? ` counter-tick is-${pulse.direction}` : ''}`}>{c.count}</span>
+                {pulse?.scale && <span key={`ring-${pulse.seq}`} className="counter-change-ring" aria-hidden="true" />}
               </span>
             )
           })}

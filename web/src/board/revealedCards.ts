@@ -39,7 +39,8 @@ export function opponentRevealedCards(
   const watched = game.watchedHands?.[player.name] ?? game.watchedHands?.[player.playerId]
   if (watched) {
     Object.entries(watched).forEach(([id, c]) => {
-      res[id] = { name: (c as { name?: string }).name ?? '?', manaValue: 0, expansionSetCode: '', cardNumber: '0', parentId: id, id }
+      const printing = c as { name?: string; expansionSetCode?: string; cardNumber?: string }
+      res[id] = { name: printing.name ?? '?', manaValue: 0, expansionSetCode: printing.expansionSetCode ?? '', cardNumber: printing.cardNumber ?? '0', parentId: id, id }
     })
   }
 

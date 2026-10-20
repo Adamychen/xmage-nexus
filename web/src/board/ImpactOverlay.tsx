@@ -1,5 +1,6 @@
-import type { CSSProperties } from 'react'
+import { useLayoutEffect, useRef, type CSSProperties } from 'react'
 import { useImpacts, particleVectors, type ImpactFx, type ManaColor } from './impactFx'
+import { wipeBoardRect } from './boardWipe'
 import './ImpactOverlay.css'
 
 function rgbVar(c: ManaColor | undefined): string {
@@ -24,6 +25,35 @@ function Particles({ fx, count, spread, className, rise = 0 }: { fx: ImpactFx; c
         />
       ))}
     </>
+  )
+}
+
+/** The board wipe's wash follows the board while it plays: the stack panel closes as the wipe resolves and the board widens under it. */
+function WipeItem({ style }: { style: Vars }) {
+  const ref = useRef<HTMLDivElement>(null)
+  useLayoutEffect(() => {
+    if (typeof requestAnimationFrame !== 'function') return
+    let raf = 0
+    const follow = () => {
+      const el = ref.current
+      const rect = wipeBoardRect()
+      if (el && rect) {
+        el.style.left = `${rect.left + rect.width / 2}px`
+        el.style.top = `${rect.top + rect.height / 2}px`
+        el.style.width = `${rect.width}px`
+        el.style.height = `${rect.height}px`
+      }
+      raf = requestAnimationFrame(follow)
+    }
+    raf = requestAnimationFrame(follow)
+    return () => cancelAnimationFrame(raf)
+  }, [])
+  return (
+    <div ref={ref} className="fx-burst fx-wipe" data-testid="fx-wipe" style={style}>
+      <span className="fx-wipe-dim" />
+      <span className="fx-wipe-flash" />
+      <span className="fx-wipe-wave" />
+    </div>
   )
 }
 
@@ -160,6 +190,137 @@ function ImpactItem({ fx }: { fx: ImpactFx }) {
           <span className="fx-eliminated-dim" />
           <span className="fx-eliminated-crack" />
           <Particles fx={fx} count={10} spread={Math.max(60, Math.min(fx.w, fx.h) * 0.45)} className="fx-shard fx-eliminated-shard" />
+        </div>
+      )
+    case 'wipe':
+      return <WipeItem style={at} />
+    case 'face-up':
+      return (
+        <div className="fx-burst fx-face-up" data-testid="fx-face-up" style={{ ...at, '--reveal-rgb': rgbVar(fx.colors[0]) } as Vars}>
+          <span className="fx-face-up-shroud" />
+          <span className="fx-face-up-burst" />
+          <span className="fx-face-up-ring" />
+          <Particles fx={fx} count={10} spread={Math.max(40, fx.w * 0.7)} className="fx-face-up-mote" />
+        </div>
+      )
+    case 'poison':
+      return (
+        <div className="fx-burst fx-poison" data-testid="fx-poison" style={at}>
+          <span className="fx-poison-splash" />
+          <Particles fx={fx} count={7} spread={Math.max(14, fx.w * 0.5)} rise={-Math.max(30, fx.h * 2.4)} className="fx-poison-drop" />
+        </div>
+      )
+    case 'poison-lethal':
+      return (
+        <div className="fx-burst fx-poison-lethal" data-testid="fx-poison-lethal" style={at}>
+          <span className="fx-poison-cloud" />
+          <span className="fx-poison-ring" />
+          <Particles fx={fx} count={14} spread={Math.max(50, fx.w * 0.55)} rise={-Math.max(40, fx.h * 0.8)} className="fx-poison-drop" />
+        </div>
+      )
+    case 'energy':
+      return (
+        <div className="fx-burst fx-energy" data-testid="fx-energy" style={at}>
+          <span className="fx-energy-flash" />
+          <span className="fx-energy-bolt" />
+          <Particles fx={fx} count={8} spread={Math.max(26, fx.w * 0.9)} className="fx-energy-spark" />
+        </div>
+      )
+    case 'control': {
+      const dx = (fx.toX ?? fx.x) - fx.x
+      const dy = (fx.toY ?? fx.y) - fx.y
+      return (
+        <div
+          className="fx-burst fx-control"
+          data-testid="fx-control"
+          style={{ ...at, '--tint': fx.tint ?? 'var(--gold-300)', '--len': `${Math.hypot(dx, dy)}px`, '--angle': `${Math.atan2(dy, dx)}rad` } as Vars}
+        >
+          <span className="fx-control-grip" />
+          <span className="fx-control-tether"><span className="fx-control-beam" /></span>
+          <span className="fx-control-anchor" style={{ '--ax': `${dx}px`, '--ay': `${dy}px` } as Vars} />
+        </div>
+      )
+    }
+    case 'command':
+      return (
+        <div className="fx-burst fx-command" data-testid="fx-command" style={at}>
+          <span className="fx-command-column" />
+          <span className="fx-command-ring" />
+          <span className="fx-command-crown" />
+          <Particles fx={fx} count={10} spread={Math.max(30, fx.w * 0.5)} rise={fx.h * 0.9} className="fx-command-mote" />
+        </div>
+      )
+    case 'tuck':
+      return (
+        <div className="fx-burst fx-tuck" data-testid="fx-tuck" style={at}>
+          <span className="fx-tuck-vortex" />
+          <Particles fx={fx} count={9} spread={Math.max(34, fx.w * 0.6)} className="fx-tuck-mote" />
+        </div>
+      )
+    case 'attach': {
+      const dx = (fx.toX ?? fx.x) - fx.x
+      const dy = (fx.toY ?? fx.y) - fx.y
+      return (
+        <div
+          className="fx-burst fx-attach"
+          data-testid="fx-attach"
+          style={{ ...at, '--attach-rgb': rgbVar(fx.colors[0]), '--len': `${Math.hypot(dx, dy)}px`, '--angle': `${Math.atan2(dy, dx)}rad` } as Vars}
+        >
+          <span className="fx-attach-frame" />
+          <span className="fx-attach-ring" />
+          <span className="fx-attach-tether"><span className="fx-attach-beam" /></span>
+          <span className="fx-attach-knot" style={{ '--ax': `${dx}px`, '--ay': `${dy}px` } as Vars} />
+        </div>
+      )
+    }
+    case 'mutate':
+      return (
+        <div className="fx-burst fx-mutate" data-testid="fx-mutate" style={{ ...at, '--mutate-a-rgb': rgbVar(fx.colors[0] ?? 'g'), '--mutate-b-rgb': rgbVar(fx.colors[1] ?? 'b') } as Vars}>
+          <span className="fx-mutate-flash" />
+          <span className="fx-mutate-ripple" />
+          <span className="fx-mutate-ripple fx-mutate-ripple--2" />
+          <span className="fx-mutate-ripple fx-mutate-ripple--3" />
+          <Particles fx={fx} count={12} spread={Math.max(40, fx.w * 0.75)} className="fx-mutate-mote" />
+        </div>
+      )
+    case 'animate':
+      return (
+        <div className="fx-burst fx-animate" data-testid="fx-animate" style={{ ...at, '--animate-rgb': rgbVar(fx.colors[0]) } as Vars}>
+          <span className="fx-animate-column" />
+          <span className="fx-animate-ring" />
+          <Particles fx={fx} count={10} spread={Math.max(26, fx.w * 0.45)} rise={Math.max(40, fx.h * 1.1)} className="fx-animate-mote" />
+        </div>
+      )
+    case 'emblem':
+      return (
+        <div className="fx-burst fx-emblem" data-testid="fx-emblem" style={at}>
+          <span className="fx-emblem-flash" />
+          <span className="fx-emblem-ring" />
+          <span className="fx-emblem-ring fx-emblem-ring--late" />
+          <Particles fx={fx} count={10} spread={Math.max(40, fx.w * 0.8)} className="fx-emblem-spark" />
+        </div>
+      )
+    case 'dungeon':
+      return (
+        <div className="fx-burst fx-dungeon" data-testid="fx-dungeon" style={at}>
+          <span className="fx-dungeon-glow" />
+          <span className="fx-dungeon-ring" />
+          <Particles fx={fx} count={8} spread={Math.max(24, fx.w * 0.6)} rise={Math.max(20, fx.h)} className="fx-dungeon-ember" />
+        </div>
+      )
+    case 'planeswalk':
+      return (
+        <div className="fx-burst fx-planeswalk" data-testid="fx-planeswalk" style={at}>
+          <span className="fx-planeswalk-portal" />
+          <span className="fx-planeswalk-flash" />
+          <Particles fx={fx} count={12} spread={Math.max(50, fx.w * 0.9)} className="fx-planeswalk-mote" />
+        </div>
+      )
+    case 'flip':
+      return (
+        <div className="fx-burst fx-flip" data-testid="fx-flip" style={{ ...at, '--flip-rgb': rgbVar(fx.colors[0]) } as Vars}>
+          <span className="fx-flip-flash" />
+          <span className="fx-flip-arc" />
         </div>
       )
   }

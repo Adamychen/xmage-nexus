@@ -1,10 +1,11 @@
 import type { PermanentView } from '../net/types'
 import { isMarqueePermanent } from './marquee'
 
+/** The band a permanent is drawn in. A creature that is also a land (Dryad Arbor, an animated Mutavault) fights, so it sits with the creatures, as on the desktop client. */
 export function permanentKind(perm: PermanentView): 'creatures' | 'lands' | 'other' {
   const types = perm.cardTypes ?? []
-  if (types.some((t) => t === 'Land' || t.toLowerCase() === 'land')) return 'lands'
   if (types.some((t) => t === 'Creature' || t.toLowerCase() === 'creature')) return 'creatures'
+  if (types.some((t) => t === 'Land' || t.toLowerCase() === 'land')) return 'lands'
   return 'other'
 }
 

@@ -59,4 +59,25 @@ test.describe('Keyword badges & hover', { tag: '@keywords' }, () => {
       await expect(kwBox).toContainText('Toque mortal')
     })
   })
+  for (const size of [{ width: 1600, height: 900 }, { width: 760, height: 520 }]) {
+    test(`keyword badge row stays inside its card at ${size.width}px`, async ({ page }) => {
+      await page.setViewportSize(size)
+      await withFakeServer(mechanicsScenario, async () => {
+        await startGame(page, { prefix: 'kw', tableName: TABLE.mechanics, deck: DECK.advanced })
+        await dismissInfoWindows(page)
+        const rows = page.locator('.card-slot .keyword-badges')
+        await expect(rows.first()).toBeVisible()
+        const overflow = await rows.evaluateAll((els) =>
+          els.filter((row) => {
+            const card = row.closest('.card-slot')!.getBoundingClientRect()
+            const r = row.getBoundingClientRect()
+            const kids = [...row.children].map((c) => c.getBoundingClientRect())
+            const sticksOut = kids.some((k) => k.right > r.right + 0.5 || k.left < r.left - 0.5)
+            return sticksOut || r.right > card.right + 0.5 || r.left < card.left - 0.5
+          }).length,
+        )
+        expect(overflow).toBe(0)
+      })
+    })
+  }
 })

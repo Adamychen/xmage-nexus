@@ -863,11 +863,31 @@ describe('CardSlot keywordIcons', () => {
     for (const b of badges) expect(b.classList.contains('icons-outline')).toBe(true)
   })
 
-  it('keeps the emoji for badge keywords outside the set', () => {
-    const { container } = withSet('outline', beast(['Menace']))
-    const badge = container.querySelector('.keyword-badge') as HTMLElement
-    expect(badge).not.toBeNull()
-    expect(badge.classList.contains('is-glyph')).toBe(false)
-    expect(badge.querySelector('svg')).toBeNull()
+  it('draws a glyph for every badge keyword and never an emoji', () => {
+    const { container } = withSet('outline', beast(['Menace, shadow, ward {2}']))
+    const badges = [...container.querySelectorAll('.keyword-badge')]
+    expect(badges.length).toBeGreaterThanOrEqual(2)
+    for (const b of badges) {
+      expect(b.classList.contains('is-glyph')).toBe(true)
+      expect(b.querySelector('svg')).not.toBeNull()
+    }
+  })
+
+  it('shows one badge when the server icon and the rules both say Flying', () => {
+    const card = { ...beast(['Flying']), cardIcons: [{ cardIconType: 'ABILITY_FLYING', text: '', hint: 'Flying' }] } as unknown as PermanentView
+    const { container } = render(<CardSlot card={card} showPt />)
+    expect(container.querySelectorAll('.keyword-badge.kw-flying')).toHaveLength(1)
+    expect(container.querySelector('.card-icon.ability')).toBeNull()
+  })
+
+  it('shows a tooltip with the keyword name and rules summary on hover', () => {
+    const { container } = render(<CardSlot card={beast(['Flying'])} showPt />)
+    const badge = container.querySelector('.keyword-badge.kw-flying') as HTMLElement
+    fireEvent.pointerEnter(badge)
+    const tip = document.querySelector('.badge-tip')
+    expect(tip).not.toBeNull()
+    expect(tip?.querySelector('.badge-tip-title')?.textContent).toBeTruthy()
+    fireEvent.pointerLeave(badge)
+    expect(document.querySelector('.badge-tip')).toBeNull()
   })
 })

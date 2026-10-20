@@ -45,6 +45,7 @@ import ShuffleOverlay from '../board/ShuffleOverlay'
 import DiceRollOverlay from '../board/DiceRollOverlay'
 import DesignationOverlay from '../board/DesignationOverlay'
 import ProjectileOverlay from '../board/ProjectileOverlay'
+import HandRevealOverlay from '../board/HandRevealOverlay'
 import { useDisplayedStack } from '../board/stackHold'
 import { useDisplayedGame } from '../board/damageHold'
 import { useGameTransitions } from '../board/gameTransitionEngine'
@@ -571,6 +572,7 @@ export default function GameScreen() {
               <DiceRollOverlay />
               <DesignationOverlay />
               <ProjectileOverlay />
+              <HandRevealOverlay />
               {v2 && stackCount > 0 && (
                 <StackDeck
                   stack={displayStack}

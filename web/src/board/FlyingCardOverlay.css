@@ -197,6 +197,139 @@
   100% { filter: none; opacity: 1; }
 }
 
+/* Control change: the card glows in its new controller's seat colour and trails it as it is pulled across. */
+.flying-card-item.flight-control {
+  --tint: var(--flight-tint, var(--gold-300));
+  border: 2px solid var(--tint);
+  box-shadow:
+    0 0 18px 3px color-mix(in srgb, var(--tint) 75%, transparent),
+    calc(var(--trail-ux, 0) * -16px) calc(var(--trail-uy, 0) * -16px) 18px 2px color-mix(in srgb, var(--tint) 55%, transparent),
+    calc(var(--trail-ux, 0) * -36px) calc(var(--trail-uy, 0) * -36px) 26px 0 color-mix(in srgb, var(--tint) 30%, transparent),
+    0 24px 48px var(--shade-4);
+}
+
+.flight-control .flying-card-glow {
+  background: linear-gradient(135deg, color-mix(in srgb, var(--tint) 45%, transparent) 0%, transparent 70%);
+  animation: flightControlGrip var(--flight-dur, 900ms) ease-out both;
+}
+
+@keyframes flightControlGrip {
+  0% { opacity: 0; }
+  28% { opacity: 1; }
+  100% { opacity: 0.35; }
+}
+
+/* Leaving a hidden zone: the back turns edge-on and the face comes round in its place. */
+.flying-card-back-cover {
+  position: absolute;
+  inset: 0;
+}
+
+.flight-reveal .flying-card-back-cover {
+  animation: flightRevealBack var(--flight-dur, 420ms) linear both;
+}
+
+.flight-reveal .flying-card-face {
+  animation: flightRevealFace var(--flight-dur, 420ms) linear both;
+}
+
+.flight-exile.flight-reveal .flying-card-face {
+  animation: flightRevealFace var(--flight-dur, 420ms) linear both, flightFadeLight var(--flight-dur, 420ms) ease-in both;
+}
+
+@keyframes flightRevealBack {
+  0%, 15% { scale: 1 1; opacity: 1; }
+  45% { scale: 0 1; opacity: 1; }
+  46%, 100% { scale: 0 1; opacity: 0; }
+}
+
+@keyframes flightRevealFace {
+  0%, 45% { scale: 0 1; }
+  75%, 100% { scale: 1 1; }
+}
+
+/* Going into a hidden zone (a library): the face turns edge-on and the back comes round in its place. */
+.flight-conceal .flying-card-face {
+  animation: flightConcealFace var(--flight-dur, 420ms) linear both;
+}
+
+.flight-conceal .flying-card-back-cover {
+  animation: flightConcealBack var(--flight-dur, 420ms) linear both;
+}
+
+@keyframes flightConcealFace {
+  0%, 20% { scale: 1 1; opacity: 1; }
+  50% { scale: 0 1; opacity: 1; }
+  51%, 100% { scale: 0 1; opacity: 0; }
+}
+
+@keyframes flightConcealBack {
+  0%, 50% { scale: 0 1; }
+  80%, 100% { scale: 1 1; }
+}
+
+/* Put on the library: a cool, dim card sinking into the pile. */
+.flying-card-item.flight-tuck {
+  border-color: rgb(var(--mana-u-rgb) / 0.7);
+  box-shadow: 0 18px 36px var(--shade-4), 0 0 18px rgb(var(--mana-u-rgb) / 0.45);
+}
+
+.flight-tuck .flying-card-glow {
+  background: linear-gradient(180deg, transparent 30%, rgb(var(--ink-rgb) / 0.55) 100%);
+  animation: flightFadeGlow var(--flight-dur, 420ms) ease-in both;
+}
+
+/* Back to the command zone: a regal gold-and-violet glow, and a sheen as the crown claims it. */
+.flying-card-item.flight-command {
+  border: 2px solid rgb(var(--gold-rgb) / 0.95);
+  box-shadow:
+    0 0 22px 4px rgb(var(--gold-rgb) / 0.7),
+    0 0 46px 10px rgb(var(--mana-b-rgb) / 0.35),
+    0 24px 48px var(--shade-4);
+}
+
+.flight-command .flying-card-glow {
+  background: linear-gradient(115deg, transparent 30%, rgb(var(--gold-rgb) / 0.6) 50%, transparent 70%);
+  background-size: 260% 100%;
+  animation: flightFoilSheen var(--flight-dur, 760ms) ease-in-out both;
+}
+
+/* Becomes a creature: the permanent rises from its band into the creature band, lit in its colour. */
+.flying-card-item.flight-animate {
+  --tint: var(--flight-tint, rgb(var(--gold-rgb)));
+  border: 2px solid var(--tint);
+  box-shadow:
+    0 0 22px 4px color-mix(in srgb, var(--tint) 75%, transparent),
+    0 18px 40px var(--shade-4);
+}
+
+.flight-animate .flying-card-glow {
+  background: linear-gradient(0deg, color-mix(in srgb, var(--tint) 55%, transparent) 0%, transparent 75%);
+  animation: flightControlGrip var(--flight-dur, 720ms) ease-out both;
+}
+
+/* Mutate: the spell drops onto its host, its colours bleeding into it. */
+.flying-card-item.flight-mutate {
+  border-color: rgb(var(--mana-g-rgb) / 0.9);
+  box-shadow: 0 0 24px 4px rgb(var(--mana-g-rgb) / 0.6), 0 0 40px 8px rgb(var(--mana-b-rgb) / 0.35), 0 24px 48px var(--shade-4);
+}
+
+.flight-mutate .flying-card-img {
+  animation: flightMutate var(--flight-dur, 560ms) ease-in both;
+}
+
+.flight-mutate .flying-card-glow {
+  background: radial-gradient(circle, rgb(var(--mana-g-rgb) / 0.55) 0%, rgb(var(--mana-b-rgb) / 0.3) 55%, transparent 100%);
+  animation: flightFadeGlow var(--flight-dur, 560ms) ease-in both;
+}
+
+@keyframes flightMutate {
+  0% { filter: none; opacity: 1; }
+  70% { filter: saturate(1.6) hue-rotate(-25deg) brightness(1.15); opacity: 1; }
+  100% { filter: saturate(2) hue-rotate(-40deg) brightness(1.5) blur(1px); opacity: 0.55; }
+}
+
+html.fx-off .flight-mutate .flying-card-img,
 html.fx-off .flight-sacrifice .flying-card-img,
 html.fx-off .flight-phase .flying-card-img,
 html.fx-off .flight-copy .flying-card-img,

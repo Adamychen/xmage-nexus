@@ -1,7 +1,12 @@
-interface CardIcon {
-  cardIconType?: string
-  text?: string
-  hint?: string
+function hintTip(hint: string | undefined, fallback: string) {
+  const lines = (hint ?? '')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<[^>]+>/g, '')
+    .split('\n')
+    .map((l) => l.trim())
+    .filter(Boolean)
+  if (lines.length === 0) return { title: fallback }
+  return { title: lines[0], body: lines.slice(1).join(' ') || undefined }
 }
 
 function abbrev(hint: string): string {
@@ -11,8 +16,12 @@ function abbrev(hint: string): string {
   return words.slice(0, 2).map((w) => w[0].toUpperCase()).join('')
 }
 
+import { useState } from 'react'
 import { t as tStatic } from '../i18n'
+import BadgeTip from '../ui/BadgeTip'
 import Icon from '../ui/Icon'
+import { iconKeywordId } from './cardBadges'
+import { gainedIconKeys, iconKey, isGoadIcon, type CardIconLike as CardIcon } from './cardIconFx'
 
 /**
  * Renders the restriction / ability icons the server sends on each card
@@ -23,26 +32,37 @@ import Icon from '../ui/Icon'
  * through the view's restriction icon, not a dedicated field.
  */
 export default function CardIcons({ icons }: { icons?: CardIcon[] }) {
+  const [seen, setSeen] = useState<CardIcon[] | undefined>(icons)
+  const [gained, setGained] = useState<string[]>([])
+  if (seen !== icons) {
+    const keys = (icons ?? []).map(iconKey)
+    setSeen(icons)
+    setGained([...gained.filter((key) => keys.includes(key)), ...gainedIconKeys(seen, icons)])
+  }
   if (!icons || icons.length === 0) return null
   const restrictions = icons.filter((i) => i.cardIconType === 'OTHER_HAS_RESTRICTIONS')
-  const others = icons.filter((i) => i.cardIconType !== 'OTHER_HAS_RESTRICTIONS')
+  const others = icons.filter((i) => i.cardIconType !== 'OTHER_HAS_RESTRICTIONS' && !iconKeywordId(i))
   if (restrictions.length === 0 && others.length === 0) return null
 
   return (
     <div className="card-icons">
       {restrictions.map((r, i) => (
-        <span
+        <BadgeTip
           key={`r${i}`}
-          className="card-icon restriction"
-          title={r.hint?.replace(/<br>/g, '\n') ?? tStatic('board', 'restriction_fallback')}
+          className={`card-icon restriction${gained.includes(iconKey(r)) ? (isGoadIcon(r) ? ' icon-gained icon-gained--goad' : ' icon-gained') : ''}`}
+          tip={hintTip(r.hint, tStatic('board', 'restriction_fallback'))}
         >
           {r.text || <Icon name="alert" size={11} />}
-        </span>
+        </BadgeTip>
       ))}
       {others.map((o, i) => (
-        <span key={`a${i}`} className="card-icon ability" title={o.hint}>
+        <BadgeTip
+          key={`a${i}`}
+          className={`card-icon ability${gained.includes(iconKey(o)) ? ' icon-gained' : ''}`}
+          tip={hintTip(o.hint, o.text || tStatic('board', 'restriction_fallback'))}
+        >
           {o.text || abbrev(o.hint ?? '')}
-        </span>
+        </BadgeTip>
       ))}
     </div>
   )

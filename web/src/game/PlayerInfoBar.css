@@ -271,9 +271,9 @@ html.fx-off .life-value {
 }
 
 .counter-poison {
-  background: rgb(var(--purple-rgb) / 0.15);
-  border-color: rgb(var(--purple-rgb) / 0.35);
-  color: var(--purple);
+  background: rgb(var(--toxic-rgb) / 0.14);
+  border-color: rgb(var(--toxic-rgb) / 0.4);
+  color: var(--toxic);
 }
 
 .counter-hand {
@@ -292,6 +292,155 @@ html.fx-off .life-value {
   background: rgb(var(--ok-rgb) / 0.25);
   border-color: rgb(var(--ok-rgb) / 0.6);
   color: var(--ok);
+}
+
+/* A player counter whose count changed (useCounterPulse via usePlayerCounters): the badge pops,
+   flashes in its own colour, a ring spreads and the number ticks. Poison also drips toxic green,
+   energy jolts yellow; ten poison counters keep the badge glowing. The change itself floats up
+   from the badge (gameTransitionEngine `animatePlayerCounter`). */
+.player-counter-badge,
+.player-badges .badge-speed {
+  position: relative;
+  --pulse-rgb: var(--gold-rgb);
+}
+
+.player-counter-badge.counter-poison { --pulse-rgb: var(--toxic-rgb); }
+.player-counter-badge.counter-energy { --pulse-rgb: var(--volt-rgb); }
+.player-counter-badge.counter-rad { --pulse-rgb: var(--ok-rgb); }
+.player-counter-badge.counter-experience { --pulse-rgb: var(--purple-rgb); }
+.player-counter-badge.counter-ticket { --pulse-rgb: var(--brand-rgb); }
+.player-counter-badge.counter-speed,
+.player-badges .badge-speed { --pulse-rgb: var(--ember-rgb); }
+
+.is-portrait .player-chips .player-counter-badge.counter-poison {
+  background: rgb(var(--toxic-rgb) / 0.14);
+  border-color: rgb(var(--toxic-rgb) / 0.45);
+  color: var(--toxic);
+}
+
+.is-portrait .player-chips .player-counter-badge.counter-energy {
+  background: rgb(var(--volt-rgb) / 0.12);
+  border-color: rgb(var(--volt-rgb) / 0.45);
+  color: var(--volt);
+}
+
+.player-counter-badge.counter-badge-changed,
+.player-badges .badge-speed.counter-badge-changed {
+  box-shadow: 0 0 12px 2px rgb(var(--pulse-rgb) / 0.85);
+  filter: brightness(1.3);
+}
+
+.player-counter-badge.counter-badge-pulse,
+.player-badges .badge-speed.counter-badge-pulse {
+  animation: playerCounterPulse calc(0.5s / var(--fx-speed, 1)) linear;
+}
+
+@keyframes playerCounterPulse {
+  0% { scale: 1; animation-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1); }
+  40% { scale: 1.4; animation-timing-function: ease-in-out; }
+  70% { scale: 0.96; animation-timing-function: ease-out; }
+  100% { scale: 1; }
+}
+
+.player-counter-badge .counter-change-ring,
+.player-badges .badge-speed .counter-change-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  border: 2px solid rgb(var(--pulse-rgb) / 0.95);
+  box-shadow: 0 0 10px 1px rgb(var(--pulse-rgb) / 0.8);
+  pointer-events: none;
+  animation: playerCounterRing calc(0.5s / var(--fx-speed, 1)) var(--ease-out) both;
+}
+
+@keyframes playerCounterRing {
+  0% { scale: 1; opacity: 0.95; }
+  100% { scale: 2.1; opacity: 0; }
+}
+
+.player-counter-badge .counter-tick,
+.player-badges .badge-speed .counter-tick {
+  display: inline-block;
+  animation: playerCounterTickUp calc(0.3s / var(--fx-speed, 1)) ease-out;
+}
+
+.player-counter-badge .counter-tick.is-down,
+.player-badges .badge-speed .counter-tick.is-down {
+  animation-name: playerCounterTickDown;
+}
+
+@keyframes playerCounterTickUp {
+  0% { translate: 0 60%; opacity: 0; }
+  100% { translate: 0 0; opacity: 1; }
+}
+
+@keyframes playerCounterTickDown {
+  0% { translate: 0 -60%; opacity: 0; }
+  100% { translate: 0 0; opacity: 1; }
+}
+
+.player-counter-badge.counter-poison.counter-badge-up::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  width: 6px;
+  height: 9px;
+  border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+  background: rgb(var(--toxic-rgb));
+  box-shadow: 0 0 6px rgb(var(--toxic-rgb) / 0.9);
+  pointer-events: none;
+  animation: playerPoisonDrip calc(0.8s / var(--fx-speed, 1)) cubic-bezier(0.55, 0, 0.9, 0.5) both;
+}
+
+@keyframes playerPoisonDrip {
+  0% { translate: -50% -100%; scale: 0.4; opacity: 0; }
+  25% { translate: -50% -40%; scale: 1; opacity: 1; }
+  100% { translate: -50% 160%; scale: 0.7; opacity: 0; }
+}
+
+.player-counter-badge.counter-energy.counter-badge-changed .counter-emoji {
+  animation: playerEnergyJolt calc(0.5s / var(--fx-speed, 1)) steps(5, end);
+}
+
+@keyframes playerEnergyJolt {
+  0% { translate: 0 0; filter: drop-shadow(0 0 6px rgb(var(--volt-rgb))); }
+  25% { translate: -1px 1px; }
+  50% { translate: 1px -1px; filter: drop-shadow(0 0 10px rgb(var(--volt-rgb))); }
+  75% { translate: -1px 0; }
+  100% { translate: 0 0; filter: none; }
+}
+
+.player-counter-badge.counter-poison.is-lethal {
+  animation: playerPoisonLethal calc(1.4s / var(--fx-speed, 1)) ease-in-out infinite;
+}
+
+.player-counter-badge.counter-poison.is-lethal.counter-badge-pulse {
+  animation: playerCounterPulse calc(0.5s / var(--fx-speed, 1)) linear, playerPoisonLethal calc(1.4s / var(--fx-speed, 1)) ease-in-out infinite;
+}
+
+@keyframes playerPoisonLethal {
+  0%, 100% { box-shadow: 0 0 6px 1px rgb(var(--toxic-rgb) / 0.5); }
+  50% { box-shadow: 0 0 16px 4px rgb(var(--toxic-rgb) / 0.95); }
+}
+
+html.fx-off .player-counter-badge,
+html.fx-off .player-counter-badge *,
+html.fx-off .player-counter-badge::after,
+html.fx-off .player-badges .badge-speed,
+html.fx-off .player-badges .badge-speed * {
+  animation: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .player-counter-badge.counter-badge-pulse,
+  .player-badges .badge-speed.counter-badge-pulse,
+  .player-counter-badge .counter-change-ring,
+  .player-counter-badge .counter-tick,
+  .player-counter-badge.counter-poison.counter-badge-up::after,
+  .player-counter-badge.counter-energy.counter-badge-changed .counter-emoji {
+    animation: none;
+  }
 }
 
 /* Priority Timer Clock */
@@ -427,12 +576,25 @@ html.fx-off .life-value {
   animation: badgeDayNightTurn calc(0.9s / var(--fx-speed, 1)) cubic-bezier(0.2, 0.9, 0.3, 1.2);
 }
 
-html.fx-off .badge-daynight.is-turning {
+/* A dungeon room entered: the badge flares like a torch and pops. */
+@keyframes badgeDungeonAdvance {
+  0% { scale: 1; box-shadow: 0 0 0 0 rgb(var(--ember-rgb) / 0); }
+  30% { scale: 1.3; box-shadow: 0 0 16px 4px rgb(var(--ember-rgb) / 0.85); filter: brightness(1.5); }
+  100% { scale: 1; box-shadow: 0 0 0 0 rgb(var(--ember-rgb) / 0); filter: none; }
+}
+
+.badge-dungeon.fx-dungeon-advance {
+  animation: badgeDungeonAdvance calc(0.9s / var(--fx-speed, 1)) cubic-bezier(0.2, 0.9, 0.3, 1.2);
+}
+
+html.fx-off .badge-daynight.is-turning,
+html.fx-off .badge-dungeon.fx-dungeon-advance {
   animation: none !important;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .badge-daynight.is-turning {
+  .badge-daynight.is-turning,
+  .badge-dungeon.fx-dungeon-advance {
     animation: none;
   }
 }

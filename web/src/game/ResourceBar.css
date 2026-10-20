@@ -437,3 +437,93 @@
   }
 }
 
+
+/* Library running out: a steady red glow at three cards or fewer, a red
+   outline at none, and one crack-and-flash when it empties. */
+.library-stack.library-low,
+.library-chip.library-low {
+  border-color: rgb(var(--err-rgb) / 0.85);
+  box-shadow: 0 0 12px rgb(var(--err-rgb) / 0.55), 0 4px 10px var(--shade-3);
+  animation: libraryLowBreath calc(2.4s / var(--fx-speed, 1)) ease-in-out infinite;
+}
+
+.library-stack.library-low .stack-count,
+.library-chip.library-low .chip-count {
+  color: rgb(var(--err-rgb));
+}
+
+.library-stack.library-empty,
+.library-chip.library-empty {
+  border: 1.5px solid rgb(var(--err-rgb) / 0.9);
+  box-shadow: 0 0 10px rgb(var(--err-rgb) / 0.5);
+}
+
+.library-stack.library-empty .stack-count,
+.library-chip.library-empty .chip-count {
+  display: flex;
+  color: rgb(var(--err-rgb));
+}
+
+.library-stack.library-cracking,
+.library-chip.library-cracking {
+  animation: libraryCrackShake calc(0.5s / var(--fx-speed, 1)) ease-out;
+}
+
+.library-stack.library-cracking::after,
+.library-chip.library-cracking::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  pointer-events: none;
+  border-radius: inherit;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 56' preserveAspectRatio='none'%3E%3Cpath d='M22 0 L17 12 L25 20 L15 31 L23 40 L18 56 M17 12 L7 16 M25 20 L35 17 M15 31 L4 36 M23 40 L33 45' fill='none' stroke='white' stroke-width='1.6' stroke-linejoin='bevel'/%3E%3C/svg%3E") center / 100% 100% no-repeat,
+    radial-gradient(circle at 50% 50%, rgb(var(--err-rgb) / 0.85), transparent 70%);
+  animation: libraryCrackFlash calc(1.3s / var(--fx-speed, 1)) ease-out forwards;
+}
+
+@keyframes libraryLowBreath {
+  0%, 100% { box-shadow: 0 0 8px rgb(var(--err-rgb) / 0.4), 0 4px 10px var(--shade-3); }
+  50% { box-shadow: 0 0 16px rgb(var(--err-rgb) / 0.75), 0 4px 10px var(--shade-3); }
+}
+
+@keyframes libraryCrackShake {
+  0%, 100% { translate: 0 0; }
+  15% { translate: -3px 1px; }
+  35% { translate: 3px -1px; }
+  55% { translate: -2px 0; }
+  75% { translate: 1px 0; }
+}
+
+@keyframes libraryCrackFlash {
+  0% { opacity: 0; scale: 1.2; }
+  12% { opacity: 1; scale: 1; }
+  60% { opacity: 0.9; }
+  100% { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .library-stack.library-low,
+  .library-chip.library-low,
+  .library-stack.library-cracking,
+  .library-chip.library-cracking {
+    animation: none;
+  }
+
+  .library-stack.library-cracking::after,
+  .library-chip.library-cracking::after {
+    display: none;
+  }
+}
+
+html.fx-off .library-stack.library-low,
+html.fx-off .library-chip.library-low,
+html.fx-off .library-stack.library-cracking,
+html.fx-off .library-chip.library-cracking {
+  animation: none !important;
+}
+
+html.fx-off .library-stack.library-cracking::after,
+html.fx-off .library-chip.library-cracking::after {
+  display: none;
+}

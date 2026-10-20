@@ -1,0 +1,95 @@
+.hand-reveal-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 999970;
+  overflow: hidden;
+}
+
+/* A revealed hand: each card leaves the hand face down, fans out beside it and turns face up in turn,
+   holds, then the fan folds back into the hand. */
+.hand-reveal-card {
+  position: fixed;
+  perspective: 700px;
+  animation: handRevealFan var(--card-dur) cubic-bezier(0.25, 0.8, 0.35, 1) var(--card-delay) both;
+}
+
+.hand-reveal-turn {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  animation: handRevealTurn var(--card-dur) ease-in-out var(--card-delay) both;
+}
+
+.hand-reveal-face,
+.hand-reveal-back {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: var(--r-base);
+  backface-visibility: hidden;
+  box-shadow: 0 10px 26px var(--shade-4);
+}
+
+.hand-reveal-face {
+  overflow: hidden;
+  background: var(--ink-2);
+  border: 1px solid rgb(var(--gold-rgb) / 0.6);
+  animation: handRevealGlow var(--card-dur) ease-out var(--card-delay) both;
+}
+
+.hand-reveal-face img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.hand-reveal-name {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: var(--sp-1);
+  text-align: center;
+  font-family: var(--font-ui);
+  font-size: var(--fs-2xs);
+  color: var(--fg-hi);
+}
+
+.hand-reveal-back {
+  rotate: y 180deg;
+  object-fit: cover;
+}
+
+@keyframes handRevealFan {
+  0% { opacity: 0; transform: translate(var(--dx0), var(--dy0)) scale(0.3) rotate(0deg); }
+  8% { opacity: 1; }
+  24% { transform: translate(0, 0) scale(1.06) rotate(var(--rot)); }
+  32% { transform: translate(0, 0) scale(1) rotate(var(--rot)); }
+  80% { opacity: 1; transform: translate(0, 0) scale(1) rotate(var(--rot)); }
+  100% { opacity: 0; transform: translate(var(--dx0), var(--dy0)) scale(0.3) rotate(0deg); }
+}
+
+@keyframes handRevealTurn {
+  0%, 16% { rotate: y 180deg; }
+  34% { rotate: y -10deg; }
+  42%, 100% { rotate: y 0deg; }
+}
+
+@keyframes handRevealGlow {
+  0%, 30% { box-shadow: 0 10px 26px var(--shade-4), 0 0 0 0 rgb(var(--gold-rgb) / 0); filter: brightness(1); }
+  38% { box-shadow: 0 10px 26px var(--shade-4), 0 0 22px 4px rgb(var(--gold-rgb) / 0.85); filter: brightness(1.45); }
+  60%, 100% { box-shadow: 0 10px 26px var(--shade-4), 0 0 12px 1px rgb(var(--gold-rgb) / 0.45); filter: brightness(1); }
+}
+
+html.fx-off .hand-reveal-overlay {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hand-reveal-overlay {
+    display: none;
+  }
+}

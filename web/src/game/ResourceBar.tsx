@@ -9,6 +9,7 @@ import CardSlot from '../board/CardSlot'
 import { CountFlash, useCountFlash } from './useCountFlash'
 import Icon from '../ui/Icon'
 import { useTranslation } from '../i18n'
+import { useLibraryRunOut } from './libraryRunOut'
 import ManaPoolView, { type ManaPoolKey } from './ManaPoolView'
 import { useStore } from '../state/store'
 import { sendPlayerManaType } from '../net/commands'
@@ -105,6 +106,7 @@ export default function ResourceBar({
   const topExileCard = useMemo(() => (exileCards.length > 0 ? exileCards[exileCards.length - 1] : null), [exileCards])
 
   const libraryFlash = useCountFlash(player.libraryCount ?? 0)
+  const libraryRunOut = useLibraryRunOut(player.libraryCount)
   const graveyardFlash = useCountFlash(graveyardCount)
   const exileFlash = useCountFlash(exileCount)
 
@@ -217,7 +219,7 @@ export default function ResourceBar({
             <button
               type="button"
               data-library-count={player.libraryCount}
-              className={`resource-chip library-chip clickable-pile ${player.topCard ? 'has-top-revealed' : ''}${libraryHighlight ? ' target-zone' : ''}`}
+              className={`resource-chip library-chip clickable-pile ${player.topCard ? 'has-top-revealed' : ''}${libraryHighlight ? ' target-zone' : ''} ${libraryRunOut}`}
               title={
                 player.topCard
                   ? `${t('game', 'pile_library')}: ${player.libraryCount} (${player.topCard.name})`
@@ -311,7 +313,7 @@ export default function ResourceBar({
             <button
               type="button"
               data-library-count={player.libraryCount}
-              className={`resource-stack library-stack clickable-pile ${player.topCard ? 'has-top-revealed' : ''}${libraryHighlight ? ' target-zone' : ''}`}
+              className={`resource-stack library-stack clickable-pile ${player.topCard ? 'has-top-revealed' : ''}${libraryHighlight ? ' target-zone' : ''} ${libraryRunOut}`}
               title={
                 player.topCard
                   ? `${t('game', 'pile_library')}: ${player.libraryCount} (${player.topCard.name})`

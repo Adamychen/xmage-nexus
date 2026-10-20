@@ -25,6 +25,12 @@ export interface FlightRecord {
   fromCompact?: boolean
   /** The clone lands on a compact art-crop tile: it ends as that landscape art crop. */
   toCompact?: boolean
+  /** The clone leaves a hidden zone face down and turns face up halfway. */
+  reveal?: boolean
+  /** The clone leaves face up and turns face down halfway, into a hidden zone. */
+  conceal?: boolean
+  /** A CSS colour the flight glows in (a control change wears the new controller's seat colour). */
+  tint?: string
 }
 
 /** Entrada al campo: subida al centro, pausa y caída (ver FlyingCardOverlay). */
@@ -33,7 +39,7 @@ export const ENTER_FLIGHT_MS = 1100
 export const ENTER_LAND_AT = 0.8
 export const CAST_FLIGHT_MS = 900
 
-export type FlightVariant = 'destroy' | 'exile' | 'heavy' | 'land' | 'enter' | 'phase' | 'sacrifice' | 'copy'
+export type FlightVariant = 'destroy' | 'exile' | 'heavy' | 'land' | 'enter' | 'phase' | 'sacrifice' | 'copy' | 'control' | 'command' | 'tuck' | 'mutate' | 'animate'
 
 export type FlightTrail = 'gold'
 
@@ -137,6 +143,11 @@ export interface FlightOptions {
   fromCompact?: boolean
   /** The destination is a compact art-crop tile. Defaults to probing `toSelector` in the DOM. */
   toCompact?: boolean
+  /** The card leaves a hidden zone (library, an opponent's hand): it starts face down and turns face up halfway. */
+  reveal?: boolean
+  /** The card goes into a hidden zone (a library): it starts face up and turns face down halfway. */
+  conceal?: boolean
+  tint?: string
 }
 
 /** Whether the element a selector matches is (or sits inside) a compact art-crop tile. */
@@ -265,6 +276,7 @@ export function startCardFlight(
         existing.card = card
         if (options?.variant) existing.variant = options.variant
         if (options?.trail) existing.trail = options.trail
+        if (options?.tint) existing.tint = options.tint
         existing.duration = Math.min(age + Math.round(scaledDuration * 0.8), age + 1200)
         existing.timers?.forEach((t) => clearTimeout(t))
         existing.timers = scheduleFlightTimers(existing)
@@ -299,6 +311,9 @@ export function startCardFlight(
     lift: options?.lift,
     fromCompact: fromCompact || undefined,
     toCompact: toCompact || undefined,
+    reveal: (options?.reveal === true && card.faceDown !== true) || undefined,
+    conceal: (options?.conceal === true && options?.reveal !== true && card.faceDown !== true) || undefined,
+    tint: options?.tint,
   }
 
   activeFlights = [...activeFlights, record]

@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from 'react'
 import { fxMotionDuration } from './fx'
 
-export type FeedbackTone = 'bad' | 'good' | 'poison'
+export type FeedbackTone = 'bad' | 'good' | 'mixed' | 'poison' | 'energy'
 
 export interface FloaterFx {
   id: number
@@ -10,6 +10,8 @@ export interface FloaterFx {
   y: number
   tone: FeedbackTone
   duration: number
+  /** Drawn on a dark pill, readable over card art. */
+  boxed?: boolean
 }
 
 export interface BannerFx {
@@ -67,7 +69,8 @@ export function spawnFloater(
   dedupeKey: string,
   rect: DOMRect | null,
   text: string,
-  tone: FeedbackTone
+  tone: FeedbackTone,
+  boxed = false
 ): void {
   const duration = fxMotionDuration(1150)
   if (!duration || !rect || rect.width <= 0 || rect.height <= 0) return
@@ -82,6 +85,7 @@ export function spawnFloater(
     y: rect.top + rect.height * 0.18,
     tone,
     duration,
+    ...(boxed ? { boxed } : null),
   }
   state = { ...state, floaters: [...state.floaters, item].slice(-MAX_FLOATERS) }
   notify()

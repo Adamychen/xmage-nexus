@@ -90,7 +90,17 @@ export function commandersOf(player: PlayerView | undefined): CommanderInfo[] {
   return out
 }
 
-// ── Memoria de partida (roster de comandantes) ─────────────────────────────────────────
+/** The commanders sitting in a player's command zone right now (a companion only when the engine marked it as the commander). */
+export function commandZoneCommanders(player: PlayerView | undefined): Map<string, CardView> {
+  const out = new Map<string, CardView>()
+  if (!player) return out
+  for (const i of parseCommandList(player.commandList, player.helperCards ?? {})) {
+    if (i.isCommander || (i.isCompanion && isCommanderObject(i.card))) out.set(i.id, i.card)
+  }
+  return out
+}
+
+// ── Memoria de partida (roster de comandantes)─────────────────────────────────────────
 // El daño de comandante NO tiene campo en el view (`PlayerView`/`GameView` no lo exponen):
 // viaja solo en las `rules` del objeto del comandante (CommanderInfoWatcher → cardState
 // info, clave "Commander"+playerUUID, con el TOTAL acumulado por pareja comandante/jugador).

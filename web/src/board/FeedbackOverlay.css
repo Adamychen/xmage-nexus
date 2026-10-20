@@ -27,8 +27,27 @@
   color: var(--ok);
 }
 
+.fx-floater.mixed {
+  color: var(--gold-300);
+}
+
+.fx-floater.is-boxed {
+  font-size: var(--fs-lg);
+  line-height: 1.1;
+  padding: var(--sp-0h) var(--sp-1h);
+  border-radius: var(--r-sm);
+  background: var(--shade-5);
+  border: 1.5px solid currentColor;
+  text-shadow: 0 1px 3px var(--shade-5);
+  box-shadow: 0 0 12px var(--shade-4);
+}
+
 .fx-floater.poison {
-  color: var(--purple-fg);
+  color: var(--toxic);
+}
+
+.fx-floater.energy {
+  color: var(--volt);
 }
 
 @keyframes fxFloatUp {

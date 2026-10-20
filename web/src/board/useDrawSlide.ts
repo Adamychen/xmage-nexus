@@ -1,7 +1,7 @@
 import { useLayoutEffect, useRef, useState } from 'react'
 import type { RefObject } from 'react'
 import { fxMotionAllowed, fxMotionDuration, fxOpacityAllowed, fxOpacityDuration } from './fx'
-import { drawnCardIds, drawOffset } from './drawSlide'
+import { drawnCardIds, drawOffset, handReturnPile, pileAnchor } from './drawSlide'
 
 export type DrawMode = 'slide' | 'fade'
 
@@ -52,11 +52,13 @@ export function useDrawSlide(
     const fresh = enabled && mode && scope ? drawnCardIds(prev, next) : []
 
     if (scope && mode && fresh.length > 0) {
-      const anchorEl = anchorElement(scope, { scope: anchorScope, select: anchorSelect })
-      const anchorRect = anchorEl?.getBoundingClientRect()
+      const libraryRect = anchorElement(scope, { scope: anchorScope, select: anchorSelect })?.getBoundingClientRect()
       const ms = mode === 'slide' ? fxMotionDuration(DRAW_SLIDE_MS) : fxOpacityDuration(DRAW_FADE_MS)
       for (const slot of Array.from(scope.querySelectorAll<HTMLElement>('[data-hand-id]'))) {
-        if (!fresh.includes(slot.dataset.handId ?? '')) continue
+        const id = slot.dataset.handId ?? ''
+        if (!fresh.includes(id)) continue
+        const pile = handReturnPile(id)
+        const anchorRect = (pile ? anchorElement(scope, { scope: anchorScope, select: pileAnchor(anchorSelect, pile) })?.getBoundingClientRect() : null) ?? libraryRect
         const offset = anchorRect ? drawOffset(anchorRect, slot.getBoundingClientRect()) : { dx: 0, dy: 0 }
         slot.style.setProperty('--draw-dx', `${offset.dx}px`)
         slot.style.setProperty('--draw-dy', `${offset.dy}px`)

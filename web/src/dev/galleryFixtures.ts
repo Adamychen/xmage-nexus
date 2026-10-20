@@ -6,6 +6,7 @@ import { forgetCoinFlip } from '../board/coinFlipFx'
 import type {
   CardView,
   GameView,
+  PermanentView,
   PlayerView,
   LobbyEnvelope,
   TableView,
@@ -30,6 +31,9 @@ import manifest from '../../fixtures/recorded/manifest.json'
 import { replayProjectileDemo } from './projectileDemo'
 import type { GameUi } from '../game/gameUi'
 import { handleChatMessage } from '../state/events/chat'
+import { STEPS } from '../game/phaseSteps'
+import { observeTurnRecap, resetTurnRecap, type TurnRecap } from '../game/turnRecap'
+import { CAST_FLIGHT_MS } from '../board/flightManager'
 
 interface FrameModule {
   default: { gameId: string; gameView: GameView }
@@ -420,6 +424,9 @@ const GALLERY_ISO_END = new Date(GALLERY_EPOCH + 14 * 60_000).toISOString()
 
 const GANG_BLOCK_FRAME = recordedFrames.find((f) => f.file === 'gang-block.json')
 const COMMANDER_FRAME = recordedFrames.find((f) => f.file === 'commander-free-mulligan.json')
+const COMMANDER_ZONE_FRAME = recordedFrames.find((f) => f.file === 'commander-zone.json')
+const EMBLEM_FRAME = recordedFrames.find((f) => f.file === 'emblem.json')
+const DUNGEON_FRAME = recordedFrames.find((f) => f.file === 'dungeon.json')
 const SLICER_ASK_RULE =
   "At the beginning of each opponent's upkeep, you may have that player gain control of {this} until end of turn. If you do, untap {this}, goad it, and it can't be sacrificed this turn. If you don't, convert it."
 
@@ -765,6 +772,11 @@ function calmGame(game: GameView): GameView {
   return { ...game, combat: [] }
 }
 
+function mapOpponent(game: GameView, fn: (player: PlayerView) => PlayerView): GameView {
+  const opponent = opponentPlayer(game)
+  return { ...game, players: players(game).map((p) => (p === opponent ? fn(p) : p)) }
+}
+
 function mapControlled(game: GameView, fn: (player: PlayerView) => PlayerView): GameView {
   const me = controlledPlayer(game)
   return { ...game, players: players(game).map((p) => (p === me ? fn(p) : p)) }
@@ -851,6 +863,11 @@ function addDamage(game: GameView, id: string, amount: number): GameView {
   })
 }
 
+/** The id a spell's card has once it leaves the stack: the server keys a stack spell by its spell ability id, not by its card id. */
+function cardIdOf(spellId: string): string {
+  return `${spellId}-card`
+}
+
 function bolt(id: string, controller: PlayerView | undefined): CardView {
   return {
     id,
@@ -878,7 +895,7 @@ function resolveDamageSpellAtMe(game: GameView, spellId: string, amount: number)
     stack,
     players: players(game).map((p) => {
       if (p === me) return { ...p, life: (p.life ?? 0) - amount }
-      if (p.playerId === spell.controllerId) return { ...p, graveyard: { ...p.graveyard, [spellId]: spell } }
+      if (p.playerId === spell.controllerId) return { ...p, graveyard: { ...p.graveyard, [cardIdOf(spellId)]: { ...spell, id: cardIdOf(spellId) } } }
       return p
     }),
   }
@@ -955,12 +972,14 @@ function replayQuiet(base: GameView, gameId: string, change: (game: GameView) =>
   }
 }
 
-/** Sets the count of one +1/+1 counter on a permanent; the server sends counters as {name, count} pairs. */
+/** Sets the count of one +1/+1 counter on a permanent, and its P/T with it; the server sends counters as {name, count} pairs. */
 function withPlusCounter(game: GameView, id: string, count: number): GameView {
   return mapControlled(game, (p) => {
     const perm = p.battlefield?.[id]
     if (!perm) return p
-    return { ...p, battlefield: { ...p.battlefield, [id]: { ...perm, counters: [{ name: '+1/+1', count }] } } }
+    const delta = count - (perm.counters ?? []).filter((c) => c.name === '+1/+1').reduce((n, c) => n + (c.count ?? 0), 0)
+    const bump = (value: unknown) => String((parseInt(String(value ?? '0'), 10) || 0) + delta)
+    return { ...p, battlefield: { ...p.battlefield, [id]: { ...perm, power: bump(perm.power), toughness: bump(perm.toughness), counters: [{ name: '+1/+1', count }] } } }
   })
 }
 
@@ -1052,7 +1071,7 @@ function resolveCounterspell(game: GameView): GameView {
     ...game,
     stack: {} as unknown as GameView['stack'],
     players: players(game).map((p) => {
-      const mine = Object.entries(stack).filter(([, spell]) => spell.controllerId === p.playerId)
+      const mine = Object.entries(stack).filter(([, spell]) => spell.controllerId === p.playerId).map(([id, spell]) => [cardIdOf(id), { ...spell, id: cardIdOf(id) }])
       return mine.length > 0 ? { ...p, graveyard: { ...p.graveyard, ...Object.fromEntries(mine) } } : p
     }),
   }
@@ -1245,7 +1264,7 @@ function castFirstInstant(game: GameView): GameView {
 
 const CREATURE_STACK_ID = 'gallery-creature-stack'
 
-/** Pone una criatura en la pila con el controlador dado; al resolver entra al campo con el mismo id. */
+/** Puts a creature spell on the stack for the given controller; it resolves onto the battlefield under its card id. */
 function withCreatureOnStack(game: GameView, owner: PlayerView | undefined, extra: Partial<CardView> = {}): GameView {
   const creature: CardView = {
     id: CREATURE_STACK_ID,
@@ -1262,7 +1281,7 @@ function withCreatureOnStack(game: GameView, owner: PlayerView | undefined, extr
   return { ...game, stack: { ...(game.stack ?? {}), [CREATURE_STACK_ID]: creature } }
 }
 
-/** Resuelve la criatura de la pila: sale de la pila y entra al campo de su controlador. */
+/** Resolves the creature spell: it leaves the stack and enters its controller's battlefield as the permanent of its card. */
 function resolveCreatureSpell(game: GameView): GameView {
   const spell = game.stack?.[CREATURE_STACK_ID]
   if (!spell) return game
@@ -1272,9 +1291,147 @@ function resolveCreatureSpell(game: GameView): GameView {
     ...game,
     stack,
     players: players(game).map((p) => (p.playerId === spell.controllerId
-      ? { ...p, battlefield: { ...p.battlefield, [CREATURE_STACK_ID]: { ...spell, tapped: false } } }
+      ? { ...p, battlefield: { ...p.battlefield, [cardIdOf(CREATURE_STACK_ID)]: { ...spell, id: cardIdOf(CREATURE_STACK_ID), tapped: false } } }
       : p)),
   }
+}
+
+/** Replaces one of my permanents with another card, keeping its id and slot. */
+function withMyPermanent(game: GameView, id: string, card: Partial<PermanentView>): GameView {
+  return mapControlled(game, (p) => {
+    const perm = p.battlefield?.[id]
+    if (!perm) return p
+    return { ...p, battlefield: { ...p.battlefield, [id]: { ...perm, counters: [], attachments: [], ...card, id } } }
+  })
+}
+
+const TREETOP_VILLAGE: Partial<PermanentView> = {
+  name: 'Treetop Village',
+  displayName: 'Treetop Village',
+  expansionSetCode: 'ULG',
+  cardNumber: '143',
+  cardTypes: ['LAND'],
+  subTypes: [],
+  power: '0',
+  toughness: '0',
+  color: { white: false, blue: false, black: false, red: false, green: false },
+  rules: ['Treetop Village enters the battlefield tapped.', '{T}: Add {G}.', '{1}{G}: Treetop Village becomes a 3/3 green Ape creature with trample until end of turn. It\'s still a land.'],
+  tapped: false,
+}
+
+/** A manland activated (or the effect wearing off at end of turn): the server adds or drops CREATURE, its P/T and its creature types. */
+function withAnimatedLand(game: GameView, id: string, animated: boolean): GameView {
+  return withMyPermanent(game, id, animated
+    ? { ...TREETOP_VILLAGE, cardTypes: ['LAND', 'CREATURE'], subTypes: ['APE'], power: '3', toughness: '3', color: { white: false, blue: false, black: false, red: false, green: true } }
+    : TREETOP_VILLAGE)
+}
+
+const GALLERY_VEHICLE_ID = 'gallery-vehicle'
+
+const SMUGGLERS_COPTER: Partial<PermanentView> = {
+  name: "Smuggler's Copter",
+  displayName: "Smuggler's Copter",
+  expansionSetCode: 'KLD',
+  cardNumber: '235',
+  manaValue: 2,
+  rarity: 'RARE',
+  cardTypes: ['ARTIFACT'],
+  subTypes: ['VEHICLE'],
+  superTypes: [],
+  color: { white: false, blue: false, black: false, red: false, green: false },
+  power: '3',
+  toughness: '3',
+  rules: ['Flying', 'Whenever Smuggler\'s Copter attacks or blocks, you may draw a card. If you do, discard a card.', 'Crew 1'],
+  tapped: false,
+  summoningSickness: false,
+}
+
+/** A vehicle on my battlefield, next to the creature that can crew it. */
+function withVehicle(game: GameView, templateId: string): GameView {
+  return mapControlled(game, (p) => {
+    const template = p.battlefield?.[templateId]
+    if (!template) return p
+    return { ...p, battlefield: { ...p.battlefield, [GALLERY_VEHICLE_ID]: { ...template, counters: [], attachments: [], ...SMUGGLERS_COPTER, id: GALLERY_VEHICLE_ID } } }
+  })
+}
+
+/** Crew 1: the crew taps and the vehicle becomes an artifact creature until end of turn. */
+function crewVehicle(game: GameView, crewId: string): GameView {
+  return mapControlled(game, (p) => {
+    const vehicle = p.battlefield?.[GALLERY_VEHICLE_ID]
+    const crew = p.battlefield?.[crewId]
+    if (!vehicle || !crew) return p
+    return { ...p, battlefield: { ...p.battlefield, [crewId]: { ...crew, tapped: true }, [GALLERY_VEHICLE_ID]: { ...vehicle, cardTypes: ['ARTIFACT', 'CREATURE'] } } }
+  })
+}
+
+const GALLERY_EMBLEM_ID = 'gallery-emblem'
+
+/** The emblem as the server sends it in `commandList` (an `EmblemView`: no mageObjectType, no card types), from the recorded frame. */
+function galleryEmblem(): Record<string, unknown> {
+  const recorded = (EMBLEM_FRAME?.gameView.players ?? []).flatMap((p) => (p.commandList ?? []) as Array<Record<string, unknown>>).find((c) => String(c.name ?? '').startsWith('Emblem'))
+  return { ...(recorded ?? { name: 'Emblem Gideon', expansionSetCode: 'AKH', cardNumber: '', rules: ["As long as you control a Gideon planeswalker, you can't lose the game and your opponents can't win the game."] }), id: GALLERY_EMBLEM_ID }
+}
+
+function withMyCommandItem(game: GameView, item: Record<string, unknown>): GameView {
+  return mapControlled(game, (p) => ({ ...p, commandList: [...((p.commandList ?? []) as unknown[]).filter((c) => (c as { id?: string }).id !== item.id), item] }))
+}
+
+const GALLERY_DUNGEON_ID = 'gallery-dungeon'
+
+/** Lost Mine of Phandelver as the server sends it (a `DungeonView`), from the recorded frame, with the venture in `room`. */
+function galleryDungeon(room: string): Record<string, unknown> {
+  const recorded = (DUNGEON_FRAME?.gameView.players ?? []).flatMap((p) => (p.commandList ?? []) as Array<Record<string, unknown>>).find((c) => String(c.name ?? '').includes('Phandelver'))
+  const rules = ((recorded?.rules as string[] | undefined) ?? ['<i>(Currently in Goblin Lair)</i>'])
+    .map((line) => line.replace(/\(Currently in [^)]+\)/, `(Currently in ${room})`))
+  return { ...(recorded ?? { name: 'Lost Mine of Phandelver', expansionSetCode: 'AFR' }), id: GALLERY_DUNGEON_ID, rules }
+}
+
+/** A plane as the server sends it (a `PlaneView`): it is universal, so every player's command list carries it. */
+function withPlane(game: GameView, id: string, name: string, rules: string[]): GameView {
+  const plane = { id, name, imageFileName: '', imageNumber: 0, expansionSetCode: 'PCA', rules }
+  return {
+    ...game,
+    players: players(game).map((p) => ({
+      ...p,
+      commandList: [...((p.commandList ?? []) as Array<{ name?: string }>).filter((c) => !String(c.name ?? '').startsWith('Plane - ')), plane],
+    })),
+  }
+}
+
+const AKOUM = ['Players may cast enchantment spells as though they had flash.', 'Whenever chaos ensues, destroy target creature that isn\'t enchanted.']
+const TOLARIA_WEST = ['When you planeswalk to Academy at Tolaria West, discard your hand, then draw seven cards.', 'Whenever chaos ensues, discard your hand.']
+
+/** Cards an opponent let me watch in their hand (`watchedHands`, keyed by player name): `SimpleCardView`s, a printing and no name. */
+function withWatchedHand(game: GameView, owner: PlayerView | undefined): GameView {
+  if (!owner) return game
+  const printings = [['M10', '146'], ['MH2', '267'], ['M14', '169']]
+  const hand = Object.fromEntries(printings.map(([set, num], i) => {
+    const id = `gallery-watched-${i}`
+    return [id, { id, expansionSetCode: set, cardNumber: num, usesVariousArt: false, gameObject: false }]
+  }))
+  return { ...game, watchedHands: { ...(game.watchedHands ?? {}), [owner.name]: hand } as GameView['watchedHands'] }
+}
+
+const BUSHI_TENDERFOOT: Partial<PermanentView> = {
+  name: 'Bushi Tenderfoot',
+  displayName: 'Bushi Tenderfoot',
+  expansionSetCode: 'CHK',
+  cardNumber: '2',
+  cardTypes: ['CREATURE'],
+  subTypes: ['HUMAN', 'SOLDIER'],
+  color: { white: true, blue: false, black: false, red: false, green: false },
+  power: '1',
+  toughness: '1',
+  flipped: false,
+  rules: ['When a creature dealt damage by Bushi Tenderfoot this turn dies, flip Bushi Tenderfoot.'],
+}
+
+/** A Kamigawa flip card on its unflipped side or flipped: the server keeps the id and sends `flipped` with the other half's name and P/T. */
+function withFlipCard(game: GameView, id: string, flipped: boolean): GameView {
+  return withMyPermanent(game, id, flipped
+    ? { ...BUSHI_TENDERFOOT, name: 'Kenzo the Hardhearted', displayName: 'Kenzo the Hardhearted', superTypes: ['LEGENDARY'], subTypes: ['HUMAN', 'SAMURAI'], power: '3', toughness: '4', flipped: true, rules: ['Double strike; bushido 2'] }
+    : BUSHI_TENDERFOOT)
 }
 
 /** Mueve la primera tierra de la mano al campo del jugador controlado. */
@@ -1288,6 +1445,814 @@ function playFirstLand(game: GameView): GameView {
     players: players(game).map((p) => (p === me
       ? { ...p, handCount: Math.max(0, (p.handCount ?? 0) - 1), battlefield: { ...p.battlefield, [taken.id]: { ...taken.card, tapped: false } } }
       : p)),
+  }
+}
+
+/** Like `replayQuiet`, plus a second change `secondAtMs` after the press (a cast, then its resolution). */
+function replayQuietThen(base: GameView, gameId: string, first: (game: GameView) => GameView, second: (game: GameView) => GameView, secondAtMs: number): () => void {
+  const replay = replayQuiet(base, gameId, first)
+  return () => {
+    replay()
+    setTimeout(() => {
+      const current = getState().game
+      if (current) setState({ game: second(current) })
+    }, secondAtMs)
+  }
+}
+
+function withStep(game: GameView, phase: string, step: string): GameView {
+  return { ...game, phase, step }
+}
+
+/** The controlled player holds priority, so their own timer is the one that ticks. */
+function withMyPriority(game: GameView): GameView {
+  const me = controlledPlayer(game)
+  if (!me) return game
+  return { ...game, priorityPlayerName: me.name, players: players(game).map((p) => ({ ...p, hasPriority: p === me })) }
+}
+
+function withMyTimer(game: GameView, seconds: number): GameView {
+  return mapControlled(game, (p) => ({ ...p, priorityTimeLeftSecs: seconds, timerActive: true }))
+}
+
+function untapPermanent(game: GameView, id: string): GameView {
+  return mapControlled(game, (p) => {
+    const perm = p.battlefield?.[id]
+    if (!perm) return p
+    return { ...p, battlefield: { ...p.battlefield, [id]: { ...perm, tapped: false } } }
+  })
+}
+
+/** Declares `id` as an attacker against the opponent: it taps and joins a combat group, the only source of the `attacking` class. */
+function declareAttacker(game: GameView, id: string): GameView {
+  const opponent = opponentPlayer(game)
+  const tapped = mapControlled(game, (p) => {
+    const perm = p.battlefield?.[id]
+    if (!perm) return p
+    return { ...p, battlefield: { ...p.battlefield, [id]: { ...perm, tapped: true } } }
+  })
+  const group = { attackers: { [id]: {} }, blockers: {}, isBlocked: false, defenderId: opponent?.playerId, defenderName: opponent?.name }
+  return { ...withStep(tapped, 'COMBAT', 'DECLARE_ATTACKERS'), combat: [group] as unknown as GameView['combat'] }
+}
+
+const GALLERY_OPP_ATTACKER_ID = 'gallery-opp-attacker'
+const GALLERY_PAID_SPELL_ID = 'gallery-paid-spell'
+
+/** Gives a player's pool the given mana; the server sends the pool as six counters. */
+function withManaPool(game: GameView, pool: Partial<PlayerView['manaPool']>): GameView {
+  return mapControlled(game, (p) => ({ ...p, manaPool: { red: 0, green: 0, blue: 0, white: 0, black: 0, colorless: 0, ...pool } }))
+}
+
+/** Casts a spell paid from the pool: it joins the stack and the pool empties in the same view. */
+function castPaidFromPool(game: GameView): GameView {
+  const me = controlledPlayer(game)
+  const spell = { ...bolt(GALLERY_PAID_SPELL_ID, me), name: 'Lightning Bolt' }
+  return { ...withManaPool(game, {}), stack: { ...(game.stack ?? {}), [GALLERY_PAID_SPELL_ID]: spell } as GameView['stack'] }
+}
+
+/** Sets the library size of one player. */
+function withLibraryCount(game: GameView, playerId: string | undefined, libraryCount: number): GameView {
+  return { ...game, players: players(game).map((p) => (p.playerId === playerId ? { ...p, libraryCount } : p)) }
+}
+
+/** Replaces the card icons of one of my permanents; the server sends them as `{cardIconType, text, hint}`. */
+function withCardIcons(game: GameView, id: string, cardIcons: Array<{ cardIconType: string; text: string; hint: string }>): GameView {
+  return mapControlled(game, (p) => {
+    const perm = p.battlefield?.[id]
+    if (!perm) return p
+    return { ...p, battlefield: { ...p.battlefield, [id]: { ...perm, cardIcons } } }
+  })
+}
+
+/** The opponent attacks with a copy of one of my creatures; nothing has blocked yet. */
+function withOpponentAttacker(game: GameView, templateId: string): GameView {
+  const me = controlledPlayer(game)
+  const opponent = opponentPlayer(game)
+  const template = me?.battlefield?.[templateId]
+  if (!me || !opponent || !template) return game
+  const attacker = { ...template, id: GALLERY_OPP_ATTACKER_ID, name: 'Raging Goblin', displayName: 'Raging Goblin', tapped: true, counters: [] }
+  const group = { attackers: { [GALLERY_OPP_ATTACKER_ID]: {} }, blockers: {}, isBlocked: false, defenderId: me.playerId, defenderName: me.name }
+  return {
+    ...withStep(game, 'COMBAT', 'DECLARE_ATTACKERS'),
+    players: players(game).map((p) => (p === opponent ? { ...p, battlefield: { ...p.battlefield, [GALLERY_OPP_ATTACKER_ID]: attacker } } : p)) as PlayerView[],
+    combat: [group] as unknown as GameView['combat'],
+  }
+}
+
+/** A permanent joins the blockers of every combat group, as the declare-blockers step does. */
+function declareBlocker(game: GameView, id: string): GameView {
+  const groups = (game.combat ?? []) as unknown as Array<Record<string, unknown>>
+  return {
+    ...withStep(game, 'COMBAT', 'DECLARE_BLOCKERS'),
+    combat: groups.map((g) => ({ ...g, blockers: { ...((g.blockers ?? {}) as Record<string, unknown>), [id]: {} }, isBlocked: true })) as unknown as GameView['combat'],
+  }
+}
+
+const GALLERY_ATTACKER_ID = 'gallery-attacker'
+
+/** The recorded block (my Elvish Mystic into theirs) plus an unblocked Grizzly Bears of mine attacking the opponent. */
+function withTwoAttackers(game: GameView): GameView {
+  const opponent = opponentPlayer(game)
+  const bears = {
+    id: GALLERY_ATTACKER_ID,
+    name: 'Grizzly Bears',
+    displayName: 'Grizzly Bears',
+    expansionSetCode: 'IMA',
+    cardNumber: '165',
+    manaValue: 2,
+    cardTypes: ['Creature'],
+    subtypes: ['Bear'],
+    power: '2',
+    toughness: '2',
+    tapped: true,
+  }
+  const withBears = mapControlled(game, (p) => ({ ...p, battlefield: { ...p.battlefield, [GALLERY_ATTACKER_ID]: bears } }))
+  const unblocked = { attackers: { [GALLERY_ATTACKER_ID]: {} }, blockers: {}, isBlocked: false, defenderId: opponent?.playerId, defenderName: opponent?.name }
+  return { ...withBears, combat: [...(game.combat ?? []), unblocked] as unknown as GameView['combat'] }
+}
+
+/**
+ * The combat damage step: every attacker and blocker in a group with a blocker dies (two 1/1 Mystics trade),
+ * and the opponent loses what the unblocked attackers deal. Only the unblocked groups stay in combat.
+ */
+function dealCombatDamage(game: GameView): GameView {
+  const groups = (game.combat ?? []) as unknown as Array<Record<string, unknown>>
+  const ids = (value: unknown) => Object.keys((value ?? {}) as Record<string, unknown>)
+  const traded = new Set(groups.filter((g) => ids(g.blockers).length > 0).flatMap((g) => [...ids(g.attackers), ...ids(g.blockers)]))
+  const unblocked = groups.filter((g) => ids(g.blockers).length === 0)
+  const damage = unblocked.reduce((sum, g) => sum + ids(g.attackers).reduce((n, id) => {
+    const perm = players(game).map((p) => p.battlefield?.[id]).find(Boolean)
+    return n + (parseInt(String(perm?.power ?? '0'), 10) || 0)
+  }, 0), 0)
+  const defenderId = unblocked.map((g) => g.defenderId).find((id): id is string => typeof id === 'string')
+  return {
+    ...withStep(game, 'COMBAT', 'COMBAT_DAMAGE'),
+    combat: unblocked as unknown as GameView['combat'],
+    players: players(game).map((p) => {
+      const dying = Object.keys(p.battlefield ?? {}).filter((id) => traded.has(id))
+      const battlefield = { ...p.battlefield }
+      const graveyard = { ...p.graveyard }
+      for (const id of dying) {
+        graveyard[id] = battlefield[id]
+        delete battlefield[id]
+      }
+      return { ...p, battlefield, graveyard, life: p.playerId === defenderId ? (p.life ?? 0) - damage : p.life }
+    }),
+  }
+}
+
+function sendToExile(game: GameView, id: string): GameView {
+  return mapControlled(game, (p) => {
+    const perm = p.battlefield?.[id]
+    if (!perm) return p
+    const battlefield = { ...p.battlefield }
+    delete battlefield[id]
+    return { ...p, battlefield, exile: { ...p.exile, [id]: perm } }
+  })
+}
+
+/** Returns a card of my graveyard to the battlefield under the same id, as Reanimate does. */
+function returnFromGraveyard(game: GameView, id: string): GameView {
+  return mapControlled(game, (p) => {
+    const card = p.graveyard?.[id]
+    if (!card) return p
+    const graveyard = { ...p.graveyard }
+    delete graveyard[id]
+    return { ...p, graveyard, battlefield: { ...p.battlefield, [id]: { ...card, tapped: false, damage: 0 } } }
+  })
+}
+
+/** Discards the first card of my hand: it leaves `myHand` and lands in my graveyard under the same id. */
+function discardFirstCard(game: GameView): GameView {
+  const me = controlledPlayer(game)
+  const taken = removeFromHand(game, () => true)
+  if (!me || !taken) return game
+  return {
+    ...game,
+    myHand: taken.hand,
+    players: players(game).map((p) => (p === me
+      ? { ...p, handCount: Math.max(0, (p.handCount ?? 0) - 1), graveyard: { ...p.graveyard, [taken.id]: taken.card } }
+      : p)),
+  }
+}
+
+/** Sets a controlled permanent's power and toughness, as a pump or a shrink until end of turn does (no counters). */
+function withPt(game: GameView, id: string, power: number, toughness: number): GameView {
+  return mapControlled(game, (p) => {
+    const perm = p.battlefield?.[id]
+    if (!perm) return p
+    return { ...p, battlefield: { ...p.battlefield, [id]: { ...perm, power: String(power), toughness: String(toughness), counters: [] } } }
+  })
+}
+
+function ptOf(game: GameView, id: string): { power: number; toughness: number } {
+  const perm = controlledPlayer(game)?.battlefield?.[id]
+  return { power: parseInt(String(perm?.power ?? '1'), 10) || 1, toughness: parseInt(String(perm?.toughness ?? '1'), 10) || 1 }
+}
+
+/** Returns a card of my graveyard to my hand under the same id, as Regrowth does. */
+function returnGraveyardToHand(game: GameView, id: string): GameView {
+  const me = controlledPlayer(game)
+  const card = me?.graveyard?.[id]
+  if (!me || !card) return game
+  const graveyard = { ...me.graveyard }
+  delete graveyard[id]
+  return {
+    ...game,
+    myHand: { ...(game.myHand ?? {}), [id]: { ...card, tapped: false } as CardView },
+    players: players(game).map((p) => (p === me ? { ...p, graveyard, handCount: (p.handCount ?? 0) + 1 } : p)),
+  }
+}
+
+const OPP_GRAVE_ID = 'gallery-opp-grave'
+
+function withOpponentGraveyardCard(game: GameView, owner: PlayerView | undefined): GameView {
+  if (!owner) return game
+  const card = { id: OPP_GRAVE_ID, name: 'Grizzly Bears', displayName: 'Grizzly Bears', expansionSetCode: 'IMA', cardNumber: '165', manaValue: 2, cardTypes: ['Creature'], power: '2', toughness: '2' }
+  return { ...game, players: players(game).map((p) => (p.playerId === owner.playerId ? { ...p, graveyard: { ...p.graveyard, [OPP_GRAVE_ID]: card } } : p)) }
+}
+
+/** The opponent takes a card of their graveyard back: it leaves the graveyard and only their hand count grows. */
+function opponentRegrowth(game: GameView, owner: PlayerView | undefined): GameView {
+  if (!owner) return game
+  return {
+    ...game,
+    players: players(game).map((p) => {
+      if (p.playerId !== owner.playerId || !p.graveyard?.[OPP_GRAVE_ID]) return p
+      const graveyard = { ...p.graveyard }
+      delete graveyard[OPP_GRAVE_ID]
+      return { ...p, graveyard, handCount: (p.handCount ?? 0) + 1 }
+    }),
+  }
+}
+
+/** Exiles the first card of my hand: it leaves `myHand` and lands in my exile under the same id. */
+function exileFirstHandCard(game: GameView): GameView {
+  const me = controlledPlayer(game)
+  const taken = removeFromHand(game, () => true)
+  if (!me || !taken) return game
+  return {
+    ...game,
+    myHand: taken.hand,
+    players: players(game).map((p) => (p === me
+      ? { ...p, handCount: Math.max(0, (p.handCount ?? 0) - 1), exile: { ...p.exile, [taken.id]: taken.card } }
+      : p)),
+  }
+}
+
+const DELVE_IDS = ['gallery-delve-0', 'gallery-delve-1', 'gallery-delve-2']
+
+function withDelveGraveyard(game: GameView): GameView {
+  return mapControlled(game, (p) => ({
+    ...p,
+    graveyard: {
+      ...p.graveyard,
+      ...Object.fromEntries(DELVE_IDS.map((id, i) => [id, { ...(LIBRARY_CARDS[i] as unknown as CardView), id, manaValue: 0 }])),
+    },
+  }))
+}
+
+/** Delve: three cards of my graveyard go to exile in one update. */
+function delveThree(game: GameView): GameView {
+  return mapControlled(game, (p) => {
+    const graveyard = { ...p.graveyard }
+    const exiled: Record<string, CardView> = {}
+    for (const id of DELVE_IDS) {
+      if (!graveyard[id]) continue
+      exiled[id] = graveyard[id]
+      delete graveyard[id]
+    }
+    return { ...p, graveyard, exile: { ...p.exile, ...exiled } }
+  })
+}
+
+const IMPULSE_ID = 'gallery-impulse'
+
+/** Impulse draw: the top card of my library goes to exile. */
+function exileTopOfLibrary(game: GameView): GameView {
+  return mapControlled(game, (p) => ({
+    ...p,
+    libraryCount: Math.max(0, (p.libraryCount ?? 0) - 1),
+    exile: { ...p.exile, [IMPULSE_ID]: { ...(LIBRARY_CARDS[2] as unknown as CardView), id: IMPULSE_ID, manaValue: 1 } },
+  }))
+}
+
+const FLASHBACK_ID = 'gallery-flashback'
+
+function faithlessLooting(id: string, owner: PlayerView | undefined): CardView {
+  return {
+    id,
+    name: 'Faithless Looting',
+    displayName: 'Faithless Looting',
+    expansionSetCode: 'PIDW',
+    cardNumber: '2',
+    manaValue: 1,
+    cardTypes: ['Sorcery'],
+    rules: ['Draw two cards, then discard two cards.', 'Flashback {2}{R}'],
+    controllerId: owner?.playerId,
+    controllerName: owner?.name,
+  }
+}
+
+function withInPile(game: GameView, pile: 'graveyard' | 'exile', card: CardView): GameView {
+  return mapControlled(game, (p) => ({ ...p, [pile]: { ...p[pile], [card.id ?? '']: card } }))
+}
+
+/** Casts a card out of my graveyard or exile: it leaves the pile and goes on the stack under the same id. */
+function castFromMyPile(game: GameView, pile: 'graveyard' | 'exile', id: string): GameView {
+  const me = controlledPlayer(game)
+  const card = me?.[pile]?.[id]
+  if (!me || !card) return game
+  const rest = { ...me[pile] }
+  delete rest[id]
+  return {
+    ...game,
+    stack: { ...(game.stack ?? {}), [id]: { ...card, controllerId: me.playerId, controllerName: me.name } } as GameView['stack'],
+    players: players(game).map((p) => (p === me ? { ...p, [pile]: rest } : p)),
+  }
+}
+
+const GALLERY_FADING_TOKEN_ID = 'gallery-fading-token'
+
+function withFadingToken(game: GameView): GameView {
+  const token = { id: GALLERY_FADING_TOKEN_ID, name: 'Spirit', displayName: 'Spirit', manaValue: 0, cardTypes: ['Creature'], subtypes: ['Spirit'], power: '1', toughness: '1', isToken: true, tapped: false }
+  return mapControlled(game, (p) => ({ ...p, battlefield: { ...p.battlefield, [GALLERY_FADING_TOKEN_ID]: token } }))
+}
+
+/** The permanent ceases to exist: it leaves the battlefield for no zone the client can see. */
+function removeFromBattlefield(game: GameView, id: string): GameView {
+  return mapControlled(game, (p) => {
+    if (!p.battlefield?.[id]) return p
+    const battlefield = { ...p.battlefield }
+    delete battlefield[id]
+    return { ...p, battlefield }
+  })
+}
+
+const HEAVY_SPELL_ID = 'gallery-heavy-spell'
+
+function withHeavySpellInHand(game: GameView): GameView {
+  const me = controlledPlayer(game)
+  const spell: CardView = {
+    id: HEAVY_SPELL_ID,
+    name: 'Cruel Ultimatum',
+    displayName: 'Cruel Ultimatum',
+    manaValue: 7,
+    rarity: 'RARE',
+    cardTypes: ['Sorcery'],
+    manaCostLeftStr: ['{U}', '{U}', '{B}', '{B}', '{B}', '{R}', '{R}'],
+    rules: ['Target opponent sacrifices a creature, discards three cards, then loses 5 life. You return a creature card from your graveyard to your hand, draw three cards, then gain 5 life.'],
+  }
+  return {
+    ...game,
+    myHand: { ...(game.myHand ?? {}), [HEAVY_SPELL_ID]: spell },
+    players: players(game).map((p) => (p === me ? { ...p, handCount: (p.handCount ?? 0) + 1 } : p)),
+  }
+}
+
+function castHeavySpell(game: GameView): GameView {
+  const me = controlledPlayer(game)
+  const taken = removeFromHand(game, (card) => card.id === HEAVY_SPELL_ID)
+  if (!me || !taken) return game
+  return {
+    ...game,
+    myHand: taken.hand,
+    stack: { [HEAVY_SPELL_ID]: { ...taken.card, controllerId: me.playerId, controllerName: me.name } } as GameView['stack'],
+    players: players(game).map((p) => (p === me ? { ...p, handCount: Math.max(0, (p.handCount ?? 0) - 1) } : p)),
+  }
+}
+
+function resolveHeavySpell(game: GameView): GameView {
+  const spell = game.stack?.[HEAVY_SPELL_ID]
+  if (!spell) return game
+  return {
+    ...game,
+    stack: {} as GameView['stack'],
+    players: players(game).map((p) => (p.playerId === spell.controllerId ? { ...p, graveyard: { ...p.graveyard, [cardIdOf(HEAVY_SPELL_ID)]: { ...spell, id: cardIdOf(HEAVY_SPELL_ID) } } } : p)),
+  }
+}
+
+const WRATH_ID = 'gallery-wrath'
+const isLandPerm = (perm: CardView) => (perm.cardTypes ?? []).some((t) => String(t).toLowerCase() === 'land')
+
+/** A Grizzly Bears on every player's battlefield, so a 1v1 board has enough creatures for a wipe. */
+function withWipeCrowd(game: GameView): GameView {
+  return {
+    ...game,
+    players: players(game).map((p) => {
+      const id = `gallery-wipe-${p.playerId}`
+      const bears = { id, name: 'Grizzly Bears', displayName: 'Grizzly Bears', expansionSetCode: 'J21', cardNumber: '580', manaValue: 2, cardTypes: ['Creature'], subTypes: ['Bear'], power: '2', toughness: '2', tapped: false, controllerId: p.playerId } as PermanentView
+      return { ...p, battlefield: { ...p.battlefield, [id]: bears } }
+    }),
+  }
+}
+
+/** Wrath of God on the stack, cast by the controlled player. */
+function withWrathOnStack(game: GameView): GameView {
+  const me = controlledPlayer(game)
+  const wrath: CardView = {
+    id: WRATH_ID,
+    name: 'Wrath of God',
+    displayName: 'Wrath of God',
+    manaValue: 4,
+    rarity: 'RARE',
+    cardTypes: ['Sorcery'],
+    manaCostLeftStr: ['{2}', '{W}', '{W}'],
+    color: { white: true },
+    rules: ["Destroy all creatures. They can't be regenerated."],
+    controllerId: me?.playerId,
+    controllerName: me?.name,
+  }
+  return { ...game, stack: { [WRATH_ID]: wrath } as GameView['stack'] }
+}
+
+/** Wrath of God resolves: every creature on every battlefield goes to its graveyard (a token simply vanishes), and the Wrath follows. */
+function resolveWrath(game: GameView): GameView {
+  const wrath = game.stack?.[WRATH_ID]
+  return {
+    ...game,
+    stack: {} as GameView['stack'],
+    players: players(game).map((p) => {
+      const battlefield: Record<string, PermanentView> = {}
+      const graveyard = { ...p.graveyard }
+      for (const [id, perm] of Object.entries(p.battlefield ?? {})) {
+        if (isLandPerm(perm)) battlefield[id] = perm
+        else if (perm.isToken !== true) graveyard[id] = perm
+      }
+      if (wrath && p.playerId === wrath.controllerId) graveyard[WRATH_ID] = wrath
+      return { ...p, battlefield, graveyard }
+    }),
+  }
+}
+
+type GalleryFaceDown = 'morph' | 'manifest'
+
+const FACE_DOWN_ID = 'gallery-face-down'
+const FACE_DOWN: Record<GalleryFaceDown, { prefix: string; image: string; rules: string[]; face: Partial<CardView> & { name: string } }> = {
+  morph: {
+    prefix: 'Morph',
+    image: 'Morph',
+    rules: ['{this} becomes a 2/2 face-down creature, with no text, no name, no subtypes, and no mana cost.', 'Turn it face up any time for its morph cost.'],
+    face: { name: 'Den Protector', expansionSetCode: 'C16', cardNumber: '147', power: '2', toughness: '1', manaValue: 2, rarity: 'RARE', color: { green: true }, subTypes: ['Human', 'Warrior'] },
+  },
+  manifest: {
+    prefix: 'Manifest',
+    image: 'Manifest',
+    rules: ['Turn it face up any time for its mana cost if it is a creature card.'],
+    face: { name: 'Elite Vanguard', expansionSetCode: 'EMA', cardNumber: '8', power: '2', toughness: '1', manaValue: 1, rarity: 'UNCOMMON', color: { white: true }, subTypes: ['Human', 'Soldier'] },
+  },
+}
+
+/** A face-down 2/2 on the controlled battlefield, shaped like the recorded morph/cloak frames (`XMAGE` set, flags per kind, the real name after the prefix). */
+function withFaceDown(game: GameView, kind: GalleryFaceDown): GameView {
+  const { prefix, image, rules, face } = FACE_DOWN[kind]
+  const name = `${prefix}: ${face.name}`
+  const perm: PermanentView = {
+    id: FACE_DOWN_ID,
+    name,
+    displayName: name,
+    expansionSetCode: 'XMAGE',
+    cardNumber: '0',
+    imageFileName: image,
+    manaValue: 0,
+    rarity: 'SPECIAL',
+    cardTypes: ['CREATURE'],
+    subTypes: [],
+    power: '2',
+    toughness: '2',
+    rules,
+    color: { white: false, blue: false, black: false, red: false, green: false },
+    faceDown: true,
+    morphed: kind === 'morph',
+    manifested: kind === 'manifest',
+    disguised: false,
+    cloaked: false,
+    tapped: false,
+    counters: [],
+  } as PermanentView
+  return mapControlled(game, (p) => ({ ...p, battlefield: { ...p.battlefield, [FACE_DOWN_ID]: perm } }))
+}
+
+/** The face-down permanent is turned face up: same id, the face's name, set and P/T, the face-down flags cleared. */
+function turnFaceUp(game: GameView, kind: GalleryFaceDown): GameView {
+  const { face } = FACE_DOWN[kind]
+  return mapControlled(game, (p) => {
+    const perm = p.battlefield?.[FACE_DOWN_ID]
+    if (!perm) return p
+    const up = { ...perm, ...face, displayName: face.name, cardTypes: ['CREATURE'], imageFileName: undefined, rules: [], faceDown: false, morphed: false, manifested: false } as PermanentView
+    return { ...p, battlefield: { ...p.battlefield, [FACE_DOWN_ID]: up } }
+  })
+}
+
+/** Sets one counter on a player; the server sends player counters as {name, count} pairs and drops a counter at 0. */
+function withPlayerCounter(game: GameView, playerId: string | undefined, name: string, count: number): GameView {
+  return {
+    ...game,
+    players: players(game).map((p) => {
+      if (p.playerId !== playerId) return p
+      const others = (p.counters ?? []).filter((c) => c.name !== name)
+      return { ...p, counters: count > 0 ? [...others, { name, count }] : others }
+    }),
+  }
+}
+
+/** Moves a permanent to another player's battlefield under the same id, as a control change does. */
+function withControl(game: GameView, id: string, toId: string): GameView {
+  const from = players(game).find((p) => p.battlefield?.[id])
+  const perm = from?.battlefield?.[id]
+  if (!from || !perm || from.playerId === toId) return game
+  return {
+    ...game,
+    players: players(game).map((p) => {
+      if (p === from) {
+        const battlefield = { ...p.battlefield }
+        delete battlefield[id]
+        return { ...p, battlefield }
+      }
+      if (p.playerId === toId) return { ...p, battlefield: { ...p.battlefield, [id]: { ...perm, controllerId: toId, tapped: false } } }
+      return p
+    }),
+  }
+}
+
+/** The commander of a player's command zone, as the server lists it there. */
+function commanderOf(player: PlayerView | undefined): CardView | undefined {
+  return ((player?.commandList ?? []) as CardView[]).find((item) => item.mageObjectType === 'COMMANDER')
+}
+
+/** Moves a player's commander out of the command zone into `zone` under the same id, as the engine keeps it. */
+function withCommanderIn(game: GameView, playerId: string, zone: 'battlefield' | 'graveyard'): GameView {
+  return {
+    ...game,
+    players: players(game).map((p) => {
+      const commander = commanderOf(p)
+      if (p.playerId !== playerId || !commander?.id) return p
+      const placed = { ...commander, mageObjectType: zone === 'battlefield' ? 'PERMANENT' : 'CARD', controllerId: p.playerId, tapped: false } as PermanentView
+      return {
+        ...p,
+        commandList: (p.commandList ?? []).filter((item) => (item as CardView).id !== commander.id),
+        [zone]: { ...p[zone], [commander.id]: placed },
+      }
+    }),
+  }
+}
+
+const COMMANDER_SPELL_ID = 'gallery-commander-spell'
+
+/** My commander is cast from the command zone: it leaves it and goes on the stack under a spell id of its own, as the server sends it. */
+function castMyCommander(game: GameView): GameView {
+  const me = controlledPlayer(game)
+  const commander = commanderOf(me)
+  if (!me || !commander) return game
+  return {
+    ...game,
+    stack: { [COMMANDER_SPELL_ID]: { ...commander, id: COMMANDER_SPELL_ID, mageObjectType: 'SPELL', controllerId: me.playerId, controllerName: me.name } } as GameView['stack'],
+    players: players(game).map((p) => (p === me ? { ...p, commandList: (p.commandList ?? []).filter((item) => (item as CardView).id !== commander.id) } : p)),
+  }
+}
+
+/** Puts a permanent into its controller's library (Chaos Warp, a tuck): it leaves the battlefield and the library grows. */
+function tuckPermanent(game: GameView, id: string): GameView {
+  return {
+    ...game,
+    players: players(game).map((p) => {
+      if (!p.battlefield?.[id]) return p
+      const battlefield = { ...p.battlefield }
+      delete battlefield[id]
+      return { ...p, battlefield, libraryCount: (p.libraryCount ?? 0) + 1 }
+    }),
+  }
+}
+
+/** Puts my first `count` hand cards back on top of my library, as Brainstorm does. */
+function putBackFromHand(game: GameView, count: number): GameView {
+  const me = controlledPlayer(game)
+  const hand = Object.entries(game.myHand ?? {})
+  if (!me || hand.length === 0) return game
+  const back = hand.slice(0, count)
+  return {
+    ...game,
+    myHand: Object.fromEntries(hand.slice(count)),
+    players: players(game).map((p) => (p === me
+      ? { ...p, handCount: Math.max(0, (p.handCount ?? 0) - back.length), libraryCount: (p.libraryCount ?? 0) + back.length }
+      : p)),
+  }
+}
+
+/** An opponent puts `count` cards of their hand into their library: the server only sends both counts. */
+function opponentPutBack(game: GameView, owner: PlayerView | undefined, count: number): GameView {
+  if (!owner) return game
+  return {
+    ...game,
+    players: players(game).map((p) => (p.playerId === owner.playerId
+      ? { ...p, handCount: Math.max(0, (p.handCount ?? 0) - count), libraryCount: (p.libraryCount ?? 0) + count }
+      : p)),
+  }
+}
+
+const RANCOR_ID = 'gallery-rancor'
+
+/** Rancor on the stack, cast by me at one of my creatures. */
+function withRancorOnStack(game: GameView, hostId: string): GameView {
+  const me = controlledPlayer(game)
+  const rancor: CardView = {
+    id: RANCOR_ID,
+    name: 'Rancor',
+    displayName: 'Rancor',
+    expansionSetCode: 'ULG',
+    cardNumber: '110',
+    manaValue: 1,
+    rarity: 'COMMON',
+    cardTypes: ['ENCHANTMENT'],
+    subTypes: ['AURA'],
+    manaCostLeftStr: ['{G}'],
+    color: { white: false, blue: false, black: false, red: false, green: true },
+    rules: ['Enchant creature', 'Enchanted creature gets +2/+0 and has trample.'],
+    targets: [hostId],
+    controllerId: me?.playerId,
+    controllerName: me?.name,
+  }
+  return { ...game, stack: { [RANCOR_ID]: rancor } as GameView['stack'] }
+}
+
+/** Rancor resolves: it enters attached to its host (`attachedTo` on the aura, its id in the host's `attachments`). */
+function resolveRancor(game: GameView): GameView {
+  const rancor = game.stack?.[RANCOR_ID]
+  const hostId = rancor?.targets?.[0]
+  if (!rancor || !hostId) return game
+  return {
+    ...game,
+    stack: {} as GameView['stack'],
+    players: players(game).map((p) => {
+      const host = p.battlefield?.[hostId]
+      if (!host) return p
+      const aura = { ...rancor, targets: [], attachedTo: hostId, attachments: [], tapped: false } as PermanentView
+      return { ...p, battlefield: { ...p.battlefield, [hostId]: { ...host, attachments: [...(host.attachments ?? []), RANCOR_ID] }, [RANCOR_ID]: aura } }
+    }),
+  }
+}
+
+const MUTATE_SPELL_ID = 'gallery-mutate-spell'
+const MUTATE_CARD_ID = 'gallery-mutate-card'
+
+function gemrazer(id: string, owner: PlayerView | undefined): CardView {
+  return {
+    id,
+    name: 'Gemrazer',
+    displayName: 'Gemrazer',
+    expansionSetCode: 'IKO',
+    cardNumber: '155',
+    manaValue: 4,
+    rarity: 'RARE',
+    cardTypes: ['CREATURE'],
+    subTypes: ['BEAST'],
+    manaCostLeftStr: ['{3}', '{G}'],
+    color: { white: false, blue: false, black: false, red: false, green: true },
+    power: '4',
+    toughness: '4',
+    rules: ['Mutate {1}{G}{G}', 'Reach', 'Trample'],
+    controllerId: owner?.playerId,
+    controllerName: owner?.name,
+  }
+}
+
+/** Gemrazer cast for its mutate cost on the stack, under a spell id of its own, as the server sends it. */
+function withMutateOnStack(game: GameView): GameView {
+  return { ...game, stack: { [MUTATE_SPELL_ID]: gemrazer(MUTATE_SPELL_ID, controlledPlayer(game)) } as GameView['stack'] }
+}
+
+/**
+ * Gemrazer merges with my creature: it leaves the stack and never enters on its own; the host keeps its
+ * id, turns `mutated` and lists both cards in its `mutateView` (recorded `mutate.json` shape). Over, the
+ * merged creature takes Gemrazer's face and P/T.
+ */
+function mutateOnto(game: GameView, hostId: string, over: boolean): GameView {
+  const me = controlledPlayer(game)
+  const host = me?.battlefield?.[hostId]
+  if (!me || !host) return game
+  const card = gemrazer(MUTATE_CARD_ID, me)
+  const face = over ? { ...card, id: hostId } : {}
+  const merged = { ...host, ...face, mutated: true, mutateView: { name: (over ? card : host).name, id: hostId, cards: { [hostId]: host, [MUTATE_CARD_ID]: card } } } as PermanentView
+  return {
+    ...game,
+    stack: {} as GameView['stack'],
+    players: players(game).map((p) => (p === me ? { ...p, battlefield: { ...p.battlefield, [hostId]: merged } } : p)),
+  }
+}
+
+const SOURCE_ABILITY_ID = 'gallery-source-ability'
+
+/** A triggered ability of `sourceId` goes on the stack; the server names its source in `sourceCard`. */
+function triggerAbilityOf(game: GameView, sourceId: string): GameView {
+  const me = controlledPlayer(game)
+  const source = me?.battlefield?.[sourceId]
+  if (!me || !source) return game
+  const controller = { controllerId: me.playerId, controllerName: me.name }
+  const ability = {
+    id: SOURCE_ABILITY_ID,
+    name: source.name,
+    sourceName: source.name,
+    mageObjectType: 'TRIGGERED_ABILITY',
+    abilityType: 'Triggered',
+    rules: [`Whenever ${source.name} becomes tapped, you gain 1 life.`],
+    sourceCard: { id: sourceId, name: source.name, expansionSetCode: source.expansionSetCode, cardNumber: source.cardNumber, ...controller },
+    ...controller,
+  }
+  return { ...game, stack: { [SOURCE_ABILITY_ID]: ability } as unknown as GameView['stack'] }
+}
+
+/** The first view of the next turn, with `who` active and holding priority. */
+function startNextTurn(game: GameView, who: PlayerView | undefined, step = 'UPKEEP'): GameView {
+  if (!who) return game
+  return {
+    ...game,
+    turn: game.turn + 1,
+    phase: step === 'UPKEEP' ? 'BEGINNING' : 'PRECOMBAT_MAIN',
+    step,
+    combat: [] as unknown as GameView['combat'],
+    activePlayerId: who.playerId,
+    activePlayerName: who.name,
+    priorityPlayerName: who.name,
+    players: players(game).map((p) => ({ ...p, isActive: p.playerId === who.playerId, hasPriority: p.playerId === who.playerId })),
+  }
+}
+
+const STEP_PHASE: Record<string, string> = { b: 'BEGINNING', m1: 'PRECOMBAT_MAIN', c: 'COMBAT', m2: 'POSTCOMBAT_MAIN', e: 'END' }
+
+/** Moves to the next step of the phase bar, wrapping from cleanup back to upkeep within the turn. */
+function advanceStep(game: GameView): GameView {
+  const index = STEPS.findIndex((s) => s.key === game.step)
+  const next = STEPS[(index + 1) % STEPS.length]
+  return withStep(game, STEP_PHASE[next.group] ?? 'BEGINNING', next.key)
+}
+
+const RECAP_CREATURE_ID = 'gallery-recap-creature'
+
+/** The opponent's creature spell, on the stack and then on their battlefield under the same id. */
+function recapCreature(owner: PlayerView): CardView {
+  return { id: RECAP_CREATURE_ID, name: 'Grizzly Bears', displayName: 'Grizzly Bears', expansionSetCode: 'IMA', cardNumber: '165', manaValue: 2, cardTypes: ['Creature'], power: '2', toughness: '2', controllerId: owner.playerId, controllerName: owner.name }
+}
+
+/**
+ * The views of one opponent turn, fed through the real `observeTurnRecap`: they cast Grizzly Bears,
+ * attack with a creature, destroy my creature and take a life from me; then my turn starts.
+ */
+function opponentTurnRecapViews(base: GameView, myVictimId: string): GameView[] {
+  const me = controlledPlayer(base)
+  const opponent = opponentPlayer(base)
+  if (!me || !opponent) return []
+  const attackerId = creatureIds(opponent)[0]
+  const oppTurn = startNextTurn(base, opponent, 'PRECOMBAT_MAIN')
+  const cast = { ...oppTurn, stack: { [RECAP_CREATURE_ID]: recapCreature(opponent) } as GameView['stack'] }
+  const resolved: GameView = {
+    ...cast,
+    stack: {} as GameView['stack'],
+    players: players(cast).map((p) => (p.playerId === opponent.playerId ? { ...p, battlefield: { ...p.battlefield, [RECAP_CREATURE_ID]: recapCreature(opponent) } } : p)),
+  }
+  const group = { attackers: attackerId ? { [attackerId]: {} } : {}, blockers: {}, isBlocked: false, defenderId: me.playerId, defenderName: me.name }
+  const attack = { ...withStep(resolved, 'COMBAT', 'DECLARE_ATTACKERS'), combat: [group] as unknown as GameView['combat'] }
+  const afterCombat = loseLife(sendToGraveyard({ ...withStep(attack, 'POSTCOMBAT_MAIN', 'POSTCOMBAT_MAIN'), combat: [] as unknown as GameView['combat'] }, myVictimId), 1)
+  return [oppTurn, cast, resolved, attack, afterCombat, startNextTurn(afterCombat, me)]
+}
+
+/** Replays the views through the turn-recap observer from a fresh window and shows the recap it closes with. */
+function replayTurnRecap(views: GameView[], gameId: string): () => void {
+  return () => {
+    setState({ turnRecap: null })
+    resetTurnRecap(gameId)
+    let recap: TurnRecap | null = null
+    for (let i = 0; i < views.length; i++) recap = observeTurnRecap(views[i - 1] ?? null, views[i], gameId) ?? recap
+    const shown = recap
+    if (shown) setTimeout(() => setState({ turnRecap: shown }), 60)
+  }
+}
+
+/** Commander damage as the engine writes it: a sentence in the commander card's rules. */
+function withCommanderDamage(game: GameView, ownerId: string, target: PlayerView, damage: number): GameView {
+  const line = `<b>Commander</b> did ${damage} combat damage to player <font color='#20B2AA'>${target.name}</font>.`
+  return {
+    ...game,
+    players: players(game).map((p) => (p.playerId === ownerId
+      ? {
+          ...p,
+          commandList: (p.commandList ?? []).map((item, i) => (i === 0
+            ? { ...(item as CardView), rules: [...((item as CardView).rules ?? []).filter((r) => !String(r).includes('combat damage to player')), line] }
+            : item)),
+        }
+      : p)),
+  }
+}
+
+function openDrawerTab(tab: string): void {
+  const toggle = document.querySelector<HTMLElement>(`[data-testid="drawer-tab-${tab}"]`)
+  if (toggle && toggle.getAttribute('aria-pressed') !== 'true') toggle.click()
+}
+
+/** Closes the end screen and opens it again, so its cinematic plays from the start. */
+function replayGameEnd(info: GameEndInfo): () => void {
+  return () => {
+    setState({ gameEnd: null })
+    setTimeout(() => setState({ gameEnd: info }), 60)
   }
 }
 
@@ -2506,6 +3471,882 @@ export function buildGalleryEntries(): GalleryEntry[] {
       boardLayout: 'arena',
       feedback: targetPlayerPrompt(fourPlayers, gameId, opponentOfFour, false),
     })
+    const lungeBase = withStep(untapPermanent(animBase, mystic), 'COMBAT', 'BEGIN_COMBAT')
+    entries.push({
+      id: 'anim:attack-lunge',
+      group: 'Animaciones',
+      label: 'Combat: attacker lunges at the opponent',
+      description: `"Replay" declares ${mysticName} as an attacker: it taps, springs towards the opponent with a brief flash, and settles a little forward of its row while it attacks.`,
+      phase: 'game',
+      game: lungeBase,
+      gameId,
+      action: { label: 'Replay', run: replayQuiet(lungeBase, gameId, (g) => declareAttacker(g, mystic)) },
+    })
+    const paidBase = withManaPool(animBase, { white: 1, blue: 1, red: 1 })
+    entries.push({
+      id: 'anim:mana-spent',
+      group: 'Animaciones',
+      label: 'Mana: spent on a spell',
+      description: 'Your pool holds one white, one blue and one red mana. "Replay" casts a spell paid from it: three orbs in those colours leave the mana pool one after another and fly to the new spell on the stack.',
+      phase: 'game',
+      game: paidBase,
+      gameId,
+      action: { label: 'Replay', run: replayQuiet(paidBase, gameId, castPaidFromPool) },
+    })
+    const goadBase = withCardIcons(animBase, mystic, [])
+    entries.push({
+      id: 'anim:goad',
+      group: 'Animaciones',
+      label: 'Card icons: goad lands',
+      description: `"Replay" goads ${mysticName}: the red restriction badge pops onto the card with a red ring and glow. Cards that already carry the badge when a game opens do not play it.`,
+      phase: 'game',
+      game: goadBase,
+      gameId,
+      action: { label: 'Replay', run: replayQuiet(goadBase, gameId, (g) => withCardIcons(g, mystic, [{ cardIconType: 'OTHER_HAS_RESTRICTIONS', text: '', hint: "Goaded by <font color='#20B2AA'>Opponent</font> (must attack)" }])) },
+    })
+    entries.push({
+      id: 'anim:card-icon-gain',
+      group: 'Animaciones',
+      label: 'Card icons: an ability icon is gained',
+      description: `"Replay" gives ${mysticName} flying: its ability icon pops in, a quiet version of the goad badge.`,
+      phase: 'game',
+      game: goadBase,
+      gameId,
+      action: { label: 'Replay', run: replayQuiet(goadBase, gameId, (g) => withCardIcons(g, mystic, [{ cardIconType: 'ABILITY_FLYING', text: '', hint: 'Flying' }])) },
+    })
+    const allIcons = ['FLYING', 'DEFENDER', 'DEATHTOUCH', 'LIFELINK', 'DOUBLE_STRIKE', 'FIRST_STRIKE', 'TRAMPLE', 'HEXPROOF', 'INFECT', 'INDESTRUCTIBLE', 'VIGILANCE', 'REACH']
+    const badgesGame = withCardIcons(animBase, mystic, [
+      ...allIcons.map((k) => ({ cardIconType: `ABILITY_${k}`, text: '', hint: k })),
+      { cardIconType: 'OTHER_HAS_RESTRICTIONS', text: '', hint: "Goaded by <font color='#20B2AA'>Opponent</font> (must attack)" },
+    ])
+    entries.push({
+      id: 'anim:card-badges',
+      group: 'Animaciones',
+      label: 'Card badges: glyphs and tooltips',
+      description: `${mysticName} carries every ability icon the server can send, merged with its rules keywords into one glyph set (no duplicates, no emoji). Hover or tap a badge for its name and rules summary.`,
+      phase: 'game',
+      game: badgesGame,
+      gameId,
+      action: { label: 'Replay', run: replayQuiet(goadBase, gameId, () => badgesGame) },
+    })
+    const lowLibraryBase = withLibraryCount(animBase, meOfBase?.playerId, 4)
+    entries.push({
+      id: 'anim:library-low',
+      group: 'Animaciones',
+      label: 'Library: running low (3 cards)',
+      description: 'The new-table library chip of your portrait. "Replay" draws your library from 4 to 3 cards: it starts to glow red and breathe, a steady state that stays while three cards or fewer remain.',
+      phase: 'game',
+      game: lowLibraryBase,
+      gameId,
+      gameUi: 'v2',
+      action: { label: 'Replay', run: replayQuiet(lowLibraryBase, gameId, (g) => withLibraryCount(g, meOfBase?.playerId, 3)) },
+    })
+    const lastCardBase = withLibraryCount(animBase, meOfBase?.playerId, 1)
+    entries.push({
+      id: 'anim:library-empty',
+      group: 'Animaciones',
+      label: 'Library: runs out (new table)',
+      description: 'The library chip of your portrait, down to its last card. "Replay" empties it: the chip shakes, a crack flashes across it in red and it stays outlined in red at 0.',
+      phase: 'game',
+      game: lastCardBase,
+      gameId,
+      gameUi: 'v2',
+      action: { label: 'Replay', run: replayQuiet(lastCardBase, gameId, (g) => withLibraryCount(g, meOfBase?.playerId, 0)) },
+    })
+    entries.push({
+      id: 'anim:library-empty-classic',
+      group: 'Animaciones',
+      label: 'Library: runs out (classic pile)',
+      description: 'The classic table, where the library is a pile: "Replay" takes its last card, and the pile shakes, cracks in red and stays outlined in red at 0.',
+      phase: 'game',
+      game: lastCardBase,
+      gameId,
+      gameUi: 'v1',
+      action: { label: 'Replay', run: replayQuiet(lastCardBase, gameId, (g) => withLibraryCount(g, meOfBase?.playerId, 0)) },
+    })
+    const attackedBase = withOpponentAttacker(animBase, mystic)
+    entries.push({
+      id: 'anim:block-lunge',
+      group: 'Animaciones',
+      label: 'Combat: your blocker steps up to the attacker',
+      description: `The opponent attacks you. "Replay" blocks with ${mysticName}: it steps up the board towards the attacker with a brief cyan flash and stays a little forward while it blocks.`,
+      phase: 'game',
+      game: attackedBase,
+      gameId,
+      action: { label: 'Replay', run: replayQuiet(attackedBase, gameId, (g) => declareBlocker(g, mystic)) },
+    })
+    const opponentHeldBack = mapOpponent(withOpponentAttacker(animBase, mystic), (p) => ({
+      ...p,
+      battlefield: { ...p.battlefield, [GALLERY_OPP_ATTACKER_ID]: { ...p.battlefield?.[GALLERY_OPP_ATTACKER_ID], tapped: false } },
+    }))
+    const heldBack = {
+      ...mapControlled(opponentHeldBack, (p) => ({ ...p, battlefield: { ...p.battlefield, [mystic]: { ...p.battlefield?.[mystic], tapped: true } } })),
+      combat: [{ attackers: { [mystic]: {} }, blockers: {}, isBlocked: false, defenderId: opponentOfBase?.playerId }] as unknown as GameView['combat'],
+    }
+    entries.push({
+      id: 'anim:block-lunge-opp',
+      group: 'Animaciones',
+      label: 'Combat: their blocker steps down to your attacker',
+      description: `You attack with ${mysticName}. "Replay" has the opponent block with their creature: it steps down the board towards your attacker, mirroring yours.`,
+      phase: 'game',
+      game: heldBack,
+      gameId,
+      action: { label: 'Replay', run: replayQuiet(heldBack, gameId, (g) => declareBlocker(g, GALLERY_OPP_ATTACKER_ID)) },
+    })
+    const strikesBase = withTwoAttackers(game)
+    entries.push({
+      id: 'anim:combat-strikes',
+      group: 'Animaciones',
+      label: 'Combat: sequential strikes, then the deaths',
+      description: 'Declare-blockers step: your Elvish Mystic is blocked by theirs and your Grizzly Bears is unblocked. "Replay" moves to combat damage: the Mystic lunges into its blocker, then the Bears into the opponent, each with sparks and a shake on impact and the opponent\'s -2 on the second; only after the last strike do both Mystics fly to their graveyards.',
+      phase: 'game',
+      game: strikesBase,
+      gameId,
+      action: { label: 'Replay', run: replayQuiet(strikesBase, gameId, dealCombatDamage) },
+    })
+    entries.push({
+      id: 'anim:destroy',
+      group: 'Animaciones',
+      label: 'Destroy: ember burn on the way to the graveyard',
+      description: `"Replay" destroys ${mysticName}: embers and a scorch burst where it stood and the card flies, burning, to your graveyard (the slot itself dissolves).`,
+      phase: 'game',
+      game: animBase,
+      gameId,
+      action: { label: 'Replay', run: replayQuiet(animBase, gameId, (g) => sendToGraveyard(g, mystic)) },
+    })
+    entries.push({
+      id: 'anim:exile',
+      group: 'Animaciones',
+      label: 'Exile: white flash and flight to the exile pile (classic table)',
+      description: `Classic table. "Replay" exiles ${mysticName}: a white flash bursts where it stood and the card flies, pale, to your exile pile.`,
+      phase: 'game',
+      game: animBase,
+      gameId,
+      gameUi: 'v1',
+      action: { label: 'Replay', run: replayQuiet(animBase, gameId, (g) => sendToExile(g, mystic)) },
+    })
+    entries.push({
+      id: 'anim:discard',
+      group: 'Animaciones',
+      label: 'Discard: a card flies from your hand to the graveyard',
+      description: '"Replay" discards the first card of your hand: it leaves the hand and flies to your graveyard, and the graveyard count flashes +1.',
+      phase: 'game',
+      game: animBase,
+      gameId,
+      action: { label: 'Replay', run: replayQuiet(animBase, gameId, discardFirstCard) },
+    })
+    const tokenBase = withFadingToken(animBase)
+    entries.push({
+      id: 'anim:token-fade',
+      group: 'Animaciones',
+      label: 'Token: fades away when it leaves the battlefield',
+      description: 'A Spirit token is on your battlefield. "Replay" removes it (a token that leaves goes to no zone): a puff fades out where it stood, with no flight to the graveyard.',
+      phase: 'game',
+      game: tokenBase,
+      gameId,
+      action: { label: 'Replay', run: replayQuiet(tokenBase, gameId, (g) => removeFromBattlefield(g, GALLERY_FADING_TOKEN_ID)) },
+    })
+    const reanimateBase = sendToGraveyard(animBase, mystic)
+    entries.push({
+      id: 'anim:reanimate',
+      group: 'Animaciones',
+      label: 'Reanimate: a creature returns from the graveyard',
+      description: `${mysticName} starts in your graveyard. "Replay" returns it to the battlefield: it lifts out of the graveyard pile, not your hand, holds and drops onto its row.`,
+      phase: 'game',
+      game: reanimateBase,
+      gameId,
+      action: { label: 'Replay', run: replayQuiet(reanimateBase, gameId, (g) => returnFromGraveyard(g, mystic)) },
+    })
+    entries.push({
+      id: 'anim:exile-v2',
+      group: 'Animaciones',
+      label: 'Exile: white flash and flight to the exile chip (new table)',
+      description: `New table. "Replay" exiles ${mysticName}: a white flash bursts where it stood and the card flies, pale, to the exile chip of your portrait.`,
+      phase: 'game',
+      game: animBase,
+      gameId,
+      gameUi: 'v2',
+      action: { label: 'Replay', run: replayQuiet(animBase, gameId, (g) => sendToExile(g, mystic)) },
+    })
+    const ptGame = untapPermanent(animBase, mystic)
+    const ptBase = ptOf(ptGame, mystic)
+    entries.push({
+      id: 'anim:pt-pump',
+      group: 'Animaciones',
+      label: 'P/T: a pump pops the box green',
+      description: `"Replay" gives ${mysticName} +3/+3 until end of turn (no counters): its P/T box pops and flashes green and "+3/+3" floats up from it.`,
+      phase: 'game',
+      game: ptGame,
+      gameId,
+      action: { label: 'Replay', run: replayQuiet(ptGame, gameId, (g) => withPt(g, mystic, ptBase.power + 3, ptBase.toughness + 3)) },
+    })
+    const pumpedBase = withPt(ptGame, mystic, ptBase.power + 2, ptBase.toughness + 2)
+    entries.push({
+      id: 'anim:pt-shrink',
+      group: 'Animaciones',
+      label: 'P/T: a shrink pops the box red',
+      description: `${mysticName} starts at +2/+2. "Replay" gives it -2/-2: its P/T box pops and flashes red and "-2/-2" floats up from it.`,
+      phase: 'game',
+      game: pumpedBase,
+      gameId,
+      action: { label: 'Replay', run: replayQuiet(pumpedBase, gameId, (g) => withPt(g, mystic, ptBase.power, ptBase.toughness)) },
+    })
+    entries.push({
+      id: 'anim:pt-mixed',
+      group: 'Animaciones',
+      label: 'P/T: a mixed change pops the box gold',
+      description: `${mysticName} starts at +2/+2. "Replay" gives it +2/-1: its P/T box pops and flashes gold and "+2/-1" floats up from it.`,
+      phase: 'game',
+      game: pumpedBase,
+      gameId,
+      action: { label: 'Replay', run: replayQuiet(pumpedBase, gameId, (g) => withPt(g, mystic, ptBase.power + 4, ptBase.toughness + 1)) },
+    })
+    entries.push({
+      id: 'anim:regrowth',
+      group: 'Animaciones',
+      label: 'Regrowth: a card returns from your graveyard to your hand',
+      description: `${mysticName} starts in your graveyard. "Replay" returns it to your hand: it flies out of the graveyard pile into the hand, not from the library.`,
+      phase: 'game',
+      game: reanimateBase,
+      gameId,
+      action: { label: 'Replay', run: replayQuiet(reanimateBase, gameId, (g) => returnGraveyardToHand(g, mystic)) },
+    })
+    if (opponentOfBase) {
+      const oppGraveBase = withOpponentGraveyardCard(animBase, opponentOfBase)
+      entries.push({
+        id: 'anim:opp-regrowth',
+        group: 'Animaciones',
+        label: 'Regrowth: an opponent card returns from their graveyard to their hand',
+        description: `Grizzly Bears is in ${opponentOfBase.name}'s graveyard. "Replay" returns it to their hand (the server only sends their hand count): it flies face up out of their graveyard pile to their hand, with no face-down draw from the library.`,
+        phase: 'game',
+        game: oppGraveBase,
+        gameId,
+        action: { label: 'Replay', run: replayQuiet(oppGraveBase, gameId, (g) => opponentRegrowth(g, opponentOfBase)) },
+      })
+    }
+    entries.push({
+      id: 'anim:exile-from-hand',
+      group: 'Animaciones',
+      label: 'Exile from hand: a card flies from your hand to the exile pile',
+      description: '"Replay" exiles the first card of your hand (foretell, an exile-from-hand cost): it leaves the hand with a white flash and flies, pale, to your exile pile.',
+      phase: 'game',
+      game: animBase,
+      gameId,
+      action: { label: 'Replay', run: replayQuiet(animBase, gameId, exileFirstHandCard) },
+    })
+    const delveBase = withDelveGraveyard(animBase)
+    entries.push({
+      id: 'anim:exile-from-graveyard',
+      group: 'Animaciones',
+      label: 'Exile from graveyard: delve exiles three cards',
+      description: '"Replay" delves three cards of your graveyard: one after another they flash white on the graveyard pile and fly, pale, to your exile pile.',
+      phase: 'game',
+      game: delveBase,
+      gameId,
+      action: { label: 'Replay', run: replayQuiet(delveBase, gameId, delveThree) },
+    })
+    entries.push({
+      id: 'anim:exile-from-library',
+      group: 'Animaciones',
+      label: 'Exile from library: impulse draw turns the top card face up',
+      description: '"Replay" exiles the top card of your library (impulse draw, cascade): it leaves the library face down with a white flash, turns face up halfway and lands, pale, on your exile pile.',
+      phase: 'game',
+      game: animBase,
+      gameId,
+      action: { label: 'Replay', run: replayQuiet(animBase, gameId, exileTopOfLibrary) },
+    })
+    const flashbackBase = withMyPriority(withInPile(animBase, 'graveyard', faithlessLooting(FLASHBACK_ID, meOfBase)))
+    entries.push({
+      id: 'anim:flashback',
+      group: 'Animaciones',
+      label: 'Flashback: a spell is cast from your graveyard',
+      description: 'Faithless Looting is in your graveyard. "Replay" casts it with flashback: it lifts out of the graveyard pile (not your hand) to the middle of the screen, holds, then flies to the stack with the gold trail.',
+      phase: 'game',
+      game: flashbackBase,
+      gameId,
+      action: { label: 'Replay', run: replayQuiet(flashbackBase, gameId, (g) => castFromMyPile(g, 'graveyard', FLASHBACK_ID)) },
+    })
+    const impulseBase = withMyPriority(withInPile(animBase, 'exile', { ...bolt(IMPULSE_ID, meOfBase), id: IMPULSE_ID }))
+    entries.push({
+      id: 'anim:cast-from-exile',
+      group: 'Animaciones',
+      label: 'Cast from exile: an impulse-drawn spell leaves the exile pile',
+      description: 'A Lightning Bolt you exiled with impulse draw is in your exile. "Replay" casts it: it lifts out of the exile pile (not your hand) to the middle of the screen, holds, then flies to the stack with the gold trail.',
+      phase: 'game',
+      game: impulseBase,
+      gameId,
+      action: { label: 'Replay', run: replayQuiet(impulseBase, gameId, (g) => castFromMyPile(g, 'exile', IMPULSE_ID)) },
+    })
+    const wrathBase = withMyPriority(withWrathOnStack(withWipeCrowd(animBase)))
+    entries.push({
+      id: 'anim:board-wipe',
+      group: 'Animaciones',
+      label: 'Board wipe: Wrath of God sweeps the board',
+      description: 'Wrath of God is on the stack and both players have creatures. "Replay" resolves it: the board darkens and shakes, one wave of white-gold light sweeps it from left to right, and each creature burns and flies to its graveyard as the wave reaches it, so the whole Wrath reads as one event.',
+      phase: 'game',
+      game: wrathBase,
+      gameId,
+      action: { label: 'Replay', run: replayQuiet(wrathBase, gameId, resolveWrath) },
+    })
+    const wipePodBase = withMyPriority(withWrathOnStack(podBase))
+    entries.push({
+      id: 'anim:board-wipe-pod',
+      group: 'Animaciones',
+      label: 'Board wipe: Wrath of God in a four-player pod',
+      description: 'Four-player pod. "Replay" resolves Wrath of God: the wave crosses every seat at once while the board shakes, and the creatures of all four players die in its wake, left to right.',
+      phase: 'game',
+      game: wipePodBase,
+      gameId,
+      boardLayout: 'pod',
+      action: { label: 'Replay', run: replayQuiet(wipePodBase, gameId, resolveWrath) },
+    })
+    const faceUpLabels: Record<GalleryFaceDown, { label: string; description: string }> = {
+      morph: {
+        label: 'Morph: a face-down creature is turned face up',
+        description: 'A face-down 2/2 (morph) is on your battlefield. "Replay" turns it face up: a dark shroud closes over it while it turns edge-on, then Den Protector comes round lit, a green burst and ring spreading from it.',
+      },
+      manifest: {
+        label: 'Manifest: a manifested card is turned face up',
+        description: 'A manifested face-down 2/2 is on your battlefield. "Replay" turns it face up: it darkens and turns edge-on, then Elite Vanguard comes round out of the shadow with a white-gold burst and ring.',
+      },
+    }
+    for (const kind of ['morph', 'manifest'] as const) {
+      const faceDownBase = withFaceDown(animBase, kind)
+      entries.push({
+        id: `anim:${kind}-face-up`,
+        group: 'Animaciones',
+        label: faceUpLabels[kind].label,
+        description: faceUpLabels[kind].description,
+        phase: 'game',
+        game: faceDownBase,
+        gameId,
+        action: { label: 'Replay', run: replayQuiet(faceDownBase, gameId, (g) => turnFaceUp(g, kind)) },
+      })
+    }
+    const oppIdOfBase = opponentOfBase?.playerId
+    const myIdOfBase = meOfBase?.playerId
+    const poisonBase = withPlayerCounter(animBase, oppIdOfBase, 'poison', 2)
+    entries.push({
+      id: 'anim:poison',
+      group: 'Animaciones',
+      label: 'Poison: the opponent gets a poison counter',
+      description: 'The opponent has 2 poison counters. "Replay" gives them a third (infect, toxic): the poison badge on their info bar pops and flashes toxic green, a ring spreads, green drops drip off it and a green "+1" floats up while the number ticks.',
+      phase: 'game',
+      game: poisonBase,
+      gameId,
+      action: { label: 'Replay', run: replayQuiet(poisonBase, gameId, (g) => withPlayerCounter(g, oppIdOfBase, 'poison', 3)) },
+    })
+    const nearLethalBase = withPlayerCounter(animBase, oppIdOfBase, 'poison', 9)
+    entries.push({
+      id: 'anim:poison-lethal',
+      group: 'Animaciones',
+      label: 'Poison: the tenth poison counter',
+      description: 'The opponent has 9 poison counters. "Replay" gives them the tenth: on top of the badge pulse and drip, a toxic cloud bursts over their seat with a green shockwave, the board shakes, and the badge keeps glowing green.',
+      phase: 'game',
+      game: nearLethalBase,
+      gameId,
+      action: { label: 'Replay', run: replayQuiet(nearLethalBase, gameId, (g) => withPlayerCounter(g, oppIdOfBase, 'poison', 10)) },
+    })
+    const podPoisoned = podVictim?.playerId
+    const podPoisonBase = withPlayerCounter(podBase, podPoisoned, 'poison', 4)
+    entries.push({
+      id: 'anim:poison-pod',
+      group: 'Animaciones',
+      label: 'Poison: a pod opponent gets a poison counter',
+      description: 'Four-player pod. "Replay" gives one opponent a fifth poison counter: their seat\'s poison chip pops toxic green, drips and floats a green "+1".',
+      phase: 'game',
+      game: podPoisonBase,
+      gameId,
+      boardLayout: 'pod',
+      action: { label: 'Replay', run: replayQuiet(podPoisonBase, gameId, (g) => withPlayerCounter(g, podPoisoned, 'poison', 5)) },
+    })
+    const energyBase = withPlayerCounter(animBase, myIdOfBase, 'energy', 1)
+    entries.push({
+      id: 'anim:energy',
+      group: 'Animaciones',
+      label: 'Energy: you get two energy counters',
+      description: 'You have 1 energy. "Replay" gives you two more: the energy badge pops and flashes yellow, a yellow bolt cracks over it with sparks, the bolt icon jolts and a yellow "+2" floats up while the number ticks to 3.',
+      phase: 'game',
+      game: energyBase,
+      gameId,
+      action: { label: 'Replay', run: replayQuiet(energyBase, gameId, (g) => withPlayerCounter(g, myIdOfBase, 'energy', 3)) },
+    })
+    const experienceBase = withPlayerCounter(animBase, myIdOfBase, 'experience', 1)
+    entries.push({
+      id: 'anim:player-counter',
+      group: 'Animaciones',
+      label: 'Player counter: an experience counter (generic pulse)',
+      description: 'You have 1 experience counter. "Replay" gives you another: like any other player counter (rad, ticket…), its badge pops with a purple flash and a ring, the number ticks to 2 and a "+1" floats up.',
+      phase: 'game',
+      game: experienceBase,
+      gameId,
+      action: { label: 'Replay', run: replayQuiet(experienceBase, gameId, (g) => withPlayerCounter(g, myIdOfBase, 'experience', 2)) },
+    })
+    const speedBase = withPlayerCounter(animBase, myIdOfBase, 'speed', 1)
+    entries.push({
+      id: 'anim:speed',
+      group: 'Animaciones',
+      label: 'Speed: your speed goes up',
+      description: 'Your speed is 1. "Replay" raises it to 2: the speed chip (a badge on the new table, a counter on the classic one) pops with an ember flash and a ring, and a "+1" floats up.',
+      phase: 'game',
+      game: speedBase,
+      gameId,
+      action: { label: 'Replay', run: replayQuiet(speedBase, gameId, (g) => withPlayerCounter(g, myIdOfBase, 'speed', 2)) },
+    })
+    const stolenId = opponentNonLandId(opponentOfBase)
+    if (stolenId && myIdOfBase && oppIdOfBase) {
+      entries.push({
+        id: 'anim:gain-control',
+        group: 'Animaciones',
+        label: 'Gain control: you take an opponent\'s creature (Threaten)',
+        description: '"Replay" gains control of an opponent\'s creature, as Threaten does: a tether in your seat colour seizes it where it stood, a ring marks its new slot on your side, and the tether reels it across into your battlefield, glowing your colour, instead of the ordinary lift-and-drop entry.',
+        phase: 'game',
+        game: animBase,
+        gameId,
+        action: { label: 'Replay', run: replayQuiet(animBase, gameId, (g) => withControl(g, stolenId, myIdOfBase)) },
+      })
+      const stolenBase = withControl(animBase, stolenId, myIdOfBase)
+      entries.push({
+        id: 'anim:control-return',
+        group: 'Animaciones',
+        label: 'Control returns: the creature goes back to its owner',
+        description: 'The opponent\'s creature is on your battlefield. "Replay" ends the effect (end of turn): a tether in the opponent\'s seat colour pulls it back across to their side.',
+        phase: 'game',
+        game: stolenBase,
+        gameId,
+        action: { label: 'Replay', run: replayQuiet(stolenBase, gameId, (g) => withControl(g, stolenId, oppIdOfBase)) },
+      })
+    }
+    const [podThief, podOwner] = players(podBase).filter((p) => !p.controlled)
+    const podStolenId = opponentNonLandId(podOwner)
+    if (podThief && podStolenId) {
+      entries.push({
+        id: 'anim:gain-control-pod',
+        group: 'Animaciones',
+        label: 'Gain control: one pod opponent steals from another',
+        description: `Four-player pod. "Replay" gives ${podThief.name} control of a creature of ${podOwner.name}: a tether in ${podThief.name}'s seat colour reels it from one opponent's seat into the other's.`,
+        phase: 'game',
+        game: podBase,
+        gameId,
+        boardLayout: 'pod',
+        action: { label: 'Replay', run: replayQuiet(podBase, gameId, (g) => withControl(g, podStolenId, podThief.playerId)) },
+      })
+    }
+    entries.push({
+      id: 'anim:tuck',
+      group: 'Animaciones',
+      label: 'Put on the library: your permanent is tucked (new table)',
+      description: `"Replay" puts ${mysticName} into your library, as Chaos Warp does: a cool vortex draws it down where it stood, and it flies to the library chip of your portrait, turning face down on the way.`,
+      phase: 'game',
+      game: animBase,
+      gameId,
+      gameUi: 'v2',
+      action: { label: 'Replay', run: replayQuiet(animBase, gameId, (g) => tuckPermanent(g, mystic)) },
+    })
+    entries.push({
+      id: 'anim:tuck-classic',
+      group: 'Animaciones',
+      label: 'Put on the library: your permanent is tucked (classic table)',
+      description: `Classic table, where the library is a pile of card backs: "Replay" tucks ${mysticName}; it sinks into the vortex and flies onto the pile, turning face down.`,
+      phase: 'game',
+      game: animBase,
+      gameId,
+      gameUi: 'v1',
+      action: { label: 'Replay', run: replayQuiet(animBase, gameId, (g) => tuckPermanent(g, mystic)) },
+    })
+    entries.push({
+      id: 'anim:hand-to-library',
+      group: 'Animaciones',
+      label: 'Put on the library: two hand cards go back (Brainstorm)',
+      description: '"Replay" puts the first two cards of your hand back on top of your library, as Brainstorm does: one after the other they leave the hand face up and turn face down as they fly into the library.',
+      phase: 'game',
+      game: animBase,
+      gameId,
+      action: { label: 'Replay', run: replayQuiet(animBase, gameId, (g) => putBackFromHand(g, 2)) },
+    })
+    if (opponentOfBase) {
+      const oppPutBackBase = withOpponentHandDelta(animBase, opponentOfBase, +2)
+      entries.push({
+        id: 'anim:opp-hand-to-library',
+        group: 'Animaciones',
+        label: 'Put on the library: the opponent puts two hand cards back (classic table)',
+        description: `Classic table, where the opponent's hand is drawn as card backs. The server only sends ${opponentOfBase.name}'s hand and library counts: "Replay" shrinks the hand by two and grows the library by two, with nothing reaching a graveyard, an exile or the stack, and two face-down cards fly from their hand to their library pile.`,
+        phase: 'game',
+        game: oppPutBackBase,
+        gameId,
+        gameUi: 'v1',
+        action: { label: 'Replay', run: replayQuiet(oppPutBackBase, gameId, (g) => opponentPutBack(g, opponentOfBase, 2)) },
+      })
+    }
+    const rancorBase = withMyPriority(withRancorOnStack(animBase, mystic))
+    entries.push({
+      id: 'anim:aura-attach',
+      group: 'Animaciones',
+      label: 'Aura: Rancor enters attached to its host',
+      description: `Rancor is on the stack, aimed at ${mysticName}. "Replay" resolves it: it lifts, holds and drops into its slot beside the creature, then a green thread of light binds it to ${mysticName}, a ring closes round the host and both glow green.`,
+      phase: 'game',
+      game: rancorBase,
+      gameId,
+      action: { label: 'Replay', run: replayQuiet(rancorBase, gameId, resolveRancor) },
+    })
+    entries.push({
+      id: 'anim:aura-attach-classic',
+      group: 'Animaciones',
+      label: 'Aura: Rancor enters attached to its host (classic table)',
+      description: 'The same Rancor on the classic table: it drops into its slot under the host and the green thread, ring and glow bind them.',
+      phase: 'game',
+      game: rancorBase,
+      gameId,
+      gameUi: 'v1',
+      action: { label: 'Replay', run: replayQuiet(rancorBase, gameId, resolveRancor) },
+    })
+    const mutateBase = withMyPriority(withMutateOnStack(animBase))
+    entries.push({
+      id: 'anim:mutate',
+      group: 'Animaciones',
+      label: 'Mutate: Gemrazer merges over your creature',
+      description: `Gemrazer is on the stack, cast for its mutate cost. "Replay" merges it over ${mysticName}: instead of leaving the stack for a graveyard, it flies down onto the creature, green ripples wobble out, the host squashes and swells as they merge, and the pile now shows Gemrazer on top with ${mysticName} under it.`,
+      phase: 'game',
+      game: mutateBase,
+      gameId,
+      action: { label: 'Replay', run: replayQuiet(mutateBase, gameId, (g) => mutateOnto(g, mystic, true)) },
+    })
+    entries.push({
+      id: 'anim:mutate-under',
+      group: 'Animaciones',
+      label: 'Mutate: Gemrazer merges under your creature',
+      description: `The same merge with Gemrazer put under ${mysticName}: it flies onto the creature and ripples, and the host keeps its face with Gemrazer peeking out beneath it.`,
+      phase: 'game',
+      game: mutateBase,
+      gameId,
+      action: { label: 'Replay', run: replayQuiet(mutateBase, gameId, (g) => mutateOnto(g, mystic, false)) },
+    })
+    const manland = landIds(meOfBase)[0] ?? ''
+    const villageBase = withAnimatedLand(animBase, manland, false)
+    const villageAnimated = withAnimatedLand(animBase, manland, true)
+    entries.push({
+      id: 'anim:land-animate',
+      group: 'Animaciones',
+      label: 'Animated land: a manland rises into the creature band (classic table)',
+      description: 'Classic table. Treetop Village sits with your lands. "Replay" activates it: a column of green light lifts it where it stood, it flies up into the creature band and lands there lit green, a 3/3 Ape.',
+      phase: 'game',
+      game: villageBase,
+      gameId,
+      gameUi: 'v1',
+      action: { label: 'Replay', run: replayQuiet(villageBase, gameId, (g) => withAnimatedLand(g, manland, true)) },
+    })
+    entries.push({
+      id: 'anim:land-animate-v2',
+      group: 'Animaciones',
+      label: 'Animated land: a manland rises into the creature band (new table)',
+      description: 'The same activation on the new table: Treetop Village leaves the land row in a column of green light and lands among your creatures, glowing.',
+      phase: 'game',
+      game: villageBase,
+      gameId,
+      gameUi: 'v2',
+      action: { label: 'Replay', run: replayQuiet(villageBase, gameId, (g) => withAnimatedLand(g, manland, true)) },
+    })
+    entries.push({
+      id: 'anim:land-unanimate',
+      group: 'Animaciones',
+      label: 'Animated land: the effect ends and it settles back',
+      description: 'Treetop Village is a 3/3 Ape among your creatures. "Replay" ends the effect, as at end of turn: it flies back down to your lands, quicker and softer, and dims for a moment as it settles.',
+      phase: 'game',
+      game: villageAnimated,
+      gameId,
+      action: { label: 'Replay', run: replayQuiet(villageAnimated, gameId, (g) => withAnimatedLand(g, manland, false)) },
+    })
+    const copterBase = withVehicle(untapPermanent(animBase, mystic), mystic)
+    entries.push({
+      id: 'anim:vehicle-crew',
+      group: 'Animaciones',
+      label: "Vehicle crewed: Smuggler's Copter becomes a creature",
+      description: `Smuggler's Copter sits with your other permanents. "Replay" crews it with ${mysticName}: the Mystic taps, the Copter rises in a column of gold light into the creature band and lands there glowing.`,
+      phase: 'game',
+      game: copterBase,
+      gameId,
+      action: { label: 'Replay', run: replayQuiet(copterBase, gameId, (g) => crewVehicle(g, mystic)) },
+    })
+    entries.push({
+      id: 'anim:emblem',
+      group: 'Animaciones',
+      label: 'Emblem: it pops into the command zone',
+      description: 'No emblem yet. "Replay" gives you Emblem Gideon, shaped as the server sends it: the command zone opens beside your creatures and the emblem pops in with a violet flash, two rings and gold sparks.',
+      phase: 'game',
+      game: animBase,
+      gameId,
+      action: { label: 'Replay', run: replayQuiet(animBase, gameId, (g) => withMyCommandItem(g, galleryEmblem())) },
+    })
+    const dungeonBase = withMyCommandItem(animBase, galleryDungeon('Cave Entrance'))
+    entries.push({
+      id: 'anim:dungeon',
+      group: 'Animaciones',
+      label: 'Dungeon: venturing into the next room',
+      description: 'You are in Lost Mine of Phandelver, at Cave Entrance (the dungeon badge on your info bar). "Replay" ventures into Goblin Lair: the badge flares like a torch, a ring and embers rise from it and "Goblin Lair" floats up. The dungeon map in the mechanics panel lights the new room.',
+      phase: 'game',
+      game: dungeonBase,
+      gameId,
+      action: { label: 'Replay', run: replayQuiet(dungeonBase, gameId, (g) => withMyCommandItem(g, galleryDungeon('Goblin Lair'))) },
+    })
+    const planeBase = withPlane(animBase, 'gallery-plane-akoum', 'Plane - Akoum', AKOUM)
+    entries.push({
+      id: 'anim:planeswalk',
+      group: 'Animaciones',
+      label: 'Planechase: planeswalking rolls the new plane in',
+      description: 'Akoum is the plane in your command zone. "Replay" planeswalks to Academy at Tolaria West: a planar portal swirls open over the command zone and the new plane rolls down into it out of the flash.',
+      phase: 'game',
+      game: planeBase,
+      gameId,
+      action: { label: 'Replay', run: replayQuiet(planeBase, gameId, (g) => withPlane(g, 'gallery-plane-tolaria', 'Plane - Academy at Tolaria West', TOLARIA_WEST)) },
+    })
+    entries.push({
+      id: 'anim:hand-revealed',
+      group: 'Animaciones',
+      label: "Hand revealed: the opponent's hand fans out face up (classic table)",
+      description: `Classic table. "Replay" lets you see three cards of ${opponentOfBase?.name ?? 'the opponent'}'s hand (watchedHands): they leave the hand face down, fan out below it and turn face up one after another, hold, then fold back into the hand.`,
+      phase: 'game',
+      game: animBase,
+      gameId,
+      gameUi: 'v1',
+      action: { label: 'Replay', run: replayQuiet(animBase, gameId, (g) => withWatchedHand(g, opponentOfBase)) },
+    })
+    entries.push({
+      id: 'anim:hand-revealed-v2',
+      group: 'Animaciones',
+      label: "Hand revealed: the opponent's hand fans out face up (new table)",
+      description: "New table, where an opponent's hand is only a badge on the portrait: the three cards fan out of the hand badge face up, card by card, and fold back into it. The badge keeps pulsing: click it to open the hand.",
+      phase: 'game',
+      game: animBase,
+      gameId,
+      gameUi: 'v2',
+      action: { label: 'Replay', run: replayQuiet(animBase, gameId, (g) => withWatchedHand(g, opponentOfBase)) },
+    })
+    const bushiBase = withFlipCard(untapPermanent(animBase, mystic), mystic, false)
+    entries.push({
+      id: 'anim:flip-card',
+      group: 'Animaciones',
+      label: 'Flip card: Bushi Tenderfoot flips into Kenzo the Hardhearted',
+      description: 'A Kamigawa flip card. "Replay" flips Bushi Tenderfoot: the card lifts, turns a half circle on its face with a white flash and an arc of light, and settles upside down as Kenzo the Hardhearted.',
+      phase: 'game',
+      game: bushiBase,
+      gameId,
+      action: { label: 'Replay', run: replayQuiet(bushiBase, gameId, (g) => withFlipCard(g, mystic, true)) },
+    })
+    const slamBase = withMyPriority(withHeavySpellInHand(animBase))
+    entries.push({
+      id: 'anim:spell-slam',
+      group: 'Animaciones',
+      label: 'Spell weight: a 7-mana sorcery slams the board',
+      description: 'Cruel Ultimatum (mana value 7) is in your hand. "Replay" casts it, a heavy flight to the stack, then resolves it: the board dims, a flash in its colours and a ring spread from the centre, the board quakes and the epic impact plays.',
+      phase: 'game',
+      game: slamBase,
+      gameId,
+      action: { label: 'Replay', run: replayQuietThen(slamBase, gameId, castHeavySpell, resolveHeavySpell, 60 + CAST_FLIGHT_MS + 700) },
+    })
+    entries.push({
+      id: 'anim:ability-source',
+      group: 'Animaciones',
+      label: 'Ability on the stack: its source pulses',
+      description: `"Replay" puts a triggered ability of ${mysticName} on the stack: the Mystic on the battlefield pulses while the ability flies to the stack.`,
+      phase: 'game',
+      game: animBase,
+      gameId,
+      action: { label: 'Replay', run: replayQuiet(animBase, gameId, (g) => triggerAbilityOf(g, mystic)) },
+    })
+    entries.push({
+      id: 'anim:turn-banner',
+      group: 'Animaciones',
+      label: 'Turn banner: a new turn starts',
+      description: `Turn ${animBase.turn}, your combat. "Replay" sends the first view of turn ${animBase.turn + 1}: the centred banner announces the turn number and ${opponentOfBase?.name ?? 'the opponent'}, the new active player.`,
+      phase: 'game',
+      game: animBase,
+      gameId,
+      action: { label: 'Replay', run: replayQuiet(animBase, gameId, (g) => startNextTurn(g, opponentOfBase)) },
+    })
+    const wipeBase = withStep(animBase, 'PRECOMBAT_MAIN', 'PRECOMBAT_MAIN')
+    entries.push({
+      id: 'anim:phase-wipe',
+      group: 'Animaciones',
+      label: 'Phase bar: the active step wipes in (classic table)',
+      description: 'Classic table, main phase 1. Each press of "Next step" advances one step: the new active badge in the phase bar wipes in with a spring and the step name fades in beside it.',
+      phase: 'game',
+      game: wipeBase,
+      gameId,
+      gameUi: 'v1',
+      action: { label: 'Next step', apply: advanceStep },
+    })
+    if (opponentOfBase) {
+      const millDraw = (g: GameView): GameView => {
+        const milled = Object.fromEntries([0, 1, 2].map((i) => {
+          const id = `gallery-count-milled-${i}`
+          return [id, { ...LIBRARY_CARDS[i % LIBRARY_CARDS.length], id, manaValue: 0 } as CardView]
+        }))
+        return {
+          ...g,
+          players: players(g).map((p) => (p.playerId === opponentOfBase.playerId
+            ? { ...p, libraryCount: Math.max(0, (p.libraryCount ?? 0) - 5), handCount: (p.handCount ?? 0) + 2, graveyard: { ...p.graveyard, ...milled } }
+            : p)),
+        }
+      }
+      entries.push({
+        id: 'anim:count-flash',
+        group: 'Animaciones',
+        label: 'Zone counts: +N / -N flash on the portrait',
+        description: `"Replay" makes ${opponentOfBase.name} mill 3 and draw 2 in one update: their portrait flashes "-5" over the library, "+3" over the graveyard and "+2" over the hand, while the milled cards fly to the graveyard and two face-down cards to their hand.`,
+        phase: 'game',
+        game: animBase,
+        gameId,
+        action: { label: 'Replay', run: replayQuiet(animBase, gameId, millDraw) },
+      })
+    }
+    const timerBase = withMyPriority(animBase)
+    entries.push({
+      id: 'anim:timer-low',
+      group: 'Animaciones',
+      label: 'Priority timer: tick, then shake when time runs low',
+      description: 'You hold priority. "Replay" gives you 12 seconds on the clock: the timer badge counts down in amber, from 10 s each second pops with a tick (and the tick sound), and from 5 s it turns red and shakes until 00:00.',
+      phase: 'game',
+      game: timerBase,
+      gameId,
+      action: { label: 'Replay', run: replayQuiet(timerBase, gameId, (g) => withMyTimer(g, 12)) },
+    })
+    if (opponentOfBase && meOfBase) {
+      const recapViews = opponentTurnRecapViews(animBase, mystic)
+      const recapGame = recapViews[recapViews.length - 1] ?? animBase
+      entries.push({
+        id: 'anim:turn-recap',
+        group: 'Animaciones',
+        label: 'Turn recap: what happened on the opponent turn',
+        description: `"Replay" feeds one ${opponentOfBase.name} turn through the real recap observer (they cast Grizzly Bears, attack, destroy ${mysticName} and you lose 1 life), then your turn starts: the recap strip slides down from the top with the summary and a chip for the destroyed card. It hides after 10 s.`,
+        phase: 'game',
+        game: recapGame,
+        gameId,
+        action: { label: 'Replay', run: replayTurnRecap(recapViews, gameId) },
+      })
+    }
+    entries.push({
+      id: 'anim:end-victory',
+      group: 'Animaciones',
+      label: 'End screen: victory cinematic',
+      description: '"Replay" closes and reopens the match-won screen: gold rays fan out and spin, the title lands, gold particles rise, and the result panel rises in after 0.7 s.',
+      screen: 'gameend',
+      phase: 'game',
+      game,
+      gameId,
+      gameEnd: GAME_END_MATCH,
+      action: { label: 'Replay', run: replayGameEnd(GAME_END_MATCH) },
+    })
+    entries.push({
+      id: 'anim:end-defeat',
+      group: 'Animaciones',
+      label: 'End screen: defeat cinematic',
+      description: '"Replay" closes and reopens the game-lost screen: dark red rays fan out and spin, the title sinks in, grey ash particles fall, and the result panel rises in after 0.7 s.',
+      screen: 'gameend',
+      phase: 'game',
+      game,
+      gameId,
+      gameEnd: GAME_END_GAME,
+      action: { label: 'Replay', run: replayGameEnd(GAME_END_GAME) },
+    })
+  }
+
+  if (THREE_PLAYER_COMMANDER && COMMANDER_FRAME) {
+    const cmdMe = controlledPlayer(THREE_PLAYER_COMMANDER)
+    const cmdRival = opponentPlayer(THREE_PLAYER_COMMANDER)
+    if (cmdMe && cmdRival) {
+      const cmdTurn = withStep(startNextTurn({ ...THREE_PLAYER_COMMANDER, turn: 5 }, cmdRival, 'PRECOMBAT_MAIN'), 'POSTCOMBAT_MAIN', 'POSTCOMBAT_MAIN')
+      const cmdBase = withCommanderDamage(cmdTurn, cmdRival.playerId, cmdMe, 18)
+      const cmdReplay = replayQuiet(cmdBase, COMMANDER_FRAME.gameId, (g) => withCommanderDamage(g, cmdRival.playerId, cmdMe, 21))
+      entries.push({
+        id: 'anim:commander-lethal',
+        group: 'Animaciones',
+        label: 'Commander damage: lethal cell pulses (classic table)',
+        description: `Classic table, three-player Commander. ${cmdRival.name}'s commander has dealt you 18. "Replay" opens the Commander drawer and raises it to 21: the warning turns into a red lethal alert and the matrix cell pulses red, looping.`,
+        phase: 'game',
+        game: cmdBase,
+        gameId: COMMANDER_FRAME.gameId,
+        gameUi: 'v1',
+        action: {
+          label: 'Replay',
+          run: () => {
+            openDrawerTab('commander')
+            cmdReplay()
+          },
+        },
+      })
+    }
+  }
+
+  if (COMMANDER_ZONE_FRAME) {
+    const cmdGame = withMyPriority(calmGame(COMMANDER_ZONE_FRAME.gameView))
+    const cmdGameId = COMMANDER_ZONE_FRAME.gameId
+    const cmdMe = controlledPlayer(cmdGame)
+    const cmdName = commanderOf(cmdMe)?.name ?? 'your commander'
+    if (cmdMe && commanderOf(cmdMe)) {
+      const onField = withCommanderIn(cmdGame, cmdMe.playerId, 'battlefield')
+      const inGrave = withCommanderIn(cmdGame, cmdMe.playerId, 'graveyard')
+      const back = () => ({ ...cmdGame })
+      entries.push({
+        id: 'anim:commander-to-command',
+        group: 'Animaciones',
+        label: 'Commander: back to the command zone from the battlefield (classic table)',
+        description: `Commander duel (recorded frame), ${cmdName} is on your battlefield. "Replay" sends it to the command zone, as a bounce or exile replaced by the commander rule does: a column of gold light and a crown lift off where it stood, it flies in a gold-and-violet glow into its command-zone slot, and a gold ring spreads there as it lands.`,
+        phase: 'game',
+        game: onField,
+        gameId: cmdGameId,
+        gameUi: 'v1',
+        action: { label: 'Replay', run: replayQuiet(onField, cmdGameId, back) },
+      })
+      entries.push({
+        id: 'anim:commander-to-command-v2',
+        group: 'Animaciones',
+        label: 'Commander: back to the command zone from the battlefield (new table)',
+        description: `The same return on the new table: ${cmdName} lifts off the battlefield in the crown's light and flies into the command-zone slot beside your creatures.`,
+        phase: 'game',
+        game: onField,
+        gameId: cmdGameId,
+        gameUi: 'v2',
+        action: { label: 'Replay', run: replayQuiet(onField, cmdGameId, back) },
+      })
+      entries.push({
+        id: 'anim:commander-grave-to-command',
+        group: 'Animaciones',
+        label: 'Commander: from the graveyard to the command zone',
+        description: `${cmdName} died and is in your graveyard, where the server asks "Move ${cmdName} to the command zone?". "Replay" answers yes: the crown's light rises out of the graveyard pile and the commander flies from it into the command zone, instead of vanishing from the pile.`,
+        phase: 'game',
+        game: inGrave,
+        gameId: cmdGameId,
+        action: { label: 'Replay', run: replayQuiet(inGrave, cmdGameId, back) },
+      })
+      entries.push({
+        id: 'anim:commander-cast',
+        group: 'Animaciones',
+        label: 'Commander: cast from the command zone',
+        description: `${cmdName} is in your command zone. "Replay" casts it: the crown's light rises from the command zone and the commander lifts out of it, not out of your hand, holds in the middle of the screen and flies to the stack with the gold trail.`,
+        phase: 'game',
+        game: cmdGame,
+        gameId: cmdGameId,
+        action: { label: 'Replay', run: replayQuiet(cmdGame, cmdGameId, castMyCommander) },
+      })
+    }
+  }
+  if (THREE_PLAYER_COMMANDER && COMMANDER_FRAME) {
+    const podCmd = withMyPriority(withStep(startNextTurn({ ...THREE_PLAYER_COMMANDER, turn: 5 }, controlledPlayer(THREE_PLAYER_COMMANDER), 'PRECOMBAT_MAIN'), 'PRECOMBAT_MAIN', 'PRECOMBAT_MAIN'))
+    const podRival = opponentPlayer(podCmd)
+    if (podRival && commanderOf(podRival)) {
+      const rivalOnField = withCommanderIn(podCmd, podRival.playerId, 'battlefield')
+      entries.push({
+        id: 'anim:commander-to-command-pod',
+        group: 'Animaciones',
+        label: 'Commander: an opponent\'s commander goes back to the command zone (pod)',
+        description: `Three-player Commander pod. ${podRival.name}'s commander is on their battlefield; "Replay" sends it back to their command zone: the gold column and crown rise from their seat and the card flies into the command zone of that seat.`,
+        phase: 'game',
+        game: rivalOnField,
+        gameId: COMMANDER_FRAME.gameId,
+        boardLayout: 'pod',
+        action: { label: 'Replay', run: replayQuiet(rivalOnField, COMMANDER_FRAME.gameId, () => ({ ...podCmd })) },
+      })
+    }
   }
 
   const slicerFrame = recordedFrames.find((frame) => frame.file === 'slicer.json')
