@@ -8,8 +8,32 @@ export interface DeckLike {
   name: string
   cards: { cardName: string; setCode: string; cardNumber: string; amount: number }[]
   sideboard: { cardName: string; setCode: string; cardNumber: string; amount: number }[]
+  commanders?: { cardName: string; setCode: string; cardNumber: string; amount: number }[]
   commanderCard?: { cardName: string; setCode: string; cardNumber: string; amount: number }
   partnerCard?: { cardName: string; setCode: string; cardNumber: string; amount: number }
+}
+
+/** Fold card names for comparison: collapses straight/curly apostrophes and whitespace. */
+export function foldCardName(name: string): string {
+  return (name ?? '').replace(/[’']/g, "'").trim().toLowerCase()
+}
+
+/** Synchronizes commanders array with commanderCard and partnerCard for XMage validation. */
+export function syncCommandersForValidation<D extends DeckLike>(deck: D): D {
+  if (!deck.commanderCard) return deck
+  const commanders: { cardName: string; setCode: string; cardNumber: string; amount: number }[] = [deck.commanderCard]
+  if (
+    deck.partnerCard &&
+    (deck.partnerCard.cardName !== deck.commanderCard.cardName ||
+      deck.partnerCard.setCode !== deck.commanderCard.setCode ||
+      deck.partnerCard.cardNumber !== deck.commanderCard.cardNumber)
+  ) {
+    commanders.push(deck.partnerCard)
+  }
+  return {
+    ...deck,
+    commanders,
+  }
 }
 
 /**
@@ -19,7 +43,8 @@ export interface DeckLike {
  */
 export async function fetchDeckIssues(deck: DeckLike): Promise<DeckValidationResult | null> {
   try {
-    const report = await validateDeck(deck as never)
+    const payload = syncCommandersForValidation(deck)
+    const report = await validateDeck(payload as never)
     return report && report.ready ? report : null
   } catch (e) {
     console.warn('[deckIssues] validateDeck no disponible:', e instanceof Error ? e.message : e)
@@ -29,7 +54,7 @@ export async function fetchDeckIssues(deck: DeckLike): Promise<DeckValidationRes
 
 /** Clave estable de una entrada de mazo (cardName|setCode|cardNumber). */
 export function deckIssueKey(cardName: string, setCode: string, cardNumber: string): string {
-  return `${cardName}|${setCode}|${cardNumber}`
+  return `${(cardName ?? '').replace(/[’']/g, "'").trim()}|${(setCode ?? '').trim().toUpperCase()}|${(cardNumber ?? '').trim()}`
 }
 
 /** Formato web -> deckType de config.xml del servidor (null: sin validador en XMage). */
@@ -114,14 +139,22 @@ export function fixesForIssue(issue: DeckIssue, to: DeckPrinting): DeckFix[] {
   return issuePrintings(issue).map((from) => ({ from, to: target }))
 }
 
-/** Reemplaza la impresión `from` por `to` en main y sideboard (misma cantidad). */
+/** Checks if two card printings refer to the same printing (case/apostrophe-insensitive). */
+export function isSamePrinting(a: DeckPrinting, b: DeckPrinting): boolean {
+  return (
+    foldCardName(a.cardName) === foldCardName(b.cardName) &&
+    a.setCode.trim().toUpperCase() === b.setCode.trim().toUpperCase() &&
+    a.cardNumber.trim().toLowerCase() === b.cardNumber.trim().toLowerCase()
+  )
+}
+
+/** Reemplaza la impresión `from` por `to` en main, sideboard, commanders y comandante designado. */
 export function applySuggestion<D extends { cards: DeckPrinting[]; sideboard: DeckPrinting[] }>(
   deck: D,
   from: DeckPrinting,
   to: DeckPrinting,
 ): D {
-  const samePrinting = (c: DeckPrinting) =>
-    c.cardName === from.cardName && c.setCode === from.setCode && c.cardNumber === from.cardNumber
+  const samePrinting = (c: DeckPrinting) => isSamePrinting(c, from)
   const swap = (cards: DeckPrinting[]) =>
     cards.map((c) =>
       samePrinting(c)
@@ -129,6 +162,11 @@ export function applySuggestion<D extends { cards: DeckPrinting[]; sideboard: De
         : c,
     )
   const next: D = { ...deck, cards: swap(deck.cards), sideboard: swap(deck.sideboard) }
+  if (Array.isArray((deck as Record<string, unknown>).commanders)) {
+    ;(next as Record<string, unknown>).commanders = swap(
+      (deck as Record<string, unknown>).commanders as DeckPrinting[],
+    )
+  }
   for (const field of ['commanderCard', 'partnerCard', 'coverCard'] as const) {
     const cur = (next as Record<string, unknown>)[field] as DeckPrinting | undefined | null
     if (cur && samePrinting(cur)) {
@@ -166,6 +204,8 @@ export function findFlaggedSameName(
   cardName: string,
 ): number {
   return cards.findIndex(
-    (c) => c.cardName === cardName && flaggedKeys.has(deckIssueKey(c.cardName, c.setCode, c.cardNumber)),
+    (c) =>
+      foldCardName(c.cardName) === foldCardName(cardName) &&
+      flaggedKeys.has(deckIssueKey(c.cardName, c.setCode, c.cardNumber)),
   )
 }

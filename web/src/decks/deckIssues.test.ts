@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { setGateway } from '../net/commands'
 import type { Gateway } from '../net/Gateway'
-import { fetchFormatIssues, xmageDeckTypeFor, applySuggestion, applySuggestions, autoResolveFixes, deckIssueKey, fixesForIssue, issuePrintings, findFlaggedSameName, issueKeysFromReport } from './deckIssues'
+import { fetchFormatIssues, xmageDeckTypeFor, applySuggestion, applySuggestions, autoResolveFixes, deckIssueKey, fixesForIssue, issuePrintings, findFlaggedSameName, issueKeysFromReport, isSamePrinting, syncCommandersForValidation } from './deckIssues'
 import type { DeckValidationResult } from '../net/types'
 
 const report: DeckValidationResult = {
@@ -63,6 +63,54 @@ describe('deckIssues helpers', () => {
     expect(next.commanderCard).toMatchObject({ setCode: 'CMR', cardNumber: '535' })
     expect(next.coverCard).toMatchObject({ setCode: 'CMR', cardNumber: '535' })
     expect(next.cards[0]).toMatchObject({ setCode: 'CMR', cardNumber: '535' })
+  })
+
+  it('applySuggestion actualiza el array commanders si existe en mazos importados', () => {
+    const deck = {
+      name: 'CMD',
+      cards: [{ cardName: "Trostani, Selesnya's Voice", setCode: 'SLD', cardNumber: '2429', amount: 1 }],
+      sideboard: [],
+      commanders: [{ cardName: "Trostani, Selesnya's Voice", setCode: 'SLD', cardNumber: '2429', amount: 1 }],
+      commanderCard: { cardName: "Trostani, Selesnya's Voice", setCode: 'SLD', cardNumber: '2429', amount: 1 },
+    }
+    const next = applySuggestion(
+      deck,
+      { cardName: "Trostani, Selesnya's Voice", setCode: 'SLD', cardNumber: '2429' },
+      { cardName: "Trostani, Selesnya's Voice", setCode: 'C19', cardNumber: '204' },
+    )
+    expect(next.commanders[0]).toMatchObject({ setCode: 'C19', cardNumber: '204' })
+    expect(next.commanderCard).toMatchObject({ setCode: 'C19', cardNumber: '204' })
+    expect(next.cards[0]).toMatchObject({ setCode: 'C19', cardNumber: '204' })
+  })
+
+  it('isSamePrinting y applySuggestion toleran diferencias de mayúsculas y apóstrofes tipográficos', () => {
+    const from = { cardName: "Trostani, Selesnya's Voice", setCode: 'SLD', cardNumber: '2429' }
+    const inDeck = { cardName: 'Trostani, Selesnya’s Voice', setCode: 'sld', cardNumber: '2429' }
+    expect(isSamePrinting(inDeck, from)).toBe(true)
+
+    const deck = {
+      name: 'CMD',
+      cards: [{ cardName: 'Trostani, Selesnya’s Voice', setCode: 'sld', cardNumber: '2429', amount: 1 }],
+      sideboard: [],
+      commanderCard: { cardName: 'Trostani, Selesnya’s Voice', setCode: 'sld', cardNumber: '2429', amount: 1 },
+    }
+    const next = applySuggestion(deck, from, { cardName: "Trostani, Selesnya's Voice", setCode: 'C19', cardNumber: '204' })
+    expect(next.cards[0]).toMatchObject({ setCode: 'C19', cardNumber: '204' })
+    expect(next.commanderCard).toMatchObject({ setCode: 'C19', cardNumber: '204' })
+  })
+
+  it('syncCommandersForValidation sincroniza commanders con commanderCard y partnerCard', () => {
+    const cmd = { cardName: "Trostani, Selesnya's Voice", setCode: 'C19', cardNumber: '204', amount: 1 }
+    const staleCmd = { cardName: "Trostani, Selesnya's Voice", setCode: 'SLD', cardNumber: '2429', amount: 1 }
+    const deck = {
+      name: 'CMD',
+      cards: [cmd],
+      sideboard: [],
+      commanders: [staleCmd],
+      commanderCard: cmd,
+    }
+    const synced = syncCommandersForValidation(deck)
+    expect(synced.commanders).toEqual([cmd])
   })
 
   it('autoResolveFixes takes the first suggestion of every flagged card that has one', () => {

@@ -22,7 +22,7 @@ import CurveChart from './CurveChart'
 import { DeckImportModal } from './DeckImportModal'
 import { exportTxt } from './parseDck'
 import type { CardStripMeta } from './ArenaCardStrip'
-import { applySuggestions, fetchDeckIssues, fetchFormatIssues, type DeckFix } from './deckIssues'
+import { applySuggestions, deckIssueKey, fetchDeckIssues, fetchFormatIssues, type DeckFix } from './deckIssues'
 import { deckCardKey } from './deckCardOps'
 import { withCommanderFirst, derivePartnerCard } from './deckUtils'
 import { FORMAT_CONFIGS } from './formatRules'
@@ -333,7 +333,20 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
 
   const handleRepairIssue = (fixes: DeckFix[]) => {
     if (!deck) return
-    schedulePersist(applySuggestions(deck, fixes))
+    const next = applySuggestions(deck, fixes)
+    schedulePersist(next)
+    updateMetaForDeck([...next.cards, ...next.sideboard])
+    setServerIssues((prev) => {
+      if (!prev) return null
+      const fixedFromKeys = new Set(fixes.map((f) => deckIssueKey(f.from.cardName, f.from.setCode, f.from.cardNumber)))
+      const keep = (c: { cardName: string; setCode: string; cardNumber: string }) =>
+        !fixedFromKeys.has(deckIssueKey(c.cardName, c.setCode, c.cardNumber))
+      return {
+        ...prev,
+        missing: prev.missing.filter(keep),
+        mismatches: prev.mismatches.filter(keep),
+      }
+    })
   }
 
   // Cover Card Art for Header
