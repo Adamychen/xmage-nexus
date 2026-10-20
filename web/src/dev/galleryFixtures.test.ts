@@ -77,6 +77,13 @@ describe('galería de estados (P3)', () => {
       'anim:counter-change',
       'anim:loyalty-change',
       'anim:mill',
+      'anim:countered',
+      'anim:transform',
+      'anim:bounce',
+      'anim:life-gain',
+      'anim:shuffle',
+      'anim:shuffle-opp',
+      'anim:shuffle-classic',
     ]
     for (const id of withAction) expect(entry(entries, id).action?.label, id).toBeTruthy()
     const staticStates = ['anim:life-6', 'anim:chosen-target', 'anim:opp-pill-required', 'anim:opp-pill-optional']

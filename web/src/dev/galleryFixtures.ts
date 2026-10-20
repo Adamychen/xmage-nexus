@@ -28,6 +28,8 @@ import type { RollbackVote } from '../state/rollbackVote'
 import { STORAGE_KEY as CREATE_TABLE_STORAGE_KEY } from '../lobby/CreateTable/constants'
 import manifest from '../../fixtures/recorded/manifest.json'
 import { replayProjectileDemo } from './projectileDemo'
+import type { GameUi } from '../game/gameUi'
+import { handleChatMessage } from '../state/events/chat'
 
 interface FrameModule {
   default: { gameId: string; gameView: GameView }
@@ -123,6 +125,8 @@ export interface GalleryEntry {
   myDeck?: Deck | null
   chatMessages?: ChatMessageEvent[]
   boardLayout?: 'standard' | 'pod' | 'arena'
+  /** Table interface for this state; omitted = the viewer's setting. */
+  gameUi?: GameUi
   /** Rollback vote dialog state (`rollbackVote` in the store). */
   rollbackVote?: RollbackVote | null
   uiScale?: number
@@ -932,6 +936,25 @@ function replayCast(base: GameView, cast: (game: GameView) => GameView): () => v
   }
 }
 
+const QUIET_RESET_GAME_ID = 'gallery-quiet-reset'
+
+/**
+ * Like `replayCast`, but the reset itself never animates: the base view arrives under another
+ * game id and then under the real one, and the transition engine never diffs views of different
+ * games. Needed when undoing the change would itself play an animation (a bounced card entering
+ * again, a transformed card flipping back).
+ */
+function replayQuiet(base: GameView, gameId: string, change: (game: GameView) => GameView): () => void {
+  return () => {
+    setState({ game: { ...base }, gameId: QUIET_RESET_GAME_ID })
+    setTimeout(() => setState({ game: { ...base }, gameId }), 0)
+    setTimeout(() => {
+      const current = getState().game
+      if (current) setState({ game: change(current) })
+    }, 60)
+  }
+}
+
 /** Sets the count of one +1/+1 counter on a permanent; the server sends counters as {name, count} pairs. */
 function withPlusCounter(game: GameView, id: string, count: number): GameView {
   return mapControlled(game, (p) => {
@@ -996,6 +1019,103 @@ function withMilledCard(game: GameView, templateId: string): GameView {
     if (!template) return p
     return { ...p, graveyard: { ...p.graveyard, 'gallery-milled': { ...template, id: 'gallery-milled', name: 'Milled Card' } } }
   })
+}
+
+const COUNTERSPELL_ID = 'gallery-counterspell'
+const COUNTERED_ID = 'gallery-countered-bolt'
+
+/** The opponent's Bolt aims at my creature and my Counterspell, on top, targets the Bolt. */
+function withCounterspellOnStack(game: GameView, creatureId: string): GameView {
+  const me = controlledPlayer(game)
+  const opponent = opponentPlayer(game)
+  const counterspell = {
+    id: COUNTERSPELL_ID,
+    name: 'Counterspell',
+    displayName: 'Counterspell',
+    expansionSetCode: 'MH2',
+    cardNumber: '267',
+    manaValue: 2,
+    cardTypes: ['Instant'],
+    rules: ['Counter target spell.'],
+    targets: [COUNTERED_ID],
+    controllerId: me?.playerId,
+    controllerName: me?.name,
+  }
+  const target = { ...bolt(COUNTERED_ID, opponent), targets: [creatureId] }
+  return { ...game, stack: { [COUNTERSPELL_ID]: counterspell, [COUNTERED_ID]: target } as unknown as GameView['stack'] }
+}
+
+/** Both leave the stack in one update, each to its controller's graveyard; the creature is untouched. */
+function resolveCounterspell(game: GameView): GameView {
+  const stack = game.stack ?? {}
+  return {
+    ...game,
+    stack: {} as unknown as GameView['stack'],
+    players: players(game).map((p) => {
+      const mine = Object.entries(stack).filter(([, spell]) => spell.controllerId === p.playerId)
+      return mine.length > 0 ? { ...p, graveyard: { ...p.graveyard, ...Object.fromEntries(mine) } } : p
+    }),
+  }
+}
+
+/** A day/night double-faced creature on the controlled battlefield, on the given face; the server flags the back face with `transformed`. */
+function withDelver(game: GameView, templateId: string, transformed: boolean): GameView {
+  return mapControlled(game, (p) => {
+    const template = p.battlefield?.[templateId]
+    if (!template) return p
+    const face = transformed
+      ? { name: 'Insectile Aberration', displayName: 'Insectile Aberration', power: '3', toughness: '2', abilities: ['Flying'] }
+      : { name: 'Delver of Secrets', displayName: 'Delver of Secrets', power: '1', toughness: '1', abilities: [] }
+    return {
+      ...p,
+      battlefield: {
+        ...p.battlefield,
+        [templateId]: { ...template, ...face, expansionSetCode: 'ISD', cardNumber: '51', manaValue: 1, cardTypes: ['Creature'], transformed, tapped: false, counters: [] },
+      },
+    }
+  })
+}
+
+/** Returns a controlled permanent to my hand: it leaves the battlefield and shows up in `myHand`. */
+function bounceToMyHand(game: GameView, id: string): GameView {
+  const me = controlledPlayer(game)
+  const perm = me?.battlefield?.[id]
+  if (!me || !perm) return game
+  const battlefield = { ...me.battlefield }
+  delete battlefield[id]
+  return {
+    ...game,
+    myHand: { ...(game.myHand ?? {}), [id]: perm },
+    players: players(game).map((p) => (p === me ? { ...p, battlefield, handCount: (p.handCount ?? 0) + 1 } : p)),
+  }
+}
+
+/** Returns an opponent's permanent to their hand: only their hand count tells where it went. */
+function bounceToOpponentHand(game: GameView, owner: PlayerView | undefined, id: string): GameView {
+  if (!owner) return game
+  return {
+    ...game,
+    players: players(game).map((p) => {
+      if (p.playerId !== owner.playerId || !p.battlefield?.[id]) return p
+      const battlefield = { ...p.battlefield }
+      delete battlefield[id]
+      return { ...p, battlefield, handCount: (p.handCount ?? 0) + 1 }
+    }),
+  }
+}
+
+function opponentNonLandId(player: PlayerView | undefined): string | undefined {
+  return Object.entries(player?.battlefield ?? {})
+    .find(([, perm]) => !(perm.cardTypes ?? []).some((t) => String(t).toLowerCase() === 'land'))?.[0]
+}
+
+/** The game-log line `PlayerImpl.shuffleLibrary` broadcasts, fed through the real chat handler. */
+function announceShuffle(player: PlayerView | undefined): () => void {
+  return () => {
+    if (!player) return
+    const message = `<font color='#20B2AA'>${player.name}</font>'s library is shuffled (source: <font color='#6495ED'>Evolving Wilds</font>)`
+    handleChatMessage({ message, messageType: 'GAME', username: '' }, null, getState())
+  }
 }
 
 const COIN_GAME_ID = 'gallery-coin-flip'
@@ -1899,6 +2019,96 @@ export function buildGalleryEntries(): GalleryEntry[] {
       game: animBase,
       gameId,
       action: { label: 'Replay', run: replayCast(animBase, (g) => withMilledCard(g, mystic)) },
+    })
+    const counterBaseGame = withCounterspellOnStack(animBase, mystic)
+    entries.push({
+      id: 'anim:countered',
+      group: 'Animaciones',
+      label: 'Stack: countered spell cracks and shatters',
+      description: 'The opponent\'s Lightning Bolt targets your creature and your Counterspell, on top, targets the Bolt. "Replay" resolves both in one update: Counterspell\'s projectile hits the Bolt, which shudders, drains of colour, cracks and bursts into blue shards, then falls to the graveyard. No projectile reaches the creature.',
+      phase: 'game',
+      game: counterBaseGame,
+      gameId,
+      action: { label: 'Replay', run: replayQuiet(counterBaseGame, gameId, resolveCounterspell) },
+    })
+    const delverFront = withDelver(animBase, mystic, false)
+    entries.push({
+      id: 'anim:transform',
+      group: 'Animaciones',
+      label: 'Transform: double-faced card flips to its other face',
+      description: 'Press "Replay" to reset Delver of Secrets to its front face and then transform it: the card turns edge-on, comes back as Insectile Aberration with a bright flash, a light sweep crosses it and a white-gold ring spreads out.',
+      phase: 'game',
+      game: delverFront,
+      gameId,
+      action: { label: 'Replay', run: replayQuiet(delverFront, gameId, (g) => withDelver(g, mystic, true)) },
+    })
+    entries.push({
+      id: 'anim:bounce',
+      group: 'Animaciones',
+      label: 'Bounce: your permanent returns to your hand',
+      description: 'Press "Replay" to return Elvish Mystic to your hand: a blue swirl closes in where it stood and the card flies to your hand.',
+      phase: 'game',
+      game: animBase,
+      gameId,
+      action: { label: 'Replay', run: replayQuiet(animBase, gameId, (g) => bounceToMyHand(g, mystic)) },
+    })
+    const opponentBounceId = opponentNonLandId(opponentOfBase)
+    if (opponentBounceId) {
+      entries.push({
+        id: 'anim:opp-bounce',
+        group: 'Animaciones',
+        label: 'Bounce: an opponent permanent returns to their hand',
+        description: 'Press "Replay" to return an opponent\'s permanent to their hand (the server only sends their hand count): the blue swirl plays and the card flies to their hand, with no face-down draw from the library.',
+        phase: 'game',
+        game: animBase,
+        gameId,
+        action: { label: 'Replay', run: replayQuiet(animBase, gameId, (g) => bounceToOpponentHand(g, opponentOfBase, opponentBounceId)) },
+      })
+    }
+    const lifeGainBase = withLife(animBase, 14)
+    entries.push({
+      id: 'anim:life-gain',
+      group: 'Animaciones',
+      label: 'Life gain: green motes rise over your portrait',
+      description: 'Press "Replay" to set your life to 14 and then gain 4: a green glow lights your info bar, green-gold motes rise out of it and a "+4" floats up.',
+      phase: 'game',
+      game: lifeGainBase,
+      gameId,
+      action: { label: 'Replay', run: replayQuiet(lifeGainBase, gameId, (g) => withLife(g, 18)) },
+    })
+    const meOfBase = controlledPlayer(animBase)
+    entries.push({
+      id: 'anim:shuffle',
+      group: 'Animaciones',
+      label: 'Shuffle: your library (new table, chip)',
+      description: 'Press "Replay" to feed the server\'s log line "<you>\'s library is shuffled": a mini deck of three card backs in your sleeve pops out above the library chip of your portrait, splits in two halves, riffles single cards back into the middle and drops into the chip.',
+      phase: 'game',
+      game: animBase,
+      gameId,
+      gameUi: 'v2',
+      action: { label: 'Replay', run: announceShuffle(meOfBase) },
+    })
+    entries.push({
+      id: 'anim:shuffle-opp',
+      group: 'Animaciones',
+      label: 'Shuffle: opponent library (new table, chip)',
+      description: 'Same log line for the opponent: the mini deck (default card back) riffles above the library chip of their portrait.',
+      phase: 'game',
+      game: animBase,
+      gameId,
+      gameUi: 'v2',
+      action: { label: 'Replay', run: announceShuffle(opponentOfBase) },
+    })
+    entries.push({
+      id: 'anim:shuffle-classic',
+      group: 'Animaciones',
+      label: 'Shuffle: your library (classic table, pile)',
+      description: 'Classic table, where the library is a pile of card backs: "Replay" riffles the pile in place, the two halves fan out, single cards fall back into the middle and the pile squares up.',
+      phase: 'game',
+      game: animBase,
+      gameId,
+      gameUi: 'v1',
+      action: { label: 'Replay', run: announceShuffle(meOfBase) },
     })
     const coinPre = coinPregame(animBase)
     entries.push({

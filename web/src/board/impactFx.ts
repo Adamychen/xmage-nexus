@@ -6,7 +6,7 @@ import { soundManager } from '../audio/soundManager'
 
 export type ManaColor = 'w' | 'u' | 'b' | 'r' | 'g'
 export type SpellWeight = 0 | 1 | 2
-export type ImpactKind = 'slam' | 'sparks' | 'destroy' | 'exile' | 'token-pop' | 'token-fade' | 'enter-ring'
+export type ImpactKind = 'slam' | 'sparks' | 'destroy' | 'exile' | 'token-pop' | 'token-fade' | 'enter-ring' | 'countered' | 'transform' | 'bounce' | 'heal'
 
 export interface ImpactFx {
   id: number
@@ -89,6 +89,10 @@ const BASE_MS: Record<ImpactKind, number> = {
   'token-pop': 650,
   'token-fade': 700,
   'enter-ring': 900,
+  countered: 760,
+  transform: 820,
+  bounce: 640,
+  heal: 1100,
 }
 
 export function spawnImpact(

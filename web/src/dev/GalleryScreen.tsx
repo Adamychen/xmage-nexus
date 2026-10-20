@@ -141,6 +141,7 @@ export default function GalleryScreen() {
       settings: {
         ...base.settings,
         boardLayout: active.boardLayout ?? base.settings.boardLayout,
+        gameUi: active.gameUi ?? base.settings.gameUi,
         uiScale: active.uiScale ?? base.settings.uiScale,
         cjkBoost: active.cjkBoost ?? base.settings.cjkBoost,
       },

@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { detectAndAnimateTransitions } from './gameTransitionEngine'
+import { counteredSpellIds, detectAndAnimateTransitions, opponentBounceIds } from './gameTransitionEngine'
+import { clearImpacts, getImpacts } from './impactFx'
 import { clearCardPositionRegistry, recordCardPosition } from './cardPositionRegistry'
 import { clearFlights, getActiveFlights, hasFlightFor } from './flightManager'
 import { clearFeedbackFx, getFeedbackFxState } from './feedbackFx'
@@ -230,6 +231,86 @@ describe('gameTransitionEngine — stack resolution and feedback', () => {
     clearFeedbackFx()
     detectAndAnimateTransitions(baseGame({ players: [player({ life: 17 })] }), baseGame({ players: [player({ life: 19 })] }))
     expect(getFeedbackFxState().floaters.some((f) => f.text === '+2' && f.tone === 'good')).toBe(true)
+  })
+
+  it('spawns rising heal motes and lights the bar on life gain, not on life loss', () => {
+    document.body.innerHTML = '<div class="player-info-bar" data-player-id="p1" data-player-name="Alice"></div>'
+    clearImpacts()
+    detectAndAnimateTransitions(baseGame({ players: [player({ life: 17 })] }), baseGame({ players: [player({ life: 15 })] }))
+    expect(getImpacts().some((fx) => fx.kind === 'heal')).toBe(false)
+
+    detectAndAnimateTransitions(baseGame({ players: [player({ life: 15 })] }), baseGame({ players: [player({ life: 19 })] }))
+    expect(getImpacts().some((fx) => fx.kind === 'heal')).toBe(true)
+    expect(document.querySelector('.player-info-bar')?.classList.contains('gained-life')).toBe(true)
+  })
+
+  it('a countered spell shatters on the stack and fires no projectile at its own target', async () => {
+    document.body.innerHTML =
+      '<div class="stack-deck"><div data-card-id="bolt-1"></div><div data-card-id="cs-1"></div></div>'
+      + '<div data-player-id="p1" data-player-name="Alice"><div class="graveyard-stack"></div><div class="card-slot" data-card-id="c1"></div></div>'
+    clearImpacts()
+    const counterspell = { id: 'cs-1', name: 'Counterspell', targets: ['bolt-1'] } as unknown as CardView
+    const aimed = { ...bolt, targets: ['c1'] } as unknown as CardView
+    const creature = { id: 'c1', name: 'Grizzly Bears', cardTypes: ['Creature'], damage: 0 }
+    const prev = baseGame({ stack: { 'cs-1': counterspell, 'bolt-1': aimed }, players: [player({ battlefield: { c1: creature as never } })] })
+    const next = baseGame({ stack: {}, players: [player({ battlefield: { c1: creature as never }, graveyard: { 'cs-1': counterspell, 'bolt-1': aimed } })] })
+    recordCardPosition('cs-1', domRect(1000, 500), 'stack-zone')
+    recordCardPosition('bolt-1', domRect(1000, 520), 'stack-zone')
+
+    expect([...counteredSpellIds(prev.stack, next.stack, next)]).toEqual(['bolt-1'])
+    detectAndAnimateTransitions(prev, next)
+    await new Promise((resolve) => setTimeout(resolve, 1400))
+
+    expect(getImpacts().some((fx) => fx.kind === 'countered')).toBe(true)
+    expect(hasFlightFor('bolt-1')).toBe(true)
+  })
+
+  it('a spell that resolves with its targets is not countered', () => {
+    const aimed = { ...bolt, targets: ['c1'] } as unknown as CardView
+    const prev = baseGame({ stack: { 'bolt-1': aimed } })
+    const next = baseGame({ stack: {}, players: [player({ graveyard: { 'bolt-1': aimed } })] })
+    expect(counteredSpellIds(prev.stack, next.stack, next).size).toBe(0)
+  })
+
+  it('reads an opponent permanent that vanished while their hand grew as bounced, never a token', () => {
+    const bear = { id: 'c1', name: 'Grizzly Bears', cardTypes: ['Creature'] }
+    const token = { id: 't1', name: 'Soldier', cardTypes: ['Creature'], isToken: true }
+    const prevP = player({ handCount: 2, battlefield: { c1: bear as never, t1: token as never } })
+    const nextP = player({ handCount: 3, battlefield: {} })
+    expect(opponentBounceIds(prevP, nextP, baseGame({}))).toEqual(['c1'])
+    expect(opponentBounceIds(prevP, { ...nextP, handCount: 2 }, baseGame({}))).toEqual([])
+    expect(opponentBounceIds(prevP, { ...nextP, controlled: true }, baseGame({}))).toEqual([])
+  })
+
+  it('flies an opponent bounce to their hand with a swirl and no face-down draw', async () => {
+    document.body.innerHTML =
+      '<div data-player-id="p1" data-player-name="Alice"><div class="library-stack"></div><div class="hand-zone"></div><div class="card-slot" data-card-id="c1"></div></div>'
+    clearImpacts()
+    const bear = { id: 'c1', name: 'Grizzly Bears', cardTypes: ['Creature'] }
+    const prev = baseGame({ players: [player({ handCount: 2, battlefield: { c1: bear as never } })] })
+    const next = baseGame({ players: [player({ handCount: 3, battlefield: {} })] })
+
+    detectAndAnimateTransitions(prev, next)
+    await new Promise((resolve) => setTimeout(resolve, 200))
+
+    expect(getImpacts().some((fx) => fx.kind === 'bounce')).toBe(true)
+    expect(hasFlightFor('c1')).toBe(true)
+    expect(getActiveFlights().some((f) => f.card.faceDown === true)).toBe(false)
+  })
+
+  it('flips a permanent whose transformed flag changed', async () => {
+    document.body.innerHTML = '<div data-player-id="p1"><div class="card-slot" data-card-id="d1"></div></div>'
+    clearImpacts()
+    const front = { id: 'd1', name: 'Delver of Secrets', cardTypes: ['Creature'], transformed: false }
+    const back = { ...front, name: 'Insectile Aberration', transformed: true }
+    detectAndAnimateTransitions(
+      baseGame({ players: [player({ battlefield: { d1: front as never } })] }),
+      baseGame({ players: [player({ battlefield: { d1: back as never } })] }),
+    )
+    await afterLayout()
+    expect(document.querySelector('.card-slot')?.classList.contains('fx-transform-flip')).toBe(true)
+    await new Promise((resolve) => setTimeout(resolve, 400))
+    expect(getImpacts().some((fx) => fx.kind === 'transform')).toBe(true)
   })
 
   it('announces a banner on turn change only', () => {

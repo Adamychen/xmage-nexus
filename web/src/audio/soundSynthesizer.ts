@@ -433,5 +433,25 @@ export function synthesizeSound(ctx: AudioContext, key: SoundKey): AudioBuffer {
       }
       return buf
     }
+
+    case 'shuffle': {
+      const duration = 0.5
+      const buf = makeBuffer(ctx, duration)
+      const data = buf.getChannelData(0)
+      const sr = ctx.sampleRate
+      const flicks = 22
+      let b0 = 0
+      for (let i = 0; i < data.length; i++) {
+        const t = i / sr
+        const at = Math.min(flicks - 1, Math.floor((t / 0.42) * flicks))
+        const dt = t - (at * 0.42) / flicks
+        const flick = t < 0.42 ? Math.exp(-dt * 260) : 0
+        const white = Math.random() * 2 - 1
+        b0 = 0.6 * b0 + white * 0.4
+        const tap = t > 0.43 ? Math.exp(-(t - 0.43) * 70) * Math.sin(2 * Math.PI * 180 * (t - 0.43)) * 0.6 : 0
+        data[i] = Math.tanh((b0 * flick * 1.6 + tap) * 1.2) * 0.7
+      }
+      return buf
+    }
   }
 }

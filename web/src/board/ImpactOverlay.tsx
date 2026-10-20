@@ -85,6 +85,35 @@ function ImpactItem({ fx }: { fx: ImpactFx }) {
           <Particles fx={fx} count={9} spread={Math.max(26, fx.w * 0.4)} rise={fx.h * 0.3} className="fx-puff" />
         </div>
       )
+    case 'countered':
+      return (
+        <div className="fx-burst fx-countered" data-testid="fx-countered" style={at}>
+          <span className="fx-countered-flash" />
+          <span className="fx-countered-crack" />
+          <Particles fx={fx} count={12} spread={Math.max(44, fx.w * 0.8)} className="fx-shard" />
+        </div>
+      )
+    case 'transform':
+      return (
+        <div className="fx-burst fx-transform" data-testid="fx-transform" style={at}>
+          <span className="fx-transform-sweep" />
+          <span className="fx-transform-ring" />
+        </div>
+      )
+    case 'bounce':
+      return (
+        <div className="fx-burst fx-bounce" data-testid="fx-bounce" style={at}>
+          <span className="fx-bounce-swirl" />
+          <Particles fx={fx} count={8} spread={Math.max(30, fx.w * 0.5)} className="fx-droplet" />
+        </div>
+      )
+    case 'heal':
+      return (
+        <div className="fx-burst fx-heal" data-testid="fx-heal" style={at}>
+          <span className="fx-heal-glow" />
+          <Particles fx={fx} count={12} spread={Math.max(24, fx.w * 0.35)} rise={Math.max(40, fx.h * 1.4)} className="fx-heal-mote" />
+        </div>
+      )
   }
 }
 

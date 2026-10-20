@@ -20,6 +20,7 @@ import { matchHistoryStore } from '../../system/matchHistory'
 import { clearFlights } from '../../board/flightManager'
 import type { Snapshot, EmbeddedGame } from './context'
 import { waitingForName } from '../../game/waitingState'
+import { sniffShuffle } from '../../board/shuffleFx'
 
 interface GameMeta {
   gameId: string
@@ -106,6 +107,7 @@ export function handleGameUpdate(method: string, objectId: string | null, data: 
     sniffRoomDoor(informMessage, objectId ?? s.gameId)
     sniffElimination(informMessage, objectId ?? s.gameId)
     sniffRollbackAnnounce(informMessage, objectId ?? s.gameId)
+    sniffShuffle(informMessage, objectId ?? s.gameId)
   }
   if (embeddedGame) {
     if (embeddedGame.players?.some((p) => p.controlled)) lastSeenGame = embeddedGame

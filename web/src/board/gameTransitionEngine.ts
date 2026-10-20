@@ -15,6 +15,7 @@ import { clearCombatSnapshots, combatantIds, planDamageStrikes, playDamageStrike
 import { spawnDamageNumber } from './DamageNumber'
 import { restingRect } from './restingRect'
 import { observeCoinFlip } from './coinFlipFx'
+import { soundManager } from '../audio/soundManager'
 
 const pendingSlams = new Map<string, CardView>()
 const DAMAGE_TEXT = /\bdamage\b/i
@@ -206,13 +207,68 @@ function flyAfterLayout(
   })
 }
 
+function replayClass(el: Element, cls: string, ms: number): void {
+  el.classList.remove(cls)
+  void (el as HTMLElement).offsetWidth
+  el.classList.add(cls)
+  setTimeout(() => el.classList.remove(cls), ms)
+}
+
 function shakeElement(selector: string, ms = 420): void {
   const el = document.querySelector(selector)
-  if (!el) return
-  el.classList.remove('took-damage')
-  void (el as HTMLElement).offsetWidth
-  el.classList.add('took-damage')
-  setTimeout(() => el.classList.remove('took-damage'), ms)
+  if (el) replayClass(el, 'took-damage', ms)
+}
+
+const COUNTERED_MS = 520
+const TRANSFORM_FLIP_MS = 700
+const BOUNCE_FLIGHT_MS = 420
+
+/**
+ * Spells countered in this update: each left the stack for a graveyard or exile (not the
+ * battlefield) together with another stack object that targeted it, the counterspell.
+ */
+export function counteredSpellIds(prevStack: Record<string, CardView>, nextStack: Record<string, CardView>, nextGame: GameView): Set<string> {
+  const departed = Object.keys(prevStack).filter((id) => !(id in nextStack))
+  const countered = new Set<string>()
+  for (const id of departed) {
+    if (resolvedTo(id, nextGame) !== 'graveyard') continue
+    if (departed.some((other) => other !== id && stackTargetIds(prevStack[other]).includes(id))) countered.add(id)
+  }
+  return countered
+}
+
+/** A permanent that stayed on the battlefield but changed face (transform, day/night, disturb back). */
+function flipTransformed(permId: string): void {
+  if (!fxMotionAllowed()) return
+  scheduleAfterLayout(() => {
+    const slots = [...document.querySelectorAll(`.card-slot[data-card-id="${permId}"]`)].filter((el) => !el.closest(STACK_SELECTOR))
+    const ms = fxMotionDuration(TRANSFORM_FLIP_MS)
+    for (const slot of slots) replayClass(slot, 'fx-transform-flip', ms + 40)
+    const rect = rectOf(slots[0])
+    if (rect) later(Math.round(ms * 0.4), () => spawnImpact('transform', rect))
+  })
+}
+
+/**
+ * Permanents an opponent's battlefield lost to their hand: the server only sends that hand's
+ * count, so a non-token that went nowhere visible while the count grew is read as bounced
+ * (at most as many as the count grew).
+ */
+export function opponentBounceIds(prevP: PlayerView, nextP: PlayerView, nextGame: GameView): string[] {
+  const grown = (nextP.handCount ?? 0) - (prevP.handCount ?? 0)
+  if (nextP.controlled === true || grown <= 0) return []
+  const nextBattlefield = nextP.battlefield ?? {}
+  const myHand = nextGame.myHand ?? {}
+  return Object.entries(prevP.battlefield ?? {})
+    .filter(([id, perm]) => !(id in nextBattlefield) && !(id in (nextP.graveyard ?? {})) && !(id in (nextP.exile ?? {}))
+      && !(id in myHand) && (perm as { isToken?: boolean }).isToken !== true)
+    .map(([id]) => id)
+    .slice(0, grown)
+}
+
+function later(ms: number, fn: () => void): void {
+  if (ms > 0) setTimeout(fn, ms)
+  else fn()
 }
 const SOURCE_PULSE_MS = 600
 
@@ -231,7 +287,6 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
   if (!prevGame || !nextGame) return
   const combatants = new Set(combatantIds(prevGame))
   const strikes = playDamageStrikes(planDamageStrikes(prevGame, nextGame), [...combatants])
-  const later = (ms: number, fn: () => void) => (ms > 0 ? void setTimeout(fn, ms) : fn())
   const pendingLandings = new Map<string, { count: number; queue: Array<() => void> }>()
   const landed = (id: string) => {
     const pending = pendingLandings.get(id)
@@ -375,8 +430,9 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
     } else {
       const prevHandCount = prevP.handCount ?? 0
       const nextHandCount = nextP.handCount ?? 0
-      if (nextHandCount > prevHandCount && libRect && handRect) {
-        const drawnCount = Math.min(3, nextHandCount - prevHandCount)
+      const bouncedCount = opponentBounceIds(prevP, nextP, nextGame).length
+      if (nextHandCount - bouncedCount > prevHandCount && libRect && handRect) {
+        const drawnCount = Math.min(3, nextHandCount - bouncedCount - prevHandCount)
         for (let i = 0; i < drawnCount; i++) {
           const drawnId = `draw-${nextP.playerId}-${Date.now()}-${i}`
           const dummyCard: CardView = {
@@ -474,12 +530,32 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
     //    (token que deja de existir, carta a la biblioteca) no vuela — antes
     //    volaba un fantasma erróneo al cementerio en todos los casos.
     const myHandIds = nextGame.myHand ?? {}
+    const opponentBounces = new Set(isControlled ? [] : opponentBounceIds(prevP, nextP, nextGame))
     for (const [permId, perm] of Object.entries(prevBattlefield)) {
       if (permId in nextBattlefield) continue
       const inGrave = permId in (nextP.graveyard ?? {})
       const inExile = permId in (nextP.exile ?? {})
       const bouncedToHand = permId in myHandIds
+      const bouncedToOpponentHand = opponentBounces.has(permId)
       const registered = getPreviousCardPosition(permId)
+      if (bouncedToOpponentHand) {
+        const fromRect = registered ?? getRect(`[data-card-id="${permId}"]`)
+        if (!fromRect) {
+          noteFlightEvent({ kind: 'skip', reason: 'no-source', cardId: permId, detail: 'bf-bounce' })
+          continue
+        }
+        const prevSize = registered ? getPreviousCardSize(permId) : null
+        afterLanding(permId, deathDelay(permId), () => {
+          spawnImpact('bounce', fromRect)
+          flyAfterLayout(permId, perm, fromRect, [
+            `${pSel} .hand-zone .hand-card-slot:last-child`,
+            `${pSel} .hand-zone`,
+            `.player-info-bar[data-player-id="${nextP.playerId}"] .pp-hand-badge`,
+            `.player-info-bar[data-player-id="${nextP.playerId}"]`,
+          ], handRect ?? getRect(`.player-info-bar[data-player-id="${nextP.playerId}"]`), BOUNCE_FLIGHT_MS, prevSize)
+        })
+        continue
+      }
       if (!inGrave && !inExile && !bouncedToHand) {
         if ((perm as { isToken?: boolean }).isToken) {
           const fadeRect = registered ?? getRect(`[data-card-id="${permId}"]`)
@@ -501,6 +577,7 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
             `${pSel} .exile-stack`,
           ], getRect(`${pSel} .exile-stack`), 420, prevSize, 'exile')
         } else if (bouncedToHand) {
+          spawnImpact('bounce', prevCardRect)
           flyAfterLayout(permId, perm, prevCardRect, [
             `[data-card-id="${permId}"]`,
             '.hand-bar .hand-card-slot:last-child',
@@ -516,6 +593,12 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
           ], graveRect, isLand ? 350 : 420, prevSize, isLand ? undefined : 'destroy')
         }
       })
+    }
+
+    // E) Transform / day-night: the permanent stays but shows its other face.
+    for (const [permId, nextPerm] of Object.entries(nextBattlefield)) {
+      const prevPerm = prevBattlefield[permId]
+      if (prevPerm && (prevPerm.transformed === true) !== (nextPerm.transformed === true)) flipTransformed(permId)
     }
 
     // D) Combat/ability damage feedback: creatures and players that lost life shake
@@ -565,12 +648,10 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
           }
           return
         }
-        spawnFloater(
-          `life:${nextP.playerId}`,
-          deepest.getBoundingClientRect(),
-          `+${nextLife - prevLife}`,
-          'good'
-        )
+        const rect = deepest.getBoundingClientRect()
+        spawnFloater(`life:${nextP.playerId}`, rect, `+${nextLife - prevLife}`, 'good')
+        spawnImpact('heal', rect)
+        replayClass(deepest, 'gained-life', fxMotionDuration(900) + 40)
       }
     }
     if (nextLife !== prevLife) {
@@ -582,7 +663,9 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
   // C) Spells that left the stack resolve one at a time: stackHold keeps each one on display
   //    until its turn ends. Its projectiles fly to its targets (each target's hit waits for the
   //    landing), then it exits to the graveyard/exile or flashes in place. Positions are read
-  //    now, while the spell is still on display.
+  //    now, while the spell is still on display. A countered spell fires nothing: it cracks
+  //    and shatters where it stands, then falls to its graveyard.
+  const countered = counteredSpellIds(prevStack, nextStack, nextGame)
   for (const [spellId, spell] of Object.entries(prevStack)) {
     if (spellId in nextStack) continue
     const registered = getPreviousCardPosition(spellId)
@@ -603,6 +686,16 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
         noteFlightEvent({ kind: 'skip', reason: 'no-source', cardId: spellId, detail: 'stack-resolve' })
         for (const targetId of targetIds) landed(targetId)
         done()
+        return
+      }
+      if (countered.has(spellId)) {
+        for (const targetId of targetIds) landed(targetId)
+        const shown = [...document.querySelectorAll(`[data-card-id="${spellId}"]`)].find((el) => el.closest(STACK_SELECTOR))
+        const ms = fxMotionDuration(COUNTERED_MS)
+        if (shown) replayClass(shown, 'fx-countered-shake', ms + 200)
+        spawnImpact('countered', stackSpellSource(spellId)?.rect ?? prevRect)
+        soundManager.play('destroy', 'game')
+        later(ms, exit)
         return
       }
       if (targetIds.length === 0) {

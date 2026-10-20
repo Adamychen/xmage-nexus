@@ -207,6 +207,64 @@ html.fx-off .card-slot.attacking {
   }
 }
 
+@keyframes gainedLife {
+  0% { box-shadow: 0 0 0 0 rgb(var(--mana-g-rgb) / 0); filter: brightness(1); }
+  30% { box-shadow: 0 0 22px 4px rgb(var(--mana-g-rgb) / 0.75); filter: brightness(1.25); }
+  100% { box-shadow: 0 0 0 0 rgb(var(--mana-g-rgb) / 0); filter: brightness(1); }
+}
+
+.player-info-bar.gained-life {
+  animation: gainedLife calc(0.9s / var(--fx-speed, 1)) ease-out;
+}
+
+html.fx-off .player-info-bar.gained-life {
+  animation: none !important;
+}
+
+/* Transform / day-night flip. The individual `rotate`/`scale` properties
+   compose with the `.tapped` rotation in `transform` instead of replacing it. */
+@keyframes transformFlip {
+  0% { rotate: y 0deg; scale: 1; filter: brightness(1); }
+  45% { rotate: y 90deg; scale: 1.08; filter: brightness(1.8); }
+  55% { rotate: y -90deg; scale: 1.08; filter: brightness(1.8); }
+  100% { rotate: y 0deg; scale: 1; filter: brightness(1); }
+}
+
+@keyframes transformFlash {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.7); }
+}
+
+.card-slot.fx-transform-flip {
+  animation: transformFlip calc(0.7s / var(--fx-speed, 1)) cubic-bezier(0.45, 0, 0.55, 1);
+  z-index: 15;
+}
+
+/* A countered spell on the stack: it shudders and drains of colour before it shatters. */
+@keyframes counteredDrain {
+  0% { filter: none; }
+  100% { filter: grayscale(0.85) brightness(0.75); }
+}
+
+.fx-countered-shake {
+  animation: shakeHit 300ms ease-in-out, counteredDrain calc(0.5s / var(--fx-speed, 1)) ease-out forwards;
+}
+
+html.fx-off .card-slot.fx-transform-flip,
+html.fx-off .fx-countered-shake {
+  animation: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-slot.fx-transform-flip {
+    animation: transformFlash 300ms ease-out;
+  }
+
+  .fx-countered-shake {
+    animation: counteredDrain 300ms ease-out forwards;
+  }
+}
+
 @keyframes stackSourcePulse {
   0% { box-shadow: 0 0 0 0 rgb(var(--brand-rgb) / 0.85); }
   100% { box-shadow: 0 0 0 14px rgb(var(--brand-rgb) / 0); }

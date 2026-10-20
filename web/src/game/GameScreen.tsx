@@ -41,6 +41,7 @@ import CombatArrowsOverlay from '../board/CombatArrowsOverlay'
 import FeedbackOverlay from '../board/FeedbackOverlay'
 import ImpactOverlay from '../board/ImpactOverlay'
 import CoinFlipOverlay from '../board/CoinFlipOverlay'
+import ShuffleOverlay from '../board/ShuffleOverlay'
 import ProjectileOverlay from '../board/ProjectileOverlay'
 import { useDisplayedStack } from '../board/stackHold'
 import { useDisplayedGame } from '../board/damageHold'
@@ -564,6 +565,7 @@ export default function GameScreen() {
               <FeedbackOverlay />
               <ImpactOverlay />
               <CoinFlipOverlay />
+              <ShuffleOverlay />
               <ProjectileOverlay />
               {v2 && stackCount > 0 && (
                 <StackDeck
