@@ -435,21 +435,67 @@ export function synthesizeSound(ctx: AudioContext, key: SoundKey): AudioBuffer {
     }
 
     case 'shuffle': {
-      const duration = 0.5
+      const duration = 0.62
       const buf = makeBuffer(ctx, duration)
       const data = buf.getChannelData(0)
       const sr = ctx.sampleRate
-      const flicks = 22
-      let b0 = 0
+      const onePole = (hz: number) => 1 - Math.exp((-2 * Math.PI * hz) / sr)
+      // Riffle: card edges slipping off the thumb, spacing shrinking from 28 ms to 11 ms.
+      const flicks: Array<{ at: number; amp: number; decay: number }> = []
+      for (let at = 0.03, n = 0; at < 0.4; n++) {
+        flicks.push({ at, amp: 0.55 + Math.random() * 0.45, decay: 140 + Math.random() * 80 })
+        at += 0.028 - 0.017 * Math.min(1, n / 18) + (Math.random() - 0.5) * 0.004
+      }
+      const settleAt = 0.44
+      const lpFlick = onePole(2000)
+      const hpFlick = onePole(450)
+      const lpBed = onePole(900)
+      const lpTap = onePole(420)
+      let f1 = 0
+      let f2 = 0
+      let fLow = 0
+      let fHigh = 0
+      let bed1 = 0
+      let bed = 0
+      let tap1 = 0
+      let tapNoise = 0
+      let next = 0
+      let current = -1
+      let peak = 0
       for (let i = 0; i < data.length; i++) {
         const t = i / sr
-        const at = Math.min(flicks - 1, Math.floor((t / 0.42) * flicks))
-        const dt = t - (at * 0.42) / flicks
-        const flick = t < 0.42 ? Math.exp(-dt * 260) : 0
+        while (next < flicks.length && flicks[next].at <= t) current = next++
         const white = Math.random() * 2 - 1
-        b0 = 0.6 * b0 + white * 0.4
-        const tap = t > 0.43 ? Math.exp(-(t - 0.43) * 70) * Math.sin(2 * Math.PI * 180 * (t - 0.43)) * 0.6 : 0
-        data[i] = Math.tanh((b0 * flick * 1.6 + tap) * 1.2) * 0.7
+        let flick = 0
+        if (current >= 0) {
+          const f = flicks[current]
+          const dt = t - f.at
+          const env = Math.min(1, dt / 0.0008) * Math.exp(-dt * f.decay)
+          flick = white * env * f.amp
+        }
+        f1 += lpFlick * (flick - f1)
+        f2 += lpFlick * (f1 - f2)
+        fLow += lpFlick * (f2 - fLow)
+        fHigh += hpFlick * (fLow - fHigh)
+        const swell = t < 0.42 ? Math.sin(Math.PI * Math.min(1, t / 0.42)) ** 0.5 : 0
+        bed1 += lpBed * (white - bed1)
+        bed += lpBed * (bed1 - bed)
+        let settle = 0
+        if (t >= settleAt) {
+          const dt = t - settleAt
+          tap1 += lpTap * (white - tap1)
+          tapNoise += lpTap * (tap1 - tapNoise)
+          settle = tapNoise * Math.exp(-dt * 38) * 5 + Math.sin(2 * Math.PI * 105 * dt) * Math.exp(-dt * 28) * 0.22
+        }
+        const v = (fLow - fHigh) * swell * 6 + bed * swell * 0.25 + settle
+        data[i] = v
+        peak = Math.max(peak, Math.abs(v))
+      }
+      const fadeFrom = Math.floor(sr * (duration - 0.04))
+      const gain = peak > 0 ? 0.5 / peak : 0
+      for (let i = 0; i < data.length; i++) {
+        const fade = i > fadeFrom ? Math.max(0, 1 - (i - fadeFrom) / (data.length - fadeFrom)) : 1
+        data[i] *= gain * fade
       }
       return buf
     }
