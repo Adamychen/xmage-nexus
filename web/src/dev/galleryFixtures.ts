@@ -460,7 +460,7 @@ function withClonedOpponent(game: GameView, src: PlayerView | undefined, suffix:
   if (!src) return game
   const ids = playerCardIds(src)
   const map = (id: string) => (ids.has(id) ? `${id}-${suffix}` : undefined)
-  const clone = { ...remapIds(src, map), name: name ?? src.name }
+  const clone = { ...remapIds(src, map), name: name ?? src.name, hasPriority: false, isActive: false }
   const srcHand = game.opponentHands?.[src.playerId]
   const opponentHands = srcHand ? { ...(game.opponentHands ?? {}), [clone.playerId]: remapIds(srcHand, map) } : game.opponentHands
   return { ...game, players: [...players(game), clone], opponentHands }
@@ -581,6 +581,29 @@ function passPriority(game: GameView): GameView {
     ...game,
     priorityPlayerName: next.name,
     players: all.map((p) => (p === holder ? { ...p, hasPriority: false } : p === next ? { ...p, hasPriority: true } : p)),
+  }
+}
+
+function rotatePriority(game: GameView): GameView {
+  const all = players(game)
+  const from = all.findIndex((p) => p.hasPriority)
+  const next = all[(from + 1) % all.length]
+  if (!next) return game
+  return {
+    ...game,
+    priorityPlayerName: next.name,
+    players: all.map((p) => ({ ...p, hasPriority: p === next })),
+  }
+}
+
+function withPriorityOnRival(game: GameView): GameView {
+  const all = players(game)
+  const rival = all.find((p) => !p.controlled && !p.isActive && p.playerId !== game.activePlayerId)
+  if (!rival) return game
+  return {
+    ...game,
+    priorityPlayerName: rival.name,
+    players: all.map((p) => ({ ...p, hasPriority: p === rival })),
   }
 }
 
@@ -2392,6 +2415,17 @@ export function buildGalleryEntries(): GalleryEntry[] {
     game: FOUR_PLAYER_GAME,
     gameId: GANG_BLOCK_FRAME?.gameId ?? null,
     boardLayout: 'arena',
+  })
+  entries.push({
+    id: 'board:priority-frame',
+    group: 'Tablero',
+    label: 'Prioridad: marco del asiento',
+    description: 'Arena de 4 con la prioridad en un rival que no es el jugador activo: todo su asiento brilla con un marco dorado. Pulsa "Pasar prioridad" para rotarla por la mesa.',
+    phase: 'game',
+    game: FOUR_PLAYER_GAME ? withPriorityOnRival(FOUR_PLAYER_GAME) : null,
+    gameId: GANG_BLOCK_FRAME?.gameId ?? null,
+    boardLayout: 'arena',
+    action: { label: 'Pasar prioridad', apply: rotatePriority },
   })
   entries.push({
     id: 'board:pod-4-crowded',

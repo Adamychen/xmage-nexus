@@ -177,6 +177,33 @@ describe('galería de estados (P3)', () => {
     expect((commander.game?.players ?? []).every((p) => (p.commandList ?? []).length > 0)).toBe(true)
   })
 
+  it('los rivales clonados no heredan prioridad ni turno', () => {
+    const pod = entry(entries, 'board:pod-4').game
+    expect((pod?.players ?? []).filter((p) => p.hasPriority).length).toBeLessThanOrEqual(1)
+    expect((pod?.players ?? []).filter((p) => p.isActive).length).toBeLessThanOrEqual(1)
+  })
+
+  it('el marco de prioridad pone la prioridad en un rival no activo y la rota por la mesa', () => {
+    const e = entry(entries, 'board:priority-frame')
+    expect(e.boardLayout).toBe('arena')
+    const game = e.game
+    const holders = (game?.players ?? []).filter((p) => p.hasPriority)
+    expect(holders).toHaveLength(1)
+    expect(holders[0].controlled).toBeFalsy()
+    expect(holders[0].playerId).not.toBe(game?.activePlayerId)
+    expect(game?.priorityPlayerName).toBe(holders[0].name)
+
+    let current = game!
+    const seen = new Set<string>()
+    for (let i = 0; i < 4; i++) {
+      current = e.action!.apply!(current)
+      const now = (current.players ?? []).filter((p) => p.hasPriority)
+      expect(now).toHaveLength(1)
+      seen.add(now[0].playerId)
+    }
+    expect(seen.size).toBe(4)
+  })
+
   it('cada variante de tablero declara su layout y el frame base conserva su campo', () => {
     expect(entry(entries, 'board:pod-4').boardLayout).toBe('pod')
     expect(entry(entries, 'board:arena-4').boardLayout).toBe('arena')

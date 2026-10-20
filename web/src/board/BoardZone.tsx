@@ -623,6 +623,7 @@ export default function BoardZone({
       data-player-name={player.name}
       data-role={isTop ? 'opponent' : 'player'}
       data-turn={isTurnZone || undefined}
+      data-priority={(player.hasPriority && !isDefeated) || undefined}
       style={{
         '--card-w': `${cardW}px`,
         '--seat': seatColor,

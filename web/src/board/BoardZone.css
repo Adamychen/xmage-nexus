@@ -613,3 +613,31 @@
     animation: none;
   }
 }
+
+/* Priority frame: the whole seat glows gold while its player holds priority,
+   so the holder reads at a glance instead of only through the info-bar border.
+   Own outline/box-shadow only, so `overflow: hidden` never clips it and no
+   child positioning context changes. */
+.board-zone[data-priority] {
+  --priority-rgb: var(--gold-rgb);
+  outline: 2px solid rgb(var(--priority-rgb) / 0.8);
+  outline-offset: -2px;
+  box-shadow: inset 0 0 24px rgb(var(--priority-rgb) / 0.28);
+  border-radius: var(--r-xl);
+  animation: zonePriorityGlow 1.8s ease-in-out infinite;
+}
+
+@keyframes zonePriorityGlow {
+  0%, 100% {
+    box-shadow: inset 0 0 18px rgb(var(--priority-rgb) / 0.2);
+  }
+  50% {
+    box-shadow: inset 0 0 34px rgb(var(--priority-rgb) / 0.4);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .board-zone[data-priority] {
+    animation: none;
+  }
+}
