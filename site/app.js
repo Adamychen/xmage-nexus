@@ -467,6 +467,9 @@
     renderMilestones(t);
     renderStatusTeaser(d, t);
     setText("footer-note", t.footerNote);
+    setText("footer-engine", t.rulesEngine);
+    var engine = document.getElementById("footer-engine");
+    if (engine && (d.project || {}).rulesEngineUrl) engine.href = d.project.rulesEngineUrl;
     setText("footer-stack", (d.project || {}).stack);
   }
 

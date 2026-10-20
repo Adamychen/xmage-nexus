@@ -8,6 +8,8 @@ export default function Attribution() {
       {parts[0]}
       <a href="https://scryfall.com" target="_blank" rel="noopener noreferrer">Scryfall</a>
       {parts[1] ?? ' · Not affiliated with Wizards of the Coast'}
+      {' · '}
+      <a href="https://github.com/magefree/mage" target="_blank" rel="noopener noreferrer">{t('common', 'attribution_engine')}</a>
     </>
   )
 }

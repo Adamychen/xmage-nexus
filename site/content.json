@@ -1,7 +1,8 @@
 {
   "project": {
     "name": "XMage Nexus",
-    "tagline": "Modern, polished web client for XMage (React 19 + TypeScript + WebSocket proxy).",
+    "tagline": "Unofficial MTG client for the XMage rules engine (React 19 + TypeScript + WebSocket proxy).",
+    "rulesEngineUrl": "https://github.com/magefree/mage",
     "version": "0.4.3",
     "repo": "Adamychen/xmage-nexus",
     "playUrl": "https://web.xmage-nexus.com",
@@ -35,7 +36,7 @@
         "skip": "Saltar al contenido",
         "nav": { "demo": "Cómo jugar", "features": "Features", "formats": "Formatos", "download": "Descarga", "roadmap": "Roadmap", "status": "Status", "cta": "Descargar", "try": "Demo" },
         "hero": {
-          "eyebrow": "Cliente web moderno para XMage",
+          "eyebrow": "Cliente de MTG no oficial para el motor de reglas XMage",
           "title": "XMage en tu navegador, sin instalar Java",
           "subtitle": "Lobby en vivo, tablero con arte en alta resolución, targeting visual, audio y 9 idiomas sobre el motor probado de XMage.",
           "primaryCta": "Descargar para",
@@ -111,6 +112,7 @@
         "statusTeaserDesc": "Tests, cobertura, anti-drift y matriz de paridad actualizados automáticamente.",
         "seeStatus": "Ver dashboard técnico",
         "footerNote": "Imágenes de cartas cortesía de Scryfall. No afiliado a Wizards of the Coast. Magic: The Gathering es una marca registrada de Wizards of the Coast.",
+        "rulesEngine": "Motor de reglas por XMage",
         "health": { "all": "● Todos los sistemas operativos", "fail": "● %n capa(s) en fallo" },
         "statusPage": {
           "pageTitle": "Estado del proyecto",
@@ -131,7 +133,7 @@
         "skip": "Skip to content",
         "nav": { "demo": "How to play", "features": "Features", "formats": "Formats", "download": "Download", "roadmap": "Roadmap", "status": "Status", "cta": "Download", "try": "Demo" },
         "hero": {
-          "eyebrow": "Modern web client for XMage",
+          "eyebrow": "Unofficial MTG client for the XMage rules engine",
           "title": "XMage in your browser, no Java install",
           "subtitle": "Live lobby, HD-art battlefield, visual targeting, audio and 9 languages on top of XMage's battle-tested engine.",
           "primaryCta": "Download for",
@@ -207,6 +209,7 @@
         "statusTeaserDesc": "Tests, coverage, anti-drift and the parity matrix, updated automatically.",
         "seeStatus": "View technical dashboard",
         "footerNote": "Card images courtesy of Scryfall. Not affiliated with Wizards of the Coast. Magic: The Gathering is a trademark of Wizards of the Coast.",
+        "rulesEngine": "Rules engine by XMage",
         "health": { "all": "● All systems operational", "fail": "● %n layer(s) failing" },
         "statusPage": {
           "pageTitle": "Project status",
