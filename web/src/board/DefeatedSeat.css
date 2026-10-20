@@ -123,6 +123,36 @@
   transition: flex calc(0.3s / var(--fx-speed, 1)) ease;
 }
 
+/* The moment a player leaves: the seat jolts, drains of colour and dims under the crack. */
+@keyframes seatEliminated {
+  0% { filter: none; translate: 0 0; }
+  8% { translate: -6px 2px; }
+  16% { translate: 5px -2px; filter: brightness(1.6) saturate(0.4); }
+  26% { translate: -3px 1px; }
+  36% { translate: 0 0; }
+  100% { filter: grayscale(0.85) brightness(0.7); translate: 0 0; }
+}
+
+.board-zone.fx-eliminated,
+.defeated-seat.fx-eliminated {
+  animation: seatEliminated calc(1.4s / var(--fx-speed, 1)) ease-out;
+}
+
+.board-zone.fx-eliminated .zone-defeated-overlay {
+  animation: seatOverlayIn calc(1.4s / var(--fx-speed, 1)) ease-out both;
+}
+
+@keyframes seatOverlayIn {
+  0%, 25% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+html.fx-off .board-zone.fx-eliminated,
+html.fx-off .defeated-seat.fx-eliminated,
+html.fx-off .board-zone.fx-eliminated .zone-defeated-overlay {
+  animation: none !important;
+}
+
 html.fx-off .pod-cell,
 html.fx-off .pod-row,
 html.fx-off .arena-opp-cell {
@@ -130,6 +160,11 @@ html.fx-off .arena-opp-cell {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .board-zone.fx-eliminated,
+  .defeated-seat.fx-eliminated {
+    animation: none;
+  }
+
   .pod-cell,
   .pod-row,
   .arena-opp-cell {

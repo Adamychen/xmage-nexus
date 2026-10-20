@@ -1,0 +1,144 @@
+.dice-roll-overlay {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  z-index: 999991;
+}
+
+.dice-roll {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-3);
+  animation-duration: var(--dice-dur);
+  animation-timing-function: linear;
+  animation-fill-mode: both;
+  animation-name: diceFade;
+}
+
+.dice-row {
+  display: flex;
+  gap: var(--sp-4);
+}
+
+.dice-die {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 76px;
+  height: 76px;
+  box-sizing: border-box;
+  color: var(--fg-1);
+  animation-duration: var(--dice-dur);
+  animation-timing-function: var(--ease-out);
+  animation-fill-mode: both;
+  animation-delay: calc(var(--die-i) * 70ms);
+}
+
+.dice-die::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 35% 30%, var(--ink-3), var(--ink-0) 85%);
+  box-shadow: 0 10px 26px var(--shade-4), inset 0 0 0 2px rgb(var(--gold-rgb) / 0.4);
+}
+
+.dice-die.is-d6::before,
+.dice-die.is-planar::before {
+  border-radius: var(--r-xl);
+  border: 4px solid var(--dice-color);
+}
+
+.dice-die.is-dn::before {
+  clip-path: polygon(50% 0%, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%);
+  background:
+    linear-gradient(var(--dice-color), var(--dice-color)) center / 100% 100% no-repeat;
+}
+
+.dice-die.is-dn::after {
+  content: '';
+  position: absolute;
+  inset: 5px;
+  clip-path: polygon(50% 0%, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%);
+  background: radial-gradient(circle at 35% 30%, var(--ink-3), var(--ink-0) 85%);
+}
+
+.dice-face {
+  position: relative;
+  z-index: 1;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--fs-2xl);
+  line-height: 1;
+  text-shadow: 0 0 10px rgb(var(--gold-rgb) / 0.6);
+  animation: diceReveal var(--dice-dur) linear both;
+}
+
+.is-planar .dice-face {
+  font-size: var(--fs-life);
+}
+
+.is-spin .dice-die {
+  animation-name: diceTumble;
+}
+
+.dice-caption {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-2);
+  padding: var(--sp-1) var(--sp-3);
+  border-radius: var(--r-pill);
+  background: rgb(var(--ink-2-rgb) / 0.85);
+  border: 1px solid var(--dice-color);
+  max-width: 80vw;
+}
+
+.dice-name {
+  font-weight: 800;
+  font-size: var(--fs-sm);
+  color: var(--fg-1);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dice-kind {
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  color: var(--gold-300);
+  white-space: nowrap;
+}
+
+@keyframes diceTumble {
+  0% { transform: translate(-160px, 120px) rotate(-260deg) scale(0.5); }
+  35% { transform: translate(-40px, -50px) rotate(-90deg) scale(1.05); }
+  55% { transform: translate(10px, 8px) rotate(25deg) scale(1); }
+  66% { transform: translate(0, -14px) rotate(-8deg) scale(1); }
+  76% { transform: translate(0, 0) rotate(0deg) scale(1.08); }
+  84%, 100% { transform: translate(0, 0) rotate(0deg) scale(1); }
+}
+
+@keyframes diceReveal {
+  0%, 55% { opacity: 0; scale: 0.6; }
+  72% { opacity: 1; scale: 1.25; }
+  82%, 100% { opacity: 1; scale: 1; }
+}
+
+@keyframes diceFade {
+  0% { opacity: 0; }
+  8% { opacity: 1; }
+  85% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+html.fx-off .dice-roll-overlay {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dice-face {
+    animation: none;
+  }
+}

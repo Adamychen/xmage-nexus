@@ -33,6 +33,7 @@ export default function InfoWindows({ playableIds, onPlayCard, targetIds, onTarg
           onPlayCard={onPlayCard}
           targetIds={targetIds}
           onTargetClick={onTargetClick}
+          flipIn={w.kind !== 'companion'}
         />
       ))}
     </>

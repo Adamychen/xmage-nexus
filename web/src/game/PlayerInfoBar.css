@@ -417,6 +417,26 @@ html.fx-off .life-value {
   filter: drop-shadow(0 0 6px var(--brand-fg));
 }
 
+@keyframes badgeDayNightTurn {
+  0% { rotate: -180deg; scale: 0.4; opacity: 0; }
+  60% { rotate: 15deg; scale: 1.35; opacity: 1; }
+  100% { rotate: 0deg; scale: 1; opacity: 1; }
+}
+
+.badge-daynight.is-turning {
+  animation: badgeDayNightTurn calc(0.9s / var(--fx-speed, 1)) cubic-bezier(0.2, 0.9, 0.3, 1.2);
+}
+
+html.fx-off .badge-daynight.is-turning {
+  animation: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .badge-daynight.is-turning {
+    animation: none;
+  }
+}
+
 /* Targeting pulse on player */
 @keyframes playerTargetPulse {
   0%, 100% {

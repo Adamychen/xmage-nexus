@@ -8,7 +8,7 @@ import { announceBanner, spawnFloater } from './feedbackFx'
 import { t } from '../i18n'
 import { isAbilityCard } from '../cards/cardImages'
 import { fxMotionAllowed, fxMotionDuration } from './fx'
-import { cardManaColors, slamSpell, spawnImpact, spellWeight } from './impactFx'
+import { cardManaColors, slamSpell, slamUltimate, spawnImpact, spellWeight } from './impactFx'
 import { spawnProjectile } from './projectileFx'
 import { stackTargetIds } from './stackEntries'
 import { clearCombatSnapshots, combatantIds, planDamageStrikes, playDamageStrikes, primeCombatHolds, snapshotCombatants } from './combatStrikes'
@@ -16,6 +16,8 @@ import { spawnDamageNumber } from './DamageNumber'
 import { restingRect } from './restingRect'
 import { observeCoinFlip } from './coinFlipFx'
 import { soundManager } from '../audio/soundManager'
+import { consumeSacrificed } from './gameLogFx'
+import { passedDesignations, spawnDesignationFlight } from './designationFx'
 
 const pendingSlams = new Map<string, CardView>()
 const DAMAGE_TEXT = /\bdamage\b/i
@@ -270,6 +272,123 @@ function later(ms: number, fn: () => void): void {
   if (ms > 0) setTimeout(fn, ms)
   else fn()
 }
+
+const PHASE_OUT_MS = 600
+const COPY_FLIGHT_MS = 520
+const MULLIGAN_RETURN_MS = 300
+const MULLIGAN_DEAL_MS = 320
+const MULLIGAN_STAGGER_MS = 55
+const MULLIGAN_MAX_CARDS = 8
+/** A loyalty cost at least this large is read as an ultimate. */
+export const ULTIMATE_LOYALTY_DROP = 6
+
+function battlefieldSlots(permId: string): Element[] {
+  return [...document.querySelectorAll(`.card-slot[data-card-id="${permId}"]`)].filter((el) => !el.closest(STACK_SELECTOR))
+}
+
+/** A phased-out permanent stops being drawn: a ghost of it fades out in place, scan lines and all. */
+function phaseOut(permId: string, perm: CardView): void {
+  if (!fxMotionAllowed()) return
+  const rect = getPreviousCardPosition(permId) ?? getRect(`[data-card-id="${permId}"]`)
+  if (!rect) return
+  // A tapped card's rect is its rotated box: without a size the flight reads it as rotated and keeps it so.
+  const sourceSize = (perm as { tapped?: boolean }).tapped === true ? null : getPreviousCardSize(permId)
+  startCardFlight(perm, rect, rect, fxMotionDuration(PHASE_OUT_MS), undefined, { static: true, sourceSize, variant: 'phase' })
+  spawnImpact('phase', rect)
+}
+
+function phaseIn(permId: string): void {
+  if (!fxMotionAllowed()) return
+  scheduleAfterLayout(() => {
+    const slots = battlefieldSlots(permId)
+    for (const slot of slots) replayClass(slot, 'fx-phase-in', fxMotionDuration(PHASE_OUT_MS) + 40)
+    const rect = rectOf(slots[0])
+    if (rect) spawnImpact('phase', rect)
+  })
+}
+
+function loyaltyOf(card: CardView | undefined): number | null {
+  const n = parseInt(String(card?.loyalty ?? ''), 10)
+  return Number.isFinite(n) ? n : null
+}
+
+/**
+ * Planeswalkers of `prevP` that paid an ultimate: loyalty dropped by at least
+ * {@link ULTIMATE_LOYALTY_DROP} while staying, or the planeswalker left while a new ability of
+ * its own went on the stack with at least that much loyalty to pay.
+ */
+export function ultimatePlaneswalkerIds(prevP: PlayerView, nextP: PlayerView, prevStack: Record<string, CardView>, nextStack: Record<string, CardView>): string[] {
+  const nextBattlefield = nextP.battlefield ?? {}
+  const newSources = new Set(Object.entries(nextStack)
+    .filter(([id]) => !(id in prevStack))
+    .map(([, s]) => s.sourceCard?.id)
+    .filter((id): id is string => !!id))
+  const out: string[] = []
+  for (const [id, prevPerm] of Object.entries(prevP.battlefield ?? {})) {
+    const before = loyaltyOf(prevPerm)
+    if (before === null || before < ULTIMATE_LOYALTY_DROP) continue
+    const after = id in nextBattlefield ? loyaltyOf(nextBattlefield[id]) : null
+    if (after !== null ? before - after >= ULTIMATE_LOYALTY_DROP : newSources.has(id)) out.push(id)
+  }
+  return out
+}
+
+/**
+ * The stack object a new spell copies: another spell of the same name already on the stack, while
+ * no card of that name left its controller's hand (a cast from hand is a cast, not a copy).
+ */
+export function copiedSpellId(spellId: string, spell: CardView, prevGame: GameView, nextGame: GameView): string | null {
+  if (spell.isAbility === true || isAbilityCard(spell)) return null
+  const prevStack = prevGame.stack ?? {}
+  const original = Object.entries(prevStack).find(([id, s]) => id !== spellId && s.name === spell.name && s.isAbility !== true && !isAbilityCard(s))
+  if (!original) return null
+  const ctrlId = spell.controllerId ?? spell.sourceCard?.controllerId
+  const prevCtrl = (prevGame.players ?? []).find((p) => p.playerId === ctrlId)
+  const nextCtrl = (nextGame.players ?? []).find((p) => p.playerId === ctrlId)
+  if (prevCtrl?.controlled === true) {
+    const nextHand = nextGame.myHand ?? {}
+    const left = Object.entries(prevGame.myHand ?? {}).some(([id, c]) => !(id in nextHand) && c.name === spell.name)
+    if (left) return null
+  } else if (prevCtrl && nextCtrl && (nextCtrl.handCount ?? 0) < (prevCtrl.handCount ?? 0)) {
+    return null
+  }
+  return original[0]
+}
+
+/**
+ * My mulligan, in the views before the first phase: the hand cards that went back fly to the
+ * library and the new hand is dealt from it, every card, in a quick stagger.
+ */
+function playMulligan(prevHand: Record<string, CardView>, nextHand: Record<string, CardView>, libRect: DOMRect, handRect: DOMRect, pSel: string): void {
+  const returned = Object.keys(prevHand).filter((id) => !(id in nextHand)).slice(0, MULLIGAN_MAX_CARDS)
+  const dealt = Object.keys(nextHand).filter((id) => !(id in prevHand)).slice(0, MULLIGAN_MAX_CARDS)
+  returned.forEach((id, i) => {
+    const from = getPreviousCardPosition(id)
+    if (!from) return
+    const card = { ...prevHand[id], faceDown: true }
+    setTimeout(() => startCardFlight(card, from, libRect, MULLIGAN_RETURN_MS, undefined, { sourceSize: getPreviousCardSize(id) }), i * MULLIGAN_STAGGER_MS)
+  })
+  const dealFrom = returned.length > 0 ? MULLIGAN_RETURN_MS * 0.6 : 0
+  dealt.forEach((id, i) => {
+    setTimeout(() => {
+      flyAfterLayout(id, nextHand[id], libRect, [
+        `[data-card-id="${id}"]`,
+        '.hand-bar .hand-card-slot:last-child',
+        `${pSel} .hand-zone .hand-card-slot:last-child`,
+      ], handRect, MULLIGAN_DEAL_MS)
+    }, dealFrom + i * MULLIGAN_STAGGER_MS)
+  })
+}
+
+/** Measured in the same frame as the update: a pod seat is just starting to fold into its strip, so the crack covers the whole seat. */
+function eliminateSeat(playerId: string): void {
+  const els = [...document.querySelectorAll(`.board-zone[data-player-id="${playerId}"], .defeated-seat[data-seat-id="${playerId}"]`)]
+  const cells = els.map((el) => el.closest('.pod-cell, .arena-opp-cell') ?? el)
+  const rect = cells.map(rectOf).find((r): r is DOMRect => !!r) ?? getRect(`.player-info-bar[data-player-id="${playerId}"]`)
+  for (const el of els) replayClass(el, 'fx-eliminated', fxMotionDuration(1400) + 40)
+  if (rect) spawnImpact('eliminated', rect)
+  soundManager.play('impact_heavy', 'game')
+}
 const SOURCE_PULSE_MS = 600
 
 function pulseStackSource(cardId: string): void {
@@ -337,6 +456,22 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
       if (isAbilityCard(spell) && spell.sourceCard?.id) pulseStackSource(spell.sourceCard.id)
       const weight = spellWeight(spell)
       if (weight > 0) pendingSlams.set(spellId, spell)
+
+      // 1-copy. A copy clones itself out of the spell it copies, with an echo, instead of flying from a hand.
+      const originalId = copiedSpellId(spellId, spell, prevGame, nextGame)
+      if (originalId) {
+        const originalSource = stackSpellSource(originalId)
+        const fromRect = originalSource?.rect ?? getRect(`[data-card-id="${originalId}"]`) ?? stackRect
+        if (fromRect && stackRect) {
+          spawnImpact('copy', fromRect)
+          flyAfterLayout(spellId, spell, fromRect, [
+            `[data-card-id="${spellId}"] .stack-thumb`,
+            `[data-card-id="${spellId}"] .stack-tl-card`,
+            `[data-card-id="${spellId}"]`,
+          ], stackRect, COPY_FLIGHT_MS, originalSource?.size ?? null, 'copy')
+        }
+        continue
+      }
 
       // 1a. Check cardPositionRegistry first (card just unmounted from hand/battlefield)
       const srcId = spell.sourceCard?.id ?? spell.id
@@ -406,7 +541,10 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
       const prevHand = prevGame.myHand ?? {}
       const nextHand = nextGame.myHand ?? {}
       const drawnIds = Object.keys(nextHand).filter((id) => !(id in prevHand))
-      if (drawnIds.length > 0 && libRect && handRect) {
+      const mulligan = nextGame.phase == null && Object.keys(prevHand).some((id) => !(id in nextHand))
+      if (mulligan && libRect && handRect) {
+        if (fxMotionAllowed()) playMulligan(prevHand, nextHand, libRect, handRect, pSel)
+      } else if (drawnIds.length > 0 && libRect && handRect) {
         const capped = drawnIds.slice(0, 3)
         capped.forEach((id, i) => {
           const drawn = nextHand[id]
@@ -500,6 +638,8 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
           originSize = getPreviousCardSize(permId)
         } else if (wasInStack) {
           originRect = stackRect
+        } else if (permId in (prevP.exile ?? {})) {
+          originRect = getRect(`${pSel} .exile-stack`) ?? handRect
         } else if (permId in (prevP.graveyard ?? {})) {
           // Reanimar: el origen real es la pila del cementerio, no la mano.
           originRect = graveRect
@@ -559,7 +699,7 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
       if (!inGrave && !inExile && !bouncedToHand) {
         if ((perm as { isToken?: boolean }).isToken) {
           const fadeRect = registered ?? getRect(`[data-card-id="${permId}"]`)
-          afterLanding(permId, deathDelay(permId), () => spawnImpact('token-fade', fadeRect))
+          afterLanding(permId, deathDelay(permId), () => spawnImpact(consumeSacrificed(permId) ? 'sacrifice' : 'token-fade', fadeRect))
         }
         continue
       }
@@ -587,10 +727,12 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
           // Destino con ámbito al cementerio: el id puede seguir presente como
           // top-card del propio montón del cementerio (nunca el slot de origen).
           const isLand = (perm.cardTypes ?? []).some((t) => String(t).toUpperCase() === 'LAND')
-          if (!isLand) spawnImpact('destroy', prevCardRect)
+          const sacrificed = consumeSacrificed(permId)
+          if (sacrificed) spawnImpact('sacrifice', prevCardRect)
+          else if (!isLand) spawnImpact('destroy', prevCardRect)
           flyAfterLayout(permId, perm, prevCardRect, [
             `${pSel} :is(.graveyard-stack, .graveyard-chip) [data-card-id="${permId}"]`,
-          ], graveRect, isLand ? 350 : 420, prevSize, isLand ? undefined : 'destroy')
+          ], graveRect, isLand && !sacrificed ? 350 : 420, prevSize, sacrificed ? 'sacrifice' : isLand ? undefined : 'destroy')
         }
       })
     }
@@ -600,6 +742,25 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
       const prevPerm = prevBattlefield[permId]
       if (prevPerm && (prevPerm.transformed === true) !== (nextPerm.transformed === true)) flipTransformed(permId)
     }
+
+    // F) Phasing: a phased-out permanent is not drawn, so it fades out as a ghost; one phasing in fades up.
+    for (const [permId, nextPerm] of Object.entries(nextBattlefield)) {
+      const prevPerm = prevBattlefield[permId]
+      if (!prevPerm) continue
+      const wasIn = prevPerm.phasedIn !== false
+      const isIn = nextPerm.phasedIn !== false
+      if (wasIn && !isIn) phaseOut(permId, prevPerm)
+      else if (!wasIn && isIn) phaseIn(permId)
+    }
+
+    // H) Planeswalker ultimate: a big loyalty cost slams the board from the planeswalker.
+    for (const permId of ultimatePlaneswalkerIds(prevP, nextP, prevStack, nextStack)) {
+      const fromRect = getPreviousCardPosition(permId)
+      scheduleAfterLayout(() => slamUltimate(rectOf(battlefieldSlots(permId)[0]) ?? fromRect ?? getRect(`[data-card-id="${permId}"]`)))
+    }
+
+    // I) A player leaves the game: their seat cracks and dims.
+    if (prevP.hasLeft !== true && nextP.hasLeft === true) eliminateSeat(nextP.playerId)
 
     // D) Combat/ability damage feedback: creatures and players that lost life shake
     //    + floating damage numbers on top of the hit element.
@@ -716,6 +877,11 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
     }, () => {
       for (const targetId of targetIds) landed(targetId)
     })
+  }
+
+  // J) Monarch / initiative changes hands: the crown flies from its old holder to the new one.
+  for (const passed of passedDesignations(prevGame, nextGame)) {
+    scheduleAfterLayout(() => spawnDesignationFlight(passed.kind, passed.from, passed.to))
   }
 
   snapshotCombatants(nextGame)

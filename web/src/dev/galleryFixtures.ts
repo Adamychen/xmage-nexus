@@ -1118,6 +1118,82 @@ function announceShuffle(player: PlayerView | undefined): () => void {
   }
 }
 
+/** Feeds one server game-log line through the real chat handler. */
+function announce(message: string): () => void {
+  return () => handleChatMessage({ message, messageType: 'GAME', username: '' }, null, getState())
+}
+
+const logName = (name: string) => `<font color='#20B2AA'>${name}</font>`
+const logObject = (id: string, name: string) => `<font color='#B0C4DE' object_id='${id}'>${name}</font> [${id.slice(0, 3)}]`
+
+/** Like `replayQuiet`, plus a log line fed after the reset and before the change (the server sends the line first). */
+function replayQuietWithLog(base: GameView, gameId: string, line: () => string, change: (game: GameView) => GameView): () => void {
+  return () => {
+    setState({ game: { ...base }, gameId: QUIET_RESET_GAME_ID })
+    setTimeout(() => setState({ game: { ...base }, gameId }), 0)
+    setTimeout(() => announce(line())(), 40)
+    setTimeout(() => {
+      const current = getState().game
+      if (current) setState({ game: change(current) })
+    }, 80)
+  }
+}
+
+function withDesignation(game: GameView, kind: 'monarch' | 'initiative', holderId: string | null): GameView {
+  return { ...game, players: players(game).map((p) => ({ ...p, [kind]: p.playerId === holderId })) }
+}
+
+function withPhased(game: GameView, id: string, phasedIn: boolean): GameView {
+  return mapControlled(game, (p) => {
+    const perm = p.battlefield?.[id]
+    if (!perm) return p
+    return { ...p, battlefield: { ...p.battlefield, [id]: { ...perm, phasedIn } } }
+  })
+}
+
+function withPlayerOut(game: GameView, playerId: string): GameView {
+  return { ...game, players: players(game).map((p) => (p.playerId === playerId ? { ...p, life: 0, hasLeft: true } : p)) }
+}
+
+/** A mulligan view: turn 1 with no phase, and the hand dealt under ids tagged with `round`. */
+function mulliganHand(game: GameView, round: number): GameView {
+  const hand = Object.values(game.myHand ?? {})
+  const source = hand.length > 0 ? hand : LIBRARY_CARDS.map((c) => c as unknown as CardView)
+  const dealt = Array.from({ length: 7 }, (_, i) => {
+    const card = source[i % source.length]
+    const id = `gallery-mulligan-${round}-${i}`
+    return [id, { ...card, id }] as const
+  })
+  return { ...coinMulligan(game), myHand: Object.fromEntries(dealt) }
+}
+
+const DAY_NIGHT_ID = 'gallery-day-night'
+
+/** The day/night designation: the engine adds its state to a helper emblem's rules. */
+function withDayNight(game: GameView, night: boolean): GameView {
+  const emblem = { id: DAY_NIGHT_ID, name: night ? 'Night' : 'Day', displayName: night ? 'Night' : 'Day', manaValue: 0, rules: [night ? "It's currently night" : "It's currently day"] }
+  return { ...game, myHelperEmblems: { ...(game.myHelperEmblems ?? {}), [DAY_NIGHT_ID]: emblem } as GameView['myHelperEmblems'] }
+}
+
+const COPIED_BOLT_ID = 'gallery-copied-bolt'
+const BOLT_COPY_ID = 'gallery-bolt-copy'
+
+/** A copy of the Bolt on the stack lands on top of it; no hand changes, so it reads as a copy, not a cast. */
+function copyBolt(game: GameView): GameView {
+  const original = game.stack?.[COPIED_BOLT_ID]
+  if (!original) return game
+  return { ...game, stack: { ...(game.stack ?? {}), [BOLT_COPY_ID]: { ...original, id: BOLT_COPY_ID } } as GameView['stack'] }
+}
+
+function withRevealed(game: GameView, templateIds: string[], owner: PlayerView | undefined): GameView {
+  const cards = Object.fromEntries(templateIds.map((id, i) => {
+    const template = owner?.battlefield?.[id]
+    const revealedId = `gallery-revealed-${i}`
+    return [revealedId, { ...(template ?? { name: 'Forest', manaValue: 0 }), id: revealedId, tapped: false, counters: [] }]
+  }))
+  return { ...game, revealed: [{ name: 'Gallery Reveal', cards: cards as GameView['myHand'] }] }
+}
+
 const COIN_GAME_ID = 'gallery-coin-flip'
 
 /** Pre-game view: turn 0, nobody active, the mulligan already over. */
@@ -2109,6 +2185,200 @@ export function buildGalleryEntries(): GalleryEntry[] {
       gameId,
       gameUi: 'v1',
       action: { label: 'Replay', run: announceShuffle(meOfBase) },
+    })
+    const meName = meOfBase?.name ?? 'You'
+    const mysticName = meOfBase?.battlefield?.[mystic]?.name ?? 'Elvish Mystic'
+    entries.push({
+      id: 'anim:flicker',
+      group: 'Animaciones',
+      label: 'Flicker: exiled and returned in one go',
+      description: `Press "Replay" to feed the server's log line "${meName} puts ${mysticName} from exile onto the Battlefield" while it is still on the battlefield (a flicker keeps its id, so the view shows nothing): the card collapses to a sliver of light inside a closing frame, flashes and snaps back with a ring.`,
+      phase: 'game',
+      game: animBase,
+      gameId,
+      action: { label: 'Replay', run: announce(`${logName(meName)} puts ${logObject(mystic, mysticName)} from exile onto the Battlefield (source: ${logName('Ephemerate')})`) },
+    })
+    const monarchMine = withDesignation(animBase, 'monarch', meOfBase?.playerId ?? null)
+    if (opponentOfBase) {
+      entries.push({
+        id: 'anim:monarch-pass',
+        group: 'Animaciones',
+        label: 'Monarch: the crown flies to the new monarch',
+        description: 'You are the monarch. "Replay" makes the opponent the monarch: a gold crown token leaves your portrait, arcs over the board and lands on theirs, where a gold ring spreads and the crown badge pops.',
+        phase: 'game',
+        game: monarchMine,
+        gameId,
+        action: { label: 'Replay', run: replayQuiet(monarchMine, gameId, (g) => withDesignation(g, 'monarch', opponentOfBase.playerId)) },
+      })
+    }
+    entries.push({
+      id: 'anim:initiative-take',
+      group: 'Animaciones',
+      label: 'Initiative: taken when nobody had it',
+      description: 'Nobody has the initiative. "Replay" gives it to you: the ember token drops from above onto your portrait and the initiative badge pops.',
+      phase: 'game',
+      game: animBase,
+      gameId,
+      action: { label: 'Replay', run: replayQuiet(animBase, gameId, (g) => withDesignation(g, 'initiative', meOfBase?.playerId ?? null)) },
+    })
+    const podBase = fourPlayers
+    const podVictim = opponentPlayer(podBase)
+    if (podVictim) {
+      entries.push({
+        id: 'anim:player-eliminated',
+        group: 'Animaciones',
+        label: 'Multiplayer: a player is eliminated',
+        description: `Four-player pod. "Replay" drops ${podVictim.name} to 0 life and out of the game: their seat jolts, cracks open in red and white, sheds shards and drains to grey as the defeated card fades in; then it folds into the strip.`,
+        phase: 'game',
+        game: podBase,
+        gameId,
+        boardLayout: 'pod',
+        action: { label: 'Replay', run: replayQuiet(podBase, gameId, (g) => withPlayerOut(g, podVictim.playerId)) },
+      })
+    }
+    entries.push({
+      id: 'anim:dice-roll',
+      group: 'Animaciones',
+      label: 'Dice: you roll a d20',
+      description: `Press "Replay" to feed the log line "[Roll a die] ${meName} rolled a d20, result: 17": a hexagonal die in your seat colour tumbles in from the corner, bounces, settles and shows 17 above your name.`,
+      phase: 'game',
+      game: animBase,
+      gameId,
+      action: { label: 'Replay', run: announce(`[Roll a die] ${logName(meName)} rolled a d20, result: 17 (source: ${logName('Delina, Wild Mage')})`) },
+    })
+    if (opponentOfBase) {
+      entries.push({
+        id: 'anim:dice-roll-multi',
+        group: 'Animaciones',
+        label: 'Dice: the opponent rolls 2d6',
+        description: `"[Roll a die] ${opponentOfBase.name} rolled 2d6, results: [4, 6]": two square dice in the opponent's seat colour tumble in one after the other.`,
+        phase: 'game',
+        game: animBase,
+        gameId,
+        action: { label: 'Replay', run: announce(`[Roll a die] ${logName(opponentOfBase.name)} rolled 2d6, results: [4, 6] (source: ${logName('Wyll, Blade of Frontiers')})`) },
+      })
+    }
+    entries.push({
+      id: 'anim:dice-planar',
+      group: 'Animaciones',
+      label: 'Dice: planar die (chaos)',
+      description: `"[Roll a planar die] ${meName} rolled Chaos Roll": the planar die lands on the chaos symbol.`,
+      phase: 'game',
+      game: animBase,
+      gameId,
+      action: { label: 'Replay', run: announce(`[Roll a planar die] ${logName(meName)} rolled Chaos Roll`) },
+    })
+    entries.push({
+      id: 'anim:phase-out',
+      group: 'Animaciones',
+      label: 'Phasing: a permanent phases out',
+      description: 'Press "Replay" to phase Elvish Mystic out: it stops being drawn, and a ghost of it jitters, takes a blue scan-line tint and fades away where it stood.',
+      phase: 'game',
+      game: animBase,
+      gameId,
+      action: { label: 'Replay', run: replayQuiet(animBase, gameId, (g) => withPhased(g, mystic, false)) },
+    })
+    const phasedOut = withPhased(animBase, mystic, false)
+    entries.push({
+      id: 'anim:phase-in',
+      group: 'Animaciones',
+      label: 'Phasing: a permanent phases back in',
+      description: 'Elvish Mystic starts phased out (not drawn). "Replay" phases it in: it fades up from translucent with the same jitter and scan lines, which slide off it.',
+      phase: 'game',
+      game: phasedOut,
+      gameId,
+      action: { label: 'Replay', run: replayQuiet(phasedOut, gameId, (g) => withPhased(g, mystic, true)) },
+    })
+    const mulliganBase = mulliganHand(animBase, 0)
+    entries.push({
+      id: 'anim:mulligan',
+      group: 'Animaciones',
+      label: 'Mulligan: your hand goes back and a new one is dealt',
+      description: 'Pre-game view (turn 1, no phase) with a 7-card hand. "Replay" takes a mulligan: the seven cards turn face down and fly back to your library one after another, and the new seven are dealt from it in a quick stagger.',
+      phase: 'game',
+      game: mulliganBase,
+      gameId,
+      action: { label: 'Replay', run: replayQuiet(mulliganBase, gameId, (g) => mulliganHand(g, 1)) },
+    })
+    if (opponentOfBase) {
+      const opponentMulliganBase = coinMulligan(animBase)
+      entries.push({
+        id: 'anim:mulligan-opp',
+        group: 'Animaciones',
+        label: 'Mulligan: the opponent takes one',
+        description: `The server only sends the opponent's hand count, which a mulligan leaves the same: "Replay" feeds "${opponentOfBase.name} decides to take mulligan" and four face-down cards go from their hand to their library, then four come back.`,
+        phase: 'game',
+        game: opponentMulliganBase,
+        gameId,
+        action: { label: 'Replay', run: announce(`${logName(opponentOfBase.name)} decides to take mulligan`) },
+      })
+    }
+    const dayBase = withDayNight(animBase, false)
+    entries.push({
+      id: 'anim:day-night',
+      group: 'Animaciones',
+      label: 'Day / night: it becomes night (new table, top bar)',
+      description: 'It is day. "Replay" makes it night: a dusk sky washes across the top bar from right to left, the chip glows purple and the moon rises into it.',
+      phase: 'game',
+      game: dayBase,
+      gameId,
+      gameUi: 'v2',
+      action: { label: 'Replay', run: replayQuiet(dayBase, gameId, (g) => withDayNight(g, true)) },
+    })
+    const nightBase = withDayNight(animBase, true)
+    entries.push({
+      id: 'anim:day-night-classic',
+      group: 'Animaciones',
+      label: 'Day / night: it becomes day (classic table, badge)',
+      description: 'Classic table, where day/night is a badge on your info bar. It is night; "Replay" makes it day: the badge spins in as the sun and settles.',
+      phase: 'game',
+      game: nightBase,
+      gameId,
+      gameUi: 'v1',
+      action: { label: 'Replay', run: replayQuiet(nightBase, gameId, (g) => withDayNight(g, false)) },
+    })
+    entries.push({
+      id: 'anim:sacrifice',
+      group: 'Animaciones',
+      label: 'Sacrifice: a distinct death',
+      description: `"Replay" feeds "${meName} sacrificed ${mysticName}" and then moves it to your graveyard: instead of the ember burn of a destroy, a blood-red sigil closes in, the card drains from the top and drops fall as it flies, darkening, to the graveyard.`,
+      phase: 'game',
+      game: animBase,
+      gameId,
+      action: { label: 'Replay', run: replayQuietWithLog(animBase, gameId, () => `${logName(meName)} sacrificed ${logObject(mystic, mysticName)} (source: ${logName('Village Rites')})`, (g) => sendToGraveyard(g, mystic)) },
+    })
+    const copyBase = { ...animBase, stack: { [COPIED_BOLT_ID]: bolt(COPIED_BOLT_ID, meOfBase) } as GameView['stack'] }
+    entries.push({
+      id: 'anim:spell-copy',
+      group: 'Animaciones',
+      label: 'Stack: a spell is copied',
+      description: 'Your Lightning Bolt is on the stack. "Replay" adds a copy of it (no card leaves a hand): two blue echoes ripple out of the original and the copy peels off it, pale and translucent, onto the top of the stack.',
+      phase: 'game',
+      game: copyBase,
+      gameId,
+      action: { label: 'Replay', run: replayQuiet(copyBase, gameId, copyBolt) },
+    })
+    const ultimateBase = withLoyalty(animBase, mystic, 8)
+    entries.push({
+      id: 'anim:pw-ultimate',
+      group: 'Animaciones',
+      label: 'Planeswalker: ultimate (−7)',
+      description: 'A planeswalker at 8 loyalty. "Replay" pays a −7: on top of the loyalty pulse, purple rays and a shockwave burst out of it, sparks fly across the board, the board shakes and the epic impact plays.',
+      phase: 'game',
+      game: ultimateBase,
+      gameId,
+      action: { label: 'Replay', run: replayQuiet(ultimateBase, gameId, (g) => withLoyalty(g, mystic, 1)) },
+    })
+    const revealIds = battlefieldIds(meOfBase).slice(0, 3)
+    entries.push({
+      id: 'anim:revealed-flip',
+      group: 'Animaciones',
+      label: 'Revealed cards: they flip in as the viewer opens',
+      description: '"Replay" reveals three cards: the viewer opens and each card turns face up in turn, edge-on to face-on with a brief flash. Close the viewer or press "Replay" again.',
+      phase: 'game',
+      game: animBase,
+      gameId,
+      action: { label: 'Replay', run: replayQuiet(animBase, gameId, (g) => withRevealed(g, revealIds, meOfBase)) },
     })
     const coinPre = coinPregame(animBase)
     entries.push({

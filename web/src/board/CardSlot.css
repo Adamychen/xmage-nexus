@@ -250,14 +250,47 @@ html.fx-off .player-info-bar.gained-life {
   animation: shakeHit 300ms ease-in-out, counteredDrain calc(0.5s / var(--fx-speed, 1)) ease-out forwards;
 }
 
+/* Flicker: the permanent blinks out to a sliver of light and snaps back in. */
+@keyframes flickerBlink {
+  0% { opacity: 1; scale: 1; filter: none; }
+  40% { opacity: 0.05; scale: 0.82; filter: brightness(2.4) saturate(0.2) blur(2px); }
+  55% { opacity: 0.05; scale: 0.82; filter: brightness(2.4) saturate(0.2) blur(2px); }
+  80% { opacity: 1; scale: 1.06; filter: brightness(1.5); }
+  100% { opacity: 1; scale: 1; filter: none; }
+}
+
+.card-slot.fx-flicker {
+  animation: flickerBlink calc(0.7s / var(--fx-speed, 1)) cubic-bezier(0.45, 0, 0.55, 1);
+  z-index: 15;
+}
+
+/* Phasing in: the permanent fades up from translucent, scan lines sliding off it. */
+@keyframes phaseIn {
+  0% { opacity: 0; filter: hue-rotate(80deg) blur(2px) brightness(1.6); translate: 0 0; }
+  35% { opacity: 0.45; translate: -3px 0; }
+  50% { translate: 3px 0; }
+  100% { opacity: 1; filter: none; translate: 0 0; }
+}
+
+.card-slot.fx-phase-in {
+  animation: phaseIn calc(0.6s / var(--fx-speed, 1)) ease-out;
+}
+
+html.fx-off .card-slot.fx-flicker,
+html.fx-off .card-slot.fx-phase-in,
 html.fx-off .card-slot.fx-transform-flip,
 html.fx-off .fx-countered-shake {
   animation: none !important;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .card-slot.fx-transform-flip {
+  .card-slot.fx-transform-flip,
+  .card-slot.fx-flicker {
     animation: transformFlash 300ms ease-out;
+  }
+
+  .card-slot.fx-phase-in {
+    animation: none;
   }
 
   .fx-countered-shake {

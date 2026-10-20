@@ -14,7 +14,7 @@ function fakeContext() {
 }
 
 describe('projectile sounds', () => {
-  it.each(['projectile_launch', 'projectile_impact', 'card_land', 'coin_flip', 'shuffle'] as const)('%s is finite, audible and within range', (key) => {
+  it.each(['projectile_launch', 'projectile_impact', 'card_land', 'coin_flip', 'shuffle', 'dice_roll'] as const)('%s is finite, audible and within range', (key) => {
     const buf = synthesizeSound(fakeContext(), key)
     const data = buf.getChannelData(0)
     let peak = 0

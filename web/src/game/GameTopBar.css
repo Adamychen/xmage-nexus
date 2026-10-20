@@ -92,6 +92,82 @@
   color: var(--brand-fg);
 }
 
+/* Day <-> night: a sky washes across the bar and the sun or moon rises into the chip. */
+.game-topbar-sky {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  mix-blend-mode: screen;
+  animation: topbarSky calc(1.3s / var(--fx-speed, 1)) ease-in-out both;
+}
+
+.game-topbar-sky.to-night {
+  background: linear-gradient(90deg, transparent 0%, rgb(var(--ember-rgb) / 0.35) 20%, rgb(var(--brand-rgb) / 0.55) 50%, rgb(var(--ink-rgb) / 0.2) 80%, transparent 100%);
+  background-size: 220% 100%;
+}
+
+.game-topbar-sky.to-day {
+  background: linear-gradient(90deg, transparent 0%, rgb(var(--brand-rgb) / 0.3) 20%, rgb(var(--ember-rgb) / 0.4) 45%, rgb(var(--gold-rgb) / 0.55) 65%, transparent 100%);
+  background-size: 220% 100%;
+}
+
+@keyframes topbarSky {
+  0% { opacity: 0; background-position: 100% 0; }
+  25% { opacity: 1; }
+  75% { opacity: 1; }
+  100% { opacity: 0; background-position: 0% 0; }
+}
+
+.game-topbar-daynight.is-turning {
+  animation: daynightChip calc(1.3s / var(--fx-speed, 1)) ease-out;
+}
+
+.game-topbar-daynight.is-turning svg {
+  animation: daynightRise calc(0.9s / var(--fx-speed, 1)) cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+}
+
+@keyframes daynightChip {
+  0% { box-shadow: 0 0 0 0 rgb(var(--gold-rgb) / 0); }
+  30% { box-shadow: 0 0 18px 4px rgb(var(--gold-rgb) / 0.6); }
+  100% { box-shadow: 0 0 0 0 rgb(var(--gold-rgb) / 0); }
+}
+
+.game-topbar-daynight.is-night.is-turning {
+  animation-name: daynightChipNight;
+}
+
+@keyframes daynightChipNight {
+  0% { box-shadow: 0 0 0 0 rgb(var(--brand-rgb) / 0); }
+  30% { box-shadow: 0 0 18px 4px rgb(var(--brand-rgb) / 0.7); }
+  100% { box-shadow: 0 0 0 0 rgb(var(--brand-rgb) / 0); }
+}
+
+@keyframes daynightRise {
+  0% { translate: 0 10px; rotate: -90deg; opacity: 0; }
+  60% { opacity: 1; }
+  100% { translate: 0 0; rotate: 0deg; opacity: 1; }
+}
+
+html.fx-off .game-topbar-sky {
+  display: none;
+}
+
+html.fx-off .game-topbar-daynight.is-turning,
+html.fx-off .game-topbar-daynight.is-turning svg {
+  animation: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .game-topbar-sky {
+    animation-duration: 0.3s;
+  }
+
+  .game-topbar-daynight.is-turning svg {
+    animation: none;
+  }
+}
+
 .game-top--v2 .game-menu-panel {
   bottom: auto;
   top: calc(100% + 6px);

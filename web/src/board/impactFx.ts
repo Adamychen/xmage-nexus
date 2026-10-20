@@ -7,6 +7,7 @@ import { soundManager } from '../audio/soundManager'
 export type ManaColor = 'w' | 'u' | 'b' | 'r' | 'g'
 export type SpellWeight = 0 | 1 | 2
 export type ImpactKind = 'slam' | 'sparks' | 'destroy' | 'exile' | 'token-pop' | 'token-fade' | 'enter-ring' | 'countered' | 'transform' | 'bounce' | 'heal'
+  | 'flicker' | 'phase' | 'sacrifice' | 'copy' | 'ultimate' | 'eliminated'
 
 export interface ImpactFx {
   id: number
@@ -93,6 +94,12 @@ const BASE_MS: Record<ImpactKind, number> = {
   transform: 820,
   bounce: 640,
   heal: 1100,
+  flicker: 700,
+  phase: 800,
+  sacrifice: 950,
+  copy: 700,
+  ultimate: 1300,
+  eliminated: 1400,
 }
 
 export function spawnImpact(
@@ -146,6 +153,15 @@ export function slamSpell(card: CardView, landDelayMs = 320): SpellWeight {
     soundManager.play(weight === 2 ? 'impact_epic' : 'impact_heavy', 'game')
   }, delay)
   return weight
+}
+
+/** A planeswalker ultimate: a purple shockwave from the planeswalker, the board shakes and the epic impact plays. */
+export function slamUltimate(rect: Pick<DOMRect, 'left' | 'top' | 'width' | 'height'> | null): ImpactFx | null {
+  const fx = spawnImpact('ultimate', rect)
+  if (!fx) return null
+  quakeBoard(2, Math.round(fx.duration * 0.45))
+  soundManager.play('impact_epic', 'game')
+  return fx
 }
 
 export function particleVectors(seed: number, count: number, spread: number): Array<{ dx: number; dy: number; delay: number; size: number }> {

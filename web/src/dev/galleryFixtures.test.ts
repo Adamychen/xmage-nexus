@@ -84,6 +84,23 @@ describe('galería de estados (P3)', () => {
       'anim:shuffle',
       'anim:shuffle-opp',
       'anim:shuffle-classic',
+      'anim:flicker',
+      'anim:monarch-pass',
+      'anim:initiative-take',
+      'anim:player-eliminated',
+      'anim:dice-roll',
+      'anim:dice-roll-multi',
+      'anim:dice-planar',
+      'anim:phase-out',
+      'anim:phase-in',
+      'anim:mulligan',
+      'anim:mulligan-opp',
+      'anim:day-night',
+      'anim:day-night-classic',
+      'anim:sacrifice',
+      'anim:spell-copy',
+      'anim:pw-ultimate',
+      'anim:revealed-flip',
     ]
     for (const id of withAction) expect(entry(entries, id).action?.label, id).toBeTruthy()
     const staticStates = ['anim:life-6', 'anim:chosen-target', 'anim:opp-pill-required', 'anim:opp-pill-optional']

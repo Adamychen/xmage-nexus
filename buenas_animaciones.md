@@ -1,18 +1,22 @@
 # Animation backlog
 
-Animations the board does not have yet, ranked by impact and by whether the data already reaches the
+Animations the board did not have, ranked by impact and by whether the data already reaches the
 client. Every animation that ships gets a `#/gallery` entry (group `Animaciones`) with a **Replay**
 action, so it can be watched without a live game.
 
-Already shipped (for reference, see the `anim:*` gallery entries): draw slide, land slide, mana tap,
-untap wave, token pop, projectiles, spell cast lift, stack sequence and countdown, damage and life
-numbers, counters, loyalty, equip move, mill, legendary/mythic enter, coin flip, priority orb, spell
-weight slam, sequential combat strikes, destroy/exile/token deaths, low-life vignette, cinematic end
-screen.
+Already shipped before this list (see the `anim:*` gallery entries): draw slide, land slide, mana
+tap, untap wave, token pop, projectiles, spell cast lift, stack sequence and countdown, damage and
+life numbers, counters, loyalty, equip move, mill, legendary/mythic enter, coin flip, priority orb,
+spell weight slam, sequential combat strikes, destroy/exile/token deaths, low-life vignette,
+cinematic end screen.
+
+Every item below is done. Three of them have no trace in the `GameView` and are read from the game
+log (`board/gameLogFx.ts`, `board/diceRollFx.ts`): a flicker keeps the permanent's id, a sacrifice
+looks like a destroy, and a die roll is never in the view.
 
 ## High priority (data already in the `GameView` diff)
 
-| # | Animation | Trigger in the diff | State |
+| # | Animation | Trigger | State |
 |---|---|---|---|
 | 1 | **Countered spell**: the spell cracks and shatters on the stack instead of quietly leaving | A spell leaves the stack for a graveyard/exile in the same update as another departed stack object that targeted it | Done 2026-10-20 (`anim:countered`) |
 | 2 | **Transform / double-faced flip**: a 3D flip of the card when it changes face | `transformed` toggles on a permanent that stays on the battlefield | Done 2026-10-20 (`anim:transform`) |
@@ -22,21 +26,21 @@ screen.
 
 ## Medium priority
 
-| # | Animation | Notes |
-|---|---|---|
-| 6 | **Flicker** (exile and return): one in/out flash instead of a death plus an enter | A permanent leaves and a new id with the same card enters in the same update |
-| 7 | **Monarch / Initiative passing**: the crown or token flies from one portrait to another | The `monarch`/`initiative` flags move between players |
-| 8 | **Player eliminated** in multiplayer: the seat dims or cracks | `DefeatedSeat` exists but has no keyframes |
-| 9 | **Dice roll**: like the coin flip, reusing `coinFlipFx` | Check whether the roll reaches the client as data or only in the log |
-| 10 | **Phasing**: a translucency transition when phasing in or out | The phased state exists but switches instantly |
-| 11 | **Mulligan**: the hand goes back to the library and a new one is dealt | Today the hand is replaced in place |
-| 12 | **Day / night**: a sky transition in the top bar when it switches | `dayNight` is shown but changes without motion |
+| # | Animation | Trigger | State |
+|---|---|---|---|
+| 6 | **Flicker** (exile and return): the card collapses to a sliver of light and snaps back, instead of nothing | The permanent keeps its id, so the view shows no change: the log line `<player> puts <permanent> from exile onto the Battlefield` for a permanent that was on the battlefield (`gameLogFx.ts` `parseFlicker`). A card returning after a later update now flies in from the exile pile, not from the hand | Done 2026-10-20 (`anim:flicker`) |
+| 7 | **Monarch / Initiative passing**: a gold crown (or ember initiative) token flies on an arc from the old holder's portrait to the new one, and the badge pops | `monarch` / `initiative` moves between players (`designationFx.ts` `passedDesignations`); taken from nobody, it drops from above | Done 2026-10-20 (`anim:monarch-pass`, `anim:initiative-take`) |
+| 8 | **Player eliminated**: the seat jolts, cracks in red and white, sheds shards and drains to grey while the defeated overlay fades in | `hasLeft` turns true | Done 2026-10-20 (`anim:player-eliminated`) |
+| 9 | **Dice roll**: dice in the roller's seat colour tumble in, bounce and show the result (hexagon for dN, square for d6, symbol for the planar die); new `dice_roll` sound | Log only: `[Roll a die] <name> rolled a d20, result: 17`, `… rolled 2d6, results: [4, 6]`, `[Roll a planar die] <name> rolled Chaos Roll` | Done 2026-10-20 (`anim:dice-roll`, `anim:dice-roll-multi`, `anim:dice-planar`) |
+| 10 | **Phasing**: a phased-out permanent leaves a ghost that jitters and fades through blue scan lines; phasing in fades it back up | `phasedIn` toggles (phased-out permanents are not drawn) | Done 2026-10-20 (`anim:phase-out`, `anim:phase-in`) |
+| 11 | **Mulligan**: my hand turns face down and flies back to the library, then the new hand is dealt card by card; an opponent's mulligan sends four face-down cards to their library and back | Mine: hand ids change in a view with no phase. Opponent: the log line `<name> decides to take mulligan` (their hand count does not change) | Done 2026-10-20 (`anim:mulligan`, `anim:mulligan-opp`) |
+| 12 | **Day / night**: a dawn or dusk sky washes across the top bar and the sun or moon rises into its chip; on the classic table the info-bar badge spins in | The day/night hint changes | Done 2026-10-20 (`anim:day-night`, `anim:day-night-classic`) |
 
 ## Polish
 
-| # | Animation | Notes |
-|---|---|---|
-| 13 | Distinct **sacrifice** death (different colour or particle shape than destroy) | Needs a cause: the log, since the diff looks like a destroy |
-| 14 | **Spell copies** (storm, copy effects): the card clones itself on the stack with an echo | A new stack object with the same card as an existing one |
-| 15 | **Planeswalker ultimate**: a special slam when loyalty drops by a large amount at once | Builds on the loyalty pulse |
-| 16 | **Revealed / looked-at cards** (scry, surveil, reveal): the cards flip in when the viewer opens | `revealed` / `lookedAt` groups |
+| # | Animation | Trigger | State |
+|---|---|---|---|
+| 13 | Distinct **sacrifice** death: a blood-red sigil closes in, the card drains from the top and drops fall as it darkens on its way to the graveyard (a sacrificed token gets the sigil instead of the puff) | The log line `<player> sacrificed <permanent>`, noted for a few seconds and consumed by the death | Done 2026-10-20 (`anim:sacrifice`) |
+| 14 | **Spell copies**: blue echoes ripple out of the original and the copy peels off it, pale, onto the stack | A new stack spell with the name of one already there, while no card of that name left its controller's hand | Done 2026-10-20 (`anim:spell-copy`) |
+| 15 | **Planeswalker ultimate**: purple rays and a shockwave from the planeswalker, sparks across the board, a board shake and the epic impact | Loyalty drops by 6 or more at once, or the planeswalker dies paying for a new ability of its own | Done 2026-10-20 (`anim:pw-ultimate`) |
+| 16 | **Revealed / looked-at cards**: the cards flip face up one after another as the viewer opens | The `revealed` / `lookedAt` viewer opens (not companions) | Done 2026-10-20 (`anim:revealed-flip`) |

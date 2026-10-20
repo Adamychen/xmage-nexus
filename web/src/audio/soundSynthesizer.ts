@@ -499,5 +499,44 @@ export function synthesizeSound(ctx: AudioContext, key: SoundKey): AudioBuffer {
       }
       return buf
     }
+
+    case 'dice_roll': {
+      const duration = 1.1
+      const buf = makeBuffer(ctx, duration)
+      const data = buf.getChannelData(0)
+      const sr = ctx.sampleRate
+      // Bounces on the table: each clack quieter and closer to the previous one, then a short rattle.
+      const clacks: Array<{ at: number; amp: number; hz: number }> = []
+      let at = 0.12
+      let gap = 0.2
+      let amp = 1
+      while (at < 0.95 && amp > 0.08) {
+        clacks.push({ at, amp, hz: 1700 + Math.random() * 900 })
+        at += gap
+        gap *= 0.62
+        amp *= 0.72
+      }
+      const lp = 1 - Math.exp((-2 * Math.PI * 3200) / sr)
+      let low = 0
+      let peak = 0
+      for (let i = 0; i < data.length; i++) {
+        const t = i / sr
+        let v = 0
+        for (const c of clacks) {
+          if (t < c.at) break
+          const dt = t - c.at
+          if (dt > 0.08) continue
+          v += Math.sin(2 * Math.PI * c.hz * dt) * Math.exp(-dt * 90) * c.amp * 0.6
+          v += Math.sin(2 * Math.PI * 180 * dt) * Math.exp(-dt * 60) * c.amp * 0.5
+          v += (Math.random() * 2 - 1) * Math.exp(-dt * 700) * c.amp * 0.5
+        }
+        low += lp * (v - low)
+        data[i] = low
+        peak = Math.max(peak, Math.abs(low))
+      }
+      const gain = peak > 0 ? 0.55 / peak : 0
+      for (let i = 0; i < data.length; i++) data[i] *= gain
+      return buf
+    }
   }
 }

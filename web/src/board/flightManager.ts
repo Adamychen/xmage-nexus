@@ -33,7 +33,7 @@ export const ENTER_FLIGHT_MS = 1100
 export const ENTER_LAND_AT = 0.8
 export const CAST_FLIGHT_MS = 900
 
-export type FlightVariant = 'destroy' | 'exile' | 'heavy' | 'land' | 'enter'
+export type FlightVariant = 'destroy' | 'exile' | 'heavy' | 'land' | 'enter' | 'phase' | 'sacrifice' | 'copy'
 
 export type FlightTrail = 'gold'
 

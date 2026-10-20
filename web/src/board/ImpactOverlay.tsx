@@ -114,6 +114,54 @@ function ImpactItem({ fx }: { fx: ImpactFx }) {
           <Particles fx={fx} count={12} spread={Math.max(24, fx.w * 0.35)} rise={Math.max(40, fx.h * 1.4)} className="fx-heal-mote" />
         </div>
       )
+    case 'flicker':
+      return (
+        <div className="fx-burst fx-flicker" data-testid="fx-flicker" style={at}>
+          <span className="fx-flicker-implode" />
+          <span className="fx-flicker-flash" />
+          <span className="fx-flicker-ring" />
+        </div>
+      )
+    case 'phase':
+      return (
+        <div className="fx-burst fx-phase" data-testid="fx-phase" style={at}>
+          <span className="fx-phase-shimmer" />
+          <Particles fx={fx} count={8} spread={Math.max(24, fx.w * 0.4)} rise={fx.h * 0.4} className="fx-phase-mote" />
+        </div>
+      )
+    case 'sacrifice':
+      return (
+        <div className="fx-burst fx-sacrifice" data-testid="fx-sacrifice" style={at}>
+          <span className="fx-sacrifice-sigil" />
+          <span className="fx-sacrifice-drain" />
+          <Particles fx={fx} count={12} spread={Math.max(22, fx.w * 0.35)} rise={-Math.max(36, fx.h * 0.7)} className="fx-blood-drop" />
+        </div>
+      )
+    case 'copy':
+      return (
+        <div className="fx-burst fx-copy" data-testid="fx-copy" style={at}>
+          <span className="fx-copy-echo" />
+          <span className="fx-copy-echo fx-copy-echo--late" />
+        </div>
+      )
+    case 'ultimate':
+      return (
+        <div className="fx-burst fx-ultimate" data-testid="fx-ultimate" style={at}>
+          <span className="fx-ultimate-rays" />
+          <span className="fx-ultimate-core" />
+          <span className="fx-ultimate-wave" />
+          <span className="fx-ultimate-wave fx-ultimate-wave--late" />
+          <Particles fx={fx} count={16} spread={Math.max(80, fx.w * 1.4)} className="fx-ultimate-spark" />
+        </div>
+      )
+    case 'eliminated':
+      return (
+        <div className="fx-burst fx-eliminated" data-testid="fx-eliminated" style={at}>
+          <span className="fx-eliminated-dim" />
+          <span className="fx-eliminated-crack" />
+          <Particles fx={fx} count={10} spread={Math.max(60, Math.min(fx.w, fx.h) * 0.45)} className="fx-shard fx-eliminated-shard" />
+        </div>
+      )
   }
 }
 

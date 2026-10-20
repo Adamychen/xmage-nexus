@@ -307,6 +307,7 @@ export default function PlayerInfoBar({
     dungeonState?.current && dungeonState.depth != null ? `${dungeonState.current} ${dungeonState.depth}/${dungeonState.depthCount}` : null
   const portraitSpeed = portrait ? speedOf(player) : null
   const dayNightInfo = getDayNightInfo(player, game)
+  const [dayNightTurned] = useChangeFlag(dayNightInfo?.isNight ?? null, 1000)
   const curseInfo = getCurseInfo(player, game)
   const nonDayNightDesignations = (player.designationNames ?? []).filter(
     (d) => !d.toLowerCase().includes('day') && !d.toLowerCase().includes('night')
@@ -413,7 +414,7 @@ export default function PlayerInfoBar({
 
           {dayNightInfo && !portrait && (
             <span
-              className={`badge badge-daynight interactive-badge ${dayNightInfo.isNight ? 'is-night' : 'is-day'}`}
+              className={`badge badge-daynight interactive-badge ${dayNightInfo.isNight ? 'is-night' : 'is-day'}${dayNightTurned ? ' is-turning' : ''}`}
               title={dayNightInfo.isNight ? t('game', 'mechanics_night') : t('game', 'mechanics_day')}
               onMouseEnter={(e) => handleMouseEnter(dayNightInfo.card, e)}
               onMouseLeave={handleMouseLeave}

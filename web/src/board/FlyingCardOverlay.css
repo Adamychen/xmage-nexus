@@ -146,6 +146,60 @@
   100% { background-position: -30% 0; }
 }
 
+.flying-card-item.flight-sacrifice {
+  border-color: rgb(var(--blood-rgb) / 0.9);
+  box-shadow: 0 24px 48px var(--shade-4), 0 0 26px rgb(var(--blood-rgb) / 0.8);
+}
+
+.flight-sacrifice .flying-card-img {
+  animation: flightSacrifice var(--flight-dur, 420ms) ease-in both;
+}
+
+.flight-sacrifice .flying-card-glow {
+  background: linear-gradient(180deg, rgb(var(--blood-rgb) / 0.75) 0%, rgb(var(--ink-rgb) / 0.4) 60%, transparent 100%);
+  animation: flightFadeGlow var(--flight-dur, 420ms) ease-in both;
+}
+
+@keyframes flightSacrifice {
+  0% { filter: none; }
+  50% { filter: sepia(1) hue-rotate(-40deg) saturate(2.4) brightness(0.8); }
+  100% { filter: grayscale(0.6) sepia(0.6) hue-rotate(-40deg) brightness(0.3); }
+}
+
+.flight-phase .flying-card-img {
+  animation: flightPhaseOut var(--flight-dur, 600ms) ease-in both;
+}
+
+.flight-phase .flying-card-glow {
+  background: repeating-linear-gradient(0deg, rgb(var(--mana-u-rgb) / 0.45) 0 3px, transparent 3px 7px);
+  animation: flightFadeGlow var(--flight-dur, 600ms) ease-in both;
+}
+
+@keyframes flightPhaseOut {
+  0% { opacity: 1; filter: none; translate: 0 0; }
+  30% { opacity: 0.8; filter: hue-rotate(40deg) saturate(1.4); translate: 3px 0; }
+  45% { translate: -3px 0; }
+  100% { opacity: 0; filter: hue-rotate(80deg) blur(2px) brightness(1.6); translate: 0 0; }
+}
+
+.flying-card-item.flight-copy {
+  opacity: 0.85;
+  border-color: rgb(var(--mana-u-rgb) / 0.9);
+  box-shadow: 0 0 22px rgb(var(--mana-u-rgb) / 0.75), -14px 0 18px -6px rgb(var(--mana-w-rgb) / 0.45);
+}
+
+.flight-copy .flying-card-img {
+  animation: flightCopy var(--flight-dur, 520ms) ease-out both;
+}
+
+@keyframes flightCopy {
+  0% { filter: brightness(1.8) saturate(0.4) hue-rotate(160deg); opacity: 0.5; }
+  100% { filter: none; opacity: 1; }
+}
+
+html.fx-off .flight-sacrifice .flying-card-img,
+html.fx-off .flight-phase .flying-card-img,
+html.fx-off .flight-copy .flying-card-img,
 html.fx-off .flight-destroy .flying-card-img,
 html.fx-off .flight-exile .flying-card-img {
   animation: none !important;

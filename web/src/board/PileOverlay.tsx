@@ -1,7 +1,7 @@
 import CloseButton from '../ui/CloseButton'
 import { useEscape } from '../ui/useEscape'
 import EmptyState from '../ui/EmptyState'
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type CSSProperties } from 'react'
 import { createPortal } from 'react-dom'
 import type { CardView, PermanentView } from '../net/types'
 import CardSlot from './CardSlot'
@@ -20,6 +20,8 @@ interface PileOverlayProps {
   targetIds?: Set<string>
   onTargetClick?: (id: string) => void
   isLibrary?: boolean
+  /** Revealed / looked-at cards turn face up one after another when the viewer opens. */
+  flipIn?: boolean
 }
 
 export default function PileOverlay({
@@ -31,6 +33,7 @@ export default function PileOverlay({
   targetIds,
   onTargetClick,
   isLibrary = false,
+  flipIn = false,
 }: PileOverlayProps) {
   const { t } = useTranslation()
   const entries = Object.entries(cards)
@@ -82,7 +85,11 @@ export default function PileOverlay({
                 : undefined
 
             return (
-              <div key={id} className={`pile-card-wrapper ${isTop ? 'is-top-card' : ''} ${isRevealed ? 'is-revealed' : ''}`}>
+              <div
+                key={id}
+                className={`pile-card-wrapper ${isTop ? 'is-top-card' : ''} ${isRevealed ? 'is-revealed' : ''}${flipIn ? ' is-flip-in' : ''}`}
+                style={flipIn ? ({ '--flip-i': Math.min(index, 12) } as CSSProperties) : undefined}
+              >
                 {isLibrary && (
                   <div className={`pile-position-badge ${isTop ? 'top-badge' : ''} ${isRevealed ? 'revealed-badge' : ''}`}>
                     {isTop ? (<><Icon name="star" size={10} /> #1 {t('board', 'pile_top')}</>) : `#${index + 1}`}

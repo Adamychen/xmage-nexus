@@ -161,3 +161,25 @@
     transition: none;
   }
 }
+
+/* Revealed / looked-at cards: each turns face up in turn as the viewer opens. */
+@keyframes pileFlipIn {
+  0% { opacity: 0; rotate: y 90deg; scale: 0.88; filter: brightness(0.4); }
+  55% { opacity: 1; rotate: y -12deg; scale: 1.04; filter: brightness(1.5); }
+  100% { opacity: 1; rotate: y 0deg; scale: 1; filter: none; }
+}
+
+.pile-card-wrapper.is-flip-in {
+  animation: pileFlipIn calc(0.55s / var(--fx-speed, 1)) cubic-bezier(0.25, 0.8, 0.35, 1) both;
+  animation-delay: calc(var(--flip-i, 0) * 90ms / var(--fx-speed, 1));
+}
+
+html.fx-off .pile-card-wrapper.is-flip-in {
+  animation: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pile-card-wrapper.is-flip-in {
+    animation: none;
+  }
+}

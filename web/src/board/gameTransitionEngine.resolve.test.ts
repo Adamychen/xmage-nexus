@@ -259,10 +259,10 @@ describe('gameTransitionEngine — stack resolution and feedback', () => {
 
     expect([...counteredSpellIds(prev.stack, next.stack, next)]).toEqual(['bolt-1'])
     detectAndAnimateTransitions(prev, next)
-    await new Promise((resolve) => setTimeout(resolve, 1400))
+    // The fall to the graveyard starts ~1.4 s in (counterspell projectile, then the shatter): wait for it, not for a fixed time.
+    await vi.waitFor(() => expect(hasFlightFor('bolt-1')).toBe(true), { timeout: 3000, interval: 25 })
 
     expect(getImpacts().some((fx) => fx.kind === 'countered')).toBe(true)
-    expect(hasFlightFor('bolt-1')).toBe(true)
   })
 
   it('a spell that resolves with its targets is not countered', () => {
