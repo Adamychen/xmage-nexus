@@ -11,11 +11,29 @@ import { handReveals } from '../board/handRevealFx'
 import { permanentKind } from '../board/bandWeights'
 import { castFromCommand, commanderReturns } from '../board/commandFx'
 import type { GameView } from '../net/types'
+import { AURA_KEYWORDS, dominantAuraKeyword } from '../board/keywordAura'
+import { extractOwnedKeywords } from '../data/keywordExtractor'
+import { planDamageStrikes } from '../board/combatStrikes'
+import { planKeywordStrikes, survivesLethal } from '../board/keywordStrikeFx'
 
 function entry(entries: GalleryEntry[], id: string): GalleryEntry {
   const found = entries.find((e) => e.id === id)
   expect(found, `falta la entrada ${id}`).toBeTruthy()
   return found!
+}
+
+function replayPair(entries: GalleryEntry[], id: string): { base: GameView; next: GameView } {
+  const e = entry(entries, id)
+  vi.useFakeTimers()
+  try {
+    setState({ game: null })
+    e.action!.run!()
+    vi.advanceTimersByTime(100)
+    return { base: e.game!, next: getState().game! }
+  } finally {
+    setState({ game: null })
+    vi.useRealTimers()
+  }
 }
 
 function allCardIds(game: GalleryEntry['game']): string[] {
@@ -78,6 +96,8 @@ describe('galería de estados (P3)', () => {
       'anim:token-pop',
       'anim:sickness',
       'anim:entered-glow',
+      'anim:keyword-auras',
+      'anim:keyword-gain',
       'anim:dissolve',
       'anim:stack-trail',
       'anim:land-slide',
@@ -114,6 +134,11 @@ describe('galería de estados (P3)', () => {
       'anim:revealed-flip',
       'anim:attack-lunge',
       'anim:combat-strikes',
+      'anim:kw-first-strike',
+      'anim:kw-deathtouch',
+      'anim:kw-lifelink',
+      'anim:kw-trample',
+      'anim:kw-indestructible',
       'anim:destroy',
       'anim:exile',
       'anim:discard',
@@ -395,6 +420,85 @@ describe('galería de estados (P3)', () => {
 
     const flip = changeOf('anim:flip-card')
     expect(pair(flip.base, flip.next).flatMap(([p, n]) => flippedChanges(p, n))).toHaveLength(1)
+  })
+
+  it('anim:keyword-auras replay puts one creature per aura keyword on the battlefield', () => {
+    vi.useFakeTimers()
+    try {
+      setState({ game: null })
+      entry(entries, 'anim:keyword-auras').action!.run!()
+      vi.advanceTimersByTime(100)
+      const me = getState().game?.players?.find((p) => p.controlled)
+      const perms = Object.values(me?.battlefield ?? {}).filter((perm) => perm.id?.startsWith('gallery-kw-'))
+      expect(perms).toHaveLength(7)
+      const auras = perms.map((perm) => dominantAuraKeyword(extractOwnedKeywords(perm).map((k) => k.id)))
+      expect([...auras].sort()).toEqual([...AURA_KEYWORDS].sort())
+    } finally {
+      setState({ game: null })
+      vi.useRealTimers()
+    }
+  })
+
+  it('anim:kw-first-strike replay plans a first-strike hit on the unblocked knight', () => {
+    const { base, next } = replayPair(entries, 'anim:kw-first-strike')
+    expect(base.step).toBe('DECLARE_BLOCKERS')
+    expect(next.step).toBe('FIRST_COMBAT_DAMAGE')
+    const opponent = next.players!.find((p) => !p.controlled)!
+    expect(opponent.life).toBe((base.players!.find((p) => !p.controlled)!.life ?? 0) - 2)
+    const strikes = planKeywordStrikes(base, next, planDamageStrikes(base, next))
+    expect(strikes).toEqual([
+      { attackerId: 'gallery-kwfx-knight', targetId: opponent.playerId, firstStrike: true, deathtouchKill: false, lifelinkTo: null, trampleTo: null },
+    ])
+  })
+
+  it('anim:kw-deathtouch replay plans a deathtouch kill of the blocker', () => {
+    const { base, next } = replayPair(entries, 'anim:kw-deathtouch')
+    expect(base.step).toBe('DECLARE_BLOCKERS')
+    expect(next.step).toBe('COMBAT_DAMAGE')
+    expect(next.combat ?? []).toHaveLength(0)
+    const strikes = planKeywordStrikes(base, next, planDamageStrikes(base, next))
+    expect(strikes).toEqual([
+      { attackerId: 'gallery-kwfx-rats', targetId: 'gallery-kwfx-dreadmaw-opp', firstStrike: false, deathtouchKill: true, lifelinkTo: null, trampleTo: null },
+    ])
+    const allNext = next.players!.flatMap((p) => Object.keys(p.battlefield ?? {}))
+    expect(allNext).not.toContain('gallery-kwfx-rats')
+    expect(allNext).not.toContain('gallery-kwfx-dreadmaw-opp')
+  })
+
+  it('anim:kw-lifelink replay plans lifelink motes to my life total', () => {
+    const { base, next } = replayPair(entries, 'anim:kw-lifelink')
+    expect(base.step).toBe('DECLARE_BLOCKERS')
+    expect(next.step).toBe('COMBAT_DAMAGE')
+    const me = (g: GameView) => g.players!.find((p) => p.controlled)!
+    const opponent = (g: GameView) => g.players!.find((p) => !p.controlled)!
+    expect(me(next).life).toBe((me(base).life ?? 0) + 2)
+    expect(opponent(next).life).toBe((opponent(base).life ?? 0) - 2)
+    const strikes = planKeywordStrikes(base, next, planDamageStrikes(base, next))
+    expect(strikes).toEqual([
+      { attackerId: 'gallery-kwfx-child', targetId: opponent(base).playerId, firstStrike: false, deathtouchKill: false, lifelinkTo: me(base).playerId, trampleTo: null },
+    ])
+  })
+
+  it('anim:kw-trample replay plans the overflow to the opponent', () => {
+    const { base, next } = replayPair(entries, 'anim:kw-trample')
+    expect(base.step).toBe('DECLARE_BLOCKERS')
+    expect(next.step).toBe('COMBAT_DAMAGE')
+    const opponent = (g: GameView) => g.players!.find((p) => !p.controlled)!
+    expect(opponent(next).life).toBe((opponent(base).life ?? 0) - 4)
+    expect(Object.keys(opponent(next).graveyard ?? {})).toContain('gallery-kwfx-bears')
+    expect(next.players!.find((p) => p.controlled)!.battlefield?.['gallery-kwfx-dreadmaw']?.damage).toBe(2)
+    const strikes = planKeywordStrikes(base, next, planDamageStrikes(base, next))
+    expect(strikes).toEqual([
+      { attackerId: 'gallery-kwfx-dreadmaw', targetId: 'gallery-kwfx-bears', firstStrike: false, deathtouchKill: false, lifelinkTo: null, trampleTo: opponent(base).playerId },
+    ])
+  })
+
+  it('anim:kw-indestructible replay leaves the lethal-damaged myr on the battlefield', () => {
+    const { base, next } = replayPair(entries, 'anim:kw-indestructible')
+    const myrOf = (g: GameView) => g.players!.find((p) => p.controlled)!.battlefield!['gallery-kwfx-myr']!
+    expect(survivesLethal(myrOf(base))).toBe(false)
+    expect(myrOf(next).damage).toBe(3)
+    expect(survivesLethal(myrOf(next))).toBe(true)
   })
 
   it('anim:turn-recap closes a recap through the real observer', () => {

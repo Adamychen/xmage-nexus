@@ -388,6 +388,7 @@ export default function BoardZone({
             blocking={isBlocking}
             showPt={isCreature}
             showCounters
+            keywordAura
             showDamage={isCreature}
             compact={compactCards}
             showManaSource={showManaSource}
@@ -418,6 +419,7 @@ export default function BoardZone({
             blocking={isBlocking}
             showPt={isCreature}
             showCounters
+            keywordAura
             showDamage={isCreature}
             compact={compactCards}
             showManaSource={showManaSource}
@@ -441,6 +443,7 @@ export default function BoardZone({
         blocking={isBlocking}
         showPt={isCreature}
         showCounters
+        keywordAura
         showDamage={isCreature}
         compact={compactCards}
         showManaSource={showManaSource}

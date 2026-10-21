@@ -937,3 +937,73 @@ describe('CardSlot designation gained', () => {
     expect(container.querySelector('.card-slot')?.classList.contains('fx-designation-swell')).toBe(false)
   })
 })
+
+describe('CardSlot keyword aura', () => {
+  const creature = (over: Record<string, unknown> = {}) =>
+    ({
+      id: 'ka1',
+      name: 'Aura Beast',
+      cardTypes: ['Creature'],
+      power: '3',
+      toughness: '3',
+      rules: ['Flying, trample'],
+      ...over,
+    }) as unknown as PermanentView
+
+  it('draws the aura of the main keyword on a battlefield permanent', () => {
+    const { container } = render(<CardSlot card={creature()} keywordAura />)
+    expect(container.querySelectorAll('.kw-aura.kw-aura--flying[data-kw-aura="flying"]')).toHaveLength(1)
+  })
+
+  it('draws no aura unless the battlefield asks for one', () => {
+    const { container } = render(<CardSlot card={creature()} />)
+    expect(container.querySelector('.kw-aura')).toBeNull()
+  })
+
+  it('draws no aura when the setting is off, and marks it vivid when set to vivid', () => {
+    setSetting('keywordAura', 'off')
+    try {
+      const off = render(<CardSlot card={creature()} keywordAura />)
+      expect(off.container.querySelector('.kw-aura')).toBeNull()
+      off.unmount()
+    } finally {
+      setSetting('keywordAura', 'subtle')
+    }
+    setSetting('keywordAura', 'vivid')
+    try {
+      const vivid = render(<CardSlot card={creature()} keywordAura />)
+      expect(vivid.container.querySelector('.kw-aura.is-vivid')).not.toBeNull()
+    } finally {
+      setSetting('keywordAura', 'subtle')
+    }
+  })
+
+  it('honours a per-demo override of the setting', () => {
+    const { container } = render(<CardSlot card={creature()} keywordAura demo={{ artUrl: null, keywordAura: 'off' }} />)
+    expect(container.querySelector('.kw-aura')).toBeNull()
+  })
+
+  it('picks the highest-priority aura keyword', () => {
+    const { container } = render(<CardSlot card={creature({ rules: ['Hexproof, indestructible'] })} keywordAura />)
+    expect(container.querySelector('[data-kw-aura]')?.getAttribute('data-kw-aura')).toBe('indestructible')
+  })
+
+  it('draws no aura on a face-down card', () => {
+    const { container } = render(<CardSlot card={creature({ faceDown: true })} keywordAura faceDown />)
+    expect(container.querySelector('.kw-aura')).toBeNull()
+  })
+
+  it('does not pop a keyword the card already has on its first render', () => {
+    const { container } = render(<CardSlot card={creature()} keywordAura />)
+    expect(container.querySelector('.kw-coin.kw-flying')?.classList.contains('kw-gained')).toBe(false)
+    expect(container.querySelector('.kw-aura-flare')).toBeNull()
+  })
+
+  it('pops the gained coin and flares the aura when a card gains flying', () => {
+    const { container, rerender } = render(<CardSlot card={creature({ rules: [] })} keywordAura />)
+    expect(container.querySelector('.kw-aura')).toBeNull()
+    rerender(<CardSlot card={creature({ rules: ['Flying'] })} keywordAura />)
+    expect(container.querySelector('.kw-coin.kw-flying')?.classList.contains('kw-gained')).toBe(true)
+    expect(container.querySelector('.kw-aura-flare.kw-aura-flare--flying')).not.toBeNull()
+  })
+})

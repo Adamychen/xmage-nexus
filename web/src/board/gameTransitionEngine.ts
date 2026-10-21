@@ -13,6 +13,7 @@ import { spawnProjectile } from './projectileFx'
 import { stackTargetIds } from './stackEntries'
 import { clearCombatSnapshots, combatantIds, planDamageStrikes, playDamageStrikes, primeCombatHolds, snapshotCombatants } from './combatStrikes'
 import { spawnDamageNumber } from './DamageNumber'
+import { planKeywordStrikes, playKeywordStrikes, survivesLethal } from './keywordStrikeFx'
 import { restingRect } from './restingRect'
 import { observeCoinFlip } from './coinFlipFx'
 import { soundManager } from '../audio/soundManager'
@@ -937,7 +938,12 @@ function pulseStackSource(cardId: string): void {
 export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameView, bannerDelayMs = 0) {
   if (!prevGame || !nextGame) return
   const combatants = new Set(combatantIds(prevGame))
-  const strikes = playDamageStrikes(planDamageStrikes(prevGame, nextGame), [...combatants])
+  const strikePlans = planDamageStrikes(prevGame, nextGame)
+  const strikes = playDamageStrikes(strikePlans, [...combatants])
+  const keywordHits = playKeywordStrikes(planKeywordStrikes(prevGame, nextGame, strikePlans), strikes)
+  keywordHits.playerHits.forEach((ms, id) => {
+    if (!strikes.impactAt.has(id)) strikes.impactAt.set(id, ms)
+  })
   const pendingLandings = new Map<string, { count: number; queue: Array<() => void> }>()
   const landed = (id: string) => {
     const pending = pendingLandings.get(id)
@@ -1423,6 +1429,7 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
           if (!el) return
           const rect = el.getBoundingClientRect()
           if (document.querySelector(`.card-slot${sel}`)) spawnDamageNumber(`card:${permId}`, nextDamage - prevDamage)
+          if (survivesLethal(nextPerm)) spawnImpact('indestructible', rect)
           if (struckAt === undefined) spawnImpact('sparks', rect)
         }
         if (struckAt === undefined) afterLanding(permId, 0, hit)
@@ -1460,7 +1467,9 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
       }
     }
     if (nextLife !== prevLife) {
-      if (lifeStruckAt === undefined) afterLanding(nextP.playerId, 0, lifeHit)
+      const gainAt = nextLife > prevLife ? keywordHits.lifeGains.get(nextP.playerId) : undefined
+      if (gainAt !== undefined) later(gainAt, lifeHit)
+      else if (lifeStruckAt === undefined) afterLanding(nextP.playerId, 0, lifeHit)
       else later(lifeStruckAt, lifeHit)
     }
 

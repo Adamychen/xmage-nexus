@@ -6,7 +6,7 @@ import type { AutoAnswerRule } from '../../game/autoAnswers'
 import type { ChoiceMemoryRule } from '../../game/choiceMemory'
 import { normalizePlaymat, type PlaymatId } from '../../appearance/playmats'
 import { normalizeCardStyle, normalizeTapStyle, type CardStyle, type TapStyle } from '../../board/compactCard'
-import { normalizeBoardFill, normalizeStackCaption, normalizeCardRender, normalizeHandRail, normalizeHandRailWidth, normalizeHandRow, normalizePtBadgeMode, normalizeShowHandCost, normalizeShowManaSource, normalizeSicknessStyle, normalizeKeywordIconSet, type CardRender, type KeywordIconSet, type PtBadgeMode, type SicknessStyle } from '../../board/cardOverlays'
+import { normalizeBoardFill, normalizeStackCaption, normalizeCardRender, normalizeHandRail, normalizeHandRailWidth, normalizeHandRow, normalizePtBadgeMode, normalizeShowHandCost, normalizeShowManaSource, normalizeSicknessStyle, normalizeKeywordIconSet, normalizeKeywordAuraMode, type CardRender, type KeywordIconSet, type KeywordAuraMode, type PtBadgeMode, type SicknessStyle } from '../../board/cardOverlays'
 import { normalizeGameUi, type GameUi } from '../../game/gameUi'
 import { gameplayPreset, isGameplayPresetId, type GameplayPresetId } from '../../settings/gameplayPresets'
 
@@ -51,6 +51,7 @@ export interface SettingsState {
   gameUi: GameUi
   sicknessStyle: SicknessStyle
   keywordIcons: KeywordIconSet
+  keywordAura: KeywordAuraMode
   uiScale: ZoomLevel
   cjkBoost: boolean
   transparentDialogs: boolean
@@ -81,6 +82,7 @@ export function loadAppearanceSlice() {
     gameUi: normalizeGameUi(appearance.gameUi),
     sicknessStyle: normalizeSicknessStyle(appearance.sicknessStyle),
     keywordIcons: normalizeKeywordIconSet(appearance.keywordIcons),
+    keywordAura: normalizeKeywordAuraMode(appearance.keywordAura),
   }
 }
 

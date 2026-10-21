@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { normalizePtBadgeMode, normalizeShowHandCost, normalizeShowManaSource, normalizeSicknessStyle } from './cardOverlays'
+import { normalizeKeywordAuraMode, normalizePtBadgeMode, normalizeShowHandCost, normalizeShowManaSource, normalizeSicknessStyle } from './cardOverlays'
 
 describe('normalizeShowHandCost', () => {
   it('defaults to true for a missing or non-boolean value', () => {
@@ -54,5 +54,19 @@ describe('normalizeShowManaSource', () => {
     expect(normalizeShowManaSource(1)).toBe(false)
     expect(normalizeShowManaSource(false)).toBe(false)
     expect(normalizeShowManaSource(true)).toBe(true)
+  })
+})
+
+describe('normalizeKeywordAuraMode', () => {
+  it('keeps each valid mode', () => {
+    expect(normalizeKeywordAuraMode('off')).toBe('off')
+    expect(normalizeKeywordAuraMode('subtle')).toBe('subtle')
+    expect(normalizeKeywordAuraMode('vivid')).toBe('vivid')
+  })
+
+  it('falls back to subtle for a missing or invalid mode', () => {
+    expect(normalizeKeywordAuraMode(undefined)).toBe('subtle')
+    expect(normalizeKeywordAuraMode('loud')).toBe('subtle')
+    expect(normalizeKeywordAuraMode(1)).toBe('subtle')
   })
 })

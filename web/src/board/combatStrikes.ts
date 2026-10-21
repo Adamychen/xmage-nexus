@@ -216,11 +216,21 @@ const snapshots = new Map<string, Snapshot>()
 export function snapshotCombatants(game: GameView | null | undefined): void {
   if (typeof document === 'undefined') return
   const ids = new Set(combatantIds(game))
-  for (const id of [...snapshots.keys()]) if (!ids.has(id)) snapshots.delete(id)
+  for (const [id, snap] of snapshots) if (!ids.has(id) && !snap.ghost.isConnected) snapshots.delete(id)
   for (const id of ids) {
     const el = slotElement(id)
     if (el) snapshots.set(id, { ghost: buildGhost(el, el.getBoundingClientRect()), rect: el.getBoundingClientRect() })
   }
+}
+
+/** Where a combatant is drawn right now: its live slot, else its stand-in ghost during the strikes, else where it stood. */
+export function combatantRect(id: string): DOMRect | null {
+  const live = visibleRect(slotElement(id))
+  if (live) return live
+  const snap = snapshots.get(id)
+  if (!snap) return null
+  if (snap.ghost.isConnected) return visibleRect(snap.ghost.firstElementChild ?? snap.ghost)
+  return getPreviousCardPosition(id) ?? snap.rect
 }
 
 function sequenceMs(count: number, duration: number): number {

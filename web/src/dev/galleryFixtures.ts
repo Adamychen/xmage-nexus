@@ -2,6 +2,7 @@ import { getState, setState } from '../state/state'
 import { parseFeedback, type FeedbackCard, type FeedbackPrompt } from '../game/feedback'
 import { TOP_CARD_PEEK_NAME } from '../game/topCardPeek'
 import { landTapColor } from '../board/compactCard'
+import type { AuraKeyword } from '../board/keywordAura'
 import { forgetCoinFlip } from '../board/coinFlipFx'
 import type {
   CardView,
@@ -846,6 +847,41 @@ function addSickCreature(game: GameView): { game: GameView; id: string } {
   }
 }
 
+const KEYWORD_AURA_CREATURES: Record<AuraKeyword, { name: string; power: string; toughness: string; manaValue: number; subtypes: string[]; rules: string[] }> = {
+  indestructible: { name: 'Darksteel Myr', power: '0', toughness: '1', manaValue: 0, subtypes: ['Myr'], rules: ['Indestructible'] },
+  hexproof: { name: 'Gladecover Scout', power: '1', toughness: '2', manaValue: 1, subtypes: ['Elf', 'Scout'], rules: ['Hexproof'] },
+  deathtouch: { name: 'Typhoid Rats', power: '1', toughness: '1', manaValue: 1, subtypes: ['Rat'], rules: ['Deathtouch'] },
+  flying: { name: 'Serra Angel', power: '4', toughness: '4', manaValue: 5, subtypes: ['Angel'], rules: ['Flying, vigilance'] },
+  lifelink: { name: 'Child of Night', power: '2', toughness: '1', manaValue: 3, subtypes: ['Vampire'], rules: ['Lifelink'] },
+  trample: { name: 'Colossal Dreadmaw', power: '6', toughness: '6', manaValue: 5, subtypes: ['Dinosaur'], rules: ['Trample'] },
+  haste: { name: 'Raging Goblin', power: '1', toughness: '1', manaValue: 1, subtypes: ['Goblin'], rules: ['Haste'] },
+}
+
+function addKeywordCreatures(game: GameView): GameView {
+  return mapControlled(game, (p) => ({
+    ...p,
+    battlefield: {
+      ...p.battlefield,
+      ...Object.fromEntries(
+        (Object.entries(KEYWORD_AURA_CREATURES) as Array<[AuraKeyword, (typeof KEYWORD_AURA_CREATURES)[AuraKeyword]]>).map(([id, c]) => [
+          `gallery-kw-${id}`,
+          { id: `gallery-kw-${id}`, name: c.name, displayName: c.name, manaValue: c.manaValue, cardTypes: ['Creature'], subtypes: c.subtypes, power: c.power, toughness: c.toughness, tapped: false, summoningSickness: false, rules: c.rules },
+        ]),
+      ),
+    },
+  }))
+}
+
+function withKeywordGainBear(game: GameView): GameView {
+  return mapControlled(game, (p) => ({
+    ...p,
+    battlefield: {
+      ...p.battlefield,
+      'gallery-kw-gain': { id: 'gallery-kw-gain', name: 'Grizzly Bears', displayName: 'Grizzly Bears', manaValue: 2, cardTypes: ['Creature'], subtypes: ['Bear'], power: '2', toughness: '2', tapped: false, summoningSickness: false, rules: [] },
+    },
+  }))
+}
+
 function sendToGraveyard(game: GameView, id: string): GameView {
   return mapControlled(game, (p) => {
     const perm = p.battlefield?.[id]
@@ -1609,6 +1645,99 @@ function dealCombatDamage(game: GameView): GameView {
       return { ...p, battlefield, graveyard, life: p.playerId === defenderId ? (p.life ?? 0) - damage : p.life }
     }),
   }
+}
+
+const KWFX_KNIGHT_ID = 'gallery-kwfx-knight'
+const KWFX_RATS_ID = 'gallery-kwfx-rats'
+const KWFX_DEATHTOUCH_BLOCKER_ID = 'gallery-kwfx-dreadmaw-opp'
+const KWFX_DREADMAW_ID = 'gallery-kwfx-dreadmaw'
+const KWFX_BEARS_ID = 'gallery-kwfx-bears'
+const KWFX_CHILD_ID = 'gallery-kwfx-child'
+const KWFX_MYR_ID = 'gallery-kwfx-myr'
+
+interface KwFxCard {
+  name: string
+  power: string
+  toughness: string
+  manaValue: number
+  subtypes: string[]
+  rules: string[]
+  cardIcons?: Array<{ cardIconType?: string }>
+}
+
+const KWFX_KNIGHT: KwFxCard = {
+  name: 'White Knight',
+  power: '2',
+  toughness: '2',
+  manaValue: 2,
+  subtypes: ['Human', 'Knight'],
+  rules: ['First strike, protection from black'],
+  cardIcons: [{ cardIconType: 'ABILITY_FIRST_STRIKE' }],
+}
+
+const KWFX_BEARS: KwFxCard = { name: 'Grizzly Bears', power: '2', toughness: '2', manaValue: 2, subtypes: ['Bear'], rules: [] }
+
+function kwFxPermanent(id: string, card: KwFxCard, tapped: boolean): PermanentView {
+  return {
+    id,
+    name: card.name,
+    displayName: card.name,
+    manaValue: card.manaValue,
+    cardTypes: ['Creature'],
+    subTypes: card.subtypes,
+    power: card.power,
+    toughness: card.toughness,
+    tapped,
+    summoningSickness: false,
+    rules: card.rules,
+    cardIcons: card.cardIcons,
+  }
+}
+
+function kwFxCombat(game: GameView, attackers: string[], blockers: string[]): Record<string, unknown> {
+  const opponent = opponentPlayer(game)
+  return {
+    attackers: Object.fromEntries(attackers.map((id) => [id, {}])),
+    blockers: Object.fromEntries(blockers.map((id) => [id, {}])),
+    isBlocked: blockers.length > 0,
+    defenderId: opponent?.playerId,
+    defenderName: opponent?.name,
+  }
+}
+
+/** The declare-blockers step with one combat group only, my creatures on my battlefield and theirs on the opponent's. */
+function kwFxBase(
+  game: GameView,
+  group: Record<string, unknown>,
+  mine: Record<string, PermanentView>,
+  theirs: Record<string, PermanentView>,
+): GameView {
+  const withMine = mapControlled(game, (p) => ({ ...p, battlefield: { ...p.battlefield, ...mine } }))
+  const withBoth = mapOpponent(withMine, (p) => ({ ...p, battlefield: { ...p.battlefield, ...theirs } }))
+  return { ...withStep(withBoth, 'COMBAT', 'DECLARE_BLOCKERS'), combat: [group] as unknown as GameView['combat'] }
+}
+
+/** Moves the given permanents, whoever controls them, to their owners' graveyards. */
+function toGraveyards(game: GameView, ids: string[]): GameView {
+  return {
+    ...game,
+    players: players(game).map((p) => {
+      const battlefield = { ...p.battlefield }
+      const graveyard = { ...p.graveyard }
+      for (const id of ids) {
+        if (battlefield[id]) {
+          graveyard[id] = battlefield[id]
+          delete battlefield[id]
+        }
+      }
+      return { ...p, battlefield, graveyard }
+    }),
+  }
+}
+
+function withLifeDelta(game: GameView, owner: 'me' | 'opponent', delta: number): GameView {
+  const change = (p: PlayerView) => ({ ...p, life: (p.life ?? 0) + delta })
+  return owner === 'me' ? mapControlled(game, change) : mapOpponent(game, change)
 }
 
 function sendToExile(game: GameView, id: string): GameView {
@@ -2995,6 +3124,27 @@ export function buildGalleryEntries(): GalleryEntry[] {
       },
     })
     entries.push({
+      id: 'anim:keyword-auras',
+      group: 'Animaciones',
+      label: 'Keyword auras: a looping effect per main keyword',
+      description: '"Replay" puts seven creatures on your battlefield, one per aura keyword (indestructible, hexproof, deathtouch, flying, lifelink, trample, haste), each showing its looping aura (kwAura… keyframes).',
+      phase: 'game',
+      game: animBase,
+      gameId,
+      action: { label: 'Replay', run: replayQuiet(animBase, gameId, addKeywordCreatures) },
+    })
+    const keywordGainBase = withKeywordGainBear(animBase)
+    entries.push({
+      id: 'anim:keyword-gain',
+      group: 'Animaciones',
+      label: 'Keyword gained: the coin pops and the aura flares',
+      description: '"Replay" grants Grizzly Bears flying: the flying coin pops in and the blue aura flares once, then loops.',
+      phase: 'game',
+      game: keywordGainBase,
+      gameId,
+      action: { label: 'Replay', run: replayQuiet(keywordGainBase, gameId, (g) => withRules(g, 'gallery-kw-gain', ['Flying'])) },
+    })
+    entries.push({
       id: 'anim:dissolve',
       group: 'Animaciones',
       label: 'Graveyard: dissolve (D4)',
@@ -3759,6 +3909,92 @@ export function buildGalleryEntries(): GalleryEntry[] {
       game: strikesBase,
       gameId,
       action: { label: 'Replay', run: replayQuiet(strikesBase, gameId, dealCombatDamage) },
+    })
+    const kwFxFirstStrikeBase = kwFxBase(game, kwFxCombat(game, [KWFX_KNIGHT_ID], []), { [KWFX_KNIGHT_ID]: kwFxPermanent(KWFX_KNIGHT_ID, KWFX_KNIGHT, true) }, {})
+    entries.push({
+      id: 'anim:kw-first-strike',
+      group: 'Animaciones',
+      label: 'Keyword: first strike slash',
+      description: '"Replay" moves to the first-strike damage step: the unblocked White Knight lands a bright slash across the opponent before regular damage, and their life drops by 2.',
+      phase: 'game',
+      game: kwFxFirstStrikeBase,
+      gameId,
+      action: {
+        label: 'Replay',
+        run: replayQuiet(kwFxFirstStrikeBase, gameId, (g) => withStep(mapOpponent(g, (p) => ({ ...p, life: (p.life ?? 0) - 2 })), 'COMBAT', 'FIRST_COMBAT_DAMAGE')),
+      },
+    })
+    const kwFxDeathtouchBase = kwFxBase(
+      game,
+      kwFxCombat(game, [KWFX_RATS_ID], [KWFX_DEATHTOUCH_BLOCKER_ID]),
+      { [KWFX_RATS_ID]: kwFxPermanent(KWFX_RATS_ID, KEYWORD_AURA_CREATURES.deathtouch, true) },
+      { [KWFX_DEATHTOUCH_BLOCKER_ID]: kwFxPermanent(KWFX_DEATHTOUCH_BLOCKER_ID, KEYWORD_AURA_CREATURES.trample, false) },
+    )
+    entries.push({
+      id: 'anim:kw-deathtouch',
+      group: 'Animaciones',
+      label: 'Keyword: deathtouch kills its blocker',
+      description: '"Replay" deals combat damage: your Typhoid Rats, blocked by the Colossal Dreadmaw, kills it with deathtouch, a skull ring and motes mark the hit, and both creatures go to their graveyards.',
+      phase: 'game',
+      game: kwFxDeathtouchBase,
+      gameId,
+      action: {
+        label: 'Replay',
+        run: replayQuiet(kwFxDeathtouchBase, gameId, (g) => ({
+          ...toGraveyards(withStep(g, 'COMBAT', 'COMBAT_DAMAGE'), [KWFX_RATS_ID, KWFX_DEATHTOUCH_BLOCKER_ID]),
+          combat: [] as unknown as GameView['combat'],
+        })),
+      },
+    })
+    const kwFxLifelinkBase = kwFxBase(game, kwFxCombat(game, [KWFX_CHILD_ID], []), { [KWFX_CHILD_ID]: kwFxPermanent(KWFX_CHILD_ID, KEYWORD_AURA_CREATURES.lifelink, true) }, {})
+    entries.push({
+      id: 'anim:kw-lifelink',
+      group: 'Animaciones',
+      label: 'Keyword: lifelink motes flow to your life',
+      description: '"Replay" deals combat damage: the unblocked Child of Night sends motes flying from its card to your portrait, your life goes up by 2 and the opponent\'s down by 2.',
+      phase: 'game',
+      game: kwFxLifelinkBase,
+      gameId,
+      action: {
+        label: 'Replay',
+        run: replayQuiet(kwFxLifelinkBase, gameId, (g) => withLifeDelta(withLifeDelta(withStep(g, 'COMBAT', 'COMBAT_DAMAGE'), 'me', 2), 'opponent', -2)),
+      },
+    })
+    const kwFxTrampleBase = kwFxBase(
+      game,
+      kwFxCombat(game, [KWFX_DREADMAW_ID], [KWFX_BEARS_ID]),
+      { [KWFX_DREADMAW_ID]: kwFxPermanent(KWFX_DREADMAW_ID, KEYWORD_AURA_CREATURES.trample, true) },
+      { [KWFX_BEARS_ID]: kwFxPermanent(KWFX_BEARS_ID, KWFX_BEARS, false) },
+    )
+    entries.push({
+      id: 'anim:kw-trample',
+      group: 'Animaciones',
+      label: 'Keyword: trample overflow reaches the player',
+      description: '"Replay" deals combat damage: the Colossal Dreadmaw kills the blocking Grizzly Bears, and the 4 damage that does not fit becomes a wave that crosses to the opponent, whose life drops by 4; the Dreadmaw keeps 2 damage.',
+      phase: 'game',
+      game: kwFxTrampleBase,
+      gameId,
+      action: {
+        label: 'Replay',
+        run: replayQuiet(kwFxTrampleBase, gameId, (g) => ({
+          ...withLifeDelta(toGraveyards(addDamage(withStep(g, 'COMBAT', 'COMBAT_DAMAGE'), KWFX_DREADMAW_ID, 2), [KWFX_BEARS_ID]), 'opponent', -4),
+          combat: [] as unknown as GameView['combat'],
+        })),
+      },
+    })
+    const kwFxIndestructibleBase = mapControlled(animBase, (p) => ({
+      ...p,
+      battlefield: { ...p.battlefield, [KWFX_MYR_ID]: kwFxPermanent(KWFX_MYR_ID, KEYWORD_AURA_CREATURES.indestructible, false) },
+    }))
+    entries.push({
+      id: 'anim:kw-indestructible',
+      group: 'Animaciones',
+      label: 'Keyword: indestructible shrugs off lethal damage',
+      description: '"Replay" puts 3 damage on your Darksteel Myr, a 0/1 with indestructible: the damage reaches its toughness, an indestructible burst marks it, and it stays on the battlefield.',
+      phase: 'game',
+      game: kwFxIndestructibleBase,
+      gameId,
+      action: { label: 'Replay', run: replayQuiet(kwFxIndestructibleBase, gameId, (g) => addDamage(g, KWFX_MYR_ID, 3)) },
     })
     entries.push({
       id: 'anim:destroy',

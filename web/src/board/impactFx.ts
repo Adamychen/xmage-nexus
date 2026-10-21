@@ -9,6 +9,7 @@ export type SpellWeight = 0 | 1 | 2
 export type ImpactKind = 'slam' | 'sparks' | 'destroy' | 'exile' | 'token-pop' | 'token-fade' | 'enter-ring' | 'countered' | 'transform' | 'bounce' | 'heal'
   | 'flicker' | 'phase' | 'sacrifice' | 'copy' | 'ultimate' | 'eliminated' | 'wipe' | 'face-up' | 'poison' | 'poison-lethal' | 'energy' | 'control'
   | 'command' | 'tuck' | 'attach' | 'mutate' | 'animate' | 'emblem' | 'dungeon' | 'planeswalk' | 'flip' | 'conceded'
+  | 'first-strike' | 'deathtouch' | 'lifelink' | 'trample' | 'indestructible'
 
 export interface ImpactFx {
   id: number
@@ -125,6 +126,11 @@ const BASE_MS: Record<ImpactKind, number> = {
   planeswalk: 1300,
   flip: 760,
   conceded: 1200,
+  'first-strike': 520,
+  deathtouch: 1000,
+  lifelink: 900,
+  trample: 700,
+  indestructible: 1100,
 }
 
 export function spawnImpact(

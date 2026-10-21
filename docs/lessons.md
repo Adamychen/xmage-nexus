@@ -251,3 +251,24 @@ ops), `docs/testing.md`, `web/AGENTS.md`, `Mage.Proxy/README.md`.
   of `getComputedStyle(el).animationName` after the class lands catches this; the fix is a
   `.stack-deck-face.fx-…` rule in `StackDeck.css`. `e2e/animations-play.spec.ts` now asserts the computed
   `animationName` per gallery entry (verified red with the fix removed).
+- **A looping status effect lives on a child, never on the card slot.** `.card-slot` already uses
+  `translate` for the hover lift and the attack / block lunges, `transform` for the tap rotation and
+  `box-shadow` for chosen / target states, so an infinite animation on any of those properties would
+  freeze the lift or erase the target glow. Keyword auras are a child `span.kw-aura` (absolute, inset 0,
+  under the badges) that animates only `opacity` and its pseudo-elements' `transform`; the static ring
+  is a `box-shadow` on the span, so reduced motion keeps the information without the motion.
+  `KeywordAura.css.test.ts` enforces the transform/opacity rule and the strength variable on every
+  colour. One aura per card, by priority, is what keeps a full board readable.
+- **Trampled-over damage used to animate nothing on the player.** The life block only shows a player's
+  hit when a strike targeted that player (`StrikeSchedule.impactAt`) or a damage spell resolved; a
+  blocked trampler targets its blocker, so the defender's life dropped silently. `keywordStrikeFx.ts`
+  adds the defender to `impactAt` at the trample wave's arrival, which is the hook for any future
+  "damage reaches a player it did not strike" effect.
+- **A combatant that dies in the strike's own view has no `data-card-id` on screen.** Its live slot is
+  gone and `combatStrikes.ts` draws a stand-in ghost whose clone drops the id, so anything that
+  looks it up by id (`strikeTargetElement`) gets null and `spawnImpact` silently drops a non-slam
+  impact. Resolve combatants through `combatantRect(id)` (live slot → connected ghost → last
+  position). The engine's closing `snapshotCombatants(nextGame)` used to prune that ghost's
+  snapshot before the impact fired (the post-damage view has no combat); a snapshot is now kept
+  while its ghost is connected. Only the real-browser `animations-play.spec.ts` caught this: the
+  unit tests passed because they never removed the live slot.

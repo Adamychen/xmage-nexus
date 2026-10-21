@@ -10,7 +10,7 @@ import CustomSleeveTile from './CustomSleeveTile'
 import CustomCardArtManager from './CustomCardArtManager'
 import PlaymatPicker from './PlaymatPicker'
 import { CARD_STYLES, TAP_STYLES } from '../board/compactCard'
-import { KEYWORD_ICON_SETS, PT_BADGE_MODES, SICKNESS_STYLES } from '../board/cardOverlays'
+import { KEYWORD_AURA_MODES, KEYWORD_ICON_SETS, PT_BADGE_MODES, SICKNESS_STYLES } from '../board/cardOverlays'
 import { ZOOM_PRESETS, isZoomPreset, stepZoom, zoomPercent } from './zoom'
 import { useTranslation } from '../i18n'
 import { useSettings } from '../state/selectors'
@@ -210,6 +210,22 @@ export default function AppearanceSettingsModal({ onClose }: Props) {
                 <span className="board-layout-label">{t('lobby', `keyword_icons_${set}`)}</span>
                 <span className="board-layout-desc">{t('lobby', `keyword_icons_${set}_desc`)}</span>
                 {settings.keywordIcons === set && <span className="board-layout-check">✓</span>}
+              </Button>
+            ))}
+          </div>
+          <div className="board-layout-grid">
+            {KEYWORD_AURA_MODES.map((mode) => (
+              <Button
+                key={mode}
+                variant="ghost"
+                className={`board-layout-item ${settings.keywordAura === mode ? 'selected' : ''}`}
+                onClick={() => setSetting('keywordAura', mode)}
+                aria-pressed={settings.keywordAura === mode}
+                data-testid={`appearance-keyword-aura-${mode}`}
+              >
+                <span className="board-layout-label">{t('lobby', `keyword_aura_${mode}`)}</span>
+                <span className="board-layout-desc">{t('lobby', `keyword_aura_${mode}_desc`)}</span>
+                {settings.keywordAura === mode && <span className="board-layout-check">✓</span>}
               </Button>
             ))}
           </div>

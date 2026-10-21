@@ -33,10 +33,12 @@ import { useSleeveFor } from '../appearance/useSleeve'
 import { perfMark } from '../system/perfProbe'
 import { ManaPip } from '../decks/ArenaManaSymbols'
 import { artCropUrl, landTapColor, manaSourceSymbols, primaryCardType } from './compactCard'
-import type { KeywordIconSet, PtBadgeMode, SicknessStyle } from './cardOverlays'
+import type { KeywordAuraMode, KeywordIconSet, PtBadgeMode, SicknessStyle } from './cardOverlays'
 import KeywordGlyph from './KeywordGlyph'
+import { dominantAuraKeyword, gainedKeywordIds } from './keywordAura'
 import { manaPoolElement, spawnManaParticle, type ManaSide } from './manaParticle'
 import './CardSlot.css'
+import './KeywordAura.css'
 import './manaParticle.css'
 
 /** Cota del acuse optimista si el eco del servidor no llega nunca. */
@@ -65,8 +67,10 @@ interface CardSlotProps {
   compact?: boolean
   /** Classic battlefield card: overlay its mana source too (the compact tile always does). */
   showManaSource?: boolean
+  /** Battlefield permanents only: draw the looping aura of the card's main keyword. */
+  keywordAura?: boolean
   /** Settings previews only: local art (never a network lookup) and per-option overrides of the global overlay settings. */
-  demo?: { artUrl: string | null; ptBadgeMode?: PtBadgeMode; sicknessStyle?: SicknessStyle; keywordIcons?: KeywordIconSet }
+  demo?: { artUrl: string | null; ptBadgeMode?: PtBadgeMode; sicknessStyle?: SicknessStyle; keywordIcons?: KeywordIconSet; keywordAura?: KeywordAuraMode }
 }
 
 export default function CardSlot({
@@ -89,6 +93,7 @@ export default function CardSlot({
   showDamage = false,
   compact = false,
   showManaSource = false,
+  keywordAura = false,
   demo,
 }: CardSlotProps) {
   const { t } = useTranslation()
@@ -96,6 +101,7 @@ export default function CardSlot({
   const ptBadgeMode = demo?.ptBadgeMode ?? settings.ptBadgeMode
   const sicknessStyle = demo?.sicknessStyle ?? settings.sicknessStyle
   const keywordIcons = demo?.keywordIcons ?? settings.keywordIcons
+  const auraMode = demo?.keywordAura ?? settings.keywordAura
   const sleeve = useSleeveFor(card.controllerId)
   const resolvedImgUrl = useCardImageUrl(card, !faceDown && !demo)
   const imgUrl = demo ? demo.artUrl : resolvedImgUrl
@@ -291,6 +297,17 @@ export default function CardSlot({
     const merged = mergeBadgeKeywords(card.cardIcons, extractOwnedKeywords(card))
     return perm.mutated === true ? [{ id: 'mutate', name: 'Mutate', icon: '', category: 'mechanic' as const }, ...merged].slice(0, 5) : merged
   }, [perm.mutated, card.rules, card.cardIcons, (card as unknown as { abilities?: unknown }).abilities, card.name])
+
+  const keywordIdsKey = keywordBadges.map((kw) => kw.id).join('|')
+  const [seenKeywordIds, setSeenKeywordIds] = useState(keywordIdsKey)
+  const [gainedKeywords, setGainedKeywords] = useState<string[]>([])
+  if (seenKeywordIds !== keywordIdsKey) {
+    setSeenKeywordIds(keywordIdsKey)
+    setGainedKeywords(gainedKeywordIds(seenKeywordIds.split('|'), keywordIdsKey.split('|')))
+  }
+  const auraKeyword = keywordAura && auraMode !== 'off' && !showBack && !isFaceDownCard
+    ? dominantAuraKeyword(keywordBadges.map((kw) => kw.id))
+    : null
 
   const badgeRowRef = useRef<HTMLDivElement>(null)
   const shownBadges = useBadgeFit(badgeRowRef, keywordBadges.length)
@@ -612,6 +629,17 @@ const showPtBadge =
 
       {enteredThisTurn && <span className="entered-glow" aria-hidden="true" />}
 
+      {auraKeyword && (
+        <span
+          className={`kw-aura kw-aura--${auraKeyword}${auraMode === 'vivid' ? ' is-vivid' : ''}`}
+          data-kw-aura={auraKeyword}
+          aria-hidden="true"
+        />
+      )}
+      {auraKeyword && gainedKeywords.includes(auraKeyword) && (
+        <span key={`flare-${keywordIdsKey}`} className={`kw-aura-flare kw-aura-flare--${auraKeyword}`} aria-hidden="true" />
+      )}
+
       {recapMark && (
         <div className="recap-mark-badge" data-mark={recapMark} data-testid="recap-mark">
           {t('game', recapMark === 'new' ? 'recap_mark_new' : 'recap_mark_changed')}
@@ -687,7 +715,7 @@ const showPtBadge =
           {keywordBadges.slice(0, shownBadges).map((kw) => (
             <BadgeTip
               key={kw.id}
-              className={`keyword-badge kw-coin is-glyph cat-${kw.category} icons-${keywordIcons} kw-${kw.id}${kw.id === 'mutate' ? ' mutated-badge' : ''}`}
+              className={`keyword-badge kw-coin is-glyph cat-${kw.category} icons-${keywordIcons} kw-${kw.id}${kw.id === 'mutate' ? ' mutated-badge' : ''}${gainedKeywords.includes(kw.id) ? ' kw-gained' : ''}`}
               tip={{
                 title: keywordDisplayName(kw.id, kw.name, (k) => t('keywords', k), kw.parameter),
                 body: keywordSummary(kw.id, (k) => t('keywords', k), kw.parameter),

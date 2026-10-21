@@ -182,4 +182,67 @@ test.describe('animations really play @board', () => {
     await expect(page.locator('[data-testid="fx-eliminated"]')).toBeAttached({ timeout: 4000 })
     expect(pageErrors).toEqual([])
   })
+
+  test('anim:keyword-auras runs one looping aura per keyword', async ({ page }) => {
+    const pageErrors = trackPageErrors(page)
+    await openGallery(page)
+    await replayEntry(page, 'anim:keyword-auras')
+    await expectAnimation(page, '.kw-aura--indestructible', 'kwAuraIndestructible')
+    await expectAnimation(page, '.kw-aura--hexproof', 'kwAuraHexproof')
+    await expectAnimation(page, '.kw-aura--deathtouch', 'kwAuraDeathtouch')
+    await expectAnimation(page, '.kw-aura--flying', 'kwAuraFlying')
+    await expectAnimation(page, '.kw-aura--lifelink', 'kwAuraLifelink')
+    await expectAnimation(page, '.kw-aura--trample', 'kwAuraTrample')
+    await expectAnimation(page, '.kw-aura--haste', 'kwAuraHaste')
+    expect(pageErrors).toEqual([])
+  })
+
+  test('anim:keyword-gain pops the coin and flares the aura', async ({ page }) => {
+    const pageErrors = trackPageErrors(page)
+    await openGallery(page)
+    await replayEntry(page, 'anim:keyword-gain')
+    await expectAnimation(page, '.kw-coin.kw-gained', 'kwCoinGained')
+    await expectAnimation(page, '.kw-aura-flare--flying', 'kwAuraFlare')
+    expect(pageErrors).toEqual([])
+  })
+
+  test('anim:kw-first-strike flashes the first-strike slash', async ({ page }) => {
+    const pageErrors = trackPageErrors(page)
+    await openGallery(page)
+    await replayEntry(page, 'anim:kw-first-strike')
+    await expect(page.locator('[data-testid="fx-first-strike"]')).toBeAttached({ timeout: 4000 })
+    expect(pageErrors).toEqual([])
+  })
+
+  test('anim:kw-deathtouch shows the deathtouch kill', async ({ page }) => {
+    const pageErrors = trackPageErrors(page)
+    await openGallery(page)
+    await replayEntry(page, 'anim:kw-deathtouch')
+    await expect(page.locator('[data-testid="fx-deathtouch"]')).toBeAttached({ timeout: 4000 })
+    expect(pageErrors).toEqual([])
+  })
+
+  test('anim:kw-lifelink sends the lifelink motes', async ({ page }) => {
+    const pageErrors = trackPageErrors(page)
+    await openGallery(page)
+    await replayEntry(page, 'anim:kw-lifelink')
+    await expect(page.locator('[data-testid="fx-lifelink"]')).toBeAttached({ timeout: 4000 })
+    expect(pageErrors).toEqual([])
+  })
+
+  test('anim:kw-trample sends the overflow wave to the player', async ({ page }) => {
+    const pageErrors = trackPageErrors(page)
+    await openGallery(page)
+    await replayEntry(page, 'anim:kw-trample')
+    await expect(page.locator('[data-testid="fx-trample"]')).toBeAttached({ timeout: 4000 })
+    expect(pageErrors).toEqual([])
+  })
+
+  test('anim:kw-indestructible flashes the burst on the surviving creature', async ({ page }) => {
+    const pageErrors = trackPageErrors(page)
+    await openGallery(page)
+    await replayEntry(page, 'anim:kw-indestructible')
+    await expect(page.locator('[data-testid="fx-indestructible"]')).toBeAttached({ timeout: 4000 })
+    expect(pageErrors).toEqual([])
+  })
 })

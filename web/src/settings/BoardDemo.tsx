@@ -1,5 +1,5 @@
 import CardSlot from '../board/CardSlot'
-import type { KeywordIconSet, PtBadgeMode, SicknessStyle } from '../board/cardOverlays'
+import type { KeywordAuraMode, KeywordIconSet, PtBadgeMode, SicknessStyle } from '../board/cardOverlays'
 import type { CardStyle, TapStyle } from '../board/compactCard'
 import { showcaseArtUrl } from '../cards/showcaseArt'
 import type { PermanentView } from '../net/types'
@@ -12,6 +12,7 @@ export type BoardDemoSpec =
   | { kind: 'ptBadge'; value: PtBadgeMode }
   | { kind: 'sickness'; value: SicknessStyle }
   | { kind: 'keywordIcons'; value: KeywordIconSet }
+  | { kind: 'keywordAura'; value: KeywordAuraMode }
   | { kind: 'manaSource'; value: boolean }
 
 interface Tile {
@@ -63,6 +64,12 @@ function tilesFor(spec: BoardDemoSpec): Tile[] {
         { perm: creature('Sentinel Spider', { rules: ['Deathtouch, lifelink'] }), showPt: true },
         { perm: creature('Tarmogoyf', { power: '3', toughness: '4', originalPower: '3', originalToughness: '4', rules: ['Trample, hexproof, indestructible'] }), showPt: true },
       ]
+    case 'keywordAura':
+      return [
+        { perm: creature('Shivan Dragon', { power: '5', toughness: '5', originalPower: '5', originalToughness: '5', rules: ['Flying'] }), showPt: true },
+        { perm: creature('Sentinel Spider', { rules: ['Deathtouch'] }), showPt: true },
+        { perm: creature('Tarmogoyf', { power: '3', toughness: '4', originalPower: '3', originalToughness: '4', rules: ['Indestructible'] }), showPt: true },
+      ]
     case 'manaSource':
       return [
         { perm: land('Forest', { rules: ['{T}: Add {G}.'] }) },
@@ -87,6 +94,7 @@ export default function BoardDemo({ spec }: { spec: BoardDemoSpec }) {
     ptBadgeMode: spec.kind === 'ptBadge' ? spec.value : undefined,
     sicknessStyle: spec.kind === 'sickness' ? spec.value : undefined,
     keywordIcons: spec.kind === 'keywordIcons' ? spec.value : undefined,
+    keywordAura: spec.kind === 'keywordAura' ? spec.value : undefined,
   })
   return (
     <span
@@ -104,6 +112,7 @@ export default function BoardDemo({ spec }: { spec: BoardDemoSpec }) {
             showPt={showPt}
             compact={compact}
             showManaSource={showManaSource}
+            keywordAura={spec.kind === 'keywordAura'}
             demo={demo(perm.name)}
           />
         ))}

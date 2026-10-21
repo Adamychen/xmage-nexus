@@ -1,6 +1,7 @@
 import { useLayoutEffect, useRef, type CSSProperties } from 'react'
 import { useImpacts, particleVectors, type ImpactFx, type ManaColor } from './impactFx'
 import { wipeBoardRect } from './boardWipe'
+import KeywordGlyph from './KeywordGlyph'
 import './ImpactOverlay.css'
 
 function rgbVar(c: ManaColor | undefined): string {
@@ -327,6 +328,64 @@ function ImpactItem({ fx }: { fx: ImpactFx }) {
         <div className="fx-burst fx-flip" data-testid="fx-flip" style={{ ...at, '--flip-rgb': rgbVar(fx.colors[0]) } as Vars}>
           <span className="fx-flip-flash" />
           <span className="fx-flip-arc" />
+        </div>
+      )
+    case 'first-strike':
+      return (
+        <div className="fx-burst fx-first-strike" data-testid="fx-first-strike" style={at}>
+          <span className="fx-first-strike-slash" />
+        </div>
+      )
+    case 'deathtouch':
+      return (
+        <div className="fx-burst fx-deathtouch" data-testid="fx-deathtouch" style={{ ...at, '--rise': `${fx.h * 0.2}px` } as Vars}>
+          <span className="fx-deathtouch-ring" />
+          <span className="fx-deathtouch-skull">
+            <KeywordGlyph id="deathtouch" category="combat" set="outline" />
+          </span>
+          <Particles fx={fx} count={8} spread={Math.max(30, fx.w * 0.5)} rise={fx.h * 0.6} className="fx-deathtouch-mote" />
+        </div>
+      )
+    case 'lifelink': {
+      const dx = (fx.toX ?? fx.x) - fx.x
+      const dy = (fx.toY ?? fx.y) - fx.y
+      return (
+        <div
+          className="fx-burst fx-lifelink"
+          data-testid="fx-lifelink"
+          style={{ ...at, '--len': `${Math.hypot(dx, dy)}px`, '--angle': `${Math.atan2(dy, dx)}rad` } as Vars}
+        >
+          <span className="fx-lifelink-glow" />
+          <span className="fx-lifelink-path">
+            {[0, 1, 2, 3, 4, 5].map((i) => (
+              <span key={i} className="fx-lifelink-mote" style={{ animationDelay: `${i * 60}ms` }} />
+            ))}
+          </span>
+        </div>
+      )
+    }
+    case 'trample': {
+      const dx = (fx.toX ?? fx.x) - fx.x
+      const dy = (fx.toY ?? fx.y) - fx.y
+      return (
+        <div
+          className="fx-burst fx-trample"
+          data-testid="fx-trample"
+          style={{ ...at, '--len': `${Math.hypot(dx, dy)}px`, '--angle': `${Math.atan2(dy, dx)}rad` } as Vars}
+        >
+          <span className="fx-trample-path">
+            <span className="fx-trample-wave" />
+          </span>
+          <span className="fx-trample-burst" style={{ '--ax': `${dx}px`, '--ay': `${dy}px` } as Vars} />
+        </div>
+      )
+    }
+    case 'indestructible':
+      return (
+        <div className="fx-burst fx-indestructible" data-testid="fx-indestructible" style={at}>
+          <span className="fx-indestructible-shield" />
+          <span className="fx-indestructible-crack" />
+          <span className="fx-indestructible-flash" />
         </div>
       )
   }
