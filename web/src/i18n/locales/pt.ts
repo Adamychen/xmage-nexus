@@ -1426,6 +1426,8 @@ export const pt: TranslationSchema = {
     cardgrid_count: '{count} cartas',
     cardgrid_show_all: 'Mostrar todas ({count})',
     cardgrid_only_valid: 'Apenas válidas ({count})',
+    cardgrid_peek_hint: 'Segure Alt para ver o tabuleiro',
+    cardgrid_peek_release: 'Solte Alt para voltar às suas cartas',
     cardgrid_done: 'Concluir ({count})',
     card_printings_title: 'Selecionar Edição & Arte',
     card_inspect_no_translation: 'Sem texto no idioma de carta selecionado — exibindo o original (inglês).',

@@ -1,12 +1,19 @@
-import type { CSSProperties } from 'react'
-import { useCoinFlipFx } from './coinFlipFx'
+import { useEffect, type CSSProperties } from 'react'
+import { useStore, isBlockingModal } from '../state/store'
+import { clearCoinFlipFx, useCoinFlipFx } from './coinFlipFx'
 import './CoinFlipOverlay.css'
 
 type Vars = CSSProperties & Record<`--${string}`, string>
 
 export default function CoinFlipOverlay() {
   const coin = useCoinFlipFx()
-  if (!coin) return null
+  const modalOpen = useStore(isBlockingModal)
+
+  useEffect(() => {
+    if (coin && modalOpen) clearCoinFlipFx()
+  }, [coin, modalOpen])
+
+  if (!coin || modalOpen) return null
 
   return (
     <div className="coin-flip-overlay" aria-hidden="true">

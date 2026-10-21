@@ -179,4 +179,27 @@ describe('CardGrid', () => {
     expect(cells[1].disabled).toBe(true)
     expect(cells[2].disabled).toBe(false)
   })
+
+  it('advertises the Alt peek and lets the player peek repeatedly until a card is chosen', () => {
+    const send = vi.fn()
+    const prompt = makePrompt({ options: [{ id: 'c-1', label: 'Grizzly Bears', value: 'c-1' }] as never })
+    const { container } = render(<CardGrid prompt={prompt} selected={[]} setSelected={vi.fn()} send={send} busy={false} />)
+    const hint = container.querySelector('[data-testid="card-grid-peek-hint"]') as HTMLElement
+    expect(hint.querySelector('.card-grid-peek-hint-idle')?.textContent).toBeTruthy()
+    expect(hint.querySelector('.card-grid-peek-hint-active')?.textContent).toBeTruthy()
+    const backdrop = container.querySelector('.feedback-backdrop') as HTMLElement
+    expect(backdrop.contains(hint)).toBe(true)
+    const input = container.querySelector('.card-grid-filter') as HTMLInputElement
+    fireEvent.change(input, { target: { value: 'Grizzly' } })
+    for (let i = 0; i < 3; i++) {
+      fireEvent.keyDown(window, { key: 'Alt' })
+      expect(backdrop.getAttribute('data-peek')).toBe('1')
+      fireEvent.keyUp(window, { key: 'Alt' })
+      expect(backdrop.getAttribute('data-peek')).toBeNull()
+    }
+    expect(input.value).toBe('Grizzly')
+    const cell = container.querySelector('.card-grid-cell') as HTMLButtonElement
+    fireEvent.click(cell)
+    expect(send).toHaveBeenCalledTimes(1)
+  })
 })

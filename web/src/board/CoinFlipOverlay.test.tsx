@@ -3,6 +3,7 @@ import { render, cleanup, act, screen } from '@testing-library/react'
 import CoinFlipOverlay from './CoinFlipOverlay'
 import { startCoinFlip, clearCoinFlipFx, COIN_FLIP_MS } from './coinFlipFx'
 import { soundManager } from '../audio/soundManager'
+import { setState } from '../state/store'
 
 function stubReducedMotion(matches: boolean) {
   vi.stubGlobal('matchMedia', (query: string) => ({
@@ -73,5 +74,15 @@ describe('CoinFlipOverlay', () => {
     expect(coin?.classList.contains('is-fade')).toBe(true)
     expect(coin?.classList.contains('is-spin')).toBe(false)
     expect(screen.getByText('Alice')).toBeTruthy()
+  })
+
+  it('steps aside for a blocking dialog and does not come back when it closes', () => {
+    const { container } = render(<CoinFlipOverlay />)
+    act(() => { startCoinFlip('Alice', 'var(--seat-0)') })
+    expect(container.querySelector('.coin-flip-coin')).not.toBeNull()
+    act(() => { setState({ inspectedCard: { id: 'c-1' } as never }) })
+    expect(container.querySelector('.coin-flip-coin')).toBeNull()
+    act(() => { setState({ inspectedCard: null }) })
+    expect(container.querySelector('.coin-flip-coin')).toBeNull()
   })
 })
