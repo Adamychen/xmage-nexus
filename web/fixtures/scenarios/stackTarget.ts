@@ -2,12 +2,14 @@ import { TABLE } from '../table-names'
 /**
  * Scenario for stack-target.spec.ts: the opponent's Lightning Bolt (and an
  * unrelated Giant Growth) sit on the stack while the human holds priority.
- * Clicking Giant Growth makes the server ask (after 800 ms, so a test can switch drawer tabs first) for a spell to counter
- * (GAME_TARGET with only the Bolt as a valid target); clicking the Bolt
- * entry is answered with a GAME_CHOOSE_ABILITY echoing the uuid.
+ * Clicking Giant Growth arms a prompt for a spell to counter (GAME_TARGET with
+ * only the Bolt as a valid target) that the server sends when the test asks for
+ * it with `releaseStackTarget`, so the test can switch drawer tabs first without
+ * racing a timer. Clicking the Bolt entry is answered with a GAME_CHOOSE_ABILITY
+ * echoing the uuid.
  */
 
-import { makeBaseScenario } from '../fake'
+import { makeBaseScenario, type FakeConn, type Scenario } from '../fake'
 import { makeCard, makeGameView, makePlayer } from '../../src/__fixtures__/gameViews'
 import type { GameView } from '../../src/net/types'
 import {
@@ -16,8 +18,10 @@ import {
 
 export const STACK_BOLT_ID = 'stack-bolt'
 export const STACK_GROWTH_ID = 'stack-growth'
+export const RELEASE_STACK_TARGET = 'releaseStackTarget'
 
 export function stackTargetScenario(): Scenario {
+  let armedConn: FakeConn | null = null
   const getGameView = (): GameView =>
     makeGameView({
       gameCycle: 1,
@@ -56,15 +60,20 @@ export function stackTargetScenario(): Scenario {
     gameId: GAME_ID,
     getGameView,
     selectMessage: 'Opponent cast Lightning Bolt',
+    onRequest: (conn, action, _args, requestId) => {
+      if (action !== RELEASE_STACK_TARGET) return false
+      conn.ok(requestId, action, {})
+      armedConn?.broadcast(
+        'GAME_TARGET',
+        { message: 'Select a spell to counter', targets: [STACK_BOLT_ID], gameView: getGameView() },
+        GAME_ID,
+      )
+      armedConn = null
+      return true
+    },
     onSendPlayerUUID: (conn, uuid) => {
       if (uuid === STACK_GROWTH_ID) {
-        setTimeout(() => {
-          conn.broadcast(
-            'GAME_TARGET',
-            { message: 'Select a spell to counter', targets: [STACK_BOLT_ID], gameView: getGameView() },
-            GAME_ID,
-          )
-        }, 800)
+        armedConn = conn
         return
       }
       conn.broadcast(

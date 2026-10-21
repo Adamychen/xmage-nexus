@@ -2,13 +2,13 @@ import { test, expect } from './fixtures'
 import { fakeOnly } from './support/fake-mode'
 import { withFakeServer } from './support/fake-backend'
 import { quickStartGame } from './support/start-game'
-import { stackTargetScenario } from '../fixtures/scenarios/stackTarget'
+import { RELEASE_STACK_TARGET, stackTargetScenario } from '../fixtures/scenarios/stackTarget'
 fakeOnly()
 
 test.describe('Targeting a spell on the stack', () => {
   test('a stack spell can be chosen as a target, even after closing the drawer or switching tabs @fullflow @stack-target', async ({ page }) => {
     await withFakeServer(stackTargetScenario, async () => {
-      const { pageErrors } = await quickStartGame(page, { prefix: 'st' })
+      const { pageErrors, helper } = await quickStartGame(page, { prefix: 'st' })
 
       const drawer = page.locator('[data-testid="game-drawer"]')
       const stackTab = page.locator('[data-testid="drawer-tab-stack"]')
@@ -22,6 +22,7 @@ test.describe('Targeting a spell on the stack', () => {
       await growth.click()
       await page.locator('[data-testid="drawer-tab-log"]').click()
       await expect(drawer).toHaveAttribute('data-tab', 'log')
+      expect(await helper.raw(RELEASE_STACK_TARGET, {}), 'the scenario sends the armed target prompt').toBe(true)
       await expect(drawer, 'a target prompt on a stack object brings the stack back').toHaveAttribute('data-tab', 'stack', { timeout: 10_000 })
       await expect(bolt).toHaveClass(/targetable/)
       await expect(growth, 'only eligible entries are marked').not.toHaveClass(/targetable/)

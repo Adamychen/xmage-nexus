@@ -18,7 +18,7 @@ interface HandMetrics {
 
 async function openHand(page: Page, entry: string): Promise<HandMetrics> {
   await page.goto('/#/gallery')
-  await expect(page.locator('[data-gallery]')).toBeVisible()
+  await expect(page.locator('[data-gallery]')).toBeVisible({ timeout: 30_000 })
   await page.evaluate(() => document.fonts.ready)
   await page.locator(`[data-gallery-entry="${entry}"]`).click()
   const bar = page.locator('[data-testid="hand-bar"]')

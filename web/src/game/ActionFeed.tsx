@@ -49,11 +49,11 @@ export default function ActionFeed({ onHover }: ActionFeedProps) {
 
   const feedItems = useFeedItems()
 
-  const handleScroll = () => {
+  const handleScroll = useCallback(() => {
     const box = containerRef.current
     if (!box) return
     pinnedToBottom.current = followedHeight.current - box.scrollTop - box.clientHeight < 40
-  }
+  }, [])
 
   const followBottom = useCallback(() => {
     const box = containerRef.current
@@ -62,7 +62,10 @@ export default function ActionFeed({ onHover }: ActionFeedProps) {
     followedHeight.current = box.scrollHeight
   }, [])
 
-  useLayoutEffect(() => followBottom(), [feedItems, viewMode, followBottom])
+  useLayoutEffect(() => {
+    handleScroll()
+    followBottom()
+  }, [feedItems, viewMode, handleScroll, followBottom])
 
   useEffect(() => {
     const box = containerRef.current

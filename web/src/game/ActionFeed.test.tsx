@@ -206,6 +206,22 @@ describe('ActionFeed & ActionFeedCard', () => {
     expect(box.top).toBe(1200)
   })
 
+  it('stops following a reader who scrolled up before the scroll event reached it', () => {
+    act(() => setState({ log: logEntries('one', 'two') }))
+    const { container } = render(<ActionFeed />)
+    const list = container.querySelector<HTMLElement>('.action-feed-list')!
+    const box = fakeScrollBox(list)
+
+    box.grow(1200)
+    act(() => setState({ log: logEntries('one', 'two', 'three') }))
+    expect(box.top).toBe(1000)
+
+    list.scrollTop = 0
+    box.grow(1400)
+    act(() => setState({ log: logEntries('one', 'two', 'three', 'four') }))
+    expect(box.top).toBe(0)
+  })
+
   it('re-follows the bottom when the feed resizes while pinned', () => {
     let onResize: (() => void) | undefined
     vi.stubGlobal('ResizeObserver', class {

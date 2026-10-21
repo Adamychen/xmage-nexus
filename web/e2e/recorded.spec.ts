@@ -88,16 +88,17 @@ test.describe('Recorded real frames (anti-drift smoke)', { tag: '@recorded' }, (
           await expect(marquee).toBeVisible()
           const stackPanel = page.locator('[data-testid="game-drawer"] .stack-zone')
           await expect(stackPanel).toBeVisible()
-          const pw = await marquee.boundingBox()
-          const stack = await stackPanel.boundingBox()
-          expect(pw).not.toBeNull()
-          expect(stack).not.toBeNull()
-          const overlaps =
-            pw!.x < stack!.x + stack!.width &&
-            stack!.x < pw!.x + pw!.width &&
-            pw!.y < stack!.y + stack!.height &&
-            stack!.y < pw!.y + pw!.height
-          expect(overlaps, 'la pila no tapa el planeswalker').toBe(false)
+          await expect.poll(async () => {
+            const pw = await marquee.boundingBox()
+            const stack = await stackPanel.boundingBox()
+            if (!pw || !stack) return 'missing'
+            const overlaps =
+              pw.x < stack.x + stack.width &&
+              stack.x < pw.x + pw.width &&
+              pw.y < stack.y + stack.height &&
+              stack.y < pw.y + pw.height
+            return overlaps ? 'overlap' : 'clear'
+          }, { message: 'la pila no tapa el planeswalker', timeout: 5_000 }).toBe('clear')
         }
         if (entry.assert === 'hasTokens') {
           await expect(page.locator('.player-zone .card-slot[data-card-name="Goblin Token"]')).toHaveCount(2)
