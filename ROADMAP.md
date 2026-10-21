@@ -160,6 +160,18 @@ Shipped 2026-10-13 behind `settings.gameUi` (`v1` = the interface as it was; `v2
 | v2 board layout | v2 is the fourth board layout ("Table", next to Standard, Pod and Arena in both settings pickers; stored as `gameUi: 'v2'`, so choosing a classic layout switches back to the classic chrome). It renders the arena board (up to 4 players; 5+ still falls back to standard) whatever `boardLayout` holds. The own battlefield is kept between the portrait, last-actions box, combat ledger, phase dial and action button by measuring them (`useOverlayGutters`), not by a fixed budget. Open: the own lands row can still run under the fan hand when the battlefield is tall, and at 1280 px the opponent columns shrink card names to wrapping. The space the rival hand fan used to hold (about 200x110 px right of each opponent portrait) is not reused: putting the permanents band there left 35-60 px cards with clipped names, and doing it only when it fits would make the board jump as permanents are played. `useOverlayGutters` also caps the ledger and the last-actions box below the divider, and `game-ui-v2.spec.ts` "no overlap" asserts that no visible battlefield card touches a portrait, the log, the ledger, the stack deck or the dial |
 | Commander damage, real partner pods | The v2 matrix (`CommanderSeatMatrix`) and the portrait chips group commanders by seat and print `X/Y` for partners, tones from 12 (amber) and 18 (red) as in the design; covered by unit tests with synthetic partners, but no recorded frame has a partner pair yet |
 
+### 4.3d Keyword effects: known gaps
+
+Shipped with the keyword auras and combat moments (`board/keywordAura.ts`, `board/keywordStrikeFx.ts`, `board/CardSlot.tsx`).
+
+| Open item | Why |
+|---|---|
+| Blockers get no keyword moments | `planDamageStrikes` (`combatStrikes.ts`) plans attacker strikes only, so a blocker's deathtouch, lifelink or first strike shows nothing, and a lifelinking blocker's +N does not wait for its motes |
+| Several blockers share one skull | A strike plan targets `blockers[0]` only, so a deathtouch attacker that kills two blockers shows one skull (`planKeywordStrikes`) |
+| Trample over a planeswalker or battle shows no wave | `lifeOf(defenderId)` is null for a permanent defender |
+| Keyword gains replay on remount | `gainedKeywords` in `CardSlot` never expires, so toggling *Keyword effects* off → on, or a remounted coin, replays the flare and the pop |
+| Morph or disguise turned face up pops every keyword | Every keyword counts as "gained". Decide whether that is intended, then pin it with a test |
+
 ### 4.4 Test-infrastructure risk
 
 - The nightly real-mode job covers 5 of 312 specs plus the `verify` layer; a ~15-spec protocol-sensitive set would shrink drift risk.

@@ -18,13 +18,17 @@ const ICON_TYPE_KEYWORD: Record<string, string> = {
 }
 
 const BADGE_CATEGORIES = ['combat', 'evasion', 'protection']
-const MAX_BADGES = 5
+export const MAX_BADGES = 5
 
 export function iconKeywordId(icon: CardIconLike): string | undefined {
   return ICON_TYPE_KEYWORD[icon.cardIconType ?? '']
 }
 
-export function mergeBadgeKeywords(icons: readonly CardIconLike[] | undefined, fromRules: readonly DetectedKeyword[]): DetectedKeyword[] {
+export function mergeBadgeKeywords(
+  icons: readonly CardIconLike[] | undefined,
+  fromRules: readonly DetectedKeyword[],
+  limit: number = MAX_BADGES,
+): DetectedKeyword[] {
   const merged: DetectedKeyword[] = []
   const seen = new Set<string>()
   for (const icon of icons ?? []) {
@@ -39,5 +43,5 @@ export function mergeBadgeKeywords(icons: readonly CardIconLike[] | undefined, f
     seen.add(kw.id)
     merged.push(kw)
   }
-  return merged.slice(0, MAX_BADGES)
+  return merged.slice(0, limit)
 }

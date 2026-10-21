@@ -59,11 +59,26 @@ function lifeOf(game: GameView, playerId: string): number | null {
   return typeof p?.life === 'number' ? p.life : null
 }
 
-function blockedDefender(game: GameView, attackerId: string): string | null {
+function combatGroupOf(game: GameView, attackerId: string): Record<string, unknown> | undefined {
   const groups = (game.combat ?? []) as Array<Record<string, unknown>>
-  const group = groups.find((g) => stringList(g.attackers).includes(attackerId))
+  return groups.find((g) => stringList(g.attackers).includes(attackerId))
+}
+
+function blockedDefender(group: Record<string, unknown> | undefined): string | null {
   if (!group) return null
   return (typeof group.defenderId === 'string' && group.defenderId) || stringList(group.defenders)[0] || null
+}
+
+function excessPastBlockers(prevGame: GameView, group: Record<string, unknown>, power: number, deathtouch: boolean): boolean {
+  let lethal = 0
+  for (const id of stringList(group.blockers)) {
+    const blocker = locate(prevGame, id)?.card
+    if (!blocker) continue
+    const toughness = parseInt(String(blocker.toughness), 10) || 0
+    const remaining = Math.max(0, toughness - (blocker.damage ?? 0))
+    lethal += deathtouch ? Math.min(remaining, 1) : remaining
+  }
+  return power > lethal
 }
 
 function combatGroups(prevGame: GameView, nextGame: GameView): GameView {
@@ -88,15 +103,19 @@ export function planKeywordStrikes(prevGame: GameView, nextGame: GameView, plans
       ? attacker.controllerId
       : null
 
-    const defender = blockedDefender(combatGroups(prevGame, nextGame), plan.attackerId)
+    const group = combatGroupOf(combatGroups(prevGame, nextGame), plan.attackerId)
+    const defender = blockedDefender(group)
     const defenderPrev = defender ? lifeOf(prevGame, defender) : null
     const defenderNext = defender ? lifeOf(nextGame, defender) : null
+    const power = parseInt(String(attacker.card.power), 10)
     const trampleTo = keywords.has('trample')
       && defender !== null
       && plan.targetId !== defender
       && defenderPrev !== null
       && defenderNext !== null
       && defenderNext < defenderPrev
+      && group !== undefined
+      && excessPastBlockers(prevGame, group, power, keywords.has('deathtouch'))
       ? defender
       : null
 

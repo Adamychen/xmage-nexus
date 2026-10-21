@@ -20,7 +20,7 @@ import { roomDoorKey, roomSidesLabel } from '../game/rooms'
 import { useChangeFlag } from '../game/useChangeFlag'
 import CardIcons from './CardIcons'
 import BadgeTip from '../ui/BadgeTip'
-import { mergeBadgeKeywords } from './cardBadges'
+import { MAX_BADGES, mergeBadgeKeywords } from './cardBadges'
 import { useBadgeFit } from './useBadgeFit'
 import { useBadgeLayout } from './useBadgeLayout'
 import { basePtValue, ptTrend } from './ptTrend'
@@ -293,20 +293,21 @@ export default function CardSlot({
     ? t('game', 'pt_base', { pt: `${basePower}/${baseToughness}` })
     : undefined
 
-  const keywordBadges = useMemo(() => {
-    const merged = mergeBadgeKeywords(card.cardIcons, extractOwnedKeywords(card))
-    return perm.mutated === true ? [{ id: 'mutate', name: 'Mutate', icon: '', category: 'mechanic' as const }, ...merged].slice(0, 5) : merged
+  const allKeywords = useMemo(() => {
+    const merged = mergeBadgeKeywords(card.cardIcons, extractOwnedKeywords(card), Infinity)
+    return perm.mutated === true ? [{ id: 'mutate', name: 'Mutate', icon: '', category: 'mechanic' as const }, ...merged] : merged
   }, [perm.mutated, card.rules, card.cardIcons, (card as unknown as { abilities?: unknown }).abilities, card.name])
+  const keywordBadges = useMemo(() => allKeywords.slice(0, MAX_BADGES), [allKeywords])
 
-  const keywordIdsKey = keywordBadges.map((kw) => kw.id).join('|')
-  const [seenKeywordIds, setSeenKeywordIds] = useState(keywordIdsKey)
+  const allKeywordIdsKey = allKeywords.map((kw) => kw.id).join('|')
+  const [seenKeywordIds, setSeenKeywordIds] = useState(allKeywordIdsKey)
   const [gainedKeywords, setGainedKeywords] = useState<string[]>([])
-  if (seenKeywordIds !== keywordIdsKey) {
-    setSeenKeywordIds(keywordIdsKey)
-    setGainedKeywords(gainedKeywordIds(seenKeywordIds.split('|'), keywordIdsKey.split('|')))
+  if (seenKeywordIds !== allKeywordIdsKey) {
+    setSeenKeywordIds(allKeywordIdsKey)
+    setGainedKeywords(gainedKeywordIds(seenKeywordIds.split('|'), allKeywordIdsKey.split('|')))
   }
   const auraKeyword = keywordAura && auraMode !== 'off' && !showBack && !isFaceDownCard
-    ? dominantAuraKeyword(keywordBadges.map((kw) => kw.id))
+    ? dominantAuraKeyword(allKeywords.map((kw) => kw.id))
     : null
 
   const badgeRowRef = useRef<HTMLDivElement>(null)
@@ -637,7 +638,7 @@ const showPtBadge =
         />
       )}
       {auraKeyword && gainedKeywords.includes(auraKeyword) && (
-        <span key={`flare-${keywordIdsKey}`} className={`kw-aura-flare kw-aura-flare--${auraKeyword}`} aria-hidden="true" />
+        <span key={`flare-${allKeywordIdsKey}`} className={`kw-aura-flare kw-aura-flare--${auraKeyword}`} aria-hidden="true" />
       )}
 
       {recapMark && (

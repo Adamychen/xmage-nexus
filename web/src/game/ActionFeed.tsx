@@ -52,7 +52,7 @@ export default function ActionFeed({ onHover }: ActionFeedProps) {
   const handleScroll = useCallback(() => {
     const box = containerRef.current
     if (!box) return
-    pinnedToBottom.current = followedHeight.current - box.scrollTop - box.clientHeight < 40
+    pinnedToBottom.current = Math.min(followedHeight.current, box.scrollHeight) - box.scrollTop - box.clientHeight < 40
   }, [])
 
   const followBottom = useCallback(() => {

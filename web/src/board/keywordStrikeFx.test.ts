@@ -64,8 +64,8 @@ describe('planKeywordStrikes', () => {
   })
 
   it('sends trample overflow to the defender only when a blocked attacker hurt it', () => {
-    const trampler = makePermanent({ id: 'a1', name: 'Charger', rules: ['Trample'] })
-    const bear = makePermanent({ id: 'b1', name: 'Grizzly Bears' })
+    const trampler = makePermanent({ id: 'a1', name: 'Charger', rules: ['Trample'], power: '5', toughness: '5' })
+    const bear = makePermanent({ id: 'b1', name: 'Grizzly Bears', power: '2', toughness: '2' })
     const groups: Array<Record<string, unknown>> = [{ attackers: ['a1'], blockers: ['b1'], defenderId: 'p-opp' }]
     const board = (life: number) => [
       makePlayer({ playerId: 'p-opp', name: 'Opp', life, battlefield: { b1: bear } }),
@@ -77,6 +77,40 @@ describe('planKeywordStrikes', () => {
       { attackerId: 'a1', targetId: 'b1', firstStrike: false, deathtouchKill: false, lifelinkTo: null, trampleTo: 'p-opp' },
     ])
     expect(planKeywordStrikes(prev, next, [{ attackerId: 'a1', targetId: 'p-opp' }])).toEqual([])
+  })
+
+  it('does not credit trample when the blocker absorbs all the damage and another attacker hurt the defender', () => {
+    const trampler = makePermanent({ id: 'a1', name: 'Charger', rules: ['Trample'], power: '2', toughness: '2' })
+    const runner = makePermanent({ id: 'a2', name: 'Runner', power: '2', toughness: '2' })
+    const bear = makePermanent({ id: 'b1', name: 'Grizzly Bears', power: '2', toughness: '2' })
+    const groups: Array<Record<string, unknown>> = [
+      { attackers: ['a1'], blockers: ['b1'], defenderId: 'p-opp' },
+      { attackers: ['a2'], blockers: [], defenderId: 'p-opp' },
+    ]
+    const board = (life: number) => [
+      makePlayer({ playerId: 'p-opp', name: 'Opp', life, battlefield: { b1: bear } }),
+      makePlayer({ playerId: 'p-me', name: 'Me', battlefield: { a1: trampler, a2: runner } }),
+    ]
+    const prev = game(board(20), { combat: groups as GameView['combat'] })
+    const next = game(board(18), { combat: groups as GameView['combat'] })
+    expect(planKeywordStrikes(prev, next, [{ attackerId: 'a1', targetId: 'b1' }])).toEqual([])
+  })
+
+  it('counts deathtouch as one lethal damage per blocker', () => {
+    const viper = makePermanent({ id: 'a1', name: 'Viper', rules: ['Trample', 'Deathtouch'], power: '2', toughness: '2' })
+    const juggernaut = makePermanent({ id: 'b1', name: 'Juggernaut', power: '5', toughness: '5' })
+    const groups: Array<Record<string, unknown>> = [{ attackers: ['a1'], blockers: ['b1'], defenderId: 'p-opp' }]
+    const prev = game([
+      makePlayer({ playerId: 'p-opp', name: 'Opp', life: 20, battlefield: { b1: juggernaut } }),
+      makePlayer({ playerId: 'p-me', name: 'Me', battlefield: { a1: viper } }),
+    ], { combat: groups as GameView['combat'] })
+    const next = game([
+      makePlayer({ playerId: 'p-opp', name: 'Opp', life: 19, graveyard: { b1: juggernaut } }),
+      makePlayer({ playerId: 'p-me', name: 'Me', battlefield: { a1: viper } }),
+    ], { combat: groups as GameView['combat'] })
+    expect(planKeywordStrikes(prev, next, [{ attackerId: 'a1', targetId: 'b1' }])).toEqual([
+      { attackerId: 'a1', targetId: 'b1', firstStrike: false, deathtouchKill: true, lifelinkTo: null, trampleTo: 'p-opp' },
+    ])
   })
 
   it('flags first strike from the card icon', () => {
@@ -249,8 +283,8 @@ describe('keyword strike engine integration', () => {
   })
 
   it('plays the defender damage number when a trampling attacker overflows its blocker', () => {
-    const goblin = makePermanent({ id: 'a1', name: 'Charger', rules: ['Trample'] })
-    const bear = makePermanent({ id: 'b1', name: 'Grizzly Bears' })
+    const goblin = makePermanent({ id: 'a1', name: 'Charger', rules: ['Trample'], power: '5', toughness: '5' })
+    const bear = makePermanent({ id: 'b1', name: 'Grizzly Bears', power: '2', toughness: '2' })
     const groups: Array<Record<string, unknown>> = [{ attackers: ['a1'], blockers: ['b1'], defenderId: 'p-opp' }]
     const board = (life: number) => [
       makePlayer({ playerId: 'p-opp', name: 'Opp', life, battlefield: { b1: bear } }),

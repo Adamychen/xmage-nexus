@@ -62,8 +62,12 @@ export function stackTargetScenario(): Scenario {
     selectMessage: 'Opponent cast Lightning Bolt',
     onRequest: (conn, action, _args, requestId) => {
       if (action !== RELEASE_STACK_TARGET) return false
+      if (!armedConn) {
+        conn.fail(requestId, action, 'releaseStackTarget: no stack target prompt is armed (click Giant Growth first)')
+        return true
+      }
       conn.ok(requestId, action, {})
-      armedConn?.broadcast(
+      armedConn.broadcast(
         'GAME_TARGET',
         { message: 'Select a spell to counter', targets: [STACK_BOLT_ID], gameView: getGameView() },
         GAME_ID,

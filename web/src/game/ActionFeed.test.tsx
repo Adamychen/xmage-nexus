@@ -222,6 +222,25 @@ describe('ActionFeed & ActionFeedCard', () => {
     expect(box.top).toBe(0)
   })
 
+  it('keeps following the bottom after the content shrinks while pinned', () => {
+    act(() => setState({ log: logEntries('one', 'two', 'three') }))
+    const { container } = render(<ActionFeed />)
+    const list = container.querySelector<HTMLElement>('.action-feed-list')!
+    const box = fakeScrollBox(list)
+
+    box.grow(1400)
+    act(() => setState({ log: logEntries('one', 'two', 'three', 'four') }))
+    expect(box.top).toBe(1200)
+
+    box.grow(500)
+    list.scrollTop = box.top
+    act(() => setState({ log: logEntries('five') }))
+
+    box.grow(600)
+    act(() => setState({ log: logEntries('five', 'six') }))
+    expect(box.top).toBe(400)
+  })
+
   it('re-follows the bottom when the feed resizes while pinned', () => {
     let onResize: (() => void) | undefined
     vi.stubGlobal('ResizeObserver', class {

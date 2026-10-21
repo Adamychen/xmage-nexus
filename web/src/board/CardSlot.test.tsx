@@ -988,6 +988,23 @@ describe('CardSlot keyword aura', () => {
     expect(container.querySelector('[data-kw-aura]')?.getAttribute('data-kw-aura')).toBe('indestructible')
   })
 
+  it('draws the indestructible aura even when it is beyond the visible badge cap', () => {
+    const icon = (cardIconType: string) => ({ cardIconType, text: '', hint: cardIconType })
+    const card = creature({
+      rules: ['Indestructible'],
+      cardIcons: [
+        icon('ABILITY_FLYING'),
+        icon('ABILITY_FIRST_STRIKE'),
+        icon('ABILITY_VIGILANCE'),
+        icon('ABILITY_REACH'),
+        icon('ABILITY_DEFENDER'),
+      ],
+    })
+    const { container } = render(<CardSlot card={card} keywordAura />)
+    expect(container.querySelectorAll('.keyword-badge')).toHaveLength(5)
+    expect(container.querySelector('[data-kw-aura]')?.getAttribute('data-kw-aura')).toBe('indestructible')
+  })
+
   it('draws no aura on a face-down card', () => {
     const { container } = render(<CardSlot card={creature({ faceDown: true })} keywordAura faceDown />)
     expect(container.querySelector('.kw-aura')).toBeNull()
