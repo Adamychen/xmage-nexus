@@ -23,7 +23,6 @@ import DeckIssuesDialog from './lobby/DeckIssuesDialog'
 import SetupWizard from './setup/SetupWizard'
 import { OPEN_SETUP_EVENT } from './setup/setupFlag'
 import { bootPlanFromStorage } from './setup/bootRestore'
-import GameScreen from './game/GameScreen'
 import GameEndDialog from './game/GameEndDialog'
 import EliminatedDialog from './game/EliminatedDialog'
 import ConfirmHost from './ui/ConfirmHost'
@@ -36,6 +35,7 @@ import DemoTour from './demo/DemoTour'
 // P3: galería de estados (solo dev). El import dinámico queda tras
 // `import.meta.env.DEV`, así el build de producción no incluye los frames.
 const GalleryScreen = import.meta.env.DEV ? lazy(() => import('./dev/GalleryScreen')) : null
+const GameScreen = lazy(() => import('./game/GameScreen'))
 
 export default function App() {
   const { t, lang } = useTranslation()
@@ -143,6 +143,10 @@ export default function App() {
     return () => window.removeEventListener('keydown', onZoomKeys)
   }, [settings.uiScale])
 
+  useEffect(() => {
+    if (phase === 'lobby' || phase === 'staging' || phase === 'spectating_pending') void import('./game/GameScreen')
+  }, [phase])
+
   const banner = linkBanner({ connecting, wsAlive, link, linkAttempt })
 
   if (gallery && GalleryScreen) {
@@ -182,7 +186,9 @@ export default function App() {
         ) : phase === 'staging' ? (
           <SpectatorStagingScreen mode="player" />
         ) : phase === 'game' ? (
-          <GameScreen />
+          <Suspense fallback={null}>
+            <GameScreen />
+          </Suspense>
         ) : phase === 'connecting' ? (
           <div className="login-wrap">
             <div className="login-card panel connecting-splash">

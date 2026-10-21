@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, lazy, Suspense } from 'react'
 import { useNotificationPermissionAsk } from '../game/attentionAlerts'
 import EmptyState from '../ui/EmptyState'
 import { useLobby, useStore, openStagingTable, clearError } from '../state/store'
@@ -9,7 +9,6 @@ import CreateTableDialog from './CreateTableDialog'
 import type { CreateKind } from './CreateTableDialog'
 import JoinTableDialog from './JoinTableDialog'
 import DecksGallery from '../decks/DecksGallery'
-import DeckBuilder from '../decks/DeckBuilder'
 import PlayerProfileModal from './PlayerProfileModal'
 import RankingView from './RankingView'
 import UserActionModal from './UserActionModal'
@@ -43,6 +42,8 @@ import Button from '../ui/Button'
 import IconButton from '../ui/IconButton'
 import { DEMO_GO_EVENT, type DemoTarget } from '../demo/tourBus'
 import { getDeckStorage } from '../decks/storage'
+
+const DeckBuilder = lazy(() => import('../decks/DeckBuilder'))
 
 export default function LobbyScreen() {
   const { t } = useTranslation()
@@ -187,6 +188,11 @@ export default function LobbyScreen() {
       cacheAvatar(conn.username, conn.avatarId)
     }
   }, [conn?.username, conn?.avatarId])
+
+  useEffect(() => {
+    const timer = setTimeout(() => { void import('../decks/DeckBuilder') }, 1500)
+    return () => clearTimeout(timer)
+  }, [])
 
   return (
     <div className="lobby">
@@ -368,7 +374,9 @@ export default function LobbyScreen() {
 
             {activeTab === 'decks' && (
               deckBuilderId ? (
-                <DeckBuilder deckId={deckBuilderId} onClose={() => setDeckBuilderId(null)} />
+                <Suspense fallback={null}>
+                  <DeckBuilder deckId={deckBuilderId} onClose={() => setDeckBuilderId(null)} />
+                </Suspense>
               ) : (
                 <DecksGallery onEdit={(id) => setDeckBuilderId(id)} />
               )
