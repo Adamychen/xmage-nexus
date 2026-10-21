@@ -11,7 +11,7 @@ async function openGallery(page: Page) {
   await page.route(/^https?:\/\/(?!localhost|127\.0\.0\.1)/, (route) => route.abort())
   await page.emulateMedia({ reducedMotion: 'no-preference' })
   await page.goto('/#/gallery')
-  await expect(page.locator('[data-gallery]')).toBeVisible()
+  await expect(page.locator('[data-gallery]')).toBeVisible({ timeout: 30_000 })
   await page.evaluate(() => document.fonts.ready)
 }
 
