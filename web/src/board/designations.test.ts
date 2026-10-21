@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { cardDesignations, classLevelOf, evidenceCounts, pairedPartnerName, protectorName, substituteCardRefs } from './designations'
+import { cardDesignations, classLevelOf, evidenceCounts, gainedDesignations, pairedPartnerName, protectorName, substituteCardRefs } from './designations'
 
 describe('cardDesignations', () => {
   it('detecta monstrous desde la hint en vivo del motor', () => {
@@ -86,6 +86,34 @@ describe('cardDesignations', () => {
   it('sin rules no hay designaciones', () => {
     expect(cardDesignations(undefined)).toEqual([])
     expect(cardDesignations([])).toEqual([])
+  })
+})
+
+describe('gainedDesignations', () => {
+  const NOT_MONSTROUS = "ICON_BAD{this} isn't monstrous"
+  const MONSTROUS = 'ICON_GOOD{this} is monstrous'
+  const SUSPECTED = "Suspected (has menace and can't block)"
+
+  it('reports monstrous when the card becomes monstrous', () => {
+    expect(gainedDesignations([NOT_MONSTROUS], [MONSTROUS])).toEqual(['monstrous'])
+  })
+
+  it('reports nothing when the rules are unchanged', () => {
+    expect(gainedDesignations([MONSTROUS], [MONSTROUS])).toEqual([])
+  })
+
+  it('reports classlevel only when the class level increases', () => {
+    expect(gainedDesignations(['Class level: 1'], ['Class level: 2'])).toEqual(['classlevel'])
+    expect(gainedDesignations(['Class level: 2'], ['Class level: 2'])).toEqual([])
+    expect(gainedDesignations(['Class level: 2'], ['Class level: 1'])).toEqual([])
+  })
+
+  it('reports a designation added to a card that had none', () => {
+    expect(gainedDesignations(undefined, [SUSPECTED])).toEqual(['suspected'])
+  })
+
+  it('reports nothing for a lost designation', () => {
+    expect(gainedDesignations([MONSTROUS], [NOT_MONSTROUS])).toEqual([])
   })
 })
 

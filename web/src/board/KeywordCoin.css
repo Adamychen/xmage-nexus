@@ -1,0 +1,67 @@
+.kw-coin {
+  --kw-rgb: var(--brand-rgb);
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: var(--kw-size, 16px);
+  height: var(--kw-size, 16px);
+  border: 1px solid var(--veil-5);
+  border-radius: var(--r-xs);
+  line-height: 1;
+}
+
+.kw-coin.cat-combat { --kw-rgb: var(--err-rgb); }
+.kw-coin.cat-evasion { --kw-rgb: var(--brand-rgb); }
+.kw-coin.cat-protection { --kw-rgb: var(--ok-rgb); }
+.kw-coin.cat-counters { --kw-rgb: var(--mana-g-rgb); }
+.kw-coin.cat-mana { --kw-rgb: var(--gold-rgb); }
+.kw-coin.cat-graveyard { --kw-rgb: var(--purple-rgb); }
+.kw-coin.cat-cards { --kw-rgb: var(--mana-u-rgb); }
+.kw-coin.cat-mechanic { --kw-rgb: var(--brand-rgb); }
+
+.kw-coin.kw-haste { --kw-rgb: var(--ember-rgb); }
+.kw-coin.kw-deathtouch { --kw-rgb: var(--purple-rgb); }
+.kw-coin.kw-flying { --kw-rgb: var(--mana-u-rgb); }
+.kw-coin.kw-lifelink { --kw-rgb: var(--gold-rgb); }
+.kw-coin.kw-trample { --kw-rgb: var(--mana-g-rgb); }
+.kw-coin.kw-indestructible { --kw-rgb: var(--mana-c-rgb); }
+.kw-coin.kw-hexproof { --kw-rgb: var(--ok-rgb); }
+.kw-coin.kw-mutate { --kw-rgb: var(--ok-rgb); }
+.kw-coin.kw-plainswalk { --kw-rgb: var(--mana-w-rgb); }
+.kw-coin.kw-islandwalk { --kw-rgb: var(--mana-u-rgb); }
+.kw-coin.kw-swampwalk { --kw-rgb: var(--mana-b-rgb); }
+.kw-coin.kw-mountainwalk { --kw-rgb: var(--mana-r-rgb); }
+.kw-coin.kw-forestwalk { --kw-rgb: var(--mana-g-rgb); }
+
+.kw-coin svg {
+  display: block;
+  width: 72%;
+  height: 72%;
+}
+
+.kw-coin-abbr {
+  font-family: var(--font-display);
+  font-size: calc(var(--kw-size, 16px) * 0.46);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.kw-coin.icons-coins {
+  border-radius: 50%;
+  background: rgb(var(--kw-rgb));
+  border-color: rgb(var(--ink-rgb) / 0.8);
+  color: rgb(var(--ink-rgb));
+}
+
+.kw-coin.icons-outline {
+  background: rgb(var(--ink-2-rgb) / 0.92);
+  border-color: rgb(var(--kw-rgb) / 0.65);
+  color: rgb(var(--kw-rgb));
+}
+
+.kw-coin.icons-outline svg {
+  width: 80%;
+  height: 80%;
+}

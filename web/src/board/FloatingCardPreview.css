@@ -153,10 +153,6 @@ html.fx-off .floating-card-foil {
   margin-bottom: var(--sp-1);
 }
 
-.kw-box-icon {
-  font-size: var(--fs-sm);
-}
-
 .kw-box-name {
   font-size: var(--fs-xs);
   font-weight: 800;

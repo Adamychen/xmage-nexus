@@ -67,7 +67,7 @@ describe('CardSlot compact tile', () => {
     await act(async () => {})
     expect(container.querySelector('[data-testid="compact-tap-badge"]')).toBeNull()
     rerender(<CardSlot card={perm()} compact tapped />)
-    expect(container.querySelector('[data-testid="compact-tap-badge"]')?.getAttribute('title')).toBe(t('game', 'tapped'))
+    expect(container.querySelector('[data-testid="compact-tap-badge"]')?.getAttribute('aria-label')).toBe(t('game', 'tapped'))
     rerender(<CardSlot card={perm()} tapped />)
     expect(container.querySelector('[data-testid="compact-tap-badge"]')).toBeNull()
   })
@@ -84,7 +84,7 @@ describe('CardSlot compact tile', () => {
     const { container } = render(<CardSlot card={walker} compact showCounters />)
     await act(async () => {})
     expect(container.querySelector('.loyalty-val')?.textContent).toBe('3')
-    const badges = [...container.querySelectorAll('.counter-badge')].map((b) => b.getAttribute('title'))
+    const badges = [...container.querySelectorAll('.counter-badge')].map((b) => b.getAttribute('aria-label'))
     expect(badges).toEqual(['shield: 1'])
   })
 

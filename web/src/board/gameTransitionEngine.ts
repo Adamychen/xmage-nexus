@@ -17,6 +17,8 @@ import { restingRect } from './restingRect'
 import { observeCoinFlip } from './coinFlipFx'
 import { soundManager } from '../audio/soundManager'
 import { consumeSacrificed } from './gameLogFx'
+import { consumeConceded } from './concedeFx'
+import { consumeFizzled, FIZZLE_MS } from './fizzleFx'
 import { passedDesignations, spawnDesignationFlight } from './designationFx'
 import { primeHandReturns, type HandReturnPile } from './drawSlide'
 import { boardWipeDelay, clearBoardWipe, primeBoardWipe, wipeBoardRect } from './boardWipe'
@@ -910,6 +912,11 @@ function eliminateSeat(playerId: string): void {
   const els = [...document.querySelectorAll(`.board-zone[data-player-id="${playerId}"], .defeated-seat[data-seat-id="${playerId}"]`)]
   const cells = els.map((el) => el.closest('.pod-cell, .arena-opp-cell') ?? el)
   const rect = cells.map(rectOf).find((r): r is DOMRect => !!r) ?? getRect(`.player-info-bar[data-player-id="${playerId}"]`)
+  if (consumeConceded(playerId)) {
+    for (const el of els) replayClass(el, 'fx-conceded', fxMotionDuration(1200) + 40)
+    if (rect) spawnImpact('conceded', rect)
+    return
+  }
   for (const el of els) replayClass(el, 'fx-eliminated', fxMotionDuration(1400) + 40)
   if (rect) spawnImpact('eliminated', rect)
   soundManager.play('impact_heavy', 'game')
@@ -1512,6 +1519,7 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
     const departure = departures.get(spellId)
     const entersBattlefield = departure?.zone === 'battlefield' || nextPlayers.some((p) => spellId in (p.battlefield ?? {}))
     const mergeHost = merges.get(spellId)
+    const fizzled = !countered.has(spellId) && consumeFizzled(spellId)
     enqueueStackResolve(spellId, (done) => {
       const exit = () => {
         if (prevRect && mergeHost) {
@@ -1536,6 +1544,14 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
         if (shown) replayClass(shown, 'fx-countered-shake', ms + 200)
         spawnImpact('countered', stackSpellSource(spellId)?.rect ?? prevRect)
         soundManager.play('destroy', 'game')
+        later(ms, exit)
+        return
+      }
+      if (fizzled) {
+        for (const targetId of targetIds) landed(targetId)
+        const shown = [...document.querySelectorAll(`[data-card-id="${spellId}"]`)].find((el) => el.closest(STACK_SELECTOR))
+        const ms = fxMotionDuration(FIZZLE_MS)
+        if (shown) replayClass(shown, 'fx-fizzle', ms + 200)
         later(ms, exit)
         return
       }

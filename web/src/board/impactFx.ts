@@ -8,7 +8,7 @@ export type ManaColor = 'w' | 'u' | 'b' | 'r' | 'g'
 export type SpellWeight = 0 | 1 | 2
 export type ImpactKind = 'slam' | 'sparks' | 'destroy' | 'exile' | 'token-pop' | 'token-fade' | 'enter-ring' | 'countered' | 'transform' | 'bounce' | 'heal'
   | 'flicker' | 'phase' | 'sacrifice' | 'copy' | 'ultimate' | 'eliminated' | 'wipe' | 'face-up' | 'poison' | 'poison-lethal' | 'energy' | 'control'
-  | 'command' | 'tuck' | 'attach' | 'mutate' | 'animate' | 'emblem' | 'dungeon' | 'planeswalk' | 'flip'
+  | 'command' | 'tuck' | 'attach' | 'mutate' | 'animate' | 'emblem' | 'dungeon' | 'planeswalk' | 'flip' | 'conceded'
 
 export interface ImpactFx {
   id: number
@@ -124,6 +124,7 @@ const BASE_MS: Record<ImpactKind, number> = {
   dungeon: 900,
   planeswalk: 1300,
   flip: 760,
+  conceded: 1200,
 }
 
 export function spawnImpact(

@@ -606,6 +606,22 @@ html.fx-off .board-shell.fx-quake-2 {
   box-shadow: 0 0 8px rgb(var(--err-rgb) / 0.8);
 }
 
+/* Conceded: no crack and no shards, a white wash that drains to grey over the seat. */
+.fx-conceded-wash {
+  width: 100%;
+  height: 100%;
+  translate: -50% -50%;
+  background: radial-gradient(ellipse at 50% 50%, color-mix(in srgb, var(--fg-hi) 45%, transparent) 0%, rgb(var(--ink-rgb) / 0.7) 75%);
+  animation: fxConcededWash var(--fx-dur) ease-out both;
+}
+
+@keyframes fxConcededWash {
+  0% { opacity: 0; filter: brightness(1.6); }
+  20% { opacity: 1; filter: brightness(1.3); }
+  70% { opacity: 0.85; filter: grayscale(1) brightness(0.9); }
+  100% { opacity: 0; filter: grayscale(1); }
+}
+
 .fx-heal-mote {
   width: calc(8px * var(--s));
   height: calc(8px * var(--s));

@@ -1,4 +1,5 @@
-.has-badge-tip {
+.has-badge-tip,
+.card-slot .has-badge-tip {
   pointer-events: auto;
 }
 

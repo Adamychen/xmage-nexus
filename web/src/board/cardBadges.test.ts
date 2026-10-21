@@ -1,16 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { MTG_KEYWORDS } from '../data/mtgKeywords'
-import { badgeGlyphIsLine, badgeGlyphKey, isGlyphKeyword } from './KeywordGlyph'
 import { iconKeywordId, mergeBadgeKeywords } from './cardBadges'
 
 describe('card badge glyphs', () => {
-  it('resolves a drawn glyph for every combat, evasion and protection keyword', () => {
-    for (const kw of MTG_KEYWORDS.filter((k) => ['combat', 'evasion', 'protection'].includes(k.category))) {
-      const key = badgeGlyphKey(kw.id, kw.category)
-      expect(isGlyphKeyword(key) || badgeGlyphIsLine(key), kw.id).toBe(true)
-    }
-  })
-
   it('maps every server ability icon to a keyword that exists', () => {
     for (const type of ['FLYING', 'DEFENDER', 'DEATHTOUCH', 'LIFELINK', 'DOUBLE_STRIKE', 'FIRST_STRIKE', 'TRAMPLE', 'HEXPROOF', 'INFECT', 'INDESTRUCTIBLE', 'VIGILANCE', 'REACH']) {
       const id = iconKeywordId({ cardIconType: `ABILITY_${type}` })

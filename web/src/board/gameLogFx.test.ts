@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { clearSacrificed, consumeSacrificed, parseFlicker, parseMulligan, parseSacrifice, sniffGameLogFx } from './gameLogFx'
+import { clearSacrificed, consumeSacrificed, parseFlicker, parseLibraryPeek, parseMulligan, parseSacrifice, sniffGameLogFx } from './gameLogFx'
 import { clearDiceRollFx, parseDiceRoll } from './diceRollFx'
 import { getState, setState } from '../state/state'
 import { makeGameView, makePermanent, makePlayer } from '../__fixtures__/gameViews'
@@ -30,6 +30,22 @@ describe('parseMulligan', () => {
   it('reads the player taking a mulligan', () => {
     expect(parseMulligan(`${name('Bob')} decides to take mulligan`)).toEqual({ player: 'Bob' })
     expect(parseMulligan(`${name('Bob')} keeps hand`)).toBeNull()
+  })
+})
+
+describe('parseLibraryPeek', () => {
+  it('reads a scry', () => {
+    expect(parseLibraryPeek(`${name('Alice')} scries 2 (source: <font color='#6495ED'>Opt</font>)`)).toEqual({ player: 'Alice', kind: 'scry', amount: 2 })
+  })
+
+  it('reads a surveil with a multi-word player name', () => {
+    expect(parseLibraryPeek(`${name('Bob Smith')} surveils 1 (source: <font color='#6495ED'>Thoughtbound Phantasm</font>)`)).toEqual({ player: 'Bob Smith', kind: 'surveil', amount: 1 })
+  })
+
+  it('ignores a zero amount and every other line', () => {
+    expect(parseLibraryPeek('Alice scries 0 (source: Opt)')).toBeNull()
+    expect(parseLibraryPeek('Alice draws a card')).toBeNull()
+    expect(parseLibraryPeek('Alice casts Opt')).toBeNull()
   })
 })
 

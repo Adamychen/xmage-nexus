@@ -42,6 +42,7 @@ import FeedbackOverlay from '../board/FeedbackOverlay'
 import ImpactOverlay from '../board/ImpactOverlay'
 import CoinFlipOverlay from '../board/CoinFlipOverlay'
 import ShuffleOverlay from '../board/ShuffleOverlay'
+import LibraryPeekOverlay from '../board/LibraryPeekOverlay'
 import DiceRollOverlay from '../board/DiceRollOverlay'
 import DesignationOverlay from '../board/DesignationOverlay'
 import ProjectileOverlay from '../board/ProjectileOverlay'
@@ -569,6 +570,7 @@ export default function GameScreen() {
               <ImpactOverlay />
               <CoinFlipOverlay />
               <ShuffleOverlay />
+              <LibraryPeekOverlay />
               <DiceRollOverlay />
               <DesignationOverlay />
               <ProjectileOverlay />

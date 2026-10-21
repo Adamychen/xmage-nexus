@@ -87,6 +87,7 @@ export type GalleryScreenName =
   | 'gameend'
   | 'cards'
   | 'projectile'
+  | 'glyphs'
 
 /** Acción de dev de una entrada: un botón en el sidebar que modifica el estado de la galería. */
 export interface GalleryAction {
@@ -1524,6 +1525,15 @@ function withCardIcons(game: GameView, id: string, cardIcons: Array<{ cardIconTy
   })
 }
 
+/** Replaces the `rules` of one of my permanents (designation hints live there). */
+function withRules(game: GameView, id: string, rules: string[]): GameView {
+  return mapControlled(game, (p) => {
+    const perm = p.battlefield?.[id]
+    if (!perm) return p
+    return { ...p, battlefield: { ...p.battlefield, [id]: { ...perm, rules } } }
+  })
+}
+
 /** The opponent attacks with a copy of one of my creatures; nothing has blocked yet. */
 function withOpponentAttacker(game: GameView, templateId: string): GameView {
   const me = controlledPlayer(game)
@@ -2853,6 +2863,16 @@ export function buildGalleryEntries(): GalleryEntry[] {
         gameId,
         action: { label: 'Resolve Bolt', apply: resolveBoltOn(opponentCreature) },
       })
+      entries.push({
+        id: 'anim:fizzle',
+        group: 'Animaciones',
+        label: 'Stack: a spell fizzles',
+        description: 'Your Lightning Bolt targets a creature that is gone by the time it resolves. "Replay" feeds the server\'s line "Lightning Bolt has been fizzled." and resolves it: no projectile flies, the spell goes grey and drifts apart like smoke on the stack, then falls to the graveyard.',
+        phase: 'game',
+        game: withBoltTargeting(bolted, opponentCreature),
+        gameId,
+        action: { label: 'Replay', run: replayQuietWithLog(withBoltTargeting(bolted, opponentCreature), gameId, () => 'Lightning Bolt has been fizzled.', (g) => ({ ...g, stack: {} as unknown as GameView['stack'] })) },
+      })
     }
     if (opponent && opponentCreature) {
       const sequenceGame = withFourStackSpells(calmGame(game), opponentCreature, opponent.playerId)
@@ -3141,6 +3161,28 @@ export function buildGalleryEntries(): GalleryEntry[] {
       action: { label: 'Replay', run: announceShuffle(opponentOfBase) },
     })
     entries.push({
+      id: 'anim:scry',
+      group: 'Animaciones',
+      label: 'Scry: your library peeks',
+      description: 'Press "Replay" to feed the server\'s log line "<you> scries 2": the two top cards lift face down off your library chip, fan out for a moment and settle back.',
+      phase: 'game',
+      game: animBase,
+      gameId,
+      gameUi: 'v2',
+      action: { label: 'Replay', run: announce(`${logName(meOfBase?.name ?? 'You')} scries 2 (source: <font color='#6495ED'>Opt</font>)`) },
+    })
+    entries.push({
+      id: 'anim:surveil-opp',
+      group: 'Animaciones',
+      label: 'Surveil: opponent library peeks',
+      description: 'Same for the opponent\'s log line "<opponent> surveils 3": three cards lift off their library chip and settle back (cards that go to the graveyard fly there through the ordinary zone change).',
+      phase: 'game',
+      game: animBase,
+      gameId,
+      gameUi: 'v2',
+      action: { label: 'Replay', run: announce(`${logName(opponentOfBase?.name ?? 'Opponent')} surveils 3 (source: <font color='#6495ED'>Thoughtbound Phantasm</font>)`) },
+    })
+    entries.push({
       id: 'anim:shuffle-classic',
       group: 'Animaciones',
       label: 'Shuffle: your library (classic table, pile)',
@@ -3162,6 +3204,56 @@ export function buildGalleryEntries(): GalleryEntry[] {
       game: animBase,
       gameId,
       action: { label: 'Replay', run: announce(`${logName(meName)} puts ${logObject(mystic, mysticName)} from exile onto the Battlefield (source: ${logName('Ephemerate')})`) },
+    })
+    entries.push({
+      id: 'anim:pay-paid',
+      group: 'Animaciones',
+      label: 'Pay to prevent: you pay',
+      description: '"Replay" feeds "<you> chooses to pay {2} to prevent the counter effect": a gold ring sweeps out of your portrait.',
+      phase: 'game',
+      game: animBase,
+      gameId,
+      action: { label: 'Replay', run: announce(`${logName(meName)} chooses to pay {2} to prevent the counter effect`) },
+    })
+    entries.push({
+      id: 'anim:pay-declined-opp',
+      group: 'Animaciones',
+      label: 'Pay to prevent: the opponent declines',
+      description: '"Replay" feeds the opponent\'s "chooses not to pay": their portrait dims and shakes its head.',
+      phase: 'game',
+      game: animBase,
+      gameId,
+      action: { label: 'Replay', run: announce(`${logName(opponentOfBase?.name ?? 'Opponent')} chooses not to pay {3} to prevent the counter effect`) },
+    })
+    entries.push({
+      id: 'anim:chosen-card',
+      group: 'Animaciones',
+      label: 'Choice: a value chosen on a card',
+      description: `"Replay" feeds "${mysticName}: <you> has chosen Blue": "Blue" floats up from the card in a gold box.`,
+      phase: 'game',
+      game: animBase,
+      gameId,
+      action: { label: 'Replay', run: announce(`${logObject(mystic, mysticName)}: ${logName(meName)} has chosen Blue`) },
+    })
+    entries.push({
+      id: 'anim:chosen-player',
+      group: 'Animaciones',
+      label: 'Choice: a value with no card on the board',
+      description: '"Replay" feeds a choice whose source carries no id: "Elf" floats up from the opponent\'s portrait instead.',
+      phase: 'game',
+      game: animBase,
+      gameId,
+      action: { label: 'Replay', run: announce(`Adaptive Automaton: ${logName(opponentOfBase?.name ?? 'Opponent')} has chosen Elf`) },
+    })
+    entries.push({
+      id: 'anim:behold',
+      group: 'Animaciones',
+      label: 'Behold: a card is shown',
+      description: `"Replay" feeds "<you> chooses to behold ${mysticName}": the card lifts and catches a white flash.`,
+      phase: 'game',
+      game: animBase,
+      gameId,
+      action: { label: 'Replay', run: announce(`${logName(meName)} chooses to behold ${logObject(mystic, mysticName)}`) },
     })
     const monarchMine = withDesignation(animBase, 'monarch', meOfBase?.playerId ?? null)
     if (opponentOfBase) {
@@ -3199,6 +3291,17 @@ export function buildGalleryEntries(): GalleryEntry[] {
         gameId,
         boardLayout: 'pod',
         action: { label: 'Replay', run: replayQuiet(podBase, gameId, (g) => withPlayerOut(g, podVictim.playerId)) },
+      })
+      entries.push({
+        id: 'anim:player-conceded',
+        group: 'Animaciones',
+        label: 'Multiplayer: a player concedes',
+        description: `Four-player pod. "Replay" feeds "${podVictim.name} has conceded." and takes them out of the game: no crack and no shards, the seat bows out under a white wash and drains to grey as the defeated card fades in.`,
+        phase: 'game',
+        game: podBase,
+        gameId,
+        boardLayout: 'pod',
+        action: { label: 'Replay', run: replayQuietWithLog(podBase, gameId, () => `${logName(podVictim.name)} has conceded.`, (g) => withPlayerOut(g, podVictim.playerId)) },
       })
     }
     entries.push({
@@ -3513,6 +3616,59 @@ export function buildGalleryEntries(): GalleryEntry[] {
       game: goadBase,
       gameId,
       action: { label: 'Replay', run: replayQuiet(goadBase, gameId, (g) => withCardIcons(g, mystic, [{ cardIconType: 'ABILITY_FLYING', text: '', hint: 'Flying' }])) },
+    })
+    const designationBase = withRules(animBase, mystic, ["ICON_BAD{this} isn't monstrous", "ICON_BAD{this} isn't renowned"])
+    const classBase = withRules(animBase, mystic, ['Class level: 1'])
+    const caseBase = withRules(animBase, mystic, ['ICON_BADCase is unsolved.'])
+    entries.push({
+      id: 'anim:designation-monstrous',
+      group: 'Animaciones',
+      label: 'Designations: becomes monstrous',
+      description: `"Replay" makes ${mysticName} monstrous: the gold Monstrous badge pops in with a glow in its own colour and the card swells once. A card that is already monstrous when a game opens does not play it.`,
+      phase: 'game',
+      game: designationBase,
+      gameId,
+      action: { label: 'Replay', run: replayQuiet(designationBase, gameId, (g) => withRules(g, mystic, ['ICON_GOOD{this} is monstrous', "ICON_BAD{this} isn't renowned"])) },
+    })
+    entries.push({
+      id: 'anim:designation-renowned',
+      group: 'Animaciones',
+      label: 'Designations: becomes renowned',
+      description: `"Replay" makes ${mysticName} renowned: same pop, glow and swell as monstrous.`,
+      phase: 'game',
+      game: designationBase,
+      gameId,
+      action: { label: 'Replay', run: replayQuiet(designationBase, gameId, (g) => withRules(g, mystic, ["ICON_BAD{this} isn't monstrous", 'ICON_GOOD{this} is renowned'])) },
+    })
+    entries.push({
+      id: 'anim:designation-suspected',
+      group: 'Animaciones',
+      label: 'Designations: suspected',
+      description: `"Replay" suspects ${mysticName}: the red Suspected badge pops in, glows and jolts. The card does not swell.`,
+      phase: 'game',
+      game: designationBase,
+      gameId,
+      action: { label: 'Replay', run: replayQuiet(designationBase, gameId, (g) => withRules(g, mystic, ["ICON_BAD{this} isn't monstrous", "ICON_BAD{this} isn't renowned", "Suspected (has menace and can't block)"])) },
+    })
+    entries.push({
+      id: 'anim:designation-classlevel',
+      group: 'Animaciones',
+      label: 'Designations: class level up',
+      description: '"Replay" levels the class from 1 to 2: the level badge is replaced and pops in with a purple glow.',
+      phase: 'game',
+      game: classBase,
+      gameId,
+      action: { label: 'Replay', run: replayQuiet(classBase, gameId, (g) => withRules(g, mystic, ['Class level: 2'])) },
+    })
+    entries.push({
+      id: 'anim:designation-casesolved',
+      group: 'Animaciones',
+      label: 'Designations: case solved',
+      description: '"Replay" solves the case: the green Case solved badge pops in with a glow.',
+      phase: 'game',
+      game: caseBase,
+      gameId,
+      action: { label: 'Replay', run: replayQuiet(caseBase, gameId, (g) => withRules(g, mystic, ['ICON_GOODCase is solved.'])) },
     })
     const allIcons = ['FLYING', 'DEFENDER', 'DEATHTOUCH', 'LIFELINK', 'DOUBLE_STRIKE', 'FIRST_STRIKE', 'TRAMPLE', 'HEXPROOF', 'INFECT', 'INDESTRUCTIBLE', 'VIGILANCE', 'REACH']
     const badgesGame = withCardIcons(animBase, mystic, [
@@ -4088,6 +4244,16 @@ export function buildGalleryEntries(): GalleryEntry[] {
       gameId,
       action: { label: 'Replay', run: replayQuiet(dungeonBase, gameId, (g) => withMyCommandItem(g, galleryDungeon('Goblin Lair'))) },
     })
+    entries.push({
+      id: 'anim:dungeon-complete',
+      group: 'Animaciones',
+      label: 'Dungeon: completed',
+      description: 'You are in Lost Mine of Phandelver. "Replay" feeds the server\'s line "<you> has completed Lost Mine of Phandelver": the dungeon badge flares gold and bursts, embers rise and the dungeon\'s name floats up in a green box.',
+      phase: 'game',
+      game: dungeonBase,
+      gameId,
+      action: { label: 'Replay', run: announce(`${logName(meOfBase?.name ?? 'You')} has completed <font color='#B0C4DE'>Lost Mine of Phandelver</font>`) },
+    })
     const planeBase = withPlane(animBase, 'gallery-plane-akoum', 'Plane - Akoum', AKOUM)
     entries.push({
       id: 'anim:planeswalk',
@@ -4375,6 +4541,15 @@ export function buildGalleryEntries(): GalleryEntry[] {
     label: 'Rendered cards',
     description: 'Every distinct card layout in the recorded frames, drawn from data.',
     screen: 'cards',
+    phase: 'game',
+  })
+
+  entries.push({
+    id: 'screen:keyword-glyphs',
+    group: 'Pantallas',
+    label: 'Keyword glyphs',
+    description: 'Every keyword of the glossary as the unified glyph coin, at card-badge size and at 14 px, with its id. An abbreviation means no pictogram fits.',
+    screen: 'glyphs',
     phase: 'game',
   })
 

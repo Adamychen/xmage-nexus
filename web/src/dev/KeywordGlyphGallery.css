@@ -1,0 +1,28 @@
+.kw-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: var(--sp-2);
+  padding: var(--sp-3);
+  overflow: auto;
+  height: 100%;
+}
+
+.kw-gallery-cell {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-1) var(--sp-2);
+  border: 1px solid var(--veil-5);
+  border-radius: var(--r-sm);
+  background: rgb(var(--ink-2-rgb) / 0.6);
+}
+
+.kw-gallery-id {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--fg-2);
+  font-size: var(--fs-xs);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

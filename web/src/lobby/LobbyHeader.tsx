@@ -30,13 +30,14 @@ interface Props {
   onCreate: () => void
   onCreateTournament: () => void
   onOpenAbout: () => void
+  onOpenWiki: () => void
   hasNews: boolean
 }
 
 export default function LobbyHeader({
   conn, myUser, onlineCount, confirmDisconnect, onConfirmDisconnect,
   onOpenSettings, onOpenReport, onOpenProfile, activeTab, onTabChange,
-  tableCount, activeTableCount = 0, onGoToActiveTable, onCreate, onCreateTournament, onOpenAbout, hasNews,
+  tableCount, activeTableCount = 0, onGoToActiveTable, onCreate, onCreateTournament, onOpenAbout, onOpenWiki, hasNews,
 }: Props) {
   const { t, lang } = useTranslation()
   const navRef = useRef<HTMLElement>(null)
@@ -184,6 +185,9 @@ export default function LobbyHeader({
         >
           <MenuItem icon="bug" onClick={onOpenReport} data-testid="open-report">
             {t('system', 'report_title')}
+          </MenuItem>
+          <MenuItem icon="bookOpen" onClick={onOpenWiki} data-testid="open-wiki">
+            {t('wiki', 'title')}
           </MenuItem>
           <MenuItem icon="info" onClick={onOpenAbout} data-testid="open-about">
             {t('system', 'about_title')}

@@ -1,95 +1,11 @@
-import type { ReactNode } from 'react'
+import { createElement, type CSSProperties, type ReactNode } from 'react'
 import type { KeywordIconSet } from './cardOverlays'
+import { resolveKeywordGlyph, type SolidKeyword } from './glyphs'
+import type { GlyphNode } from './glyphs/types'
+import { useSettings } from '../state/store'
+import './KeywordCoin.css'
 
-export const GLYPH_KEYWORDS = ['haste', 'deathtouch', 'flying', 'lifelink', 'trample', 'indestructible', 'hexproof'] as const
-
-export type GlyphKeyword = (typeof GLYPH_KEYWORDS)[number]
-
-export function isGlyphKeyword(id: string): id is GlyphKeyword {
-  return (GLYPH_KEYWORDS as readonly string[]).includes(id)
-}
-
-const LINE: Record<string, ReactNode> = {
-  first_strike: (
-    <>
-      <path d="M20 4 9 15" />
-      <path d="M20 4v5M20 4h-5" />
-      <path d="m7 13 4 4M7 17l-3 3" />
-    </>
-  ),
-  double_strike: (
-    <>
-      <path d="M4 4l11 11M20 4 9 15" />
-      <path d="m13 17 4-4M7 13l4 4" />
-    </>
-  ),
-  vigilance: (
-    <>
-      <path d="M2 12c1.2-2.6 5-6.5 10-6.5S20.8 9.4 22 12c-1.2 2.6-5 6.5-10 6.5S3.2 14.6 2 12z" />
-      <circle cx="12" cy="12" r="3" />
-    </>
-  ),
-  menace: (
-    <>
-      <circle cx="8" cy="8" r="2.6" />
-      <circle cx="16" cy="8" r="2.6" />
-      <path d="M3 20c0-3 2.2-5 5-5s5 2 5 5M11 20c0-3 2.2-5 5-5s5 2 5 5" />
-    </>
-  ),
-  reach: <path d="M12 21V4M6 10l6-6 6 6" />,
-  defender: <path d="M5 20h14M7 20V10h10v10M7 10V5h2v2h2V5h2v2h2V5h2v5" />,
-  ward: (
-    <>
-      <path d="M12 2.5 4.5 5.5v6c0 4.7 3.2 8.2 7.5 9.8 4.3-1.6 7.5-5.1 7.5-9.8v-6z" />
-      <path d="m9 12 2.2 2.2L15.5 10" />
-    </>
-  ),
-  protection: (
-    <>
-      <path d="M12 2.5 4.5 5.5v6c0 4.7 3.2 8.2 7.5 9.8 4.3-1.6 7.5-5.1 7.5-9.8v-6z" />
-      <path d="M12 6.5v12" />
-    </>
-  ),
-  shroud: <path d="M7 18a4 4 0 0 1-.6-7.9 5.5 5.5 0 0 1 10.7 1.2A3.4 3.4 0 0 1 17 18z" />,
-  infect: (
-    <>
-      <path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 1.8 3h10.4a2 2 0 0 0 1.8-3l-5-9V3" />
-      <path d="M7.5 15h9" />
-    </>
-  ),
-  prowess: <path d="m12 3 2.2 6.8L21 12l-6.8 2.2L12 21l-2.2-6.8L3 12l6.8-2.2z" />,
-  landwalk: <path d="M3 19 10 6l4 7 3-4 4 10z" />,
-  evasion: <path d="M3 12h13M12 6l6 6-6 6" />,
-  combat: <path d="m6 14 6-6 6 6M6 20l6-6 6 6" />,
-  protectionFallback: <path d="M12 2.5 4.5 5.5v6c0 4.7 3.2 8.2 7.5 9.8 4.3-1.6 7.5-5.1 7.5-9.8v-6z" />,
-}
-
-const ALIASES: Record<string, string> = {
-  toxic: 'infect',
-  fear: 'evasion',
-  intimidate: 'evasion',
-  shadow: 'evasion',
-  skulk: 'evasion',
-  horsemanship: 'evasion',
-  plainswalk: 'landwalk',
-  islandwalk: 'landwalk',
-  swampwalk: 'landwalk',
-  mountainwalk: 'landwalk',
-  forestwalk: 'landwalk',
-}
-
-export function badgeGlyphKey(id: string, category: string): string {
-  if (isGlyphKeyword(id)) return id
-  const key = ALIASES[id] ?? id
-  if (key in LINE) return key
-  return category === 'evasion' ? 'evasion' : category === 'protection' ? 'protectionFallback' : 'combat'
-}
-
-export function badgeGlyphIsLine(key: string): boolean {
-  return key in LINE
-}
-
-const SOLID: Record<GlyphKeyword, ReactNode> = {
+const SOLID: Record<SolidKeyword, ReactNode> = {
   haste: <path d="M13.5 1.5 4 13.5h6.5L9 22.5l10-12.5h-6.6z" />,
   deathtouch: (
     <path
@@ -117,7 +33,7 @@ const SOLID: Record<GlyphKeyword, ReactNode> = {
   ),
 }
 
-const OUTLINE: Record<GlyphKeyword, ReactNode> = {
+const OUTLINE: Record<SolidKeyword, ReactNode> = {
   haste: <path d="M13.5 2 4.5 13.5h6.5L10 22l9.5-12H13z" />,
   deathtouch: (
     <>
@@ -163,21 +79,41 @@ const OUTLINE: Record<GlyphKeyword, ReactNode> = {
   ),
 }
 
-export default function KeywordGlyph({ keyword, set }: { keyword: string; set: KeywordIconSet }) {
-  if (!isGlyphKeyword(keyword)) {
-    return (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        {LINE[keyword]}
-      </svg>
-    )
-  }
+function camelAttr(name: string): string {
+  return name.replace(/-([a-z])/g, (_, c: string) => c.toUpperCase())
+}
+
+function renderNode([tag, attrs]: GlyphNode, index: number) {
+  const props: Record<string, string | number> = { key: index }
+  for (const [name, value] of Object.entries(attrs)) props[camelAttr(name)] = value
+  return createElement(tag, props)
+}
+
+const STROKE_PROPS = { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2.2, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true } as const
+
+export default function KeywordGlyph({ id, category, set }: { id: string; category: string; set: KeywordIconSet }) {
+  const spec = resolveKeywordGlyph(id, category)
+  if (spec.kind === 'abbr') return <span className="kw-coin-abbr" aria-hidden="true">{spec.text}</span>
+  if (spec.kind === 'nodes' || spec.kind === 'fallback') return <svg {...STROKE_PROPS}>{spec.nodes.map(renderNode)}</svg>
   return set === 'outline' ? (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      {OUTLINE[keyword]}
-    </svg>
+    <svg {...STROKE_PROPS}>{OUTLINE[spec.id]}</svg>
   ) : (
     <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-      {SOLID[keyword]}
+      {SOLID[spec.id]}
     </svg>
+  )
+}
+
+export function KeywordCoin({ id, category, size, set, className }: { id: string; category: string; size?: number; set?: KeywordIconSet; className?: string }) {
+  const settings = useSettings()
+  const iconSet = set ?? settings.keywordIcons
+  return (
+    <span
+      className={`kw-coin icons-${iconSet} cat-${category} kw-${id}${className ? ` ${className}` : ''}`}
+      style={size ? ({ '--kw-size': `${size}px` } as CSSProperties) : undefined}
+      aria-hidden="true"
+    >
+      <KeywordGlyph id={id} category={category} set={iconSet} />
+    </span>
   )
 }

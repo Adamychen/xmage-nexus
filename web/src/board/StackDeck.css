@@ -461,3 +461,29 @@ html.fx-off .stack-deck-tab {
   font-weight: 700;
   pointer-events: none;
 }
+
+/* Countered and fizzled spells on the deck: these must beat the deck's own entry animation. */
+.stack-deck-face.fx-countered-shake {
+  animation: shakeHit 300ms ease-in-out, counteredDrain calc(0.5s / var(--fx-speed, 1)) ease-out forwards;
+}
+
+.stack-deck-face.fx-fizzle {
+  animation: fizzleSmoke calc(0.65s / var(--fx-speed, 1)) ease-in forwards;
+}
+
+html.fx-off .stack-deck-face.fx-countered-shake,
+html.fx-off .stack-deck-face.fx-fizzle {
+  animation: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stack-deck-face.fx-countered-shake {
+    animation: counteredDrain 300ms ease-out forwards;
+  }
+
+  .stack-deck-face.fx-fizzle {
+    animation: none;
+    opacity: 0.4;
+    filter: grayscale(1);
+  }
+}

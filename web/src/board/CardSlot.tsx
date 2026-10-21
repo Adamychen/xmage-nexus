@@ -15,13 +15,14 @@ import { fxMotionAllowed, fxMotionDuration } from './fx'
 import { counterPulseClass as pulseClass, useCounterPulse } from './useCounterPulse'
 import { extractOwnedKeywords } from '../data/keywordExtractor'
 import { keywordDisplayName, keywordSummary } from '../data/keywordI18n'
-import { cardDesignations, pairedPartnerName, classLevelOf, evidenceCounts, protectorName, type Designation } from './designations'
+import { cardDesignations, gainedDesignations, pairedPartnerName, classLevelOf, evidenceCounts, protectorName, type Designation } from './designations'
 import { roomDoorKey, roomSidesLabel } from '../game/rooms'
 import { useChangeFlag } from '../game/useChangeFlag'
 import CardIcons from './CardIcons'
 import BadgeTip from '../ui/BadgeTip'
 import { mergeBadgeKeywords } from './cardBadges'
 import { useBadgeFit } from './useBadgeFit'
+import { useBadgeLayout } from './useBadgeLayout'
 import { basePtValue, ptTrend } from './ptTrend'
 import Icon from '../ui/Icon'
 import { clickableProps } from '../ui/clickable'
@@ -33,7 +34,7 @@ import { perfMark } from '../system/perfProbe'
 import { ManaPip } from '../decks/ArenaManaSymbols'
 import { artCropUrl, landTapColor, manaSourceSymbols, primaryCardType } from './compactCard'
 import type { KeywordIconSet, PtBadgeMode, SicknessStyle } from './cardOverlays'
-import KeywordGlyph, { badgeGlyphKey } from './KeywordGlyph'
+import KeywordGlyph from './KeywordGlyph'
 import { manaPoolElement, spawnManaParticle, type ManaSide } from './manaParticle'
 import './CardSlot.css'
 import './manaParticle.css'
@@ -287,14 +288,25 @@ export default function CardSlot({
     : undefined
 
   const keywordBadges = useMemo(() => {
-    return mergeBadgeKeywords(card.cardIcons, extractOwnedKeywords(card))
-  }, [card.rules, card.cardIcons, (card as unknown as { abilities?: unknown }).abilities, card.name])
+    const merged = mergeBadgeKeywords(card.cardIcons, extractOwnedKeywords(card))
+    return perm.mutated === true ? [{ id: 'mutate', name: 'Mutate', icon: '', category: 'mechanic' as const }, ...merged].slice(0, 5) : merged
+  }, [perm.mutated, card.rules, card.cardIcons, (card as unknown as { abilities?: unknown }).abilities, card.name])
 
   const badgeRowRef = useRef<HTMLDivElement>(null)
   const shownBadges = useBadgeFit(badgeRowRef, keywordBadges.length)
   const hiddenBadges = keywordBadges.slice(shownBadges)
+  useBadgeLayout(slotRef)
 
   const designations = useMemo(() => cardDesignations(card.rules), [card.rules])
+  const [seenRules, setSeenRules] = useState(card.rules)
+  const [gainedDes, setGainedDes] = useState<Designation[]>([])
+  const [swell, setSwell] = useState(false)
+  if (seenRules !== card.rules) {
+    const fresh = gainedDesignations(seenRules, card.rules)
+    setSeenRules(card.rules)
+    setGainedDes([...gainedDes.filter((d) => designations.includes(d) && !fresh.includes(d)), ...fresh])
+    if (fresh.includes('monstrous') || fresh.includes('renowned')) setSwell(true)
+  }
   // Duskmourn Room doors never travel in the DTO; the unlocked sides are
   // sniffed from the server chat (`sniffRoomDoor`), keyed by card name.
   const roomSides = useStore((s) => {
@@ -422,10 +434,14 @@ const showPtBadge =
         entering ? 'entering' : '',
         flightState === 'hidden' || held ? 'flight-hidden' : '',
         flightState === 'landing' ? 'flight-land' : '',
+        swell ? 'fx-designation-swell' : '',
         className,
       ].filter(Boolean).join(' ')}
       onClick={handleClick}
-      onAnimationEnd={handleCastAnimationEnd}
+      onAnimationEnd={(e) => {
+        if (e.animationName === 'designationSwell') setSwell(false)
+        handleCastAnimationEnd(e)
+      }}
       {...clickableProps(handleClick)}
       aria-label={onClick ? cardName(card) : undefined}
       aria-pressed={onClick && ariaPressed !== undefined ? ariaPressed : undefined}
@@ -468,7 +484,7 @@ const showPtBadge =
       )}
 
       {showManaPill && (
-        <div className="compact-mana-source" data-testid="compact-mana-source" data-mana={manaSymbols.join('')}>
+        <div className="compact-mana-source" data-badge-zone="mana" data-testid="compact-mana-source" data-mana={manaSymbols.join('')}>
           {manaSymbols.map((sym) => (
             sym === 'ANY'
               ? <span key={sym} className="compact-mana-any" />
@@ -480,9 +496,9 @@ const showPtBadge =
       {compact && !showBack && (
         <>
           {tapped && (
-            <div className="compact-tap-badge" data-testid="compact-tap-badge" title={t('game', 'tapped')}>
+            <BadgeTip className="compact-tap-badge" data-testid="compact-tap-badge" data-badge-zone="tap" tip={{ title: t('game', 'tapped') }}>
               <ManaPip symbol="T" size={16} className="compact-tap-pip" />
-            </div>
+            </BadgeTip>
           )}
           <div className={`compact-plate${hasCornerStat ? ' has-stat' : ''}`} aria-hidden="true">
             <span className="compact-name">{cardName(card)}</span>
@@ -494,17 +510,18 @@ const showPtBadge =
       )}
 
       {showPtBadge && !renderedFace && (
-        <div
+        <BadgeTip
           className="pt-badge"
+          data-badge-zone="stats"
           data-trend={pt.power !== 'same' || pt.toughness !== 'same' ? 'changed' : undefined}
-          title={ptTitle}
+          tip={{ title: `${perm.power}/${perm.toughness}`, body: ptTitle }}
         >
           <span className="pt-value" data-trend={pt.power}>{perm.power}</span>/<span className="pt-value" data-trend={pt.toughness}>{perm.toughness}</span>
-        </div>
+        </BadgeTip>
       )}
 
       {isPlaneswalker && loyaltyVal > 0 && !renderedFace && (
-        <div className={`loyalty-badge${pulseClass(loyaltyPulse)}`} title={`${t('game', 'ability_loyalty')}: ${perm.loyalty}`}>
+        <BadgeTip className={`loyalty-badge${pulseClass(loyaltyPulse)}`} data-badge-zone="stats" tip={{ title: `${t('game', 'ability_loyalty')}: ${perm.loyalty}` }}>
           <span className="loyalty-icon"><Icon name="shield" size={11} /></span>
           <span className={`loyalty-val${loyaltyPulse?.tick ? ` counter-tick is-${loyaltyPulse.direction}` : ''}`}>{perm.loyalty}</span>
           {loyaltyPulse?.scale && <span key={`ring-${loyaltyPulse.seq}`} className="counter-change-ring" aria-hidden="true" />}
@@ -517,24 +534,18 @@ const showPtBadge =
               {loyaltyPulse.delta > 0 ? `+${loyaltyPulse.delta}` : `${loyaltyPulse.delta}`}
             </span>
           )}
-        </div>
+        </BadgeTip>
       )}
 
       {isBattle && defenseVal > 0 && !renderedFace && (
-        <div className="defense-badge" title={`${t('game', 'damage')}: ${perm.defense}`}>
+        <BadgeTip className="defense-badge" data-badge-zone="stats" tip={{ title: `${t('game', 'damage')}: ${perm.defense}` }}>
           <span className="defense-icon"><Icon name="swords" size={11} /></span>
           <span className="defense-val">{perm.defense}</span>
-        </div>
-      )}
-
-      {perm.mutated === true && (
-        <div className="mutated-badge" title={t('board', 'zone_battlefield')}>
-          <span className="mutated-icon"><Icon name="dna" size={12} /></span>
-        </div>
+        </BadgeTip>
       )}
 
       {showCounters && visibleCounters.length > 0 && !renderedFace && (
-        <div className="card-counters-wrap">
+        <div className="card-counters-wrap" data-badge-zone="counters">
           {visibleCounters.map((c) => {
             const n = c.name.toLowerCase()
             let iconElement: React.ReactNode = null
@@ -572,10 +583,10 @@ const showPtBadge =
 
             const pulse = counterPulses[c.name]
             return (
-              <div
+              <BadgeTip
                 key={c.name}
                 className={`counter-badge ${customClass}${pulseClass(pulse)}`}
-                title={`${c.name}: ${c.count}`}
+                tip={{ title: `${c.name}: ${c.count}` }}
               >
                 {iconElement && <span className="counter-icon-symbol">{iconElement}</span>}
                 {label && <span className={`counter-text-val${pulse?.tick ? ` counter-tick is-${pulse.direction}` : ''}`}>{label}</span>}
@@ -589,14 +600,14 @@ const showPtBadge =
                     {pulse.delta > 0 ? `+${pulse.delta}` : `${pulse.delta}`}
                   </span>
                 )}
-              </div>
+              </BadgeTip>
             )
           })}
         </div>
       )}
 
       {showDamage && isRealCreature && shownDamage > 0 && (
-        <div className="damage-badge">{shownDamage}</div>
+        <BadgeTip className="damage-badge" data-badge-zone="stats" tip={{ title: `${t('game', 'damage')}: ${shownDamage}` }}>{shownDamage}</BadgeTip>
       )}
 
       {enteredThisTurn && <span className="entered-glow" aria-hidden="true" />}
@@ -608,67 +619,81 @@ const showPtBadge =
       )}
 
       {hasSummoningSickness && sicknessStyle === 'badge' && (
-        <div className="sickness-badge" title={t('game', 'summoning_sickness')} aria-label={t('game', 'summoning_sickness')}>
+        <BadgeTip className="sickness-badge" data-badge-zone="sickness" tip={{ title: t('game', 'summoning_sickness') }}>
           <Icon name="timer" size={11} />
-        </div>
+        </BadgeTip>
       )}
 
       {hasSummoningSickness && sicknessStyle === 'veil' && (
-        <div className="sickness-veil" aria-hidden="true">
-          <Icon name="timer" size={28} />
+        <div className="sickness-veil">
+          <BadgeTip className="sickness-veil-icon" tip={{ title: t('game', 'summoning_sickness') }}>
+            <Icon name="timer" size={28} />
+          </BadgeTip>
         </div>
       )}
 
       {isFaceDownCard && (
-        <div className="facedown-badges">
-          {perm.morphed && <span className="facedown-type-badge morph" title={t('board', 'morph')}>{t('board', 'morph')}</span>}
-          {perm.manifested && <span className="facedown-type-badge manifest" title={t('board', 'manifest')}>{t('board', 'manifest')}</span>}
-          {perm.disguised && <span className="facedown-type-badge disguise" title={t('board', 'disguise')}>{t('board', 'disguise')}</span>}
-          {perm.cloaked && <span className="facedown-type-badge cloak" title={t('board', 'cloak')}>{t('board', 'cloak')}</span>}
+        <div className="facedown-badges" data-badge-zone="facedown">
+          {([['morphed', 'morph'], ['manifested', 'manifest'], ['disguised', 'disguise'], ['cloaked', 'cloak']] as const).map(([flag, id]) =>
+            perm[flag] ? (
+              <BadgeTip
+                key={id}
+                className={`facedown-type-badge ${id}`}
+                tip={{ title: t('board', id), body: keywordSummary(id, (k) => t('keywords', k)) || undefined }}
+              >
+                {t('board', id)}
+              </BadgeTip>
+            ) : null,
+          )}
         </div>
       )}
 
       {(card.transformable || card.secondCardFace != null || card.alternateName != null) && !isFaceDownCard && (
-        <div
+        <BadgeTip
           className={`card-transform-badge ${perm.transformed ? 'is-transformed' : ''}`}
-          title={perm.transformed ? t('wiki', 'face_back') : t('wiki', 'face_front')}
+          data-badge-zone="transform"
+          tip={{ title: perm.transformed ? t('wiki', 'face_back') : t('wiki', 'face_front') }}
         >
           {perm.transformed ? <Icon name="moon" size={11} /> : <Icon name="sun" size={11} />}
-        </div>
+        </BadgeTip>
       )}
 
       <CardIcons icons={card.cardIcons} />
 
       {(designations.length > 0 || roomSides !== '') && (
-        <div className="designation-badges">
+        <div className="designation-badges" data-badge-zone="designation">
           {designations.map((d) => {
             const texts = designationTexts(d)
             return (
-              <span key={d} className={`designation-badge is-${d}`} title={texts.title}>
+              <BadgeTip
+                key={d === 'classlevel' ? `classlevel-${classLevel}` : d}
+                className={`designation-badge is-${d}${gainedDes.includes(d) ? ` designation-gained designation-gained--${d}` : ''}`}
+                tip={{ title: texts.title }}
+              >
                 {texts.label}
-              </span>
+              </BadgeTip>
             )
           })}
           {roomSides !== '' && (
-            <span className="designation-badge is-room" title={t('board', 'designation_room_title', { sides: roomSides })}>
+            <BadgeTip className="designation-badge is-room" tip={{ title: t('board', 'designation_room_title', { sides: roomSides }) }}>
               {roomSides}
-            </span>
+            </BadgeTip>
           )}
         </div>
       )}
 
       {keywordBadges.length > 0 && (
-        <div className="keyword-badges" ref={badgeRowRef} aria-label={t('wiki', 'tab_keywords')}>
+        <div className="keyword-badges" data-badge-zone="keyword" ref={badgeRowRef} aria-label={t('wiki', 'tab_keywords')}>
           {keywordBadges.slice(0, shownBadges).map((kw) => (
             <BadgeTip
               key={kw.id}
-              className={`keyword-badge is-glyph cat-${kw.category} icons-${keywordIcons} kw-${kw.id}`}
+              className={`keyword-badge kw-coin is-glyph cat-${kw.category} icons-${keywordIcons} kw-${kw.id}${kw.id === 'mutate' ? ' mutated-badge' : ''}`}
               tip={{
                 title: keywordDisplayName(kw.id, kw.name, (k) => t('keywords', k), kw.parameter),
                 body: keywordSummary(kw.id, (k) => t('keywords', k), kw.parameter),
               }}
             >
-              <KeywordGlyph keyword={badgeGlyphKey(kw.id, kw.category)} set={keywordIcons} />
+              <KeywordGlyph id={kw.id} category={kw.category} set={keywordIcons} />
             </BadgeTip>
           ))}
           {hiddenBadges.length > 0 && (

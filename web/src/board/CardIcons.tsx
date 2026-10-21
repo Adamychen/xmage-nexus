@@ -45,7 +45,7 @@ export default function CardIcons({ icons }: { icons?: CardIcon[] }) {
   if (restrictions.length === 0 && others.length === 0) return null
 
   return (
-    <div className="card-icons">
+    <div className="card-icons" data-badge-zone="icons">
       {restrictions.map((r, i) => (
         <BadgeTip
           key={`r${i}`}

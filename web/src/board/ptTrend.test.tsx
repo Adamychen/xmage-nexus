@@ -39,7 +39,7 @@ describe('ptTrend', () => {
     const badge = container.querySelector('.pt-badge')!
     expect(badge.textContent).toBe('3/1')
     expect(badge.getAttribute('data-trend')).toBe('changed')
-    expect(badge.getAttribute('title')).toContain('2/2')
+    expect(badge.getAttribute('aria-label')).toContain('2/2')
     const [p, t] = [...badge.querySelectorAll('.pt-value')]
     expect(p.getAttribute('data-trend')).toBe('up')
     expect(t.getAttribute('data-trend')).toBe('down')

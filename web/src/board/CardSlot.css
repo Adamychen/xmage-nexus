@@ -1,4 +1,5 @@
 .card-slot {
+  --badge-size: clamp(14px, calc(var(--card-w, 100px) * 0.2), 24px);
   width: var(--card-w, 100px);
   height: calc(var(--card-w, 100px) * var(--card-h-ratio, 1.4));
   position: relative;
@@ -1102,8 +1103,19 @@ html.fx-off .card-icon.icon-gained {
   z-index: 5;
   background: rgb(var(--ink-2-rgb) / 0.7);
   border-radius: 50%;
-  padding: 1px var(--sp-1);
+  width: var(--badge-size);
+  height: var(--badge-size);
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border: 1px solid var(--line-3);
+}
+
+.sickness-badge svg,
+.card-transform-badge svg {
+  width: 62%;
+  height: 62%;
 }
 
 @keyframes sicknessFloat {
@@ -1143,6 +1155,7 @@ html.fx-off .card-icon.icon-gained {
   position: absolute;
   top: 4px;
   left: 4px;
+  max-width: calc(100% - 8px);
   display: flex;
   gap: var(--sp-1);
   z-index: 5;
@@ -1150,6 +1163,11 @@ html.fx-off .card-icon.icon-gained {
 }
 
 .facedown-type-badge {
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   padding: 1px var(--sp-1h);
   border-radius: var(--r-xs);
   font-size: var(--fs-2xs);
@@ -1172,6 +1190,7 @@ html.fx-off .card-icon.icon-gained {
   position: absolute;
   top: 4px;
   right: 4px;
+  max-width: calc(100% - 8px);
   display: flex;
   flex-direction: column;
   gap: var(--sp-1);
@@ -1181,6 +1200,11 @@ html.fx-off .card-icon.icon-gained {
 }
 
 .designation-badge {
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   padding: 1px var(--sp-1h);
   border-radius: var(--r-xs);
   font-size: var(--fs-2xs);
@@ -1203,6 +1227,51 @@ html.fx-off .card-icon.icon-gained {
 .designation-badge.is-evidence { border-color: var(--brand); color: var(--brand-fg); }
 .designation-badge.is-prepared { border-color: var(--brand-fg); color: var(--fg-1); }
 .designation-badge.is-protector { border-color: var(--ok); color: var(--ok); }
+
+/* A designation gained between views pops in and glows in its own colour. */
+.designation-badge.designation-gained {
+  animation: iconGainedPop calc(0.5s / var(--fx-speed, 1)) cubic-bezier(0.34, 1.56, 0.64, 1), designationGlow calc(1.1s / var(--fx-speed, 1)) ease-out;
+}
+
+.designation-badge.designation-gained--suspected {
+  animation: iconGainedPop calc(0.5s / var(--fx-speed, 1)) cubic-bezier(0.34, 1.56, 0.64, 1), designationGlow calc(1.1s / var(--fx-speed, 1)) ease-out, designationJolt calc(0.45s / var(--fx-speed, 1)) ease-in-out calc(0.4s / var(--fx-speed, 1));
+}
+
+@keyframes designationGlow {
+  0% { box-shadow: 0 0 0 0 currentColor; filter: brightness(1.7); }
+  35% { box-shadow: 0 0 0 5px color-mix(in srgb, currentColor 40%, transparent), 0 0 14px 3px currentColor; filter: brightness(1.3); }
+  100% { box-shadow: 0 0 0 0 transparent; filter: brightness(1); }
+}
+
+@keyframes designationJolt {
+  0%, 100% { translate: 0 0; }
+  25% { translate: -3px 0; }
+  50% { translate: 3px 0; }
+  75% { translate: -2px 0; }
+}
+
+@keyframes designationSwell {
+  0% { scale: 1; filter: none; }
+  40% { scale: 1.12; filter: brightness(1.35) drop-shadow(0 0 12px rgb(var(--warn-rgb) / 0.9)); }
+  100% { scale: 1; filter: none; }
+}
+
+.card-slot.fx-designation-swell {
+  animation: designationSwell calc(0.9s / var(--fx-speed, 1)) ease-out;
+  z-index: 15;
+}
+
+html.fx-off .designation-badge.designation-gained,
+html.fx-off .card-slot.fx-designation-swell {
+  animation: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .designation-badge.designation-gained,
+  .card-slot.fx-designation-swell {
+    animation: none;
+  }
+}
 
 /* Attached Auras & Equipment: el anfitrión va delante y entero; cada anexo
    queda detrás y asoma a la derecha en una pestaña con su nombre en vertical. */
@@ -1287,24 +1356,6 @@ html.fx-off .card-icon.icon-gained {
 }
 
 /* Mutated Permanent Badge (Mutate pile) */
-.mutated-badge {
-  position: absolute;
-  top: 4px;
-  right: 4px;
-  left: auto;
-  padding: 1px var(--sp-1h);
-  border-radius: var(--r-sm);
-  font-size: var(--fs-xs);
-  line-height: 1.2;
-  background: rgb(var(--ok-rgb) / 0.95);
-  border: 1.5px solid var(--ok);
-  color: var(--fg-1);
-  z-index: 6;
-  pointer-events: none;
-  box-shadow: 0 2px 6px var(--shade-3);
-  text-shadow: 0 1px 2px var(--shade-4);
-}
-
 /* Mutated Permanent Pile: stacked constituent cards behind the top */
 .card-mutate-pile {
   position: relative;
@@ -1339,10 +1390,11 @@ html.fx-off .card-icon.icon-gained {
 .card-transform-badge {
   position: absolute;
   top: 4px;
-  left: 24px;
+  left: calc(8px + var(--badge-size));
   right: auto;
-  width: 18px;
-  height: 18px;
+  width: var(--badge-size);
+  height: var(--badge-size);
+  box-sizing: border-box;
   border-radius: 50%;
   background: rgb(var(--ink-2-rgb) / 0.88);
   border: 1px solid rgb(var(--gold-rgb) / 0.7);
@@ -1362,7 +1414,7 @@ html.fx-off .card-icon.icon-gained {
 }
 
 .keyword-badges {
-  --kw-size: clamp(14px, calc(var(--card-w, 100px) * 0.2), 24px);
+  --kw-size: var(--badge-size);
   position: absolute;
   top: 22px;
   left: 4px;
@@ -1392,66 +1444,11 @@ html.fx-off .card-icon.icon-gained {
   box-shadow: 0 1px 4px var(--shade-3);
 }
 
-.keyword-badge.cat-combat {
-  --kw-rgb: var(--err-rgb);
-  background: rgb(var(--err-rgb) / 0.92);
-  border-color: rgb(var(--err-rgb) / 0.7);
-}
-
-.keyword-badge.cat-evasion {
-  --kw-rgb: var(--brand-rgb);
-  background: rgb(var(--brand-rgb) / 0.92);
-  border-color: rgb(var(--brand-rgb) / 0.7);
-}
-
-.keyword-badge.cat-protection {
-  --kw-rgb: var(--ok-rgb);
-  background: rgb(var(--ok-rgb) / 0.92);
-  border-color: rgb(var(--brand-rgb) / 0.7);
-}
-
-.keyword-badge.kw-haste { --kw-rgb: var(--ember-rgb); }
-.keyword-badge.kw-deathtouch { --kw-rgb: var(--purple-rgb); }
-.keyword-badge.kw-flying { --kw-rgb: var(--mana-u-rgb); }
-.keyword-badge.kw-lifelink { --kw-rgb: var(--gold-rgb); }
-.keyword-badge.kw-trample { --kw-rgb: var(--mana-g-rgb); }
-.keyword-badge.kw-indestructible { --kw-rgb: var(--mana-c-rgb); }
-.keyword-badge.kw-hexproof { --kw-rgb: var(--ok-rgb); }
-.keyword-badge.kw-plainswalk { --kw-rgb: var(--mana-w-rgb); }
-.keyword-badge.kw-islandwalk { --kw-rgb: var(--mana-u-rgb); }
-.keyword-badge.kw-swampwalk { --kw-rgb: var(--mana-b-rgb); }
-.keyword-badge.kw-mountainwalk { --kw-rgb: var(--mana-r-rgb); }
-.keyword-badge.kw-forestwalk { --kw-rgb: var(--mana-g-rgb); }
-
 .keyword-badge-more {
   font-size: calc(var(--kw-size, 16px) * 0.5);
   font-weight: 800;
   font-family: var(--font-display);
   color: var(--fg-hi);
-}
-
-.keyword-badge.is-glyph svg {
-  display: block;
-  width: 72%;
-  height: 72%;
-}
-
-.keyword-badge.is-glyph.icons-coins {
-  border-radius: 50%;
-  background: rgb(var(--kw-rgb));
-  border-color: rgb(var(--ink-rgb) / 0.8);
-  color: rgb(var(--ink-rgb));
-}
-
-.keyword-badge.is-glyph.icons-outline {
-  background: rgb(var(--ink-2-rgb) / 0.92);
-  border-color: rgb(var(--kw-rgb) / 0.65);
-  color: rgb(var(--kw-rgb));
-}
-
-.keyword-badge.is-glyph.icons-outline svg {
-  width: 80%;
-  height: 80%;
 }
 
 .card-slot[data-recap] {
@@ -1724,7 +1721,7 @@ html.fx-off .entered-glow {
 .card-slot.is-compact .sickness-badge {
   top: 4px;
   left: 50%;
-  margin-left: -10px;
+  margin-left: calc(var(--badge-size) / -2);
 }
 
 .card-slot.is-compact .sickness-veil svg {
@@ -1749,10 +1746,54 @@ html.fx-off .entered-glow {
    and the transform badge to the top right, as on compact tiles. */
 .card-slot.has-mana-pill .sickness-badge {
   left: 50%;
-  margin-left: -10px;
+  margin-left: calc(var(--badge-size) / -2);
 }
 
 .card-slot.has-mana-pill .card-transform-badge {
   left: auto;
   right: 4px;
+}
+
+[data-badge-hidden='true'] {
+  visibility: hidden;
+}
+
+/* Fizzle: a spell whose targets all became illegal goes grey and drifts apart like smoke on the stack. */
+@keyframes fizzleSmoke {
+  0% { opacity: 1; filter: none; translate: 0 0; scale: 1; }
+  30% { opacity: 0.9; filter: grayscale(1) brightness(1.15); translate: 0 -2px; scale: 1.02; }
+  100% { opacity: 0.15; filter: grayscale(1) blur(5px) brightness(1.4); translate: 0 -18px; scale: 1.08; }
+}
+
+.fx-fizzle {
+  animation: fizzleSmoke calc(0.65s / var(--fx-speed, 1)) ease-in forwards;
+}
+
+/* Behold: the shown card lifts and catches a white flash. */
+@keyframes beholdLift {
+  0% { translate: 0 0; filter: none; box-shadow: none; }
+  35% { translate: 0 -10px; filter: brightness(1.45); box-shadow: 0 0 0 3px color-mix(in srgb, var(--fg-hi) 85%, transparent), 0 10px 22px var(--shade-3); }
+  100% { translate: 0 0; filter: none; box-shadow: none; }
+}
+
+.card-slot.fx-behold {
+  animation: beholdLift calc(0.8s / var(--fx-speed, 1)) cubic-bezier(0.3, 0.9, 0.4, 1);
+  z-index: 15;
+}
+
+html.fx-off .fx-fizzle,
+html.fx-off .card-slot.fx-behold {
+  animation: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fx-fizzle {
+    animation: none;
+    opacity: 0.4;
+    filter: grayscale(1);
+  }
+
+  .card-slot.fx-behold {
+    animation: none;
+  }
 }

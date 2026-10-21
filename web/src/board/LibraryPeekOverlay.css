@@ -1,0 +1,55 @@
+.library-peek-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 999979;
+  overflow: hidden;
+}
+
+.library-peek-fx {
+  position: fixed;
+}
+
+.peek-card {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: var(--r-sm);
+  box-shadow: 0 2px 6px var(--shade-4);
+}
+
+.peek-base {
+  animation: peekBase var(--peek-dur) ease-out both;
+}
+
+/* The sleeve under the lifted cards: it fades in, grows to full size and fades out as they settle. */
+@keyframes peekBase {
+  0% { opacity: 0; scale: 0.8; }
+  10%, 90% { opacity: 1; scale: 1; }
+  100% { opacity: 0; scale: 0.9; }
+}
+
+.peek-lift {
+  animation: peekLift var(--peek-dur) cubic-bezier(0.34, 1.2, 0.64, 1) calc(var(--i) * 50ms) both;
+}
+
+/* Each top card lifts out of the deck, fans out to its slot, holds, then settles back into the deck. */
+@keyframes peekLift {
+  0% { opacity: 0; translate: 0 0; rotate: 0deg; }
+  8% { opacity: 1; translate: 0 0; rotate: 0deg; }
+  30%, 68% { opacity: 1; translate: calc(var(--fan) * 62%) calc(var(--peek-dir) * 112%); rotate: calc(var(--fan) * 7deg); filter: brightness(1.12); box-shadow: 0 6px 16px var(--shade-4); }
+  88% { opacity: 1; translate: 0 0; rotate: 0deg; filter: none; }
+  100% { opacity: 0; translate: 0 0; rotate: 0deg; }
+}
+
+html.fx-off .library-peek-overlay {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .library-peek-overlay {
+    display: none;
+  }
+}

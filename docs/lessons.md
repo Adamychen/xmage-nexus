@@ -233,3 +233,21 @@ ops), `docs/testing.md`, `web/AGENTS.md`, `Mage.Proxy/README.md`.
   Call `afterEach(cleanup)` in any spec that queries through the returned `getBy*`.
 - Native `title` tooltips on card badges never fired: `.keyword-badges` and `.card-icons` are `pointer-events: none`, so the pointer could not reach the badge at all (and `title` is slow and absent on touch). `ui/BadgeTip.tsx` re-enables pointer events on the badge only and portals a bubble above `FloatingCardPreview` (z-index 9999 → bubble 10000; at 1000 the preview covered half the text). Keyword badges and server ability icons (`ABILITY_FLYING`…) described the same keyword twice; `board/cardBadges.ts` merges them by keyword id. Emoji icons were dropped because several keywords shared one (`🛡️` for vigilance/ward/protection/heroic): every combat/evasion/protection keyword resolves to a glyph, with a per-category fallback, guarded by `cardBadges.test.ts`.
 - Card badge rows are sized from `--card-w` (`--kw-size: clamp(14px, card-w * 0.2, 24px)`) and the row measures itself (`useBadgeFit` + `badgeFit.ts`): the badges that do not fit collapse into a `+N` chip, and when only one slot fits the chip stands alone (badge + chip in one slot overflowed; the property test in `badgeFit.test.ts` caught it). Contract guard: `keywords.spec.ts` asserts the row never leaves its card at 1600 and 760 px.
+- Badge placement was four layouts' worth of independent `top/left/right` anchors (classic, compact tile, classic with the mana pill, plus keyword and designation rows both starting at the top-right), so no CSS tweak could be right for all of them. The contract is now measured: every badge group carries `data-badge-zone`, `useBadgeLayout` reads the rects after layout and `resolveBadgeLayout` (pure, `badgeLayout.test.ts`) shifts the lower-priority zone clear of the higher one, hiding it when the card cannot hold it (a 60 px card at 760 px cannot show three designations plus keywords; the hover preview still lists them). The e2e guard recomputes the intersections itself instead of trusting the hook, and was run red with `useBadgeLayout` commented out. Two traps met on the way: label text cannot be scaled down with the card (`a11yContrast.test.ts` pins `.designation-badge` and `.facedown-type-badge` at >= 0.687rem), so they ellipsize and the tooltip carries the full text; and a native `title` on a `pointer-events: none` badge never fires, so tests that read `title` now read the badge's `aria-label`.
+- **A field missing from a view DTO is not state missing from the view.** `engineViewCoverage.test.ts`
+  lists `monstrous`, `renowned` and `harnessed` as engine fields the `mage.view.*` classes never copy,
+  and the animation backlog called them blocked on that evidence alone, yet `CardSlot` was already
+  drawing their badges: the engine's `ConditionHint` writes `ICON_GOOD{this} is monstrous` into every
+  card's `rules`. Before declaring a mechanic unreachable, grep the hint registry
+  (`board/hintRegistry.ts`) and the game-log `informPlayers` lines, not only the DTO fields.
+- **`startCardFlight` cannot hold a card in mid-air.** A flight removes itself on arrival, so "fly out,
+  wait, fly back" renders as a card that vanishes during the wait, and a face-down flight from a
+  library chip draws a grey ghost over the portrait. Effects that pause near a pile (shuffle, scry /
+  surveil peek) get their own overlay with the player's sleeve (`ShuffleOverlay`, `LibraryPeekOverlay`).
+- **One-class FX rules lose to the stack deck's own animation.** `StackDeck.css` gives `.stack-deck-face`
+  an entry animation (`stackDeckIn`) and loads after `CardSlot.css`, so `.fx-countered-shake` and
+  `.fx-fizzle` (same specificity) were applied and never played on the new table's stack: the
+  countered shudder had been silent there since the deck shipped, hidden by the shard overlay. A probe
+  of `getComputedStyle(el).animationName` after the class lands catches this; the fix is a
+  `.stack-deck-face.fx-…` rule in `StackDeck.css`. `e2e/animations-play.spec.ts` now asserts the computed
+  `animationName` per gallery entry (verified red with the fix removed).

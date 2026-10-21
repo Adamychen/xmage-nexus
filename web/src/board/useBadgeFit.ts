@@ -1,7 +1,6 @@
 import { useLayoutEffect, useState, type RefObject } from 'react'
 import { visibleBadges } from './badgeFit'
 
-/** Measures the badge row against its own width, so the contract holds on any font and card size. */
 export function useBadgeFit(ref: RefObject<HTMLElement | null>, count: number): number {
   const [visible, setVisible] = useState(count)
 

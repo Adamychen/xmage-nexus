@@ -7,7 +7,7 @@ type Vars = CSSProperties & Record<`--${string}`, string | number>
 
 const FLICKS = 4
 
-function CardBack({ playerId, mine, className, style }: { playerId: string; mine: boolean; className: string; style?: Vars }) {
+export function CardBack({ playerId, mine, className, style }: { playerId: string; mine: boolean; className: string; style?: Vars }) {
   const sleeve = useSleeveFor(mine ? playerId : null)
   return sleeve.kind === 'css' ? (
     <span className={`${className} sleeve-css-back`} style={{ ...style, background: sleeve.css }} data-sleeve-id={sleeve.id} />

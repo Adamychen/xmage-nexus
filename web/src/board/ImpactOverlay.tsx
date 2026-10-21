@@ -192,6 +192,12 @@ function ImpactItem({ fx }: { fx: ImpactFx }) {
           <Particles fx={fx} count={10} spread={Math.max(60, Math.min(fx.w, fx.h) * 0.45)} className="fx-shard fx-eliminated-shard" />
         </div>
       )
+    case 'conceded':
+      return (
+        <div className="fx-burst fx-conceded" data-testid="fx-conceded" style={at}>
+          <span className="fx-conceded-wash" />
+        </div>
+      )
     case 'wipe':
       return <WipeItem style={at} />
     case 'face-up':

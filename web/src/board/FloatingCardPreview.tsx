@@ -11,6 +11,7 @@ import { useTranslation } from '../i18n'
 import { useStore, useSettings, isBlockingModal } from '../state/store'
 import RenderedCard from '../cards/rendered/RenderedCard'
 import Icon from '../ui/Icon'
+import { KeywordCoin } from './KeywordGlyph'
 import { fxEnabled } from './fx'
 import './FloatingCardPreview.css'
 
@@ -265,7 +266,7 @@ export default function FloatingCardPreview({
             return (
               <div key={kw.id} className={`floating-card-kw-box cat-${kw.category}`}>
                 <div className="kw-box-header">
-                  <span className="kw-box-icon">{kw.icon}</span>
+                  <KeywordCoin id={kw.id} category={kw.category} size={20} />
                   <span className="kw-box-name">{primaryName}</span>
                   {secondaryName && <span className="kw-box-es">({secondaryName})</span>}
                 </div>

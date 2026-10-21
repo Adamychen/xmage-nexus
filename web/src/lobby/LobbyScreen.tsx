@@ -34,6 +34,7 @@ import { extractLobbyUsers, getMyActiveTables, withTimeout, type LobbyTab } from
 import { getIgnoredUsers } from './ignoreList'
 import SettingsModal from '../settings/SettingsModal'
 import AboutModal from '../system/AboutModal'
+import HelpWikiModal from '../game/HelpWikiModal'
 import ReportDialog from '../game/ReportDialog'
 import { useNewsBadge } from '../system/useNewsBadge'
 import './LobbyScreen.css'
@@ -60,6 +61,7 @@ export default function LobbyScreen() {
   const [deckBuilderId, setDeckBuilderId] = useState<string | null>(null)
   const [createKind, setCreateKind] = useState<CreateKind | null>(null)
   const [showAbout, setShowAbout] = useState(false)
+  const [showWiki, setShowWiki] = useState(false)
   const [showReport, setShowReport] = useState(false)
   const { unseen: unseenNews, refresh: refreshNews } = useNewsBadge()
   const [profileTarget, setProfileTarget] = useState<string | null>(null)
@@ -215,6 +217,7 @@ export default function LobbyScreen() {
         onCreate={() => setCreateKind('match')}
         onCreateTournament={() => setCreateKind('tourney')}
         onOpenAbout={() => setShowAbout(true)}
+        onOpenWiki={() => setShowWiki(true)}
         hasNews={unseenNews}
       />
 
@@ -517,6 +520,9 @@ export default function LobbyScreen() {
       )}
       {showReport && (
         <ReportDialog kind="feedback" onClose={() => setShowReport(false)} />
+      )}
+      {showWiki && (
+        <HelpWikiModal onClose={() => setShowWiki(false)} />
       )}
       {showAbout && (
         <AboutModal

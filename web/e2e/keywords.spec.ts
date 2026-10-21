@@ -31,14 +31,14 @@ test.describe('Keyword badges & hover', { tag: '@keywords' }, () => {
 
       const monoBadge = beast.locator('.designation-badge.is-monstrous')
       await expect(monoBadge).toBeVisible()
-      expect(await monoBadge.getAttribute('title')).toContain('Monstruosidad')
+      expect(await monoBadge.getAttribute('aria-label')).toContain('Monstruosidad')
 
       const suspectBadge = beast.locator('.designation-badge.is-suspected')
       await expect(suspectBadge).toBeVisible()
 
       const pairBadge = beast.locator('.designation-badge.is-paired')
       await expect(pairBadge).toBeVisible()
-      expect(await pairBadge.getAttribute('title')).toContain("Consul's Lieutenant")
+      expect(await pairBadge.getAttribute('aria-label')).toContain("Consul's Lieutenant")
 
       const bard = page.locator('[data-card-name="Bard Class"]').first()
       await expect(bard).toBeVisible()
@@ -50,7 +50,7 @@ test.describe('Keyword badges & hover', { tag: '@keywords' }, () => {
       await expect(reno).toBeVisible()
       const renoBadge = reno.locator('.designation-badge.is-renowned')
       await expect(renoBadge).toBeVisible()
-      expect(await renoBadge.getAttribute('title')).toContain('Renombre')
+      expect(await renoBadge.getAttribute('aria-label')).toContain('Renombre')
 
       await beast.hover()
       const kwBox = page.locator('.floating-card-keywords')
@@ -66,9 +66,10 @@ test.describe('Keyword badges & hover', { tag: '@keywords' }, () => {
         await startGame(page, { prefix: 'kw', tableName: TABLE.mechanics, deck: DECK.advanced })
         await dismissInfoWindows(page)
         const rows = page.locator('.card-slot .keyword-badges')
-        await expect(rows.first()).toBeVisible()
+        await expect(rows.first()).toBeAttached()
+        if (size.width >= 1600) await expect(rows.first()).toBeVisible()
         const overflow = await rows.evaluateAll((els) =>
-          els.filter((row) => {
+          els.filter((row) => getComputedStyle(row).visibility !== 'hidden').filter((row) => {
             const card = row.closest('.card-slot')!.getBoundingClientRect()
             const r = row.getBoundingClientRect()
             const kids = [...row.children].map((c) => c.getBoundingClientRect())
@@ -77,6 +78,49 @@ test.describe('Keyword badges & hover', { tag: '@keywords' }, () => {
           }).length,
         )
         expect(overflow).toBe(0)
+      })
+    })
+  }
+  for (const size of [{ width: 1600, height: 900 }, { width: 760, height: 520 }]) {
+    test(`no two badge zones overlap on any card at ${size.width}px`, async ({ page }) => {
+      await page.setViewportSize(size)
+      await withFakeServer(mechanicsScenario, async () => {
+        await startGame(page, { prefix: 'kw', tableName: TABLE.mechanics, deck: DECK.advanced })
+        await dismissInfoWindows(page)
+        await expect(page.locator('.card-slot [data-badge-zone]').first()).toBeVisible()
+        await page.waitForTimeout(400)
+        const report = await page.evaluate(() => {
+          const boxOf = (el: Element) => {
+            const kids = el instanceof HTMLElement && el.dataset.badgeZone === 'keyword' ? [...el.children] : []
+            const rects = (kids.length ? kids : [el]).map((k) => k.getBoundingClientRect())
+            return {
+              left: Math.min(...rects.map((r) => r.left)),
+              right: Math.max(...rects.map((r) => r.right)),
+              top: Math.min(...rects.map((r) => r.top)),
+              bottom: Math.max(...rects.map((r) => r.bottom)),
+            }
+          }
+          const hits: string[] = []
+          let crowded = 0
+          for (const slot of document.querySelectorAll('.card-slot')) {
+            const zones = [...slot.querySelectorAll('[data-badge-zone]')].filter((z) => z.closest('.card-slot') === slot && getComputedStyle(z).visibility !== 'hidden')
+            if (zones.length < 2) continue
+            crowded += 1
+            const boxes = zones.map((z) => ({ name: (z as HTMLElement).dataset.badgeZone, ...boxOf(z) }))
+            for (let i = 0; i < boxes.length; i++) {
+              for (let j = i + 1; j < boxes.length; j++) {
+                const a = boxes[i]
+                const b = boxes[j]
+                const x = Math.min(a.right, b.right) - Math.max(a.left, b.left)
+                const y = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top)
+                if (x > 0.5 && y > 0.5) hits.push(`${slot.getAttribute('data-card-name')}: ${a.name} x ${b.name}`)
+              }
+            }
+          }
+          return { hits, crowded }
+        })
+        expect(report.crowded).toBeGreaterThan(0)
+        expect(report.hits).toEqual([])
       })
     })
   }

@@ -1,4 +1,3 @@
-/** How many badges of `count` get drawn in a row `width` wide; the last slot becomes a "+N" chip when some are hidden. */
 export function visibleBadges(count: number, width: number, size: number, gap: number): number {
   if (count <= 0 || width <= 0 || size <= 0) return count
   const capacity = Math.max(1, Math.floor((width + gap) / (size + gap)))

@@ -74,7 +74,7 @@ export function clearShuffles(): void {
   notify()
 }
 
-function libraryElement(playerId: string): { el: HTMLElement; mode: ShuffleMode } | null {
+export function libraryElement(playerId: string): { el: HTMLElement; mode: ShuffleMode } | null {
   const els = [...document.querySelectorAll<HTMLElement>(`[data-player-id="${playerId}"] :is(.library-stack, .library-chip)`)]
   const el = els.find((e) => {
     const r = e.getBoundingClientRect()
@@ -88,7 +88,7 @@ function libraryElement(playerId: string): { el: HTMLElement; mode: ShuffleMode 
  * A chip is too small to riffle on, and it sits inside the player's portrait: the deck pops out
  * past the portrait, towards the board (above a portrait in the bottom half, below one at the top).
  */
-function chipDeckCentre(el: HTMLElement, chip: DOMRect): { x: number; y: number } {
+export function chipDeckCentre(el: HTMLElement, chip: DOMRect): { x: number; y: number } {
   const bar = (el.closest('.player-info-bar') as HTMLElement | null)?.getBoundingClientRect() ?? chip
   const x = chip.left + chip.width / 2
   const below = chip.top + chip.height / 2 < window.innerHeight / 2

@@ -6,11 +6,16 @@ import { fxMotionAllowed, fxMotionDuration } from './fx'
 import { spawnImpact } from './impactFx'
 import { startCardFlight } from './flightManager'
 import { sniffDiceRoll } from './diceRollFx'
+import { sniffFizzle } from './fizzleFx'
+import { sniffBehold } from './beholdFx'
+import { sniffConcede } from './concedeFx'
+import { sniffPlayerLogFx } from './playerLogFx'
+import { spawnLibraryPeek } from './libraryPeekFx'
 
 const OBJECT_ID_RE = /object_id='([0-9a-fA-F-]{36})'/
 
 /** The first object id the log line links after `from`: player names carry none, permanents do. */
-function objectIdAfter(message: string, from: number): string | null {
+export function objectIdAfter(message: string, from: number): string | null {
   return OBJECT_ID_RE.exec(message.slice(Math.max(0, from)))?.[1] ?? null
 }
 
@@ -41,6 +46,16 @@ export function parseMulligan(message: string): { player: string } | null {
   return player ? { player } : null
 }
 
+/** `PlayerImpl.scry` / `doSurveil`: "<player> scries N (source: …)" / "<player> surveils N (source: …)". */
+export function parseLibraryPeek(message: string): { player: string; kind: 'scry' | 'surveil'; amount: number } | null {
+  const m = cleanMageText(message).match(/^(.+?) (scries|surveils) (\d+)\b/i)
+  if (!m) return null
+  const player = m[1].trim()
+  const amount = Number(m[3])
+  if (!player || amount === 0) return null
+  return { player, kind: m[2].toLowerCase() === 'scries' ? 'scry' : 'surveil', amount }
+}
+
 const SACRIFICE_TTL_MS = 5000
 const sacrificed = new Map<string, number>()
 
@@ -60,18 +75,18 @@ export function clearSacrificed(): void {
   sacrificed.clear()
 }
 
-function afterLayout(fn: () => void): void {
+export function afterLayout(fn: () => void): void {
   if (typeof requestAnimationFrame === 'function') requestAnimationFrame(() => requestAnimationFrame(fn))
   else setTimeout(fn, 34)
 }
 
-function visibleRect(el: Element | null | undefined): DOMRect | null {
+export function visibleRect(el: Element | null | undefined): DOMRect | null {
   if (!el) return null
   const rect = el.getBoundingClientRect()
   return rect.width > 0 && rect.height > 0 ? rect : null
 }
 
-function replayClass(el: Element, cls: string, ms: number): void {
+export function replayClass(el: Element, cls: string, ms: number): void {
   el.classList.remove(cls)
   void (el as HTMLElement).offsetWidth
   el.classList.add(cls)
@@ -126,16 +141,26 @@ export function animateOpponentMulligan(playerId: string): void {
   })
 }
 
+/** Scry / surveil: the library peek overlay (`libraryPeekFx.ts`); cards surveilled into the graveyard then fly there through the ordinary zone diff. */
+export function animateLibraryPeek(playerId: string, amount: number): void {
+  spawnLibraryPeek(playerId, amount)
+}
+
 /**
  * Game-log hook for the effects the `GameView` cannot show: a flicker (same id in and out), a
- * sacrifice (looks like a destroy in the diff), an opponent's mulligan (hand count unchanged) and
- * dice rolls (never in the view).
+ * sacrifice (looks like a destroy in the diff), an opponent's mulligan (hand count unchanged), scry /
+ * surveil (the library peek), dice rolls (never in the view), a fizzle, a behold, a concession,
+ * paying or declining to prevent an effect, a chosen value and a completed dungeon.
  */
 export function sniffGameLogFx(message: string, gameId: string | null | undefined): void {
   if (!gameId) return
   const s = getState()
   if (s.gameId !== gameId) return
   sniffDiceRoll(message, gameId)
+  sniffFizzle(message, gameId)
+  sniffBehold(message, gameId)
+  sniffConcede(message, gameId)
+  sniffPlayerLogFx(message, gameId)
   const sacrifice = parseSacrifice(message)
   if (sacrifice) {
     noteSacrificed(sacrifice.objectId)
@@ -147,6 +172,13 @@ export function sniffGameLogFx(message: string, gameId: string | null | undefine
     const wasOnBattlefield = players.some((p) => flicker.objectId in (p.battlefield ?? {}))
     const wasInExile = players.some((p) => flicker.objectId in (p.exile ?? {}))
     if (wasOnBattlefield && !wasInExile) flickerPermanent(flicker.objectId)
+    return
+  }
+  const peek = parseLibraryPeek(message)
+  if (peek) {
+    const named = peek.player.toLowerCase()
+    const player = s.game?.players?.find((p) => p.name.trim().toLowerCase() === named)
+    if (player) animateLibraryPeek(player.playerId, peek.amount)
     return
   }
   const mulligan = parseMulligan(message)

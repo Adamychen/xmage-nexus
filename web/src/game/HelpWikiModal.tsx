@@ -10,6 +10,7 @@ import { keywordDisplayName, keywordRuleRef, keywordSummary } from '../data/keyw
 import FormattedText from './FormattedText'
 import DialogShell from '../ui/DialogShell'
 import Icon, { type IconName } from '../ui/Icon'
+import { KeywordCoin } from '../board/KeywordGlyph'
 import { useTranslation } from '../i18n'
 import './HelpWikiModal.css'
 import Button from '../ui/Button'
@@ -144,7 +145,7 @@ export default function HelpWikiModal({ onClose }: HelpWikiModalProps) {
                     <article key={kw.id} className={`wiki-kw-card cat-${kw.category}`}>
                       <div className="wiki-kw-card-header">
                         <div className="wiki-kw-card-title">
-                          <span className="wiki-kw-icon"><Icon name={CATEGORY_ICONS[kw.category] ?? 'sparkles'} size={14} /></span>
+                          <span className="wiki-kw-icon"><KeywordCoin id={kw.id} category={kw.category} size={22} /></span>
                           <strong className="wiki-kw-name-en">{locName}</strong>
                           {showEn && <span className="wiki-kw-name-es">({kw.name})</span>}
                         </div>

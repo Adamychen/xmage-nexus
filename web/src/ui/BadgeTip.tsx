@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, type HTMLAttributes, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import './BadgeTip.css'
 
@@ -7,7 +7,7 @@ export interface BadgeTipContent {
   body?: string
 }
 
-interface Props {
+interface Props extends Omit<HTMLAttributes<HTMLSpanElement>, 'title' | 'role' | 'aria-label'> {
   tip: BadgeTipContent
   className?: string
   children: ReactNode
@@ -17,7 +17,7 @@ const GAP = 6
 const MARGIN = 8
 const TOUCH_MS = 2600
 
-export default function BadgeTip({ tip, className, children }: Props) {
+export default function BadgeTip({ tip, className, children, ...rest }: Props) {
   const anchorRef = useRef<HTMLSpanElement>(null)
   const bubbleRef = useRef<HTMLDivElement>(null)
   const timer = useRef<number>(0)
@@ -47,6 +47,7 @@ export default function BadgeTip({ tip, className, children }: Props) {
 
   return (
     <span
+      {...rest}
       ref={anchorRef}
       className={`${className ?? ''} has-badge-tip`}
       role="img"

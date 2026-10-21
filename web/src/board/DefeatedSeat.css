@@ -171,3 +171,32 @@ html.fx-off .arena-opp-cell {
     transition: none !important;
   }
 }
+
+/* Conceded: no crack and no shards, the seat bows out under a white wash and drains to grey. */
+@keyframes seatConcede {
+  0% { filter: none; opacity: 1; }
+  25% { filter: brightness(1.6) saturate(0.4); opacity: 1; }
+  100% { filter: grayscale(1) brightness(0.7); opacity: 0.75; }
+}
+
+.board-zone.fx-conceded,
+.defeated-seat.fx-conceded {
+  animation: seatConcede calc(1.2s / var(--fx-speed, 1)) ease-out;
+}
+
+.board-zone.fx-conceded .zone-defeated-overlay {
+  animation: seatOverlayIn calc(1.2s / var(--fx-speed, 1)) ease-out both;
+}
+
+html.fx-off .board-zone.fx-conceded,
+html.fx-off .defeated-seat.fx-conceded,
+html.fx-off .board-zone.fx-conceded .zone-defeated-overlay {
+  animation: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .board-zone.fx-conceded,
+  .defeated-seat.fx-conceded {
+    animation: none;
+  }
+}

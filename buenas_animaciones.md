@@ -74,6 +74,7 @@ action, so it can be watched without a live game, and its id goes in the `withAc
 | **Aura attach** (an Aura resolving, a bestow): after its drop lands in its slot under the host, a thread of light in the aura's colour binds them, a ring closes round the host and both glow | A new permanent with `attachedTo` set to a permanent still on a battlefield | engine §B `auraAttachments`, `linkAura`, impact `attach`, `CardSlot.css` `attachGlow` | `anim:aura-attach`, `anim:aura-attach-classic` |
 | **Mulligan**: my hand turns face down and flies to the library, then the new hand is dealt; an opponent's sends four face-down cards back and forth | Mine: hand ids change in a view with no phase. Opponent: log `<name> decides to take mulligan` | engine `playMulligan`, `gameLogFx.ts` `animateOpponentMulligan` | `anim:mulligan`, `anim:mulligan-opp` |
 | **Library shuffle**: the classic pile riffles in place; the new table pops a mini deck out of the library chip | Log `<name>'s library is shuffled` / `… shuffles N cards into their library` | `shuffleFx.ts` | `anim:shuffle`, `anim:shuffle-opp`, `anim:shuffle-classic` |
+| **Scry / surveil**: the top cards lift in the player's sleeve from the library (pile or chip), fan out, hold and settle back; cards surveilled into the graveyard then fly there through the ordinary zone diff | Log `<name> scries N` / `<name> surveils N` (`PlayerImpl.scry` / `doSurveil`) | `gameLogFx.ts` `parseLibraryPeek`, `libraryPeekFx.ts`, `LibraryPeekOverlay` | `anim:scry`, `anim:surveil-opp` |
 | **Revealed / looked-at**: cards flip face up one after another as the viewer opens | `revealed` / `lookedAt` group opens (not companions) | `revealedCards.ts`, `PileOverlay` | `anim:revealed-flip` |
 | **Hand revealed** (a watched hand, Mindslaver, Telepathy): the opponent's revealed cards leave their hand face down, fan out beside it and turn face up one after another (90 ms stagger), hold, then fold back into the hand (classic hand zone, or the portrait's hand badge on the new table) | An opponent's `watchedHands` / `opponentHands` entry, or a `revealed` group named "Cards in <name>'s hand", has cards it did not have (appears or grows). Thoughtseize-style reveals keep the revealed viewer | `handRevealFx.ts` `handReveals` / `spawnHandReveal`, `HandRevealOverlay`, engine §T `fanRevealedHands` | `anim:hand-revealed`, `anim:hand-revealed-v2` |
 
@@ -86,6 +87,7 @@ action, so it can be watched without a live game, and its id goes in the `withAc
 | **Sequential resolution**: several spells leaving in one update resolve one at a time, 220 ms apart | Several stack objects gone at once | `stackHold.ts` | `anim:stack-sequence` |
 | **Top-card countdown**: the top spell pulses and a 2 px bar fills over 3 s | Two or more objects on the stack | `StackZone.css` `stackTopPulse` / `stackTopFill` | `anim:stack-countdown` |
 | **Countered**: the spell shudders, drains of colour, cracks and bursts into blue shards | Leaves for a graveyard/exile with another departed object that targeted it | engine `counteredSpellIds`, impact `countered` | `anim:countered` |
+| **Fizzle**: a spell whose targets all became illegal fires no projectile; it goes grey and drifts apart like smoke on the stack, then falls to the graveyard | Log `<card name> has been fizzled.` (`Spell.java`; no object id, matched by name against the stack) before the view that removes it | `fizzleFx.ts`, engine §C `consumeFizzled`, `CardSlot.css` `fizzleSmoke` | `anim:fizzle` |
 | **Copy**: blue echoes ripple from the original and the pale copy peels off it | New stack spell named like one already there, no card left a hand | engine `copiedSpellId`, impact `copy` | `anim:spell-copy` |
 | **Mutate**: the mutating spell flies from the stack down onto its host instead of the generic exit; organic ripples in its colours wobble out and the host squashes and swells as they merge (over or under) | A spell leaves the stack without entering on its own while a host that stayed is `mutated` and its `mutateView.cards` gained that card (same id, or the same name) | engine `mutateMerges`, `mergeIntoHost`, flight variant `mutate`, impact `mutate`, `CardSlot.css` `mutateMerge` | `anim:mutate`, `anim:mutate-under` |
 
@@ -95,6 +97,8 @@ action, so it can be watched without a live game, and its id goes in the `withAc
 |---|---|---|---|
 | **Mana tap**: ring in the land's colour and a particle to the mana pool | A land taps | `CardSlot.css` `manaTapPulse`, `manaParticle.ts`, `useTapFlip.ts` | `anim:mana-tap` |
 | **Card icon gained** (goad, restrictions, keywords): the badge pops onto the card; goad lands with a red ring and glow. Only on gain between views, never on a card's first render | A permanent's `cardIcons` has an icon (type, text, hint) it did not have; goad is the `OTHER_HAS_RESTRICTIONS` icon whose hint says "Goaded by …" | `cardIconFx.ts` `gainedIconKeys` / `isGoadIcon`, `CardIcons.tsx`, `CardSlot.css` `iconGainedPop` / `goadPulse` | `anim:goad`, `anim:card-icon-gain` |
+| **Behold**: the shown card lifts and catches a white flash | Log `<player> chooses to behold <permanent>` (the single-permanent form, the only one with an object id) | `beholdFx.ts`, `CardSlot.css` `beholdLift` | `anim:behold` |
+| **Designation gained** (monstrous, renowned, suspected, class level up, case solved, harnessed, evidence, prepared, protector, paired): the badge pops in and glows in its own colour; suspected also jolts; a card that becomes monstrous or renowned swells once in gold. Never on a card's first render | `cardDesignations(rules)` gains a designation between views, or the class level rises (the hints live in `rules`: `ICON_GOOD{this} is monstrous`, …) | `designations.ts` `gainedDesignations`, `CardSlot.tsx`, `CardSlot.css` `designationGlow` / `designationJolt` / `designationSwell` | `anim:designation-monstrous`, `anim:designation-renowned`, `anim:designation-suspected`, `anim:designation-classlevel`, `anim:designation-casesolved` |
 | **Untap wave**: my tapped permanents untap with a 40 ms stagger | Several untap at once | `useUntapWave.ts` | `anim:untap-wave` |
 | **Summoning sickness / entered glow**: floating badge and gold glow (looping) | `summoningSickness` / entered this turn | `CardSlot.css` `sicknessFloat`, `enteredGlow` | `anim:sickness`, `anim:entered-glow` |
 | **Counters**: badge pulse with gold flash and ring, `+1` rises, the number ticks | A permanent's `counters` change | `useCounterPulse.ts` | `anim:counter-change` |
@@ -133,9 +137,13 @@ action, so it can be watched without a live game, and its id goes in the `withAc
 | **Timer**: tick, then shake when time runs low | Priority timer | `PlayerInfoBar.css` `timerTick` / `timerShake` | `anim:timer-low` |
 | **Emblem**: it pops into the command zone with a violet flash, two rings (violet, gold) and gold sparks | A new emblem in a player's `commandList` (an `EmblemView`: no type, a name starting "Emblem") | `commandObjectsFx.ts` `commandArrivals`, engine §S, `CardSlot.css` `emblemPop`, impact `emblem` | `anim:emblem` |
 | **Dungeon**: the dungeon badge flares like a torch, a ring and embers rise from it and the room's name (the dungeon's, on the first venture) floats up; the dungeon map in the mechanics panel lights the new room | A dungeon appears in `commandList`, or its current room ("(Currently in Goblin Lair)" in its rules) changes | `commandObjectsFx.ts` `dungeonOf`, engine §S, `PlayerInfoBar.css` `badgeDungeonAdvance`, `DungeonMap.tsx` / `MechanicsTray.css` `dungeonRoomEntered`, impact `dungeon` | `anim:dungeon` |
+| **Dungeon completed**: the badge flares gold and bursts, embers rise and the dungeon's name floats up | Log `<player> has completed <dungeon>` (`GameImpl.java`) | `playerLogFx.ts` `animateDungeonCompleted`, `PlayerInfoBar.css` `badgeDungeonComplete` | `anim:dungeon-complete` |
 | **Planeswalk** (Planechase): a planar portal swirls open over my command zone and the new plane rolls down into it. Planes are drawn in my command zone (every player's list carries the universal plane; only my side draws it) | A new plane (`PlaneView`, name "Plane - …") in `commandList`, reported once (no recorded Planechase frame: the shape is the fork's `PlaneView`; emblems and dungeons are checked against `emblem.json` / `dungeon.json`) | `commandObjectsFx.ts`, `CommandZone.tsx` (`plane-slot`), engine §S, `CardSlot.css` `planeRoll`, impact `planeswalk` | `anim:planeswalk` |
 | **Monarch / initiative**: crown or ember token arcs from the old holder to the new one, badge pops; from nobody it drops from above | `monarch` / `initiative` moves | `designationFx.ts` | `anim:monarch-pass`, `anim:initiative-take` |
+| **Pay to prevent**: paying sweeps a gold ring out of the portrait; declining dims it and shakes it like a head | Log `<player> chooses to pay … / chooses not to pay … to prevent the counter/sacrifice effect`, `<player> pays the cost to prevent the effect` | `playerLogFx.ts` `animatePayChoice`, `PlayerInfoBar.css` `payPaid` / `payDeclined` | `anim:pay-paid`, `anim:pay-declined-opp` |
+| **Choice announced**: the chosen value (colour, creature type, player…) floats up in a gold box from the source card, or from the player's portrait when the source carries no id | Log `[<source>: ]<player> has chosen[ the color][:] <choice>` (not the Ring-bearer or companion lines) | `playerLogFx.ts` `animateChosen` | `anim:chosen-card`, `anim:chosen-player` |
 | **Player eliminated**: the seat jolts, cracks red and white, sheds shards and drains to grey | `hasLeft` turns true | engine `eliminateSeat`, `DefeatedSeat.css` | `anim:player-eliminated` |
+| **Player conceded**: no crack and no shards; the seat bows out under a white wash and drains to grey | Log `<player> has conceded.` within 10 s before `hasLeft` turns true | `concedeFx.ts`, engine `eliminateSeat`, impact `conceded`, `DefeatedSeat.css` `seatConcede` | `anim:player-conceded` |
 | **Commander damage lethal**: the matrix cell pulses red | ≥ 21 from one commander | `CommanderDamageMatrix.css` `cdmLethalPulse` | `anim:commander-lethal` |
 | **Targetable player**: pill beacon (required) or static border (optional) | `GAME_TARGET` on a player | `PlayerInfoBar.css` `playerTargetPulse` | `anim:chosen-target`, `anim:opp-pill-required`, `anim:opp-pill-optional` |
 
@@ -153,7 +161,7 @@ action, so it can be watched without a live game, and its id goes in the `withAc
 
 ## Backlog
 
-Verified against the engine on 2026-10-20: every animation the view allows now plays. What is left
+Verified against the engine and the game log on 2026-10-21: every animation the view or the log allows now plays. What is left
 is in "Blocked: not in the view" below.
 
 ### Gallery coverage
@@ -163,9 +171,16 @@ both tables (`:is(.graveyard-stack, .graveyard-chip)`, `:is(.exile-stack, .exile
 leaving a chip starts as a small upright card (`pileSize`), not as the chip's wide box read as a
 tapped card.
 
+`web/e2e/animations-play.spec.ts` replays the entries whose effect is a CSS class (countered,
+fizzle, designations, scry / surveil, pay, choice, behold, dungeon completed, goad, conceded,
+eliminated) with motion on and asserts `getComputedStyle(el).animationName`, so a stylesheet that
+overrides an FX class fails there; `gallery.spec.ts` only checks that entries mount (reduced motion).
+
 ### Blocked: not in the view
 
-`harnessed`, `monstrous`, `renowned` and player targeting are engine state the `mage.view.*` DTOs
-never copy (`engineViewCoverage.test.ts` baseline), so no client can animate them without a fork
-patch. Regeneration, prevented damage and "crime committed" have neither view fields nor stable log
-lines.
+Player targeting is engine state the `mage.view.*` DTOs never copy (`engineViewCoverage.test.ts`
+baseline), so no client can animate it without a fork patch. `monstrous`, `renowned` and `harnessed`
+are in that baseline too, but only as fields: their `ConditionHint` text reaches every card's `rules`,
+so they animate (see "Designation gained"). Regeneration, prevented damage and "crime committed" have
+neither view fields nor stable log lines; fight, proliferate, cascade, discover and explore have no
+log line of their own (explore's reveal plays through the revealed-card flip).

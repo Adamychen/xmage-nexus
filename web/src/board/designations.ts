@@ -49,6 +49,18 @@ export function cardDesignations(rules?: readonly string[] | null): Designation[
   return out
 }
 
+export function gainedDesignations(prevRules: readonly string[] | null | undefined, nextRules: readonly string[] | null | undefined): Designation[] {
+  const before = cardDesignations(prevRules)
+  const after = cardDesignations(nextRules)
+  const gained = after.filter((d) => !before.includes(d))
+  if (before.includes('classlevel') && after.includes('classlevel')) {
+    const prev = classLevelOf(prevRules)
+    const next = classLevelOf(nextRules)
+    if (prev != null && next != null && next > prev) gained.push('classlevel')
+  }
+  return gained
+}
+
 /**
  * Partner name from the soulbond `info` line
  * ("Paired with <font …>Name [hash]</font>"), or null.

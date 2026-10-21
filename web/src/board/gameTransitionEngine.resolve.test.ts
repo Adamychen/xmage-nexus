@@ -6,6 +6,9 @@ import { clearFlights, getActiveFlights, hasFlightFor } from './flightManager'
 import { clearFeedbackFx, getFeedbackFxState } from './feedbackFx'
 import { clearStackHold } from './stackHold'
 import { damageNumbersFor } from './DamageNumber'
+import { clearFizzled, noteFizzled } from './fizzleFx'
+import { clearConceded, noteConceded } from './concedeFx'
+import { clearProjectiles, getProjectiles } from './projectileFx'
 import type { CardView, GameView, PlayerView } from '../net/types'
 
 function domRect(left = 100, top = 200): DOMRect {
@@ -132,6 +135,8 @@ describe('gameTransitionEngine — stack resolution and feedback', () => {
   afterEach(() => {
     vi.restoreAllMocks()
     document.body.innerHTML = ''
+    clearFizzled()
+    clearConceded()
   })
 
   it('flies a resolved spell to the graveyard pile', async () => {
@@ -321,6 +326,120 @@ describe('gameTransitionEngine — stack resolution and feedback', () => {
     expect(getFeedbackFxState().banner).not.toBeNull()
     expect(getFeedbackFxState().banner?.text).toContain('2')
     expect(getFeedbackFxState().banner?.text).toContain('Alice')
+  })
+
+  it('a fizzled spell drifts apart on the stack and fires no projectile', async () => {
+    document.body.innerHTML =
+      '<div class="stack-deck"><div data-card-id="bolt-1"></div></div>'
+      + '<div data-player-id="p1" data-player-name="Alice"><div class="graveyard-stack"></div><div class="card-slot" data-card-id="c1"></div></div>'
+    clearImpacts()
+    clearProjectiles()
+    const aimed = { ...bolt, targets: ['c1'] } as unknown as CardView
+    const creature = { id: 'c1', name: 'Grizzly Bears', cardTypes: ['Creature'], damage: 0 }
+    const prev = baseGame({ stack: { 'bolt-1': aimed }, players: [player({ battlefield: { c1: creature as never } })] })
+    const next = baseGame({ stack: {}, players: [player({ battlefield: { c1: creature as never }, graveyard: { 'bolt-1': aimed } })] })
+    recordCardPosition('bolt-1', domRect(1000, 520), 'stack-zone')
+    noteFizzled('bolt-1')
+
+    detectAndAnimateTransitions(prev, next)
+    await vi.waitFor(() => expect(document.querySelector('.stack-deck [data-card-id="bolt-1"]')?.classList.contains('fx-fizzle')).toBe(true), { timeout: 3000, interval: 25 })
+    await vi.waitFor(() => expect(hasFlightFor('bolt-1')).toBe(true), { timeout: 3000, interval: 25 })
+
+    expect(getProjectiles()).toHaveLength(0)
+    expect(getImpacts().some((fx) => fx.kind === 'countered')).toBe(false)
+    clearFizzled()
+  })
+
+  it('the same spell without a fizzle line fires its projectile', async () => {
+    document.body.innerHTML =
+      '<div class="stack-deck"><div data-card-id="bolt-1"></div></div>'
+      + '<div data-player-id="p1" data-player-name="Alice"><div class="graveyard-stack"></div><div class="card-slot" data-card-id="c1"></div></div>'
+    clearImpacts()
+    clearProjectiles()
+    const aimed = { ...bolt, targets: ['c1'] } as unknown as CardView
+    const creature = { id: 'c1', name: 'Grizzly Bears', cardTypes: ['Creature'], damage: 0 }
+    const prev = baseGame({ stack: { 'bolt-1': aimed }, players: [player({ battlefield: { c1: creature as never } })] })
+    const next = baseGame({ stack: {}, players: [player({ battlefield: { c1: creature as never }, graveyard: { 'bolt-1': aimed } })] })
+    recordCardPosition('bolt-1', domRect(1000, 520), 'stack-zone')
+
+    detectAndAnimateTransitions(prev, next)
+    await vi.waitFor(() => expect(getProjectiles().length).toBeGreaterThan(0), { timeout: 3000, interval: 25 })
+
+    expect(document.querySelector('.stack-deck [data-card-id="bolt-1"]')?.classList.contains('fx-fizzle')).toBe(false)
+  })
+
+  it('a player who leaves the game cracks their seat', () => {
+    document.body.innerHTML = '<div class="board-zone" data-player-id="p2"></div>'
+    clearImpacts()
+    const prev = baseGame({ players: [player({ playerId: 'p1' }), player({ playerId: 'p2', name: 'Bob' })] })
+    const next = baseGame({ players: [player({ playerId: 'p1' }), player({ playerId: 'p2', name: 'Bob', hasLeft: true })] })
+
+    detectAndAnimateTransitions(prev, next)
+
+    expect(document.querySelector('.board-zone')?.classList.contains('fx-eliminated')).toBe(true)
+    expect(getImpacts().some((fx) => fx.kind === 'eliminated')).toBe(true)
+  })
+
+  it('a player who conceded bows out without the crack', () => {
+    document.body.innerHTML = '<div class="board-zone" data-player-id="p2"></div>'
+    clearImpacts()
+    noteConceded('p2')
+    const prev = baseGame({ players: [player({ playerId: 'p1' }), player({ playerId: 'p2', name: 'Bob' })] })
+    const next = baseGame({ players: [player({ playerId: 'p1' }), player({ playerId: 'p2', name: 'Bob', hasLeft: true })] })
+
+    detectAndAnimateTransitions(prev, next)
+
+    expect(document.querySelector('.board-zone')?.classList.contains('fx-conceded')).toBe(true)
+    expect(document.querySelector('.board-zone')?.classList.contains('fx-eliminated')).toBe(false)
+    expect(getImpacts().some((fx) => fx.kind === 'conceded')).toBe(true)
+    expect(getImpacts().some((fx) => fx.kind === 'eliminated')).toBe(false)
+    clearConceded()
+  })
+
+  it('a permanent that phases out leaves as a ghost; one phasing in fades up', async () => {
+    document.body.innerHTML = '<div data-player-id="p1"><div class="card-slot" data-card-id="c1"></div></div>'
+    clearImpacts()
+    const bears = { id: 'c1', name: 'Grizzly Bears', cardTypes: ['Creature'], phasedIn: true }
+    const phasedOut = { ...bears, phasedIn: false }
+    recordCardPosition('c1', domRect(300, 300), 'battlefield')
+
+    detectAndAnimateTransitions(
+      baseGame({ players: [player({ battlefield: { c1: bears as never } })] }),
+      baseGame({ players: [player({ battlefield: { c1: phasedOut as never } })] }),
+    )
+    await vi.waitFor(() => expect(hasFlightFor('c1')).toBe(true), { timeout: 3000, interval: 25 })
+    expect(getImpacts().some((fx) => fx.kind === 'phase')).toBe(true)
+
+    clearImpacts()
+    detectAndAnimateTransitions(
+      baseGame({ players: [player({ battlefield: { c1: phasedOut as never } })] }),
+      baseGame({ players: [player({ battlefield: { c1: bears as never } })] }),
+    )
+    await vi.waitFor(() => expect(document.querySelector('.card-slot[data-card-id="c1"]')?.classList.contains('fx-phase-in')).toBe(true), { timeout: 3000, interval: 25 })
+    expect(getImpacts().some((fx) => fx.kind === 'phase')).toBe(true)
+  })
+
+  it('my mulligan sends the old hand to the library and deals the new one', async () => {
+    document.body.innerHTML = '<div data-player-id="p1"><div class="library-stack"></div></div><div class="hand-bar"></div>'
+    const card = (id: string) => ({ ...bolt, id }) as CardView
+    recordCardPosition('h1', domRect(500, 700), 'hand')
+    recordCardPosition('h2', domRect(600, 700), 'hand')
+    const prev = baseGame({
+      phase: null,
+      step: null,
+      myHand: { h1: card('h1'), h2: card('h2') },
+      players: [player({ controlled: true })],
+    })
+    const next = baseGame({
+      phase: null,
+      step: null,
+      myHand: { h3: card('h3'), h4: card('h4') },
+      players: [player({ controlled: true })],
+    })
+
+    detectAndAnimateTransitions(prev, next)
+    await vi.waitFor(() => expect(hasFlightFor('h1')).toBe(true), { timeout: 3000, interval: 25 })
+    await vi.waitFor(() => expect(hasFlightFor('h3')).toBe(true), { timeout: 3000, interval: 25 })
   })
 })
 

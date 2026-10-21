@@ -137,7 +137,7 @@ describe('CardSlot', () => {
     const { container } = render(<CardSlot card={card} />)
     const badge = container.querySelector('.designation-badge.is-paired')
     expect(badge).not.toBeNull()
-    expect(badge?.getAttribute('title')).toContain('Grizzly Bears')
+    expect(badge?.getAttribute('aria-label')).toContain('Grizzly Bears')
   })
 
   it('is keyboard operable when clickable: Tab + Enter triggers the same action as click', () => {
@@ -201,7 +201,7 @@ describe('CardSlot', () => {
     const badge = container.querySelector('.designation-badge.is-classlevel')
     expect(badge).not.toBeNull()
     expect(badge?.textContent).toContain('2')
-    expect(badge?.getAttribute('title')).toContain('2/3')
+    expect(badge?.getAttribute('aria-label')).toContain('2/3')
   })
 
   it('renders case solved and prepared badges from live engine lines', () => {
@@ -227,8 +227,8 @@ describe('CardSlot', () => {
     const { container } = render(<CardSlot card={card} />)
     const badge = container.querySelector('.designation-badge.is-evidence')
     expect(badge).not.toBeNull()
-    expect(badge?.getAttribute('title')).toContain('6')
-    expect(badge?.getAttribute('title')).toContain('9')
+    expect(badge?.getAttribute('aria-label')).toContain('6')
+    expect(badge?.getAttribute('aria-label')).toContain('9')
   })
 
   it('renders harnessed and protector badges with the protector name in title', () => {
@@ -242,7 +242,7 @@ describe('CardSlot', () => {
     expect(container.querySelector('.designation-badge.is-harnessed')).not.toBeNull()
     const badge = container.querySelector('.designation-badge.is-protector')
     expect(badge).not.toBeNull()
-    expect(badge?.getAttribute('title')).toContain('Grizzly Bears')
+    expect(badge?.getAttribute('aria-label')).toContain('Grizzly Bears')
   })
 
   it('renders a room-door badge from sniffed unlock broadcasts', () => {
@@ -262,7 +262,7 @@ describe('CardSlot', () => {
     const badge = container.querySelector('.designation-badge.is-room')
     expect(badge).not.toBeNull()
     expect(badge?.textContent).toBe('L')
-    expect(badge?.getAttribute('title')).toContain('L')
+    expect(badge?.getAttribute('aria-label')).toContain('L')
   })
 
   it('renders no room-door badge on non-Room cards with a colliding name', () => {
@@ -324,8 +324,8 @@ describe('CardSlot', () => {
     const { container } = render(<CardSlot card={card} />)
     const badge = container.querySelector('.sickness-badge') as HTMLElement
     expect(badge).not.toBeNull()
-    expect(badge.getAttribute('title')).toContain('Enfermedad de invocación')
-    expect(badge.getAttribute('aria-label')).toBe(badge.getAttribute('title'))
+    expect(badge.getAttribute('aria-label')).toContain('Enfermedad de invocación')
+    expect(badge.getAttribute('title')).toBeNull()
   })
 
   it('no pinta el badge de enfermedad de invocación si la criatura está girada', () => {
@@ -776,7 +776,7 @@ describe('CardSlot sicknessStyle (issue #12)', () => {
     // Geometry is not measured here: jsdom returns zero rects. The "covers the
     // whole card" contract lives in `cardOverlayCss.test.ts` (`inset: 0`) and was
     // checked in a real browser (elementFromPoint returns the card).
-    expect(veil.getAttribute('aria-hidden')).toBe('true')
+    expect(veil.querySelector('.sickness-veil-icon')?.getAttribute('aria-label')).toContain('Enfermedad de invocación')
     expect(veil.querySelector('svg')).not.toBeNull()
   })
 
@@ -880,6 +880,19 @@ describe('CardSlot keywordIcons', () => {
     expect(container.querySelector('.card-icon.ability')).toBeNull()
   })
 
+  it('draws mutate as a glyph badge with its own tooltip instead of a separate mutated badge', () => {
+    const card = { ...beast(['Flying']), mutated: true } as unknown as PermanentView
+    const { container } = render(<CardSlot card={card} showPt />)
+    const badge = container.querySelector('.keyword-badge.mutated-badge') as HTMLElement
+    expect(badge).not.toBeNull()
+    expect(badge.querySelector('svg')).not.toBeNull()
+    expect(container.querySelectorAll('.mutated-badge')).toHaveLength(1)
+    fireEvent.pointerEnter(badge)
+    const title = document.querySelector('.badge-tip-title')?.textContent
+    fireEvent.pointerLeave(badge)
+    expect(title).toMatch(/Mut/)
+  })
+
   it('shows a tooltip with the keyword name and rules summary on hover', () => {
     const { container } = render(<CardSlot card={beast(['Flying'])} showPt />)
     const badge = container.querySelector('.keyword-badge.kw-flying') as HTMLElement
@@ -889,5 +902,38 @@ describe('CardSlot keywordIcons', () => {
     expect(tip?.querySelector('.badge-tip-title')?.textContent).toBeTruthy()
     fireEvent.pointerLeave(badge)
     expect(document.querySelector('.badge-tip')).toBeNull()
+  })
+})
+
+describe('CardSlot designation gained', () => {
+  const NOT_MONSTROUS = "ICON_BAD{this} isn't monstrous"
+  const MONSTROUS = 'ICON_GOOD{this} is monstrous'
+  const SUSPECTED = "Suspected (has menace and can't block)"
+  const card = (rules: string[]) =>
+    ({ id: 'g1', name: 'Polukranos, World Eater', cardTypes: ['Creature'], rules }) as unknown as PermanentView
+
+  it('does not animate a designation on the first render', () => {
+    const { container } = render(<CardSlot card={card(['Trample', MONSTROUS])} />)
+    const badge = container.querySelector('.designation-badge.is-monstrous')
+    expect(badge).not.toBeNull()
+    expect(badge?.classList.contains('designation-gained')).toBe(false)
+    expect(container.querySelector('.card-slot')?.classList.contains('fx-designation-swell')).toBe(false)
+  })
+
+  it('pops and swells when a card becomes monstrous', () => {
+    const { container, rerender } = render(<CardSlot card={card(['Trample', NOT_MONSTROUS])} />)
+    rerender(<CardSlot card={card(['Trample', MONSTROUS])} />)
+    const badge = container.querySelector('.designation-badge.is-monstrous')
+    expect(badge?.classList.contains('designation-gained')).toBe(true)
+    expect(badge?.classList.contains('designation-gained--monstrous')).toBe(true)
+    expect(container.querySelector('.card-slot')?.classList.contains('fx-designation-swell')).toBe(true)
+  })
+
+  it('pops a newly added suspected badge without swelling', () => {
+    const { container, rerender } = render(<CardSlot card={card(['Deathtouch'])} />)
+    rerender(<CardSlot card={card(['Deathtouch', SUSPECTED])} />)
+    const badge = container.querySelector('.designation-badge.is-suspected')
+    expect(badge?.classList.contains('designation-gained--suspected')).toBe(true)
+    expect(container.querySelector('.card-slot')?.classList.contains('fx-designation-swell')).toBe(false)
   })
 })
