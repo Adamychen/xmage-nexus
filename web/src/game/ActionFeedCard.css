@@ -104,6 +104,14 @@
   font-size: var(--fs-sm);
 }
 
+.action-time {
+  margin-left: auto;
+  font-size: var(--fs-2xs);
+  color: var(--fg-3);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
 .action-player-tag {
   font-size: var(--fs-2xs);
   font-weight: 700;

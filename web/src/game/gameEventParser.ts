@@ -171,7 +171,8 @@ function putsDestKey(dest: string): GameFeedKey | null {
 export function parseGameEvent(
   raw: string,
   myPlayerName?: string,
-  idPrefix = 'act'
+  idPrefix = 'act',
+  time = Date.now()
 ): ParsedGameEvent | null {
   const text = cleanMageText(raw)
   if (!text) return null
@@ -189,8 +190,8 @@ export function parseGameEvent(
   }
 
   const base = {
-    id: `${idPrefix}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-    timestamp: Date.now(),
+    id: idPrefix,
+    timestamp: time,
     rawText: text,
   }
 

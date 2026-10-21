@@ -57,3 +57,11 @@
   gap: var(--sp-1);
 }
 
+.game-log-time {
+  margin-right: var(--sp-1h);
+  color: var(--fg-3);
+  font-size: var(--fs-2xs);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+

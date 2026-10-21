@@ -18,7 +18,10 @@ export const REPLAY_TABLE_NAME = 'Replay Recorded (real frame)'
 export function replayRecordedScenario(
   filename: string,
   tableName: string = REPLAY_TABLE_NAME,
-  extras: { onStartMatch?: (conn: FakeConn, gameId: string) => void } = {},
+  extras: {
+    onStartMatch?: (conn: FakeConn, gameId: string) => void
+    onRequest?: (conn: FakeConn, action: string, args: Record<string, unknown>, requestId: string | number) => boolean
+  } = {},
 ): Scenario {
   const raw = JSON.parse(fs.readFileSync(path.join(RECORDED_DIR, filename), 'utf8')) as {
     gameId: string
@@ -32,5 +35,6 @@ export function replayRecordedScenario(
     gameId,
     gameView: gameView as GameView,
     onStartMatch: extras.onStartMatch ? (conn) => extras.onStartMatch!(conn, gameId) : undefined,
+    onRequest: extras.onRequest,
   })
 }

@@ -6,6 +6,7 @@ import { awaitImageUrl } from '../cards/cardImages'
 import Icon, { type IconName } from '../ui/Icon'
 import { useTranslation } from '../i18n'
 import FormattedText from './FormattedText'
+import { formatFeedTime } from './feedTime'
 import './ActionFeedCard.css'
 
 interface ActionFeedCardProps {
@@ -30,8 +31,9 @@ const TYPE_ICONS: Record<string, IconName> = {
 }
 
 export default function ActionFeedCard({ item, onHover }: ActionFeedCardProps) {
-  const { t } = useTranslation()
+  const { t, lang } = useTranslation()
   const [imgUrl, setImgUrl] = useState<string | null>(null)
+  const time = formatFeedTime(item.timestamp, lang)
   const icon: IconName = TYPE_ICONS[item.type] ?? 'info'
 
   useEffect(() => {
@@ -54,6 +56,7 @@ export default function ActionFeedCard({ item, onHover }: ActionFeedCardProps) {
           <Icon name={icon} size={12} /> {t('game','turn')} {item.amount} {item.playerName ? `· ${item.playerName}` : ''}
         </span>
         <span className="turn-line" />
+        <span className="action-time">{time}</span>
       </div>
     )
   }
@@ -104,6 +107,7 @@ export default function ActionFeedCard({ item, onHover }: ActionFeedCardProps) {
               {item.isMe ? t('game','you') : item.playerName}
             </span>
           )}
+          <span className="action-time">{time}</span>
           {/* Life / Damage badge */}
           {isDamage && item.amount !== undefined && (
             <span className="action-damage-badge">-{item.amount} <Icon name="heart" size={11} /></span>

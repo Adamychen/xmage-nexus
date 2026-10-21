@@ -19,7 +19,7 @@ export function useFeedItems(): ActionFeedItem[] {
       if (seenRaw.has(key)) continue
       seenRaw.add(key)
 
-      const parsed = parseGameEvent(entry.text, myPlayerName, `log-${entry.id ?? i}`)
+      const parsed = parseGameEvent(entry.text, myPlayerName, `log-${entry.id ?? i}`, entry.time)
       if (parsed) {
         items.push(toFeedItem(parsed, t))
       } else if (entry.text) {

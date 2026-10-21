@@ -28,6 +28,14 @@ describe('gameEventParser', () => {
     expect(cleanMageText(raw)).toBe('Player casts Lightning Bolt from Hand')
   })
 
+  it('keeps the id stable across re-parses of the same entry and stamps the given time', () => {
+    const a = parseGameEvent('Alice casts Lightning Bolt', 'Alice', 'log-7', 1234)
+    const b = parseGameEvent('Alice casts Lightning Bolt', 'Alice', 'log-7', 1234)
+    expect(a?.id).toBe('log-7')
+    expect(b?.id).toBe(a?.id)
+    expect(a?.timestamp).toBe(1234)
+  })
+
   it('parses real XMage turn events with life totals', () => {
     const res = parseGameEvent('Turn 1 Player1 (0 - 20)', 'Player1')
     expect(res).not.toBeNull()
