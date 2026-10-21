@@ -1,10 +1,8 @@
 import { fakeOnly } from './support/fake-mode'
-import { TABLE } from '../fixtures/table-names'
-import { DECK } from '../fixtures/deck-names'
 import { test, expect } from './fixtures'
 import { combatHumanBlockScenario } from '../fixtures/scenarios/combatHuman'
 import { withFakeServer } from './support/fake-backend'
-import { startGame } from './support/start-game'
+import { quickStartGame } from './support/start-game'
 
 fakeOnly()
 
@@ -13,11 +11,8 @@ const zOf = (page: import('@playwright/test').Page, sel: string) =>
 
 test('el menú de partida (⋯) manda sobre el dock y las flechas ceden con él abierto', { tag: '@combat' }, async ({ page }) => {
   await withFakeServer(() => combatHumanBlockScenario(), async () => {
-    await startGame(page, {
+    await quickStartGame(page, {
       prefix: 'gmo',
-      tableName: TABLE.combatHumanBlock,
-      deck: DECK.combatHuman,
-      simDeck: DECK.blockSim,
       skipCombat: true,
     })
 

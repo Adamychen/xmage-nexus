@@ -1,12 +1,13 @@
 import { fakeOnly } from './support/fake-mode'
-import { TABLE } from '../fixtures/table-names'
-import { DECK } from '../fixtures/deck-names'
 import { test, expect } from './fixtures'
 fakeOnly()
-import { startGame } from './support/start-game'
+import { quickStartGame } from './support/start-game'
+import { retryTimingSpecInCi } from './support/timing'
 import { withFakeServer } from './support/fake-backend'
 import { spellsScenario } from '../fixtures/scenarios/spells'
 import type { Page } from '@playwright/test'
+
+retryTimingSpecInCi()
 
 const svg = (w: number, h: number, fill: string, label: string) =>
   `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}"><rect width="100%" height="100%" fill="${fill}"/>` +
@@ -31,15 +32,13 @@ interface Sample {
   cropOpacity: number
 }
 
-test('an ability leaving a compact tile flies as its art crop, not the middle of the full card @flights', async ({ page }) => {
+test('an ability leaving a compact tile flies as its art crop, not the middle of the full card @flights', { tag: '@timing' }, async ({ page }) => {
   await stubCardArt(page)
   await withFakeServer(
     () => spellsScenario('blaze'),
     async () => {
-      const { pageErrors } = await startGame(page, {
+      const { pageErrors } = await quickStartGame(page, {
         prefix: 'flc',
-        tableName: TABLE.spellsBlaze,
-        deck: DECK.advanced,
         skipAsks: true,
       })
       await expect(page.locator('.game-board')).toBeVisible({ timeout: 20_000 })

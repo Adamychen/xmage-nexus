@@ -10,6 +10,9 @@ export default defineConfig(({ mode }) => {
     build: demo ? { outDir: 'dist-demo' } : undefined,
     server: {
       port: 5173,
+      watch: {
+        ignored: ['**/test-results*/**', '**/playwright-report/**', '**/e2e/shots/**', '**/dist/**', '**/dist-demo/**'],
+      },
       proxy: {
         '/ranking.json': {
           target: 'https://web.xmage-nexus.com',

@@ -267,10 +267,19 @@ game per test. Common libraries in `web/e2e/support/`
 `web/fixtures/scenarios/` (mini-engine `humanGame.ts`). Tags by
 domain: `@spells`, `@targeting`, `@combat`, `@fullflow`, `@board`, `@site` (scripts
 `test:e2e:spells|targeting|combat|fullflow|board|site`). Every spec runs in fake
-(no stack, ~9 min for all 312) and can run in real; the nightly real-mode job
-covers the five protocol-sensitive specs (`deckvalidation`, `multi-user`,
-`priority-stop-real`, `skips`, `full-flow`) plus the `verify` layer, not all 312.
+(no stack; ~440 tests, ~12 min locally with 4 workers, 4 shards in CI) and can run in real; the
+nightly real-mode job covers the five protocol-sensitive specs (`deckvalidation`, `multi-user`,
+`priority-stop-real`, `skips`, `full-flow`) plus the `verify` layer, not all of them.
 When touching `e2e/support/` or the scenarios, run the full fake + real suite.
+**Game specs start with `quickStartGame`** (`e2e/support/start-game.ts`): in fake mode the helper
+sends `startMatch` over its WS and the scenario answers START_GAME + GAME_INIT, skipping the
+create-table UI (~9 s → ~5 s per test); in real mode it is `startGame` unchanged. Use `startGame`
+only when the spec is about the table flow, needs `winsNeeded > 1`, or its scenario begins at
+createTable (draft, tournament). **Specs whose verdict depends on wall-clock timing or animation
+ordering carry the `@timing` tag** and `retryTimingSpecInCi()`: CI runs them in their own
+`e2e-timing` job and the shards run `--grep-invert @timing`. **Keep single tests short**: the
+suite is `fullyParallel`, so one 4-minute test (the old one-test gallery sweep) sets the floor of
+the whole run; split loops into blocks generated at describe level.
 **The helper does NOT answer the mulligan** (the web's auto-keep already does it;
 a second false breaks the test window).
 
@@ -294,8 +303,12 @@ for `mechanics.spec.ts`, so a fixture change must be checked against every spec 
 - **After touching `web`**: run `unit` and `typecheck` (and `build` if
   the build changed). After touching proxy Java: `java` + rebuild jar
   (`build.mjs proxy`) + restart proxy.
-- **Before declaring a task "done"**: the full suite (`node scripts/test.mjs`) with the stack up, **and the
-  remote CI green afterwards** (`gh run list -R Adamychen/xmage-nexus -L 5`). `Web client CI` once sat red on
+- **Before declaring a task "done"**: the layers the change touches — for `web/`, `unit` + `typecheck` and
+  `npm --prefix web run test:e2e:changed` (Playwright `--only-changed`: the specs your diff reaches through
+  their imports); the full fake e2e (`node scripts/test.mjs e2e`) when touching `e2e/support/`, `fixtures/`
+  or the FakeServer; the stack layers (`self-test`, `human-test`, `verify`) with the stack up when the proxy
+  or the protocol changed — **and the remote CI green afterwards** (`gh run list -R Adamychen/xmage-nexus -L 5`),
+  which runs the whole fake e2e sharded on every push. `Web client CI` once sat red on
   `master` for a week while the local suite was 9/9, because CI's Maven cache held old `org.mage` artifacts.
   If the fork is touched, publish `origin/nexus` first: CI and `release.yml` build from there.
 - **Restart the stack right before** (`node scripts/ctl.mjs restart all`): a server that accumulated orphan
@@ -340,7 +353,9 @@ for `mechanics.spec.ts`, so a fixture change must be checked against every spec 
 (test layers, coverage, roadmap phases, feature-parity matrix, anti-drift guards).
 
 - Generator: `scripts/gen-dashboard.mjs` (merges `site/content.json` + test artefacts).
-- CI orchestrator: `scripts/dashboard-ci.mjs` (unit+coverage, typecheck, build, fake-e2e, proxy java).
+- CI orchestrator: `scripts/dashboard-ci.mjs` (unit+coverage in one vitest run, typecheck, build, proxy java;
+  fake-e2e only on the nightly/dispatch runs — on push `DASHBOARD_SKIP_E2E=1` reports it `pending`, since the
+  same suite already runs sharded in `Web client CI`).
 - Red gate: `scripts/check-status.mjs` runs as the **last** Pages step and exits non-zero when any
   layer of `status.json` is `fail`. It runs after the deploy on purpose: the page publishes the
   truth and the run is red with it. Before 2026-10-10 every nightly step carried

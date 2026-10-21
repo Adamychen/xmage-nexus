@@ -24,7 +24,10 @@ node scripts/test.mjs [layer...]                        # unit coverage typechec
 After touching `web/`: run `unit` + `typecheck` (`build` if the build changed).
 After touching proxy Java: run `java` + `node scripts/build.mjs proxy` +
 `node scripts/ctl.mjs restart proxy`. Before declaring anything done, run the
-full suite with the stack up (`node scripts/test.mjs`). See `docs/testing.md`.
+layers your change touches (for `web/`: `unit`, `typecheck` and
+`npm --prefix web run test:e2e:changed`; the stack layers when the proxy or the
+protocol changed) and check that the remote CI is green: it runs the whole fake
+e2e sharded on every push. See `docs/testing.md`.
 
 ## Recipes
 

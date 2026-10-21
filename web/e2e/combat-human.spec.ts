@@ -1,6 +1,4 @@
 import { fakeOnly } from './support/fake-mode'
-import { TABLE } from '../fixtures/table-names'
-import { DECK } from '../fixtures/deck-names'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -9,7 +7,7 @@ fakeOnly()
 import type { Page } from '@playwright/test'
 import { combatHumanAttackScenario, combatHumanBlockScenario } from '../fixtures/scenarios/combatHuman'
 import { withFakeServer } from './support/fake-backend'
-import { startGame } from './support/start-game'
+import { quickStartGame } from './support/start-game'
 import {
   controlledPlayer,
   framesOf,
@@ -74,11 +72,8 @@ async function confirmMyAttackWindows(page: Page): Promise<SceneCombat> {
 test('combate humano: el humano declara atacantes por la UI y el daño baja la vida del Sim', { tag: '@combat' }, async ({ page }) => {
   fs.mkdirSync(SHOTS_DIR, { recursive: true })
   await withFakeServer(() => combatHumanAttackScenario(), async () => {
-    const { helper, pageErrors } = await startGame(page, {
+    const { helper, pageErrors } = await quickStartGame(page, {
       prefix: 'cba',
-      tableName: TABLE.combatHumanAttack,
-      deck: DECK.combatHuman,
-      simDeck: DECK.aiLands,
       skipCombat: true,
     })
 
@@ -136,11 +131,8 @@ test('combate humano: el humano declara atacantes por la UI y el daño baja la v
 test('combate humano: el humano bloquea por la UI y el ataque del Sim no hace daño', { tag: '@combat' }, async ({ page }) => {
   fs.mkdirSync(SHOTS_DIR, { recursive: true })
   await withFakeServer(() => combatHumanBlockScenario(), async () => {
-    const { helper, pageErrors } = await startGame(page, {
+    const { helper, pageErrors } = await quickStartGame(page, {
       prefix: 'cbb',
-      tableName: TABLE.combatHumanBlock,
-      deck: DECK.combatHuman,
-      simDeck: DECK.blockSim,
       skipCombat: true,
     })
 

@@ -1,8 +1,10 @@
 #!/usr/bin/env node
-// Orquesta las capas ligeras de CI, escribe marcadores y genera el dashboard.
-// Uso: node scripts/dashboard-ci.mjs
-// Capas: unit+coverage (vitest), typecheck, build, fake-e2e, mcp, proxy java.
-// Los resultados crudos se dejan en web/ para que gen-dashboard.mjs los consuma.
+// Runs the lightweight CI layers, writes markers and generates the dashboard.
+// Usage: node scripts/dashboard-ci.mjs
+// Layers: unit+coverage (vitest), typecheck, build, fake-e2e, mcp, proxy java.
+// Raw results are left in web/ so gen-dashboard.mjs can consume them.
+// DASHBOARD_SKIP_E2E=1 skips the fake e2e (set by pages.yml on push: web-ci.yml runs the suite
+// sharded on every push, and the nightly/dispatch Pages run executes it here).
 
 import fs from "node:fs";
 import path from "node:path";
@@ -18,7 +20,7 @@ function writeMarker(name, status) {
 }
 
 async function main() {
-  // 1. Unit + coverage (un solo run vitest que emite ambos artefactos)
+  // 1. Unit + coverage (a single vitest run emits both artifacts)
   run("npm", ["run", "test:coverage", "--", "--reporter=json", "--outputFile=test-results.json"], {
     cwd: webDir,
     timeoutMs: 600_000,
@@ -32,19 +34,23 @@ async function main() {
   const b = run("npm", ["run", "build"], { cwd: webDir, timeoutMs: 300_000 });
   writeMarker(".build.json", b.code === 0 ? "pass" : "fail");
 
-  // 4. Fake E2E (no requiere el stack XMage; vite levanta solo).
-  // El JSON reporter escribe su fichero vía env (no existe la flag --output-file).
-  const e2e = run("npx", ["playwright", "test", "--reporter=json"], {
-    cwd: webDir,
-    timeoutMs: 1_800_000,
-    env: { PLAYWRIGHT_JSON_OUTPUT_NAME: "e2e-results.json" },
-  });
-  if (e2e.code !== 0) {
-    console.log("e2e stdout (tail):", e2e.stdout.slice(-2000));
-    console.log("e2e stderr (tail):", e2e.stderr.slice(-2000));
+  // 4. Fake E2E (no XMage stack needed; vite starts on its own).
+  // The JSON reporter writes its file via env (there is no --output-file flag).
+  if (process.env.DASHBOARD_SKIP_E2E === "1") {
+    console.log("[dashboard-ci] fake e2e skipped (DASHBOARD_SKIP_E2E=1): runs in Web client CI and nightly");
+  } else {
+    const e2e = run("npx", ["playwright", "test", "--reporter=json"], {
+      cwd: webDir,
+      timeoutMs: 1_800_000,
+      env: { PLAYWRIGHT_JSON_OUTPUT_NAME: "e2e-results.json" },
+    });
+    if (e2e.code !== 0) {
+      console.log("e2e stdout (tail):", e2e.stdout.slice(-2000));
+      console.log("e2e stderr (tail):", e2e.stderr.slice(-2000));
+    }
   }
 
-  // 5. MCP (typecheck + tests herméticos contra el FixtureServer, sin Java)
+  // 5. MCP (typecheck + hermetic tests against the FixtureServer, no Java)
   const mcpTc = run("npm", ["run", "typecheck"], { cwd: mcpDir, timeoutMs: 300_000 });
   const mcpTest = run("npm", ["run", "test"], { cwd: mcpDir, timeoutMs: 600_000 });
   if (mcpTc.code !== 0) console.log("mcp typecheck stderr (tail):", mcpTc.stderr.slice(-2000));
@@ -54,8 +60,8 @@ async function main() {
   }
   writeMarker(".mcp-tests.json", mcpTc.code === 0 && mcpTest.code === 0 ? "pass" : "fail");
 
-  // 6. Proxy (java) — necesita los artefactos org.mage en ~/.m2 (release del
-  //    fork descargada en CI, build local en máquina de desarrollo)
+  // 6. Proxy (java). Needs the org.mage artifacts in ~/.m2 (the fork release downloaded in CI,
+  //    a local build on a development machine)
   ensureMageArtifacts();
   const java = run(binName("mvn"), ["-f", "Mage.Proxy/pom.xml", "test"], { timeoutMs: 900_000 });
   if (java.code !== 0) {
@@ -63,7 +69,7 @@ async function main() {
     console.log("java stderr (tail):", java.stderr.slice(-2000));
   }
 
-  // 7. Generar status.json
+  // 7. Generate status.json
   build();
 }
 

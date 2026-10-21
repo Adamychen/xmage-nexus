@@ -1,8 +1,7 @@
-import { TABLE } from '../fixtures/table-names'
 import { expect, test } from './fixtures'
 import { blockLocalizedEnrich, fakeOnly } from './support/fake-mode'
 import { withFakeServer } from './support/fake-backend'
-import { startGame } from './support/start-game'
+import { quickStartGame } from './support/start-game'
 import { stackPriorityScenario } from '../fixtures/scenarios/stackPriority'
 import { SIM_PLAYER_ID } from '../fixtures/humanGameConstants'
 fakeOnly()
@@ -13,9 +12,8 @@ test.describe('Pila, Disparos y Prioridad Avanzada (Bloque B)', () => {
 
     await withFakeServer(() => stackPriorityScenario(), async () => {
       await blockLocalizedEnrich(page)
-      const { pageErrors, helper } = await startGame(page, {
+      const { pageErrors, helper } = await quickStartGame(page, {
         prefix: 'stk',
-        tableName: TABLE.stackPriority,
       })
 
       const board = page.locator('.game-board')

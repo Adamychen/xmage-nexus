@@ -73,6 +73,5 @@ export class FakeServer {
         resolve()
       })
     })
-    await new Promise((r) => setTimeout(r, 500))
   }
 }

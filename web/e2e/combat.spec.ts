@@ -3,7 +3,7 @@ import { DECK } from '../fixtures/deck-names'
 import { test, expect } from './fixtures'
 import type { Page } from '@playwright/test'
 import { controlledPlayer, framesOf, lastGameView, opponentBattlefield, parseFrames } from './support/frames'
-import { startGame } from './support/start-game'
+import { quickStartGame } from './support/start-game'
 import { combatScenario } from '../fixtures/scenarios/combat'
 import { withFakeServer } from './support/fake-backend'
 import { retryTimingSpecInCi } from './support/timing'
@@ -51,9 +51,9 @@ function assertCombat(seen: { goblin: boolean; attack: boolean; damaged: boolean
   expect(seen.tapped, 'el atacante debería verse girado (clase tapped en su CardSlot) durante el combate').toBeTruthy()
 }
 
-test('combate determinista: el Sim lanza una criatura, ataca con todo y el daño baja la vida', { tag: '@combat' }, async ({ page }) => {
+test('combate determinista: el Sim lanza una criatura, ataca con todo y el daño baja la vida', { tag: ['@combat', '@timing'] }, async ({ page }) => {
   await withFakeServer(() => combatScenario(), async () => {
-    const { frames, pageErrors } = await startGame(page, {
+    const { frames, pageErrors } = await quickStartGame(page, {
       prefix: 'cb',
       tableName: TABLE.combat,
       // mazo humano solo tierras: la partida no avanza sola (nada que lanzar) y el

@@ -1,11 +1,10 @@
 import { test, expect } from '@playwright/test'
 import { fakeOnly } from './support/fake-mode'
 import { withFakeServer } from './support/fake-backend'
-import { login, startGame } from './support/start-game'
+import { login, quickStartGame } from './support/start-game'
 import { makeBaseScenario } from '../fixtures/fake'
 import { playerGameView } from '../src/__fixtures__/gameViews'
-import { DECK } from '../fixtures/deck-names'
-import { replayRecordedScenario, REPLAY_TABLE_NAME } from '../fixtures/scenarios/replay-recorded'
+import { replayRecordedScenario } from '../fixtures/scenarios/replay-recorded'
 
 fakeOnly()
 
@@ -62,10 +61,8 @@ test.describe('UI zoom (browser-like)', () => {
           JSON.stringify({ sleeveId: 'classic', boardLayout: 'standard', uiScale: 1.5, cjkBoost: false }),
         )
       })
-      const { pageErrors } = await startGame(page, {
+      const { pageErrors } = await quickStartGame(page, {
         prefix: 'zm',
-        tableName: REPLAY_TABLE_NAME,
-        deck: DECK.advanced,
       })
 
       expect(pageErrors).toEqual([])

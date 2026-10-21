@@ -1,15 +1,14 @@
-import { TABLE } from '../fixtures/table-names'
 import { test, expect } from './fixtures'
 import { fakeOnly } from './support/fake-mode'
 import { withFakeServer } from './support/fake-backend'
-import { startGame } from './support/start-game'
+import { quickStartGame } from './support/start-game'
 import { stackTargetScenario } from '../fixtures/scenarios/stackTarget'
 fakeOnly()
 
 test.describe('Targeting a spell on the stack', () => {
   test('a stack spell can be chosen as a target, even after closing the drawer or switching tabs @fullflow @stack-target', async ({ page }) => {
     await withFakeServer(stackTargetScenario, async () => {
-      const { pageErrors } = await startGame(page, { prefix: 'st', tableName: TABLE.stackTarget })
+      const { pageErrors } = await quickStartGame(page, { prefix: 'st' })
 
       const drawer = page.locator('[data-testid="game-drawer"]')
       const stackTab = page.locator('[data-testid="drawer-tab-stack"]')

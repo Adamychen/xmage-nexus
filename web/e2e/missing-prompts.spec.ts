@@ -1,11 +1,10 @@
 import { fakeOnly } from './support/fake-mode'
-import { TABLE } from '../fixtures/table-names'
 import { test, expect } from './fixtures'
 fakeOnly()
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { startGame } from './support/start-game'
+import { quickStartGame } from './support/start-game'
 import { withFakeServer } from './support/fake-backend'
 import { missingPromptsScenario } from '../fixtures/scenarios/missingPrompts'
 import { SIM_NAME } from '../fixtures/humanGameConstants'
@@ -18,9 +17,8 @@ test('prompts faltantes del servidor: SELECT_PLAYER, CHOOSE_STRING (lista+libre)
   fs.mkdirSync(SHOTS_DIR, { recursive: true })
 
   await withFakeServer(() => missingPromptsScenario(), async () => {
-    const { pageErrors } = await startGame(page, {
+    const { pageErrors } = await quickStartGame(page, {
       prefix: 'pr',
-      tableName: TABLE.missingPrompts,
       skipAsks: true,
     })
 

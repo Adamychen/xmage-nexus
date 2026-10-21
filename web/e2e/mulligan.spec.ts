@@ -1,6 +1,4 @@
 import { fakeOnly } from './support/fake-mode'
-import { TABLE } from '../fixtures/table-names'
-import { DECK } from '../fixtures/deck-names'
 /**
  * Mulligan (Keep + Mulligan London): con auto-keep desactivado, la ventana de
  * mulligan (FeedbackDialog con GAME_ASK) debe aparecer y poderse ejercitar.
@@ -17,7 +15,7 @@ import { test, expect } from './fixtures'
 fakeOnly()
 import { mulliganScenario, MULLIGAN_BOTTOM_COUNT, MULLIGAN_HAND_IDS } from '../fixtures/scenarios/mulligan'
 import { withFakeServer } from './support/fake-backend'
-import { startGame } from './support/start-game'
+import { quickStartGame } from './support/start-game'
 import { framesOf, parseFrames, parseSent, sentOf } from './support/frames'
 
 const SHOTS_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), 'shots')
@@ -25,11 +23,8 @@ const SHOTS_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), 'shots
 test('mulligan: la ventana aparece y "Keep hand" arranca la partida', { tag: '@fullflow' }, async ({ page }) => {
   fs.mkdirSync(SHOTS_DIR, { recursive: true })
   await withFakeServer(() => mulliganScenario(), async () => {
-    const { pageErrors } = await startGame(page, {
+    const { pageErrors } = await quickStartGame(page, {
       prefix: 'mull',
-      tableName: TABLE.mulligan,
-      deck: DECK.lands,
-      simDeck: DECK.aiLands,
       autoKeepMulligan: false,
     })
 
@@ -73,11 +68,8 @@ test('mulligan: la ventana aparece y "Keep hand" arranca la partida', { tag: '@f
 
 test('mulligan: "Mulligan" abre el target de London (poner carta al fondo)', { tag: '@fullflow' }, async ({ page }) => {
   await withFakeServer(() => mulliganScenario(), async () => {
-    const { pageErrors } = await startGame(page, {
+    const { pageErrors } = await quickStartGame(page, {
       prefix: 'mull2',
-      tableName: TABLE.mulligan,
-      deck: DECK.lands,
-      simDeck: DECK.aiLands,
       autoKeepMulligan: false,
     })
 
@@ -111,11 +103,8 @@ test('mulligan: "Mulligan" abre el target de London (poner carta al fondo)', { t
 
 test('mulligan: la ventana ofrece "Conceder" y confirma el envío de CONCEDE', { tag: '@fullflow' }, async ({ page }) => {
   await withFakeServer(() => mulliganScenario(), async () => {
-    const { pageErrors } = await startGame(page, {
+    const { pageErrors } = await quickStartGame(page, {
       prefix: 'mull3',
-      tableName: TABLE.mulligan,
-      deck: DECK.lands,
-      simDeck: DECK.aiLands,
       autoKeepMulligan: false,
     })
 

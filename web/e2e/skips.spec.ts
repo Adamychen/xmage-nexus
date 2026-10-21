@@ -17,7 +17,7 @@ import { FAKE_MODE } from './dual'
 import type { Page } from '@playwright/test'
 import { skipsScenario } from '../fixtures/scenarios/skips'
 import { withFakeServer } from './support/fake-backend'
-import { startGame } from './support/start-game'
+import { quickStartGame } from './support/start-game'
 import {
   parseSent,
   sentOf,
@@ -62,7 +62,7 @@ async function openPassMenu(page: Page) {
 test('skips: teclas F + menú ▾ envían PASS_PRIORITY_* y marcan el skip activo', { tag: '@fullflow' }, async ({ page }) => {
   test.setTimeout(FAKE_MODE ? 60_000 : 240_000)
   await withFakeServer(() => skipsScenario(), async () => {
-    const { pageErrors, frames: sessionFrames, helper: sessionHelper } = await startGame(page, {
+    const { pageErrors, frames: sessionFrames, helper: sessionHelper } = await quickStartGame(page, {
       prefix: 'skips',
       tableName: TABLE.skips,
       ...(FAKE_MODE ? { deck: DECK.lands, simDeck: DECK.aiLands } : {}),

@@ -1,10 +1,8 @@
 import { test, expect } from './fixtures'
 import { fakeOnly } from './support/fake-mode'
-import { startGame } from './support/start-game'
+import { quickStartGame } from './support/start-game'
 import { withFakeServer } from './support/fake-backend'
 import { triggerOrderScenario, TRIGGER_ACTIONS, TRIGGER_PICKS } from '../fixtures/scenarios/triggerOrder'
-import { TABLE } from '../fixtures/table-names'
-import { DECK } from '../fixtures/deck-names'
 fakeOnly()
 
 const WARDEN = '11111111-1111-1111-1111-111111111111'
@@ -13,10 +11,8 @@ const ARTIST = '22222222-2222-2222-2222-222222222222'
 test.describe('Trigger order dialog', { tag: '@triggers' }, () => {
   test('renders one row per trigger and picks them one by one', async ({ page }) => {
     await withFakeServer(triggerOrderScenario, async () => {
-      const { pageErrors } = await startGame(page, {
+      const { pageErrors } = await quickStartGame(page, {
         prefix: 'trg',
-        tableName: TABLE.triggerOrder,
-        deck: DECK.advanced,
         skipAsks: true,
       })
       expect(pageErrors).toEqual([])
@@ -38,10 +34,8 @@ test.describe('Trigger order dialog', { tag: '@triggers' }, () => {
 
   test('apply chains the whole order (bottom of the stack first)', async ({ page }) => {
     await withFakeServer(triggerOrderScenario, async () => {
-      const { pageErrors } = await startGame(page, {
+      const { pageErrors } = await quickStartGame(page, {
         prefix: 'trg',
-        tableName: TABLE.triggerOrder,
-        deck: DECK.advanced,
         skipAsks: true,
       })
       expect(pageErrors).toEqual([])
@@ -61,10 +55,8 @@ test.describe('Trigger order dialog', { tag: '@triggers' }, () => {
   test('remembering "always first" does not place the trigger', async ({ page }) => {
     TRIGGER_ACTIONS.length = 0
     await withFakeServer(triggerOrderScenario, async () => {
-      const { pageErrors } = await startGame(page, {
+      const { pageErrors } = await quickStartGame(page, {
         prefix: 'trg',
-        tableName: TABLE.triggerOrder,
-        deck: DECK.advanced,
         skipAsks: true,
       })
       expect(pageErrors).toEqual([])

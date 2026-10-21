@@ -1,19 +1,15 @@
 import { test, expect } from './fixtures'
 import { fakeOnly } from './support/fake-mode'
-import { startGame } from './support/start-game'
+import { quickStartGame } from './support/start-game'
 import { withFakeServer } from './support/fake-backend'
 import { autoAnswersScenario } from '../fixtures/scenarios/autoAnswers'
-import { TABLE } from '../fixtures/table-names'
-import { DECK } from '../fixtures/deck-names'
 fakeOnly()
 
 test.describe('Auto-answers', { tag: '@autoanswers' }, () => {
   test('remember checkbox auto-answers the repeat and menu forgets it', async ({ page }) => {
     await withFakeServer(autoAnswersScenario, async () => {
-      const { pageErrors } = await startGame(page, {
+      const { pageErrors } = await quickStartGame(page, {
         prefix: 'aa',
-        tableName: TABLE.autoAnswers,
-        deck: DECK.advanced,
         skipAsks: true,
       })
       expect(pageErrors).toEqual([])

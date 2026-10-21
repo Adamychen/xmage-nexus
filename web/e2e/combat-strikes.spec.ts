@@ -8,7 +8,7 @@ import { retryTimingSpecInCi } from './support/timing'
 
 retryTimingSpecInCi()
 
-test('combat strikes: attackers lunge when combat damage resolves, not when they are declared', { tag: '@combat' }, async ({ page }) => {
+test('combat strikes: attackers lunge when combat damage resolves, not when they are declared', { tag: ['@combat', '@timing'] }, async ({ page }) => {
   await page.addInitScript(() => {
     const w = window as unknown as { __strikeLog: Array<{ step: string; ghosts: number }>; __combatOrder: string[] }
     w.__strikeLog = []
@@ -53,12 +53,16 @@ test('combat strikes: attackers lunge when combat damage resolves, not when they
     const early = log.filter((e) => e.step === 'DECLARE_ATTACKERS' || e.step === 'DECLARE_BLOCKERS')
     expect(early, `strikes must not start before damage: ${JSON.stringify(log)}`).toEqual([])
 
-    await expect.poll(() => page.evaluate(() => (window as unknown as { __combatOrder: string[] }).__combatOrder.includes('life')), { timeout: 5_000 }).toBe(true)
+    await expect.poll(() => page.evaluate(() => {
+      const order = (window as unknown as { __combatOrder: string[] }).__combatOrder
+      return order.includes('hit') && order.includes('life')
+    }), { timeout: 5_000 }).toBe(true)
     const order = await page.evaluate(() => (window as unknown as { __combatOrder: string[] }).__combatOrder)
     expect(order.indexOf('hit'), `life must drop on the hit, not before the lunge: ${order.join(',')}`).toBeGreaterThanOrEqual(0)
     expect(order.indexOf('hit'), `life must drop on the hit, not before the lunge: ${order.join(',')}`).toBeLessThan(order.indexOf('life'))
 
-    await expect.poll(() => page.locator('.combat-strike-ghost').count(), { timeout: 5_000 }).toBe(0)
+    const ghosts = await page.locator('.combat-strike-ghost').elementHandles()
+    await expect.poll(() => Promise.all(ghosts.map((g) => g.evaluate((n) => n.isConnected))).then((c) => c.filter(Boolean).length), { timeout: 5_000 }).toBe(0)
     expect(pageErrors, `pageerrors: ${pageErrors.map(String).join(' | ')}`).toEqual([])
   })
 })

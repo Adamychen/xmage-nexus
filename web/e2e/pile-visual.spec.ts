@@ -1,10 +1,8 @@
 import { test, expect } from './fixtures'
 import { blockLocalizedEnrich, fakeOnly } from './support/fake-mode'
-import { startGame } from './support/start-game'
+import { quickStartGame } from './support/start-game'
 import { withFakeServer } from './support/fake-backend'
 import { pileVisualScenario } from '../fixtures/scenarios/pileVisual'
-import { TABLE } from '../fixtures/table-names'
-import { DECK } from '../fixtures/deck-names'
 import { parseSent, sentOf } from './support/frames'
 fakeOnly()
 
@@ -12,10 +10,8 @@ test.describe('PileDialog visual (U14 PickPile)', { tag: '@feedback' }, () => {
   test('renders two card piles side by side and choosing sends boolean', async ({ page }) => {
     await withFakeServer(pileVisualScenario, async () => {
       await blockLocalizedEnrich(page)
-      const { pageErrors } = await startGame(page, {
+      const { pageErrors } = await quickStartGame(page, {
         prefix: 'pilevis',
-        tableName: TABLE.pileVisual,
-        deck: DECK.advanced,
         skipAsks: true,
       })
       expect(pageErrors).toEqual([])

@@ -1,11 +1,9 @@
-import { TABLE } from '../fixtures/table-names'
-import { DECK } from '../fixtures/deck-names'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { test, expect } from './fixtures'
 import { blockLocalizedEnrich, fakeOnly } from './support/fake-mode'
-import { startGame } from './support/start-game'
+import { quickStartGame } from './support/start-game'
 import { openDrawerTab } from './support/game-screen'
 import { withFakeServer } from './support/fake-backend'
 import { dismissInfoWindows } from './support/info-windows'
@@ -18,10 +16,8 @@ test.describe('Mechanics & Reminder Tray Widget', { tag: '@mechanics' }, () => {
   test('sagas, planeswalkers and battles dock in the marquee dock @mechanics', async ({ page }) => {
     await withFakeServer(mechanicsScenario, async () => {
       await blockLocalizedEnrich(page)
-      const { pageErrors } = await startGame(page, {
+      const { pageErrors } = await quickStartGame(page, {
         prefix: 'mechq',
-        tableName: TABLE.mechanics,
-        deck: DECK.advanced,
       })
 
       const myZone = page.locator('.player-zone:not(.mirrored)')
@@ -42,10 +38,8 @@ test.describe('Mechanics & Reminder Tray Widget', { tag: '@mechanics' }, () => {
 
   test('mana pool is inline (never a dropdown) and hides the zero colours @mechanics', async ({ page }) => {
     await withFakeServer(mechanicsScenario, async () => {
-      const { pageErrors } = await startGame(page, {
+      const { pageErrors } = await quickStartGame(page, {
         prefix: 'mechm',
-        tableName: TABLE.mechanics,
-        deck: DECK.advanced,
       })
 
       const myZone = page.locator('.player-zone:not(.mirrored)')
@@ -73,10 +67,8 @@ test.describe('Mechanics & Reminder Tray Widget', { tag: '@mechanics' }, () => {
     fs.mkdirSync(SHOTS_DIR, { recursive: true })
 
     await withFakeServer(mechanicsScenario, async () => {
-      const { pageErrors } = await startGame(page, {
+      const { pageErrors } = await quickStartGame(page, {
         prefix: 'mech',
-        tableName: TABLE.mechanics,
-        deck: DECK.advanced,
       })
 
       expect(pageErrors).toEqual([])

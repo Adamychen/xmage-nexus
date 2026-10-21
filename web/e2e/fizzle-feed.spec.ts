@@ -1,8 +1,7 @@
-import { DECK } from '../fixtures/deck-names'
 import { test, expect } from './fixtures'
 import { fakeOnly } from './support/fake-mode'
 import { withFakeServer } from './support/fake-backend'
-import { startGame } from './support/start-game'
+import { quickStartGame } from './support/start-game'
 import { openDrawerTab } from './support/game-screen'
 import { replayRecordedScenario, REPLAY_TABLE_NAME } from '../fixtures/scenarios/replay-recorded'
 
@@ -37,10 +36,8 @@ test.describe('Fizzle feed (aviso real del motor)', { tag: '@recorded' }, () => 
           },
         }),
       async () => {
-        const { pageErrors } = await startGame(page, {
+        const { pageErrors } = await quickStartGame(page, {
           prefix: 'fizzle',
-          tableName: REPLAY_TABLE_NAME,
-          deck: DECK.advanced,
         })
 
         await openDrawerTab(page, 'log')

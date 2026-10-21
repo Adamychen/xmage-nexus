@@ -7,7 +7,7 @@ const FAKE_MODE = process.env.E2E_BACKEND !== 'real'
 // e2e/support/fake-backend.ts), así que los tests son independientes entre sí y
 // se pueden repartir entre workers. real: 1 worker serial (el stack es único).
 const E2E_WORKERS =
-  Number(process.env.E2E_WORKERS) || Math.max(1, Math.min(4, cpus().length - 1))
+  Number(process.env.E2E_WORKERS) || Math.max(1, Math.min(6, cpus().length - 1))
 
 // Puerto DEDICADO del dev server del e2e fake (misma lección que el puerto
 // propio del FixtureServer):
@@ -16,7 +16,7 @@ const E2E_WORKERS =
 // contra su gráfico de módulos (HMR stale, UI vieja) fallando de forma
 // intermitente. Con puerto propio + strictPort, el e2e siempre parte de un
 // server limpio con el código actual. Real sigue en 5173 (el vite del stack).
-const E2E_PORT = FAKE_MODE ? 5175 : 5173
+const E2E_PORT = FAKE_MODE ? Number(process.env.E2E_PORT) || 5175 : 5173
 
 // Matriz navegador × resolución (plan4 §8.1): por defecto Chromium 1600×900
 // (el loop diario no cambia). WebKit = motor real de Tauri en macOS.
@@ -39,7 +39,7 @@ export default defineConfig({
   // en modo fake (por defecto) el e2e no depende del stack: vite se levanta solo
   webServer: FAKE_MODE
     ? {
-        command: 'npm run dev -- --port 5175 --strictPort',
+        command: `npm run dev -- --port ${E2E_PORT} --strictPort`,
         url: `http://localhost:${E2E_PORT}`,
         reuseExistingServer: false,
         timeout: 60_000,

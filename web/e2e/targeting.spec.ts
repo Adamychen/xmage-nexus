@@ -15,7 +15,7 @@ import {
   waitFrame,
 } from './support/frames'
 import { playableInSceneByName, waitScene } from './support/scene'
-import { startGame } from './support/start-game'
+import { quickStartGame } from './support/start-game'
 import { targetingScenario } from '../fixtures/scenarios/targeting'
 import { withFakeServer } from './support/fake-backend'
 import { feedbackDialog, payMana } from './support/game-screen'
@@ -24,7 +24,7 @@ const SHOTS_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), 'shots
 
 test('targeting visual: humano lanza Lightning Bolt y el tablero resalta objetivos (pulso + línea)', { tag: '@targeting' }, async ({ page }) => {
   await withFakeServer(() => targetingScenario(), async () => {
-  const { frames, pageErrors, helper } = await startGame(page, { prefix: 'tg', tableName: 'targeting-test' })
+  const { frames, pageErrors, helper } = await quickStartGame(page, { prefix: 'tg' })
 
   // (a) esperar la mano inicial (mulligan auto-keep); el mazo automático es
   //     determinista (sin barajar): 4 Mountain + 3 Bolt en la mano inicial

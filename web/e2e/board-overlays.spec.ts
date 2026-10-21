@@ -1,11 +1,9 @@
 import { fakeOnly } from './support/fake-mode'
 import { test, expect } from './fixtures'
-import { startGame } from './support/start-game'
+import { quickStartGame } from './support/start-game'
 import { withFakeServer } from './support/fake-backend'
 import { allInteractionsScenario } from '../fixtures/scenarios/allInteractions'
 import { cardOverlaysScenario, OV_BASE_BEARS, OV_BUFFED_MYSTIC, OV_SICK_TAPPED, OV_OPP_BEAST, OV_TOKEN } from '../fixtures/scenarios/cardOverlays'
-import { TABLE } from '../fixtures/table-names'
-import { DECK } from '../fixtures/deck-names'
 import type { Page } from '@playwright/test'
 
 fakeOnly()
@@ -48,11 +46,8 @@ async function seedAppearance(page: Page, patch: Record<string, unknown>) {
  *  pins `ptBadgeMode` only means something if the default was showing badges). */
 async function openOverlayBoard(page: Page) {
   const session = await withFakeServer(cardOverlaysScenario, async () => {
-    const s = await startGame(page, {
+    const s = await quickStartGame(page, {
       prefix: 'ovl',
-      tableName: TABLE.cardOverlays,
-      deck: DECK.advanced,
-      simDeck: DECK.advanced,
       skipAsks: true,
     })
     await expect(page.locator('.player-zone .card-slot').first()).toBeVisible({ timeout: 30_000 })
@@ -68,11 +63,8 @@ test.describe('capas sobre la carta @board', () => {
   test('los pips de coste de la mano respetan showHandCost', async ({ page }) => {
     await seedAppearance(page, { showHandCost: false })
     await withFakeServer(() => allInteractionsScenario(), async () => {
-      const { pageErrors } = await startGame(page, {
+      const { pageErrors } = await quickStartGame(page, {
         prefix: 'ovl',
-        tableName: TABLE.allInteractions,
-        deck: DECK.advanced,
-        simDeck: DECK.advanced,
         skipAsks: true,
       })
       const pips = page.locator('.hand-bar .hand-card-cost')

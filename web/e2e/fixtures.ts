@@ -58,13 +58,14 @@ export const test = base.extend<{ fakeServer: FakeServer | null; autoShot: void 
     },
     { scope: 'test' },
   ],
-  // Fixture automático: captura la pantalla final de CADA test para verificación
-  // visual (y un -FAILED si falla). `auto: true` lo ejecuta en el teardown de
-  // todos los tests de este tipo (y de los que lo extienden, p.ej. chatTest),
-  // de forma fiable en corridas individuales y combinadas.
+  // Automatic fixture: captures the final screen of EVERY test for visual review
+  // (and a -FAILED one when it fails). `auto: true` runs it in the teardown of every
+  // test of this type (and of those extending it, e.g. chatTest). In CI only the
+  // failures are captured: a fullPage shot costs ~0.8 s per test.
   autoShot: [
     async ({ page }, use, testInfo) => {
       await use()
+      if (process.env.CI && testInfo.status !== 'failed') return
       try {
         await fs.promises.mkdir(SHOTS_DIR, { recursive: true })
         const fileStem = path.basename(testInfo.file || 'test', '.spec.ts')

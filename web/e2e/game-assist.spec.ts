@@ -1,7 +1,6 @@
 import { fakeOnly } from './support/fake-mode'
 import { test, expect } from './fixtures'
-import { DECK } from '../fixtures/deck-names'
-import { startGame } from './support/start-game'
+import { quickStartGame } from './support/start-game'
 import { withFakeServer } from './support/fake-backend'
 import { makeBaseScenario } from '../fixtures/fake'
 import { makeCard, makeGameView, makePlayer, makePermanent } from '../src/__fixtures__/gameViews'
@@ -86,7 +85,7 @@ async function playOpponentTurn(page: Page) {
 
 test('turn recap: strip summarises the opponent turn and marks new permanents @gamefeel', async ({ page }) => {
   await withFakeServer(recapScenario, async () => {
-    const { pageErrors } = await startGame(page, { prefix: 'recap', tableName: RECAP_TABLE, deck: DECK.advanced, skipAsks: true })
+    const { pageErrors } = await quickStartGame(page, { prefix: 'recap', skipAsks: true })
     await expect(page.locator('.game-board')).toBeVisible({ timeout: 20_000 })
 
     await playOpponentTurn(page)
@@ -110,7 +109,7 @@ test('turn recap: strip summarises the opponent turn and marks new permanents @g
 
 test('waiting state: the action button names who holds priority and counts up @gamefeel', async ({ page }) => {
   await withFakeServer(recapScenario, async () => {
-    const { pageErrors } = await startGame(page, { prefix: 'wait', tableName: RECAP_TABLE, deck: DECK.advanced, skipAsks: true })
+    const { pageErrors } = await quickStartGame(page, { prefix: 'wait', skipAsks: true })
     await expect(page.locator('.game-board')).toBeVisible({ timeout: 20_000 })
 
     await push(page, recapView({ mine: false, turn: 2 }))
@@ -129,7 +128,7 @@ test('waiting state: the action button names who holds priority and counts up @g
 
 test('P/T tint, summoning sickness and entered-this-turn glow @gamefeel', async ({ page }) => {
   await withFakeServer(recapScenario, async () => {
-    const { pageErrors } = await startGame(page, { prefix: 'ptm', tableName: RECAP_TABLE, deck: DECK.advanced, skipAsks: true })
+    const { pageErrors } = await quickStartGame(page, { prefix: 'ptm', skipAsks: true })
     await expect(page.locator('.game-board')).toBeVisible({ timeout: 20_000 })
 
     const base = (v: number) => ({ baseValue: v, modifiedBaseValue: v, boostedValue: v, cardValue: String(v) }) as never
@@ -158,7 +157,7 @@ test('P/T tint, summoning sickness and entered-this-turn glow @gamefeel', async 
 
 test('attention alerts: hidden tab gets a title badge on my turn, cleared when visible @gamefeel', async ({ page }) => {
   await withFakeServer(recapScenario, async () => {
-    const { pageErrors } = await startGame(page, { prefix: 'attn', tableName: RECAP_TABLE, deck: DECK.advanced, skipAsks: true })
+    const { pageErrors } = await quickStartGame(page, { prefix: 'attn', skipAsks: true })
     await expect(page.locator('.game-board')).toBeVisible({ timeout: 20_000 })
     const baseTitle = await page.title()
 
@@ -181,7 +180,7 @@ test('attention alerts: hidden tab gets a title badge on my turn, cleared when v
 
 test('smart stops: passes mana-only windows and stops when a spell is castable @gamefeel', async ({ page }) => {
   await withFakeServer(recapScenario, async () => {
-    const { pageErrors } = await startGame(page, { prefix: 'smart', tableName: RECAP_TABLE, deck: DECK.advanced, skipAsks: true })
+    const { pageErrors } = await quickStartGame(page, { prefix: 'smart', skipAsks: true })
     await expect(page.locator('.game-board')).toBeVisible({ timeout: 20_000 })
 
     await page.locator('[data-testid="pass-split-toggle"]').click()

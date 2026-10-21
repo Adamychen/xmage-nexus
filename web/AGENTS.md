@@ -23,8 +23,13 @@ proxy over a JSON WebSocket and contains **no XMage/Java code**.
   **FakeServer** (`web/fixtures/fake.ts`): a Node WS server that speaks the real
   protocol derived from `web/src/net/types.ts`. No proxy, no server, no flakes.
   Dynamic port per test (`FakeServer.start(0)` + `setFakePort`; 8788 is the Java
-  proxy's HTTP test page — never use it here), `fullyParallel` with up to 4
-  workers (`E2E_WORKERS` to override).
+  proxy's HTTP test page — never use it here), `fullyParallel` with up to 6
+  workers (`E2E_WORKERS` to override; ~10.5 min for the whole suite on 12 cores).
+  Vite listens on 5175 unless `E2E_PORT` is set, so two runs can share the tree.
+- `npm run test:e2e:changed` — only the specs the diff against `origin/master` reaches
+  (Playwright `--only-changed`): the default loop while iterating.
+- `npm run test:e2e:timing` — the `@timing` lane (wall-clock / animation-order specs; CI
+  runs it as its own job with retries and excludes it from the shards).
 - `E2E_BACKEND=real npm run test:e2e:real` — against a live stack (needs the
   proxy running; see `Mage.Proxy/AGENTS.md`). Use only as the anti-drift net.
 - `npm run build:demo` — static in-browser demo (`vite build --mode demo` → `dist-demo/`,

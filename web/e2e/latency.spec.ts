@@ -41,6 +41,9 @@ import {
   waitFrameAt,
 } from './support/frames'
 import { waitScene } from './support/scene'
+import { retryTimingSpecInCi } from './support/timing'
+
+retryTimingSpecInCi()
 
 const ACK_BUDGET_MS = 100
 const WAIT_STATE_MS = 500
@@ -70,13 +73,14 @@ async function echoAfter(page: Page, clickName: string, timeoutMs = LATENCY_ECHO
   }
 }
 
-test.describe('Latencia percibida (acuse <100ms + eco con retardo)', { tag: '@latency' }, () => {
+test.describe('Latencia percibida (acuse <100ms + eco con retardo)', { tag: ['@latency', '@timing'] }, () => {
   // The artificial echo delays EVERY FixtureServer event, so the scenario slows
   // down when other workers share the runner: serial inside the file and
   // generous margins. The budget asserted is the ACK's (<100 ms); the echo check
   // only asks that the round trip be real (> 0.6 x the delay), which is why each
   // measurement starts with `freezeAndDrain` (one actor per window, drained
-  // channel) and why this file keeps CI retries off again.
+  // channel). CI retries the file (`retryTimingSpecInCi`): the ack is a wall-clock
+  // budget that a loaded runner can miss once.
   test.describe.configure({ mode: 'serial', timeout: 240_000 })
 
   test('pasar prioridad: ack en el botón y espera explícita mientras el eco viaja', async ({ page }) => {

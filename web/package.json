@@ -23,6 +23,8 @@
     "test:e2e:fullflow": "playwright test --grep \"@fullflow\"",
     "test:e2e:board": "playwright test --grep \"@board\"",
     "test:e2e:a11y": "playwright test --grep \"@a11y\"",
+    "test:e2e:timing": "playwright test --grep \"@timing\"",
+    "test:e2e:changed": "playwright test --only-changed=origin/master",
     "check:bundle": "node ../scripts/check-bundle-size.mjs dist/assets",
     "test:e2e:site": "playwright test e2e/site-downloads.spec.ts",
     "test:e2e:visual": "E2E_VISUAL=1 E2E_VIEWPORT=1920x1080 playwright test e2e/gallery.spec.ts",

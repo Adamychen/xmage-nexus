@@ -1,6 +1,4 @@
 import { fakeOnly } from './support/fake-mode'
-import { TABLE } from '../fixtures/table-names'
-import { DECK } from '../fixtures/deck-names'
 /**
  * Menú de jugador (G12-1/G12-2, U12): clic derecho en la barra del jugador
  * abre el menú contextual por bando y cada item envía su PlayerAction
@@ -12,7 +10,7 @@ import type { Page } from '@playwright/test'
 fakeOnly()
 import { playerMenuScenario } from '../fixtures/scenarios/playerMenu'
 import { withFakeServer } from './support/fake-backend'
-import { startGame } from './support/start-game'
+import { quickStartGame } from './support/start-game'
 import { parseSent, sentOf } from './support/frames'
 
 async function openMenu(page: Page, side: 'my' | 'opp') {
@@ -22,11 +20,8 @@ async function openMenu(page: Page, side: 'my' | 'opp') {
 
 test('player menu: rival ofrece pedir ver la mano y lo envía', { tag: '@game' }, async ({ page }) => {
   await withFakeServer(() => playerMenuScenario(), async () => {
-    const { pageErrors } = await startGame(page, {
+    const { pageErrors } = await quickStartGame(page, {
       prefix: 'pmenu',
-      tableName: TABLE.playerMenu,
-      deck: DECK.lands,
-      simDeck: DECK.aiLands,
     })
 
     await openMenu(page, 'opp')
@@ -53,11 +48,8 @@ test('player menu: rival ofrece pedir ver la mano y lo envía', { tag: '@game' }
 
 test('player menu: propia permite revocar y alternar peticiones', { tag: '@game' }, async ({ page }) => {
   await withFakeServer(() => playerMenuScenario(), async () => {
-    const { pageErrors } = await startGame(page, {
+    const { pageErrors } = await quickStartGame(page, {
       prefix: 'pmenu2',
-      tableName: TABLE.playerMenu,
-      deck: DECK.lands,
-      simDeck: DECK.aiLands,
     })
 
     await openMenu(page, 'my')

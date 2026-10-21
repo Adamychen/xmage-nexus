@@ -1,11 +1,9 @@
-import { TABLE } from '../fixtures/table-names'
-import { DECK } from '../fixtures/deck-names'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { test, expect } from './fixtures'
 import { fakeOnly } from './support/fake-mode'
-import { startGame } from './support/start-game'
+import { quickStartGame } from './support/start-game'
 import { withFakeServer } from './support/fake-backend'
 import { mutateScenario } from '../fixtures/scenarios/mutate'
 fakeOnly()
@@ -17,10 +15,8 @@ test.describe('Mutate mechanic (protocol-faithful)', { tag: '@mutate' }, () => {
     fs.mkdirSync(SHOTS_DIR, { recursive: true })
 
     await withFakeServer(mutateScenario, async () => {
-      const { pageErrors } = await startGame(page, {
+      const { pageErrors } = await quickStartGame(page, {
         prefix: 'mut',
-        tableName: TABLE.mutate,
-        deck: DECK.advanced,
       })
 
       expect(pageErrors).toEqual([])

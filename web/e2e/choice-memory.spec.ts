@@ -1,20 +1,16 @@
 import { test, expect } from './fixtures'
 import { fakeOnly } from './support/fake-mode'
-import { startGame } from './support/start-game'
+import { quickStartGame } from './support/start-game'
 import { withFakeServer } from './support/fake-backend'
 import { choiceMemoryScenario } from '../fixtures/scenarios/choiceMemory'
-import { TABLE } from '../fixtures/table-names'
-import { DECK } from '../fixtures/deck-names'
 import { parseSent, sentOf } from './support/frames'
 fakeOnly()
 
 test.describe('Choice memory (U14 P14-2/P14-3/P14-4)', { tag: '@feedback' }, () => {
   test('server sortData orders options and hintData shows as tooltip', async ({ page }) => {
     await withFakeServer(choiceMemoryScenario, async () => {
-      const { pageErrors } = await startGame(page, {
+      const { pageErrors } = await quickStartGame(page, {
         prefix: 'choicemem',
-        tableName: TABLE.choiceMemory,
-        deck: DECK.advanced,
         skipAsks: true,
       })
       expect(pageErrors).toEqual([])
@@ -30,10 +26,8 @@ test.describe('Choice memory (U14 P14-2/P14-3/P14-4)', { tag: '@feedback' }, () 
 
   test('remembered choice auto-answers the second identical prompt', async ({ page }) => {
     await withFakeServer(choiceMemoryScenario, async () => {
-      const { pageErrors } = await startGame(page, {
+      const { pageErrors } = await quickStartGame(page, {
         prefix: 'choicemem2',
-        tableName: TABLE.choiceMemory,
-        deck: DECK.advanced,
         skipAsks: true,
       })
       expect(pageErrors).toEqual([])

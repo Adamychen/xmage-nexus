@@ -29,6 +29,7 @@ import {
   type GameFrame,
 } from './frames'
 import { parsedLen } from './frames'
+import { FAKE_MODE } from '../dual'
 
 export type DrawerTab = 'stack' | 'log' | 'chat' | 'tracker' | 'commander' | 'mechanics'
 
@@ -145,19 +146,34 @@ async function payManaInner(page: Page, helper: HumanHelper, fromIndex?: number)
     // tras el pago, esperar el SIGUIENTE ask de maná; si no llega (5s), el pago
     // está completo. OJO: no salir por la prioridad del humano — un SELECT durante el pago
     // incompleto (el helper lo aguanta con payingUntil) no significa el final.
-    let nextIndex = -1
-    try {
-      const next = await waitFrameAt(page, (f) => f.method === 'GAME_PLAY_MANA', `siguiente ask de maná (${i})`, 5_000, cursor)
-      nextIndex = next.index
-    } catch {
-      nextIndex = -1
-    }
+    const nextIndex = await nextManaAsk(page, cursor)
     if (nextIndex < 0) return
     // el ask siguiente sigue sin pagar: no avanzar el cursor más allá de él,
     // o la siguiente iteración esperaría un ask posterior que nunca llega
     cursor = nextIndex
   }
   throw new Error('no se pudo pagar el maná del hechizo')
+}
+
+const PAYMENT_SETTLED_METHODS = new Set(['GAME_SELECT', 'GAME_OVER', 'END_GAME_INFO'])
+
+/** Índice del siguiente GAME_PLAY_MANA desde `cursor`, o -1 si el pago terminó.
+ *  En real se espera la ventana completa de 5 s. En fake el servidor resuelve en
+ *  el mismo tick: un frame de resolución seguido de 300 ms sin otro ask cierra el
+ *  pago (esperar 5 s fijos por Bolt dominaba best-of/defeat). */
+async function nextManaAsk(page: Page, cursor: number): Promise<number> {
+  const deadline = Date.now() + 5_000
+  let settledAt = 0
+  while (Date.now() < deadline) {
+    const parsed = parseFrames(framesOf(page))
+    for (let j = Math.min(cursor, parsed.length); j < parsed.length; j++) {
+      if (parsed[j].method === 'GAME_PLAY_MANA') return j
+      if (FAKE_MODE && !settledAt && PAYMENT_SETTLED_METHODS.has(String(parsed[j].method))) settledAt = Date.now()
+    }
+    if (settledAt && Date.now() - settledAt >= 300) return -1
+    await new Promise((r) => setTimeout(r, 100))
+  }
+  return -1
 }
 
 export interface WaitPlayableOptions {

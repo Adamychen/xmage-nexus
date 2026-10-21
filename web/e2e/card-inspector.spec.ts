@@ -1,9 +1,7 @@
 import { fakeOnly } from './support/fake-mode'
-import { TABLE } from '../fixtures/table-names'
-import { DECK } from '../fixtures/deck-names'
 import { test, expect } from './fixtures'
 fakeOnly()
-import { startGame } from './support/start-game'
+import { quickStartGame } from './support/start-game'
 import { withFakeServer } from './support/fake-backend'
 import { cardInspectorScenario } from '../fixtures/scenarios/cardInspector'
 import type { Page } from '@playwright/test'
@@ -41,10 +39,8 @@ test.describe('Card inspector (right click)', { tag: '@game' }, () => {
     })
     await stubScryfall(page)
     await withFakeServer(cardInspectorScenario, async () => {
-      const { pageErrors } = await startGame(page, {
+      const { pageErrors } = await quickStartGame(page, {
         prefix: 'insp',
-        tableName: TABLE.cardInspector,
-        deck: DECK.lands,
       })
 
       const slot = page.locator('.player-zone .card-slot[data-card-name="The One Ring"]').first()
@@ -70,10 +66,8 @@ test.describe('Card inspector (right click)', { tag: '@game' }, () => {
   test('falls back to the engine rules when Scryfall has no localized text', async ({ page }) => {
     await stubScryfall(page, NO_TEXT)
     await withFakeServer(cardInspectorScenario, async () => {
-      const { pageErrors } = await startGame(page, {
+      const { pageErrors } = await quickStartGame(page, {
         prefix: 'insp2',
-        tableName: TABLE.cardInspector,
-        deck: DECK.lands,
       })
 
       const slot = page.locator('.player-zone .card-slot[data-card-name="The One Ring"]').first()

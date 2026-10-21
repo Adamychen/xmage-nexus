@@ -1,9 +1,8 @@
 import { fakeOnly } from './support/fake-mode'
-import { TABLE } from '../fixtures/table-names'
 import { test, expect } from './fixtures'
 fakeOnly()
 import { crossZoneScenario } from '../fixtures/scenarios/crossZone'
-import { startGame } from './support/start-game'
+import { quickStartGame } from './support/start-game'
 import { withFakeServer } from './support/fake-backend'
 import { waitCrossZonePlayable, payMana } from './support/game-screen'
 import { lastGameView, opponentPlayer, parseFrames, parseSent, sentOf, waitOppLife } from './support/frames'
@@ -20,7 +19,7 @@ import { crossZoneInScene } from './support/scene'
 test.describe('Cross-zone cast (ray)', { tag: '@crosszone' }, () => {
   test('Arc Trail desde el cementerio: clic en el rayo, selección en overlay y resolución', async ({ page }) => {
    await withFakeServer(() => crossZoneScenario('graveyard-cast'), async () => {
-    const { frames, pageErrors, helper } = await startGame(page, { prefix: 'cz', tableName: TABLE.crossZone })
+    const { frames, pageErrors, helper } = await quickStartGame(page, { prefix: 'cz' })
     const board = page.locator('.game-board')
 
      // esperar la mano inicial (mulligan auto-keep)
@@ -73,7 +72,7 @@ test.describe('Cross-zone cast (ray)', { tag: '@crosszone' }, () => {
 
   test('Arc Trail desde exilio: mismo flujo con la carta en exilio', async ({ page }) => {
    await withFakeServer(() => crossZoneScenario('exile-cast'), async () => {
-    const { frames, pageErrors, helper } = await startGame(page, { prefix: 'czx', tableName: TABLE.crossZoneExile })
+    const { frames, pageErrors, helper } = await quickStartGame(page, { prefix: 'czx' })
     const board = page.locator('.game-board')
 
     const arcId = await waitCrossZonePlayable(page, 'Arc Trail', { timeoutMs: 30_000, minUntapped: 0 })

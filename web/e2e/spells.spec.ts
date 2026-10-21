@@ -1,6 +1,4 @@
 import { fakeOnly } from './support/fake-mode'
-import { TABLE } from '../fixtures/table-names'
-import { DECK } from '../fixtures/deck-names'
 import { test, expect } from './fixtures'
 fakeOnly()
 import * as fs from 'node:fs'
@@ -9,7 +7,7 @@ import { fileURLToPath } from 'node:url'
 import { clickPlayerHeader } from './support/canvas'
 import { targetIdsOf, lastGameView, myBattlefield, opponentPlayer, parseFrames, waitFrame, waitFrameAt, parsedLen, gameViewOf, waitOppLife } from './support/frames'
 import { expectFeedbackDialog, feedbackDialog, payMana, resolveInteger, targetOpponent, waitPlayable } from './support/game-screen'
-import { startGame } from './support/start-game'
+import { quickStartGame } from './support/start-game'
 import { spellsScenario } from '../fixtures/scenarios/spells'
 import { withFakeServer } from './support/fake-backend'
 
@@ -24,7 +22,7 @@ test.describe('Blaze', { tag: '@spells' }, () => {
   test('Blaze {X}{R}: diálogo integer X=2, targeting visual y pago de maná', async ({ page }) => {
   fs.mkdirSync(SHOTS_DIR, { recursive: true })
   await withFakeServer(() => spellsScenario('blaze'), async () => {
-  const { frames, pageErrors, helper } = await startGame(page, { prefix: 'sp', tableName: TABLE.spellsBlaze, deck: DECK.advanced })
+  const { frames, pageErrors, helper } = await quickStartGame(page, { prefix: 'sp' })
   const blazeId = await waitPlayable(page, 'Blaze', { timeoutMs: 30_000, minUntapped: 3 })
   if (!blazeId) throw new Error('Blaze no fue jugable en 30s (robo adverso)')
   const cursor = parsedLen(page)
@@ -59,7 +57,7 @@ test.describe('Arc Trail', { tag: '@spells' }, () => {
   test('Arc Trail {1}{R}: dos objetivos (segundo ask o auto-elección) y resolución', async ({ page }) => {
   fs.mkdirSync(SHOTS_DIR, { recursive: true })
   await withFakeServer(() => spellsScenario('arc'), async () => {
-  const { frames, pageErrors, helper } = await startGame(page, { prefix: 'sp', tableName: TABLE.spellsArc, deck: DECK.advanced })
+  const { frames, pageErrors, helper } = await quickStartGame(page, { prefix: 'sp' })
   const arcId = await waitPlayable(page, 'Arc Trail', { timeoutMs: 30_000, minUntapped: 2 })
   if (!arcId) throw new Error('Arc Trail no fue jugable en 30s (robo adverso)')
   const cursor = parsedLen(page)
@@ -110,7 +108,7 @@ test.describe('Boros Charm', { tag: '@spells' }, () => {
   test('Boros Charm {R}{W}: GAME_CHOOSE_ABILITY del modo "4 damage" y pago multi-color', async ({ page }) => {
   fs.mkdirSync(SHOTS_DIR, { recursive: true })
   await withFakeServer(() => spellsScenario('boros'), async () => {
-  const { frames, pageErrors, helper } = await startGame(page, { prefix: 'sp', tableName: TABLE.spellsBoros, deck: DECK.advanced })
+  const { frames, pageErrors, helper } = await quickStartGame(page, { prefix: 'sp' })
   const borosId = await waitPlayable(page, 'Boros Charm', { timeoutMs: 30_000, minUntapped: 2, needPlains: true })
   if (!borosId) throw new Error('Boros Charm no fue jugable en 30s (¿sin Mountain+Plains sin girar?)')
   const cursor = parsedLen(page)
@@ -146,7 +144,7 @@ test.describe('Walking Ballista', { tag: '@spells' }, () => {
   test('Walking Ballista {X}{X}: GAME_CHOOSE_ABILITY "Cast", X=4 y 4 contadores en el campo', async ({ page }) => {
   fs.mkdirSync(SHOTS_DIR, { recursive: true })
   await withFakeServer(() => spellsScenario('ballista'), async () => {
-  const { frames, pageErrors, helper } = await startGame(page, { prefix: 'sp', tableName: TABLE.spellsBallista, deck: DECK.advanced })
+  const { frames, pageErrors, helper } = await quickStartGame(page, { prefix: 'sp' })
   const ballistaId = await waitPlayable(page, 'Walking Ballista', { timeoutMs: 60_000, minUntapped: 8 })
   if (!ballistaId) throw new Error('Walking Ballista no fue jugable con 8+ maná en 60s (robo adverso)')
   const cursor = parsedLen(page)

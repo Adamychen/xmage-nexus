@@ -1,8 +1,7 @@
-import { TABLE } from '../fixtures/table-names'
 import { test, expect } from './fixtures'
 import { fakeOnly } from './support/fake-mode'
 import { withFakeServer } from './support/fake-backend'
-import { startGame } from './support/start-game'
+import { quickStartGame } from './support/start-game'
 import { tokensScenario } from '../fixtures/scenarios/tokens'
 fakeOnly()
 
@@ -19,7 +18,7 @@ const ROT_90 = 'matrix(0, 1, -1, 0, 0, 0)'
 test.describe('Rotación de cartas giradas', () => {
   test('una carta girada nunca se endereza por hover ni al montarse @fullflow @tapped', async ({ page }) => {
     await withFakeServer(tokensScenario, async () => {
-      const { pageErrors } = await startGame(page, { prefix: 'tap', tableName: TABLE.tokens })
+      const { pageErrors } = await quickStartGame(page, { prefix: 'tap' })
 
       const tapped = page.locator('[data-card-id="treasure-5"]')
       await expect(tapped).toBeVisible({ timeout: 30_000 })

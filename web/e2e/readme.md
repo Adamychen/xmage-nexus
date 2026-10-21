@@ -24,6 +24,7 @@ Each test creates ITS OWN isolated match. Shared utilities live in `e2e/support/
 
 - `frames.ts` — WS frame DSL: parsing, GameView accessors, `waitFrame`, `waitFrameAt`, `waitOppLife`, mana payment (`nextManaSource`).
 - `start-game.ts` — `startGame(page, opts)` handles login → table vs SIM → match launch → WS helper, returning the active `GameSession`.
+- `quickStartGame(page, opts)` — same `GameSession`, but in fake mode it skips the table dialog (the helper sends START_MATCH); real mode delegates to `startGame`. Use it unless the spec tests table creation or needs `winsNeeded > 1`.
 - `game-screen.ts` — Page objects for feedback dialogs (`feedback-dialog`) and action drivers: `payMana`, `targetOpponent`, `resolveInteger`, `waitPlayable`.
 - `scene.ts` / `canvas.ts` — Live scene state (`window.__mageScene`, deterministic) and board scene interactions.
 - `wshelper.ts` — `HumanHelper`: plays lands, discards, and yields priority over WS for fast/fragile operations; UI verifies dialogs, rendering, and page errors.

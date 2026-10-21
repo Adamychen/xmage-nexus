@@ -1,15 +1,14 @@
-import { TABLE } from '../fixtures/table-names'
 import { test, expect } from './fixtures'
 import { fakeOnly } from './support/fake-mode'
 import { withFakeServer } from './support/fake-backend'
-import { startGame } from './support/start-game'
+import { quickStartGame } from './support/start-game'
 import { manaStackScenario } from '../fixtures/scenarios/manaStack'
 fakeOnly()
 
 test.describe('Mana permanents next to a land pile', () => {
   test('the mana rocks beside a fanned land pile are pushed aside and every land stays clickable @stack-groups', async ({ page }) => {
     await withFakeServer(manaStackScenario, async () => {
-      const { pageErrors } = await startGame(page, { prefix: 'ms', tableName: TABLE.manaStack })
+      const { pageErrors } = await quickStartGame(page, { prefix: 'ms' })
       const myZone = page.locator('.player-zone:not(.mirrored)')
       const pile = myZone.locator('.stack-group[data-stack-name="Plains"]')
       await expect(pile).toHaveCount(1, { timeout: 30_000 })
@@ -50,7 +49,7 @@ test.describe('Mana permanents next to a land pile', () => {
 test.describe('Tapping a land moves it between piles', () => {
   test('the card slides from its old place instead of jumping @stack-groups', async ({ page }) => {
     await withFakeServer(manaStackScenario, async () => {
-      const { pageErrors } = await startGame(page, { prefix: 'mf', tableName: TABLE.manaStack })
+      const { pageErrors } = await quickStartGame(page, { prefix: 'mf' })
       const myZone = page.locator('.player-zone:not(.mirrored)')
       await expect(myZone.locator('[data-card-id="plains-5"]')).toBeVisible({ timeout: 30_000 })
       await page.evaluate(() => {

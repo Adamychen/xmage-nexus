@@ -5,6 +5,9 @@
  * `getComputedStyle(el).animationName` is read after pressing Replay.
  */
 import { test, expect, type Page } from '@playwright/test'
+import { retryTimingSpecInCi } from './support/timing'
+
+retryTimingSpecInCi()
 
 async function openGallery(page: Page) {
   await page.addInitScript(() => localStorage.clear())
@@ -51,7 +54,7 @@ function trackPageErrors(page: Page): string[] {
   return errors
 }
 
-test.describe('animations really play @board', () => {
+test.describe('animations really play @board', { tag: '@timing' }, () => {
   test('anim:countered runs counteredDrain', async ({ page }) => {
     const pageErrors = trackPageErrors(page)
     await openGallery(page)

@@ -1,9 +1,7 @@
 import { fakeOnly } from './support/fake-mode'
-import { TABLE } from '../fixtures/table-names'
-import { DECK } from '../fixtures/deck-names'
 import { test, expect } from './fixtures'
 fakeOnly()
-import { startGame } from './support/start-game'
+import { quickStartGame } from './support/start-game'
 import { withFakeServer } from './support/fake-backend'
 import { spellsScenario } from '../fixtures/scenarios/spells'
 
@@ -27,14 +25,12 @@ async function flightLog(page: Page): Promise<DiagEntry[]> {
   })
 }
 
-test('animaciones de movimiento: diagnóstico de vuelos por transición @flights', async ({ page }) => {
+test('animaciones de movimiento: diagnóstico de vuelos por transición @flights', { tag: '@timing' }, async ({ page }) => {
   await withFakeServer(
     () => spellsScenario('blaze'),
     async () => {
-      const { pageErrors } = await startGame(page, {
+      const { pageErrors } = await quickStartGame(page, {
         prefix: 'fl',
-        tableName: TABLE.spellsBlaze,
-        deck: DECK.advanced,
         skipAsks: true,
       })
       await expect(page.locator('.game-board')).toBeVisible({ timeout: 20_000 })

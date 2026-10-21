@@ -1,20 +1,16 @@
 import { test, expect } from './fixtures'
 import { fakeOnly } from './support/fake-mode'
-import { startGame } from './support/start-game'
+import { quickStartGame } from './support/start-game'
 import { withFakeServer } from './support/fake-backend'
 import { dismissInfoWindows } from './support/info-windows'
 import { mechanicsScenario } from '../fixtures/scenarios/mechanics'
-import { TABLE } from '../fixtures/table-names'
-import { DECK } from '../fixtures/deck-names'
 fakeOnly()
 
 test.describe('Keyword badges & hover', { tag: '@keywords' }, () => {
   test('renders keyword badges on card and hover shows keyword boxes', async ({ page }) => {
     await withFakeServer(mechanicsScenario, async () => {
-      const { pageErrors } = await startGame(page, {
+      const { pageErrors } = await quickStartGame(page, {
         prefix: 'kw',
-        tableName: TABLE.mechanics,
-        deck: DECK.advanced,
       })
       expect(pageErrors).toEqual([])
       // the scenario reveals a card, which latches its viewer open over the board
@@ -63,7 +59,7 @@ test.describe('Keyword badges & hover', { tag: '@keywords' }, () => {
     test(`keyword badge row stays inside its card at ${size.width}px`, async ({ page }) => {
       await page.setViewportSize(size)
       await withFakeServer(mechanicsScenario, async () => {
-        await startGame(page, { prefix: 'kw', tableName: TABLE.mechanics, deck: DECK.advanced })
+        await quickStartGame(page, { prefix: 'kw' })
         await dismissInfoWindows(page)
         const rows = page.locator('.card-slot .keyword-badges')
         await expect(rows.first()).toBeAttached()
@@ -85,7 +81,7 @@ test.describe('Keyword badges & hover', { tag: '@keywords' }, () => {
     test(`no two badge zones overlap on any card at ${size.width}px`, async ({ page }) => {
       await page.setViewportSize(size)
       await withFakeServer(mechanicsScenario, async () => {
-        await startGame(page, { prefix: 'kw', tableName: TABLE.mechanics, deck: DECK.advanced })
+        await quickStartGame(page, { prefix: 'kw' })
         await dismissInfoWindows(page)
         await expect(page.locator('.card-slot [data-badge-zone]').first()).toBeVisible()
         await page.waitForTimeout(400)

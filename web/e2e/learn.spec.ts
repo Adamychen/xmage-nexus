@@ -1,10 +1,9 @@
 import { fakeOnly } from './support/fake-mode'
-import { TABLE } from '../fixtures/table-names'
 import { test, expect } from './fixtures'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { startGame } from './support/start-game'
+import { quickStartGame } from './support/start-game'
 import { withFakeServer } from './support/fake-backend'
 import { learnScenario, LESSON_ID } from '../fixtures/scenarios/learn'
 import { parsedLen, waitFrameAt, parseSent, sentOf } from './support/frames'
@@ -17,9 +16,8 @@ test('LEARN: elegir una Lesson del sideboard (Eyetwitch muerte → learn) @learn
   fs.mkdirSync(SHOTS_DIR, { recursive: true })
 
   await withFakeServer(() => learnScenario(), async () => {
-    await startGame(page, {
+    await quickStartGame(page, {
       prefix: 'learn',
-      tableName: TABLE.learn,
       skipAsks: true, // el helper no auto-contesta: el SÍ del learn lo da el test
     })
 

@@ -1,12 +1,10 @@
 import { fakeOnly } from './support/fake-mode'
-import { TABLE } from '../fixtures/table-names'
-import { DECK } from '../fixtures/deck-names'
 import { test, expect } from './fixtures'
 fakeOnly()
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { startGame } from './support/start-game'
+import { quickStartGame } from './support/start-game'
 import { withFakeServer } from './support/fake-backend'
 import { allInteractionsScenario } from '../fixtures/scenarios/allInteractions'
 import { parsedLen, waitFrame } from './support/frames'
@@ -17,11 +15,8 @@ test('interacciones completas de MTG: GAME_ASK, GAME_CHOOSE_COLOR, GAME_CHOOSE_P
   fs.mkdirSync(SHOTS_DIR, { recursive: true })
 
   await withFakeServer(() => allInteractionsScenario(), async () => {
-    const { pageErrors } = await startGame(page, {
+    const { pageErrors } = await quickStartGame(page, {
       prefix: 'int',
-      tableName: TABLE.allInteractions,
-      deck: DECK.advanced,
-      simDeck: DECK.advanced,
       skipAsks: true,
     })
 

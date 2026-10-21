@@ -88,7 +88,9 @@ async function openGallery(page: Page) {
   // trazos sólidos → capturas deterministas.
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.goto('/#/gallery')
-  await expect(page.locator('[data-gallery]')).toBeVisible()
+  // Arranque en frío: el primer `/#/gallery` de cada worker compila el builder
+  // de la galería en Vite, y con varios bloques a la vez 5 s no bastan.
+  await expect(page.locator('[data-gallery]')).toBeVisible({ timeout: 30_000 })
   // Espera a las fuentes antes de montar entradas: las medidas de layout
   // (`useZoneScale`, tarjetas) usan métricas finales y no las de reserva.
   await page.evaluate(() => document.fonts.ready)
@@ -120,24 +122,30 @@ async function showEntry(page: Page, id: string) {
   await page.waitForTimeout(150)
 }
 
+const GALLERY_MOUNT_CHUNKS = 12
+
 test.describe('galería de estados (P3)', () => {
-  test('todas las entradas montan sin errores de página', async ({ page }) => {
-    const pageErrors: string[] = []
-    page.on('pageerror', (error) => pageErrors.push(String(error)))
+  // Las entradas salen del DOM (el builder las genera en runtime), así que no
+  // se conocen al cargar el spec: cada bloque abre la galería y monta las
+  // entradas de su rebanada (índice módulo N). Cualquier entrada nueva cae en
+  // algún bloque; el total sigue siendo el de la galería, y los bloques se
+  // reparten entre workers en vez de ir todos en un único test.
+  for (let block = 0; block < GALLERY_MOUNT_CHUNKS; block++) {
+    test(`todas las entradas montan sin errores de página (bloque ${block + 1}/${GALLERY_MOUNT_CHUNKS})`, async ({ page }) => {
+      const pageErrors: string[] = []
+      page.on('pageerror', (error) => pageErrors.push(String(error)))
 
-    await openGallery(page)
-    const ids = await entryIds(page)
-    expect(ids.length).toBeGreaterThan(40)
-    // El coste crece con la galería (~0,5 s por entrada en local, más del
-    // doble en el runner de CI): presupuesto proporcional, no un tope fijo.
-    test.setTimeout(Math.max(120_000, ids.length * 2_000))
+      await openGallery(page)
+      const ids = await entryIds(page)
+      expect(ids.length).toBeGreaterThan(40)
 
-    for (const id of ids) {
-      await showEntry(page, id)
-    }
+      for (const id of ids.filter((_, index) => index % GALLERY_MOUNT_CHUNKS === block)) {
+        await showEntry(page, id)
+      }
 
-    expect(pageErrors).toEqual([])
-  })
+      expect(pageErrors).toEqual([])
+    })
+  }
 
   test('el ASK de Slicer sanea {this} con el nombre de la fuente', async ({ page }) => {
     await openGallery(page)

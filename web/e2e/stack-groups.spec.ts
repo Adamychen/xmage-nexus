@@ -1,17 +1,15 @@
-import { TABLE } from '../fixtures/table-names'
 import { test, expect } from './fixtures'
 import { fakeOnly } from './support/fake-mode'
 import { withFakeServer } from './support/fake-backend'
-import { startGame } from './support/start-game'
+import { quickStartGame } from './support/start-game'
 import { tokensScenario } from '../fixtures/scenarios/tokens'
 fakeOnly()
 
 test.describe('Apilado visual de tokens (×3)', () => {
   test('tokens fungibles se apilan desde ×3 y el click atraviesa la pila @fullflow @stack-groups', async ({ page }) => {
     await withFakeServer(tokensScenario, async () => {
-      const { pageErrors } = await startGame(page, {
+      const { pageErrors } = await quickStartGame(page, {
         prefix: 'sg',
-        tableName: TABLE.tokens,
       })
 
       const myZone = page.locator('.player-zone:not(.mirrored)')
@@ -57,7 +55,7 @@ test.describe('Apilado visual de tokens (×3)', () => {
 
   test('compact piles fan out as an overlay: no reflow and no hover flicker at the edge @stack-groups', async ({ page }) => {
     await withFakeServer(tokensScenario, async () => {
-      const { pageErrors } = await startGame(page, { prefix: 'sge', tableName: TABLE.tokens })
+      const { pageErrors } = await quickStartGame(page, { prefix: 'sge' })
       const myZone = page.locator('.player-zone:not(.mirrored)')
       await expect(myZone).toBeVisible({ timeout: 30_000 })
       await page.evaluate(() => (globalThis as any).__mageStore.setSetting('cardStyle', 'compact'))

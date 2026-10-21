@@ -1,19 +1,15 @@
 import { test, expect } from './fixtures'
 import { fakeOnly } from './support/fake-mode'
-import { startGame } from './support/start-game'
+import { quickStartGame } from './support/start-game'
 import { withFakeServer } from './support/fake-backend'
 import { votingScenario } from '../fixtures/scenarios/voting'
-import { TABLE } from '../fixtures/table-names'
-import { DECK } from '../fixtures/deck-names'
 fakeOnly()
 
 test.describe('Voting Dialog', { tag: '@voting' }, () => {
   test('renders dedicated voting dialog with two choices and sends vote', async ({ page }) => {
     await withFakeServer(votingScenario, async () => {
-      const { pageErrors } = await startGame(page, {
+      const { pageErrors } = await quickStartGame(page, {
         prefix: 'voting',
-        tableName: TABLE.voting,
-        deck: DECK.advanced,
         skipAsks: true,
       })
       expect(pageErrors).toEqual([])

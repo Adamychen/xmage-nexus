@@ -1,24 +1,20 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { TABLE } from '../fixtures/table-names'
 import { test, expect } from './fixtures'
 import { fakeOnly } from './support/fake-mode'
 import { withFakeServer } from './support/fake-backend'
 import { dismissInfoWindows } from './support/info-windows'
-import { startGame } from './support/start-game'
+import { quickStartGame } from './support/start-game'
 import { openDrawerTab } from './support/game-screen'
 import { mechanicsScenario } from '../fixtures/scenarios/mechanics'
-import { DECK } from '../fixtures/deck-names'
 fakeOnly()
 
 test.describe('Feed unificado con diseño carta', () => {
   test('las líneas genéricas del log se ven como cartas con tint por tipo @mechanics @feed', async ({ page }) => {
     await withFakeServer(mechanicsScenario, async () => {
-      const { pageErrors } = await startGame(page, {
+      const { pageErrors } = await quickStartGame(page, {
         prefix: 'feed',
-        tableName: TABLE.mechanics,
-        deck: DECK.advanced,
       })
       // the scenario reveals a card, which latches its viewer open over the board
       await dismissInfoWindows(page)

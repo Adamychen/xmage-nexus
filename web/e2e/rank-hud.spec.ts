@@ -1,7 +1,6 @@
-import { DECK } from '../fixtures/deck-names'
 import { test, expect } from './fixtures'
 import { fakeOnly } from './support/fake-mode'
-import { startGame } from './support/start-game'
+import { quickStartGame } from './support/start-game'
 import { withFakeServer } from './support/fake-backend'
 import { replayRecordedScenario } from '../fixtures/scenarios/replay-recorded'
 fakeOnly()
@@ -13,7 +12,7 @@ fakeOnly()
 test.describe('Rank HUD', { tag: '@board' }, () => {
   test('1v1 standard board shows the badge on both bars', async ({ page }) => {
     await withFakeServer(() => replayRecordedScenario('aura.json', 'Rank 1v1'), async () => {
-      const { pageErrors } = await startGame(page, { prefix: 'rank1v1', tableName: 'Rank 1v1', deck: DECK.advanced })
+      const { pageErrors } = await quickStartGame(page, { prefix: 'rank1v1' })
       expect(pageErrors).toEqual([])
       await expect(page.locator('.player-info-bar .rank-badge')).toHaveCount(2, { timeout: 10_000 })
     })
@@ -21,7 +20,7 @@ test.describe('Rank HUD', { tag: '@board' }, () => {
 
   test('pod FFA shows one compact badge per player bar', async ({ page }) => {
     await withFakeServer(() => replayRecordedScenario('commander-4.json', 'Rank Pod'), async () => {
-      const { pageErrors } = await startGame(page, { prefix: 'rankpod', tableName: 'Rank Pod', deck: DECK.advanced })
+      const { pageErrors } = await quickStartGame(page, { prefix: 'rankpod' })
       expect(pageErrors).toEqual([])
       await expect(page.locator('.player-info-bar .rank-badge')).toHaveCount(4, { timeout: 10_000 })
     })

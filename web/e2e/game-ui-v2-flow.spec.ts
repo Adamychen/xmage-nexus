@@ -1,6 +1,6 @@
 import { test, expect } from './fixtures'
 import { TABLE } from '../fixtures/table-names'
-import { startGame } from './support/start-game'
+import { quickStartGame } from './support/start-game'
 import { withFakeServer } from './support/fake-backend'
 import { spellsScenario } from '../fixtures/scenarios/spells'
 import { lastGameView } from './support/frames'
@@ -10,7 +10,7 @@ test('v2 plays a real game: top bar, dial, portraits and passing from the dial @
     await page.addInitScript(() => {
       window.localStorage.setItem('mage-web-appearance', JSON.stringify({ gameUi: 'v2' }))
     })
-    const session = await startGame(page, { prefix: 'u2', tableName: TABLE.spellsBlaze, skipAsks: true })
+    const session = await quickStartGame(page, { prefix: 'u2', tableName: TABLE.spellsBlaze, skipAsks: true })
     const pageErrors = session.pageErrors
 
     await expect(page.getByTestId('game-topbar')).toBeVisible({ timeout: 60_000 })

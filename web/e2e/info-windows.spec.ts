@@ -1,6 +1,4 @@
 import { fakeOnly } from './support/fake-mode'
-import { TABLE } from '../fixtures/table-names'
-import { DECK } from '../fixtures/deck-names'
 /**
  * Visores looked-at / companion (G12-2, U12): el GAME_INIT estático los trae
  * y las ventanas se abren solas con sus cartas.
@@ -10,16 +8,13 @@ import { test, expect } from './fixtures'
 fakeOnly()
 import { infoWindowsScenario } from '../fixtures/scenarios/infoWindows'
 import { withFakeServer } from './support/fake-backend'
-import { startGame } from './support/start-game'
+import { quickStartGame } from './support/start-game'
 import { parseSent, sentOf } from './support/frames'
 
 test('info windows: lookedAt y companion se abren solos con sus cartas', { tag: '@game' }, async ({ page }) => {
   await withFakeServer(() => infoWindowsScenario(), async () => {
-    const { pageErrors } = await startGame(page, {
+    const { pageErrors } = await quickStartGame(page, {
       prefix: 'infow',
-      tableName: TABLE.infoWindows,
-      deck: DECK.lands,
-      simDeck: DECK.aiLands,
     })
 
     const overlays = page.locator('.pile-overlay')

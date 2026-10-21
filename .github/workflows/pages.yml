@@ -10,7 +10,7 @@ on:
       - "site/**"
       - ".github/workflows/pages.yml"
   schedule:
-    # Nightly: incluye el suite de integración con el stack real.
+    # Nightly: also runs the integration suite against the real stack.
     - cron: "23 3 * * *"
   workflow_dispatch: {}
 
@@ -26,8 +26,8 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    # Sin esto un runner zombi (p. ej. 'Install Playwright browsers' colgado)
-    # bloquea la cola pages-* para siempre: cancel-in-progress es false.
+    # Without this, a zombie runner (e.g. a hung 'Install Playwright browsers') blocks
+    # the pages-* queue forever: cancel-in-progress is false.
     timeout-minutes: 90
     environment:
       name: github-pages
@@ -77,6 +77,9 @@ jobs:
 
       - name: Generate dashboard (lightweight layers)
         env:
+          # On push the fake e2e is skipped here: web-ci.yml runs the same suite sharded on every push,
+          # and this workflow runs it nightly / on demand. The layer is reported as pending, not failed.
+          DASHBOARD_SKIP_E2E: ${{ github.event_name == 'push' && '1' || '' }}
           # The runner is much slower than a dev machine (29 min vs 9 for the fake e2e); fewer parallel
           # Chromiums keep the timing-sensitive specs (flights, latency, combat strikes) off a starved CPU.
           E2E_WORKERS: "2"

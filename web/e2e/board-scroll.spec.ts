@@ -1,9 +1,8 @@
 import { fakeOnly } from './support/fake-mode'
 import { test, expect } from './fixtures'
-import { startGame } from './support/start-game'
+import { quickStartGame } from './support/start-game'
 import { withFakeServer } from './support/fake-backend'
 import { spellsScenario } from '../fixtures/scenarios/spells'
-import { TABLE } from '../fixtures/table-names'
 import type { Page } from '@playwright/test'
 
 fakeOnly()
@@ -25,7 +24,7 @@ async function scrolledBoxes(page: Page): Promise<string[]> {
 test('focusing a hand card that peeks below the edge never scrolls the board @hand-bar', async ({ page }) => {
   await page.setViewportSize({ width: 1600, height: 880 })
   await withFakeServer(() => spellsScenario('blaze'), async () => {
-    const { pageErrors } = await startGame(page, { prefix: 'bsc', tableName: TABLE.spellsBlaze, skipAsks: true })
+    const { pageErrors } = await quickStartGame(page, { prefix: 'bsc', skipAsks: true })
     const hand = page.locator('[data-testid="hand-bar"] .hand-card-slot')
     await expect(hand.first()).toBeVisible({ timeout: 30_000 })
     await expect(page.locator('.big-action-btn')).toBeEnabled({ timeout: 30_000 })

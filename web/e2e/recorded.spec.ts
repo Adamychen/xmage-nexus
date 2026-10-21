@@ -1,14 +1,13 @@
-import { DECK } from '../fixtures/deck-names'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { test, expect } from './fixtures'
 import { fakeOnly } from './support/fake-mode'
-import { startGame } from './support/start-game'
+import { quickStartGame } from './support/start-game'
 import { withFakeServer } from './support/fake-backend'
 import { playableInSceneByName } from './support/scene'
 import { expectStackCount, openDrawerTab } from './support/game-screen'
-import { replayRecordedScenario, REPLAY_TABLE_NAME } from '../fixtures/scenarios/replay-recorded'
+import { replayRecordedScenario } from '../fixtures/scenarios/replay-recorded'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const manifest = JSON.parse(
@@ -29,11 +28,7 @@ test.describe('Recorded real frames (anti-drift smoke)', { tag: '@recorded' }, (
   for (const entry of replayable) {
     test(`${entry.mechanic} (${entry.file}) renderiza sin errores`, async ({ page }) => {
       await withFakeServer(() => replayRecordedScenario(entry.file), async () => {
-        const { pageErrors } = await startGame(page, {
-          prefix: `rec-${entry.mechanic}`,
-          tableName: REPLAY_TABLE_NAME,
-          deck: DECK.advanced,
-        })
+        const { pageErrors } = await quickStartGame(page, { prefix: `rec-${entry.mechanic}` })
 
         expect(pageErrors).toEqual([])
 

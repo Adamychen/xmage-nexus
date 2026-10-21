@@ -1,11 +1,9 @@
 import type { Locator } from '@playwright/test'
-import { DECK } from '../fixtures/deck-names'
 import { test, expect } from './fixtures'
 import { fakeOnly } from './support/fake-mode'
 import { withFakeServer } from './support/fake-backend'
-import { startGame } from './support/start-game'
+import { quickStartGame } from './support/start-game'
 import { openDrawerTab } from './support/game-screen'
-import { REPLAY_TABLE_NAME } from '../fixtures/scenarios/replay-recorded'
 import { FEED_BURST_LINES, FEED_EMIT_PREFIX, feedLogScenario } from '../fixtures/scenarios/feedLog'
 
 fakeOnly()
@@ -31,10 +29,8 @@ test.describe('Log de partida: horas y auto-scroll', { tag: '@feed' }, () => {
   test('cada entrada lleva su hora de llegada y el feed sigue la última línea solo mientras estás al fondo', async ({ page }) => {
     await withFakeServer(feedLogScenario, async () => {
       const t0 = Date.now()
-      const { pageErrors, helper } = await startGame(page, {
+      const { pageErrors, helper } = await quickStartGame(page, {
         prefix: 'flog',
-        tableName: REPLAY_TABLE_NAME,
-        deck: DECK.advanced,
       })
       const emit = async (text: string) => {
         expect(await helper.raw('sendChatMessage', { chatId: 'log-feed', text: `${FEED_EMIT_PREFIX}${text}` })).toBe(true)

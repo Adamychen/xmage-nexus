@@ -1,12 +1,10 @@
 import { test, expect } from './fixtures'
 import { fakeOnly } from './support/fake-mode'
 import { withFakeServer } from './support/fake-backend'
-import { login, startGame } from './support/start-game'
+import { login, quickStartGame } from './support/start-game'
 import { makeBaseScenario } from '../fixtures/fake'
 import { playerGameView } from '../src/__fixtures__/gameViews'
 import { manaPaymentScenario, PHASE_PREFS } from '../fixtures/scenarios/manaPayment'
-import { TABLE } from '../fixtures/table-names'
-import { DECK } from '../fixtures/deck-names'
 
 fakeOnly()
 
@@ -63,10 +61,8 @@ test.describe('Phase stops', { tag: '@phasestops' }, () => {
       )
     })
     await withFakeServer(manaPaymentScenario, async () => {
-      const { pageErrors } = await startGame(page, {
+      const { pageErrors } = await quickStartGame(page, {
         prefix: 'ps',
-        tableName: TABLE.manaPayment,
-        deck: DECK.advanced,
         skipAsks: true,
       })
       expect(pageErrors).toEqual([])

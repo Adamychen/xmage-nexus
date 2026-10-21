@@ -1,10 +1,8 @@
 import { test, expect } from './fixtures'
 import { fakeOnly } from './support/fake-mode'
-import { startGame } from './support/start-game'
+import { quickStartGame } from './support/start-game'
 import { withFakeServer } from './support/fake-backend'
 import { manaPaymentScenario, MANA_ACTIONS, MANA_TYPES, MANA_PREFS } from '../fixtures/scenarios/manaPayment'
-import { TABLE } from '../fixtures/table-names'
-import { DECK } from '../fixtures/deck-names'
 fakeOnly()
 
 async function openMenu(page: import('@playwright/test').Page) {
@@ -18,10 +16,8 @@ test.describe('Mana payment prefs', { tag: '@manapayment' }, () => {
   test('syncs prefs on game start and toggles send server actions', async ({ page }) => {
     MANA_ACTIONS.length = 0
     await withFakeServer(manaPaymentScenario, async () => {
-      const { pageErrors } = await startGame(page, {
+      const { pageErrors } = await quickStartGame(page, {
         prefix: 'mp',
-        tableName: TABLE.manaPayment,
-        deck: DECK.advanced,
         skipAsks: true,
       })
       expect(pageErrors).toEqual([])
@@ -52,10 +48,8 @@ test.describe('Mana payment prefs', { tag: '@manapayment' }, () => {
   test('pool pips pay mana manually via sendPlayerManaType', async ({ page }) => {
     MANA_TYPES.length = 0
     await withFakeServer(manaPaymentScenario, async () => {
-      const { pageErrors } = await startGame(page, {
+      const { pageErrors } = await quickStartGame(page, {
         prefix: 'mp',
-        tableName: TABLE.manaPayment,
-        deck: DECK.advanced,
         skipAsks: true,
       })
       expect(pageErrors).toEqual([])
@@ -69,10 +63,8 @@ test.describe('Mana payment prefs', { tag: '@manapayment' }, () => {
   test('confirm checkbox syncs the server flag and pass goes straight through', async ({ page }) => {
     MANA_PREFS.length = 0
     await withFakeServer(manaPaymentScenario, async () => {
-      const { pageErrors } = await startGame(page, {
+      const { pageErrors } = await quickStartGame(page, {
         prefix: 'mp',
-        tableName: TABLE.manaPayment,
-        deck: DECK.advanced,
         skipAsks: true,
       })
       expect(pageErrors).toEqual([])

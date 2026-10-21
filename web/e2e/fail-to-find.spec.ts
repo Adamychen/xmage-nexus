@@ -1,6 +1,6 @@
 import { test, expect } from './fixtures'
 import { fakeOnly } from './support/fake-mode'
-import { startGame } from './support/start-game'
+import { quickStartGame } from './support/start-game'
 import { withFakeServer } from './support/fake-backend'
 import { waitPlayable } from './support/game-screen'
 import { lastGameView, myHandEntries, parseFrames, parseSent, sentOf, targetIdsOf, waitFrame } from './support/frames'
@@ -28,9 +28,8 @@ function failToFindScenario() {
 test.describe('Fail to find (búsqueda declinable)', { tag: '@failtofind' }, () => {
   test('flag:false ofrece Terminar y declinar no mueve cartas ni cambia la biblioteca', async ({ page }) => {
     await withFakeServer(failToFindScenario, async () => {
-      const { frames, pageErrors, helper } = await startGame(page, {
+      const { frames, pageErrors, helper } = await quickStartGame(page, {
         prefix: 'ftf',
-        tableName: TABLE_NAME,
       })
 
       const wildsId = await waitPlayable(page, 'Evolving Wilds', { timeoutMs: 30_000 })

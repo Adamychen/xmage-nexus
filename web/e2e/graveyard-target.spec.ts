@@ -5,7 +5,7 @@ import * as fs from 'node:fs'
 import * as path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { REANIMATE_GRIZZLY_ID, reanimateTargetScenario } from '../fixtures/scenarios/reanimateTarget'
-import { startGame } from './support/start-game'
+import { quickStartGame } from './support/start-game'
 import { withFakeServer } from './support/fake-backend'
 import { payMana } from './support/game-screen'
 import { waitScene } from './support/scene'
@@ -27,9 +27,8 @@ test(
   'objetivo dentro del cementerio via PileOverlay: Reanimate apunta a Grizzly Bears @graveyard-target',
   async ({ page }) => {
     await withFakeServer(() => reanimateTargetScenario(), async () => {
-      const { frames, pageErrors, helper } = await startGame(page, {
+      const { frames, pageErrors, helper } = await quickStartGame(page, {
         prefix: 'gyt',
-        tableName: 'reanimate-target-test',
       })
 
       // (a) lanzar Reanimate desde la mano (WS directo; lo que se prueba es el

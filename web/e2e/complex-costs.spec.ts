@@ -1,12 +1,10 @@
 import { fakeOnly } from './support/fake-mode'
-import { TABLE } from '../fixtures/table-names'
-import { DECK } from '../fixtures/deck-names'
 import { test, expect } from './fixtures'
 fakeOnly()
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { startGame } from './support/start-game'
+import { quickStartGame } from './support/start-game'
 import { withFakeServer } from './support/fake-backend'
 import { complexCostsScenario } from '../fixtures/scenarios/complexCosts'
 import { parsedLen, waitFrame } from './support/frames'
@@ -19,11 +17,8 @@ test('costes complejos de MTG: Maná Pirexiano, Kicker, Split Cards, Aventuras/M
   fs.mkdirSync(SHOTS_DIR, { recursive: true })
 
   await withFakeServer(() => complexCostsScenario(), async () => {
-    const { pageErrors, helper } = await startGame(page, {
+    const { pageErrors, helper } = await quickStartGame(page, {
       prefix: 'cst',
-      tableName: TABLE.complexCosts,
-      deck: DECK.advanced,
-      simDeck: DECK.advanced,
       skipAsks: true,
     })
 

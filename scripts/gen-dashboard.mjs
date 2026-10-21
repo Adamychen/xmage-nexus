@@ -1,13 +1,13 @@
 #!/usr/bin/env node
-// Genera site/status.json consumiendo los artefactos de test y site/content.json.
-// Uso: node scripts/gen-dashboard.mjs
-// Entradas esperadas (generadas por CI):
+// Generates site/status.json from the test artifacts and site/content.json.
+// Usage: node scripts/gen-dashboard.mjs
+// Inputs (produced by CI):
 //   web/test-results.json                  (vitest --reporter=json --outputFile)
 //   web/coverage/coverage-summary.json      (vitest coverage json-summary)
-//   web/e2e-results.json                    (playwright --reporter=json --output-file)
-//   Mage.Proxy/target/surefire-reports/*.xml (junit del proxy)
-//   reports/integration-result.json         (nightly, stack real)
-// Variables de entorno: GITHUB_SHA, GITHUB_RUN_URL
+//   web/e2e-results.json                    (playwright JSON reporter, PLAYWRIGHT_JSON_OUTPUT_NAME)
+//   Mage.Proxy/target/surefire-reports/*.xml (proxy junit)
+//   reports/integration-result.json         (nightly, real stack)
+// Environment: GITHUB_SHA, GITHUB_RUN_URL, DASHBOARD_SKIP_E2E (1 = fake e2e not run in this run)
 
 import fs from "node:fs";
 import path from "node:path";
@@ -89,9 +89,9 @@ function markerStatus(dir, name) {
   return m && (m.status === "pass" || m.status === "fail") ? m.status : null;
 }
 
-// Cruza el baseline commiteado (fuente de verdad del guard engineViewCoverage)
-// con las anotaciones legibles de content.json. Si un campo anotado deja de
-// estar en el baseline (upstream lo expone), se marca exposed para no hacer drift.
+// Joins the committed baseline (source of truth for the engineViewCoverage guard)
+// with the human-readable annotations in content.json. If an annotated field is no longer
+// in the baseline (upstream exposes it now), it is marked exposed so the dashboard does not drift.
 function buildEngineGaps(baseline, content) {
   const display = (content && content.displayGaps) || {};
   const entries = [];
@@ -121,9 +121,9 @@ function buildEngineGaps(baseline, content) {
   return { totalMissing, entries };
 }
 
-// Reverse-drift (server->client): todo campo que el server puede emitir
-// (oracle server-view-schema.json) debe estar modelado en contract.schema.json.
-// Auto-sincronizado: lee ambos artefactos commiteados, sin lista manual.
+// Reverse drift (server->client): every field the server can emit
+// (oracle server-view-schema.json) must be modeled in contract.schema.json.
+// Self-synchronizing: reads both committed artifacts, no manual list.
 function buildReverseCoverage() {
   const oracle = readJson(path.join(webDir, "fixtures", "server-view-schema.json"));
   const contract = readJson(path.join(webDir, "schema", "contract.schema.json"));
@@ -194,8 +194,8 @@ function build() {
   const thresholds =
     content.coverageThresholds || (content.project && content.project.coverageThresholds) || {};
 
-  // Release: content.json es la fuente de highlights/downloads; la version se
-  // deriva del Cargo.toml del launcher para que no quede desfasada del tag.
+  // Release: content.json is the source of highlights/downloads; the version is
+  // derived from the launcher's Cargo.toml so it cannot drift from the tag.
   const launcherVersion = readLauncherVersion();
   const release = content.release ? { ...content.release } : null;
   if (release && launcherVersion) release.version = launcherVersion;
@@ -203,7 +203,8 @@ function build() {
   if (release && release.version) project.version = release.version;
 
   const vitest = readVitest();
-  const pw = readPlaywright();
+  const e2eSkipped = process.env.DASHBOARD_SKIP_E2E === "1";
+  const pw = e2eSkipped ? null : readPlaywright();
   const cov = readCoverage();
   const proxy = readProxy();
   const integ = readJson(path.join(repoRoot, "reports", "integration-result.json"));
@@ -227,7 +228,12 @@ function build() {
     layer("typecheck", "Typecheck (tsc)", markerStatus(webDir, ".typecheck.json")),
     layer("build", "Build (vite)", markerStatus(webDir, ".build.json")),
     layer("mcp", "MCP (typecheck+test)", markerStatus(webDir, ".mcp-tests.json")),
-    layer("fake-e2e", "E2E (fake, no stack)", pw ? (pw.failed ? "fail" : "pass") : "pending", pw),
+    layer(
+      "fake-e2e",
+      "E2E (fake, no stack)",
+      pw ? (pw.failed ? "fail" : "pass") : "pending",
+      pw ?? (e2eSkipped ? { note: E2E_SKIPPED_NOTE } : null),
+    ),
     layer("proxy", "Proxy (java)", proxy ? (proxy.failed ? "fail" : "pass") : "pending", proxy),
     layer(
       "integration",
@@ -259,6 +265,9 @@ function build() {
   const failed = layers.filter((l) => l.status === "fail").length;
   console.log(`[gen-dashboard] layers: ${layers.length}, failed: ${failed}`);
 }
+
+const E2E_SKIPPED_NOTE =
+  "not run on push: the same suite runs sharded in Web client CI, and nightly on this dashboard";
 
 function integNote(integ) {
   const parts = [];

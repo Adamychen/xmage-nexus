@@ -1,7 +1,6 @@
 import { fakeOnly } from './support/fake-mode'
 import { test, expect } from './fixtures'
-import { DECK } from '../fixtures/deck-names'
-import { startGame } from './support/start-game'
+import { quickStartGame } from './support/start-game'
 import { withFakeServer } from './support/fake-backend'
 import { makeBaseScenario } from '../fixtures/fake'
 import { makeCard, makeGameView, makePlayer, makePermanent } from '../src/__fixtures__/gameViews'
@@ -69,16 +68,14 @@ function reloadScenario() {
  * dialled the proxy at all, which is why the assertion below is about the `connect`
  * being attempted, not only about what ends up painted.
  *
- * Every other reload spec gets here through `startGame`, whose `login()` dismisses the
+ * Every other reload spec gets here through `startGame` or `quickStartGame`, whose `login()` dismisses the
  * wizard with "skip" (which does set the flag), so the gate was invisible from the
  * test suite. This spec removes it on purpose.
  */
 test('recargar con sesión guardada y el asistente sin terminar reabre la partida', async ({ page }) => {
   await withFakeServer(() => reloadScenario(), async () => {
-    const session = await startGame(page, {
+    const session = await quickStartGame(page, {
       prefix: 'rel',
-      tableName: RELOAD_TABLE,
-      deck: DECK.advanced,
       skipAsks: true,
     })
     await expect(page.locator('.game-board')).toBeVisible({ timeout: 30_000 })

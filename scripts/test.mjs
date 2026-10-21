@@ -38,36 +38,40 @@ const VERIFY_SCRIPTS = [
 ]
 
 const LAYERS = [
-  { name: 'unit', desc: 'vitest run (web)' },
-  { name: 'coverage', desc: 'vitest run --coverage (web)' },
+  { name: 'unit', desc: 'vitest run (web); shares one run with coverage when both are selected' },
+  { name: 'coverage', desc: 'vitest run --coverage (web), coverage gate included' },
   { name: 'typecheck', desc: 'tsc -b --noEmit (web)' },
   { name: 'build', desc: 'tsc -b && vite build (web)' },
-  { name: 'java', desc: 'mvn -f Mage.Proxy/pom.xml test (con artefactos del fork en ~/.m2)' },
-  { name: 'self-test', desc: 'E2E headless (ws://127.0.0.1:8787)' },
-  { name: 'human-test', desc: 'E2E jugador humano contra IA (ws://127.0.0.1:8787)' },
-  { name: 'verify', desc: `${VERIFY_SCRIPTS.length} verify/* scripts anti-drift (multi-tenant, permisos, torneos…)` },
-  { name: 'verify-restart', desc: 'verify-reconnect (reinicia el proxy: no lo mezcles con otras capas)' },
-  { name: 'fuzz', desc: 'fuzz.mjs self-play (20 partidas por defecto: nightly, no en cada push)' },
+  { name: 'java', desc: 'mvn -f Mage.Proxy/pom.xml test (with the fork artifacts in ~/.m2)' },
+  { name: 'self-test', desc: 'headless E2E (ws://127.0.0.1:8787)' },
+  { name: 'human-test', desc: 'E2E human player vs AI (ws://127.0.0.1:8787)' },
+  { name: 'verify', desc: `${VERIFY_SCRIPTS.length} verify/* anti-drift scripts (multi-tenant, permissions, tournaments…)` },
+  { name: 'verify-restart', desc: 'verify-reconnect (restarts the proxy: do not mix it with other layers)' },
+  { name: 'fuzz', desc: 'fuzz.mjs self-play (20 games by default: nightly, not on every push)' },
   { name: 'e2e', desc: 'playwright test (web)' },
-  { name: 'i18n', desc: 'i18n coverage guard (894 claves, whitelist)' },
+  { name: 'i18n', desc: 'i18n coverage guard (894 keys, allowlist)' },
 ]
 const NAMES = new Set(LAYERS.map((l) => l.name))
 
 function usage() {
   console.log(`
-Uso: node scripts/test.mjs [layer...] [--skip=capas]
+Usage: node scripts/test.mjs [layer...] [--skip=layers]
 
-Capas (orden por defecto):
+Layers (default order):
 ${LAYERS.map((l) => `  ${l.name.padEnd(10)} ${l.desc}`).join('\n')}
 
-Opciones:
-  --skip=unit,typecheck   excluye capas (separadas por coma)
-  --help                  muestra esta ayuda
+  unit and coverage are one vitest run: when both are selected (the default) it runs once,
+  with coverage, and each layer reports from it; the coverage gate fails only "coverage".
 
-Ejemplos:
-  node scripts/test.mjs                  # todas las capas
-  node scripts/test.mjs typecheck        # solo typecheck
-  node scripts/test.mjs --skip=unit,e2e  # todas menos unit y e2e
+Options:
+  --skip=unit,typecheck   excludes layers (comma-separated)
+  --help                  shows this help
+
+Examples:
+  node scripts/test.mjs                  # all layers
+  node scripts/test.mjs typecheck        # typecheck only
+  node scripts/test.mjs unit             # vitest without coverage
+  node scripts/test.mjs --skip=unit,e2e  # all except unit and e2e
 `)
 }
 
@@ -172,6 +176,18 @@ function runVerifyScript(file) {
   return res
 }
 
+/**
+ * The shared vitest run exits non-zero both for a failing test and for a coverage gate that is
+ * not met. The unit layer only owns the first: it passes when every test passed, even if the
+ * gate failed, and the coverage layer keeps the whole exit code.
+ */
+function vitestVerdict(vitest, layer) {
+  if (layer === 'coverage' || vitest.code === 0) return vitest
+  const out = `${vitest.stdout}\n${vitest.stderr}`
+  const gateOnly = /does not meet (?:global )?threshold/.test(out) && !/^\s*Tests\b.*\bfailed\b/m.test(out)
+  return gateOnly ? { code: 0, stdout: vitest.stdout, stderr: '' } : vitest
+}
+
 async function main() {
   const opts = parseArgs(process.argv.slice(2))
 
@@ -200,6 +216,8 @@ async function main() {
   const startedAt = Date.now()
   const results = []
   let fails = 0
+  const vitestCommand = selected.includes('coverage') ? 'test:coverage' : 'test'
+  let vitestRun = null
 
   // warm-up del stack antes de las capas E2E que requieren proxy (self-test/human-test):
   // la PRIMERA partida tras un arranque en frío del servidor puede perder el socket de
@@ -229,13 +247,14 @@ async function main() {
   for (const name of selected) {
     const layerStart = Date.now()
     let res = null
+    let note = ''
 
     switch (name) {
       case 'unit':
-        res = run(binName('npm'), ['--prefix', 'web', 'run', 'test'])
-        break
       case 'coverage':
-        res = run(binName('npm'), ['--prefix', 'web', 'run', 'test:coverage'])
+        if (vitestRun) note = ' (shared vitest run)'
+        vitestRun ??= run(binName('npm'), ['--prefix', 'web', 'run', vitestCommand])
+        res = vitestVerdict(vitestRun, name)
         break
       case 'typecheck':
         res = run(binName('npm'), ['--prefix', 'web', 'run', 'typecheck'])
@@ -333,11 +352,11 @@ async function main() {
     const seconds = ((Date.now() - layerStart) / 1000).toFixed(1)
     if (res.code === 0) {
       results.push({ name, status: 'pass' })
-      console.log(`[PASS] ${name} (${seconds}s)`)
+      console.log(`[PASS] ${name} (${note ? 'shared run' : `${seconds}s`})`)
     } else {
       fails++
       results.push({ name, status: 'fail' })
-      console.log(`[FAIL] ${name} (${seconds}s)`)
+      console.log(`[FAIL] ${name} (${note ? 'shared run' : `${seconds}s`})`)
       const lines = `${res.stderr ?? ''}\n${res.stdout ?? ''}`.split(/\r?\n/).map((l) => l.trim()).filter(Boolean)
       if (lines.length) {
         console.log('  salida de error:')

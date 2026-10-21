@@ -1,10 +1,9 @@
 import { test, expect } from './fixtures'
 import { fakeOnly } from './support/fake-mode'
 import { withFakeServer } from './support/fake-backend'
-import { startGame } from './support/start-game'
+import { quickStartGame } from './support/start-game'
 import { parseSent, sentOf } from './support/frames'
 import { playableInScene } from './support/scene'
-import { TABLE } from '../fixtures/table-names'
 import {
   controlScenario,
   CONTROL_BATTLE_ID,
@@ -23,7 +22,7 @@ fakeOnly()
  *  nombre, como enruta el servidor (GameController.sendMessage). */
 test('control del turno ajeno: pasar, mano cambiada y jugables del controlado @control', async ({ page }) => {
   await withFakeServer(controlScenario, async () => {
-    const session = await startGame(page, { prefix: 'ctl', tableName: TABLE.control, skipAsks: true })
+    const session = await quickStartGame(page, { prefix: 'ctl', skipAsks: true })
 
     // El helper WS no pasa la prioridad del controlado (me.hasPriority=false):
     // la ventana sigue abierta y es la UI la que decide.

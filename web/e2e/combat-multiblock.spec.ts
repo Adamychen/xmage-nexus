@@ -1,12 +1,11 @@
 import { fakeOnly } from './support/fake-mode'
-import { TABLE } from '../fixtures/table-names'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { test, expect } from './fixtures'
 import { combatMultiBlockScenario } from '../fixtures/scenarios/combatMultiBlock'
 import { withFakeServer } from './support/fake-backend'
-import { startGame } from './support/start-game'
+import { quickStartGame } from './support/start-game'
 import { sceneClick, waitScene } from './support/scene'
 fakeOnly()
 const SHOTS_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), 'shots')
@@ -15,9 +14,8 @@ test('combate multi-bloqueador: declaración de múltiples bloqueadores, orden d
   fs.mkdirSync(SHOTS_DIR, { recursive: true })
 
   await withFakeServer(() => combatMultiBlockScenario(), async () => {
-    const { pageErrors } = await startGame(page, {
+    const { pageErrors } = await quickStartGame(page, {
       prefix: 'cmb',
-      tableName: TABLE.combatMultiBlock,
       skipCombat: true,
     })
 

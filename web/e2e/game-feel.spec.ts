@@ -1,7 +1,6 @@
 import { fakeOnly } from './support/fake-mode'
 import { test, expect } from './fixtures'
-import { DECK } from '../fixtures/deck-names'
-import { startGame } from './support/start-game'
+import { quickStartGame } from './support/start-game'
 import { withFakeServer } from './support/fake-backend'
 import { parseSent, sentOf } from './support/frames'
 import { makeBaseScenario } from '../fixtures/fake'
@@ -63,10 +62,8 @@ function gameFeelScenario() {
 }
 
 async function startFeelGame(page: Page) {
-  const session = await startGame(page, {
+  const session = await quickStartGame(page, {
     prefix: 'feel',
-    tableName: FEEL_TABLE,
-    deck: DECK.advanced,
     skipAsks: true,
   })
   await expect(page.locator('.game-board')).toBeVisible({ timeout: 20_000 })
