@@ -58,6 +58,15 @@ async function ensureCreature(page: Page, helper: HumanHelper, name: string): Pr
   throw new Error(`${name} no entró al campo a tiempo`)
 }
 
+/** Leaves my main window with exactly one pass. The helper's fallback already passes it
+ *  1.5 s after it opens (retrying past a mana payment), so a second, explicit pass on a
+ *  slow runner confirmed an empty attack and dealt the damage twice (life 18, not 19).
+ *  Pass here only when no combat window opened within the fallback's reach. */
+async function leaveMainWindow(page: Page, helper: HumanHelper): Promise<void> {
+  const opened = await waitScene(page, 'combat', (c) => c.active, 'ventana de combate', 4_000).then(() => true, () => false)
+  if (!opened) expect(await helper.passPriority(), 'pasar el main tras lanzar la criatura').toBeTruthy()
+}
+
 /** Confirma las ventanas de ataque propias hasta que aparezca la de bloqueo
  *  (en real, el humano también abre ataque en sus turnos; en fake no). */
 async function confirmMyAttackWindows(page: Page): Promise<SceneCombat> {
@@ -80,9 +89,7 @@ test('combate humano: el humano declara atacantes por la UI y el daño baja la v
     // criatura propia en el campo (turno 1-2) para poder atacar
     const goblinId = await ensureCreature(page, helper, 'Raging Goblin')
 
-    // pasar el main tras lanzar la criatura (por WS: el fallback interno del
-    // helper muere si coincide con el pago de maná y la ventana quedaría abierta)
-    expect(await helper.passPriority(), 'pasar el main tras lanzar la criatura').toBeTruthy()
+    await leaveMainWindow(page, helper)
 
     // ventana de declaración de atacantes: la criatura es clicable
     let combat: SceneCombat
@@ -139,8 +146,7 @@ test('combate humano: el humano bloquea por la UI y el ataque del Sim no hace da
     // criatura propia en el campo para bloquear
     const blockerId = await ensureCreature(page, helper, 'Raging Goblin')
 
-    // pasar el main tras lanzar la criatura (abre MI ventana de ataque)
-    expect(await helper.passPriority(), 'pasar el main tras lanzar la criatura').toBeTruthy()
+    await leaveMainWindow(page, helper)
 
     // confirmar mis ventanas de ataque (en real el humano también puede atacar)
     // y llegar a la ventana de bloqueo del ataque del Sim

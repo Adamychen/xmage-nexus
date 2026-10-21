@@ -57,9 +57,9 @@ function threePlayerGame() {
 const VIEWPORTS: Array<[number, number]> = []
 for (let w = 1500; w <= 2560; w += 53) for (const h of [900, 1080, 1250, 1440]) VIEWPORTS.push([w, h])
 
-// Cada bloque abre la página una vez (~10 s de montaje) y barre sus viewports en
-// orden, como el bucle original; repartidos entre workers en vez de un único test.
-const BAND_FIT_BLOCKS = 4
+// Each block mounts the page once (~10 s) and sweeps its viewports in order, like the
+// original loop, so the sweep spreads across workers instead of one 3-minute test.
+const BAND_FIT_BLOCKS = 8
 const BAND_FIT_BLOCK_SIZE = Math.ceil(VIEWPORTS.length / BAND_FIT_BLOCKS)
 
 for (let block = 0; block < BAND_FIT_BLOCKS; block++) {
@@ -67,6 +67,7 @@ for (let block = 0; block < BAND_FIT_BLOCKS; block++) {
   if (slice.length === 0) continue
   const label = `${slice[0][0]}x${slice[0][1]}-${slice[slice.length - 1][0]}x${slice[slice.length - 1][1]}`
   test(`classic bands settle on one fit at every viewport ${label} instead of flipping @board`, async ({ page }) => {
+    test.setTimeout(300_000)
     await page.setViewportSize({ width: slice[0][0], height: slice[0][1] })
     await page.goto('/')
     await dismissSetupWizard(page)
