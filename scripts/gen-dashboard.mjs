@@ -44,30 +44,91 @@ function readLauncherVersion() {
   }
 }
 
-function readVitest() {
-  const d = readJson(path.join(webDir, "test-results.json"));
+export function parseVitest(d) {
   if (!d) return null;
   const total = d.numTotalTests ?? 0;
   const passed = d.numPassedTests ?? 0;
-  const failed = d.numFailedTests ?? (d.numTotalTests ?? 0) - (d.numPassedTests ?? 0);
+  const failed = d.numFailedTests ?? total - passed;
+  const failedSuites = d.numFailedTestSuites ?? 0;
+  const ok = d.success !== false && failed === 0 && failedSuites === 0;
   let durationMs = null;
   if (typeof d.startTime === "number" && typeof d.endTime === "number") {
     durationMs = d.endTime - d.startTime;
   } else if (Array.isArray(d.testResults)) {
     durationMs = d.testResults.reduce((s, t) => s + (t.duration || 0), 0);
   }
-  return { total, passed, failed, durationMs };
+  const note = failedSuites ? `${failedSuites} test file(s) failed to run` : undefined;
+  return { total, passed, failed, failedSuites, ok, durationMs, note };
+}
+
+function readVitest() {
+  return parseVitest(readJson(path.join(webDir, "test-results.json")));
+}
+
+export function unitVerdict(vitest, run) {
+  if (!vitest) return run && run.status === "fail" ? "fail" : "pending";
+  return vitest.ok ? "pass" : "fail";
+}
+
+export function coverageVerdict(cov, thresholds, run) {
+  if (!cov) return run && run.status === "fail" ? "fail" : "pending";
+  return Object.keys(thresholds).every((k) => cov[k] == null || cov[k] >= thresholds[k])
+    ? "pass"
+    : "fail";
+}
+
+export function proxyVerdict(proxy, run) {
+  if (run && run.status === "fail") {
+    return { status: "fail", note: `mvn exited with code ${run.code} (build, compile or failed tests)` };
+  }
+  if (!proxy) {
+    return run && run.status === "pass"
+      ? { status: "fail", note: "mvn passed but wrote no surefire reports" }
+      : { status: "pending" };
+  }
+  return proxy.failed ? { status: "fail" } : { status: "pass" };
+}
+
+export function parsePlaywright(d) {
+  if (!d || !d.stats) return null;
+  const s = d.stats;
+  const passed = s.expected ?? 0;
+  const failed = s.unexpected ?? 0;
+  const flaky = s.flaky ?? 0;
+  const skipped = s.skipped ?? 0;
+  return {
+    total: passed + failed + flaky + skipped,
+    passed,
+    failed,
+    flaky,
+    durationMs: s.duration ?? null,
+    executed: passed + failed + flaky,
+    loadErrors: Array.isArray(d.errors) ? d.errors.length : 0,
+  };
 }
 
 function readPlaywright() {
-  const d = readJson(path.join(webDir, "e2e-results.json"));
-  if (!d || !d.stats) return null;
-  const s = d.stats;
+  return parsePlaywright(readJson(path.join(webDir, "e2e-results.json")));
+}
+
+export function fakeE2eLayer({ skipped, pw, marker }) {
+  if (skipped) return { status: "pending", note: E2E_SKIPPED_NOTE };
+  const problems = [];
+  if (marker && marker.status === "fail") {
+    problems.push(`playwright exited with code ${marker.code} (crash, timeout or failed run)`);
+  }
+  if (!pw) {
+    problems.push("no Playwright JSON report was written");
+  } else {
+    if (pw.loadErrors) problems.push(`${pw.loadErrors} load error(s): the specs or the webServer did not start`);
+    if (pw.executed === 0) problems.push("no tests executed");
+    if (pw.failed) problems.push(`${pw.failed} test(s) failed`);
+  }
+  const notes = [...problems];
+  if (pw && pw.flaky) notes.push(`${pw.flaky} flaky (passed only on retry)`);
   return {
-    total: s.total ?? 0,
-    passed: s.expected ?? 0,
-    failed: s.unexpected ?? 0,
-    durationMs: s.duration ?? null,
+    status: problems.length ? "fail" : "pass",
+    note: notes.length ? notes.join("; ") : undefined,
   };
 }
 
@@ -203,10 +264,14 @@ function build() {
   if (release && release.version) project.version = release.version;
 
   const vitest = readVitest();
+  const vitestRun = readJson(path.join(webDir, ".vitest.json"));
   const e2eSkipped = process.env.DASHBOARD_SKIP_E2E === "1";
   const pw = e2eSkipped ? null : readPlaywright();
+  const e2eRun = readJson(path.join(webDir, ".e2e.json"));
+  const e2e = fakeE2eLayer({ skipped: e2eSkipped, pw, marker: e2eRun });
   const cov = readCoverage();
   const proxy = readProxy();
+  const proxyStatus = proxyVerdict(proxy, readJson(path.join(webDir, ".proxy.json")));
   const integ = readJson(path.join(repoRoot, "reports", "integration-result.json"));
   const baseline = readJson(
     path.join(webDir, "fixtures", "engine-view-gap.baseline.json"),
@@ -215,26 +280,13 @@ function build() {
   const reverseCoverage = buildReverseCoverage();
 
   const layers = [
-    layer("unit", "Unit (vitest)", vitest ? (vitest.failed ? "fail" : "pass") : "pending", vitest),
-    layer(
-      "coverage",
-      "Coverage gate",
-      cov
-        ? Object.keys(thresholds).every((k) => cov[k] == null || cov[k] >= thresholds[k])
-          ? "pass"
-          : "fail"
-        : "pending",
-    ),
+    layer("unit", "Unit (vitest)", unitVerdict(vitest, vitestRun), vitest),
+    layer("coverage", "Coverage gate", coverageVerdict(cov, thresholds, vitestRun)),
     layer("typecheck", "Typecheck (tsc)", markerStatus(webDir, ".typecheck.json")),
     layer("build", "Build (vite)", markerStatus(webDir, ".build.json")),
     layer("mcp", "MCP (typecheck+test)", markerStatus(webDir, ".mcp-tests.json")),
-    layer(
-      "fake-e2e",
-      "E2E (fake, no stack)",
-      pw ? (pw.failed ? "fail" : "pass") : "pending",
-      pw ?? (e2eSkipped ? { note: E2E_SKIPPED_NOTE } : null),
-    ),
-    layer("proxy", "Proxy (java)", proxy ? (proxy.failed ? "fail" : "pass") : "pending", proxy),
+    layer("fake-e2e", "E2E (fake, no stack)", e2e.status, { ...(pw || {}), note: e2e.note }),
+    layer("proxy", "Proxy (java)", proxyStatus.status, { ...(proxy || {}), note: proxyStatus.note }),
     layer(
       "integration",
       "Integration (real stack)",

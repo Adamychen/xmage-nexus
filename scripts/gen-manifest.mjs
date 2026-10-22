@@ -10,6 +10,9 @@ import crypto from 'node:crypto'
 import fs from 'node:fs'
 import path from 'node:path'
 import { execFileSync } from 'node:child_process'
+import { XMAGE_VERSION } from './lib.mjs'
+
+export const XMAGE_RELEASE = `${XMAGE_VERSION}-V1`
 
 const COMPONENTS = ['jre', 'server', 'proxy', 'proxy-xdhs']
 const TARGETS = ['linux-x64', 'win-x64', 'mac-arm64']
@@ -27,6 +30,20 @@ function gitSha() {
   }
 }
 
+export function readForkSha(dir) {
+  for (const target of TARGETS) {
+    const full = path.join(dir, `nexus-server-${target}.tar.gz`)
+    if (!fs.existsSync(full)) continue
+    try {
+      const version = JSON.parse(execFileSync('tar', ['-xzOf', full, './version.json'], { encoding: 'utf8' }))
+      if (typeof version.forkSha === 'string' && version.forkSha) return version.forkSha
+    } catch {
+      continue
+    }
+  }
+  return 'unknown'
+}
+
 function sha256(file) {
   return crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex')
 }
@@ -37,7 +54,7 @@ function main() {
   const repo = argValue(args, '--repo') ?? 'Adamychen/xmage-nexus'
   const dir = path.resolve(argValue(args, '--dir') ?? '.')
   const out = path.resolve(argValue(args, '--out') ?? 'components-manifest.json')
-  const xmage = argValue(args, '--xmage') ?? '1.4.62-V1'
+  const xmage = argValue(args, '--xmage') ?? XMAGE_RELEASE
   const baseUrl =
     argValue(args, '--base-url') ?? `https://github.com/${repo}/releases/download/${tag}`
   if (!tag) {
@@ -71,6 +88,7 @@ function main() {
     release,
     xmage,
     git_sha: gitSha(),
+    fork_sha: readForkSha(dir),
     min_launcher: '0.1.0',
     components,
   }
@@ -78,4 +96,4 @@ function main() {
   console.log(`manifiesto ${release}: ${files} ficheros → ${out}`)
 }
 
-main()
+if (import.meta.main) main()

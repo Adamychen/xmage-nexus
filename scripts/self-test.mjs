@@ -144,6 +144,7 @@ async function main() {
   }
 
   let tableId = null
+  let gameId = null
   try {
     await Promise.race([opened, timeout(10000, 'apertura del WebSocket')])
     check('WebSocket al proxy', true)
@@ -231,7 +232,7 @@ async function main() {
     }
     if (res.ok && ev) {
       check('evento WATCHGAME recibido', true, `gameId=${String(ev.objectId).slice(0, 8)}…`)
-      const gameId = ev.objectId
+      gameId = ev.objectId
       const initEv = waitEvent((m) => m.method === 'GAME_INIT' && m.objectId === gameId, 'GAME_INIT', 30000)
       const gameWatchRes = await Promise.race([send('watchGame', { gameId }), timeout(15000, 'watchGame')])
       check('watchGame', !!gameWatchRes.ok, gameWatchRes.error ?? '')
@@ -257,15 +258,26 @@ async function main() {
   } catch (e) {
     check('flujo global', false, e.message)
   } finally {
-    // higiene: eliminar la mesa del test para no dejar partidas IA huérfanas corriendo
-    // (el servidor reenvía sus eventos al siguiente usuario que conecte por el proxy,
-    // saturando la cola de callbacks y retrasando/estropeando el siguiente test)
+    // hygiene: quit the match and remove the table so no AI game keeps running (the server forwards
+    // its events to the next user who connects through the proxy, clogging the callback queue)
+    if (gameId) {
+      try {
+        await Promise.race([send('quitMatch', { gameId }), timeout(10000, 'quitMatch')])
+      } catch {
+        /* noop */
+      }
+    }
     if (tableId) {
       try {
         await Promise.race([send('removeTable', { tableId }), timeout(10000, 'removeTable')])
       } catch {
         /* noop */
       }
+    }
+    try {
+      await Promise.race([send('disconnect', {}), timeout(5000, 'disconnect')])
+    } catch {
+      /* noop */
     }
     try {
       ws.close()

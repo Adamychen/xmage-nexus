@@ -432,7 +432,7 @@ async function simAfterRestart(sim, logOffset) {
   C.answering = false
   await C.call('quitMatch', { gameId: sim.gameId })
   await C.call('removeTable', { tableId: sim.tableId })
-  C.ws.close()
+  await logout(C)
 }
 
 async function startDuel(labelA, userA, labelB, userB) {
@@ -495,7 +495,7 @@ async function leavePhase() {
   G.answering = false
   await G.call('quitMatch', { gameId })
   await G.call('removeTable', { tableId })
-  G.ws.close()
+  await logout(G)
 }
 
 function serverPid() {
@@ -575,14 +575,20 @@ async function serverOutagePhase() {
   await cleanup(D, E, tableId)
 }
 
+/** Logs the session out before closing the socket: the proxy would otherwise hold it for the grace period. */
+async function logout(c) {
+  await c.call('disconnect', {}, 3000).catch(() => {})
+  c.ws.close()
+}
+
 async function cleanup(A, B, tableId) {
   for (const c of [A, B]) {
     c.answering = false
     await c.call('quitMatch', { gameId: c.gameId })
   }
   await A.call('removeTable', { tableId })
-  A.ws.close()
-  B.ws.close()
+  await logout(A)
+  await logout(B)
 }
 
 try {

@@ -191,12 +191,17 @@ async function main() {
     ])
     if (!check('joinTable IA', !!res.ok, res.error ?? '')) return
 
+    const startP = A.waitEvent((m) => m.method === 'START_GAME', 'START_GAME de A', 30000)
     const initP = A.waitEvent((m) => m.method === 'GAME_INIT', 'GAME_INIT de A', 30000)
     res = await Promise.race([A.send('startMatch', { tableId }), timeout(20000, 'startMatch')])
     if (!check('startMatch', !!res.ok, res.error ?? '')) return
 
     let initEv = null
     try {
+      const startEv = await Promise.race([startP, timeout(30000, 'START_GAME de A')])
+      const startGameId = startEv.objectId ?? null
+      res = await Promise.race([A.send('joinGame', { gameId: startGameId }), timeout(15000, 'joinGame de A')])
+      check('joinGame de A tras START_GAME', !!res.ok, res.error ?? '')
       initEv = await Promise.race([initP, timeout(30000, 'GAME_INIT de A')])
       gameId = initEv.objectId ?? null
     } catch (e) {

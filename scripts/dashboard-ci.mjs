@@ -15,16 +15,22 @@ import { build } from "./gen-dashboard.mjs";
 const webDir = path.join(repoRoot, "web");
 const mcpDir = path.join(repoRoot, "mcp");
 
-function writeMarker(name, status) {
-  fs.writeFileSync(path.join(webDir, name), JSON.stringify({ status }));
+function writeMarker(name, status, extra) {
+  fs.writeFileSync(path.join(webDir, name), JSON.stringify({ status, ...extra }));
+}
+
+function clearReports(...files) {
+  for (const f of files) fs.rmSync(path.join(webDir, f), { force: true });
 }
 
 async function main() {
   // 1. Unit + coverage (a single vitest run emits both artifacts)
-  run("npm", ["run", "test:coverage", "--", "--reporter=json", "--outputFile=test-results.json"], {
+  clearReports("test-results.json", path.join("coverage", "coverage-summary.json"));
+  const vitest = run("npm", ["run", "test:coverage", "--", "--reporter=json", "--outputFile=test-results.json"], {
     cwd: webDir,
     timeoutMs: 600_000,
   });
+  writeMarker(".vitest.json", vitest.code === 0 ? "pass" : "fail", { code: vitest.code });
 
   // 2. Typecheck
   const tc = run("npm", ["run", "typecheck"], { cwd: webDir, timeoutMs: 300_000 });
@@ -39,11 +45,13 @@ async function main() {
   if (process.env.DASHBOARD_SKIP_E2E === "1") {
     console.log("[dashboard-ci] fake e2e skipped (DASHBOARD_SKIP_E2E=1): runs in Web client CI and nightly");
   } else {
+    clearReports("e2e-results.json");
     const e2e = run("npx", ["playwright", "test", "--reporter=json"], {
       cwd: webDir,
       timeoutMs: 1_800_000,
       env: { PLAYWRIGHT_JSON_OUTPUT_NAME: "e2e-results.json" },
     });
+    writeMarker(".e2e.json", e2e.code === 0 ? "pass" : "fail", { code: e2e.code });
     if (e2e.code !== 0) {
       console.log("e2e stdout (tail):", e2e.stdout.slice(-2000));
       console.log("e2e stderr (tail):", e2e.stderr.slice(-2000));
@@ -62,8 +70,10 @@ async function main() {
 
   // 6. Proxy (java). Needs the org.mage artifacts in ~/.m2 (the fork release downloaded in CI,
   //    a local build on a development machine)
+  fs.rmSync(path.join(repoRoot, "Mage.Proxy", "target", "surefire-reports"), { recursive: true, force: true });
   ensureMageArtifacts();
   const java = run(binName("mvn"), ["-f", "Mage.Proxy/pom.xml", "test"], { timeoutMs: 900_000 });
+  writeMarker(".proxy.json", java.code === 0 ? "pass" : "fail", { code: java.code });
   if (java.code !== 0) {
     console.log("java stdout (tail):", java.stdout.slice(-3000));
     console.log("java stderr (tail):", java.stderr.slice(-2000));

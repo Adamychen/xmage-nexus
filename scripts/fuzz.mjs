@@ -537,6 +537,7 @@ async function playOneGame(gameNum) {
     human.closedExpectedly = true
     try { if (tableId) human.ws.send(JSON.stringify({ action: 'removeTable', args: { tableId } })) } catch {}
     await new Promise((r) => setTimeout(r, 300))
+    await Promise.race([human.call('disconnect', {}), new Promise((r) => setTimeout(r, 3000))]).catch(() => {})
     try { human.ws.close() } catch {}
     result.durationMs = Date.now() - startedAt
   }

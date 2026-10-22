@@ -3,11 +3,13 @@
 // Uso: node scripts/install.mjs
 // NOTA: no arranca el stack ni empaqueta el proxy (eso lo hace dev.mjs/build.mjs).
 
-import { binName, copyPluginJars, forkDir, log, logError, mvn, PLUGIN_MODULES, run } from './lib.mjs'
+import { binName, copyPluginJars, forkDir, lastLines, log, logError, mvn, PLUGIN_MODULES, run, stampMageArtifacts } from './lib.mjs'
 
 function fail(step, res) {
-  logError(`FALLÓ en: ${step}`)
+  logError(`FAILED at: ${step}`)
   if (res.stderr) logError(res.stderr.split('\n').filter((l) => /ERROR/.test(l)).slice(0, 8).join('\n'))
+  const tail = lastLines(res.stdout, 60)
+  if (tail.trim()) logError(`last lines of output:\n${tail}`)
   process.exit(1)
 }
 
@@ -36,6 +38,7 @@ async function main() {
   log('== paso 3/5: mvn install de plugins ==')
   res = mvn(['-q', '-pl', PLUGIN_MODULES.join(','), 'install', '-DskipTests'], { cwd: forkDir() })
   if (res.code !== 0) fail('instalación de plugins', res)
+  stampMageArtifacts()
   log('  OK')
 
   log('== paso 4/5: copiar plugins a local-server/plugins/ ==')

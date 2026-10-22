@@ -80,8 +80,8 @@ jobs:
           # On push the fake e2e is skipped here: web-ci.yml runs the same suite sharded on every push,
           # and this workflow runs it nightly / on demand. The layer is reported as pending, not failed.
           DASHBOARD_SKIP_E2E: ${{ github.event_name == 'push' && '1' || '' }}
-          # The runner is much slower than a dev machine (29 min vs 9 for the fake e2e); fewer parallel
-          # Chromiums keep the timing-sensitive specs (flights, latency, combat strikes) off a starved CPU.
+          # The runner is much slower than a dev machine, so the fake e2e takes several times longer there;
+          # fewer parallel Chromiums keep the timing-sensitive specs (flights, latency, combat strikes) off a starved CPU.
           E2E_WORKERS: "2"
           GITHUB_SHA: ${{ github.sha }}
           GITHUB_RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}

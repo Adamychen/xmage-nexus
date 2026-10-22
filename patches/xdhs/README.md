@@ -18,13 +18,29 @@ XDHS build still needs patch 0003.)
 | `0002-cheatsetup-client.patch` | `0e95f17bb9` | `SessionImpl.cheatSetup` + `MageServer`/`Testable` declarations. Against a stock XDHS server the call fails softly (the server has no such remote method). |
 | `0003-custom-threadpool-shared-pool.patch` | `f1179a096d` | jboss-remoting instantiates `CustomThreadPool` per connection and never releases it; the shared pool bounds the leak that degrades long-lived multi-tenant proxies. XDHS-only as of `xmage_1.4.62V1`: upstream fixed the leak (idle thread expiry) in nexus. |
 
+## Host install (`scripts/deploy/host-xdhs.sh`)
+
+The host script runs the steps above and installs the `xmage-proxy-xdhs` service.
+
+- `ALLOWED_ORIGINS` is required (the script fails without it). Set it to the exact
+  origin the web page is served from, e.g. `https://example.trycloudflare.com`.
+  Without the flag the proxy accepts localhost origins only, so a missing value
+  would silently block every remote player. There is deliberately no default,
+  because quick-tunnel hostnames change between runs.
+- The XDHS jar is served from `RUN_DIR` (default `~/Escritorio/xmage-xdhs-run/`),
+  not from `Mage.Proxy/target/`. `build.mjs proxy` and the beta deploy run
+  `mvn clean` on `target/` and would delete it, leaving the service with
+  "unable to access jarfile" on its next restart.
+- The systemd unit is rewritten (and `daemon-reload`ed) whenever its content
+  changes, so changing `ALLOWED_ORIGINS` or the ports takes effect on the next run.
+
 ## How to build the XDHS flavor
 
 ```bash
 git clone https://github.com/xenohedron/mage ../xmage-xdhs
 git -C ../xmage-xdhs checkout 1.5.8-XDHS-r1
 for p in patches/xdhs/*.patch; do git -C ../xmage-xdhs apply "$p"; done
-mvn -q -f ../xmage-xdhs/pom.xml -pl Mage.Common,Mage,Mage.Sets -am install -DskipTests
+mvn -q -f ../xmage-xdhs/pom.xml -pl Mage.Common,Mage,Mage.Sets,Mage.Server.Plugins/Mage.Deck.Constructed -am install -DskipTests
 
 # Build the proxy in a throwaway copy: `clean` must not delete the nexus jar
 # that lives in Mage.Proxy/target (host service and local assemble use it).
@@ -34,6 +50,9 @@ mvn -q -f /tmp/mage-proxy-xdhs/pom.xml -Dmage.version=1.5.8 clean package -Dskip
 cp /tmp/mage-proxy-xdhs/target/mage-proxy-1.5.8.jar Mage.Proxy/target/
 # -> Mage.Proxy/target/mage-proxy-1.5.8.jar (coexists with mage-proxy-1.4.62.jar)
 ```
+
+The proxy needs `org.mage:mage-deck-constructed` (deck validation), which is why
+the install list includes `Mage.Server.Plugins/Mage.Deck.Constructed`.
 
 CI does the same in `.github/workflows/modules.yml` (`proxy-xdhs` job; fresh
 checkout, so it can clean in place). `node scripts/build.mjs proxy` (nexus)

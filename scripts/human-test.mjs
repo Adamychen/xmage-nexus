@@ -620,6 +620,11 @@ async function main() {
     const gameId = started.objectId ?? started.data?.gameId
     cleanupGameId = gameId
     check('START_GAME con gameId', Boolean(gameId), String(gameId ?? ''))
+    result = await Promise.race([
+      send('joinGame', { gameId }),
+      timeout(15000, 'joinGame tras START_GAME'),
+    ])
+    check('joinGame tras START_GAME', result.ok, result.error ?? '')
     const init = await initEvent
     check('GAME_INIT para jugador humano', (init.data?.players?.length ?? 0) >= 2, `${init.data?.players?.length ?? 0} jugadores`)
 
@@ -996,6 +1001,11 @@ async function main() {
       } catch {
         // noop
       }
+    }
+    try {
+      await Promise.race([send('disconnect', {}), timeout(5000, 'disconnect cleanup')])
+    } catch {
+      // noop
     }
     try {
       ws.close()

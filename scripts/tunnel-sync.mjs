@@ -27,6 +27,7 @@
 import { execFileSync } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const HOST = process.env.HOST || 'adam@192.168.1.225';
 const HOST_REPO = process.env.REPO || '~/Escritorio/xmage-nexus';
@@ -84,7 +85,7 @@ if (hostOf(oldWs) === hostOf(urls.ws) && hostOf(oldXdhs) === hostOf(urls.xdhs)) 
 }
 
 // 4. Local site/*.json playUrl (GitHub Pages invitation link).
-const repoRoot = path.resolve(new URL('..', import.meta.url).pathname);
+const repoRoot = path.resolve(fileURLToPath(new URL('..', import.meta.url)));
 let siteChanged = false;
 for (const f of ['site/content.json', 'site/status.json']) {
   const p = path.join(repoRoot, f);

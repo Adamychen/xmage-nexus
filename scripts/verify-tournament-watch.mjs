@@ -114,8 +114,7 @@ async function main() {
       timeout(15000, 'resultado de connect'),
     ])
     if (!check('connect/login', !!res.ok, `lastError='${res.error ?? ''}'`)) {
-      ws.close()
-      process.exit(1)
+      return
     }
 
     // Constructed Elimination: sin draft ni construcción, arranca directo al run.
@@ -139,8 +138,7 @@ async function main() {
     ])
     tableId = res.ok ? (res.data?.tableId ?? null) : null
     if (!check('createTournamentTable', !!tableId, res.ok ? `tableId=${String(tableId).slice(0, 8)}…` : (res.error ?? ''))) {
-      ws.close()
-      process.exit(1)
+      return
     }
 
     for (let i = 0; i < 2; i++) {
@@ -155,15 +153,13 @@ async function main() {
         timeout(15000, `joinTournamentTable #${i + 1}`),
       ])
       if (!check(`joinTournamentTable IA ${i + 1}`, !!res.ok, res.error ?? '')) {
-        ws.close()
-        process.exit(1)
+        return
       }
     }
 
     res = await Promise.race([send('startTournament', { tableId }), timeout(20000, 'startTournament')])
     if (!check('startTournament (owner)', !!res.ok, res.error ?? '')) {
-      ws.close()
-      process.exit(1)
+      return
     }
 
     // Watch de la tabla torneo -> SHOW_TOURNAMENT (objectId = tournamentId).
@@ -171,8 +167,7 @@ async function main() {
     const showEvP = waitEvent((m) => m.method === 'SHOW_TOURNAMENT', 'SHOW_TOURNAMENT', 20000)
     res = await Promise.race([send('watchTournamentTable', { tableId }), timeout(15000, 'watchTournamentTable (torneo)')])
     if (!check('watchTournamentTable (tabla torneo)', !!res.ok, res.error ?? '')) {
-      ws.close()
-      process.exit(1)
+      return
     }
     let tournamentId = null
     try {
@@ -183,8 +178,7 @@ async function main() {
       check('evento SHOW_TOURNAMENT recibido', false, e.message)
     }
     if (!tournamentId) {
-      ws.close()
-      process.exit(1)
+      return
     }
 
     // Poll del bracket hasta que haya un match vivo (mismo dato que pinta el ojo).
@@ -206,8 +200,7 @@ async function main() {
       if (!matchTableId) await sleep(500)
     }
     if (!check('match vivo en el bracket', !!matchTableId, matchTableId ? `matchTable=${String(matchTableId).slice(0, 8)}…` : 'sin Dueling en 60s')) {
-      ws.close()
-      process.exit(1)
+      return
     }
 
     // El ojo del bracket: watchTournamentTable(matchTableId) -> WATCHGAME.
@@ -226,8 +219,7 @@ async function main() {
       }
     }
     if (!check('evento WATCHGAME del match recibido', !!ev, res.error ?? '')) {
-      ws.close()
-      process.exit(1)
+      return
     }
     gameId = ev.objectId ?? gameId
     const initEv = waitEvent((m) => m.method === 'GAME_INIT' && (!gameId || m.objectId === gameId), 'GAME_INIT', 30000)
@@ -256,7 +248,7 @@ async function main() {
       } catch { /* noop */ }
     }
     try {
-      await send('disconnect', {}, 5000)
+      await Promise.race([send('disconnect', {}), timeout(5000, 'disconnect')])
     } catch {
       /* noop */
     }
@@ -265,9 +257,13 @@ async function main() {
     } catch { /* noop */ }
   }
 
-  console.log('')
-  console.log(`[tournament-watch] RESULTADO: ${failCount === 0 ? 'TODO PASS' : `${failCount} FALLOS`} (${passCount} pass, ${failCount} fail)`)
-  process.exit(failCount === 0 ? 0 : 1)
 }
 
-await main()
+// Early `return`s skip the summary, so it is printed here, after main's cleanup.
+try {
+  await main()
+} finally {
+  console.log('')
+  console.log(`[tournament-watch] RESULT: ${failCount === 0 ? 'ALL PASS' : `${failCount} FAILURES`} (${passCount} pass, ${failCount} fail)`)
+  process.exit(failCount === 0 ? 0 : 1)
+}

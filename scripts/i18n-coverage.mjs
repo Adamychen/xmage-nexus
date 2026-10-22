@@ -72,6 +72,9 @@ const WHITELIST = new Set([
   'keywords.mentor_name',
   'keywords.modular_name',
   'keywords.ninjutsu_name',
+  'keywords.opus_name',
+  'keywords.station_name',
+  'keywords.warp_name',
 ])
 
 function parseLocale(filePath) {

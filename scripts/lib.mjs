@@ -43,9 +43,15 @@ export function forkPath(rel) {
   return path.join(forkDir(), rel)
 }
 
+/** org.mage artifacts the proxy build needs in ~/.m2 (deck-constructed is a proxy dependency). */
+export const MAGE_ARTIFACT_IDS = ['mage', 'mage-common', 'mage-sets', 'mage-deck-constructed']
+const DECK_MODULE = 'Mage.Server.Plugins/Mage.Deck.Constructed'
+
 /** ¿Están los artefactos org.mage instalados en ~/.m2? */
-export function mageArtifactsPresent() {
-  return fs.existsSync(path.join(os.homedir(), '.m2', 'repository', 'org', 'mage', 'mage', XMAGE_VERSION, `mage-${XMAGE_VERSION}.jar`))
+export function mageArtifactsPresent(home = os.homedir()) {
+  return MAGE_ARTIFACT_IDS.every((id) =>
+    fs.existsSync(path.join(home, '.m2', 'repository', 'org', 'mage', id, XMAGE_VERSION, `${id}-${XMAGE_VERSION}.jar`)),
+  )
 }
 
 const mageStampFile = () => path.join(os.homedir(), '.m2', 'repository', 'org', 'mage', '.nexus-fork-commit')
@@ -67,15 +73,15 @@ export function ensureMageArtifacts() {
   try { stamped = fs.readFileSync(mageStampFile(), 'utf8').trim() } catch {}
   if (mageArtifactsPresent() && (!commit || stamped === commit)) return
   log(mageArtifactsPresent()
-    ? `artefactos org.mage de otro commit del fork (${stamped ?? 'sin sello'} ≠ ${commit}) — reinstalando…`
-    : 'artefactos org.mage ausentes en ~/.m2 — instalando desde el fork…')
-  const res = mvn(['-q', '-pl', 'Mage.Common,Mage,Mage.Sets,Mage.Server', '-am', 'install', '-DskipTests'], {
+    ? `org.mage artifacts from another fork commit (${stamped ?? 'no stamp'} ≠ ${commit}) — reinstalling…`
+    : 'org.mage artifacts missing from ~/.m2 — installing from the fork…')
+  const res = mvn(['-q', '-pl', `Mage.Common,Mage,Mage.Sets,Mage.Server,${DECK_MODULE}`, '-am', 'install', '-DskipTests'], {
     cwd: forkDir(),
     timeoutMs: 1_800_000,
     quiet: true,
   })
   if (res.code !== 0) {
-    throw new Error(`mvn install del fork falló: ${res.stderr.slice(0, 400)}`)
+    throw new Error(`mvn install of the fork failed:\n${lastLines(`${res.stdout}\n${res.stderr}`, 60)}`)
   }
   stampMageArtifacts(commit)
 }
@@ -165,9 +171,92 @@ export function isAlive(pid) {
   }
 }
 
-export function stopPid(name, { force = true } = {}) {
+const COMPONENT_MARKERS = {
+  server: ['mage.server.Main'],
+  proxy: ['org.mage.proxy', 'mage-proxy'],
+  vite: ['vite'],
+}
+
+const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+
+/** Does a process command line belong to the component? */
+export function cmdlineMatches(name, cmdline) {
+  return (COMPONENT_MARKERS[name] ?? []).some((marker) => cmdline.includes(marker))
+}
+
+/** Command line of a pid from /proc (Linux/WSL), or null when the process does not exist. */
+export function procCmdline(pid, procRoot = '/proc') {
+  try {
+    return fs.readFileSync(path.join(procRoot, String(pid), 'cmdline'), 'utf8').split('\0').join(' ')
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Is the pid still the component? A pidfile can point at a pid reused by another process.
+ * Without /proc (macOS, Windows) this cannot be checked, so the pid is trusted.
+ */
+export function ownsPid(name, pid, { hasProc = fs.existsSync('/proc/self/cmdline'), readCmdline = procCmdline } = {}) {
+  if (!hasProc) return true
+  const cmdline = readCmdline(pid)
+  return cmdline !== null && cmdlineMatches(name, cmdline)
+}
+
+function removePidFile(name) {
+  try {
+    fs.unlinkSync(pidFile(name))
+  } catch {
+    /* noop */
+  }
+}
+
+/** The component's pid if it is still alive and still the component; otherwise deletes the stale pidfile. */
+export function livePid(name) {
   const pid = readPid(name)
-  if (pid && isAlive(pid)) {
+  if (!pid) return null
+  if (isAlive(pid) && ownsPid(name, pid)) return pid
+  removePidFile(name)
+  return null
+}
+
+/**
+ * SIGTERM first: the proxy closes its XMage sessions in its shutdown hook. If the process is
+ * still alive after graceMs, SIGKILL. Returns 'terminated' | 'killed' | 'gone'.
+ */
+export async function terminateProcess(pid, {
+  kill = (target, signal) => process.kill(target, signal),
+  alive = isAlive,
+  sleep = delay,
+  now = Date.now,
+  graceMs = 5000,
+  pollMs = 200,
+} = {}) {
+  const signal = (sig) => {
+    try {
+      kill(pid, sig)
+      return true
+    } catch (e) {
+      if (e?.code === 'ESRCH') return false
+      throw e
+    }
+  }
+  if (!signal('SIGTERM')) return 'gone'
+  const deadline = now() + graceMs
+  while (alive(pid)) {
+    if (now() >= deadline) {
+      signal('SIGKILL')
+      return 'killed'
+    }
+    await sleep(pollMs)
+  }
+  return 'terminated'
+}
+
+/** Stops the component (SIGTERM, wait, then SIGKILL) and deletes its pidfile. */
+export async function stopPid(name) {
+  const pid = livePid(name)
+  if (pid) {
     try {
       if (process.platform === 'win32') {
         const result = spawnSync('taskkill', ['/PID', String(pid), '/T', '/F'], {
@@ -175,19 +264,17 @@ export function stopPid(name, { force = true } = {}) {
           stdio: 'ignore',
         })
         if (result.status !== 0) throw new Error(`taskkill exit code ${result.status}`)
+        log(`${name} detenido (pid ${pid})`)
       } else {
-        process.kill(pid, force ? 'SIGKILL' : 'SIGTERM')
+        const outcome = await terminateProcess(pid)
+        if (outcome === 'killed') logError(`${name} no salió con SIGTERM en 5 s — SIGKILL (pid ${pid})`)
+        if (outcome !== 'gone') log(`${name} detenido (pid ${pid})`)
       }
-      log(`${name} detenido (pid ${pid})`)
     } catch (e) {
       logError(`no se pudo detener ${name}: ${e.message}`)
     }
   }
-  try {
-    fs.unlinkSync(pidFile(name))
-  } catch {
-    /* noop */
-  }
+  removePidFile(name)
 }
 
 export function binName(name) {
@@ -334,21 +421,109 @@ export function waitForPortDown(port, timeoutMs = 30000) {
   })
 }
 
-/** Ejecuta un comando en primer plano y devuelve { code, stdout, stderr }. */
+/** A single TCP connection attempt to the port (127.0.0.1, ::1, localhost). */
+export function canConnect(port, timeoutMs = 1500) {
+  const hosts = ['127.0.0.1', '::1', 'localhost']
+  return new Promise((resolve) => {
+    const tryHost = (index) => {
+      if (index >= hosts.length) return resolve(false)
+      const socket = net.connect({ host: hosts[index], port })
+      socket.setTimeout(timeoutMs)
+      socket.once('connect', () => {
+        socket.destroy()
+        resolve(true)
+      })
+      const next = () => {
+        socket.destroy()
+        tryHost(index + 1)
+      }
+      socket.once('error', next)
+      socket.once('timeout', next)
+    }
+    tryHost(0)
+  })
+}
+
+/** Extracts the pid from `ss -ltnp` output, or null. */
+export function parseSsOwner(text) {
+  const match = /pid=(\d+)/.exec(text ?? '')
+  return match ? Number(match[1]) : null
+}
+
+/** pid listening on the port (Linux only, needs iproute2). */
+export function portOwnerPid(port) {
+  if (process.platform !== 'linux') return null
+  const res = spawnSync('ss', ['-H', '-ltnp', `sport = :${port}`], { encoding: 'utf8' })
+  return res.status === 0 ? parseSsOwner(res.stdout) : null
+}
+
+/**
+ * Before launching a component: if the port already answers, starting would fail with a
+ * BindException in the child and print a misleading "OK". Fails and names the owner when known.
+ */
+export async function ensureStartable({
+  port,
+  label,
+  probe = canConnect,
+  owner = portOwnerPid,
+  describe = (pid) => procCmdline(pid)?.slice(0, 120) ?? '?',
+}) {
+  if (!(await probe(port))) return
+  const pid = owner(port)
+  const who = pid ? ` — owned by pid ${pid} (${describe(pid)})` : ''
+  throw new Error(`${label}: port ${port} is already in use${who}. Stop that process (node scripts/ctl.mjs stop) and retry`)
+}
+
+/**
+ * Waits for the port to answer while the child is alive. If the child dies first
+ * (BindException, broken config) it fails at once instead of waiting for the timeout.
+ */
+export async function awaitChildListening({
+  pid,
+  port,
+  label,
+  timeoutMs,
+  probe = canConnect,
+  alive = isAlive,
+  sleep = delay,
+  now = Date.now,
+  pollMs = 500,
+}) {
+  const deadline = now() + timeoutMs
+  for (;;) {
+    if (!alive(pid)) {
+      throw new Error(`${label} exited before listening on port ${port} (pid ${pid}) — see .run/*.err.log`)
+    }
+    if (await probe(port)) return
+    if (now() >= deadline) throw new Error(`${label} is not listening on port ${port} after ${timeoutMs} ms`)
+    await sleep(pollMs)
+  }
+}
+
+/** Quoting for a Windows cmd.exe argument (run() goes through the shell only there). */
+export function quoteWinArg(arg) {
+  return /[\s"&|<>^()]/.test(arg) ? `"${arg.replace(/"/g, '\\"')}"` : arg
+}
+
+/**
+ * Runs a command in the foreground and returns { code, stdout, stderr }.
+ * No shell outside Windows: arguments arrive intact (spaces, $, quotes).
+ */
 export function run(cmd, args, { cwd = repoRoot, timeoutMs = 600_000, quiet = false, env } = {}) {
   const started = Date.now()
+  const win = process.platform === 'win32'
   try {
-    const res = spawnSync(cmd, args, {
+    const res = spawnSync(cmd, win ? args.map(quoteWinArg) : args, {
       cwd,
       encoding: 'utf8',
       timeout: timeoutMs,
       windowsHide: true,
-      shell: true,
+      shell: win,
       env: env ? { ...process.env, ...env } : process.env,
       stdio: ['ignore', 'pipe', 'pipe'],
     })
     const code = res.status ?? 1
-    return { code, stdout: res.stdout ?? '', stderr: res.stderr ?? '' }
+    return { code, stdout: res.stdout ?? '', stderr: res.error ? `${res.stderr ?? ''}${res.error.message}` : (res.stderr ?? '') }
   } catch (e) {
     return { code: 1, stdout: '', stderr: e.message }
   } finally {
@@ -432,16 +607,76 @@ export function copyPluginJars() {
   return count
 }
 
-/** Cola (tail) de un fichero con formato de cabecera. */
-export function tailFile(label, file, lines = 25) {
+/** Sanitizes a line count: a positive integer, or the fallback. */
+export function sanitizeLineCount(value, fallback = 100) {
+  const n = Number.parseInt(value, 10)
+  return Number.isInteger(n) && n > 0 ? n : fallback
+}
+
+/** Last `count` lines of a text. */
+export function lastLines(text, count = 100) {
+  return String(text ?? '').trimEnd().split(/\r?\n/).slice(-sanitizeLineCount(count)).join('\n')
+}
+
+/**
+ * Last `count` lines of a file, reading only the tail: a 1 MB window that doubles until it
+ * holds enough lines (server logs reach 50 MB).
+ */
+export function readLastLines(file, count = 100, { windowBytes = 1 << 20 } = {}) {
+  const n = sanitizeLineCount(count)
+  const fd = fs.openSync(file, 'r')
+  try {
+    const size = fs.fstatSync(fd).size
+    let window = Math.min(size, Math.max(1, windowBytes))
+    for (;;) {
+      const buf = Buffer.alloc(window)
+      fs.readSync(fd, buf, 0, window, size - window)
+      const complete = window === size
+      const parts = buf.toString('utf8').trimEnd().split(/\r?\n/)
+      if (!complete) parts.shift()
+      if (complete || parts.length > n) return parts.slice(-n)
+      window = Math.min(size, window * 2)
+    }
+  } finally {
+    fs.closeSync(fd)
+  }
+}
+
+/** Tail of a file, printed with a header. */
+export function tailFile(label, file, lines = 100) {
   console.log(`\n===== ${label} (${file}) =====`)
   try {
-    const content = fs.readFileSync(file, 'utf8')
-    const parts = content.trimEnd().split(/\r?\n/)
-    console.log(parts.slice(-lines).join('\n'))
+    console.log(readLastLines(file, lines).join('\n'))
   } catch {
-    console.log('(sin contenido)')
+    console.log('(no content)')
   }
+}
+
+export const STACK_ACTIONS = ['start', 'stop', 'restart', 'status']
+export const STACK_TARGETS = ['server', 'proxy', 'vite', 'all']
+
+/** Validates `<action> [target]` before anything is launched: both must be in the allowed lists. */
+export function parseStackCommand(argv) {
+  const [action, target = 'all', ...extra] = argv
+  if (!STACK_ACTIONS.includes(action) || !STACK_TARGETS.includes(target) || extra.length) {
+    return {
+      ok: false,
+      error: `invalid arguments: ${argv.join(' ') || '(none)'}\nusage: node scripts/ctl.mjs ${STACK_ACTIONS.join('|')} [${STACK_TARGETS.join('|')}]`,
+    }
+  }
+  return { ok: true, action, target }
+}
+
+/** Is `username` the table owner? controllerName is "owner, player1, …": the owner is the first entry, matched exactly. */
+export function isTableOwnedBy(table, username) {
+  const owner = typeof table?.controllerName === 'string' ? table.controllerName.split(',')[0].trim() : ''
+  return owner !== '' && owner === username
+}
+
+/** Logs the session out (disconnect), then closes the socket. Without disconnect the proxy keeps the session for its grace period. */
+export async function disconnectConn(conn, ms = 3000) {
+  await conn.call('disconnect', {}, ms).catch(() => {})
+  conn.close()
 }
 
 /** Fichero de log de un componente, con fallback a ubicaciones antiguas. */

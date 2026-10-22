@@ -72,6 +72,13 @@ jobs:
           ref: ${{ inputs.fork_ref }}
           path: xmage-fork
           fetch-depth: 1
+      - name: Record fork commit
+        env:
+          FORK_REF: ${{ inputs.fork_ref }}
+        run: |
+          sha="$(git -C "$NEXUS_FORK_DIR" rev-parse HEAD)"
+          echo "XMage fork ref $FORK_REF resolved to $sha"
+          echo "XMage fork \`$FORK_REF\`: \`$sha\`" >> "$GITHUB_STEP_SUMMARY"
       - name: Setup JDK 17
         uses: actions/setup-java@v5
         with:
@@ -184,6 +191,13 @@ jobs:
           ref: ${{ inputs.xdhs_ref }}
           path: xdhs-fork
           fetch-depth: 1
+      - name: Record XDHS fork commit
+        env:
+          XDHS_REF: ${{ inputs.xdhs_ref }}
+        run: |
+          sha="$(git -C xdhs-fork rev-parse HEAD)"
+          echo "XDHS fork ref $XDHS_REF resolved to $sha"
+          echo "XDHS fork \`$XDHS_REF\`: \`$sha\`" >> "$GITHUB_STEP_SUMMARY"
       - name: Setup JDK 17
         uses: actions/setup-java@v5
         with:

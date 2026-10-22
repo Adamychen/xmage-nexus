@@ -7,6 +7,7 @@
 
 import path from 'node:path'
 import fs from 'node:fs'
+import { fileURLToPath } from 'node:url'
 import { binName, ensureMageArtifacts, log, logError, PORTS, repoRoot, run, waitForPort, waitForPortDown } from './lib.mjs'
 
 const WEB_DIR = path.join(repoRoot, 'web')
@@ -50,6 +51,7 @@ const LAYERS = [
   { name: 'fuzz', desc: 'fuzz.mjs self-play (20 games by default: nightly, not on every push)' },
   { name: 'e2e', desc: 'playwright test (web)' },
   { name: 'i18n', desc: 'i18n coverage guard (894 keys, allowlist)' },
+  { name: 'scripts', desc: 'node --test over scripts/*.test.mjs (dashboard and CI helpers)' },
 ]
 const NAMES = new Set(LAYERS.map((l) => l.name))
 
@@ -181,10 +183,10 @@ function runVerifyScript(file) {
  * not met. The unit layer only owns the first: it passes when every test passed, even if the
  * gate failed, and the coverage layer keeps the whole exit code.
  */
-function vitestVerdict(vitest, layer) {
+export function vitestVerdict(vitest, layer) {
   if (layer === 'coverage' || vitest.code === 0) return vitest
   const out = `${vitest.stdout}\n${vitest.stderr}`
-  const gateOnly = /does not meet (?:global )?threshold/.test(out) && !/^\s*Tests\b.*\bfailed\b/m.test(out)
+  const gateOnly = /does not meet (?:global )?threshold/.test(out) && !/^\s*(?:Tests|Test Files)\b.*\bfailed\b|^\s*Errors\b/m.test(out)
   return gateOnly ? { code: 0, stdout: vitest.stdout, stderr: '' } : vitest
 }
 
@@ -347,6 +349,11 @@ async function main() {
       case 'i18n':
         res = run('node', ['scripts/i18n-coverage.mjs'])
         break
+      case 'scripts': {
+        const files = fs.readdirSync(path.join(repoRoot, 'scripts')).filter((f) => f.endsWith('.test.mjs')).sort()
+        res = run('node', ['--test', ...files.map((f) => `scripts/${f}`)], { timeoutMs: 600_000 })
+        break
+      }
     }
 
     const seconds = ((Date.now() - layerStart) / 1000).toFixed(1)
@@ -371,4 +378,5 @@ async function main() {
   process.exit(fails === 0 ? 0 : 1)
 }
 
-await main()
+const isMain = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)
+if (isMain) await main()

@@ -51,7 +51,7 @@ const base = `http://127.0.0.1:${server.address().port}/`
 const browser = await chromium.launch()
 
 async function open(query = '', seed) {
-  const page = await browser.newPage({ viewport: { width: 1440, height: 900 } })
+  const page = await browser.newPage({ viewport: { width: 1440, height: 900 }, locale: 'en-US' })
   const errors = []
   page.on('pageerror', (e) => errors.push(String(e)))
   if (seed) await page.addInitScript((id) => sessionStorage.setItem('nexus_demo_autostart', id), seed)

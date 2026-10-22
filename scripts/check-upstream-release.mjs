@@ -11,7 +11,7 @@ import { forkPath } from './lib.mjs'
 
 const UPSTREAM = 'https://github.com/magefree/mage'
 
-function parse(version) {
+export function parseRelease(version) {
   const m = /^(\d+)\.(\d+)\.(\d+)-?V(\d+)([a-z]*)$/i.exec(version)
   if (!m) return null
   return { text: `${m[1]}.${m[2]}.${m[3]}-V${m[4]}${m[5]}`, key: [Number(m[1]), Number(m[2]), Number(m[3]), Number(m[4]), m[5].toLowerCase()] }
@@ -22,6 +22,38 @@ function compare(a, b) {
   return a.key[4] < b.key[4] ? -1 : a.key[4] > b.key[4] ? 1 : 0
 }
 
+function numericPrefix(tag) {
+  const digits = /^\d+(?:[._]\d+)*/.exec(tag)?.[0]
+  if (!digits) return null
+  return digits.split(/[._]/).map(Number)
+}
+
+function comparePrefix(nums, key) {
+  for (let i = 0; i < 3; i++) {
+    const d = (nums[i] ?? 0) - key[i]
+    if (d !== 0) return d
+  }
+  return 0
+}
+
+export function evaluateReleases(tags, ours) {
+  const parsed = tags.map((tag) => parseRelease(tag)).filter(Boolean)
+  const latest = parsed.length ? parsed.reduce((a, b) => (compare(a, b) >= 0 ? a : b)) : null
+  const reference = latest ?? ours
+  let unparsedNewer = null
+  let best = null
+  for (const tag of tags) {
+    if (parseRelease(tag)) continue
+    const nums = numericPrefix(tag)
+    if (!nums || comparePrefix(nums, reference.key) <= 0) continue
+    if (!best || comparePrefix(nums, best) > 0) {
+      best = nums
+      unparsedNewer = tag
+    }
+  }
+  return { latest, unparsedNewer }
+}
+
 function forkVersion() {
   const src = fs.readFileSync(forkPath('Mage.Common/src/main/java/mage/utils/MageVersion.java'), 'utf8')
   const num = (name) => new RegExp(`${name}\\s*=\\s*(\\d+)`).exec(src)?.[1]
@@ -29,29 +61,36 @@ function forkVersion() {
   return `${num('MAGE_VERSION_MAJOR')}.${num('MAGE_VERSION_MINOR')}.${num('MAGE_VERSION_RELEASE')}-${info}`
 }
 
-function upstreamReleases() {
+function upstreamTags() {
   const out = execFileSync('git', ['ls-remote', '--tags', UPSTREAM, 'xmage_*'], { encoding: 'utf8' })
   return out.split('\n')
     .map((line) => /refs\/tags\/xmage_([^\s^]+)$/.exec(line.trim())?.[1])
     .filter(Boolean)
-    .map(parse)
-    .filter(Boolean)
 }
 
-const ours = parse(process.argv[2] ?? forkVersion())
-if (!ours) {
-  console.error(`::error::cannot read the fork's XMage version (${process.argv[2] ?? forkVersion()})`)
-  process.exit(2)
+function main() {
+  const ours = parseRelease(process.argv[2] ?? forkVersion())
+  if (!ours) {
+    console.error(`::error::cannot read the fork's XMage version (${process.argv[2] ?? forkVersion()})`)
+    process.exit(2)
+  }
+  const tags = upstreamTags()
+  if (tags.length === 0) {
+    console.error(`::error::no xmage_* release tags found at ${UPSTREAM}`)
+    process.exit(2)
+  }
+  const { latest, unparsedNewer } = evaluateReleases(tags, ours)
+  if (unparsedNewer) {
+    console.error(`::error::magefree/mage tagged xmage_${unparsedNewer}, a release this script cannot parse and that is newer than the newest parsed release (${latest?.text ?? 'none'}). `
+      + `The fork and the proxy are on ${ours.text}: check the tag and, if it is a release, merge it into the fork (mage-fork-upgrade skill).`)
+    process.exit(1)
+  }
+  if (latest && compare(latest, ours) > 0) {
+    console.error(`::error::magefree/mage released ${latest.text}; the fork and the proxy are still on ${ours.text}. `
+      + 'The public server refuses older clients: merge the release into the fork (mage-fork-upgrade skill), rebuild and redeploy the proxy.')
+    process.exit(1)
+  }
+  console.log(`Fork on ${ours.text}; newest upstream release ${latest?.text ?? 'none parsed'}: up to date.`)
 }
-const releases = upstreamReleases()
-if (releases.length === 0) {
-  console.error(`::error::no xmage_* release tags found at ${UPSTREAM}`)
-  process.exit(2)
-}
-const latest = releases.reduce((a, b) => (compare(a, b) >= 0 ? a : b))
-if (compare(latest, ours) > 0) {
-  console.error(`::error::magefree/mage released ${latest.text}; the fork and the proxy are still on ${ours.text}. `
-    + 'The public server refuses older clients: merge the release into the fork (mage-fork-upgrade skill), rebuild and redeploy the proxy.')
-  process.exit(1)
-}
-console.log(`Fork on ${ours.text}; newest upstream release ${latest.text}: up to date.`)
+
+if (import.meta.main) main()

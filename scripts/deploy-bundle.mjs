@@ -11,18 +11,22 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { XMAGE_VERSION } from "./lib.mjs";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const outDir = path.join(repoRoot, "deploy", "bundle");
+
+export function selectProxyJar(files, version = XMAGE_VERSION) {
+  const name = `mage-proxy-${version}.jar`;
+  return files.includes(name) ? name : null;
+}
 
 function main() {
   fs.rmSync(outDir, { recursive: true, force: true });
   fs.mkdirSync(outDir, { recursive: true });
 
   const jarDir = path.join(repoRoot, "Mage.Proxy", "target");
-  const jar = fs.existsSync(jarDir)
-    ? fs.readdirSync(jarDir).find((f) => /^mage-proxy-.*\.jar$/.test(f))
-    : null;
+  const jar = fs.existsSync(jarDir) ? selectProxyJar(fs.readdirSync(jarDir)) : null;
   if (!jar) {
     console.error("Missing proxy jar — run: node scripts/build.mjs proxy");
     process.exit(1);
@@ -48,4 +52,4 @@ function main() {
   console.log("[deploy-bundle] Copy this folder to the host machine and follow README.md.");
 }
 
-main();
+if (import.meta.main) main();

@@ -8,7 +8,7 @@
 // Si el fallo del juego ocurre, se reintenta una vez.
 // Uso: node scripts/warmup.mjs
 
-import { wsConn } from './lib.mjs'
+import { disconnectConn, wsConn } from './lib.mjs'
 
 const WS_URL = 'ws://127.0.0.1:8787'
 const SERVER_HOST = 'localhost'
@@ -55,7 +55,7 @@ async function cleanup(tableId, gameId) {
   } catch {
     /* la limpieza nunca debe romper el warmup */
   } finally {
-    c.close()
+    await disconnectConn(c)
   }
 }
 
@@ -82,7 +82,7 @@ async function waitProxyReady() {
     } catch (e) {
       reason = e instanceof Error ? e.message : String(e)
     } finally {
-      c?.close()
+      if (c) await disconnectConn(c)
     }
     if (Date.now() > deadline) {
       throw new Error(`el proxy no terminó de cargar la BD de cartas en ${READY_TIMEOUT_MS / 1000}s`)
@@ -155,9 +155,10 @@ async function runOnce() {
 
     await c.call('quitMatch', { gameId }, 10000).catch(() => {})
     await c.call('removeTable', { tableId }, 10000).catch(() => {})
+    await disconnectConn(c)
     return { ok: true, gameId }
   } catch (e) {
-    c.close()
+    await disconnectConn(c)
     await cleanup(tableId, gameId)
     throw e
   }

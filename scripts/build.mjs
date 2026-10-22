@@ -1,14 +1,18 @@
 #!/usr/bin/env node
-// Cadena de build completa del Mage.Proxy (Windows/macOS/Linux/WSL).
-// Uso: node scripts/build.mjs [proxy]
-//   (sin argumentos: compila servidor + plugins y empaqueta el proxy)
-//   (arg "proxy": solo empaqueta el proxy, asumiendo el resto ya compilado)
+// Full build chain for Mage.Proxy (Windows/macOS/Linux/WSL).
+// Usage: node scripts/build.mjs [proxy]
+//   (no arguments: builds server + plugins and packages the proxy)
+//   (arg "proxy": only packages the proxy, assuming the rest is already built)
 
-import { copyPluginJars, ensureMageArtifacts, stampMageArtifacts, forkDir, log, logError, mvn, PLUGIN_MODULES, stopPid } from './lib.mjs'
+import { copyPluginJars, ensureMageArtifacts, stampMageArtifacts, forkDir, lastLines, log, logError, mvn, PLUGIN_MODULES, stopPid } from './lib.mjs'
 
 function fail(step, res) {
-  logError(`FALLÓ en: ${step}`)
-  if (res.stderr) logError(res.stderr.split('\n').filter((l) => /ERROR/.test(l)).slice(0, 8).join('\n'))
+  logError(`FAILED at: ${step}`)
+  const errors = (res.stderr ?? '').split('\n').filter((l) => /ERROR/.test(l)).slice(0, 8)
+  if (errors.length) logError(errors.join('\n'))
+  // mvn -q writes its errors to stdout, not stderr
+  const tail = lastLines(res.stdout, 60)
+  if (tail.trim()) logError(`last lines of output:\n${tail}`)
   process.exit(1)
 }
 
@@ -16,33 +20,34 @@ async function main() {
   const onlyProxy = process.argv[2] === 'proxy'
 
   if (!onlyProxy) {
-    log('== paso 1/4: compilar módulos base (Mage.Common, Mage, Mage.Sets, Mage.Server) ==')
+    log('== step 1/4: build base modules (Mage.Common, Mage, Mage.Sets, Mage.Server) ==')
     let res = mvn(['-q', '-pl', 'Mage.Common,Mage,Mage.Sets,Mage.Server', '-am', 'install', '-DskipTests'], { cwd: forkDir() })
-    if (res.code !== 0) fail('compilación de módulos base', res)
+    if (res.code !== 0) fail('base module build', res)
+    log('  OK')
+
+    log('== step 2/4: build plugin modules ==')
+    res = mvn(['-q', '-pl', PLUGIN_MODULES.join(','), 'install', '-DskipTests'], { cwd: forkDir() })
+    if (res.code !== 0) fail('plugin build', res)
+    // the stamp goes last: a failed plugin build must not leave a stamp that makes the next run skip the install
     stampMageArtifacts()
     log('  OK')
 
-    log('== paso 2/4: compilar módulos plugin ==')
-    res = mvn(['-q', '-pl', PLUGIN_MODULES.join(','), 'install', '-DskipTests'], { cwd: forkDir() })
-    if (res.code !== 0) fail('compilación de plugins', res)
-    log('  OK')
-
-    log('== paso 3/4: copiar plugins a local-server/plugins/ ==')
+    log('== step 3/4: copy plugins to local-server/plugins/ ==')
     copyPluginJars()
   } else {
-    log('== modo proxy: saltando compilación de servidor/plugins ==')
+    log('== proxy mode: skipping server/plugin build ==')
   }
 
-  log('== paso final: empaquetar Mage.Proxy (clean package) ==')
+  log('== final step: package Mage.Proxy (clean package) ==')
   ensureMageArtifacts()
   // el jar abierto por el proxy en marcha bloquea el clean en Windows
-  stopPid('proxy')
+  await stopPid('proxy')
   await new Promise((r) => setTimeout(r, 1000))
   const res = mvn(['-q', '-f', 'Mage.Proxy/pom.xml', 'clean', 'package', '-DskipTests'])
-  if (res.code !== 0) fail('empaquetado del proxy', res)
+  if (res.code !== 0) fail('proxy packaging', res)
 
   log('')
-  log('Build completado. Arranca todo con: node scripts/dev.mjs start')
+  log('Build completed. Start everything with: node scripts/dev.mjs start')
 }
 
 await main()

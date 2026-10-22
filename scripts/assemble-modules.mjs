@@ -21,6 +21,7 @@ import {
   log,
   logError,
 } from './lib.mjs'
+import { XMAGE_RELEASE } from './gen-manifest.mjs'
 
 const repoRoot = path.join(import.meta.dirname, '..')
 const outDir = path.resolve(process.argv[2] ?? path.join(repoRoot, 'staging'))
@@ -30,12 +31,30 @@ function copyDir(src, dst) {
   fs.cpSync(src, dst, { recursive: true })
 }
 
-function gitSha() {
+function gitHead(cwd, args = ['--short']) {
   try {
-    return execFileSync('git', ['rev-parse', '--short', 'HEAD'], { cwd: repoRoot, encoding: 'utf8' }).trim()
+    return execFileSync('git', ['rev-parse', ...args, 'HEAD'], { cwd, encoding: 'utf8' }).trim()
   } catch {
     return 'unknown'
   }
+}
+
+export function compareVersions(a, b) {
+  const pa = a.match(/\d+|\D+/g) ?? []
+  const pb = b.match(/\d+|\D+/g) ?? []
+  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+    if (i >= pa.length) return -1
+    if (i >= pb.length) return 1
+    const x = pa[i]
+    const y = pb[i]
+    if (/^\d/.test(x) && /^\d/.test(y)) {
+      const d = Number(x) - Number(y)
+      if (d !== 0) return d < 0 ? -1 : 1
+    } else if (x !== y) {
+      return x < y ? -1 : 1
+    }
+  }
+  return 0
 }
 
 function main() {
@@ -87,7 +106,7 @@ function main() {
       const m = file.match(/^(.*)-(\d+\.\d+.*)\.jar$/)
       const key = m ? m[1] : file
       const ver = m ? m[2] : ''
-      if (!newest.has(key) || ver > newest.get(key).ver) {
+      if (!newest.has(key) || compareVersions(ver, newest.get(key).ver) > 0) {
         newest.set(key, { ver, from: path.join(target, file), file })
       }
     }
@@ -155,9 +174,10 @@ function main() {
 
   const version = {
     schema: 1,
-    xmage: '1.4.62-V1',
+    xmage: XMAGE_RELEASE,
     proxyJar,
-    gitSha: gitSha(),
+    gitSha: gitHead(repoRoot),
+    forkSha: gitHead(forkDir(), []),
     builtAt: new Date().toISOString(),
     server: {
       mainClass: 'mage.server.Main',
@@ -202,4 +222,4 @@ function main() {
   log('ensamblado completo')
 }
 
-main()
+if (import.meta.main) main()

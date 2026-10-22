@@ -1,17 +1,17 @@
 #!/usr/bin/env node
-// Control del stack de desarrollo del Mage.Proxy (servidor + proxy + vite).
-// Uso diagnóstico: node scripts/dev.mjs start|stop|status|restart [server|proxy|vite|all]
-// Uso recomendado para no bloquear la shell: node scripts/ctl.mjs start|stop|status|restart [server|proxy|vite|all]
+// Development stack control for Mage.Proxy (server + proxy + vite).
+// Direct diagnostics: node scripts/dev.mjs start|stop|status|restart [server|proxy|vite|all]
+// To avoid blocking the shell use: node scripts/ctl.mjs start|stop|status|restart [server|proxy|vite|all]
 
 import fs from 'node:fs'
 import path from 'node:path'
-import { daemon, forkPath, isAlive, log, logError, logFileFor, PORTS, readPid, SERVER_ADD_OPENS, stopPid, tailFile, waitForPort, waitForPortDown, buildServerClasspath } from './lib.mjs'
+import { awaitChildListening, buildServerClasspath, daemon, ensureStartable, forkPath, livePid, log, logError, logFileFor, PORTS, portOwnerPid, SERVER_ADD_OPENS, stopPid, tailFile, waitForPortDown } from './lib.mjs'
 
 const arg = process.argv[2] ?? 'status'
 const target = process.argv[3] ?? 'all'
 const VALID = new Set(['server', 'proxy', 'vite', 'all'])
 if (!VALID.has(target)) {
-  console.error(`destino inválido: ${target} (server|proxy|vite|all)`)
+  console.error(`invalid target: ${target} (server|proxy|vite|all)`)
   process.exit(1)
 }
 
@@ -41,40 +41,39 @@ function ensureLocalServerDirs() {
     .replace('serverAddress="0.0.0.0"', 'serverAddress="127.0.0.1"')
     .replace('maxGameThreads="10"', 'maxGameThreads="20"')
   if (seed.includes('${project.version}')) {
-    logError('placeholders sin sustituir en el seed de config.xml del fork')
+    logError('unresolved placeholders in the fork config.xml seed')
     process.exit(1)
   }
   fs.writeFileSync(cfg, seed)
-  log(`config seed creada: ${cfg} (versión ${pomVer})`)
+  log(`config seed created: ${cfg} (version ${pomVer})`)
 }
 
+/** Each start* returns the child pid, or null when the component cannot be launched. */
 function startServer() {
-  log('arrancando servidor XMage (headless, testMode)…')
+  log('starting XMage server (headless, testMode)…')
   try {
     ensureLocalServerDirs()
     const cp = buildServerClasspath()
     const args = [...SERVER_ADD_OPENS, '-cp', cp, 'mage.server.Main', '-testMode']
-    daemon('server', 'java', args, { cwd: `${import.meta.dirname}/../local-server` })
+    return daemon('server', 'java', args, { cwd: `${import.meta.dirname}/../local-server` })
   } catch (e) {
     logError(e.message)
-    return false
+    return null
   }
-  return true
 }
 
 function startProxy() {
   const jar = `${import.meta.dirname}/../Mage.Proxy/target/mage-proxy-1.4.62.jar`
   if (!fs.existsSync(jar)) {
-    logError(`falta el jar del proxy — ejecuta: node scripts/build.mjs`)
-    return false
+    logError(`proxy jar missing — run: node scripts/build.mjs`)
+    return null
   }
-  log('arrancando proxy…')
+  log('starting proxy…')
   // SIM bots are dev/test-harness only: the release artifacts (Docker, bundle, launcher)
   // start the proxy without --sim, so no deployment ever runs a bot.
-  daemon('proxy', 'java', [...SERVER_ADD_OPENS, '-cp', jar, 'org.mage.proxy.Main', '--sim', 'on'], {
+  return daemon('proxy', 'java', [...SERVER_ADD_OPENS, '-cp', jar, 'org.mage.proxy.Main', '--sim', 'on'], {
     cwd: `${import.meta.dirname}/../Mage.Proxy`,
   })
-  return true
 }
 
 function startVite() {
@@ -82,19 +81,24 @@ function startVite() {
   // así el pidfile apunta al proceso real y la salida va a .run/
   const viteBin = path.join(import.meta.dirname, '..', 'web', 'node_modules', 'vite', 'bin', 'vite.js')
   if (!fs.existsSync(viteBin)) {
-    logError(`falta vite en node_modules — ejecuta: npm install (en web)`)
-    return false
+    logError(`vite missing from node_modules — run: npm install (in web)`)
+    return null
   }
-  log('arrancando vite dev…')
-  daemon('vite', 'node', [viteBin, 'dev'], { cwd: `${import.meta.dirname}/../web` })
-  return true
+  log('starting vite dev…')
+  return daemon('vite', 'node', [viteBin, 'dev'], { cwd: `${import.meta.dirname}/../web` })
 }
 
-function stopTargets(list) {
+async function stopTargets(list) {
   // orden inverso de arranque: vite primero, proxy, servidor al final
-  if (list.includes('vite')) stopPid('vite')
-  if (list.includes('proxy')) stopPid('proxy')
-  if (list.includes('server')) stopPid('server')
+  if (list.includes('vite')) await stopPid('vite')
+  if (list.includes('proxy')) await stopPid('proxy')
+  if (list.includes('server')) await stopPid('server')
+}
+
+const PORT_OF = {
+  server: [PORTS.server, 'XMage server'],
+  proxy: [PORTS.proxy, 'proxy WebSocket'],
+  vite: [PORTS.vite, 'Vite'],
 }
 
 /**
@@ -102,19 +106,17 @@ function stopTargets(list) {
  * 1.5 s and hoping. The proxy's shutdown hook walks every session before it releases the port, so
  * with a few sessions alive the old process still held 8787 when the new one started: the new
  * WebSocket server failed to bind (`BindException: Address already in use`) but the process stayed
- * up anyway, answering HTTP and reporting `/ready`, while the WebSocket port belonged to the
- * process on its way out. Every script then failed in a different, confusing way.
+ * up anyway. A port still held after the wait is an error: starting on top of it is never right.
  */
 async function waitForPortsDown(list) {
-  const ports = []
-  if (list.includes('proxy')) ports.push([PORTS.proxy, 'proxy WebSocket'])
-  if (list.includes('server')) ports.push([PORTS.server, 'servidor XMage'])
-  if (list.includes('vite')) ports.push([PORTS.vite, 'Vite'])
-  for (const [port, label] of ports) {
+  for (const name of ['proxy', 'server', 'vite']) {
+    if (!list.includes(name)) continue
+    const [port, label] = PORT_OF[name]
     try {
       await waitForPortDown(port, 60_000)
     } catch (e) {
-      logError(`${label}: ${e.message} — arranco igualmente`)
+      const owner = portOwnerPid(port)
+      throw new Error(`${label}: ${e.message}${owner ? ` — held by pid ${owner}` : ''}. Not starting on top of it`)
     }
   }
 }
@@ -122,9 +124,8 @@ async function waitForPortsDown(list) {
 function status() {
   const rows = []
   for (const name of ['server', 'proxy', 'vite']) {
-    const pid = readPid(name)
-    const alive = isAlive(pid)
-    rows.push({ name, pid: alive ? pid : null, state: alive ? 'RUNNING' : 'stopped' })
+    const pid = livePid(name)
+    rows.push({ name, pid, state: pid ? 'RUNNING' : 'stopped' })
   }
   console.table(rows)
   for (const name of ['server', 'proxy', 'vite']) {
@@ -133,44 +134,29 @@ function status() {
   }
 }
 
-async function startAll(only) {
-  const list = only ?? targetsOf()
-  // 1) servidor
-  if (list.includes('server')) {
-    stopPid('server')
-    if (!startServer()) process.exit(1)
-    // CI (runner frío) hace el escaneo completo de cartas la primera vez:
-    // el wait por defecto es amplio; local arranca con DB cacheada y no lo nota.
-    await waitForRequiredPort(PORTS.server, 'servidor XMage', Number(process.env.NEXUS_SERVER_WAIT_MS ?? 600_000))
-    log(`servidor OK (puerto ${PORTS.server})`)
-  }
-
-  // 2) proxy
-  if (list.includes('proxy')) {
-    stopPid('proxy')
-    if (!startProxy()) process.exit(1)
-    await waitForRequiredPort(PORTS.proxy, 'proxy WebSocket', 30_000)
-    log(`proxy OK (ws://localhost:${PORTS.proxy})`)
-  }
-
-  // 3) vite
-  if (list.includes('vite')) {
-    stopPid('vite')
-    startVite()
-    await waitForRequiredPort(PORTS.vite, 'Vite', 60_000)
-    log(`vite OK (http://localhost:${PORTS.vite})`)
-  }
-
-  status()
+/**
+ * Stops the component, refuses to start if its port still answers (someone else owns it), starts
+ * it and waits until the port is served by the child it just started (failing at once if that
+ * child dies on the way, e.g. a BindException).
+ */
+async function startComponent(name, timeoutMs, start) {
+  const [port, label] = PORT_OF[name]
+  await stopPid(name)
+  await ensureStartable({ port, label })
+  const pid = start()
+  if (!pid) throw new Error(`${label} could not be started`)
+  await awaitChildListening({ pid, port, label, timeoutMs })
+  log(`${label} OK (port ${port})`)
 }
 
-async function waitForRequiredPort(port, label, timeoutMs) {
-  try {
-    await waitForPort(port, timeoutMs)
-  } catch (error) {
-    logError(`${label} no arrancó: ${error.message}`)
-    throw error
-  }
+async function startAll(only) {
+  const list = only ?? targetsOf()
+  // CI (cold runner) does the full card scan on first run, so the default wait is generous;
+  // locally the DB is cached and this is never noticed.
+  if (list.includes('server')) await startComponent('server', Number(process.env.NEXUS_SERVER_WAIT_MS ?? 600_000), startServer)
+  if (list.includes('proxy')) await startComponent('proxy', 30_000, startProxy)
+  if (list.includes('vite')) await startComponent('vite', 60_000, startVite)
+  status()
 }
 
 async function main() {
@@ -179,11 +165,11 @@ async function main() {
       await startAll()
       break
     case 'stop':
-      stopTargets(targetsOf())
+      await stopTargets(targetsOf())
       break
     case 'restart': {
       const list = targetsOf()
-      stopTargets(list)
+      await stopTargets(list)
       await waitForPortsDown(list)
       await startAll(list)
       break
@@ -192,9 +178,14 @@ async function main() {
       status()
       break
     default:
-      console.error('uso: node scripts/dev.mjs start|stop|status|restart [server|proxy|vite|all]')
+      console.error('usage: node scripts/dev.mjs start|stop|status|restart [server|proxy|vite|all]')
       process.exit(1)
   }
 }
 
-await main()
+try {
+  await main()
+} catch (e) {
+  logError(e.message)
+  process.exit(1)
+}
