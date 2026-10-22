@@ -7,10 +7,15 @@ import com.google.gson.JsonParser;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.AtomicMoveNotSupportedException;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.function.LongSupplier;
 import java.util.logging.Level;
@@ -75,7 +80,8 @@ final class RestoreIds {
     }
 
     static String key(String host, String username) {
-        return ProxyClient.normalizeHost(host == null ? "" : host) + "|" + (username == null ? "" : username);
+        return ProxyClient.normalizeHost(host == null ? "" : host).toLowerCase(Locale.ROOT)
+                + "|" + (username == null ? "" : username.toLowerCase(Locale.ROOT));
     }
 
     /** Restore id to present on a login of that account ("" when the proxy never saw one). */
@@ -118,7 +124,7 @@ final class RestoreIds {
                     JsonObject o = e.getValue().getAsJsonObject();
                     long at = o.has("at") ? o.get("at").getAsLong() : 0;
                     if (now - at <= MAX_AGE_MS && o.has("id")) {
-                        BY_ACCOUNT.put(e.getKey(), new Entry(o.get("id").getAsString(), at));
+                        BY_ACCOUNT.put(e.getKey().toLowerCase(Locale.ROOT), new Entry(o.get("id").getAsString(), at));
                     }
                 }
             }
@@ -147,20 +153,32 @@ final class RestoreIds {
         root.addProperty("savedAt", now);
         root.add("ids", ids);
         try {
-            File dir = file.getAbsoluteFile().getParentFile();
+            Path target = file.toPath().toAbsolutePath();
+            Path dir = target.getParent();
             if (dir != null) {
-                dir.mkdirs();
+                Files.createDirectories(dir);
             }
-            File tmp = new File(file.getPath() + ".tmp");
-            Files.write(tmp.toPath(), root.toString().getBytes(StandardCharsets.UTF_8));
-            Files.move(tmp.toPath(), file.toPath(), StandardCopyOption.REPLACE_EXISTING);
-            // a session id is a bearer ticket for the account: owner-only, best effort
-            file.setReadable(false, false);
-            file.setReadable(true, true);
-            file.setWritable(false, false);
-            file.setWritable(true, true);
+            Path tmp = createOwnerOnlyTemp(dir, target.getFileName().toString());
+            try {
+                Files.write(tmp, root.toString().getBytes(StandardCharsets.UTF_8));
+                try {
+                    Files.move(tmp, target, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+                } catch (AtomicMoveNotSupportedException ex) {
+                    Files.move(tmp, target, StandardCopyOption.REPLACE_EXISTING);
+                }
+            } finally {
+                Files.deleteIfExists(tmp);
+            }
         } catch (IOException ex) {
             logger.log(Level.WARNING, "restore ids " + file + " not saved: " + ex.getMessage());
         }
+    }
+
+    private static Path createOwnerOnlyTemp(Path dir, String name) throws IOException {
+        if (FileSystems.getDefault().supportedFileAttributeViews().contains("posix")) {
+            return Files.createTempFile(dir, name, ".tmp",
+                    PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rw-------")));
+        }
+        return Files.createTempFile(dir, name, ".tmp");
     }
 }

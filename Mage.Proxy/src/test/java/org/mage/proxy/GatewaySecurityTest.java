@@ -1,6 +1,15 @@
 package org.mage.proxy;
 
+import org.java_websocket.WebSocket;
+import org.java_websocket.handshake.ClientHandshake;
 import org.junit.jupiter.api.Test;
+
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
+import java.lang.reflect.Proxy;
+import java.net.InetSocketAddress;
+import java.nio.charset.StandardCharsets;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -48,5 +57,65 @@ class GatewaySecurityTest {
         assertNull(Gateway.pingRequestId("{\"requestId\":\"1\",\"action\":\"sendChatMessage\",\"args\":{\"text\":\"ping\"}}"));
         assertNull(Gateway.pingRequestId("{\"requestId\":\"2\",\"action\":\"joinGame\",\"args\":{}}"));
         assertNull(Gateway.pingRequestId("\"ping\" not json"));
+    }
+
+    private static WebSocket connectionFrom(String ip) {
+        InetSocketAddress peer = new InetSocketAddress(ip, 4321);
+        return (WebSocket) Proxy.newProxyInstance(WebSocket.class.getClassLoader(), new Class<?>[]{WebSocket.class},
+                (proxy, method, args) -> {
+                    if (method.getName().equals("getRemoteSocketAddress")) {
+                        return peer;
+                    }
+                    if (method.getName().equals("equals")) {
+                        return proxy == args[0];
+                    }
+                    if (method.getName().equals("hashCode")) {
+                        return System.identityHashCode(proxy);
+                    }
+                    return method.getReturnType() == boolean.class ? Boolean.TRUE : null;
+                });
+    }
+
+    private static ClientHandshake handshake(Map<String, String> headers) {
+        return (ClientHandshake) Proxy.newProxyInstance(ClientHandshake.class.getClassLoader(), new Class<?>[]{ClientHandshake.class},
+                (proxy, method, args) -> {
+                    if (method.getName().equals("hasFieldValue")) {
+                        return headers.containsKey(args[0]);
+                    }
+                    if (method.getName().equals("getFieldValue")) {
+                        return headers.get(args[0]);
+                    }
+                    return null;
+                });
+    }
+
+    @Test
+    void aForwardedAddressIsTrustedOnlyFromTheLocalReverseProxy() {
+        Gateway gateway = new Gateway(Config.parse(new String[0]), 0);
+        WebSocket local = connectionFrom("127.0.0.1");
+        gateway.onOpen(local, handshake(Map.of("X-Forwarded-For", "203.0.113.7, 10.0.0.1", "Origin", "http://localhost:5173")));
+        assertEquals("203.0.113.7", gateway.ipOf(local));
+
+        WebSocket remote = connectionFrom("198.51.100.9");
+        gateway.onOpen(remote, handshake(Map.of("X-Forwarded-For", "10.9.9.9", "Origin", "http://localhost:5173")));
+        assertEquals("198.51.100.9", gateway.ipOf(remote), "a remote client cannot pick its own address");
+    }
+
+    @Test
+    void aRejectedOriginCannotForgeALogLine() {
+        Gateway gateway = new Gateway(Config.parse(new String[0]), 0);
+        PrintStream stderr = System.err;
+        ByteArrayOutputStream captured = new ByteArrayOutputStream();
+        System.setErr(new PrintStream(captured, true, StandardCharsets.UTF_8));
+        try {
+            gateway.onOpen(connectionFrom("198.51.100.9"),
+                    handshake(Map.of("Origin", "https://attacker.example\r\n[proxy] ws close: forged")));
+        } finally {
+            System.setErr(stderr);
+        }
+        String log = captured.toString(StandardCharsets.UTF_8);
+        assertEquals(1, log.chars().filter(c -> c == '\n').count(), "one line per rejected origin: " + log);
+        assertFalse(log.contains("\r"));
+        assertTrue(log.contains("ws rejected origin=https://attacker.example[proxy] ws close: forged"), log);
     }
 }

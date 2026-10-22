@@ -15,7 +15,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -296,9 +298,35 @@ final class ReportSink {
     }
 
     /**
-     * Per-session limits. One instance per {@link ProxyClient}, which is why it can keep plain
-     * fields instead of a shared map nothing would ever clean up.
+     * Limits of one account's reports, kept in {@link Quotas} so a new login of the same account
+     * (a new {@link ProxyClient}) does not start with a fresh quota.
      */
+    static final class Quotas {
+
+        static final int MAX_KEYS = 4096;
+
+        private final Config config;
+        private final Map<String, Quota> byKey = new LinkedHashMap<String, Quota>(16, 0.75f, true) {
+            @Override
+            protected boolean removeEldestEntry(Map.Entry<String, Quota> eldest) {
+                return size() > MAX_KEYS;
+            }
+        };
+
+        Quotas(Config config) {
+            this.config = config;
+        }
+
+        synchronized Quota of(String key) {
+            Quota quota = byKey.get(key);
+            if (quota == null) {
+                quota = new Quota(config);
+                byKey.put(key, quota);
+            }
+            return quota;
+        }
+    }
+
     static final class Quota {
 
         private final Config config;

@@ -8,7 +8,12 @@ import org.junit.jupiter.api.Test;
 import java.lang.reflect.Field;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.BrokenBarrierException;
+import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -42,6 +47,31 @@ class GatewayLoginQueueTest {
 
         @Override
         ProxyClient newClient() {
+            PendingClient pc = new PendingClient(this);
+            created.add(pc);
+            return pc;
+        }
+
+        @Override
+        public void send(WebSocket conn, String json) {
+        }
+    }
+
+    /** Two connects of one account reach the client factory together, as on two worker threads. */
+    static final class RaceGateway extends Gateway {
+        final CyclicBarrier bothInFactory = new CyclicBarrier(2);
+        final List<PendingClient> created = Collections.synchronizedList(new ArrayList<>());
+
+        RaceGateway() {
+            super(Config.parse(new String[]{"--wsPort", "0", "--simRoster", "none"}));
+        }
+
+        @Override
+        ProxyClient newClient() {
+            try {
+                bothInFactory.await(500, TimeUnit.MILLISECONDS);
+            } catch (InterruptedException | BrokenBarrierException | TimeoutException ignored) {
+            }
             PendingClient pc = new PendingClient(this);
             created.add(pc);
             return pc;
@@ -96,7 +126,7 @@ class GatewayLoginQueueTest {
         WebSocket first = conn();
         WebSocket retry = conn();
         gateway.onMessage(first, connect("127.0.0.1", "alice"));
-        assertNotNull(gateway.findSession("127.0.0.1|alice"), "the account is held while its login runs");
+        assertNotNull(gateway.findSession(ProxyClient.sessionKey("127.0.0.1", 17171, "alice")), "the account is held while its login runs");
         gateway.onMessage(retry, connect("localhost", "alice"));
         assertEquals(1, gateway.created.size(), "no second server session for the same account");
         PendingClient pc = gateway.created.get(0);
@@ -115,9 +145,35 @@ class GatewayLoginQueueTest {
     void aFailedFirstLoginFreesTheAccount() {
         gateway.onMessage(conn(), connect("127.0.0.1", "alice"));
         PendingClient pc = gateway.created.get(0);
-        gateway.unregisterSession("127.0.0.1|alice", pc);
-        assertNull(gateway.findSession("127.0.0.1|alice"));
+        gateway.unregisterSession(ProxyClient.sessionKey("127.0.0.1", 17171, "alice"), pc);
+        assertNull(gateway.findSession(ProxyClient.sessionKey("127.0.0.1", 17171, "alice")));
         gateway.onMessage(conn(), connect("127.0.0.1", "alice"));
         assertEquals(2, gateway.created.size());
+    }
+
+    @Test
+    void simultaneousConnectsOfOneAccountOpenOneClient() throws Exception {
+        RaceGateway race = new RaceGateway();
+        CyclicBarrier start = new CyclicBarrier(2);
+        Runnable connectAlice = () -> {
+            try {
+                start.await();
+            } catch (InterruptedException | BrokenBarrierException ignored) {
+            }
+            race.onMessage(conn(), connect("127.0.0.1", "alice"));
+        };
+        Thread first = new Thread(connectAlice);
+        Thread second = new Thread(connectAlice);
+        first.start();
+        second.start();
+        first.join();
+        second.join();
+        try {
+            assertEquals(1, race.created.size(), "one account, one server session, however the connects interleave");
+        } finally {
+            for (PendingClient pc : race.created) {
+                pc.shutdown();
+            }
+        }
     }
 }

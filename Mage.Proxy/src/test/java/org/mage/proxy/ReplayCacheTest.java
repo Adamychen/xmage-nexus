@@ -101,13 +101,14 @@ class ReplayCacheTest {
     }
 
     @Test
-    void aNewStateForAFinishedGameTakesItOutOfTheSlot() {
+    void aStateAfterTheGameEndedDoesNotReplaceTheFinalOne() {
         ReplayCache cache = new ReplayCache();
         cache.onState(GAME, "ended", false);
         cache.onGameEnded(GAME);
-        cache.onState(GAME, "restarted", true);
-        assertEquals(Collections.singletonList("restarted"), cache.replay(GAME));
-        assertEquals(0, cache.finishedSlotCount(), "the map is the only holder now");
+        cache.onState(GAME, "trailing", true);
+        assertEquals(Collections.singletonList("ended"), cache.replay(GAME));
+        assertEquals(1, cache.finishedSlotCount(), "the finished game keeps its slot");
+        assertEquals(0, cache.stateCount(), "and nothing is put back in the per-game map");
     }
 
     @Test

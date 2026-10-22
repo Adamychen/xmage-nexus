@@ -3,7 +3,6 @@ package org.mage.proxy;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.google.gson.JsonSyntaxException;
 import mage.interfaces.MageClient;
 import mage.interfaces.callback.ClientCallback;
 import mage.interfaces.callback.ClientCallbackMethod;
@@ -17,6 +16,10 @@ import mage.view.GameView;
 import org.java_websocket.WebSocket;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
@@ -80,8 +83,6 @@ public class ProxyClient implements MageClient, CommandContext {
 
     private final SessionGames games = new SessionGames();
     private final GameActivity gameActivity = new GameActivity();
-    /** Per-session limits of the report channel, so one player cannot fill the sink. */
-    private final ReportSink.Quota reports;
     /** Latest state and open prompt per game (replayed when a connection joins the game). */
     private final ReplayCache replay = new ReplayCache();
     private final LobbyPublisher lobby;
@@ -106,6 +107,10 @@ public class ProxyClient implements MageClient, CommandContext {
     private final SimManager simManager;
     private volatile boolean service = false;
     private String accountKey = null;
+    private volatile int sessionPort = -1;
+    private volatile byte[] passwordHash = null;
+    private final byte[] passwordSalt = new byte[16];
+    private static final SecureRandom RANDOM = new SecureRandom();
     private volatile String activityUser = null;
 
     public String getActivityUser() {
@@ -113,10 +118,11 @@ public class ProxyClient implements MageClient, CommandContext {
     }
 
     private volatile boolean connected = false;
+    private volatile boolean loggingIn = false;
     private final List<ClientCallback> handshakeBuffer = new java.util.LinkedList<>();
     private final ServerMessageMailbox serverMessages = new ServerMessageMailbox();
 
-    private ScheduledFuture<?> graceDisconnectTimer = null;
+    private volatile ScheduledFuture<?> graceDisconnectTimer = null;
     /**
      * The session is drafting or building its deck for a tournament (see {@link #nextDraftPhase}).
      * A page closed in this state gets the full grace period: a reload that outlasts the short one
@@ -144,14 +150,19 @@ public class ProxyClient implements MageClient, CommandContext {
         return host;
     }
 
+    static String sessionKey(String host, int port, String username) {
+        String h = normalizeHost(host);
+        return h.length() + ":" + h + ":" + port + ":" + username.toLowerCase(Locale.ROOT);
+    }
+
     public ProxyClient(Config config, Gateway gateway) {
         this.config = config;
         this.gateway = gateway;
-        this.reports = new ReportSink.Quota(config);
         this.session = new SessionImpl(this);
         this.connections = new AuthorizedConnections(gateway);
         this.lobby = new LobbyPublisher(connections::broadcastUnnumbered);
         this.simManager = new SimManager(config, this::broadcastError, gateway.simRoster());
+        RANDOM.nextBytes(passwordSalt);
         gateway.clientCreated();
         lobbyTimer.scheduleWithFixedDelay(this::publishLobby, 2, 2, TimeUnit.SECONDS);
         // keep the server session alive (the original client pings from its UI; we have no UI)
@@ -245,7 +256,12 @@ public class ProxyClient implements MageClient, CommandContext {
             disposeCounted = true;
             gateway.clientDisposed();
         }
-        commandExecutor.shutdownNow();
+        List<Runnable> queued = commandExecutor.shutdownNow();
+        for (Runnable task : queued) {
+            if (task instanceof QueuedCommand) {
+                ((QueuedCommand) task).refuse();
+            }
+        }
         callbackExecutor.shutdownNow();
         lobbyTimer.shutdownNow();
         pingTimer.shutdownNow();
@@ -264,8 +280,19 @@ public class ProxyClient implements MageClient, CommandContext {
      * {@link #pingTimer} and its whole job is the server-side cleanup, so disposing here would
      * silently cancel it and leave the session alive on the server until it expires.
      */
-    public synchronized boolean isDisposable() {
-        return released || (!connected && !relinking && lastConnection == null && graceDisconnectTimer == null);
+    public boolean isDisposable() {
+        return released || (!connected && !relinking && !loggingIn && lastConnection == null && graceDisconnectTimer == null);
+    }
+
+    void disposeSoon() {
+        try {
+            pingTimer.execute(() -> {
+                if (isDisposable()) {
+                    dispose();
+                }
+            });
+        } catch (java.util.concurrent.RejectedExecutionException ignored) {
+        }
     }
 
     /**
@@ -430,7 +457,7 @@ public class ProxyClient implements MageClient, CommandContext {
     }
 
     /** Seconds left on the grace timer, or -1 when none is running. */
-    synchronized long graceRemainingSecs() {
+    long graceRemainingSecs() {
         return graceDisconnectTimer == null ? -1 : graceDisconnectTimer.getDelay(TimeUnit.SECONDS);
     }
 
@@ -453,6 +480,9 @@ public class ProxyClient implements MageClient, CommandContext {
         // BEFORE connectStart: the reconnect restore of the new session can arrive while
         // the login is still running and must survive it.
         sequencer.reset();
+        synchronized (handshakeBuffer) {
+            handshakeBuffer.clear();
+        }
         callbackExecutor.shutdownNow();
         callbackExecutor = Executors.newSingleThreadExecutor();
         connections.beginLogin();
@@ -484,10 +514,41 @@ public class ProxyClient implements MageClient, CommandContext {
 
     public void onClientMessage(WebSocket conn, String message) {
         try {
-            commandExecutor.execute(() -> handleCommand(conn, message));
+            commandExecutor.execute(new QueuedCommand(conn, message));
         } catch (java.util.concurrent.RejectedExecutionException ex) {
             // released between the gateway lookup and now: the client retries on a fresh one
             gateway.send(conn, ProxyProtocol.resultJson("", "", false, ProxyProtocol.ERR_FAILED, "session closed, retry"));
+        }
+    }
+
+    private final class QueuedCommand implements Runnable {
+        private final WebSocket conn;
+        private final String message;
+
+        QueuedCommand(WebSocket conn, String message) {
+            this.conn = conn;
+            this.message = message;
+        }
+
+        @Override
+        public void run() {
+            handleCommand(conn, message);
+        }
+
+        void refuse() {
+            String action = "";
+            String requestId = "";
+            try {
+                JsonObject cmd = JsonParser.parseString(message).getAsJsonObject();
+                if (cmd.has("action") && cmd.get("action").isJsonPrimitive()) {
+                    action = cmd.get("action").getAsString();
+                }
+                if (cmd.has("requestId") && cmd.get("requestId").isJsonPrimitive()) {
+                    requestId = cmd.get("requestId").getAsString();
+                }
+            } catch (RuntimeException ignored) {
+            }
+            gateway.send(conn, ProxyProtocol.resultJson(action, requestId, false, ProxyProtocol.ERR_FAILED, "session closed, retry"));
         }
     }
 
@@ -607,7 +668,7 @@ public class ProxyClient implements MageClient, CommandContext {
         int attempt = 0;
         relinkAttempts = 0;
         try {
-            while (!released && System.currentTimeMillis() < deadline) {
+            while (!released && lastConnection != null && System.currentTimeMillis() < deadline) {
                 attempt++;
                 relinkAttempts = attempt;
                 broadcastLink("retrying", attempt);
@@ -624,7 +685,7 @@ public class ProxyClient implements MageClient, CommandContext {
             Thread.currentThread().interrupt();
         }
         relinking = false;
-        if (!released) {
+        if (!released && lastConnection != null) {
             logger.warning("Could not restore the link to the XMage server");
             broadcastLink("failed", attempt);
             broadcastDisconnected();
@@ -892,7 +953,7 @@ public class ProxyClient implements MageClient, CommandContext {
         JsonObject cmd;
         try {
             cmd = JsonParser.parseString(message).getAsJsonObject();
-        } catch (JsonSyntaxException ex) {
+        } catch (RuntimeException ex) {
             gateway.send(conn, ProxyProtocol.resultJson("", requestId, false, ProxyProtocol.ERR_BAD_JSON, "Bad JSON: " + ex.getMessage()));
             return;
         }
@@ -901,6 +962,10 @@ public class ProxyClient implements MageClient, CommandContext {
             if (rid.isJsonPrimitive()) {
                 requestId = rid.getAsString();
             }
+        }
+        if (cmd.has("action") && !cmd.get("action").isJsonPrimitive()) {
+            gateway.send(conn, ProxyProtocol.resultJson("", requestId, false, ProxyProtocol.ERR_BAD_JSON, "Bad JSON: action must be a string"));
+            return;
         }
         action = cmd.has("action") ? cmd.get("action").getAsString() : "";
         if (cmd.has("args") && cmd.get("args").isJsonObject()) {
@@ -1030,7 +1095,8 @@ public class ProxyClient implements MageClient, CommandContext {
         String payload = args.toString();
         String ip = gateway.ipOf(conn);
 
-        ReportSink.Result result = ReportSink.store(config, reports, System.currentTimeMillis(),
+        ReportSink.Quota quota = gateway.reportQuotas().of(accountKey != null ? accountKey : "ip:" + ip);
+        ReportSink.Result result = ReportSink.store(config, quota, System.currentTimeMillis(),
                 activityUser, ip, kind, text, fingerprint, payload);
 
         StringBuilder detail = new StringBuilder();
@@ -1124,13 +1190,23 @@ public class ProxyClient implements MageClient, CommandContext {
 
     private synchronized void connect(WebSocket conn, String requestId, String host, int port, String username, String password,
                                       String flagName, int avatarId, String resumeStreamId, long resumeSeq) {
+        loggingIn = true;
+        try {
+            connectSession(conn, requestId, host, port, username, password, flagName, avatarId, resumeStreamId, resumeSeq);
+        } finally {
+            loggingIn = false;
+        }
+    }
+
+    private void connectSession(WebSocket conn, String requestId, String host, int port, String username, String password,
+                                String flagName, int avatarId, String resumeStreamId, long resumeSeq) {
         // mage.remote.Connection.getURI() sustituye "localhost" por la primera IP
         // no-loopback que encuentra enumerando interfaces (Connection.getLocalAddress).
         // Con interfaces bridge/túnel de VMs activas (p.ej. 192.168.97.0) construye un
         // locator bisocket inalcanzable y el login muere en "client lease". El literal
         // 127.0.0.1 se usa tal cual y siempre es correcto en el host del proxy.
         // (La misma normalización se aplica en Gateway.handleConnect para que la
-        // clave host|username coincida con el accountKey registrado aquí.)
+        // clave de sesión (sessionKey) coincida con el accountKey registrado aquí.)
         host = normalizeHost(host);
         cancelGraceTimer();
         // idempotent connect: same user + same server already connected (e.g. several browser
@@ -1138,6 +1214,12 @@ public class ProxyClient implements MageClient, CommandContext {
         // server session and start a reconnect loop (test mode kicks duplicate users on the
         // same host), leaving the WebSocket registry empty and broadcasts at 0 connections.
         if ((connected || relinking) && isSameSession(host, port, username)) {
+            if (!sameAccountPassword(password)) {
+                logger.info("connect: refused a second window of " + username + " at " + host + ":" + port + " with another password");
+                Activity.login(username, gateway.ipOf(conn), host, port, false, "wrong password", false);
+                gateway.send(conn, ProxyProtocol.resultJson("connect", requestId, false, ProxyProtocol.ERR_PASSWORD, "wrong password"));
+                return;
+            }
             logger.info("connect: already connected as " + username + " at " + host + ":" + port + " — no session restart");
             attach(conn, requestId, resumeStreamId, resumeSeq);
             return;
@@ -1156,6 +1238,7 @@ public class ProxyClient implements MageClient, CommandContext {
             connections.deauthorize(null);
             stopSession(false);
             connected = false;
+            lastConnection = null;
             try {
                 Thread.sleep(500);
             } catch (InterruptedException ignored) {
@@ -1197,6 +1280,10 @@ public class ProxyClient implements MageClient, CommandContext {
         } finally {
             expectDisconnect = false;
         }
+        if (ok) {
+            sessionPort = port;
+            passwordHash = passwordDigest(password);
+        }
         connected = ok;
         logger.info("connectStart=" + ok + " lastError='" + session.getLastError() + "'");
         if (ok) {
@@ -1205,7 +1292,7 @@ public class ProxyClient implements MageClient, CommandContext {
             lobbyTimer.shutdownNow();
             lobbyTimer = Executors.newSingleThreadScheduledExecutor();
             lobbyTimer.scheduleWithFixedDelay(this::publishLobby, 0, 2, TimeUnit.SECONDS);
-            accountKey = host + "|" + username;
+            accountKey = sessionKey(host, port, username);
             if (!service) {
                 gateway.registerSession(accountKey, this);
             }
@@ -1220,7 +1307,7 @@ public class ProxyClient implements MageClient, CommandContext {
             lastLoginWasRelink = false;
             Activity.login(username, gateway.ipOf(conn), host, port, true, null, false);
             connections.finishLogin(conn, ProxyProtocol.resultJson("connect", requestId, true, null, connections.connectData(false, false)));
-            simManager.setOwner(accountKey);
+            simManager.setOwner(host + "|" + username);
             if (!service) {
                 simManager.restoreSims();
             }
@@ -1240,7 +1327,7 @@ public class ProxyClient implements MageClient, CommandContext {
                 // stop holding five non-daemon threads and their timers for a client that can
                 // never reach a session. A retry arrives on a new WebSocket, so this client
                 // has no further use (onClientMessage answers anything else with "retry").
-                gateway.unregisterSession(host + "|" + username, this);
+                gateway.unregisterSession(sessionKey(host, port, username), this);
                 dispose();
             }
         }
@@ -1295,9 +1382,30 @@ public class ProxyClient implements MageClient, CommandContext {
         try {
             return session.getUserName() != null
                     && session.getUserName().equalsIgnoreCase(username)
-                    && session.getServerHost().equalsIgnoreCase(host);
+                    && session.getServerHost().equalsIgnoreCase(host)
+                    && sessionPort == port;
         } catch (Exception ex) {
             return false;
+        }
+    }
+
+    boolean hasPassword() {
+        return passwordHash != null;
+    }
+
+    boolean sameAccountPassword(String password) {
+        byte[] expected = passwordHash;
+        return expected != null && MessageDigest.isEqual(expected, passwordDigest(password));
+    }
+
+    private byte[] passwordDigest(String password) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            digest.update(passwordSalt);
+            digest.update(password.getBytes(StandardCharsets.UTF_8));
+            return digest.digest();
+        } catch (NoSuchAlgorithmException ex) {
+            throw new IllegalStateException(ex);
         }
     }
 

@@ -39,7 +39,7 @@ public class Gateway extends WebSocketServer {
     private final Config config;
     /** conn -> su ProxyClient (sesión propia o compartida por cuenta). */
     private final Map<WebSocket, ProxyClient> byConn = Collections.synchronizedMap(new IdentityHashMap<WebSocket, ProxyClient>());
-    /** host|username -> ProxyClient conectado (para re-adjuntar ventanas de la misma cuenta). */
+    /** {@link ProxyClient#sessionKey} -> ProxyClient conectado (para re-adjuntar ventanas de la misma cuenta). */
     private final Map<String, ProxyClient> byAccount = new ConcurrentHashMap<>();
 
     /** recuento de mensajes por conexión (ventana deslizante de 1 s) */
@@ -54,12 +54,18 @@ public class Gateway extends WebSocketServer {
     }
 
     private static String clientIp(WebSocket conn, ClientHandshake handshake) {
-        String fwd = handshake.hasFieldValue("X-Forwarded-For") ? handshake.getFieldValue("X-Forwarded-For") : "";
-        if (!fwd.isEmpty()) {
-            return fwd.split(",")[0].trim();
-        }
         InetSocketAddress a = conn.getRemoteSocketAddress();
+        boolean local = a != null && a.getAddress() != null && a.getAddress().isLoopbackAddress();
+        String fwd = local && handshake.hasFieldValue("X-Forwarded-For") ? handshake.getFieldValue("X-Forwarded-For") : "";
+        String first = fwd.split(",", -1)[0].trim();
+        if (!first.isEmpty()) {
+            return forLog(first);
+        }
         return a == null || a.getAddress() == null ? "" : a.getAddress().getHostAddress();
+    }
+
+    static String forLog(String value) {
+        return value == null ? null : value.replaceAll("\\p{Cntrl}", "");
     }
 
     /** Connections whose page announced it is closing ({@code leaving}). */
@@ -76,10 +82,16 @@ public class Gateway extends WebSocketServer {
         super(new InetSocketAddress(config.getBindAddress(), port), drafts());
         this.config = config;
         this.simRoster = SimRoster.fromConfig(config);
+        this.reportQuotas = new ReportSink.Quotas(config);
         setReuseAddr(true);
     }
 
     private final SimRoster simRoster;
+    private final ReportSink.Quotas reportQuotas;
+
+    ReportSink.Quotas reportQuotas() {
+        return reportQuotas;
+    }
     private final java.util.concurrent.ScheduledExecutorService rosterTimer =
             java.util.concurrent.Executors.newSingleThreadScheduledExecutor(r -> {
                 Thread t = new Thread(r, "sim-roster");
@@ -224,8 +236,8 @@ public class Gateway extends WebSocketServer {
         String origin = handshake.getFieldValue("Origin");
         String ip = clientIp(conn, handshake);
         if (!originAllowed(origin)) {
-            Activity.wsRejected(ip, origin);
-            System.err.println("[proxy] ws rejected origin=" + origin);
+            Activity.wsRejected(ip, forLog(origin));
+            System.err.println("[proxy] ws rejected origin=" + forLog(origin));
             conn.close(1008, "origin not allowed");
             return;
         }
@@ -248,7 +260,7 @@ public class Gateway extends WebSocketServer {
             // restored) has nothing left to serve and no grace timer to run, so its threads
             // would otherwise outlive the WebSocket for the life of the process
             if (pc.isDisposable()) {
-                pc.dispose();
+                pc.disposeSoon();
             }
         }
         String ip = connIp.remove(conn);
@@ -359,12 +371,15 @@ public class Gateway extends WebSocketServer {
 
     private final Object fallbackSendLock = new Object();
 
+    private final Object accountLock = new Object();
+
     /** Intercepta `connect` para decidir create-vs-attach antes de crear la sesión. */
     private void handleConnect(WebSocket conn, String message) {
         String requestId = "";
         String host;
         int port;
         String username;
+        String password;
         String resumeStream;
         long resumeSeq;
         try {
@@ -377,6 +392,7 @@ public class Gateway extends WebSocketServer {
             host = args.has("host") ? args.get("host").getAsString() : config.getServerHost();
             port = args.has("port") ? args.get("port").getAsInt() : config.getServerPort();
             username = args.has("username") ? args.get("username").getAsString() : config.getUsername();
+            password = JsonArgs.str(args, "password", config.getPassword());
             resumeStream = ProxyClient.resumeStream(args);
             resumeSeq = ProxyClient.resumeSeq(args);
         } catch (Exception ex) {
@@ -389,10 +405,44 @@ public class Gateway extends WebSocketServer {
                     "Proxy is still loading card data, retry in a few seconds"));
             return;
         }
-        String key = ProxyClient.normalizeHost(host) + "|" + username;
         host = ProxyClient.normalizeHost(host);
-        ProxyClient existing = byAccount.get(key);
-        if (existing != null && (existing.isConnected() || existing.isRelinking()) && existing.isSameSession(host, port, username)) {
+        String key = ProxyClient.sessionKey(host, port, username);
+        ProxyClient existing;
+        ProxyClient pc = null;
+        ProxyClient previous;
+        synchronized (accountLock) {
+            previous = byAccount.get(key);
+            existing = previous;
+            if (existing == null || !joinable(existing, host, port, username)) {
+                ProxyClient fresh = newClient();
+                boolean swapped = previous != null && byAccount.replace(key, previous, fresh);
+                ProxyClient holder = swapped ? null : byAccount.putIfAbsent(key, fresh);
+                if (holder == null) {
+                    pc = fresh;
+                } else {
+                    fresh.dispose();
+                    existing = holder;
+                }
+            }
+        }
+        if (pc != null) {
+            logger.info("connect: NEW ProxyClient key=" + key + " (existing="
+                    + (previous == null ? "null" : ("connected=" + previous.isConnected()
+                            + " sameSession=" + previous.isSameSession(host, port, username))) + ")");
+            byConn.put(conn, pc);
+            // registered before its login ends: a second connect of this account meanwhile (a
+            // retry, another tab) queues behind this login and attaches to it instead of opening a
+            // second server session that would kick this one out (and be kicked back by its relink)
+            pc.onClientMessage(conn, message);
+            return;
+        }
+        if ((existing.isConnected() || existing.isRelinking()) && existing.isSameSession(host, port, username)) {
+            if (!existing.sameAccountPassword(password)) {
+                logger.info("connect: refused a second window of key=" + key + " with another password");
+                Activity.login(username, ipOf(conn), host, port, false, "wrong password", false);
+                send(conn, ProxyProtocol.resultJson("connect", requestId, false, ProxyProtocol.ERR_PASSWORD, "wrong password"));
+                return;
+            }
             // a session that is logging in again after losing the server keeps its clients:
             // they get the relink progress and the restored games on the same stream
             logger.info("connect: attach conn to existing session key=" + key);
@@ -401,28 +451,22 @@ public class Gateway extends WebSocketServer {
             Activity.login(username, ipOf(conn), host, port, true, null, true);
             return;
         }
-        if (existing != null && !existing.isConnected() && !existing.isReleased()) {
-            // its XMage session was closed keeping the tables (grace period, lost server link):
-            // logging in again through the same client restores the games with their bots
-            logger.info("connect: re-login through the idle client of key=" + key);
-            byConn.put(conn, existing);
-            existing.onClientMessage(conn, message);
+        // its XMage session was closed keeping the tables (grace period, lost server link):
+        // logging in again through the same client restores the games with their bots
+        if (existing.hasPassword() && !existing.sameAccountPassword(password)) {
+            logger.info("connect: refused a re-login through the idle client of key=" + key + " with another password");
+            Activity.login(username, ipOf(conn), host, port, false, "wrong password", false);
+            send(conn, ProxyProtocol.resultJson("connect", requestId, false, ProxyProtocol.ERR_PASSWORD, "wrong password"));
             return;
         }
-        logger.info("connect: NEW ProxyClient key=" + key + " (existing="
-                + (existing == null ? "null" : ("connected=" + existing.isConnected()
-                        + " sameSession=" + existing.isSameSession(host, port, username))) + ")");
-        ProxyClient pc = newClient();
-        byConn.put(conn, pc);
-        // registered before its login ends: a second connect of this account meanwhile (a
-        // retry, another tab) queues behind this login and attaches to it instead of opening a
-        // second server session that would kick this one out (and be kicked back by its relink)
-        if (existing == null) {
-            byAccount.putIfAbsent(key, pc);
-        } else {
-            byAccount.replace(key, existing, pc);
-        }
-        pc.onClientMessage(conn, message);
+        logger.info("connect: re-login through the idle client of key=" + key);
+        byConn.put(conn, existing);
+        existing.onClientMessage(conn, message);
+    }
+
+    private static boolean joinable(ProxyClient existing, String host, int port, String username) {
+        boolean loggedIn = (existing.isConnected() || existing.isRelinking()) && existing.isSameSession(host, port, username);
+        return loggedIn || !existing.isConnected() && !existing.isReleased();
     }
 
     /** A {@code leaving} notice: the page is being closed or navigated away. */

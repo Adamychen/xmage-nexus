@@ -32,7 +32,7 @@ class ProxyClientStreamTest {
         }
     }
 
-    static final class RecordingGateway extends Gateway {
+    static class RecordingGateway extends Gateway {
         final List<Sent> sent = new ArrayList<>();
 
         RecordingGateway() {

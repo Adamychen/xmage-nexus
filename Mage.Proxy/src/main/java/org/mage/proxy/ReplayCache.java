@@ -1,7 +1,11 @@
 package org.mage.proxy;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -38,25 +42,42 @@ final class ReplayCache {
     private volatile UUID lastFinishedGame = null;
     private volatile String lastFinishedState = null;
 
+    static final int MAX_ENDED_GAMES = 256;
+
+    private final Set<UUID> ended = Collections.newSetFromMap(new LinkedHashMap<UUID, Boolean>() {
+        @Override
+        protected boolean removeEldestEntry(Map.Entry<UUID, Boolean> eldest) {
+            return size() > MAX_ENDED_GAMES;
+        }
+    });
+
     void onState(UUID gameId, String json, boolean init) {
-        states.put(gameId, json);
-        if (gameId.equals(lastFinishedGame)) {
-            // the game started again (a rematch reuses the id? it should not, but be safe)
-            lastFinishedGame = null;
-            lastFinishedState = null;
+        synchronized (ended) {
+            if (ended.contains(gameId)) {
+                return;
+            }
+            states.put(gameId, json);
         }
         if (init) {
-            // a (re)initialised game re-asks whatever it still waits for
             prompts.remove(gameId);
         }
     }
 
     void onPrompt(UUID gameId, String method, String json) {
-        prompts.put(gameId, new Prompt(method, json));
+        synchronized (ended) {
+            if (ended.contains(gameId)) {
+                return;
+            }
+            prompts.put(gameId, new Prompt(method, json));
+        }
     }
 
     void onGameEnded(UUID gameId) {
-        String state = states.remove(gameId);
+        String state;
+        synchronized (ended) {
+            ended.add(gameId);
+            state = states.remove(gameId);
+        }
         prompts.remove(gameId);
         if (state != null) {
             lastFinishedState = state;
@@ -119,6 +140,9 @@ final class ReplayCache {
     }
 
     void clear() {
+        synchronized (ended) {
+            ended.clear();
+        }
         states.clear();
         prompts.clear();
         lastFinishedGame = null;

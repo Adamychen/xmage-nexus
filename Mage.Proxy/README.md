@@ -58,9 +58,12 @@ Request format:
 
 **Multi-tenant:** every WebSocket connection owns its own XMage session
 (`SessionImpl`); one proxy process serves many users at once. A second connection
-that sends `connect` with the **same account** (`host|username`) attaches to the
-existing session (several tabs/windows = one session) instead of opening a new
-one. Different accounts are isolated sessions: server→client events of a session
+that sends `connect` with the **same account** (same server host and port, username
+ignoring case) attaches to the existing session (several tabs/windows = one session)
+instead of opening a new one. The attach needs the **same password** as the login that
+opened the session: a different or missing one is answered with `errorCode: "PASSWORD"`
+and attaches nothing (the proxy keeps only a salted SHA-256 of the password). Different
+accounts are isolated sessions: server→client events of a session
 only reach that session's connections.
 
 The `connect` result carries `data.attached`: `true` when the connection
@@ -76,8 +79,9 @@ carries `data.streamId` (see the resumable stream below) and, on an attach,
 that same stream gets every later frame replayed in order before the live stream
 (`resumed: true`): a `SIDEBOARD`, a game 2 `START_GAME`, a `GAME_OVER` or chat sent
 while the client was away is not lost. A newer plain `GAME_UPDATE` of a game
-replaces the older one in the log; frames are kept 60 s once delivered and
-without limit (up to 2000 frames / 16 MB) while no client is attached. When the
+replaces the older one in the log; a delivered frame is kept 60 s, even behind a frame
+no client has received yet, and a frame no client has received is kept until the limits
+(2000 frames / 16 MB). When the
 requested `seq` is no longer available the attach answers `resumed: false` and the
 client rejoins its game (`joinGame` replay below). Clients drop a frame whose
 `seq` they already processed.
@@ -138,7 +142,7 @@ session starts.
 
 **Restore ids across restarts:** the server hands a user's session to any login
 that presents the session id as its `restoreSessionId`, even from another address.
-The proxy remembers, per `host|username`, the id of the account's last live
+The proxy remembers, per `host|username` (host and account name compared case-insensitively), the id of the account's last live
 session and presents it on the next login; the store is bounded and kept on disk
 (`--restoreIds`, default `<tmpdir>/mage-proxy-restore-<wsPort>.json`, `none`
 disables it; entries older than 10 minutes are dropped, by which time the server

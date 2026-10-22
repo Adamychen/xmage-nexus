@@ -4,6 +4,9 @@ import mage.interfaces.MageServer;
 import mage.remote.SessionImpl;
 
 import java.lang.reflect.Field;
+import java.util.Collections;
+import java.util.IdentityHashMap;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -63,14 +66,33 @@ final class SessionProbe {
      * kicks the healthy session out, leaves one more dead session on the server and freezes the
      * game thread, so an unknown result must not act. It is logged loudly instead.
      */
+    private static final Set<SessionImpl> IN_FLIGHT = Collections.newSetFromMap(new IdentityHashMap<SessionImpl, Boolean>());
+
     static boolean answers(SessionImpl session, long timeoutMs) {
         if (SERVER_FIELD == null) {
             return true;
         }
+        synchronized (IN_FLIGHT) {
+            if (!IN_FLIGHT.add(session)) {
+                logger.info("A ping of this session is still waiting on the server: it did not answer in time");
+                return false;
+            }
+        }
         Future<Boolean> probe;
         try {
-            probe = PROBES.submit(() -> ping(session));
+            probe = PROBES.submit(() -> {
+                try {
+                    return ping(session);
+                } finally {
+                    synchronized (IN_FLIGHT) {
+                        IN_FLIGHT.remove(session);
+                    }
+                }
+            });
         } catch (RuntimeException ex) {
+            synchronized (IN_FLIGHT) {
+                IN_FLIGHT.remove(session);
+            }
             logger.log(Level.WARNING, "Could not run the link probe; treating the link as alive", ex);
             return true;
         }

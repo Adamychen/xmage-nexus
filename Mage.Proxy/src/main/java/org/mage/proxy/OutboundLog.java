@@ -121,7 +121,7 @@ final class OutboundLog {
             boolean overLimit = live > maxFrames || chars > maxChars;
             boolean expired = e.delivered && now - e.at > DELIVERED_RETENTION_MS;
             if (!dead && !overLimit && !expired) {
-                break;
+                continue;
             }
             it.remove();
             if (!dead) {
