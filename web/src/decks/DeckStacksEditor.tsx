@@ -8,6 +8,7 @@ import { useDeckMutations } from './useDeckMutations'
 import { useCardArtUrl } from './useCardArtUrl'
 import { ArenaCardStacks } from './ArenaCardStacks'
 import { buildTypeColumns } from './stackColumns'
+import { aggregateCards } from './deckCardOps'
 import { useTypeLabels } from './useTypeLabels'
 import SearchPanel from './SearchPanel'
 import Button from '../ui/Button'
@@ -26,7 +27,11 @@ export function DeckStacksEditor({ deck: initialDeck, onClose, onEdit }: {
 }) {
   const { t } = useTranslation()
   const storage = useMemo(() => getDeckStorage(), [])
-  const [deck, setDeck] = useState<DeckV2>(initialDeck)
+  const [deck, setDeck] = useState<DeckV2>(() => ({
+    ...initialDeck,
+    cards: aggregateCards(initialDeck.cards),
+    sideboard: aggregateCards(initialDeck.sideboard),
+  }))
   const pendingRef = useRef<DeckV2 | null>(null)
   const timerRef = useRef<number | null>(null)
   const writesRef = useRef<Promise<void>>(Promise.resolve())

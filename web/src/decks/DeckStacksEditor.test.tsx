@@ -99,6 +99,28 @@ describe('DeckStacksEditor', () => {
     expect(putSpy.mock.calls[0][0]).toMatchObject({ id: 'e1' })
   })
 
+  it('merges repeated lines of the same printing into one stack and one counter', () => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const repeated: DeckV2 = {
+      ...deck(),
+      cards: [
+        { cardName: 'Mountain', setCode: 'LEA', cardNumber: '292', amount: 4 },
+        { cardName: 'Lightning Bolt', setCode: 'M10', cardNumber: '146', amount: 4 },
+        { cardName: 'Mountain', setCode: 'LEA', cardNumber: '292', amount: 20 },
+      ],
+    }
+    render(<DeckStacksEditor deck={repeated} onClose={vi.fn()} onEdit={vi.fn()} />)
+    const mountains = document.querySelectorAll('.stacks-editor-main .arena-stack-card[data-card-key="LEA:292:Mountain"]')
+    expect(mountains).toHaveLength(1)
+    const mountain = mountains[0] as HTMLElement
+    expect(mountain.querySelector('.arena-stack-qty')?.textContent).toBe('24x')
+    fireEvent.click(mountain)
+    expect(mountain.querySelector('.arena-stack-qty')?.textContent).toBe('23x')
+    const duplicateKeyWarnings = errorSpy.mock.calls.filter((args) => args.map(String).join(' ').includes('same key'))
+    errorSpy.mockRestore()
+    expect(duplicateKeyWarnings).toEqual([])
+  })
+
   it('Edit hands over to the classic builder', async () => {
     const { onEdit } = renderEditor()
     fireEvent.click(document.querySelector('.stacks-editor-foot .ui-btn--subtle') as HTMLElement)

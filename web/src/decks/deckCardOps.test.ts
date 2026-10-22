@@ -220,3 +220,31 @@ describe('copy cap and printing merges', () => {
     expect(list).toEqual([bolt({ amount: 2 })])
   })
 })
+
+describe('one printing split across repeated lines', () => {
+  const mountain = (amount: number): DeckCard => ({ cardName: 'Mountain', setCode: 'LEA', cardNumber: '292', amount })
+  const mountainKey = 'LEA:292:Mountain'
+  const copies = (list: DeckCard[]) => list.filter((c) => deckCardKey(c) === mountainKey).reduce((s, c) => s + c.amount, 0)
+
+  it('increment adds one copy in total, not one per line', () => {
+    expect(copies(incrementInList([mountain(4), bolt(), mountain(52)], mountainKey))).toBe(57)
+  })
+
+  it('decrement removes one copy in total, not one per line', () => {
+    expect(copies(decrementInList([mountain(4), bolt(), mountain(52)], mountainKey))).toBe(55)
+  })
+
+  it('decrement drops a line that reaches zero and keeps the other line', () => {
+    expect(copies(decrementInList([mountain(1), mountain(52)], mountainKey))).toBe(52)
+  })
+
+  it('increment stops at 99 copies across all lines', () => {
+    expect(copies(incrementInList([mountain(50), mountain(49)], mountainKey))).toBe(99)
+  })
+
+  it('refuses a move into a printing already at 99 copies across its lines', () => {
+    const island = (amount: number): DeckCard => ({ cardName: 'Island', setCode: 'M21', cardNumber: '265', amount })
+    const [, nextTo] = moveOneBetween([island(1)], [island(50), island(49)], 'M21:265:Island')
+    expect(nextTo.reduce((s, c) => s + c.amount, 0)).toBe(99)
+  })
+})

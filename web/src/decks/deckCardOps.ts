@@ -22,7 +22,7 @@ export function moveOneBetween(from: DeckCard[], to: DeckCard[], key: string): [
   if (idx < 0) return [from, to]
   const card = from[idx]
   const toIdx = to.findIndex((c) => deckCardKey(c) === key)
-  if (toIdx >= 0 && to[toIdx].amount >= MAX_COPIES) return [from, to]
+  if (copiesOf(to, key) >= MAX_COPIES) return [from, to]
   const nextFrom = card.amount <= 1
     ? from.filter((_, i) => i !== idx)
     : from.map((c, i) => (i === idx ? { ...c, amount: c.amount - 1 } : c))
@@ -32,14 +32,21 @@ export function moveOneBetween(from: DeckCard[], to: DeckCard[], key: string): [
   return [nextFrom, nextTo]
 }
 
+function copiesOf(list: DeckCard[], key: string): number {
+  return list.reduce((sum, c) => (deckCardKey(c) === key ? sum + c.amount : sum), 0)
+}
+
 export function incrementInList(list: DeckCard[], key: string): DeckCard[] {
-  return list.map((c) => (deckCardKey(c) === key ? { ...c, amount: Math.min(MAX_COPIES, c.amount + 1) } : c))
+  const idx = list.findIndex((c) => deckCardKey(c) === key)
+  if (idx < 0 || copiesOf(list, key) >= MAX_COPIES) return list
+  return list.map((c, i) => (i === idx ? { ...c, amount: Math.min(MAX_COPIES, c.amount + 1) } : c))
 }
 
 export function decrementInList(list: DeckCard[], key: string): DeckCard[] {
-  return list.flatMap((c) =>
-    deckCardKey(c) === key ? (c.amount <= 1 ? [] : [{ ...c, amount: c.amount - 1 }]) : [c]
-  )
+  const idx = list.findIndex((c) => deckCardKey(c) === key)
+  if (idx < 0) return list
+  if (list[idx].amount <= 1) return list.filter((_, i) => i !== idx)
+  return list.map((c, i) => (i === idx ? { ...c, amount: c.amount - 1 } : c))
 }
 
 export function removeFromList(list: DeckCard[], key: string): DeckCard[] {

@@ -287,3 +287,30 @@ describe('useDeckMutations: printings and files', () => {
     expect(getState().error).toBe('No se pudieron reconocer cartas. Formato esperado: "4 Lightning Bolt"')
   })
 })
+
+describe('useDeckMutations: one printing split across repeated lines', () => {
+  const mountainFirst: DeckCard = { cardName: 'Mountain', setCode: 'LEA', cardNumber: '292', amount: 4 }
+  const mountainLast: DeckCard = { cardName: 'Mountain', setCode: 'LEA', cardNumber: '292', amount: 52 }
+  const mountainKey = key(mountainFirst)
+  const copies = (cards: DeckCard[]) => cards.filter((c) => key(c) === mountainKey).reduce((s, c) => s + c.amount, 0)
+
+  it('inc adds exactly one copy to the row the builder shows', () => {
+    const s = setup(makeDeck({ cards: [mountainFirst, bolt, mountainLast] }))
+    act(() => s.m.handleInc(mountainKey))
+    expect(copies(s.persisted().cards)).toBe(57)
+  })
+
+  it('dec removes exactly one copy from the row the builder shows', () => {
+    const s = setup(makeDeck({ cards: [mountainFirst, bolt, mountainLast] }))
+    act(() => s.m.handleDec(mountainKey))
+    expect(copies(s.persisted().cards)).toBe(55)
+  })
+
+  it('dec on the last copy of a split row removes only that copy', () => {
+    const s = setup(makeDeck({
+      cards: [{ ...mountainFirst, amount: 1 }, bolt, { ...mountainLast, amount: 1 }],
+    }))
+    act(() => s.m.handleDec(mountainKey))
+    expect(copies(s.persisted().cards)).toBe(1)
+  })
+})

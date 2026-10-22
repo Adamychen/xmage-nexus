@@ -49,10 +49,8 @@ export function BasicLandAdder({
     saveBasicLandSet(code)
   }
 
-  const getLandCount = (name: string): number => {
-    const found = cards.find((c) => c.cardName.toLowerCase() === name.toLowerCase())
-    return found ? found.amount : 0
-  }
+  const getLandCount = (name: string): number =>
+    cards.reduce((sum, c) => (c.cardName.toLowerCase() === name.toLowerCase() ? sum + c.amount : sum), 0)
 
   const handleSuggest = async () => {
     const suggested = suggestBasicLands(pips, targetCount, landSet)
