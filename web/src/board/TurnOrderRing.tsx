@@ -19,6 +19,8 @@ export interface TurnOrderRingProps {
    */
   lane?: boolean
   onSeatClick?: (playerId: string) => void
+  /** Lets the own pill take `onSeatClick` too (the main board mode, BRD-7). */
+  selfClickable?: boolean
   focusedId?: string | null
 }
 
@@ -31,7 +33,7 @@ export function turnOrderSeats(players: PlayerView[] | undefined, lane = false):
   return [...clamped].reverse()
 }
 
-export default function TurnOrderRing({ players, activePlayerId, lane = false, onSeatClick, focusedId = null }: TurnOrderRingProps) {
+export default function TurnOrderRing({ players, activePlayerId, lane = false, onSeatClick, selfClickable = false, focusedId = null }: TurnOrderRingProps) {
   const { t } = useTranslation()
   const portrait = useSettings().gameUi === 'v2' && !lane
   const ordered = turnOrderSeats(players, lane)
@@ -78,7 +80,7 @@ export default function TurnOrderRing({ players, activePlayerId, lane = false, o
       const isPriority = !!p.hasPriority
       const isDefeated = isPlayerOut(p)
       const nextPlayer = ordered[(idx + 1) % count]
-      const clickable = !!onSeatClick && !measure && !p.controlled && !isDefeated
+      const clickable = !!onSeatClick && !measure && (!p.controlled || selfClickable) && !isDefeated
       const focused = focusedId === p.playerId
 
       return (

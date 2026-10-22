@@ -83,6 +83,32 @@ describe('useZoneScale', () => {
     expect(cardW).toBeGreaterThan(100)
   })
 
+  it('BRD-6: a zone is sized from its layout box, not its scaled box', () => {
+    const offsetW = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetWidth')
+    const offsetH = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetHeight')
+    Object.defineProperty(HTMLElement.prototype, 'offsetWidth', { configurable: true, get() { return this.classList?.contains('board-zone') ? 800 : 0 } })
+    Object.defineProperty(HTMLElement.prototype, 'offsetHeight', { configurable: true, get() { return this.classList?.contains('board-zone') ? 400 : 0 } })
+    Element.prototype.getBoundingClientRect = function () {
+      if (this.classList?.contains('board-zone')) {
+        return { width: 200, height: 100, top: 0, left: 0, right: 200, bottom: 100, x: 0, y: 0, toJSON: () => {} } as DOMRect
+      }
+      return { width: 100, height: 44, top: 0, left: 0, right: 100, bottom: 44, x: 0, y: 0, toJSON: () => {} } as DOMRect
+    }
+    try {
+      const { getByTestId } = render(<TestZone initialAttach />)
+      const layoutCardW = Number(getByTestId('card-w').textContent)
+      cleanup()
+      Object.defineProperty(HTMLElement.prototype, 'offsetWidth', { configurable: true, get() { return this.classList?.contains('board-zone') ? 200 : 0 } })
+      Object.defineProperty(HTMLElement.prototype, 'offsetHeight', { configurable: true, get() { return this.classList?.contains('board-zone') ? 100 : 0 } })
+      const scaled = render(<TestZone initialAttach />)
+      const scaledCardW = Number(scaled.getByTestId('card-w').textContent)
+      expect(layoutCardW).toBeGreaterThan(scaledCardW)
+    } finally {
+      if (offsetW) Object.defineProperty(HTMLElement.prototype, 'offsetWidth', offsetW)
+      if (offsetH) Object.defineProperty(HTMLElement.prototype, 'offsetHeight', offsetH)
+    }
+  })
+
   it('stops re-queuing layout frames while the zone never gets a height', () => {
     const frames: FrameRequestCallback[] = []
     const request = vi.spyOn(window, 'requestAnimationFrame').mockImplementation((cb) => {

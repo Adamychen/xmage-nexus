@@ -275,7 +275,7 @@
     { "category": "Presentation & Audio", "feature": "VFX & Animations", "official": "no", "nexus": "yes", "phase": "Completed" },
     { "category": "Distribution", "feature": "Desktop & Web Deployment", "official": "no", "nexus": "yes", "phase": "Completed" },
     { "category": "Distribution", "feature": "Interactive Web Demo (GitHub Pages, no install)", "official": "no", "nexus": "yes", "phase": "Completed" },
-    { "category": "Advanced Formats", "feature": "Commander / EDH (server FFA 3-10; board render clamp 4; per-kind bands and focus on one opponent's board)", "official": "yes", "nexus": "yes", "phase": "Completed" },
+    { "category": "Advanced Formats", "feature": "Commander / EDH (server FFA 3-10; board render clamp 4; per-kind bands, focus on one opponent's board, and an opt-in main board with a side panel of scaled board copies)", "official": "yes", "nexus": "yes", "phase": "Completed" },
     { "category": "Advanced Formats", "feature": "Booster Draft & Sealed (8-player, Construct 40)", "official": "yes", "nexus": "yes", "phase": "Completed" },
     { "category": "Advanced Formats", "feature": "Swiss Tournament Brackets + Replay Entry (view-only)", "official": "yes", "nexus": "partial", "phase": "Completed" }
   ],

@@ -1,7 +1,7 @@
 import { act, cleanup, fireEvent, render } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import ResourceBar from './ResourceBar'
-import type { PlayerView } from '../net/types'
+import type { CardView, PlayerView } from '../net/types'
 import { makeCard, makeGameView, makePlayer } from '../__fixtures__/gameViews'
 import { setState } from '../state/store'
 import { TOP_CARD_PEEK_NAME } from './topCardPeek'
@@ -360,5 +360,151 @@ describe('ResourceBar top-card peek', () => {
     expect(card.className).toMatch(/playable/)
     fireEvent.click(card)
     expect(onPlay).toHaveBeenCalledWith('top-1')
+  })
+})
+
+describe('ResourceBar pileCards', () => {
+  afterEach(() => {
+    cleanup()
+  })
+
+  const pilePlayer = (overrides: Partial<PlayerView> = {}): PlayerView =>
+    makePlayer({
+      playerId: 'p-1',
+      name: 'Alice',
+      controlled: true,
+      isHuman: true,
+      libraryCount: 40,
+      manaPool: { white: 0, blue: 1, black: 0, red: 2, green: 0, colorless: 0 },
+      graveyard: {},
+      exile: {},
+      ...overrides,
+    })
+
+  it('BRD-12: pileCards draws the library face down and the graveyard and exile top cards face up, each with its count', () => {
+    const player = pilePlayer({
+      graveyard: {
+        'c-1': { id: 'c-1', name: 'Lightning Bolt', manaValue: 1, cardNumber: '10', expansionSetCode: 'lea' },
+        'c-2': { id: 'c-2', name: 'Snapcaster Mage', manaValue: 2, cardNumber: '20', expansionSetCode: 'isd' },
+      },
+      exile: {
+        'c-3': { id: 'c-3', name: 'Force of Will', manaValue: 5, cardNumber: '30', expansionSetCode: 'all' },
+      },
+    })
+    const { container } = render(<ResourceBar player={player} side="my" pileCards />)
+
+    const library = container.querySelector('[data-testid="pile-card-library"]')!
+    expect(library.classList.contains('pile-card--library')).toBe(true)
+    expect(library.querySelector('.stack-back-img')).not.toBeNull()
+    expect(library.querySelector('.card-slot')).toBeNull()
+    expect(library.querySelector('.pile-card-count')?.textContent).toBe('40')
+    expect(library.getAttribute('data-count')).toBe('40')
+
+    const graveyard = container.querySelector('[data-testid="pile-card-graveyard"]')!
+    expect(graveyard.classList.contains('pile-card--graveyard')).toBe(true)
+    expect(graveyard.querySelector('.card-slot')?.getAttribute('data-card-name')).toBe('Snapcaster Mage')
+    expect(graveyard.querySelector('.pile-card-count')?.textContent).toBe('2')
+    expect(graveyard.getAttribute('data-count')).toBe('2')
+
+    const exile = container.querySelector('[data-testid="pile-card-exile"]')!
+    expect(exile.classList.contains('pile-card--exile')).toBe(true)
+    expect(exile.querySelector('.card-slot')?.getAttribute('data-card-name')).toBe('Force of Will')
+    expect(exile.querySelector('.card-slot')?.textContent).toContain('Force of Will')
+    expect(exile.querySelector('.pile-card-count')?.textContent).toBe('1')
+    expect(exile.getAttribute('data-count')).toBe('1')
+  })
+
+  it('BRD-12: an empty pile is an outlined slot that still opens its viewer', () => {
+    const { container } = render(<ResourceBar player={pilePlayer()} side="my" pileCards />)
+
+    const exile = container.querySelector('[data-testid="pile-card-exile"]')!
+    expect(exile.tagName).toBe('BUTTON')
+    expect(exile.classList.contains('is-empty')).toBe(true)
+    expect(exile.querySelector('.pile-card-label')?.textContent).toBeTruthy()
+    expect(exile.querySelector('.card-slot')).toBeNull()
+    expect(exile.getAttribute('data-count')).toBe('0')
+
+    fireEvent.click(exile)
+    expect(document.body.querySelector('.pile-overlay')).toBeTruthy()
+  })
+
+  it('BRD-12: clicking a pile card opens the same viewer the chip opens', () => {
+    const player = pilePlayer({
+      graveyard: { 'c-1': { id: 'c-1', name: 'Lightning Bolt', manaValue: 1 } },
+    })
+    const chipView = render(<ResourceBar player={player} side="opp" micro={true} />)
+    fireEvent.click(chipView.container.querySelector('.resource-chip.graveyard-chip')!)
+    const chipTitle = document.body.querySelector('.pile-overlay-header h3')?.textContent
+    const chipCardCount = document.body.querySelectorAll('.pile-overlay .pile-card').length
+    cleanup()
+    expect(document.body.querySelector('.pile-overlay')).toBeNull()
+
+    const { container } = render(<ResourceBar player={player} side="opp" pileCards />)
+    expect(document.body.querySelector('.pile-overlay')).toBeNull()
+    fireEvent.click(container.querySelector('[data-testid="pile-card-graveyard"]')!)
+    expect(document.body.querySelector('.pile-overlay')).toBeTruthy()
+    expect(document.body.querySelector('.pile-overlay-header h3')?.textContent).toBe(chipTitle)
+    expect(document.body.querySelectorAll('.pile-overlay .pile-card').length).toBe(chipCardCount)
+  })
+
+  it('BRD-12: a pile card glows when a card in it can be played', () => {
+    const player = pilePlayer({
+      graveyard: { 'g-1': { id: 'g-1', name: 'Faithless Looting', manaValue: 1 } },
+    })
+    const crossZonePlayables = [
+      {
+        id: 'g-1',
+        card: { id: 'g-1', name: 'Faithless Looting', manaValue: 1 },
+        value: 'Cast with Flashback',
+        zone: 'graveyard',
+      },
+    ]
+    const { container } = render(
+      <ResourceBar player={player} side="my" pileCards crossZonePlayables={crossZonePlayables} />,
+    )
+
+    expect(container.querySelector('[data-testid="pile-card-graveyard"]')?.classList.contains('has-playable')).toBe(true)
+    expect(container.querySelector('[data-testid="pile-card-exile"]')?.classList.contains('has-playable')).toBe(false)
+  })
+
+  it('BRD-12: a pile card rings when the prompt can target a card in it', () => {
+    const player = pilePlayer({
+      exile: { 'x-1': { id: 'x-1', name: 'Swords to Plowshares', manaValue: 1 } },
+    })
+    const { container } = render(
+      <ResourceBar
+        player={player}
+        side="my"
+        pileCards
+        targetIds={new Set(['x-1'])}
+        targetZone="exile"
+        targetZones={new Set(['exile'])}
+      />,
+    )
+
+    expect(container.querySelector('[data-testid="pile-card-exile"]')?.classList.contains('target-zone')).toBe(true)
+    expect(container.querySelector('[data-testid="pile-card-graveyard"]')?.classList.contains('target-zone')).toBe(false)
+  })
+
+  it('BRD-12: pileCards leaves out the mana pool and the chips', () => {
+    const { container } = render(<ResourceBar player={pilePlayer()} side="my" pileCards />)
+
+    expect(container.querySelector('[data-testid="pile-cards"]')).not.toBeNull()
+    expect(container.querySelector('[data-testid="mana-inline"]')).toBeNull()
+    expect(container.querySelector('.resource-mana-wrap')).toBeNull()
+    expect(container.querySelector('.resource-chip')).toBeNull()
+    expect(container.querySelector('.resource-stack')).toBeNull()
+    expect(container.querySelector('.stack-count')).toBeNull()
+    expect(container.querySelectorAll('[data-testid^="pile-card-"]')).toHaveLength(3)
+  })
+
+  it('BRD-12: the library pile card shows the revealed top card face up', () => {
+    const top = makeCard({ id: 'top-1', name: 'Ponder', manaValue: 1 } as Partial<CardView> & { name: string })
+    const { container } = render(<ResourceBar player={pilePlayer({ topCard: top })} side="my" pileCards />)
+
+    const library = container.querySelector('[data-testid="pile-card-library"]')!
+    expect(library.querySelector('.card-slot')?.getAttribute('data-card-name')).toBe('Ponder')
+    expect(library.querySelector('.stack-back-img')).toBeNull()
+    expect(library.querySelector('.pile-card-count')?.textContent).toBe('40')
   })
 })

@@ -26,6 +26,7 @@ export interface PlayerZoneProps {
   className?: string
   showHand?: boolean
   kindColumns?: boolean
+  pileCards?: boolean
 }
 
 export default function PlayerZone(props: PlayerZoneProps) {

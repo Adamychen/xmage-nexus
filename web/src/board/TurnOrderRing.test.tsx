@@ -15,6 +15,22 @@ function withFlags(p: PlayerView, flags: Partial<PlayerView>): PlayerView {
 describe('TurnOrderRing', () => {
   afterEach(() => cleanup())
 
+  it('BRD-7: the own pill is clickable only in the main board mode', () => {
+    const picked: string[] = []
+    const { getByTestId, rerender } = render(
+      <TurnOrderRing players={[me, rival, third]} activePlayerId="me" onSeatClick={(id) => picked.push(id)} />,
+    )
+    fireEvent.click(getByTestId('tor-seat-me'))
+    expect(picked).toEqual([])
+    expect(getByTestId('tor-seat-me').getAttribute('role')).toBeNull()
+    rerender(
+      <TurnOrderRing players={[me, rival, third]} activePlayerId="me" onSeatClick={(id) => picked.push(id)} selfClickable />,
+    )
+    fireEvent.click(getByTestId('tor-seat-me'))
+    expect(picked).toEqual(['me'])
+    expect(getByTestId('tor-seat-me').getAttribute('role')).toBe('button')
+  })
+
   it('the walkway puts my seat last, whoever the server lists first', () => {
     const a = turnOrderSeats([me, rival, third], true).map((p) => p.playerId)
     const b = turnOrderSeats([third, me, rival], true).map((p) => p.playerId)

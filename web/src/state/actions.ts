@@ -40,6 +40,10 @@ export function setSeatFocus(choice: { playerId: string; combatTurn: number | nu
   setState({ seatFocus: choice ? { gameId: getState().gameId, ...choice } : null })
 }
 
+export function setSpotlight(choice: { gameId: string; playerId: string; pickedIn: string | null } | null) {
+  setState({ spotlight: choice })
+}
+
 export function clearFeedback() {
   resetPromptSound()
   setState({ feedback: null })
@@ -404,15 +408,15 @@ type SettingsKey = keyof AppState['settings']
 const FX_KEYS: SettingsKey[] = ['effects', 'animationSpeed']
 const AUDIO_KEYS: SettingsKey[] = ['soundEnabled', 'masterVolume', 'sfxVolume', 'uiVolume', 'prioritySound']
 const MUSIC_KEYS: SettingsKey[] = ['musicEnabled', 'musicVolume']
-const APPEARANCE_KEYS: SettingsKey[] = ['sleeveId', 'boardLayout', 'boardLayoutManual', 'uiScale', 'cjkBoost', 'transparentDialogs', 'playmatId', 'cardStyle', 'tapStyle', 'showHandCost', 'showManaSource', 'ptBadgeMode', 'sicknessStyle', 'keywordIcons', 'keywordAura', 'cardRender', 'handRail', 'handRailWidth', 'handRow', 'boardFill', 'stackCaption', 'gameUi']
+const APPEARANCE_KEYS: SettingsKey[] = ['sleeveId', 'boardLayout', 'boardLayoutManual', 'uiScale', 'cjkBoost', 'transparentDialogs', 'playmatId', 'cardStyle', 'tapStyle', 'showHandCost', 'showManaSource', 'ptBadgeMode', 'sicknessStyle', 'keywordIcons', 'keywordAura', 'cardRender', 'handRail', 'handRailWidth', 'handRow', 'boardFill', 'boardSpotlight', 'boardSpotlightPanel', 'stackCaption', 'gameUi']
 
 function persistClientSettings(next: AppState['settings'], prev: AppState['settings']) {
   const changed = (keys: SettingsKey[]) => keys.some((key) => next[key] !== prev[key])
-  const { effects, animationSpeed, soundEnabled, masterVolume, sfxVolume, uiVolume, prioritySound, musicEnabled, musicVolume, sleeveId, playmatId, cardStyle, tapStyle, showHandCost, showManaSource, ptBadgeMode, sicknessStyle, keywordIcons, keywordAura, cardRender, handRail, handRailWidth, handRow, boardFill, stackCaption, gameUi, boardLayout, boardLayoutManual, uiScale, cjkBoost, transparentDialogs, autoAnswers, choiceMemory, manaPayment, phaseStops, smartStops } = next
+  const { effects, animationSpeed, soundEnabled, masterVolume, sfxVolume, uiVolume, prioritySound, musicEnabled, musicVolume, sleeveId, playmatId, cardStyle, tapStyle, showHandCost, showManaSource, ptBadgeMode, sicknessStyle, keywordIcons, keywordAura, cardRender, handRail, handRailWidth, handRow, boardFill, boardSpotlight, boardSpotlightPanel, stackCaption, gameUi, boardLayout, boardLayoutManual, uiScale, cjkBoost, transparentDialogs, autoAnswers, choiceMemory, manaPayment, phaseStops, smartStops } = next
   if (changed(FX_KEYS)) saveFxSettings({ effects, animationSpeed })
   if (changed(AUDIO_KEYS)) saveAudioSettings({ soundEnabled, masterVolume, sfxVolume, uiVolume, prioritySound })
   if (changed(MUSIC_KEYS)) saveMusicSettings({ musicEnabled, musicVolume })
-  if (changed(APPEARANCE_KEYS)) saveAppearanceSettings({ sleeveId, boardLayout, boardLayoutManual, uiScale, cjkBoost, transparentDialogs, playmatId, cardStyle, tapStyle, showHandCost, showManaSource, ptBadgeMode, sicknessStyle, keywordIcons, keywordAura, cardRender, handRail, handRailWidth, handRow, boardFill, stackCaption, gameUi })
+  if (changed(APPEARANCE_KEYS)) saveAppearanceSettings({ sleeveId, boardLayout, boardLayoutManual, uiScale, cjkBoost, transparentDialogs, playmatId, cardStyle, tapStyle, showHandCost, showManaSource, ptBadgeMode, sicknessStyle, keywordIcons, keywordAura, cardRender, handRail, handRailWidth, handRow, boardFill, boardSpotlight, boardSpotlightPanel, stackCaption, gameUi })
   if (changed(['autoAnswers'])) saveAutoAnswers(autoAnswers.map(({ pattern, answer, key }) => (key ? { pattern, answer, key } : { pattern, answer })))
   if (changed(['choiceMemory'])) saveChoiceMemory(choiceMemory.map(({ pattern, value }) => ({ pattern, value })))
   if (changed(['manaPayment'])) saveManaPayment({ ...manaPayment })

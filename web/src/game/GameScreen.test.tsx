@@ -2,7 +2,8 @@ import { act, cleanup, render } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import GameScreen from './GameScreen'
 import { initialState, setState } from '../state/state'
-import { playerGameView, spectatorGameView } from '../__fixtures__/gameViews'
+import { makePlayer, playerGameView, spectatorGameView } from '../__fixtures__/gameViews'
+import type { GameView } from '../net/types'
 
 function memoryStorage(): Storage {
   const m = new Map<string, string>()
@@ -57,6 +58,56 @@ describe('GameScreen', () => {
 
   it('renders nothing playable without a game and does not crash', () => {
     expect(() => show({ game: null })).not.toThrow()
+  })
+
+  function fourPlayerArena(): GameView {
+    return {
+      ...playerGameView,
+      activePlayerId: 'p1',
+      players: [
+        makePlayer({ playerId: 'p1', name: 'Alice', controlled: true, life: 40, commandList: [] }),
+        makePlayer({ playerId: 'p2', name: 'Bob', life: 40, commandList: [] }),
+        makePlayer({ playerId: 'p3', name: 'Carol', life: 40, commandList: [] }),
+        makePlayer({ playerId: 'p4', name: 'Dave', life: 40, commandList: [] }),
+      ],
+    }
+  }
+
+  it('BRD-6: the switch on with two live opponents draws the main board instead of the opponents\' row', () => {
+    const { container } = show({
+      game: fourPlayerArena(),
+      myPlayerId: 'p1',
+      settings: { ...initialState.settings, gameUi: 'v1', boardLayout: 'arena', boardSpotlight: true },
+    })
+    expect(container.querySelector('[data-testid="spotlight-board"]')).not.toBeNull()
+    expect(container.querySelector('[data-testid="spotlight-panel"]')).not.toBeNull()
+    expect(container.querySelector('.arena-opp-row')).toBeNull()
+  })
+
+  it('BRD-6: a spectator with the switch on watching four players gets the main board', () => {
+    const watched = {
+      ...fourPlayerArena(),
+      myPlayerId: null,
+      players: fourPlayerArena().players!.map((p) => ({ ...p, controlled: false })),
+    } as GameView
+    const { container } = show({
+      game: watched,
+      myPlayerId: null,
+      settings: { ...initialState.settings, gameUi: 'v1', boardLayout: 'arena', boardSpotlight: true },
+    })
+    expect(container.querySelector('[data-testid="spotlight-board"]')).not.toBeNull()
+    expect(container.querySelector('[data-testid="spotlight-main"]')?.getAttribute('data-main-seat')).toBe('p4')
+    expect(container.querySelector('[data-testid="hand-bar"]')).toBeNull()
+  })
+
+  it('BRD-6: with the switch off the opponents\' row stays', () => {
+    const { container } = show({
+      game: fourPlayerArena(),
+      myPlayerId: 'p1',
+      settings: { ...initialState.settings, gameUi: 'v1', boardLayout: 'arena', boardSpotlight: false },
+    })
+    expect(container.querySelector('[data-testid="spotlight-board"]')).toBeNull()
+    expect(container.querySelector('.arena-opp-row')).not.toBeNull()
   })
 
   it('applies the inverse of the UI scale so the board is not zoomed twice', () => {

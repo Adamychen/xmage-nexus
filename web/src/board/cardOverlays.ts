@@ -76,3 +76,16 @@ export function normalizeBoardFill(value: unknown): boolean {
 export function normalizeStackCaption(value: unknown): boolean {
   return typeof value === 'boolean' ? value : true
 }
+
+export function normalizeBoardSpotlight(value: unknown): boolean {
+  return value === true
+}
+
+export const SPOTLIGHT_PANEL_MIN = 15
+export const SPOTLIGHT_PANEL_MAX = 35
+export const SPOTLIGHT_PANEL_DEFAULT = 22
+
+export function normalizeBoardSpotlightPanel(value: unknown): number {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return SPOTLIGHT_PANEL_DEFAULT
+  return Math.min(SPOTLIGHT_PANEL_MAX, Math.max(SPOTLIGHT_PANEL_MIN, Math.round(value)))
+}

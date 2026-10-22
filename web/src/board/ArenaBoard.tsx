@@ -4,7 +4,7 @@ import PlayerZone from './PlayerZone'
 import BoardShell, { BoardColDivider, BoardDivider } from './BoardShell'
 import { useBoardPresenter, useBoardPlayers } from './useBoardPresenter'
 import { opponentRevealedCards } from './revealedCards'
-import { isPlayerOut, MAX_BOARD_PLAYERS, useSeatStates, useSpectatorBottomHand, useSwitchedHand, type BoardProps } from './boardShared'
+import { isPlayerOut, MAX_BOARD_PLAYERS, spectatorHomeSeat, useSeatStates, useSpectatorBottomHand, useSwitchedHand, type BoardProps } from './boardShared'
 import { liveOpponentIds, useSeatFocus } from './seatFocus'
 import { useOwnCardCap } from './ownCardCap'
 import { EMPTY_TARGET_ZONES } from './targetZones'
@@ -57,7 +57,7 @@ export default function ArenaBoard({
 
   // Espectador: mismo convenio que GameBoard/pod — un jugador abajo (el último)
   // con su mano si es visible, y el resto arriba en columnas.
-  const spectatorBottom = isSpectator ? (opps.length >= 2 ? opps[opps.length - 1] : opps[0]) : undefined
+  const spectatorBottom = isSpectator ? spectatorHomeSeat(opps) : undefined
   const spectatorBottomHand = useSpectatorBottomHand(game, isSpectator, spectatorBottom)
   const switchedHand = useSwitchedHand(game)
   const { seatState, toggleSeat } = useSeatStates()

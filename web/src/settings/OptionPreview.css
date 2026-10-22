@@ -241,3 +241,48 @@
   font-size: var(--fs-4xs);
   color: var(--fg-1);
 }
+
+/* Main board with side panel (BRD-6): one large board and a narrow panel of copies, or the
+ * opponents' row above one wide board when the switch is off. */
+.opt-preview-spot {
+  position: absolute;
+  inset: var(--sp-2);
+  display: flex;
+  gap: var(--sp-2);
+}
+
+.opt-preview-spot.is-stacked {
+  flex-direction: column;
+}
+
+.opt-preview-spot-main {
+  flex: 1 1 0;
+  border-radius: var(--r-sm);
+  background: var(--shade-4);
+}
+
+.opt-preview-spot-panel {
+  flex: 0 0 26%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+}
+
+.opt-preview-spot-panel .opt-preview-spot-copy {
+  flex: 1 1 0;
+}
+
+.opt-preview-spot-row {
+  flex: 0 0 34%;
+  display: flex;
+  gap: var(--sp-2);
+}
+
+.opt-preview-spot-row .opt-preview-spot-copy {
+  flex: 1 1 0;
+}
+
+.opt-preview-spot-copy {
+  border-radius: var(--r-sm);
+  background: var(--shade-2);
+}

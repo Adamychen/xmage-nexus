@@ -23,6 +23,13 @@ export default function RenderedCardsSettings() {
         onChange={(v) => setSetting('boardFill', v)}
       />
       <OptionChoice
+        kind="boardSpotlight"
+        label={t('lobby', 'board_spotlight_show')}
+        hint={t('lobby', 'board_spotlight_show_hint')}
+        value={settings.boardSpotlight}
+        onChange={(v) => setSetting('boardSpotlight', v)}
+      />
+      <OptionChoice
         kind="handRail"
         label={t('lobby', 'hand_rail_show')}
         hint={t('lobby', 'hand_rail_show_hint')}

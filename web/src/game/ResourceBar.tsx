@@ -8,6 +8,7 @@ import { cardsContainTarget, EMPTY_TARGET_IDS, EMPTY_TARGET_ZONES, type TargetZo
 import CardSlot from '../board/CardSlot'
 import { CountFlash, useCountFlash } from './useCountFlash'
 import Icon from '../ui/Icon'
+import Button from '../ui/Button'
 import { useTranslation } from '../i18n'
 import { useLibraryRunOut } from './libraryRunOut'
 import ManaPoolView, { type ManaPoolKey } from './ManaPoolView'
@@ -28,6 +29,8 @@ interface ResourceBarProps {
   micro?: boolean
   stats?: boolean
   poolOnly?: boolean
+  pileCards?: boolean
+  noPiles?: boolean
   crossZonePlayables?: CrossZonePlayable[]
   onPlayCrossZone?: (id: string) => void
   onCardHover?: (card: CardView | PermanentView | null, rect?: DOMRect) => void
@@ -43,6 +46,16 @@ function extractCards(cardsView: unknown): CardView[] {
   return Object.values(cardsView).filter(Boolean) as CardView[]
 }
 
+function SleeveBack({ sleeve }: { sleeve: ReturnType<typeof useSleeveFor> }) {
+  return sleeve.kind === 'css' ? (
+    <div className="stack-back-img sleeve-css-back" style={{ background: sleeve.css }} data-sleeve-id={sleeve.id}>
+      <span className="sleeve-emblem" style={{ color: sleeve.accent }}>{sleeve.emblem}</span>
+    </div>
+  ) : (
+    <img className="stack-back-img" src={sleeve.imageUrl} alt="" draggable={false} data-sleeve-id={sleeve.id} />
+  )
+}
+
 export default function ResourceBar({
   player,
   side,
@@ -50,6 +63,8 @@ export default function ResourceBar({
   micro: microProp = false,
   stats = false,
   poolOnly = false,
+  pileCards = false,
+  noPiles = false,
   crossZonePlayables,
   onPlayCrossZone,
   onCardHover,
@@ -97,13 +112,24 @@ export default function ResourceBar({
     if (gameId && manaType) void sendPlayerManaType(gameId, player.playerId, manaType)
   }
 
+  const libraryCount = player.libraryCount ?? 0
+  const libraryTitle = player.topCard
+    ? `${t('game', 'pile_library')}: ${player.libraryCount} (${player.topCard.name})`
+    : `${t('game', 'pile_library')}: ${player.libraryCount}`
+
   const graveyardCards = useMemo(() => extractCards(player.graveyard), [player.graveyard])
   const graveyardCount = graveyardCards.length
   const topGraveyardCard = useMemo(() => (graveyardCards.length > 0 ? graveyardCards[graveyardCards.length - 1] : null), [graveyardCards])
+  const graveyardTitle = topGraveyardCard
+    ? `${t('game', 'pile_graveyard')}: ${graveyardCount} (${topGraveyardCard.name || topGraveyardCard.displayName})`
+    : `${t('game', 'pile_graveyard')}: 0`
 
   const exileCards = useMemo(() => extractCards(player.exile), [player.exile])
   const exileCount = exileCards.length
   const topExileCard = useMemo(() => (exileCards.length > 0 ? exileCards[exileCards.length - 1] : null), [exileCards])
+  const exileTitle = topExileCard
+    ? `${t('game', 'pile_exile')}: ${exileCount} (${topExileCard.name || topExileCard.displayName})`
+    : `${t('game', 'pile_exile')}: 0`
 
   const libraryFlash = useCountFlash(player.libraryCount ?? 0)
   const libraryRunOut = useLibraryRunOut(player.libraryCount)
@@ -112,6 +138,7 @@ export default function ResourceBar({
 
   const crossZone = crossZonePlayables ?? []
   const counts = useMemo(() => crossZoneCounts(crossZone), [crossZone])
+  const libraryPlayable = crossZone.some((p) => p.zone === 'library')
   const topCrossZoneCard = useMemo(() => (crossZone.length > 0 ? crossZone[0].card : null), [crossZone])
 
   const playableByZone = useMemo(() => {
@@ -194,12 +221,146 @@ export default function ResourceBar({
     }
   }, [autoOpenPile])
 
+  const renderPileOverlays = () => (
+    <>
+      {openPile === 'library' && (
+        <PileOverlay
+          title={`${t('game', 'pile_library')} - ${player.name || t('common', 'player')}`}
+          cards={libraryCards}
+          onClose={() => setOpenPile(null)}
+          playableIds={playableByZone.library}
+          onPlayCard={onPlayCrossZone}
+          targetIds={targetIds}
+          onTargetClick={onTargetClick}
+          isLibrary={true}
+        />
+      )}
+      {openPile === 'graveyard' && (
+        <PileOverlay
+          title={t('game', 'pile_graveyard')}
+          cards={player.graveyard ?? {}}
+          onClose={() => setOpenPile(null)}
+          playableIds={playableByZone.graveyard}
+          onPlayCard={onPlayCrossZone}
+          targetIds={targetIds}
+          onTargetClick={onTargetClick}
+        />
+      )}
+      {openPile === 'exile' && (
+        <PileOverlay
+          title={t('game', 'pile_exile')}
+          cards={player.exile ?? {}}
+          onClose={() => setOpenPile(null)}
+          playableIds={playableByZone.exile}
+          onPlayCard={onPlayCrossZone}
+          targetIds={targetIds}
+          onTargetClick={onTargetClick}
+        />
+      )}
+      {openPile === 'crosszone' && (
+        <CrossZoneOverlay
+          playables={crossZone}
+          onClose={() => setOpenPile(null)}
+          onPlay={(id) => {
+            setOpenPile(null)
+            onPlayCrossZone?.(id)
+          }}
+        />
+      )}
+    </>
+  )
+
   if (poolOnly) {
     return (
       <div className="resource-bar-pool" data-side={side} data-testid="resource-pool">
         <ManaPoolView pool={pool} canPay={canPayMana} onPay={payMana} showAll={manaPromptOpen && side === 'my'} size={14} />
         {Object.values(pool).every((n) => !n) && !manaPromptOpen && <em className="resource-pool-label">{t('game', 'mana_pool_label')}</em>}
       </div>
+    )
+  }
+
+  if (pileCards) {
+    return (
+      <>
+        <div className="resource-pile-cards" data-testid="pile-cards">
+          <Button
+            variant="link"
+            type="button"
+            data-testid="pile-card-library"
+            data-count={libraryCount}
+            className={`pile-card pile-card--library${libraryCount === 0 ? ' is-empty' : ''}${libraryHighlight ? ' target-zone' : ''}${libraryPlayable ? ' has-playable' : ''}`}
+            title={libraryTitle}
+            aria-label={libraryTitle}
+            onClick={() => setOpenPile('library')}
+            onMouseEnter={(e) =>
+              player.topCard && onCardHover?.(player.topCard, e.currentTarget.getBoundingClientRect())
+            }
+            onMouseLeave={() => onCardHover?.(null)}
+          >
+            {libraryCount > 0 ? (
+              <>
+                {player.topCard ? (
+                  <CardSlot card={player.topCard} className="pile-card-face" />
+                ) : (
+                  <SleeveBack sleeve={librarySleeve} />
+                )}
+                <span className="pile-card-count">{libraryCount}</span>
+              </>
+            ) : (
+              <span className="pile-card-label">{t('game', 'pile_library')}</span>
+            )}
+          </Button>
+
+          <Button
+            variant="link"
+            type="button"
+            data-testid="pile-card-graveyard"
+            data-count={graveyardCount}
+            className={`pile-card pile-card--graveyard${graveyardCount === 0 ? ' is-empty' : ''}${graveyardHighlight ? ' target-zone' : ''}${counts.graveyard > 0 ? ' has-playable' : ''}`}
+            title={graveyardTitle}
+            aria-label={graveyardTitle}
+            onClick={() => setOpenPile('graveyard')}
+            onMouseEnter={(e) =>
+              topGraveyardCard && onCardHover?.(topGraveyardCard, e.currentTarget.getBoundingClientRect())
+            }
+            onMouseLeave={() => onCardHover?.(null)}
+          >
+            {topGraveyardCard ? (
+              <>
+                <CardSlot card={topGraveyardCard} className="pile-card-face" />
+                <span className="pile-card-count">{graveyardCount}</span>
+              </>
+            ) : (
+              <span className="pile-card-label">{t('game', 'pile_graveyard')}</span>
+            )}
+          </Button>
+
+          <Button
+            variant="link"
+            type="button"
+            data-testid="pile-card-exile"
+            data-count={exileCount}
+            className={`pile-card pile-card--exile${exileCount === 0 ? ' is-empty' : ''}${exileHighlight ? ' target-zone' : ''}${counts.exile > 0 ? ' has-playable' : ''}`}
+            title={exileTitle}
+            aria-label={exileTitle}
+            onClick={() => setOpenPile('exile')}
+            onMouseEnter={(e) =>
+              topExileCard && onCardHover?.(topExileCard, e.currentTarget.getBoundingClientRect())
+            }
+            onMouseLeave={() => onCardHover?.(null)}
+          >
+            {topExileCard ? (
+              <>
+                <CardSlot card={topExileCard} className="pile-card-face" />
+                <span className="pile-card-count">{exileCount}</span>
+              </>
+            ) : (
+              <span className="pile-card-label">{t('game', 'pile_exile')}</span>
+            )}
+          </Button>
+        </div>
+        {renderPileOverlays()}
+      </>
     )
   }
 
@@ -216,76 +377,66 @@ export default function ResourceBar({
           <>
             {peekSlot}
 
-            <button
-              type="button"
-              data-library-count={player.libraryCount}
-              className={`resource-chip library-chip clickable-pile ${player.topCard ? 'has-top-revealed' : ''}${libraryHighlight ? ' target-zone' : ''} ${libraryRunOut}`}
-              title={
-                player.topCard
-                  ? `${t('game', 'pile_library')}: ${player.libraryCount} (${player.topCard.name})`
-                  : `${t('game', 'pile_library')}: ${player.libraryCount}`
-              }
-              onClick={() => setOpenPile('library')}
-              onMouseEnter={(e) =>
-                player.topCard && onCardHover?.(player.topCard, e.currentTarget.getBoundingClientRect())
-              }
-              onMouseLeave={() => onCardHover?.(null)}
-            >
-              <span className="chip-icon"><Icon name="bookOpen" size={12} /></span>
-              <span className="chip-count">{player.libraryCount}</span>
-              {stats && <CountFlash flash={libraryFlash} />}
-              {player.topCard && (
-                <span className="chip-indicator" title={t('board', 'zone_revealed')}>
-                  <Icon name="target" size={10} />
+            {!noPiles && (<>
+              <button
+                type="button"
+                data-library-count={player.libraryCount}
+                className={`resource-chip library-chip clickable-pile ${player.topCard ? 'has-top-revealed' : ''}${libraryHighlight ? ' target-zone' : ''} ${libraryRunOut}`}
+                title={libraryTitle}
+                onClick={() => setOpenPile('library')}
+                onMouseEnter={(e) =>
+                  player.topCard && onCardHover?.(player.topCard, e.currentTarget.getBoundingClientRect())
+                }
+                onMouseLeave={() => onCardHover?.(null)}
+              >
+                <span className="chip-icon"><Icon name="bookOpen" size={12} /></span>
+                <span className="chip-count">{player.libraryCount}</span>
+                {stats && <CountFlash flash={libraryFlash} />}
+                {player.topCard && (
+                  <span className="chip-indicator" title={t('board', 'zone_revealed')}>
+                    <Icon name="target" size={10} />
+                  </span>
+                )}
+              </button>
+
+              <button
+                type="button"
+                data-graveyard-count={graveyardCount}
+                className={`resource-chip graveyard-chip clickable-pile ${counts.graveyard > 0 ? 'has-playable' : ''}${graveyardHighlight ? ' target-zone' : ''}`}
+                title={graveyardTitle}
+                onClick={() => setOpenPile('graveyard')}
+                onMouseEnter={(e) =>
+                  topGraveyardCard && onCardHover?.(topGraveyardCard, e.currentTarget.getBoundingClientRect())
+                }
+                onMouseLeave={() => onCardHover?.(null)}
+              >
+                <span className="chip-icon">
+                  <Icon name="skull" size={12} />
                 </span>
-              )}
-            </button>
+                <span className="chip-count">{graveyardCount}</span>
+                {stats && <CountFlash flash={graveyardFlash} />}
+                {counts.graveyard > 0 && <span className="chip-playable-dot" />}
+              </button>
 
-            <button
-              type="button"
-              data-graveyard-count={graveyardCount}
-              className={`resource-chip graveyard-chip clickable-pile ${counts.graveyard > 0 ? 'has-playable' : ''}${graveyardHighlight ? ' target-zone' : ''}`}
-              title={
-                topGraveyardCard
-                  ? `${t('game', 'pile_graveyard')}: ${graveyardCount} (${topGraveyardCard.name || topGraveyardCard.displayName})`
-                  : `${t('game', 'pile_graveyard')}: 0`
-              }
-              onClick={() => setOpenPile('graveyard')}
-              onMouseEnter={(e) =>
-                topGraveyardCard && onCardHover?.(topGraveyardCard, e.currentTarget.getBoundingClientRect())
-              }
-              onMouseLeave={() => onCardHover?.(null)}
-            >
-              <span className="chip-icon">
-                <Icon name="skull" size={12} />
-              </span>
-              <span className="chip-count">{graveyardCount}</span>
-              {stats && <CountFlash flash={graveyardFlash} />}
-              {counts.graveyard > 0 && <span className="chip-playable-dot" />}
-            </button>
-
-            <button
-              type="button"
-              data-exile-count={exileCount}
-              className={`resource-chip exile-chip clickable-pile ${counts.exile > 0 ? 'has-playable' : ''}${exileHighlight ? ' target-zone' : ''}`}
-              title={
-                topExileCard
-                  ? `${t('game', 'pile_exile')}: ${exileCount} (${topExileCard.name || topExileCard.displayName})`
-                  : `${t('game', 'pile_exile')}: 0`
-              }
-              onClick={() => setOpenPile('exile')}
-              onMouseEnter={(e) =>
-                topExileCard && onCardHover?.(topExileCard, e.currentTarget.getBoundingClientRect())
-              }
-              onMouseLeave={() => onCardHover?.(null)}
-            >
-              <span className="chip-icon">
-                <Icon name="portal" size={12} />
-              </span>
-              <span className="chip-count">{exileCount}</span>
-              {stats && <CountFlash flash={exileFlash} />}
-              {counts.exile > 0 && <span className="chip-playable-dot" />}
-            </button>
+              <button
+                type="button"
+                data-exile-count={exileCount}
+                className={`resource-chip exile-chip clickable-pile ${counts.exile > 0 ? 'has-playable' : ''}${exileHighlight ? ' target-zone' : ''}`}
+                title={exileTitle}
+                onClick={() => setOpenPile('exile')}
+                onMouseEnter={(e) =>
+                  topExileCard && onCardHover?.(topExileCard, e.currentTarget.getBoundingClientRect())
+                }
+                onMouseLeave={() => onCardHover?.(null)}
+              >
+                <span className="chip-icon">
+                  <Icon name="portal" size={12} />
+                </span>
+                <span className="chip-count">{exileCount}</span>
+                {stats && <CountFlash flash={exileFlash} />}
+                {counts.exile > 0 && <span className="chip-playable-dot" />}
+              </button>
+            </>)}
 
             {side === 'my' && (!stats || crossZone.length > 0) && (
               <button
@@ -310,95 +461,79 @@ export default function ResourceBar({
           <>
             {peekSlot}
 
-            <button
-              type="button"
-              data-library-count={player.libraryCount}
-              className={`resource-stack library-stack clickable-pile ${player.topCard ? 'has-top-revealed' : ''}${libraryHighlight ? ' target-zone' : ''} ${libraryRunOut}`}
-              title={
-                player.topCard
-                  ? `${t('game', 'pile_library')}: ${player.libraryCount} (${player.topCard.name})`
-                  : `${t('game', 'pile_library')}: ${player.libraryCount}`
-              }
-              onClick={() => setOpenPile('library')}
-              onMouseEnter={(e) =>
-                player.topCard && onCardHover?.(player.topCard, e.currentTarget.getBoundingClientRect())
-              }
-              onMouseLeave={() => onCardHover?.(null)}
-            >
-              {player.topCard ? (
-                <CardSlot card={player.topCard} className="library-top-card" />
-              ) : (
-                librarySleeve.kind === 'css' ? (
-                  <div className="stack-back-img sleeve-css-back" style={{ background: librarySleeve.css }} data-sleeve-id={librarySleeve.id}>
-                    <span className="sleeve-emblem" style={{ color: librarySleeve.accent }}>{librarySleeve.emblem}</span>
-                  </div>
+            {!noPiles && (<>
+              <button
+                type="button"
+                data-library-count={player.libraryCount}
+                className={`resource-stack library-stack clickable-pile ${player.topCard ? 'has-top-revealed' : ''}${libraryHighlight ? ' target-zone' : ''} ${libraryRunOut}`}
+                title={libraryTitle}
+                onClick={() => setOpenPile('library')}
+                onMouseEnter={(e) =>
+                  player.topCard && onCardHover?.(player.topCard, e.currentTarget.getBoundingClientRect())
+                }
+                onMouseLeave={() => onCardHover?.(null)}
+              >
+                {player.topCard ? (
+                  <CardSlot card={player.topCard} className="library-top-card" />
                 ) : (
-                  <img className="stack-back-img" src={librarySleeve.imageUrl} alt="" draggable={false} data-sleeve-id={librarySleeve.id} />
-                )
-              )}
-              <span className="stack-count">{player.libraryCount}</span>
-              {player.topCard && (
-                <span className="top-card-badge" title={t('board', 'zone_revealed')}>
-                  <Icon name="target" size={12} />
-                </span>
-              )}
-            </button>
-
-            <button
-              type="button"
-              data-graveyard-count={graveyardCount}
-              className={`resource-stack graveyard-stack clickable-pile ${counts.graveyard > 0 ? 'has-playable' : ''} ${topGraveyardCard ? 'has-card-img' : 'is-empty'}${graveyardHighlight ? ' target-zone' : ''}`}
-              title={
-                topGraveyardCard
-                  ? `${t('game', 'pile_graveyard')}: ${graveyardCount} (${topGraveyardCard.name || topGraveyardCard.displayName})`
-                  : `${t('game', 'pile_graveyard')}: 0`
-              }
-              onClick={() => setOpenPile('graveyard')}
-              onMouseEnter={(e) =>
-                topGraveyardCard && onCardHover?.(topGraveyardCard, e.currentTarget.getBoundingClientRect())
-              }
-              onMouseLeave={() => onCardHover?.(null)}
-            >
-              {topGraveyardCard ? (
-                <CardSlot card={topGraveyardCard} className="graveyard-top-card" />
-              ) : (
-                <div className="stack-card-back graveyard-back">
-                  <span className="stack-mark">
-                    <Icon name="skull" size={20} />
+                  <SleeveBack sleeve={librarySleeve} />
+                )}
+                <span className="stack-count">{player.libraryCount}</span>
+                {player.topCard && (
+                  <span className="top-card-badge" title={t('board', 'zone_revealed')}>
+                    <Icon name="target" size={12} />
                   </span>
-                </div>
-              )}
-              <span className="stack-count">{graveyardCount}</span>
-              {counts.graveyard > 0 && <span className="playable-badge">{counts.graveyard}</span>}
-            </button>
+                )}
+              </button>
 
-            <button
-              type="button"
-              data-exile-count={exileCount}
-              className={`resource-stack exile-stack clickable-pile ${counts.exile > 0 ? 'has-playable' : ''} ${topExileCard ? 'has-card-img' : 'is-empty'}${exileHighlight ? ' target-zone' : ''}`}
-              title={
-                topExileCard
-                  ? `${t('game', 'pile_exile')}: ${exileCount} (${topExileCard.name || topExileCard.displayName})`
-                  : `${t('game', 'pile_exile')}: 0`
-              }
-              onClick={() => setOpenPile('exile')}
-              onMouseEnter={(e) =>
-                topExileCard && onCardHover?.(topExileCard, e.currentTarget.getBoundingClientRect())
-              }
-              onMouseLeave={() => onCardHover?.(null)}
-            >
-              {topExileCard ? (
-                <CardSlot card={topExileCard} className="exile-top-card" />
-              ) : (
-                <div className="stack-card-back exile-back">
-                  <span className="stack-mark">
-                    <Icon name="portal" size={20} />
-                  </span>
-                </div>
-              )}
-              <span className="stack-count">{exileCount}</span>
-              {counts.exile > 0 && <span className="playable-badge">{counts.exile}</span>}
-            </button>
+              <button
+                type="button"
+                data-graveyard-count={graveyardCount}
+                className={`resource-stack graveyard-stack clickable-pile ${counts.graveyard > 0 ? 'has-playable' : ''} ${topGraveyardCard ? 'has-card-img' : 'is-empty'}${graveyardHighlight ? ' target-zone' : ''}`}
+                title={graveyardTitle}
+                onClick={() => setOpenPile('graveyard')}
+                onMouseEnter={(e) =>
+                  topGraveyardCard && onCardHover?.(topGraveyardCard, e.currentTarget.getBoundingClientRect())
+                }
+                onMouseLeave={() => onCardHover?.(null)}
+              >
+                {topGraveyardCard ? (
+                  <CardSlot card={topGraveyardCard} className="graveyard-top-card" />
+                ) : (
+                  <div className="stack-card-back graveyard-back">
+                    <span className="stack-mark">
+                      <Icon name="skull" size={20} />
+                    </span>
+                  </div>
+                )}
+                <span className="stack-count">{graveyardCount}</span>
+                {counts.graveyard > 0 && <span className="playable-badge">{counts.graveyard}</span>}
+              </button>
+
+              <button
+                type="button"
+                data-exile-count={exileCount}
+                className={`resource-stack exile-stack clickable-pile ${counts.exile > 0 ? 'has-playable' : ''} ${topExileCard ? 'has-card-img' : 'is-empty'}${exileHighlight ? ' target-zone' : ''}`}
+                title={exileTitle}
+                onClick={() => setOpenPile('exile')}
+                onMouseEnter={(e) =>
+                  topExileCard && onCardHover?.(topExileCard, e.currentTarget.getBoundingClientRect())
+                }
+                onMouseLeave={() => onCardHover?.(null)}
+              >
+                {topExileCard ? (
+                  <CardSlot card={topExileCard} className="exile-top-card" />
+                ) : (
+                  <div className="stack-card-back exile-back">
+                    <span className="stack-mark">
+                      <Icon name="portal" size={20} />
+                    </span>
+                  </div>
+                )}
+                <span className="stack-count">{exileCount}</span>
+                {counts.exile > 0 && <span className="playable-badge">{counts.exile}</span>}
+              </button>
+            </>)}
 
             {side === 'my' && (
               <button
@@ -431,50 +566,7 @@ export default function ResourceBar({
         )}
       </div>
 
-         {openPile === 'library' && (
-           <PileOverlay
-            title={`${t('game', 'pile_library')} - ${player.name || t('common', 'player')}`}
-            cards={libraryCards}
-            onClose={() => setOpenPile(null)}
-            playableIds={playableByZone.library}
-            onPlayCard={onPlayCrossZone}
-            targetIds={targetIds}
-            onTargetClick={onTargetClick}
-            isLibrary={true}
-           />
-         )}
-         {openPile === 'graveyard' && (
-           <PileOverlay
-            title={t('game', 'pile_graveyard')}
-            cards={player.graveyard ?? {}}
-            onClose={() => setOpenPile(null)}
-            playableIds={playableByZone.graveyard}
-            onPlayCard={onPlayCrossZone}
-            targetIds={targetIds}
-            onTargetClick={onTargetClick}
-           />
-         )}
-         {openPile === 'exile' && (
-           <PileOverlay
-            title={t('game', 'pile_exile')}
-            cards={player.exile ?? {}}
-            onClose={() => setOpenPile(null)}
-            playableIds={playableByZone.exile}
-            onPlayCard={onPlayCrossZone}
-            targetIds={targetIds}
-            onTargetClick={onTargetClick}
-           />
-         )}
-         {openPile === 'crosszone' && (
-           <CrossZoneOverlay
-            playables={crossZone}
-            onClose={() => setOpenPile(null)}
-            onPlay={(id) => {
-             setOpenPile(null)
-             onPlayCrossZone?.(id)
-            }}
-           />
-         )}
-       </div>
-      )
+      {renderPileOverlays()}
+    </div>
+  )
 }

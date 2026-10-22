@@ -132,7 +132,7 @@
    el botón se monta FUERA de la zona para quedar por encima y ser clicable. */
 .board-shell > .hand-switch-btn {
   position: absolute;
-  right: 216px;
+  right: calc(216px + var(--main-inset-right, 0px));
   bottom: calc(var(--dock-bottom, 104px) + 8px);
   z-index: 25;
   box-shadow: 0 2px 8px var(--shade-3);
@@ -698,4 +698,28 @@
   .board-zone[data-priority] {
     animation: none;
   }
+}
+
+/* ── Pile corner (BRD-12): library, graveyard and exile as cards at the
+   bottom-right of the battlefield; the row keeps room for them on its right. */
+.board-zone.has-pile-corner {
+  position: relative;
+}
+
+.bz-status-row.has-pile-corner,
+.bz-permanents-row.pile-corner-reach {
+  padding-right: calc(var(--pile-corner-w, 0px) + var(--sp-1));
+}
+
+.bz-status-row.has-pile-corner {
+  box-sizing: border-box;
+}
+
+.bz-pile-corner {
+  position: absolute;
+  right: calc(var(--sp-3h) + var(--sp-1));
+  bottom: 0;
+  z-index: 11;
+  max-width: 25%;
+  min-width: 0;
 }

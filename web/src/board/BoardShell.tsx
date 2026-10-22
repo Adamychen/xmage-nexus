@@ -1,5 +1,5 @@
 import { createContext, useContext } from 'react'
-import type { ReactNode } from 'react'
+import type { CSSProperties, ReactNode } from 'react'
 import type { CardView } from '../net/types'
 import HandBar from './HandBar'
 import HandRail from './HandRail'
@@ -24,6 +24,7 @@ export interface BoardShellProps {
     playableIds?: Set<string>
     targetIds?: Set<string>
   } | null
+  style?: CSSProperties
   children: ReactNode
 }
 
@@ -54,7 +55,7 @@ export function BoardColDivider() {
 
 /** Marco común de los tableros: tapete, montaje de HandBar y de las capas
  *  flotantes (preview + vuelos). El layout específico va en `children`. */
-export default function BoardShell({ className, testId, presenter, handBar = null, children }: BoardShellProps) {
+export default function BoardShell({ className, testId, presenter, handBar = null, style, children }: BoardShellProps) {
   const setHandPromptSlot = useContext(HandPromptSlotContext)
   const raised = useStore((s) => isMulliganDecision(s.feedback))
   const { handRail, handRailWidth, handRow } = useSettings()
@@ -62,7 +63,7 @@ export default function BoardShell({ className, testId, presenter, handBar = nul
   const railed = handRail && !!handBar && !raised && !sidePanelOpen
   const rowed = handRow && !handRail && !!handBar && !raised
   return (
-    <div className={`board-shell ${className}${railed ? ' has-hand-rail' : ''}`} data-testid={testId} ref={presenter.boardRef} style={railed ? ({ '--hand-rail-w': `${handRailWidth}px` } as React.CSSProperties) : undefined}>
+    <div className={`board-shell ${className}${railed ? ' has-hand-rail' : ''}`} data-testid={testId} ref={presenter.boardRef} style={railed ? ({ ...style, '--hand-rail-w': `${handRailWidth}px` } as CSSProperties) : style}>
       {children}
       {railed && handBar && (
         <HandRail

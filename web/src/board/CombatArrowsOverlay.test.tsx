@@ -222,4 +222,97 @@ describe('CombatArrowsOverlay', () => {
     expect(liftedArcPath({ x: 0, y: 100 }, { x: 100, y: 100 })).toBe('M 0 100 Q 50 82 100 100')
     expect(liftedArcPath({ x: 0, y: 500 }, { x: 1000, y: 500 })).toBe('M 0 500 Q 500 410 1000 500')
   })
+
+  it('BRD-10: an attack arrow ends on the defender\'s portrait inside a copy', () => {
+    const rect = (left: number, top: number, width: number, height: number) =>
+      () => ({ left, top, width, height, right: left + width, bottom: top + height, x: left, y: top, toJSON: () => {} } as DOMRect)
+    const boardDiv = document.createElement('div')
+    document.body.appendChild(boardDiv)
+    boardDiv.getBoundingClientRect = rect(0, 0, 1000, 800)
+
+    const attCard = document.createElement('div')
+    attCard.setAttribute('data-card-id', 'card-goblin-1')
+    attCard.getBoundingClientRect = rect(100, 400, 100, 140)
+    boardDiv.appendChild(attCard)
+
+    const copy = document.createElement('div')
+    copy.setAttribute('data-testid', 'spotlight-copy-p-opp')
+    copy.className = 'spotlight-copy'
+    const copyFrame = document.createElement('div')
+    copyFrame.className = 'spotlight-copy-frame'
+    const oppZone = document.createElement('div')
+    oppZone.setAttribute('data-player-id', 'p-opp')
+    const anchor = document.createElement('div')
+    anchor.setAttribute('data-player-anchor', 'p-opp')
+    anchor.getBoundingClientRect = rect(500, 100, 60, 60)
+    oppZone.appendChild(anchor)
+    copyFrame.appendChild(oppZone)
+    copy.appendChild(copyFrame)
+    boardDiv.appendChild(copy)
+
+    const game = {
+      step: 'DECLARE_BLOCKERS',
+      turn: 3,
+      activePlayerId: 'p-me',
+      myPlayerId: 'p-me',
+      combat: [{ attackers: { 'card-goblin-1': {} }, defenderId: 'p-opp' }],
+      players: [
+        { playerId: 'p-me', name: 'Alice', life: 20, controlled: true, battlefield: {} },
+        { playerId: 'p-opp', name: 'Bob', life: 19, controlled: false, battlefield: {} },
+      ],
+    }
+
+    const { container, unmount } = render(<CombatArrowsOverlay game={game as any} boardRef={{ current: boardDiv }} />)
+    const arrow = container.querySelector('.arrow-group.arrow-attack')
+    expect(arrow?.getAttribute('data-arrow-from')).toBe('card-goblin-1')
+    expect(arrow?.getAttribute('data-arrow-to')).toBe('p-opp')
+    const coords = container.querySelector('.arrow-path.arrow-attack')!.getAttribute('d')!.split(/[ MQ]+/).filter(Boolean).map(Number)
+    const [x2, y2] = coords.slice(4)
+    expect(x2).toBeGreaterThanOrEqual(500)
+    expect(x2).toBeLessThanOrEqual(560)
+    expect(y2).toBeGreaterThanOrEqual(100)
+    expect(y2).toBeLessThanOrEqual(160)
+
+    unmount()
+    boardDiv.remove()
+  })
+
+  it('BRD-10: a stack target arrow ends on a card inside a copy', () => {
+    const rect = (left: number, top: number, width: number, height: number) =>
+      () => ({ left, top, width, height, right: left + width, bottom: top + height, x: left, y: top, toJSON: () => {} } as DOMRect)
+    const boardDiv = document.createElement('div')
+    document.body.appendChild(boardDiv)
+    boardDiv.getBoundingClientRect = rect(0, 0, 1000, 800)
+
+    const spell = document.createElement('div')
+    spell.setAttribute('data-card-id', 'spell-bolt-1')
+    spell.getBoundingClientRect = rect(800, 200, 120, 170)
+    boardDiv.appendChild(spell)
+
+    const copy = document.createElement('div')
+    copy.setAttribute('data-testid', 'spotlight-copy-p-opp')
+    copy.className = 'spotlight-copy'
+    const target = document.createElement('div')
+    target.setAttribute('data-card-id', 'perm-bear-1')
+    target.getBoundingClientRect = rect(300, 600, 40, 56)
+    copy.appendChild(target)
+    boardDiv.appendChild(copy)
+
+    const game = {
+      step: 'MAIN1',
+      turn: 3,
+      activePlayerId: 'p-me',
+      myPlayerId: 'p-me',
+      players: [{ playerId: 'p-me', name: 'Alice', life: 20, controlled: true, battlefield: {} }],
+      stack: { 'spell-bolt-1': { controllerId: 'p-me', targets: ['perm-bear-1'] } },
+    }
+
+    const { container, unmount } = render(<CombatArrowsOverlay game={game as any} boardRef={{ current: boardDiv }} />)
+    const arrow = container.querySelector('.arrow-group.arrow-target')
+    expect(arrow?.getAttribute('data-arrow-from')).toBe('spell-bolt-1')
+    expect(arrow?.getAttribute('data-arrow-to')).toBe('perm-bear-1')
+
+    unmount()
+    boardDiv.remove()
+  })
 })
