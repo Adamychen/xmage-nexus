@@ -1,6 +1,6 @@
 import type { CardView, PermanentView, PlayerView } from '../net/types'
 import type { TargetZoneKind } from './targetZones'
-import BoardZone from './BoardZone'
+import BoardZone, { type SeatFocusControl } from './BoardZone'
 import './OpponentZone.css'
 
 export interface OpponentZoneProps {
@@ -20,6 +20,9 @@ export interface OpponentZoneProps {
   compactPod?: boolean
   mirrored?: boolean
   className?: string
+  kindColumns?: boolean
+  statusOnly?: boolean
+  seatFocus?: SeatFocusControl
 }
 
 export default function OpponentZone(props: OpponentZoneProps) {

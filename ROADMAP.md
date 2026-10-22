@@ -127,6 +127,7 @@ Dropped on purpose (2026-10-07, data does not reach the client): the response wi
 | Open item | Why it is not a toggle |
 |---|---|
 | See the rules text of every permanent in play without hovering | Legible text for 8+ permanents does not fit one screen. Options: bigger cards with band panning, a one-line rules strip under compact tiles, or a persistent inspector |
+| Commander pod room (issue #23): what is left after BRD-1…BRD-5 | Shipped 2026-10-22 in the Arena and Table layouts (`docs/specs/board.md`): lands left and other non-creature permanents right, a planeswalker/saga/battle column, and focusing one opponent's board (`board/seatFocus.ts`). Open: a full point-of-view switch (the own board leaves the screen, so blockers, targets and triggers need auto-return first); piles as corner cards instead of portrait chips (the Table layout chose chips); a "phase bar on top" setting; an opponent card height is bound by the opponents' row (40% of the board), so focus only grows cards a crowded column had shrunk; at 1366x768 a non-focused opponent column still sits at the 38 px card floor, with mid-word name breaks on small faces |
 
 ### 4.3b2 Unified keyword glyphs and badges
 

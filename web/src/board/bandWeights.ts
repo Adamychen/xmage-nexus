@@ -15,7 +15,11 @@ export interface BandFill {
 }
 
 /** Which of the two bands of a zone holds anything (attachments ride on their host, phased-out permanents do not exist). */
-export function bandFill(battlefield: Record<string, PermanentView> | null | undefined, commander: boolean): BandFill {
+export function bandFill(
+  battlefield: Record<string, PermanentView> | null | undefined,
+  commander: boolean,
+  marqueeColumn = false,
+): BandFill {
   const perms = Object.entries(battlefield ?? {}).filter(([, p]) => p.phasedIn !== false)
   const attached = new Set<string>()
   for (const [, p] of perms) for (const id of p.attachments ?? []) attached.add(id)
@@ -26,7 +30,9 @@ export function bandFill(battlefield: Record<string, PermanentView> | null | und
     const kind = permanentKind(p)
     if (kind === 'creatures') creatures = true
     else if (kind === 'lands') permanents = true
-    else if (isMarqueePermanent(p)) creatures = true
+    else if (isMarqueePermanent(p)) {
+      if (!marqueeColumn) creatures = true
+    }
     else permanents = true
   }
   return { creatures, permanents }

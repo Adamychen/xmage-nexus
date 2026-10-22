@@ -1,4 +1,4 @@
-import { cleanup, render } from '@testing-library/react'
+import { cleanup, fireEvent, render } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
 import TurnOrderRing, { turnOrderSeats } from './TurnOrderRing'
 import { makePlayer } from '../__fixtures__/gameViews'
@@ -87,5 +87,33 @@ describe('TurnOrderRing', () => {
     const { container } = render(<TurnOrderRing players={[rival, me]} activePlayerId="rival" />)
     expect(container.querySelector('[data-lane-measure]')).toBeNull()
     expect(container.querySelector<HTMLElement>('.turn-order-ring')?.dataset.laneFit).toBeUndefined()
+  })
+
+  it('BRD-3: a live opponent pill is a button that reports its seat, my own pill is not', () => {
+    const picked: string[] = []
+    const dead = withFlags(third, { hasLeft: true, life: 0 })
+    const { getByTestId } = render(
+      <TurnOrderRing players={[me, rival, dead]} activePlayerId="me" onSeatClick={(id) => picked.push(id)} />,
+    )
+    fireEvent.click(getByTestId('tor-seat-rival'))
+    expect(picked).toEqual(['rival'])
+    expect(getByTestId('tor-seat-rival').getAttribute('role')).toBe('button')
+    expect(getByTestId('tor-seat-me').getAttribute('role')).toBeNull()
+    expect(getByTestId('tor-seat-third').getAttribute('role')).toBeNull()
+    fireEvent.keyDown(getByTestId('tor-seat-rival'), { key: 'Enter' })
+    expect(picked).toEqual(['rival', 'rival'])
+  })
+
+  it('BRD-3: without onSeatClick the pills are plain labels', () => {
+    const { getByTestId } = render(<TurnOrderRing players={[me, rival]} activePlayerId="me" />)
+    expect(getByTestId('tor-seat-rival').getAttribute('role')).toBeNull()
+  })
+
+  it('BRD-3: the focused opponent pill reports aria-pressed', () => {
+    const { getByTestId } = render(
+      <TurnOrderRing players={[me, rival, third]} activePlayerId="me" onSeatClick={() => {}} focusedId="rival" />,
+    )
+    expect(getByTestId('tor-seat-rival').getAttribute('aria-pressed')).toBe('true')
+    expect(getByTestId('tor-seat-third').getAttribute('aria-pressed')).toBe('false')
   })
 })

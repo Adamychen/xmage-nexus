@@ -6,6 +6,7 @@ import ArenaBoard from '../board/ArenaBoard'
 import OpponentSwitcherBar from '../board/OpponentSwitcherBar'
 import { DividerSlotContext } from '../board/BoardShell'
 import TurnOrderRing from '../board/TurnOrderRing'
+import { liveOpponentIds, useSeatFocus } from '../board/seatFocus'
 import * as cmds from '../net/commands'
 import RewindBar from './RewindBar'
 import MobileSpectator from './MobileSpectator'
@@ -395,6 +396,9 @@ export default function GameScreen() {
       : effectiveBoardLayout(settings.boardLayout, settings.boardLayoutManual ?? false, opps.length, totalPlayers)
   const isArenaLayout = effectiveLayout === 'arena'
   const isPodLayout = effectiveLayout === 'pod'
+  const seatLiveIds = liveOpponentIds(game?.players)
+  const seatFocus = useSeatFocus(seatLiveIds, game)
+  const seatPillsClickable = v2 && isArenaLayout && !isSpectator && seatLiveIds.length >= 2
 
   useDockOffset(boardWrapRef, [effectiveLayout, isSpectator, !!game, game?.turn, v2])
   const [turnGlow, clearTurnGlow] = useChangeFlag(game?.turn)
@@ -412,7 +416,12 @@ export default function GameScreen() {
 
   const stripCenter = (
         isPodLayout || (v2 && isArenaLayout) ? (
-          <TurnOrderRing players={game?.players ?? []} activePlayerId={game?.activePlayerId ?? ''} />
+          <TurnOrderRing
+            players={game?.players ?? []}
+            activePlayerId={game?.activePlayerId ?? ''}
+            onSeatClick={seatPillsClickable ? seatFocus.select : undefined}
+            focusedId={seatPillsClickable ? seatFocus.focusId : null}
+          />
         ) : topOpps.length > 1 ? (
           <OpponentSwitcherBar
             players={game?.players ?? []}

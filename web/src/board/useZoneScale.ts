@@ -27,7 +27,7 @@ interface ZoneScale {
   ref: React.RefCallback<HTMLDivElement> & React.RefObject<HTMLDivElement | null>
 }
 
-export function useZoneScale(cardAspect = CLASSIC_CARD_ASPECT, bandShare = 0.5): ZoneScale {
+export function useZoneScale(cardAspect = CLASSIC_CARD_ASPECT, bandShare = 0.5, maxCardW = Infinity): ZoneScale {
   const [el, setEl] = useState<HTMLDivElement | null>(null)
   const nodeRef = useRef<HTMLDivElement | null>(null)
   const [cardW, setCardW] = useState(120)
@@ -94,7 +94,7 @@ export function useZoneScale(cardAspect = CLASSIC_CARD_ASPECT, bandShare = 0.5):
         ? (isPlayerZone ? MAX_COMPACT_PLAYER_CARD_W : MAX_COMPACT_CARD_W)
         : (isPlayerZone ? MAX_PLAYER_CARD_W : MAX_CARD_W)
 
-      const w = Math.max(MIN_CARD_W, Math.min(maxW, fromHeight))
+      const w = Math.max(MIN_CARD_W, Math.min(maxW, maxCardW, fromHeight))
       setCardW(Math.round(w))
     }
 
@@ -137,7 +137,7 @@ export function useZoneScale(cardAspect = CLASSIC_CARD_ASPECT, bandShare = 0.5):
       ro?.disconnect()
       mo?.disconnect()
     }
-  }, [el, cardAspect, bandShare])
+  }, [el, cardAspect, bandShare, maxCardW])
 
   return { cardW, ref: refCallback }
 }

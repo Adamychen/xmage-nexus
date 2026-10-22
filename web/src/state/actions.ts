@@ -36,6 +36,10 @@ export function setSwitchedHandKey(key: string | null) {
   setState({ switchedHandKey: key })
 }
 
+export function setSeatFocus(choice: { playerId: string; combatTurn: number | null } | null) {
+  setState({ seatFocus: choice ? { gameId: getState().gameId, ...choice } : null })
+}
+
 export function clearFeedback() {
   resetPromptSound()
   setState({ feedback: null })
