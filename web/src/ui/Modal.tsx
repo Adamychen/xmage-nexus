@@ -69,7 +69,10 @@ export default function Modal({
       }
     }
     const onKeyUp = (e: KeyboardEvent) => {
-      if (e.key === 'Alt') setPeek(false)
+      if (e.key === 'Alt') {
+        e.preventDefault()
+        setPeek(false)
+      }
     }
     const onBlur = () => setPeek(false)
     window.addEventListener('keydown', onKeyDown)

@@ -1436,6 +1436,8 @@ export const ja: TranslationSchema = {
     cardgrid_count: '{count}枚',
     cardgrid_show_all: 'すべて表示（{count}）',
     cardgrid_only_valid: '有効なカードのみ（{count}）',
+    cardgrid_peek_hint: 'Altを押している間は盤面を表示',
+    cardgrid_peek_release: 'Altを離すとカードに戻ります',
     cardgrid_done: '完了（{count}）',
     card_printings_title: 'エディションとアートを選択',
     card_inspect_no_translation: '選択したカード言語のテキストがないため、原文（英語）を表示しています。',

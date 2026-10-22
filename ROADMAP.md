@@ -181,7 +181,7 @@ Shipped with the keyword auras and combat moments (`board/keywordAura.ts`, `boar
 
 Design: `docs/plans/2026-10-22-behavior-specs-design.md`. Phase 1 shipped 2026-10-22: `docs/specs/` with one file per area and `web/src/specCoverage.test.ts` linking each rule to the tests named after it.
 
-- Rules marked `Guard: none yet` need a test (`grep -n "none yet" docs/specs/*.md`). DLG-6 and DLG-7 are guarded by PR #24's tests once it merges: rename them to the rule ids.
+- Rules marked `Guard: none yet` need a test (`grep -n "none yet" docs/specs/*.md`).
 - Areas without a spec are written the first time someone changes them (stack, log and chat, deck builder, draft, settings, spectating).
 - Findings while writing the specs (not made rules). Confirmed in code:
   - Combat labels are wrong in fr/de/it/ru/ja/zhs: `ActionButton.tsx`, `feedbackModes/CombatBar.tsx` and `GenericDialog.tsx` tell attackers from blockers by finding `atacan`/`attack` in the *translated* title (`feedback/parse.ts`), so those locales show the blockers label in the attack window. Carry the mode on the prompt.

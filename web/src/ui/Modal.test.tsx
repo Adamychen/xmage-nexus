@@ -153,6 +153,21 @@ describe('Modal', () => {
     expect(backdrop.getAttribute('data-peek')).toBeNull()
   })
 
+  it('DLG-6: Alt peek repeats as often as the player wants and never hands the release to the browser menu', () => {
+    render(
+      <Modal backdropClassName="x-backdrop" dialogClassName="x-dialog" labelledBy="t">
+        <h2 id="t">Title</h2>
+      </Modal>,
+    )
+    const backdrop = screen.getByRole('dialog').parentElement as HTMLElement
+    for (let i = 0; i < 3; i++) {
+      expect(fireEvent.keyDown(window, { key: 'Alt' })).toBe(false)
+      expect(backdrop.getAttribute('data-peek')).toBe('1')
+      expect(fireEvent.keyUp(window, { key: 'Alt' })).toBe(false)
+      expect(backdrop.getAttribute('data-peek')).toBeNull()
+    }
+  })
+
   it('DLG-3: moves focus to the first control on open and restores it on close', () => {
     const outside = document.createElement('button')
     outside.textContent = 'fuera'

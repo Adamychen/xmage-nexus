@@ -40,6 +40,29 @@ test('LEARN: elegir una Lesson del sideboard (Eyetwitch muerte → learn) @learn
     await expect(grid).toBeVisible({ timeout: 15_000 })
     await expect(grid).toContainText('Environmental Sciences')
 
+    const peekHint = page.getByTestId('card-grid-peek-hint')
+    await expect(peekHint.locator('.card-grid-peek-hint-idle')).toBeVisible()
+    await expect(peekHint.locator('.card-grid-peek-hint-active')).toBeHidden()
+    const overlaps = await page.evaluate(() => {
+      const hint = document.querySelector('[data-testid="card-grid-peek-hint"]')!.getBoundingClientRect()
+      const hits = (r: DOMRect) => r.width > 0 && r.left < hint.right && r.right > hint.left && r.top < hint.bottom && r.bottom > hint.top
+      return [...document.querySelectorAll('.resource-bar.opp, .card-grid-dialog')]
+        .filter((el) => hits(el.getBoundingClientRect()))
+        .map((el) => el.className)
+    })
+    expect(overlaps, 'the peek hint covers neither the opponent piles nor the card grid').toEqual([])
+    for (let i = 0; i < 2; i++) {
+      await page.keyboard.down('Alt')
+      await expect(grid).toHaveCSS('opacity', '0')
+      await expect(grid).toHaveCSS('animation-name', 'none')
+      await expect(peekHint.locator('.card-grid-peek-hint-active')).toBeVisible()
+      if (i === 0) await page.screenshot({ path: path.join(SHOTS_DIR, 'learn-peek.png'), fullPage: true })
+      await page.keyboard.up('Alt')
+      await expect(grid).toHaveCSS('opacity', '1')
+      await expect(peekHint.locator('.card-grid-peek-hint-idle')).toBeVisible()
+    }
+    await page.screenshot({ path: path.join(SHOTS_DIR, 'learn-grid.png'), fullPage: true })
+
     // El clic sobre la celda debe enviar sendPlayerUUID con el id REAL de la
     // Lesson (mismo camino que un humano: CardGrid → sendSingle → sendPlayerUUID).
     await page.evaluate((id) => {

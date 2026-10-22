@@ -1436,6 +1436,8 @@ export const zhs: TranslationSchema = {
     cardgrid_count: '{count} 张牌',
     cardgrid_show_all: '显示全部（{count}）',
     cardgrid_only_valid: '仅有效牌（{count}）',
+    cardgrid_peek_hint: '按住 Alt 查看战场',
+    cardgrid_peek_release: '松开 Alt 返回卡牌',
     cardgrid_done: '完成（{count}）',
     card_printings_title: '选择版本与插画',
     card_inspect_no_translation: '所选卡牌语言暂无文本 — 显示原文（英文）。',

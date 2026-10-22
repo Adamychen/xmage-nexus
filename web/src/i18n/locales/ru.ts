@@ -1431,6 +1431,8 @@ export const ru: TranslationSchema = {
     cardgrid_count: 'Карт: {count}',
     cardgrid_show_all: 'Показать все ({count})',
     cardgrid_only_valid: 'Только допустимые ({count})',
+    cardgrid_peek_hint: 'Удерживайте Alt, чтобы увидеть поле',
+    cardgrid_peek_release: 'Отпустите Alt, чтобы вернуться к картам',
     cardgrid_done: 'Готово ({count})',
     card_printings_title: 'Выберите издание и арт',
     card_inspect_no_translation: 'Нет текста на выбранном языке карты — показан оригинал (английский).',

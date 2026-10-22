@@ -56,7 +56,7 @@ as they want before answering. The hint covers neither the opponent's piles nor 
 
 - Why: PR #24. The Alt peek existed but nothing on screen mentioned it, and on Windows it worked
   once per prompt (releasing a lone Alt hands focus to the browser menu).
-- Guard: none yet (PR #24 adds the hint, the repeatable peek and its tests)
+- Guard: `src/game/CardGrid.test.tsx` · `src/ui/Modal.test.tsx`
 
 ### DLG-7 · Cosmetic overlays step aside for blocking dialogs
 Board FX overlays sit at z-index 999970 and above, over every dialog. A purely decorative one
@@ -64,7 +64,7 @@ Board FX overlays sit at z-index 999970 and above, over every dialog. A purely d
 (a dice roll whose result matters for the next choice) stays on top.
 
 - Why: PR #24. The coin spun over the middle of a card grid that arrived during the toss.
-- Guard: none yet (PR #24 adds the coin's guard; the other overlays are not audited)
+- Guard: `src/board/CoinFlipOverlay.test.tsx`
 
 ### DLG-8 · No native browser dialogs
 Nothing calls `window.confirm`, `alert` or `prompt`; confirmations go through `confirmDialog` /
