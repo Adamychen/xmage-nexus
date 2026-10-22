@@ -67,7 +67,16 @@ describe('GameMenu', () => {
     const menu = openMenu(container)
     fireEvent.click(menu!.querySelector('[data-testid="game-menu-settings"]')!)
     expect(container.querySelector('[data-testid="game-menu"]')).toBeNull()
-    expect(container.querySelector('[data-testid="settings-modal"]')).not.toBeNull()
-    expect(container.querySelector('[data-testid="settings-phase-stops"]')).not.toBeNull()
+    expect(document.body.querySelector('[data-testid="settings-modal"]')).not.toBeNull()
+    expect(document.body.querySelector('[data-testid="settings-phase-stops"]')).not.toBeNull()
+  })
+
+  it('DLG-11: the settings modal opened from the menu is mounted on the body, outside the top bar', () => {
+    const { container } = render(<GameMenu />)
+    const menu = openMenu(container)
+    fireEvent.click(menu!.querySelector('[data-testid="game-menu-settings"]')!)
+    const modal = document.body.querySelector('[data-testid="settings-modal"]')
+    expect(modal).not.toBeNull()
+    expect(container.contains(modal)).toBe(false)
   })
 })

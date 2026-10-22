@@ -192,6 +192,7 @@ export class HumanGame {
       hasPriority: this.priority === 'human',
       life: this.humanLife,
       battlefield: myBattleMap,
+      hasLeft: this.options.humanLeft === true,
       handCount: this.hand.length,
       libraryCount: 40 - this.turn,
     })

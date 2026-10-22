@@ -54,6 +54,7 @@ export interface HumanGameOptions {
   humanCombatDamage?: number
   match?: { winsNeeded: number }
   simWinsGame?: number[]
+  humanLeft?: boolean
 }
 
 export interface CastRuntime {
