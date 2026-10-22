@@ -18,6 +18,8 @@ export interface TurnOrderRingProps {
    * already show it, and the strip band is 36px tall.
    */
   lane?: boolean
+  onSeatClick?: (playerId: string) => void
+  focusedId?: string | null
 }
 
 export function turnOrderSeats(players: PlayerView[] | undefined, lane = false): PlayerView[] {
@@ -29,7 +31,7 @@ export function turnOrderSeats(players: PlayerView[] | undefined, lane = false):
   return [...clamped].reverse()
 }
 
-export default function TurnOrderRing({ players, activePlayerId, lane = false }: TurnOrderRingProps) {
+export default function TurnOrderRing({ players, activePlayerId, lane = false, onSeatClick, focusedId = null }: TurnOrderRingProps) {
   const { t } = useTranslation()
   const portrait = useSettings().gameUi === 'v2' && !lane
   const ordered = turnOrderSeats(players, lane)
@@ -76,15 +78,26 @@ export default function TurnOrderRing({ players, activePlayerId, lane = false }:
       const isPriority = !!p.hasPriority
       const isDefeated = isPlayerOut(p)
       const nextPlayer = ordered[(idx + 1) % count]
+      const clickable = !!onSeatClick && !measure && !p.controlled && !isDefeated
+      const focused = focusedId === p.playerId
 
       return (
         <div key={p.playerId} className="tor-seat-group" data-active-group={isActive || undefined}>
           <div
-            className={`tor-seat ${isActive ? 'is-active' : ''} ${isPriority ? 'has-priority' : ''} ${isDefeated ? 'is-defeated' : ''} ${p.controlled ? 'is-controlled' : ''}`}
+            className={`tor-seat ${isActive ? 'is-active' : ''} ${isPriority ? 'has-priority' : ''} ${isDefeated ? 'is-defeated' : ''} ${p.controlled ? 'is-controlled' : ''}${clickable ? ' is-clickable' : ''}${focused ? ' is-focused' : ''}`}
             data-testid={measure ? undefined : `tor-seat-${p.playerId}`}
             data-active={isActive ? 'true' : undefined}
             data-priority={isPriority ? 'true' : undefined}
             title={`${p.name}${isActive ? t('board', 'turn_active_suffix') : ''}${isPriority ? t('board', 'turn_priority_suffix') : ''} · ${t('board', 'turn_life_label')}: ${p.life}`}
+            role={clickable ? 'button' : undefined}
+            tabIndex={clickable ? 0 : undefined}
+            aria-pressed={clickable ? focused : undefined}
+            onClick={clickable ? () => onSeatClick?.(p.playerId) : undefined}
+            onKeyDown={clickable ? (e) => {
+              if (e.key !== 'Enter' && e.key !== ' ') return
+              e.preventDefault()
+              onSeatClick?.(p.playerId)
+            } : undefined}
           >
             {seatBody(p, isActive, true, !measure)}
           </div>

@@ -25,6 +25,7 @@ export interface PlayerZoneProps {
   compactPod?: boolean
   className?: string
   showHand?: boolean
+  kindColumns?: boolean
 }
 
 export default function PlayerZone(props: PlayerZoneProps) {

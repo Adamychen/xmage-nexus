@@ -48,3 +48,104 @@
   flex: 1 1 0;
   min-height: 0;
 }
+
+.arena-board {
+  --seat-focus-strip-w: 220px;
+}
+
+.arena-opp-cell.seat-focus-shrunk {
+  flex: 0 0 var(--seat-focus-strip-w);
+}
+
+.arena-opp-cell .board-zone.seat-strip {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+}
+
+.arena-opp-cell .seat-strip .player-info-bar.is-portrait {
+  width: 100%;
+  max-width: 100%;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas: 'av life' 'who who' 'chips chips';
+}
+
+.arena-opp-cell .seat-strip .player-info-bar.is-portrait .player-details {
+  min-width: 0;
+}
+
+.arena-opp-cell .seat-strip .player-info-bar.is-portrait .player-name {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  overflow-wrap: anywhere;
+}
+
+.arena-opp-cell.seat-focus-on .bz-status-row > .player-info-bar.is-portrait {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas: 'av who life' 'av chips chips';
+}
+
+.arena-opp-cell.seat-focus-on .pp-stats .resource-piles {
+  grid-template-columns: repeat(3, max-content);
+}
+
+.seat-focus-btn,
+.seat-focus-all {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-1h);
+  height: 22px;
+  min-width: 22px;
+  padding: 0 var(--sp-1h);
+  border: 1px solid rgb(var(--gold-rgb) / 0.35);
+  border-radius: var(--r-pill);
+  background: transparent;
+  color: inherit;
+  font-size: var(--fs-2xs);
+  line-height: 1;
+  cursor: pointer;
+}
+
+.seat-focus-btn.is-focused,
+.seat-focus-all {
+  border-color: var(--gold-300);
+  color: var(--gold-300);
+}
+
+.seat-strip-pulse {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 6;
+  background: radial-gradient(ellipse at center, rgb(var(--gold-rgb) / 0.35) 0%, transparent 70%);
+  animation: seatStripPulse calc(700ms / var(--fx-speed, 1)) ease-out 1 both;
+}
+
+@keyframes seatStripPulse {
+  0% {
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.arena-opp-cell .board-zone.seat-strip.target-zone::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 2px solid var(--gold-300);
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 5;
+  animation: targetZoneRing 1.2s ease-in-out infinite;
+}

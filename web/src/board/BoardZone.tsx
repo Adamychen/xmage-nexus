@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useLayoutEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import type { CardView, CardsView, PermanentView, PlayerView } from '../net/types'
 import CardSlot from './CardSlot'
@@ -28,6 +28,7 @@ import { bandFill, bandShares, permanentKind } from './bandWeights'
 import { cardAspectFor } from './compactCard'
 import { EMPTY_TARGET_ZONES, type TargetZoneKind } from './targetZones'
 import { isPlayerDefeated, isPlayerOut } from './boardShared'
+import { useBattlefieldPulse } from './seatFocus'
 import { useSeatColor } from './seatColor'
 import './BoardZone.css'
 import './PortraitBoard.css'
@@ -58,6 +59,17 @@ export interface BoardZoneProps {
   className?: string
   mirrored?: boolean
   showHand?: boolean
+  kindColumns?: boolean
+  statusOnly?: boolean
+  seatFocus?: SeatFocusControl
+}
+
+export interface SeatFocusControl {
+  focused: boolean
+  onToggle: () => void
+  showAll: () => void
+  /** Ancho de carta del propio tablero: la carta del foco nunca lo supera. */
+  maxCardW?: number
 }
 
 export default function BoardZone({
@@ -85,6 +97,9 @@ export default function BoardZone({
   className = '',
   mirrored = false,
   showHand = true,
+  kindColumns = false,
+  statusOnly = false,
+  seatFocus,
 }: BoardZoneProps) {
   const effectivePosition = position ?? (mirrored ? 'bottom' : 'top')
   const effectiveControlled = isControlled ?? (player?.controlled === true)
@@ -103,29 +118,63 @@ export default function BoardZone({
   const boardFill = useStore((s) => s.settings.boardFill) && !compactPod
   const shares = useMemo(
     () => bandShares(boardFill
-      ? bandFill(player?.battlefield, hasCommandObjects(player, effectiveControlled ? helperEmblems : undefined, statusSide))
+      ? bandFill(player?.battlefield, hasCommandObjects(player, effectiveControlled ? helperEmblems : undefined, statusSide), kindColumns)
       : { creatures: true, permanents: true }),
-    [boardFill, player, effectiveControlled, helperEmblems, statusSide],
+    [boardFill, player, effectiveControlled, helperEmblems, statusSide, kindColumns],
   )
-  const { cardW, ref: zoneRef } = useZoneScale(cardAspect, shares.tallest)
+  const { cardW, ref: zoneRef } = useZoneScale(cardAspect, shares.tallest, seatFocus?.focused ? seatFocus.maxCardW : undefined)
   const [creaturesBandEl, setCreaturesBandEl] = useState<HTMLDivElement | null>(null)
   const [permanentsBandEl, setPermanentsBandEl] = useState<HTMLDivElement | null>(null)
   const [marqueeEl, setMarqueeEl] = useState<HTMLDivElement | null>(null)
   const setCreaturesBand = useCallback((node: HTMLDivElement | null) => setCreaturesBandEl(node), [])
   const setPermanentsBand = useCallback((node: HTMLDivElement | null) => setPermanentsBandEl(node), [])
+  const [landsBandEl, setLandsBandEl] = useState<HTMLDivElement | null>(null)
+  const [othersBandEl, setOthersBandEl] = useState<HTMLDivElement | null>(null)
+  const setLandsBand = useCallback((node: HTMLDivElement | null) => setLandsBandEl(node), [])
+  const setOthersBand = useCallback((node: HTMLDivElement | null) => setOthersBandEl(node), [])
   useDragScroll(creaturesBandEl)
   useDragScroll(permanentsBandEl)
-  useDragScroll(marqueeEl)
+  useDragScroll(landsBandEl)
+  useDragScroll(othersBandEl)
+  useDragScroll(kindColumns ? null : marqueeEl)
   useBandFit(creaturesBandEl, cardW, compactPod, cardAspect)
   useBandFit(permanentsBandEl, cardW, compactPod, cardAspect)
+  useBandFit(landsBandEl, cardW, compactPod, cardAspect)
+  useBandFit(othersBandEl, cardW, compactPod, cardAspect)
   useTapFlip(permanentsBandEl)
+  useTapFlip(landsBandEl)
+  useTapFlip(othersBandEl)
+  useLayoutEffect(() => {
+    if (!kindColumns || !marqueeEl) return
+    const sources = [creaturesBandEl, permanentsBandEl, landsBandEl, othersBandEl].filter((el): el is HTMLDivElement => el !== null)
+    const sync = () => {
+      let w = cardW
+      for (const el of sources) {
+        const applied = parseFloat(el.style.getPropertyValue('--card-w'))
+        if (Number.isFinite(applied) && applied < w) w = applied
+      }
+      if (w < cardW) marqueeEl.style.setProperty('--card-w', `${w}px`)
+      else marqueeEl.style.removeProperty('--card-w')
+    }
+    sync()
+    const observer = new MutationObserver(sync)
+    for (const el of sources) observer.observe(el, { attributes: true, attributeFilter: ['style'] })
+    return () => {
+      observer.disconnect()
+      marqueeEl.style.removeProperty('--card-w')
+    }
+  }, [kindColumns, marqueeEl, cardW, creaturesBandEl, permanentsBandEl, landsBandEl, othersBandEl])
   const gameId = useStore((s) => s.gameId)
   const gamePlayers = useStore((s) => s.game?.players)
   const gameCycle = useStore((s) => s.game?.gameCycle)
-  const bandEls = useMemo(() => [permanentsBandEl, creaturesBandEl], [permanentsBandEl, creaturesBandEl])
+  const bandEls = useMemo(
+    () => [permanentsBandEl, landsBandEl, othersBandEl, creaturesBandEl],
+    [permanentsBandEl, landsBandEl, othersBandEl, creaturesBandEl],
+  )
   useUntapWave(bandEls, tiltedTaps)
   useTokenPop(bandEls, player)
   useBattlefieldDissolve(bandEls, gameId, player, { players: gamePlayers, gameCycle })
+  const pulseTick = useBattlefieldPulse(player, statusOnly)
   const { t } = useTranslation()
 
   // Switch Hands (Mindslaver & cía.): el servidor envía la mano controlada en `opponentHands`.
@@ -310,7 +359,9 @@ export default function BoardZone({
   const creaturesRowTargeted =
     battlefieldFallback ||
     creatures.some(([id]) => targetIds.has(id)) ||
-    marqueeEntries.some(([id]) => targetIds.has(id))
+    (!kindColumns && marqueeEntries.some(([id]) => targetIds.has(id)))
+  const hasMarqueeColumn = kindColumns && marqueeEntries.length > 0
+  const marqueeColumnTargeted = battlefieldFallback || marqueeEntries.some(([id]) => targetIds.has(id))
 
   const renderCardItem = (id: string, perm: PermanentView, isCreature: boolean) => {
     const isSelectable = combatSelectableSet.has(id)
@@ -516,7 +567,37 @@ export default function BoardZone({
         handView={portrait && handViewable ? { known: knownHandEntries.length, onOpen: () => setHandViewerOpen(true) } : undefined}
         pool={portrait && effectiveControlled && !compactPod ? <ResourceBar player={player} side="my" poolOnly /> : undefined}
       />
-      {showHand && (!portrait || handTargeted || effectiveControlled) && (
+      {seatFocus && (
+        <button
+          type="button"
+          data-testid={`seat-focus-${player.playerId}`}
+          className={`seat-focus-btn${seatFocus.focused ? ' is-focused' : ''}`}
+          aria-pressed={seatFocus.focused}
+          aria-label={t('board', 'seat_focus')}
+          title={t('board', 'seat_focus')}
+          onClick={(e) => {
+            e.stopPropagation()
+            seatFocus.onToggle()
+          }}
+        >
+          <Icon name="maximize" size={12} />
+        </button>
+      )}
+      {seatFocus?.focused && (
+        <button
+          type="button"
+          data-testid="seat-focus-all"
+          className="seat-focus-all"
+          title={t('board', 'seat_focus_all')}
+          onClick={(e) => {
+            e.stopPropagation()
+            seatFocus.showAll()
+          }}
+        >
+          {t('board', 'seat_focus_all')}
+        </button>
+      )}
+      {!statusOnly && showHand && (!portrait || handTargeted || effectiveControlled) && (
         <HandZone
           cards={finalHand}
           onCardClick={onHandCardClick ?? onCardClick}
@@ -551,17 +632,76 @@ export default function BoardZone({
     </div>
   )
 
+  if (statusOnly) {
+    const stripTargetable = targetIds.has(player.playerId)
+    const stripTargeted = stripTargetable || Object.keys(battlefield).some((id) => targetIds.has(id))
+    const onStripClick = seatFocus
+      ? (e: React.MouseEvent) => {
+          const target = e.target as Element
+          if (target.closest('.player-avatar')) return
+          if (stripTargetable && target.closest('.player-info-bar')) return
+          seatFocus.onToggle()
+        }
+      : undefined
+    return (
+      <div
+        ref={zoneRefWithShell}
+        className={`board-zone ${effectivePosition === 'top' ? 'zone-top' : 'zone-bottom'} opponent-zone seat-strip${stripTargeted ? ' target-zone' : ''}`}
+        data-player-id={player.playerId}
+        data-player-name={player.name}
+        data-role={effectivePosition === 'top' ? 'opponent' : 'player'}
+        data-seat-mode="status"
+        onClick={onStripClick}
+        style={{ '--seat': seatColor } as React.CSSProperties}
+      >
+        {pulseTick > 0 && <span key={pulseTick} className="seat-strip-pulse" aria-hidden="true" />}
+        {statusRow}
+      </div>
+    )
+  }
+
+
+  const landSlots = landGroups.length + landSolos.length
+  const otherSlots = tokenGroups.length + otherSolos.length
+
   const permanentsRow = (
     <div
       key="permanents-row"
       className={`bz-row bz-permanents-row oz-permanents-row pz-permanents-row${permanentsRowTargeted ? ' target-zone' : ''}`}
     >
-      <div ref={setPermanentsBand} className="bz-band oz-band pz-band permanents-band full-width">
-        {landGroups.map((group) => renderStackGroup(group, false))}
-        {tokenGroups.map((group) => renderStackGroup(group, false))}
-        {landSolos.map(([id, perm]) => renderCardItem(id, perm, false))}
-        {otherSolos.map(([id, perm]) => renderCardItem(id, perm, false))}
-      </div>
+      {kindColumns ? (
+        <>
+          {landSlots > 0 && (
+            <div
+              ref={setLandsBand}
+              className="bz-band oz-band pz-band permanents-band bz-lands-band"
+              data-testid="lands-band"
+              style={{ flexGrow: landSlots }}
+            >
+              {landGroups.map((group) => renderStackGroup(group, false))}
+              {landSolos.map(([id, perm]) => renderCardItem(id, perm, false))}
+            </div>
+          )}
+          {otherSlots > 0 && (
+            <div
+              ref={setOthersBand}
+              className="bz-band oz-band pz-band bz-others-band"
+              data-testid="others-band"
+              style={{ flexGrow: otherSlots }}
+            >
+              {tokenGroups.map((group) => renderStackGroup(group, false))}
+              {otherSolos.map(([id, perm]) => renderCardItem(id, perm, false))}
+            </div>
+          )}
+        </>
+      ) : (
+        <div ref={setPermanentsBand} className="bz-band oz-band pz-band permanents-band full-width">
+          {landGroups.map((group) => renderStackGroup(group, false))}
+          {tokenGroups.map((group) => renderStackGroup(group, false))}
+          {landSolos.map(([id, perm]) => renderCardItem(id, perm, false))}
+          {otherSolos.map(([id, perm]) => renderCardItem(id, perm, false))}
+        </div>
+      )}
     </div>
   )
 
@@ -585,17 +725,27 @@ export default function BoardZone({
           />
         </div>
       )}
-      <div ref={setCreaturesBand} className={`bz-band oz-band pz-band creatures-band ${!hasCommander && marqueeEntries.length === 0 ? 'full-width' : ''}`}>
+      <div ref={setCreaturesBand} className={`bz-band oz-band pz-band creatures-band ${!hasCommander && !(marqueeEntries.length > 0 && !kindColumns) ? 'full-width' : ''}`}>
         {creatureTokenGroups.map((group) => renderStackGroup(group, true))}
         {creatureSolos.map(([id, perm]) => renderCardItem(id, perm, true))}
       </div>
-      {marqueeEntries.length > 0 && (
+      {marqueeEntries.length > 0 && !kindColumns && (
         <div ref={setMarqueeEl} className="bz-marquee oz-marquee pz-marquee">
           {marqueeEntries.map(([id, perm]) => renderCardItem(id, perm, false))}
         </div>
       )}
     </div>
   )
+
+  const marqueeColumn = hasMarqueeColumn ? (
+    <div
+      key="marquee-column"
+      ref={setMarqueeEl}
+      className={`bz-marquee oz-marquee pz-marquee bz-marquee--column${marqueeColumnTargeted ? ' target-zone' : ''}`}
+    >
+      {marqueeEntries.map(([id, perm]) => renderCardItem(id, perm, false))}
+    </div>
+  ) : null
 
   const hasAnyBoardCards = creatures.length > 0 || hasCommander || lands.length > 0 || others.length > 0
   const noCreatures = hasAnyBoardCards && creatures.length === 0 && !hasCommander
@@ -608,6 +758,7 @@ export default function BoardZone({
     mirrored ? 'mirrored' : '',
     compactPod ? 'compact-pod' : '',
     compactCards ? 'card-style-compact' : '',
+    hasMarqueeColumn ? 'has-marquee-column' : '',
     tiltedTaps ? 'tap-tilted' : '',
     noCreatures ? 'no-creatures' : '',
     noPermanents ? 'no-permanents' : '',
@@ -648,6 +799,7 @@ export default function BoardZone({
       )}
 
       {isTop ? [statusRow, permanentsRow, creaturesRow] : [creaturesRow, permanentsRow, statusRow]}
+      {marqueeColumn}
       {handViewerOpen && (
         <HandViewer
           playerName={player?.name ?? ''}

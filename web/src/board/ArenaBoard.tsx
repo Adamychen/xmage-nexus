@@ -4,7 +4,9 @@ import PlayerZone from './PlayerZone'
 import BoardShell, { BoardColDivider, BoardDivider } from './BoardShell'
 import { useBoardPresenter, useBoardPlayers } from './useBoardPresenter'
 import { opponentRevealedCards } from './revealedCards'
-import { MAX_BOARD_PLAYERS, useSeatStates, useSpectatorBottomHand, useSwitchedHand, type BoardProps } from './boardShared'
+import { isPlayerOut, MAX_BOARD_PLAYERS, useSeatStates, useSpectatorBottomHand, useSwitchedHand, type BoardProps } from './boardShared'
+import { liveOpponentIds, useSeatFocus } from './seatFocus'
+import { useOwnCardCap } from './ownCardCap'
 import { EMPTY_TARGET_ZONES } from './targetZones'
 import DefeatedSeat from './DefeatedSeat'
 import './ArenaBoard.css'
@@ -64,6 +66,10 @@ export default function ArenaBoard({
     () => (isSpectator ? opps.slice(0, Math.max(0, opps.length - 1)).slice(0, MAX_BOARD_PLAYERS - 1) : opps.slice(0, MAX_BOARD_PLAYERS - 1)),
     [isSpectator, opps]
   )
+  const liveIds = useMemo(() => liveOpponentIds(oppRow), [oppRow])
+  const { focusId, select, showAll } = useSeatFocus(liveIds, game)
+  const focusable = liveIds.length >= 2
+  const ownCardW = useOwnCardCap(presenter.boardRef)
 
   return (
     <BoardShell
@@ -84,10 +90,15 @@ export default function ArenaBoard({
           const seat = opp && state !== 'alive' && (
             <DefeatedSeat player={opp} open={state === 'open'} onToggle={() => toggleSeat(opp.playerId)} />
           )
+          const focused = !!opp && opp.playerId === focusId
+          const shrunk = focusId != null && !!opp && !isPlayerOut(opp) && !focused
+          const focusControl = focusable && !!opp && !isPlayerOut(opp)
+            ? { focused, onToggle: () => select(opp.playerId), showAll, maxCardW: ownCardW }
+            : undefined
           return (
             <Fragment key={opp?.playerId ?? `arena-empty-${i}`}>
               {i > 0 && <BoardColDivider />}
-              <div className={`arena-opp-cell${state === 'collapsed' ? ' seat-cell--out' : state === 'open' ? ' seat-cell--open' : ''}`}>
+              <div className={`arena-opp-cell${state === 'collapsed' ? ' seat-cell--out' : state === 'open' ? ' seat-cell--open' : ''}${focused ? ' seat-focus-on' : ''}${shrunk ? ' seat-focus-shrunk' : ''}`}>
                 {seat}
                 {opp && state !== 'collapsed' && (
                   <OpponentZone
@@ -105,6 +116,9 @@ export default function ArenaBoard({
                     attackingIds={attackingIds}
                     blockingIds={blockingIds}
                     compactPod
+                    kindColumns
+                    statusOnly={shrunk}
+                    seatFocus={focusControl}
                   />
                 )}
               </div>
@@ -134,6 +148,7 @@ export default function ArenaBoard({
         onPlayCrossZone={onPlayCrossZone}
         helperEmblems={game?.myHelperEmblems}
         showHand={isSpectator}
+        kindColumns
       />
     </BoardShell>
   )

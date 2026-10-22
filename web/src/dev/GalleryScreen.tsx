@@ -141,6 +141,7 @@ export default function GalleryScreen() {
       error: active.error ?? null,
       chatMessages: active.chatMessages ?? [],
       lastDraftEventAt: active.lastDraftEventAt ?? null,
+      seatFocus: active.seatFocus ? { gameId: active.gameId ?? null, playerId: active.seatFocus, combatTurn: null } : null,
       settings: {
         ...base.settings,
         boardLayout: active.boardLayout ?? base.settings.boardLayout,

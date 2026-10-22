@@ -46,6 +46,19 @@
   background: var(--veil-2);
 }
 
+.tor-seat.is-clickable {
+  cursor: pointer;
+}
+
+.tor-seat.is-clickable.is-focused {
+  border-color: var(--gold-300);
+}
+
+.tor-seat.is-clickable:focus-visible {
+  outline: 2px solid var(--gold-300);
+  outline-offset: 2px;
+}
+
 .tor-seat-dot {
   font-size: var(--fs-4xs);
   line-height: 1;

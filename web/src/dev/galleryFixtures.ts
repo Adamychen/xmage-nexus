@@ -131,6 +131,7 @@ export interface GalleryEntry {
   myDeck?: Deck | null
   chatMessages?: ChatMessageEvent[]
   boardLayout?: 'standard' | 'pod' | 'arena'
+  seatFocus?: string
   /** Table interface for this state; omitted = the viewer's setting. */
   gameUi?: GameUi
   /** Rollback vote dialog state (`rollbackVote` in the store). */
@@ -525,6 +526,35 @@ function withCrowdedBattlefields(game: GameView, creatures: number, lands: numbe
   }
 }
 
+/** Four Commander seats with every kind of permanent: lands, mana rocks, Treasures, a planeswalker and a saga (BRD-1, BRD-2). */
+function withKindColumnsBoard(game: GameView): GameView {
+  const card = (owner: string, id: string, name: string, cardTypes: string[], extra: MutableRecord = {}): [string, MutableRecord] => [
+    `${owner}-${id}`,
+    { id: `${owner}-${id}`, parentId: `${owner}-${id}`, name, displayName: name, cardTypes, manaValue: 0, expansionSetCode: '', cardNumber: '0', controllerId: owner, ...extra },
+  ]
+  const treasure = (owner: string, n: number): [string, MutableRecord] => card(owner, `treasure-${n}`, 'Treasure', ['ARTIFACT'], { isToken: true, mageObjectType: 'TOKEN' })
+  return {
+    ...game,
+    players: players(game).map((p, seat) => {
+      const owner = p.playerId
+      const extras: [string, MutableRecord][] = [
+        card(owner, 'plains-1', 'Plains', ['LAND']),
+        card(owner, 'plains-2', 'Plains', ['LAND']),
+        card(owner, 'plains-3', 'Plains', ['LAND']),
+        card(owner, 'island', 'Island', ['LAND']),
+        card(owner, 'sol-ring', 'Sol Ring', ['ARTIFACT']),
+        card(owner, 'signet', 'Arcane Signet', ['ARTIFACT']),
+        treasure(owner, 1),
+        treasure(owner, 2),
+        treasure(owner, 3),
+      ]
+      if (seat % 2 === 0) extras.push(card(owner, 'walker', 'Jace, the Mind Sculptor', ['PLANESWALKER']))
+      if (seat % 2 === 1) extras.push(card(owner, 'saga', 'Saga of Ancient Lore', ['ENCHANTMENT', 'SAGA']))
+      return { ...p, battlefield: { ...(p.battlefield ?? {}), ...Object.fromEntries(extras) } as unknown as PlayerView['battlefield'] }
+    }),
+  }
+}
+
 const LONG_ME = 'Alejandro-de-la-Vega-Fernández-Castillo'
 const LONG_OPP = 'Bartholomew-Montgomery-Fitzwilliam-III'
 const LONG_CARD = 'Asmoranomardicadaistinaculdacar'
@@ -562,6 +592,7 @@ const FOUR_PLAYER_GAME = GANG_BLOCK_FRAME
     })()
   : null
 const CROWDED_POD_GAME = FOUR_PLAYER_GAME ? withCrowdedBattlefields(FOUR_PLAYER_GAME, 16, 14) : null
+const KIND_COLUMNS_GAME = FOUR_PLAYER_GAME ? withKindColumnsBoard(FOUR_PLAYER_GAME) : null
 const THREE_PLAYER_COMMANDER = COMMANDER_FRAME?.gameView ?? null
 const HAND_15_GAME = GANG_BLOCK_FRAME ? withHandSize(GANG_BLOCK_FRAME.gameView, 15) : null
 const HAND_12_GAME = GANG_BLOCK_FRAME ? withHandSize(GANG_BLOCK_FRAME.gameView, 12) : null
@@ -1223,6 +1254,11 @@ function withPhased(game: GameView, id: string, phasedIn: boolean): GameView {
     if (!perm) return p
     return { ...p, battlefield: { ...p.battlefield, [id]: { ...perm, phasedIn } } }
   })
+}
+
+function withPermanentOn(game: GameView, playerId: string, id: string): GameView {
+  const land = { id, name: 'Forest', displayName: 'Forest', parentId: id, cardTypes: ['Land'], tapped: false, manaValue: 0, expansionSetCode: '', cardNumber: '0' } as unknown as PermanentView
+  return { ...game, players: players(game).map((p) => (p.playerId === playerId ? { ...p, battlefield: { ...p.battlefield, [id]: land } } : p)) }
 }
 
 function withPlayerOut(game: GameView, playerId: string): GameView {
@@ -3505,6 +3541,21 @@ export function buildGalleryEntries(): GalleryEntry[] {
         action: { label: 'Replay', run: replayQuietWithLog(podBase, gameId, () => `${logName(podVictim.name)} has conceded.`, (g) => withPlayerOut(g, podVictim.playerId)) },
       })
     }
+    const seatShrunk = players(fourPlayers).find((p) => !p.controlled && p.playerId !== opponentOfFour)
+    if (seatShrunk && opponentOfFour) {
+      entries.push({
+        id: 'anim:seat-focus-pulse',
+        group: 'Animaciones',
+        label: 'Focused board: a shrunk seat pulses when a permanent enters',
+        description: `Four-player arena with ${players(fourPlayers).find((p) => p.playerId === opponentOfFour)?.name ?? 'an opponent'} focused. "Replay" puts a land on ${seatShrunk.name}'s battlefield: their status strip, shrunk beside the focused board, pulses once in gold.`,
+        phase: 'game',
+        game: fourPlayers,
+        gameId,
+        boardLayout: 'arena',
+        seatFocus: opponentOfFour,
+        action: { label: 'Replay', run: replayQuiet(fourPlayers, gameId, (g) => withPermanentOn(g, seatShrunk.playerId, 'gallery-seat-land')) },
+      })
+    }
     entries.push({
       id: 'anim:dice-roll',
       group: 'Animaciones',
@@ -5271,6 +5322,18 @@ export function buildGalleryEntries(): GalleryEntry[] {
     gameId: GANG_BLOCK_FRAME?.gameId ?? null,
     boardLayout: 'arena',
   })
+  const focusOpp = FOUR_PLAYER_GAME ? opponentPlayer(FOUR_PLAYER_GAME) : undefined
+  entries.push({
+    id: 'board:arena-focus',
+    group: 'Tablero',
+    label: 'Arena (4 jugadores): un rival enfocado',
+    description: 'Arena de 4 con un rival enfocado: su tablero ocupa la fila de rivales entera y los otros dos quedan como tira de estado (retrato, vida, mano y pilas). El botón "All boards" de su fila devuelve las columnas iguales.',
+    phase: 'game',
+    game: FOUR_PLAYER_GAME,
+    gameId: GANG_BLOCK_FRAME?.gameId ?? null,
+    boardLayout: 'arena',
+    seatFocus: focusOpp?.playerId,
+  })
   entries.push({
     id: 'board:priority-frame',
     group: 'Tablero',
@@ -5299,6 +5362,16 @@ export function buildGalleryEntries(): GalleryEntry[] {
     description: 'Mismo campo lleno con layout arena (rivales en columnas compactas).',
     phase: 'game',
     game: CROWDED_POD_GAME,
+    gameId: GANG_BLOCK_FRAME?.gameId ?? null,
+    boardLayout: 'arena',
+  })
+  entries.push({
+    id: 'board:arena-kind-columns',
+    group: 'Tablero',
+    label: 'Arena: lands left, rocks and Treasures right, planeswalkers in a column',
+    description: 'Four-seat Commander with lands, mana rocks, Treasures, a planeswalker and a saga on several seats. Lands sit left of the other permanents on every board; planeswalkers and sagas form a column at the right edge spanning the creature and permanent rows.',
+    phase: 'game',
+    game: KIND_COLUMNS_GAME,
     gameId: GANG_BLOCK_FRAME?.gameId ?? null,
     boardLayout: 'arena',
   })

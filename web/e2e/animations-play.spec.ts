@@ -186,6 +186,14 @@ test.describe('animations really play @board', { tag: '@timing' }, () => {
     expect(pageErrors).toEqual([])
   })
 
+  test('FX-12: anim:seat-focus-pulse pulses the shrunk seat strip once', async ({ page }) => {
+    const pageErrors = trackPageErrors(page)
+    await openGallery(page)
+    await replayEntry(page, 'anim:seat-focus-pulse')
+    await expectAnimation(page, '.seat-strip-pulse', 'seatStripPulse')
+    expect(pageErrors).toEqual([])
+  })
+
   test('FX-12: anim:keyword-auras runs one looping aura per keyword', async ({ page }) => {
     const pageErrors = trackPageErrors(page)
     await openGallery(page)
