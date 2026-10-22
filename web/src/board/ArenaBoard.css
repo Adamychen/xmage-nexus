@@ -76,6 +76,13 @@
   min-width: 0;
 }
 
+.arena-opp-cell .seat-strip .player-info-bar.is-portrait .player-name {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  overflow-wrap: anywhere;
+}
+
 .arena-opp-cell.seat-focus-on .bz-status-row > .player-info-bar.is-portrait {
   grid-template-columns: auto minmax(0, 1fr) auto;
   grid-template-areas: 'av who life' 'av chips chips';

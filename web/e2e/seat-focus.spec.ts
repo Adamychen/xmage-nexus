@@ -215,6 +215,9 @@ test('BRD-3: a crowded opponent board grows back when focused, and never past a 
 test('BRD-3: a shrunk strip shows the full name and the library, graveyard and exile chips @seat-focus', async ({ page }) => {
   await page.setViewportSize({ width: 1366, height: 768 })
   await loadArena(page, { crowded: true })
+  await page.addStyleTag({
+    content: ':root { --font-ui: monospace !important } .arena-opp-cell .seat-strip .player-name { letter-spacing: 0.1em !important }',
+  })
   await page.getByTestId('seat-focus-p2').click()
   await expect(page.getByTestId('seat-focus-p2')).toHaveAttribute('aria-pressed', 'true')
   const strip = page.locator('.arena-opp-cell [data-player-id="p3"].seat-strip')
@@ -222,8 +225,16 @@ test('BRD-3: a shrunk strip shows the full name and the library, graveyard and e
 
   const name = strip.locator('.player-name')
   await expect(name).toHaveText('Christopher Ashworth the Third')
+  await strip.evaluate((el) => Promise.all(el.closest('.arena-opp-cell')!.getAnimations({ subtree: true }).map((a) => a.finished)))
   await expect
-    .poll(() => name.evaluate((el) => el.scrollWidth <= el.clientWidth), { message: 'the name is not clipped' })
+    .poll(
+      () =>
+        name.evaluate((el) => {
+          const box = el.closest('.seat-strip')!.getBoundingClientRect()
+          return el.scrollWidth <= el.clientWidth && el.getBoundingClientRect().right <= box.right
+        }),
+      { message: 'the name is not clipped and stays inside the strip' },
+    )
     .toBe(true)
 
   for (const chip of ['library-chip', 'graveyard-chip', 'exile-chip']) {
