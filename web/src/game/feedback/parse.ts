@@ -203,7 +203,7 @@ export function parseFeedback(
         choices = [...choices].sort((a, b) => (sortRank(a) ?? Number.MAX_SAFE_INTEGER) - (sortRank(b) ?? Number.MAX_SAFE_INTEGER))
       }
       return prompt(method, gameId, t('game', 'choose_option'), stringValue(choice.message) ?? message, 'string', choices, bounds,
-        undefined, undefined, true, subMessageOf(choice), undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+        undefined, undefined, choice.required !== false, subMessageOf(choice), undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
         choiceHints(asRecord(choice.hintData)), choice.specialEnabled === true, choice.searchEnabled !== false)
     }
     case 'GAME_CHOOSE_PILE': {

@@ -39,12 +39,14 @@ interface Box {
 /** Smallest visible horizontal ratio per card at the maximum overlap (token in handSizing.ts). */
 const MIN_VISIBLE_RATIO = HAND_BAR_MIN_VISIBLE_RATIO
 
+type Rect = { x: number; y: number; width: number; height: number }
+
 const RECT_OF = 'const rectOf = (el) => { const r = el.getBoundingClientRect(); return { x: r.x, y: r.y, width: r.width, height: r.height } };'
 
 /** Overlay: la mano flota sobre el fondo SIN consumir layout — el player-zone
  *  llega hasta el borde inferior del tablero y la barra está anclada a él. */
 async function expectOverlayLayout(page: Page): Promise<void> {
-  const boxes = await page.evaluate(`${RECT_OF}
+  const boxes = await page.evaluate<{ bar: Rect; board: Rect; zone: Rect }>(`${RECT_OF}
     (() => {
       const bar = document.querySelector('[data-testid="hand-bar"]')
       const board = bar?.closest('.game-board, .pod-board, .arena-board')
@@ -83,7 +85,7 @@ async function expectHandBarLayout(page: Page): Promise<void> {
   // (los rivales espejados en pod comparten la clase .player-zone → excluimos)
   await expect(page.locator('.player-zone:not(.mirrored) .hand-card-slot')).toHaveCount(0)
 
-  const boxes = await page.evaluate(`${RECT_OF}
+  const boxes = await page.evaluate<{ bar: Rect; board: Rect; slots: Rect[]; cards: Rect[] }>(`${RECT_OF}
     (() => {
       const bar = document.querySelector('[data-testid="hand-bar"]')
       const board = bar?.closest('.game-board, .pod-board, .arena-board')

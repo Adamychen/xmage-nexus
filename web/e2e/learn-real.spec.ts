@@ -140,7 +140,8 @@ test('LEARN real: Eyetwitch muere → learn → elegir Lesson del sideboard en e
 
 interface GameViewLike {
   myPlayerId?: string | null
-  players?: Array<{ controlled?: boolean; playerId?: string; battlefield?: Record<string, unknown> }>
+  phase?: string
+  players?: Array<{ controlled?: boolean; isActive?: boolean; playerId?: string; battlefield?: Record<string, unknown> }>
   myHand?: Record<string, unknown>
 }
 

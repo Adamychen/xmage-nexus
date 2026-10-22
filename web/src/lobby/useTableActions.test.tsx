@@ -259,9 +259,18 @@ describe('useTableActions.joinHuman', () => {
     expect(result.current.joiningTable).toBeNull()
   })
 
+  it('only AI seats free: error and no dialog, nothing sent', async () => {
+    vi.mocked(cmds.joinTable).mockClear()
+    const { result } = renderHook(() => useTableActions({ username: 'me' } as any))
+    act(() => result.current.joinHuman(matchTable()))
+    expect(getState().error).toBe(t('errors.table_no_seats'))
+    expect(result.current.joiningTable).toBeNull()
+    expect(cmds.joinTable).not.toHaveBeenCalled()
+  })
+
   it('regular match: opens the deck dialog with the remembered password', () => {
     const { result } = renderHook(() => useTableActions({ username: 'me' } as any))
-    act(() => result.current.joinHuman(matchTable(), 'secret'))
+    act(() => result.current.joinHuman(matchTable({ seats: [{ playerName: 'player1', playerType: 'HUMAN' }, { playerName: '', playerType: 'HUMAN' }] }), 'secret'))
     expect(result.current.joiningTable?.tableId).toBe('t-match')
     expect(result.current.joinPassword).toBe('secret')
     expect(cmds.joinTournamentTable).not.toHaveBeenCalled()
@@ -269,7 +278,7 @@ describe('useTableActions.joinHuman', () => {
 
   it('limited tournament without password: joins directly, without a deck', async () => {
     const { result } = renderHook(() => useTableActions({ username: 'me' } as any))
-    await act(async () => { result.current.joinHuman(draftTourTable()) })
+    await act(async () => { result.current.joinHuman(draftTourTable({ seats: [{ playerName: 'player1', playerType: 'HUMAN' }, { playerName: '', playerType: 'HUMAN' }] })) })
     expect(cmds.joinTournamentTable).toHaveBeenCalledWith({ tableId: 't-draft', playerName: 'me', playerType: 'HUMAN', skill: 1 })
     expect(result.current.joiningTable).toBeNull()
     expect(result.current.notice).toBe(t('lobby.waiting_players'))
@@ -278,7 +287,7 @@ describe('useTableActions.joinHuman', () => {
 
   it('limited tournament with password: goes through the dialog', () => {
     const { result } = renderHook(() => useTableActions({ username: 'me' } as any))
-    act(() => result.current.joinHuman(draftTourTable({ passworded: true })))
+    act(() => result.current.joinHuman(draftTourTable({ passworded: true, seats: [{ playerName: 'player1', playerType: 'HUMAN' }, { playerName: '', playerType: 'HUMAN' }] })))
     expect(result.current.joiningTable?.tableId).toBe('t-draft')
     expect(cmds.joinTournamentTable).not.toHaveBeenCalled()
   })
@@ -286,12 +295,12 @@ describe('useTableActions.joinHuman', () => {
   it('direct tournament join rejected or failed: shows the error and frees the table', async () => {
     vi.mocked(cmds.joinTournamentTable).mockResolvedValueOnce({ ok: false, error: 'table full' } as any)
     const { result } = renderHook(() => useTableActions({ username: 'me' } as any))
-    await act(async () => { result.current.joinHuman(draftTourTable()) })
+    await act(async () => { result.current.joinHuman(draftTourTable({ seats: [{ playerName: 'player1', playerType: 'HUMAN' }, { playerName: '', playerType: 'HUMAN' }] })) })
     expect(getState().error).toBe('La mesa ya está completa')
     expect(result.current.busyTable).toBeNull()
 
     vi.mocked(cmds.joinTournamentTable).mockRejectedValueOnce(new Error('ws closed'))
-    await act(async () => { result.current.joinHuman(draftTourTable()) })
+    await act(async () => { result.current.joinHuman(draftTourTable({ seats: [{ playerName: 'player1', playerType: 'HUMAN' }, { playerName: '', playerType: 'HUMAN' }] })) })
     expect(getState().error).toBeTruthy()
     expect(result.current.busyTable).toBeNull()
   })
@@ -305,7 +314,7 @@ describe('useTableActions.handleJoinWithDeck (sending)', () => {
 
   it('sends the XMage-prepared deck and closes the dialog', async () => {
     const { result } = renderHook(() => useTableActions({ username: 'me' } as any))
-    act(() => result.current.joinHuman(matchTable(), 'pw'))
+    act(() => result.current.joinHuman(matchTable({ seats: [{ playerName: 'player1', playerType: 'HUMAN' }, { playerName: '', playerType: 'HUMAN' }] }), 'pw'))
     const deck = { name: 'd', cards: [{ cardName: 'Forest', setCode: '', cardNumber: '', amount: 60 }], sideboard: [] } as any
     await act(async () => { await result.current.handleJoinWithDeck(matchTable(), deck, 'pw') })
 

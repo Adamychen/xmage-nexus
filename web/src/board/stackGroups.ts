@@ -13,7 +13,7 @@ export interface StackGroup {
 }
 
 export interface GroupStackablesOpts {
-  busyIds?: Set<string>
+  excludeIds?: Set<string>
 }
 
 function hasCounters(perm: PermanentView): boolean {
@@ -38,9 +38,10 @@ export function stackGroupKeyOf(
   id: string,
   perm: PermanentView,
   kind: 'creatures' | 'lands' | 'other',
-  busyIds?: Set<string>,
+  excludeIds?: Set<string>,
 ): { key: string; name: string; groupKind: StackGroupKind } | null {
   const name = perm.name || 'Card'
+  if (excludeIds?.has(id)) return null
   if (kind === 'lands') {
     return { key: `land:${name}:${tappedFlag(perm)}`, name, groupKind: 'land' }
   }
@@ -51,7 +52,6 @@ export function stackGroupKeyOf(
   if (kind === 'other') {
     return { key: `token:${name}:${tappedFlag(perm)}`, name, groupKind: 'token' }
   }
-  if (busyIds?.has(id)) return null
   if (perm.mutated === true) return null
   const pt = `${perm.power ?? ''}/${perm.toughness ?? ''}`
   return { key: `ctoken:${name}:${tappedFlag(perm)}:${pt}`, name, groupKind: 'creature-token' }
@@ -65,7 +65,7 @@ export function groupStackables(
   const byKey = new Map<string, StackGroup>()
   const order: StackGroup[] = []
   for (const [id, perm] of entries) {
-    const slot = stackGroupKeyOf(id, perm, kind, opts.busyIds)
+    const slot = stackGroupKeyOf(id, perm, kind, opts.excludeIds)
     if (!slot) continue
     let group = byKey.get(slot.key)
     if (!group) {

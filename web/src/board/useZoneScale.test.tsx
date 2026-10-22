@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, render, act } from '@testing-library/react'
 import { useZoneScale } from './useZoneScale'
 import { useState } from 'react'
@@ -81,5 +81,29 @@ describe('useZoneScale', () => {
     const cardWText = getByTestId('card-w').textContent
     const cardW = Number(cardWText)
     expect(cardW).toBeGreaterThan(100)
+  })
+
+  it('stops re-queuing layout frames while the zone never gets a height', () => {
+    const frames: FrameRequestCallback[] = []
+    const request = vi.spyOn(window, 'requestAnimationFrame').mockImplementation((cb) => {
+      frames.push(cb)
+      return frames.length
+    })
+    vi.spyOn(window, 'cancelAnimationFrame').mockImplementation(() => {})
+    Element.prototype.getBoundingClientRect = function () {
+      return { width: 0, height: 0, top: 0, left: 0, right: 0, bottom: 0, x: 0, y: 0, toJSON: () => {} } as DOMRect
+    }
+    try {
+      render(<TestZone initialAttach />)
+      for (let i = 0; i < 1000 && frames.length > 0; i++) {
+        const cb = frames.shift()!
+        act(() => cb(0))
+      }
+      expect(frames).toHaveLength(0)
+      expect(request.mock.calls.length).toBeLessThanOrEqual(64)
+    } finally {
+      request.mockRestore()
+      vi.restoreAllMocks()
+    }
   })
 })

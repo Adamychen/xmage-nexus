@@ -68,4 +68,42 @@ describe('Tabs', () => {
     fireEvent.keyDown(list, { key: 'ArrowLeft' })
     expect(screen.getByRole('tabpanel').textContent).toBe('d')
   })
+
+  it('keeps the first enabled tab reachable when the selected tab is disabled', () => {
+    render(
+      <Tabs
+        items={[
+          { id: 'a', label: 'Alpha', disabled: true },
+          { id: 'b', label: 'Beta' },
+          { id: 'c', label: 'Gamma' },
+        ]}
+        value="a"
+        onChange={() => {}}
+        label="demo"
+      />,
+    )
+    const tabs = screen.getAllByRole('tab')
+    expect(tabs.filter((t) => t.tabIndex === 0).map((t) => t.textContent)).toEqual(['Beta'])
+  })
+
+  it('starts arrow navigation from the ends when the selected tab is not enabled', () => {
+    const onChange = vi.fn()
+    render(
+      <Tabs
+        items={[
+          { id: 'a', label: 'Alpha', disabled: true },
+          { id: 'b', label: 'Beta' },
+          { id: 'c', label: 'Gamma' },
+        ]}
+        value="a"
+        onChange={onChange}
+        label="demo"
+      />,
+    )
+    const list = screen.getByRole('tablist')
+    fireEvent.keyDown(list, { key: 'ArrowLeft' })
+    expect(onChange).toHaveBeenLastCalledWith('c')
+    fireEvent.keyDown(list, { key: 'ArrowRight' })
+    expect(onChange).toHaveBeenLastCalledWith('b')
+  })
 })

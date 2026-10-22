@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect } from 'react'
 
 const DRAG_THRESHOLD_PX = 5
 
@@ -7,11 +7,8 @@ const DRAG_THRESHOLD_PX = 5
  * for battlefield card bands, while preserving standard card click interactions.
  * Also converts vertical mouse wheel into horizontal scroll when overflowing.
  */
-export function useDragScroll<T extends HTMLElement = HTMLDivElement>() {
-  const ref = useRef<T | null>(null)
-
+export function useDragScroll<T extends HTMLElement = HTMLDivElement>(el: T | null) {
   useEffect(() => {
-    const el = ref.current
     if (!el) return
 
     let isDown = false
@@ -114,7 +111,5 @@ export function useDragScroll<T extends HTMLElement = HTMLDivElement>() {
       window.removeEventListener('pointercancel', onPointerCancel)
       el.removeEventListener('wheel', onWheel)
     }
-  }, [])
-
-  return ref
+  }, [el])
 }

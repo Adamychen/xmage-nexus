@@ -15,6 +15,9 @@ class Recorder implements FakeConn {
   event(method: string, data: unknown, objectId?: string | null): void {
     this.emitted.push({ type: 'event', method, messageId: this.emitted.length + 1, objectId, data })
   }
+  broadcast(method: string, data: unknown, objectId?: string | null): void {
+    this.event(method, data, objectId)
+  }
   ok(): void {}
   fail(): void {}
   lobby(): void {}

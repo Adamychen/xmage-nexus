@@ -51,6 +51,7 @@ export interface ScryfallSearchResult {
   has_more: boolean
   next_page?: string
   total_cards?: number
+  fellBackToAnyLang?: boolean
 }
 
 export type ScryfallSortOrder = 'cmc' | 'name' | 'rarity' | 'color' | 'edhrec' | 'released'
@@ -77,7 +78,7 @@ export async function searchScryfall(query: string, page = 1, lang?: string, ord
     const primary = await execute(`lang:${lang} ${q}`)
     if (primary.data && primary.data.length > 0) return primary
     if (page === 1) {
-      return execute(`lang:any ${q}`)
+      return { ...(await execute(`lang:any ${q}`)), fellBackToAnyLang: true }
     }
     return primary
   }
@@ -100,6 +101,7 @@ export function useScryfallSearch(query: string, lang?: string, debounceMs = 350
   const dirRef = useRef(dir)
   const pageRef = useRef(1)
   const throttleRetriesRef = useRef(0)
+  const anyLangRef = useRef(false)
 
   useEffect(() => {
     queryRef.current = query
@@ -107,6 +109,7 @@ export function useScryfallSearch(query: string, lang?: string, debounceMs = 350
     orderRef.current = order
     dirRef.current = dir
     pageRef.current = 1
+    anyLangRef.current = false
     if (!query.trim()) {
       setCards([])
       setHasMore(false)
@@ -125,6 +128,7 @@ export function useScryfallSearch(query: string, lang?: string, debounceMs = 350
       try {
         const r = await searchScryfall(queryRef.current, 1, langRef.current, orderRef.current, dirRef.current)
         if (isCurrent()) {
+          anyLangRef.current = !!r.fellBackToAnyLang
           setCards(r.data)
           setHasMore(r.has_more)
           setTotalCards(r.total_cards ?? (r.data.length === 0 ? 0 : undefined))
@@ -157,7 +161,7 @@ export function useScryfallSearch(query: string, lang?: string, debounceMs = 350
     const nextPage = pageRef.current + 1
     setLoadingMore(true)
     try {
-      const r = await searchScryfall(queryRef.current, nextPage, langRef.current, orderRef.current, dirRef.current)
+      const r = await searchScryfall(queryRef.current, nextPage, anyLangRef.current ? 'any' : langRef.current, orderRef.current, dirRef.current)
       if (queryRef.current === query && langRef.current === lang && orderRef.current === order && dirRef.current === dir) {
         setCards((prev) => [...prev, ...r.data])
         setHasMore(r.has_more)

@@ -20,6 +20,7 @@ export default function GeneralTab({ form }: { form: CreateTableForm }) {
       <input
         value={form.name}
         onChange={(e) => form.setName(e.target.value)}
+        maxLength={64}
         placeholder={t('lobby','placeholder_table_name')}
       />
     </Field>

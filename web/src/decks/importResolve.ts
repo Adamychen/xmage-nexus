@@ -3,8 +3,9 @@ import type { CardStripMeta } from './ArenaCardStrip'
 import { fetchCardJson, hasPrinting, type ScryfallCardJson } from '../cards/scryfallCards'
 import { scryfallJson } from '../cards/scryfallClient'
 import { stripMetaFromJson } from './deckCardOps'
+import { foldCardName } from './deckIssues'
 import { FORMAT_CONFIGS } from './formatRules'
-import type { DeckFormat } from './types'
+import type { DeckFormat, DeckV2 } from './types'
 import { xmagePrintingsFor, type XmagePrinting } from './xmageCatalog'
 
 export type PrintingStrategy = 'default' | 'oldest' | 'set' | 'keep'
@@ -27,7 +28,7 @@ export interface ResolveResult {
   unresolved: string[]
 }
 
-type DeckLike = Pick<Deck, 'cards' | 'sideboard' | 'commanders'>
+type DeckLike = Pick<Deck, 'cards' | 'sideboard' | 'commanders'> & Pick<DeckV2, 'commanderCard' | 'partnerCard'>
 
 const COMMANDER_FORMATS: DeckFormat[] = ['Commander', 'Brawl', 'Oathbreaker', 'PennyDreadfulCommander']
 
@@ -49,9 +50,19 @@ function needsPrinting(c: DeckCard): boolean {
   return !hasPrinting(c)
 }
 
+function everyCardOf(deck: DeckLike): DeckCard[] {
+  return [
+    ...deck.cards,
+    ...deck.sideboard,
+    ...(deck.commanders ?? []),
+    ...(deck.commanderCard ? [deck.commanderCard] : []),
+    ...(deck.partnerCard ? [deck.partnerCard] : []),
+  ]
+}
+
 export function countUnresolved(deck: DeckLike): number {
   const names = new Set<string>()
-  for (const c of [...deck.cards, ...deck.sideboard, ...(deck.commanders ?? [])]) {
+  for (const c of everyCardOf(deck)) {
     if (needsPrinting(c)) names.add(c.cardName.toLowerCase())
   }
   return names.size
@@ -84,14 +95,14 @@ async function lookupPrinting(
   const exact = await fetchCardJson({ cardName: name })
   if (exact) return { json: exact, fellBack: strategy !== 'default' }
   const fuzzy = await scryfallJson<ScryfallCardJson>(`${NAMED}?fuzzy=${encodeURIComponent(name)}`, opts)
-  return { json: fuzzy, fellBack: !!fuzzy && strategy !== 'default' }
+  return { json: fuzzy, fellBack: !!fuzzy }
 }
 
 function mergeDuplicates(cards: DeckCard[]): DeckCard[] {
   const out: DeckCard[] = []
   const index = new Map<string, number>()
   for (const c of cards) {
-    const key = `${c.setCode}:${c.cardNumber}:${c.cardName}`
+    const key = `${c.setCode}:${c.cardNumber}:${foldCardName(c.cardName)}`
     const at = index.get(key)
     if (at === undefined) {
       index.set(key, out.length)
@@ -106,7 +117,7 @@ function mergeDuplicates(cards: DeckCard[]): DeckCard[] {
 export function applyPrintingsByName(
   deck: DeckLike,
   printings: Map<string, { setCode: string; cardNumber: string }>,
-): { cards: DeckCard[]; sideboard: DeckCard[]; commanders?: DeckCard[] } {
+): { cards: DeckCard[]; sideboard: DeckCard[]; commanders?: DeckCard[]; commanderCard?: DeckCard; partnerCard?: DeckCard } {
   const apply = (c: DeckCard): DeckCard => {
     if (!needsPrinting(c)) return c
     const p = printings.get(c.cardName.toLowerCase())
@@ -116,12 +127,14 @@ export function applyPrintingsByName(
     cards: mergeDuplicates(deck.cards.map(apply)),
     sideboard: mergeDuplicates(deck.sideboard.map(apply)),
     commanders: deck.commanders?.map(apply),
+    commanderCard: deck.commanderCard ? apply(deck.commanderCard) : undefined,
+    partnerCard: deck.partnerCard ? apply(deck.partnerCard) : undefined,
   }
 }
 
 export async function resolveDeckPrintings(deck: DeckLike, opts: ResolveOptions): Promise<ResolveResult> {
   const reps = new Map<string, DeckCard>()
-  for (const c of [...deck.cards, ...deck.sideboard, ...(deck.commanders ?? [])]) {
+  for (const c of everyCardOf(deck)) {
     const key = c.cardName.toLowerCase()
     const prev = reps.get(key)
     if (!prev || (needsPrinting(prev) && !needsPrinting(c))) reps.set(key, c)

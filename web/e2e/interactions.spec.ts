@@ -64,7 +64,7 @@ test('interacciones completas de MTG: GAME_ASK, GAME_CHOOSE_COLOR, GAME_CHOOSE_P
     // ─────────────────────────────────────────────────────────────
     // 4. GAME_TARGET con CardGrid (Tutor / Búsqueda en biblioteca)
     // ─────────────────────────────────────────────────────────────
-    await waitFrame(page, (f) => f.method === 'GAME_TARGET' && f.data?.cardsView1, 'GAME_TARGET CardGrid tutor', 15_000, cursor)
+    await waitFrame(page, (f) => f.method === 'GAME_TARGET' && !!f.data?.cardsView1, 'GAME_TARGET CardGrid tutor', 15_000, cursor)
     const cardGrid = page.locator('.card-grid')
     await expect(cardGrid, 'cuadrícula CardGrid visible').toBeVisible({ timeout: 15_000 })
     await page.waitForTimeout(300)

@@ -136,6 +136,22 @@ describe('sizeOf', () => {
   })
 })
 
+describe('report text', () => {
+  it('caps a 200 KB description so the report still fits the proxy payload', () => {
+    const draft = buildReport('bug', 'x'.repeat(200 * 1024))
+
+    expect(draft.bytes).toBeLessThanOrEqual(REPORT_LIMITS.MAX_PAYLOAD_BYTES)
+    expect(draft.wire.text.length).toBeLessThanOrEqual(REPORT_LIMITS.MAX_TEXT_CHARS + 50)
+    expect(draft.wire.text).toContain('[truncated]')
+  })
+
+  it('keeps a description under the cap whole', () => {
+    const draft = buildReport('feedback', 'the hand overlaps the log')
+    expect(draft.wire.text).toBe('the hand overlaps the log')
+    expect(draft.text).toBe('the hand overlaps the log')
+  })
+})
+
 describe('desktop reports', () => {
   it('knows a proxy that is on this machine', async () => {
     const { isLocalProxy } = await import('./report')

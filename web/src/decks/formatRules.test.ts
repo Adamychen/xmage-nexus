@@ -410,3 +410,55 @@ describe('formatRules', () => {
     expect(report.issues.some((i) => i.type === 'color_identity' && i.cardName === 'Golgari Signet')).toBe(true)
   })
 })
+
+describe('copy limits and color identity across name variants', () => {
+  const meta = (over: Partial<CardStripMeta>) => ({
+    artCropUrl: null, imageUrl: null, backImageUrl: null, manaCost: '', cmc: 0,
+    typeLine: 'Legendary Creature — Human', colors: [], oracleText: '', ...over,
+  }) as CardStripMeta
+  const atraxa = { cardName: "Atraxa, Praetors' Voice", setCode: 'C16', cardNumber: '189', amount: 1 }
+  const commanderDeck = (over: Partial<DeckV2>): DeckV2 => ({
+    id: 'cmd', name: 'CMD', format: 'Commander', cards: [atraxa], sideboard: [], commanderCard: atraxa,
+    colors: [], createdAt: 0, updatedAt: 0, source: 'custom', ...over,
+  })
+
+  it('counts a case-variant copy in the sideboard toward the constructed copy limit', () => {
+    const deck: DeckV2 = {
+      id: 'std', name: 'Bolt', format: 'Modern', cards: [{ cardName: 'Lightning Bolt', setCode: 'M10', cardNumber: '146', amount: 4 }],
+      sideboard: [{ cardName: 'lightning bolt', setCode: 'M10', cardNumber: '146', amount: 4 }],
+      colors: ['R'], createdAt: 0, updatedAt: 0, source: 'custom',
+    }
+    const report = validateDeckForFormat(deck, new Map())
+    expect(report.issues.find((i) => i.type === 'copy_limit')).toBeDefined()
+  })
+
+  it('counts a case-variant singleton toward the Commander singleton rule', () => {
+    const deck = commanderDeck({
+      cards: [atraxa, { cardName: 'Sol Ring', setCode: 'C21', cardNumber: '263', amount: 1 }],
+      sideboard: [{ cardName: 'sol ring', setCode: 'C21', cardNumber: '263', amount: 1 }],
+    })
+    const report = validateDeckForFormat(deck, new Map())
+    expect(report.issues.find((i) => i.type === 'copy_limit' && i.cardName === 'Sol Ring')).toBeDefined()
+  })
+
+  it('skips the color identity check when a commander has no metadata', () => {
+    const deck = commanderDeck({
+      cards: [atraxa, { cardName: 'Lightning Bolt', setCode: 'M10', cardNumber: '146', amount: 1 }],
+    })
+    const metaMap = new Map([['lightning bolt', meta({ colorIdentity: ['R'] })]])
+    const report = validateDeckForFormat(deck, metaMap)
+    expect(report.issues.filter((i) => i.type === 'color_identity')).toEqual([])
+  })
+
+  it('still flags off-color cards when every commander has metadata', () => {
+    const deck = commanderDeck({
+      cards: [atraxa, { cardName: 'Lightning Bolt', setCode: 'M10', cardNumber: '146', amount: 1 }],
+    })
+    const metaMap = new Map([
+      ['C16/189', meta({ colorIdentity: ['W', 'U', 'B', 'G'] })],
+      ['lightning bolt', meta({ colorIdentity: ['R'] })],
+    ])
+    const report = validateDeckForFormat(deck, metaMap)
+    expect(report.issues.filter((i) => i.type === 'color_identity').map((i) => i.cardName)).toEqual(['Lightning Bolt'])
+  })
+})

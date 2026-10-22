@@ -7,6 +7,7 @@ export interface ErrorRecord {
   at: number
   source: 'window' | 'rejection' | 'boundary' | 'app'
   text: string
+  count?: number
 }
 
 const MAX_ERRORS = 50
@@ -18,8 +19,13 @@ let installed = false
 export function recordError(source: ErrorRecord['source'], text: string, at = Date.now()): void {
   const clean = text.replace(/\s+/g, ' ').trim().slice(0, MAX_TEXT)
   if (!clean) return
+  const last = errors[errors.length - 1]
+  if (last && last.source === source && last.text === clean) {
+    errors[errors.length - 1] = { ...last, count: (last.count ?? 1) + 1 }
+    return
+  }
   if (errors.length >= MAX_ERRORS) errors.shift()
-  errors.push({ at, source, text: clean })
+  errors.push({ at, source, text: clean, count: 1 })
 }
 
 export function recentErrors(): ErrorRecord[] {

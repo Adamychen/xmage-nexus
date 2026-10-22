@@ -656,6 +656,9 @@ export class HumanGame {
   }
 
   private finishHumanBlock(): void {
+    const group = this.combat[0] as Record<string, Record<string, unknown>> | undefined
+    const blocked = Object.keys(group?.blockers ?? {}).length > 0
+    if (!blocked && this.options.simCombatDamage) this.humanLife = Math.max(0, this.humanLife - this.options.simCombatDamage)
     for (const c of this.myBattle) {
       this.crossZone.push({ id: c.id ?? c.parentId ?? c.name, name: c.name, zone: 'graveyard' })
     }

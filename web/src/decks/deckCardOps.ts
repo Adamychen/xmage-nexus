@@ -4,29 +4,36 @@ import type { ScryfallSearchCard } from './scryfallSearch'
 import { scryfallCardArtCrop, scryfallCardImage, scryfallCardBackImage } from './scryfallSearch'
 import type { CardStripMeta } from './ArenaCardStrip'
 import { BASIC_LAND_PRESETS } from './deckUtils'
-import { findFlaggedSameName } from './deckIssues'
+import { findFlaggedSameName, foldCardName } from './deckIssues'
+
+const MAX_COPIES = 99
 
 export function deckCardKey(c: DeckCard): string {
   return `${c.setCode}:${c.cardNumber}:${c.cardName}`
 }
 
-/** Mueve una copia de `from` a `to` (swap main<->sideboard, drag&drop entre zonas). */
+function printingKey(c: { cardName: string; setCode: string; cardNumber: string }): string {
+  return `${c.setCode}:${c.cardNumber}:${foldCardName(c.cardName)}`
+}
+
+/** Mueve una copia de `from` a `to` (swap main<->sideboard, drag&drop entre zonas). No mueve si `to` ya está al tope. */
 export function moveOneBetween(from: DeckCard[], to: DeckCard[], key: string): [DeckCard[], DeckCard[]] {
   const idx = from.findIndex((c) => deckCardKey(c) === key)
   if (idx < 0) return [from, to]
   const card = from[idx]
+  const toIdx = to.findIndex((c) => deckCardKey(c) === key)
+  if (toIdx >= 0 && to[toIdx].amount >= MAX_COPIES) return [from, to]
   const nextFrom = card.amount <= 1
     ? from.filter((_, i) => i !== idx)
     : from.map((c, i) => (i === idx ? { ...c, amount: c.amount - 1 } : c))
-  const toIdx = to.findIndex((c) => deckCardKey(c) === key)
   const nextTo = toIdx >= 0
-    ? to.map((c, i) => (i === toIdx ? { ...c, amount: Math.min(99, c.amount + 1) } : c))
+    ? to.map((c, i) => (i === toIdx ? { ...c, amount: c.amount + 1 } : c))
     : [...to, { ...card, amount: 1 }]
   return [nextFrom, nextTo]
 }
 
 export function incrementInList(list: DeckCard[], key: string): DeckCard[] {
-  return list.map((c) => (deckCardKey(c) === key ? { ...c, amount: Math.min(99, c.amount + 1) } : c))
+  return list.map((c) => (deckCardKey(c) === key ? { ...c, amount: Math.min(MAX_COPIES, c.amount + 1) } : c))
 }
 
 export function decrementInList(list: DeckCard[], key: string): DeckCard[] {
@@ -65,12 +72,12 @@ export function aggregateCards(cards: DeckCard[]): DeckCard[] {
 export function mergeIntoList(base: DeckCard[], incoming: DeckCard[]): DeckCard[] {
   const merged: DeckCard[] = [...base]
   for (const c of incoming) {
-    const k = deckCardKey(c)
-    const idx = merged.findIndex((x) => deckCardKey(x) === k)
+    const k = printingKey(c)
+    const idx = merged.findIndex((x) => printingKey(x) === k)
     if (idx >= 0) {
-      merged[idx] = { ...merged[idx], amount: Math.min(99, merged[idx].amount + c.amount) }
+      merged[idx] = { ...merged[idx], amount: Math.min(MAX_COPIES, merged[idx].amount + c.amount) }
     } else {
-      merged.push(c)
+      merged.push({ ...c, amount: Math.min(MAX_COPIES, c.amount) })
     }
   }
   return merged
@@ -92,18 +99,30 @@ export function insertOrIncrement(
   card: DroppedCard,
   flaggedKeys: Set<string>,
 ): { list: DeckCard[]; replacedOldKey: string | null } {
-  const key = `${card.setCode}:${card.cardNumber}:${card.cardName}`
+  const key = printingKey(card)
   const flaggedIdx = findFlaggedSameName(list, flaggedKeys, card.cardName)
   if (flaggedIdx >= 0) {
     const oldKey = deckCardKey(list[flaggedIdx])
+    const twinIdx = list.findIndex((c, i) => i !== flaggedIdx && printingKey(c) === key)
+    if (twinIdx >= 0) {
+      const merged = list.flatMap((c, i) => {
+        if (i === flaggedIdx) return []
+        if (i === twinIdx) return [{ ...c, amount: Math.min(MAX_COPIES, c.amount + list[flaggedIdx].amount) }]
+        return [c]
+      })
+      return { list: merged, replacedOldKey: oldKey }
+    }
     const next = list.map((c, i) =>
       (i === flaggedIdx ? { ...c, cardName: card.cardName, setCode: card.setCode, cardNumber: card.cardNumber } : c)
     )
     return { list: next, replacedOldKey: oldKey }
   }
-  const existingIdx = list.findIndex((c) => deckCardKey(c) === key)
+  const existingIdx = list.findIndex((c) => printingKey(c) === key)
   if (existingIdx >= 0) {
-    return { list: incrementInList(list, key), replacedOldKey: null }
+    return {
+      list: list.map((c, i) => (i === existingIdx ? { ...c, amount: Math.min(MAX_COPIES, c.amount + 1) } : c)),
+      replacedOldKey: null,
+    }
   }
   return { list: [...list, { ...card, amount: 1 }], replacedOldKey: null }
 }

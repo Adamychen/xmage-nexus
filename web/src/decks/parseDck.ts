@@ -7,6 +7,13 @@ const DCK_LINE = /^(SB:\s*)?(\d+)\s*\[([^:\]]+):([^\]]+)\]\s*(.+?)\s*$/
 const NAME_RE = /^NAME:\s*(.*)\s*$/
 const AUTHOR_RE = /^AUTHOR:\s*(.*)\s*$/
 const LAYOUT_RE = /^LAYOUT\s+(MAIN|SIDEBOARD):/
+const MAX_COPIES = 100
+
+/** Copies on a line: unreadable is 1, 0 or less drops the line (0), above MAX_COPIES is capped. */
+function copiesOf(n: number): number {
+  if (Number.isNaN(n)) return 1
+  return Math.min(MAX_COPIES, Math.max(0, Math.trunc(n)))
+}
 
 export function parseDck(text: string, fallbackName = t('decks', 'import_placeholder')): Deck | null {
   const lines = text.split(/\r?\n/)
@@ -37,11 +44,11 @@ export function parseDck(text: string, fallbackName = t('decks', 'import_placeho
     const m = line.match(DCK_LINE)
     if (m) {
       const isSideboard = !!m[1]
-      const amount = parseInt(m[2], 10) || 1
+      const amount = copiesOf(parseInt(m[2], 10))
       const setCode = m[3].trim()
       const cardNumber = m[4].trim()
       const rawName = m[5].trim()
-      if (!rawName) continue
+      if (!rawName || !amount) continue
       const cardName = normalizeBasicLandName(rawName) || rawName
       const entry = normalizeDeckCard({ cardName, setCode, cardNumber, amount })
       if (isSideboard) { sideboard.push(entry); continue }
@@ -108,12 +115,12 @@ export function parseDekXml(text: string, fallbackName = t('decks', 'import_plac
   for (const raw of text.split(/\r?\n/)) {
     const line = raw.trim()
     if (!line.includes('<Cards ')) continue
-    const qty = parseInt(attr(line, 'Quantity') ?? '1', 10)
+    const amount = copiesOf(parseInt(attr(line, 'Quantity') ?? '1', 10))
     let name = attr(line, 'Name') ?? ''
-    if (!name) continue
+    if (!name || !amount) continue
     if (!name.includes('//') && name.includes('/')) name = name.replace('/', ' // ')
     const cardName = normalizeBasicLandName(name) || name
-    const entry = normalizeDeckCard({ cardName, setCode: '', cardNumber: '', amount: Math.min(100, Math.max(1, qty || 1)) })
+    const entry = normalizeDeckCard({ cardName, setCode: '', cardNumber: '', amount })
     if ((attr(line, 'Sideboard') ?? '').toLowerCase() === 'true') sideboard.push(entry)
     else cards.push(entry)
   }
@@ -145,7 +152,8 @@ export function parseCodXml(text: string, fallbackName = t('decks', 'import_plac
       zone.querySelectorAll(':scope > card').forEach((node) => {
         const name = node.getAttribute('name')?.trim() ?? ''
         if (!name) return
-        const qty = Math.min(100, Math.max(1, parseInt(node.getAttribute('number') ?? '1', 10) || 1))
+        const qty = copiesOf(parseInt(node.getAttribute('number') ?? '1', 10))
+        if (!qty) return
         const cardName = normalizeBasicLandName(name) || name
         out.push(normalizeDeckCard({ cardName, setCode: '', cardNumber: '', amount: qty }))
       })
@@ -176,7 +184,8 @@ export function parseO8dXml(text: string, fallbackName = t('decks', 'import_plac
       section.querySelectorAll(':scope > card').forEach((node) => {
         const name = node.textContent?.trim() ?? ''
         if (!name) return
-        const qty = Math.min(100, Math.max(1, parseInt(node.getAttribute('qty') ?? '1', 10) || 1))
+        const qty = copiesOf(parseInt(node.getAttribute('qty') ?? '1', 10))
+        if (!qty) return
         const cardName = normalizeBasicLandName(name) || name
         out.push(normalizeDeckCard({ cardName, setCode: '', cardNumber: '', amount: qty }))
       })
@@ -262,7 +271,8 @@ export function parseMtgjson(text: string, fallbackName = t('decks', 'import_pla
     for (const entry of board as MtgjsonBoardEntry[]) {
       if (!entry || typeof entry.name !== 'string' || !entry.name.trim()) continue
       const cardName = normalizeBasicLandName(entry.name.trim()) || entry.name.trim()
-      const amount = Math.min(100, Math.max(1, Math.floor(entry.count ?? 1) || 1))
+      const amount = copiesOf(Math.floor(entry.count ?? 1))
+      if (!amount) continue
       out.push(normalizeDeckCard({ cardName, setCode: entry.setCode || defaultSet, cardNumber: '', amount }))
     }
     return out
@@ -292,26 +302,27 @@ function parseArenaLike(text: string, fallbackName: string): Deck | null {
       .trim()
       .replace(/\s+#.*$/, '')
       .trim()
-    if (!cleaned || /^(creatures?|instants?|sorcer|enchant|artifacts?|lands?|planeswalkers?)$/i.test(cleaned)) return
+    const copies = copiesOf(amount)
+    if (!copies || !cleaned || /^(creatures?|instants?|sorcer|enchant|artifacts?|lands?|planeswalkers?)$/i.test(cleaned)) return
     const cardName = normalizeBasicLandName(cleaned) || cleaned
-    target.push(normalizeDeckCard({ cardName, setCode, cardNumber, amount }))
+    target.push(normalizeDeckCard({ cardName, setCode, cardNumber, amount: copies }))
     cardsSeen = true
   }
 
   const pushBracketOrArena = (target: DeckCard[], rest: string, defaultSet: string, defaultNumber: string) => {
     const b = rest.match(BRACKET_SET_LINE)
     if (b) {
-      pushCard(target, parseInt(b[1], 10) || 1, b[3], b[2].trim() || defaultSet, defaultNumber)
+      pushCard(target, parseInt(b[1], 10), b[3], b[2].trim() || defaultSet, defaultNumber)
       return
     }
-    const m = rest.match(/^(\d+)x?\s+([^(\n\r]+?)(?:\s+\(([A-Za-z0-9_]+)\)\s+(\S+))?(?:\s+\*[A-Za-z]+\*)?\s*$/)
+    const m = rest.match(/^(\d+)x?\s+(.+?)(?:\s+\(([A-Za-z0-9_]+)\)\s+(\S+))?(?:\s+\*[A-Za-z]+\*)?\s*$/)
     if (m) {
-      pushCard(target, parseInt(m[1], 10) || 1, m[2], m[3] || defaultSet, m[4] || defaultNumber)
+      pushCard(target, parseInt(m[1], 10), m[2], m[3] || defaultSet, m[4] || defaultNumber)
       return
     }
     const dck = rest.match(/^(\d+)\s*\[([^:]+):([^\]]+)\]\s*(.+)$/)
     if (dck) {
-      pushCard(target, parseInt(dck[1], 10) || 1, dck[4], dck[2].trim(), dck[3].trim())
+      pushCard(target, parseInt(dck[1], 10), dck[4], dck[2].trim(), dck[3].trim())
     }
   }
 
@@ -384,15 +395,16 @@ function parseArenaLike(text: string, fallbackName: string): Deck | null {
   return deck
 }
 
-export function exportDck(deck: Deck): string {
+export function exportDck(deck: ExportDeck): string {
   const out: string[] = []
   out.push(`NAME:${deck.name}`)
   const printEntry = (prefix: string, c: DeckCard) => {
     const printing = c.setCode && c.cardNumber ? ` [${c.setCode}:${c.cardNumber}]` : ''
     out.push(`${prefix}${c.amount}${printing} ${c.cardName}`)
   }
+  const { main, commanders } = withoutDesignatedCommanders(deck)
   const grouped = new Map<string, DeckCard>()
-  for (const c of deck.cards) {
+  for (const c of main) {
     const k = `M@${c.setCode}:${c.cardNumber}:${c.cardName}`
     const prev = grouped.get(k)
     if (prev) prev.amount += c.amount
@@ -411,6 +423,10 @@ export function exportDck(deck: Deck): string {
   for (const c of groupedSb.values()) {
     printEntry('SB: ', c)
   }
+  if (commanders.length > 0) {
+    out.push('[COMMANDER]')
+    for (const c of commanders) printEntry('', c)
+  }
   return out.join('\n') + '\n'
 }
 
@@ -427,7 +443,7 @@ function isDesignated(deck: ExportDeck, c: DeckCard): boolean {
 
 /** Separa los comandantes designados del main para no exportarlos duplicados. */
 function withoutDesignatedCommanders(deck: ExportDeck): { main: DeckCard[]; commanders: DeckCard[] } {
-  const commanders = [deck.commanderCard, deck.partnerCard].filter((c): c is DeckCard => !!c)
+  const commanders = [deck.commanderCard, deck.partnerCard].filter((c): c is DeckCard => !!c).map((c) => ({ ...c, amount: c.amount || 1 }))
   if (commanders.length === 0) return { main: deck.cards, commanders: [] }
   return { main: deck.cards.filter((c) => !isDesignated(deck, c)), commanders }
 }
@@ -440,21 +456,26 @@ function appendCommanderSection(out: string[], commanders: DeckCard[], print: (c
   for (const c of commanders) out.push(print(c))
 }
 
+function arenaLine(c: DeckCard): string {
+  const printing = c.setCode && c.cardNumber ? ` (${c.setCode}) ${c.cardNumber}` : ''
+  return `${c.amount} ${c.cardName}${printing}`
+}
+
 export function exportArena(deck: ExportDeck): string {
   const { main, commanders } = withoutDesignatedCommanders(deck)
   const out: string[] = []
   out.push('Deck')
   for (const c of main) {
-    out.push(`${c.amount} ${c.cardName} (${c.setCode}) ${c.cardNumber}`)
+    out.push(arenaLine(c))
   }
   if (deck.sideboard.length > 0) {
     out.push('')
     out.push('Sideboard')
     for (const c of deck.sideboard) {
-      out.push(`${c.amount} ${c.cardName} (${c.setCode}) ${c.cardNumber}`)
+      out.push(arenaLine(c))
     }
   }
-  appendCommanderSection(out, commanders, (c) => `${c.amount} ${c.cardName} (${c.setCode}) ${c.cardNumber}`)
+  appendCommanderSection(out, commanders, arenaLine)
   return out.join('\n') + '\n'
 }
 

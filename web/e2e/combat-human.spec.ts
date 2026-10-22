@@ -64,7 +64,13 @@ async function ensureCreature(page: Page, helper: HumanHelper, name: string): Pr
  *  Pass here only when no combat window opened within the fallback's reach. */
 async function leaveMainWindow(page: Page, helper: HumanHelper): Promise<void> {
   const opened = await waitScene(page, 'combat', (c) => c.active, 'ventana de combate', 4_000).then(() => true, () => false)
-  if (!opened) expect(await helper.passPriority(), 'pasar el main tras lanzar la criatura').toBeTruthy()
+  if (opened) return
+  helper.paused = true
+  try {
+    expect(await helper.passPriority(), 'pasar el main tras lanzar la criatura').toBeTruthy()
+  } finally {
+    helper.paused = false
+  }
 }
 
 /** Confirma las ventanas de ataque propias hasta que aparezca la de bloqueo
@@ -161,7 +167,8 @@ test('combate humano: el humano bloquea por la UI y el ataque del Sim no hace da
 
     // vida justo antes de bloquear (en real el Sim ya hizo 1 de daño sin
     // bloqueador en su turno 1; en fake el daño llega solo con el ataque bloqueado)
-    const lifeBefore = controlledPlayer(lastGameView(parseFrames(framesOf(page))))?.life as number
+    const lifeBefore = (controlledPlayer(lastGameView(parseFrames(framesOf(page)))) as { life?: number } | undefined)?.life as number
+    const turnBeforeBlock = Number(lastGameView(parseFrames(framesOf(page)))?.turn ?? 0)
 
     // clic en el bloqueador → bloquea al atacante
     expect(await sceneClick(page, blockerId), 'clic para declarar bloqueador').toBeTruthy()
@@ -177,19 +184,21 @@ test('combate humano: el humano bloquea por la UI y el ataque del Sim no hace da
 
     // en fake la ventana persiste (posibleBlockers sigue listando al bloqueador):
     // confirmarla con el botón; en real el helper ya confirmó el re-select vacío
-    const confirmButton = page.getByRole('button', { name: 'Confirmar bloqueadores', exact: true })
+    const confirmButton = page.getByRole('button', { name: 'Confirmar bloqueadores', exact: true }).filter({ visible: true }).first()
     if (await confirmButton.isVisible({ timeout: 3_000 }).catch(() => false)) {
       await confirmButton.click()
     }
 
     // el ataque quedó bloqueado: mi vida NO baja al empezar mi siguiente turno
     const deadline = Date.now() + 25_000
-    while (Date.now() < deadline) {
+    let reachedNextTurn = false
+    while (Date.now() < deadline && !reachedNextTurn) {
       const view = lastGameView(parseFrames(framesOf(page)))
       const me = controlledPlayer(view)
-      if (view?.step === 'PRECOMBAT_MAIN' && me?.isActive === true) break
-      await page.waitForTimeout(250)
+      reachedNextTurn = Number(view?.turn ?? 0) > turnBeforeBlock && (me as { isActive?: boolean } | undefined)?.isActive === true
+      if (!reachedNextTurn) await page.waitForTimeout(250)
     }
+    expect(reachedNextTurn, 'el turno debería pasar a mi siguiente turno tras el bloqueo').toBeTruthy()
     const me = controlledPlayer(lastGameView(parseFrames(framesOf(page))))
     expect((me as { life?: number } | undefined)?.life, 'el bloqueo debería evitar el daño de combate').toBe(lifeBefore)
 

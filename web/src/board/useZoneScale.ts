@@ -6,6 +6,7 @@ const MAX_CARD_W = 240
 const MAX_PLAYER_CARD_W = 280
 const MAX_COMPACT_CARD_W = 190
 const MAX_COMPACT_PLAYER_CARD_W = 230
+const MAX_UNLAID_OUT_FRAMES = 30
 
 /**
  * Galería de estados (dev): congela el alto de la fila de estado que usa la
@@ -41,12 +42,15 @@ export function useZoneScale(cardAspect = CLASSIC_CARD_ASPECT, bandShare = 0.5):
     if (!el) return
 
     let rafId: number | null = null
+    let unlaidOutFrames = 0
 
     const measure = () => {
       const rect = el.getBoundingClientRect()
       if (rect.height <= 0 || rect.width <= 0) {
-        // Element not yet laid out by browser — re-check on next animation frame
-        if (rafId === null) {
+        // Element not yet laid out by browser — re-check on a few animation frames;
+        // the ResizeObserver below measures again once it gets a size.
+        if (rafId === null && unlaidOutFrames < MAX_UNLAID_OUT_FRAMES) {
+          unlaidOutFrames++
           rafId = requestAnimationFrame(() => {
             rafId = null
             measure()
@@ -54,6 +58,7 @@ export function useZoneScale(cardAspect = CLASSIC_CARD_ASPECT, bandShare = 0.5):
         }
         return
       }
+      unlaidOutFrames = 0
 
       // Measure the status bar (InfoBar + Hand + ResourceBar) or fallback based on mode
       const statusRow = el.querySelector(

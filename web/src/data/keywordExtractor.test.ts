@@ -1,14 +1,14 @@
 import { describe, it, expect } from 'vitest'
-import { extractKeywordsFromCard, extractOwnedKeywords } from './keywordExtractor'
+import { extractOwnedKeywords } from './keywordExtractor'
 import type { CardView } from '../net/types'
 
 describe('keywordExtractor', () => {
   it('returns empty array when card is null or has no rules', () => {
-    expect(extractKeywordsFromCard(null)).toEqual([])
-    expect(extractKeywordsFromCard({ id: '1', name: 'Forest', rules: [] } as any)).toEqual([])
+    expect(extractOwnedKeywords(null)).toEqual([])
+    expect(extractOwnedKeywords({ id: '1', name: 'Forest', rules: [] } as any)).toEqual([])
   })
 
-  it('detects multiple simple keywords (e.g. Atraxa: Flying, Vigilance, Deathtouch, Lifelink, Proliferate)', () => {
+  it('detects multiple keyword abilities on one line (Atraxa: Flying, Vigilance, Deathtouch, Lifelink)', () => {
     const atraxa: Partial<CardView> = {
       id: 'atraxa',
       name: "Atraxa, Praetors' Voice",
@@ -18,17 +18,13 @@ describe('keywordExtractor', () => {
       ],
     }
 
-    const kw = extractKeywordsFromCard(atraxa as CardView)
-    const ids = kw.map((k) => k.id)
+    const ids = extractOwnedKeywords(atraxa as CardView).map((k) => k.id)
 
-    expect(ids).toContain('flying')
-    expect(ids).toContain('vigilance')
-    expect(ids).toContain('deathtouch')
-    expect(ids).toContain('lifelink')
-    expect(ids).toContain('proliferate')
+    expect(ids).toEqual(expect.arrayContaining(['flying', 'vigilance', 'deathtouch', 'lifelink']))
+    expect(ids).not.toContain('proliferate')
   })
 
-  it('detects parameterized keywords like Ward and Scry', () => {
+  it('detects parameterized keywords like Ward and ignores keyword actions like scry', () => {
     const card: Partial<CardView> = {
       id: 'tivit',
       name: 'Tivit, Seller of Secrets',
@@ -39,19 +35,13 @@ describe('keywordExtractor', () => {
       ],
     }
 
-    const kw = extractKeywordsFromCard(card as CardView)
+    const kw = extractOwnedKeywords(card as CardView)
     const ward = kw.find((k) => k.id === 'ward')
-    const scry = kw.find((k) => k.id === 'scry')
-    const inv = kw.find((k) => k.id === 'investigate')
 
-    expect(ward).toBeDefined()
     expect(ward?.name).toBe('Ward {3}')
     expect(ward?.parameter).toBe('{3}')
-
-    expect(scry).toBeDefined()
-    expect(scry?.name).toBe('Scry 2')
-
-    expect(inv).toBeDefined()
+    expect(kw.map((k) => k.id)).not.toContain('scry')
+    expect(kw.map((k) => k.id)).not.toContain('investigate')
   })
 
   it('deduplicates repeating keywords', () => {
@@ -64,7 +54,7 @@ describe('keywordExtractor', () => {
       ],
     }
 
-    const kw = extractKeywordsFromCard(card as CardView)
+    const kw = extractOwnedKeywords(card as CardView)
     expect(kw.filter((k) => k.id === 'flying')).toHaveLength(1)
   })
 

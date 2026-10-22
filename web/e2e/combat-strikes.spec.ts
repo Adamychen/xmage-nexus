@@ -10,9 +10,10 @@ retryTimingSpecInCi()
 
 test('combat strikes: attackers lunge when combat damage resolves, not when they are declared', { tag: ['@combat', '@timing'] }, async ({ page }) => {
   await page.addInitScript(() => {
-    const w = window as unknown as { __strikeLog: Array<{ step: string; ghosts: number }>; __combatOrder: string[] }
+    const w = window as unknown as { __strikeLog: Array<{ step: string; ghosts: number }>; __combatOrder: string[]; __ghosts: HTMLElement[] }
     w.__strikeLog = []
     w.__combatOrder = []
+    w.__ghosts = []
     const lastLife = new Map<string, string>()
     document.addEventListener('DOMContentLoaded', () => {
       new MutationObserver((mutations) => {
@@ -29,6 +30,7 @@ test('combat strikes: attackers lunge when combat damage resolves, not when they
           if (m.type !== 'childList') continue
           m.addedNodes.forEach((n) => {
             if (!(n instanceof HTMLElement) || !n.classList.contains('combat-strike-ghost')) return
+            w.__ghosts.push(n)
             const store = (window as unknown as { __mageStore?: { getState(): { game: { step?: string } | null } } }).__mageStore
             w.__strikeLog.push({ step: String(store?.getState().game?.step ?? ''), ghosts: document.querySelectorAll('.combat-strike-ghost').length })
           })
@@ -61,8 +63,9 @@ test('combat strikes: attackers lunge when combat damage resolves, not when they
     expect(order.indexOf('hit'), `life must drop on the hit, not before the lunge: ${order.join(',')}`).toBeGreaterThanOrEqual(0)
     expect(order.indexOf('hit'), `life must drop on the hit, not before the lunge: ${order.join(',')}`).toBeLessThan(order.indexOf('life'))
 
-    const ghosts = await page.locator('.combat-strike-ghost').elementHandles()
-    await expect.poll(() => Promise.all(ghosts.map((g) => g.evaluate((n) => n.isConnected))).then((c) => c.filter(Boolean).length), { timeout: 5_000 }).toBe(0)
+    const ghostCount = await page.evaluate(() => (window as unknown as { __ghosts: unknown[] }).__ghosts.length)
+    expect(ghostCount, 'the strikes must have spawned ghosts, or the removal check below proves nothing').toBeGreaterThan(0)
+    await expect.poll(() => page.evaluate(() => (window as unknown as { __ghosts: HTMLElement[] }).__ghosts.filter((g) => g.isConnected).length), { timeout: 5_000 }).toBe(0)
     expect(pageErrors, `pageerrors: ${pageErrors.map(String).join(' | ')}`).toEqual([])
   })
 })

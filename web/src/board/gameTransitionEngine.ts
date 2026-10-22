@@ -104,13 +104,31 @@ function getDestRect(selectors: string[]): { rect: DOMRect; selector: string } |
   return null
 }
 
+const pendingTimers = new Set<ReturnType<typeof setTimeout>>()
+const pendingFrames = new Set<number>()
+
+function cancelPendingTransitions(): void {
+  pendingTimers.forEach((timer) => clearTimeout(timer))
+  pendingTimers.clear()
+  pendingFrames.forEach((frame) => cancelAnimationFrame(frame))
+  pendingFrames.clear()
+}
+
 /** Doble rAF: mide cuando React ha asentado el layout (p.ej. el fan de la mano
  *  recalcula overlap en su propio effect). Sin rAF (tests/jsdom), setTimeout. */
 function scheduleAfterLayout(fn: () => void): void {
   if (typeof requestAnimationFrame === 'function') {
-    requestAnimationFrame(() => requestAnimationFrame(fn))
+    const outer = requestAnimationFrame(() => {
+      pendingFrames.delete(outer)
+      const inner = requestAnimationFrame(() => {
+        pendingFrames.delete(inner)
+        fn()
+      })
+      pendingFrames.add(inner)
+    })
+    pendingFrames.add(outer)
   } else {
-    setTimeout(fn, 34)
+    later(34, fn)
   }
 }
 
@@ -797,8 +815,13 @@ export function playerCounterChanges(prevP: PlayerView, nextP: PlayerView): Play
 }
 
 function later(ms: number, fn: () => void): void {
-  if (ms > 0) setTimeout(fn, ms)
-  else fn()
+  if (ms > 0) {
+    const timer = setTimeout(() => {
+      pendingTimers.delete(timer)
+      fn()
+    }, ms)
+    pendingTimers.add(timer)
+  } else fn()
 }
 
 const PHASE_OUT_MS = 600
@@ -1615,6 +1638,7 @@ export function useGameTransitions(game: GameView | null, gameId: string | null)
     if (!game) {
       prevGameRef.current = null
       prevGameIdRef.current = null
+      cancelPendingTransitions()
       clearPendingSlams()
       clearCombatSnapshots()
       clearBoardWipe()
@@ -1630,6 +1654,7 @@ export function useGameTransitions(game: GameView | null, gameId: string | null)
     if (prevGame) {
       const prevId = prevGameIdRef.current
       if (gameId && prevId && gameId !== prevId) {
+        cancelPendingTransitions()
         clearCardPositionRegistry()
         clearPendingSlams()
         clearCombatSnapshots()

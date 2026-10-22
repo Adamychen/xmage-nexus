@@ -23,6 +23,7 @@ export default function SecurityTab({ form }: { form: CreateTableForm }) {
             type={form.showPassword ? 'text' : 'password'}
             value={form.password}
             onChange={(e) => form.setPassword(e.target.value)}
+            maxLength={64}
             placeholder={t('lobby','placeholder_password')}
           />
           <IconButton label={form.showPassword ? t('lobby','create_password_hide') : t('lobby','create_password_show')} size="lg" onClick={() => form.setShowPassword(!form.showPassword)}>

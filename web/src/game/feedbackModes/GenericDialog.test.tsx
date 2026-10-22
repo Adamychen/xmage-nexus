@@ -2,7 +2,15 @@ import { cleanup, fireEvent, render } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import GenericDialog from './GenericDialog'
 import type { UseFeedbackForm } from '../useFeedbackForm'
-import type { FeedbackPrompt } from '../feedback/types'
+import type { FeedbackOption, FeedbackPrompt } from '../feedback/types'
+import * as cmds from '../../net/commands'
+
+vi.mock('../../net/commands', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../../net/commands')>()),
+  sendPlayerString: vi.fn(async () => ({ ok: true })),
+  sendPlayerUUID: vi.fn(async () => ({ ok: true })),
+  sendPlayerInteger: vi.fn(async () => ({ ok: true })),
+}))
 
 function stubForm(prompt: FeedbackPrompt | null): UseFeedbackForm {
   return {
@@ -255,5 +263,153 @@ describe('GenericDialog hooks', () => {
       args.some((a) => typeof a === 'string' && a.includes('fewer hooks')),
     )
     expect(hookErrors).toHaveLength(0)
+  })
+})
+
+const elfOptions: FeedbackOption[] = [
+  { id: 'elf-warrior', label: 'Elf Warrior', value: 'Elf Warrior' },
+  { id: 'goblin', label: 'Goblin', value: 'Goblin' },
+]
+
+function choicePrompt(options: FeedbackOption[]): FeedbackPrompt {
+  return {
+    method: 'GAME_CHOOSE_CHOICE',
+    gameId: 'g1',
+    title: 'Choose',
+    message: 'Name one',
+    mode: 'string',
+    options,
+    min: 0,
+    max: 1,
+  }
+}
+
+function typedForm(prompt: FeedbackPrompt, textValue: string): UseFeedbackForm {
+  const q = textValue.trim().toLowerCase()
+  const filteredStringOptions = prompt.options.filter((opt) => !q || opt.label.toLowerCase().includes(q) || opt.value.toLowerCase().includes(q))
+  return {
+    ...stubForm(prompt),
+    textValue,
+    filteredStringOptions,
+    send: async (action) => { await action() },
+  }
+}
+
+describe('GenericDialog typed choice (string mode)', () => {
+  afterEach(() => {
+    cleanup()
+    vi.mocked(cmds.sendPlayerString).mockClear()
+  })
+
+  it('a partial unique match sends the full option value on Enter', () => {
+    const { container } = render(<GenericDialog form={typedForm(choicePrompt(elfOptions), 'Elf')} />)
+    fireEvent.keyDown(container.querySelector('.feedback-string-wrap .feedback-input-box input')!, { key: 'Enter' })
+    expect(cmds.sendPlayerString).toHaveBeenCalledTimes(1)
+    expect(cmds.sendPlayerString).toHaveBeenCalledWith('Elf Warrior', 'g1')
+  })
+
+  it('an exact match wins over the partial and is case-insensitive', () => {
+    const options = [...elfOptions, { id: 'elf', label: 'Elf', value: 'Elf' }]
+    const { container } = render(<GenericDialog form={typedForm(choicePrompt(options), 'elf')} />)
+    fireEvent.keyDown(container.querySelector('.feedback-string-wrap .feedback-input-box input')!, { key: 'Enter' })
+    expect(cmds.sendPlayerString).toHaveBeenCalledWith('Elf', 'g1')
+  })
+
+  it('an ambiguous partial match sends nothing and keeps Confirm disabled', () => {
+    const options: FeedbackOption[] = [
+      { id: 'a', label: 'Elf Warrior', value: 'Elf Warrior' },
+      { id: 'b', label: 'Elf Druid', value: 'Elf Druid' },
+    ]
+    const { container } = render(<GenericDialog form={typedForm(choicePrompt(options), 'Elf')} />)
+    fireEvent.keyDown(container.querySelector('.feedback-string-wrap .feedback-input-box input')!, { key: 'Enter' })
+    expect(cmds.sendPlayerString).not.toHaveBeenCalled()
+    const confirm = container.querySelector<HTMLButtonElement>('.feedback-dialog-actions button')!
+    expect(confirm.disabled).toBe(true)
+    fireEvent.click(confirm)
+    expect(cmds.sendPlayerString).not.toHaveBeenCalled()
+  })
+
+  it('a prompt without options still sends the typed text (free text)', () => {
+    const { container } = render(<GenericDialog form={typedForm(choicePrompt([]), 'Lightning Bolt')} />)
+    fireEvent.keyDown(container.querySelector('.feedback-string-wrap .feedback-input-box input')!, { key: 'Enter' })
+    expect(cmds.sendPlayerString).toHaveBeenCalledWith('Lightning Bolt', 'g1')
+  })
+})
+
+describe('GenericDialog amount range (integer mode)', () => {
+  const amountPrompt: FeedbackPrompt = {
+    method: 'GAME_GET_AMOUNT',
+    gameId: 'g1',
+    title: 'Amount',
+    message: 'Choose an amount',
+    mode: 'integer',
+    options: [],
+    min: 0,
+    max: 5,
+  }
+
+  afterEach(() => {
+    cleanup()
+  })
+
+  it('disables Confirm and flags the range hint when the amount is outside [min, max]', () => {
+    const { container, rerender } = render(<GenericDialog form={{ ...stubForm(amountPrompt), amount: 7 }} />)
+    const confirm = container.querySelector<HTMLButtonElement>('.feedback-dialog-actions button')!
+    expect(confirm.disabled).toBe(true)
+    expect(container.querySelector('.ui-field-error')).not.toBeNull()
+    rerender(<GenericDialog form={{ ...stubForm(amountPrompt), amount: Number.NaN }} />)
+    expect(container.querySelector<HTMLButtonElement>('.feedback-dialog-actions button')!.disabled).toBe(true)
+    rerender(<GenericDialog form={{ ...stubForm(amountPrompt), amount: 3 }} />)
+    expect(container.querySelector<HTMLButtonElement>('.feedback-dialog-actions button')!.disabled).toBe(false)
+    expect(container.querySelector('.ui-field-error')).toBeNull()
+  })
+})
+
+describe('GenericDialog multi-select (uuid, min 0)', () => {
+  afterEach(() => {
+    cleanup()
+  })
+
+  it('keeps Confirm disabled while nothing is selected', () => {
+    const multiPrompt: FeedbackPrompt = {
+      method: 'GAME_SELECT_CARDS',
+      gameId: 'g1',
+      title: 'Choose cards',
+      message: 'Choose up to two',
+      mode: 'uuid',
+      options: elfOptions.map((opt) => ({ ...opt, id: opt.id, value: opt.id })),
+      min: 0,
+      max: 2,
+    }
+    const { container } = render(<GenericDialog form={{ ...stubForm(multiPrompt), selected: [] }} />)
+    expect(container.querySelector<HTMLButtonElement>('.feedback-dialog-actions button')!.disabled).toBe(true)
+  })
+})
+
+describe('GenericDialog grid keyboard navigation on an empty grid', () => {
+  afterEach(() => {
+    cleanup()
+  })
+
+  it('ArrowDown on an empty search result does not leave the roving tab stop at -1', () => {
+    const options = Array.from({ length: 8 }, (_, i) => ({ id: `o${i}`, label: `Card ${i}`, value: `v${i}` }))
+    const gridPrompt: FeedbackPrompt = {
+      method: 'GAME_CHOOSE_MODE',
+      gameId: 'g1',
+      title: 'Choose',
+      message: 'Pick one',
+      mode: 'uuid',
+      options,
+      min: 0,
+      max: 1,
+      required: true,
+    }
+    const { container } = render(<GenericDialog form={stubForm(gridPrompt)} />)
+    const search = container.querySelector<HTMLInputElement>('.feedback-input-box input')!
+    fireEvent.change(search, { target: { value: 'zzz' } })
+    expect(container.querySelectorAll('.feedback-choice-card').length).toBe(0)
+    fireEvent.keyDown(search, { key: 'ArrowDown' })
+    fireEvent.change(search, { target: { value: '' } })
+    expect(container.querySelectorAll<HTMLButtonElement>('.feedback-choice-card')[0].tabIndex).toBe(0)
   })
 })

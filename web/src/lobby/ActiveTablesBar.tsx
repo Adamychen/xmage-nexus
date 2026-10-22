@@ -2,8 +2,7 @@ import type { TableView } from '../net/types'
 import Button from '../ui/Button'
 import Icon from '../ui/Icon'
 import { useTranslation, toBcp47Locale } from '../i18n'
-import { formatDeckTypeName, formatTimeAgo } from './lobbyUtils'
-import { tableOwnerName } from './TableFilterBar'
+import { formatDeckTypeName, formatTimeAgo, tableOwnerName } from './lobbyUtils'
 import './ActiveTablesBar.css'
 
 interface Props {

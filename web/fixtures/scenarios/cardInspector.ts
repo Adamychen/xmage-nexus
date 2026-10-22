@@ -1,6 +1,7 @@
 import { TABLE } from '../table-names'
 import { makeBaseScenario } from '../fake'
-import type { GameView, PlayerView } from '../../src/net/types'
+import type { Scenario } from '../fake'
+import type { GameView, PermanentView, PlayerView } from '../../src/net/types'
 import { GAME_ID, TABLE_ID, SIM_NAME, HUMAN_NAME, HUMAN_PLAYER_ID, SIM_PLAYER_ID } from '../humanGameConstants'
 
 export function cardInspectorScenario(): Scenario {
@@ -27,9 +28,9 @@ export function cardInspectorScenario(): Scenario {
           'Indestructible.',
           'When The One Ring enters, you gain protection from everything until your next turn.',
         ],
-      } as unknown as Record<string, unknown>,
+      } as unknown as PermanentView,
     },
-  }
+  } as unknown as PlayerView
   const sim: PlayerView = {
     playerId: SIM_PLAYER_ID,
     name: SIM_NAME,
@@ -41,9 +42,8 @@ export function cardInspectorScenario(): Scenario {
     handCount: 0,
     libraryCount: 40,
     battlefield: {},
-  }
+  } as unknown as PlayerView
   const getGameView = (): GameView => ({
-    gameId: GAME_ID,
     turn: 1,
     phase: 'PRECOMBAT_MAIN',
     step: 'PRECOMBAT_MAIN',
@@ -52,7 +52,7 @@ export function cardInspectorScenario(): Scenario {
     players: [human, sim],
     myHand: {},
     canPlayObjects: { objects: {} },
-  })
+  } as unknown as GameView)
 
   return makeBaseScenario({
     tableId: TABLE_ID,

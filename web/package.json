@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "npm run gen-splash-i18n && tsc -b && vite build",
     "build:demo": "npm run gen-splash-i18n && tsc -b && vite build --mode demo",
-    "typecheck": "tsc -b --noEmit",
+    "typecheck": "tsc -b --noEmit && tsc -p tsconfig.e2e.json",
     "lint": "oxlint src e2e",
     "preview": "vite preview",
     "test": "vitest run",

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback, useMemo } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, useCallback, useMemo } from 'react'
 import ChipButton from '../ui/ChipButton'
 import * as cmds from '../net/commands'
 import { useStore, appendLocalChatMessage } from '../state/store'
@@ -65,14 +65,8 @@ function parseSystemEvent(text: string, t: CategoryT<'lobby'>): { icon: IconName
 }
 
 function isSystemMessage(m: ChatMessageEvent): boolean {
-  if (!m.username || m.username === 'server' || m.messageType === 'SYSTEM') return true
-  if (readyMarkerOf(m)) return true
-  return (
-    m.message.includes('has joined') ||
-    m.message.includes('has lost connection') ||
-    m.message.includes('has disconnected') ||
-    m.message.includes('has left')
-  )
+  if (!m.username || m.username === 'server' || m.messageType === 'SYSTEM' || m.messageType === 'STATUS') return true
+  return !!readyMarkerOf(m)
 }
 
 function isConnectionEvent(text: string): boolean {
@@ -130,6 +124,8 @@ export default function ChatBox({ prefill, onPrefillUsed, onUserClick, onMessage
   const [hoverCard, setHoverCard] = useState<CardView | null>(null)
   const [hoverRect, setHoverRect] = useState<DOMRect | null>(null)
   const listRef = useRef<HTMLDivElement>(null)
+  const pinnedToBottom = useRef(true)
+  const followedHeight = useRef(0)
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -153,7 +149,7 @@ export default function ChatBox({ prefill, onPrefillUsed, onUserClick, onMessage
     return messages.filter((m) => {
       // If message specifies a chatId that doesn't match this room chat, exclude it
       if (m.chatId && chatId && m.chatId !== chatId) return false
-      if (hideConnections && isConnectionEvent(m.message)) return false
+      if (hideConnections && isSystemMessage(m) && isConnectionEvent(m.message)) return false
       // Filter out talk and whisper messages from ignored players
       if (m.username && isUserIgnored(m.username) && (m.messageType === 'TALK' || m.messageType === 'WHISPER_FROM')) {
         return false
@@ -162,11 +158,23 @@ export default function ChatBox({ prefill, onPrefillUsed, onUserClick, onMessage
     })
   }, [messages, chatId, hideConnections])
 
-  useEffect(() => {
-    if (listRef.current && typeof listRef.current.scrollTo === 'function') {
-      listRef.current.scrollTo({ top: listRef.current.scrollHeight })
-    }
-  }, [filteredMessages])
+  const handleScroll = useCallback(() => {
+    const box = listRef.current
+    if (!box) return
+    pinnedToBottom.current = Math.min(followedHeight.current, box.scrollHeight) - box.scrollTop - box.clientHeight < 40
+  }, [])
+
+  const followBottom = useCallback(() => {
+    const box = listRef.current
+    if (!box || !pinnedToBottom.current) return
+    box.scrollTop = box.scrollHeight
+    followedHeight.current = box.scrollHeight
+  }, [])
+
+  useLayoutEffect(() => {
+    handleScroll()
+    followBottom()
+  }, [filteredMessages, handleScroll, followBottom])
 
   const send = (e: React.FormEvent) => {
     e.preventDefault()
@@ -204,7 +212,7 @@ export default function ChatBox({ prefill, onPrefillUsed, onUserClick, onMessage
         </ChipButton>
       </div>
 
-      <div className="chat-list" ref={listRef}>
+      <div className="chat-list" ref={listRef} onScroll={handleScroll}>
         {filteredMessages.map((m, i) => {
           const sys = isSystemMessage(m)
           const isWhisper =

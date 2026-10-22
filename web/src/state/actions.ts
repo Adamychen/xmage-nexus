@@ -10,7 +10,7 @@ import { decideStop } from '../game/stopPolicy'
 import { manaPaymentActions } from '../game/manaPayment'
 import { serverAutoAnswerActions } from '../game/autoAnswers'
 import { gameplayPreset, PRESET_OWNED_KEYS, type GameplayPresetId } from '../settings/gameplayPresets'
-import { clearActiveGame, saveSmartStops, saveActiveDeck, saveFxSettings, saveAudioSettings, saveMusicSettings, saveAppearanceSettings, saveAutoAnswers, saveChoiceMemory, saveManaPayment, savePhaseStops, saveGameplayPreset, applyAppearanceToDocument, rememberEquippedDeckId, APPEARANCE_KEY } from './persistence'
+import { clearActiveGame, saveSmartStops, saveActiveDeck, saveFxSettings, saveAudioSettings, saveMusicSettings, saveAppearanceSettings, saveAutoAnswers, saveChoiceMemory, saveManaPayment, savePhaseStops, saveGameplayPreset, applyAppearanceToDocument, rememberEquippedDeckId, APPEARANCE_KEY, FX_SETTINGS_KEY, AUDIO_SETTINGS_KEY, MUSIC_SETTINGS_KEY, AUTO_ANSWERS_KEY, CHOICE_MEMORY_KEY, MANA_PAYMENT_KEY, PHASE_STOPS_KEY, SMART_STOPS_KEY, loadFxSettings, loadAudioSettings, loadMusicSettings, loadAutoAnswers, loadChoiceMemory, loadManaPayment, loadPhaseStops, loadSmartStops } from './persistence'
 import { loadAppearanceSlice } from './slices/settings'
 import { getLanguage } from '../i18n'
 import { translateError } from '../i18n'
@@ -396,36 +396,66 @@ export function dismissTurnRecap(key?: string) {
   setState({ turnRecap: null })
 }
 
-function persistClientSettings(settings: AppState['settings']) {
-  const { effects, animationSpeed, soundEnabled, masterVolume, sfxVolume, uiVolume, prioritySound, musicEnabled, musicVolume, sleeveId, playmatId, cardStyle, tapStyle, showHandCost, showManaSource, ptBadgeMode, sicknessStyle, keywordIcons, keywordAura, cardRender, handRail, handRailWidth, handRow, boardFill, stackCaption, gameUi, boardLayout, boardLayoutManual, uiScale, cjkBoost, transparentDialogs, autoAnswers, choiceMemory, manaPayment, phaseStops, smartStops } = settings
-  saveFxSettings({ effects, animationSpeed })
-  saveAudioSettings({ soundEnabled, masterVolume, sfxVolume, uiVolume, prioritySound })
-  saveMusicSettings({ musicEnabled, musicVolume })
-  saveAppearanceSettings({ sleeveId, boardLayout, boardLayoutManual, uiScale, cjkBoost, transparentDialogs, playmatId, cardStyle, tapStyle, showHandCost, showManaSource, ptBadgeMode, sicknessStyle, keywordIcons, keywordAura, cardRender, handRail, handRailWidth, handRow, boardFill, stackCaption, gameUi })
-  saveAutoAnswers(autoAnswers.map(({ pattern, answer, key }) => (key ? { pattern, answer, key } : { pattern, answer })))
-  saveChoiceMemory(choiceMemory.map(({ pattern, value }) => ({ pattern, value })))
-  saveManaPayment({ ...manaPayment })
-  savePhaseStops({ ...phaseStops })
-  saveSmartStops(smartStops)
+type SettingsKey = keyof AppState['settings']
+const FX_KEYS: SettingsKey[] = ['effects', 'animationSpeed']
+const AUDIO_KEYS: SettingsKey[] = ['soundEnabled', 'masterVolume', 'sfxVolume', 'uiVolume', 'prioritySound']
+const MUSIC_KEYS: SettingsKey[] = ['musicEnabled', 'musicVolume']
+const APPEARANCE_KEYS: SettingsKey[] = ['sleeveId', 'boardLayout', 'boardLayoutManual', 'uiScale', 'cjkBoost', 'transparentDialogs', 'playmatId', 'cardStyle', 'tapStyle', 'showHandCost', 'showManaSource', 'ptBadgeMode', 'sicknessStyle', 'keywordIcons', 'keywordAura', 'cardRender', 'handRail', 'handRailWidth', 'handRow', 'boardFill', 'stackCaption', 'gameUi']
+
+function persistClientSettings(next: AppState['settings'], prev: AppState['settings']) {
+  const changed = (keys: SettingsKey[]) => keys.some((key) => next[key] !== prev[key])
+  const { effects, animationSpeed, soundEnabled, masterVolume, sfxVolume, uiVolume, prioritySound, musicEnabled, musicVolume, sleeveId, playmatId, cardStyle, tapStyle, showHandCost, showManaSource, ptBadgeMode, sicknessStyle, keywordIcons, keywordAura, cardRender, handRail, handRailWidth, handRow, boardFill, stackCaption, gameUi, boardLayout, boardLayoutManual, uiScale, cjkBoost, transparentDialogs, autoAnswers, choiceMemory, manaPayment, phaseStops, smartStops } = next
+  if (changed(FX_KEYS)) saveFxSettings({ effects, animationSpeed })
+  if (changed(AUDIO_KEYS)) saveAudioSettings({ soundEnabled, masterVolume, sfxVolume, uiVolume, prioritySound })
+  if (changed(MUSIC_KEYS)) saveMusicSettings({ musicEnabled, musicVolume })
+  if (changed(APPEARANCE_KEYS)) saveAppearanceSettings({ sleeveId, boardLayout, boardLayoutManual, uiScale, cjkBoost, transparentDialogs, playmatId, cardStyle, tapStyle, showHandCost, showManaSource, ptBadgeMode, sicknessStyle, keywordIcons, keywordAura, cardRender, handRail, handRailWidth, handRow, boardFill, stackCaption, gameUi })
+  if (changed(['autoAnswers'])) saveAutoAnswers(autoAnswers.map(({ pattern, answer, key }) => (key ? { pattern, answer, key } : { pattern, answer })))
+  if (changed(['choiceMemory'])) saveChoiceMemory(choiceMemory.map(({ pattern, value }) => ({ pattern, value })))
+  if (changed(['manaPayment'])) saveManaPayment({ ...manaPayment })
+  if (changed(['phaseStops'])) savePhaseStops({ ...phaseStops })
+  if (changed(['smartStops'])) saveSmartStops(smartStops)
+  applyRuntimeSettings(next)
+}
+
+function applyRuntimeSettings(settings: AppState['settings']) {
+  const { sleeveId, boardLayout, uiScale, cjkBoost, transparentDialogs, soundEnabled, masterVolume, sfxVolume, uiVolume, musicEnabled, musicVolume } = settings
   try { applyAppearanceToDocument({ sleeveId, boardLayout, uiScale, cjkBoost, transparentDialogs }, getLanguage()) } catch {}
   soundManager.setSettings({ soundEnabled, masterVolume, sfxVolume, uiVolume })
   soundManager.setMusicVolume(musicEnabled ? musicVolume : 0)
 }
 
-export function syncAppearanceFromStorage() {
-  setState({ settings: { ...getState().settings, ...loadAppearanceSlice() } })
+const SETTINGS_STORAGE_LOADERS: Record<string, () => Partial<AppState['settings']>> = {
+  [FX_SETTINGS_KEY]: loadFxSettings,
+  [AUDIO_SETTINGS_KEY]: loadAudioSettings,
+  [MUSIC_SETTINGS_KEY]: loadMusicSettings,
+  [APPEARANCE_KEY]: loadAppearanceSlice,
+  [AUTO_ANSWERS_KEY]: () => ({ autoAnswers: loadAutoAnswers().map((entry, index) => ({ id: `auto-${index}`, ...entry })) }),
+  [CHOICE_MEMORY_KEY]: () => ({ choiceMemory: loadChoiceMemory().map((entry, index) => ({ id: `choice-${index}`, ...entry })) }),
+  [MANA_PAYMENT_KEY]: () => ({ manaPayment: loadManaPayment() }),
+  [PHASE_STOPS_KEY]: () => ({ phaseStops: loadPhaseStops() }),
+  [SMART_STOPS_KEY]: () => ({ smartStops: loadSmartStops() }),
+}
+
+export function syncSettingsFromStorage(key: string | null) {
+  const slice: Partial<AppState['settings']> = {}
+  const loaders = key === null ? Object.values(SETTINGS_STORAGE_LOADERS) : Object.hasOwn(SETTINGS_STORAGE_LOADERS, key) ? [SETTINGS_STORAGE_LOADERS[key]] : []
+  for (const load of loaders) Object.assign(slice, load())
+  if (Object.keys(slice).length === 0) return
+  setState({ settings: { ...getState().settings, ...slice } })
+  applyRuntimeSettings(getState().settings)
 }
 
 export function watchAppearanceStorage(): () => void {
   const onStorage = (event: StorageEvent) => {
-    if (event.key === null || event.key === APPEARANCE_KEY) syncAppearanceFromStorage()
+    if (event.key === null || Object.hasOwn(SETTINGS_STORAGE_LOADERS, event.key)) syncSettingsFromStorage(event.key)
   }
   window.addEventListener('storage', onStorage)
   return () => window.removeEventListener('storage', onStorage)
 }
 
 export function setSetting<K extends keyof AppState['settings']>(key: K, value: AppState['settings'][K]) {
-  const next = { ...getState().settings, [key]: value }
+  const prev = getState().settings
+  const next = { ...prev, [key]: value }
   if (key === 'boardLayout') next.boardLayoutManual = true
   if (key === 'handRow' && value === true) next.handRail = false
   if (key === 'handRail' && value === true) next.handRow = false
@@ -434,7 +464,7 @@ export function setSetting<K extends keyof AppState['settings']>(key: K, value: 
     saveGameplayPreset(null)
   }
   setState({ settings: next })
-  persistClientSettings(next)
+  persistClientSettings(next, prev)
   if (key === 'autoAnswers') syncAutoAnswersToServer()
   if (key === 'smartStops') {
     const gameId = getState().gameId
@@ -463,7 +493,7 @@ export function applyGameplayPreset(id: GameplayPresetId) {
   const next: AppState['settings'] = { ...s.settings, ...preset.bundle, gameplayPreset: id }
   setState({ settings: next })
   saveGameplayPreset(id)
-  persistClientSettings(next)
+  persistClientSettings(next, s.settings)
   if (!s.gameId) return
   for (const action of manaPaymentActions(next.manaPayment)) void cmds.sendManaPaymentMode(action, s.gameId)
   void cmds.updateManaConfirmPreference(next.manaPayment.confirmEmptyPool)

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { HTMLAttributes, CSSProperties, MouseEvent, ReactNode } from 'react'
+import { isTopLayer, useLayer } from './useEscape'
 
 const MODAL_Z_BASE = 500
 const MODAL_Z_MAX = 1999
@@ -8,22 +9,15 @@ let modalZCounter = MODAL_Z_BASE
 const activeModalZ = new Set<number>()
 
 function nextModalZ(): number {
-  for (let i = 0; i < 500; i++) {
-    modalZCounter++
-    if (modalZCounter > MODAL_Z_MAX) modalZCounter = MODAL_Z_BASE + 1
-    if (!activeModalZ.has(modalZCounter)) return modalZCounter
-  }
-  return MODAL_Z_MAX
+  if (modalZCounter >= MODAL_Z_MAX && activeModalZ.size === 0) modalZCounter = MODAL_Z_BASE
+  let top = modalZCounter
+  for (const v of activeModalZ) top = Math.max(top, v)
+  modalZCounter = Math.min(top + 1, MODAL_Z_MAX)
+  return modalZCounter
 }
 
 /** Costura de test para el asignador de z-index. */
 export const __modalAllocator = { next: nextModalZ, active: activeModalZ, max: MODAL_Z_MAX }
-
-function isTopmostModal(z: number): boolean {
-  let max = 0
-  for (const v of activeModalZ) max = Math.max(max, v)
-  return z >= max
-}
 
 interface ModalProps {
   backdropClassName: string
@@ -56,6 +50,7 @@ export default function Modal({
   const [peek, setPeek] = useState(false)
   const backdropStyle: CSSProperties = { zIndex: z }
   const sectionRef = useRef<HTMLElement>(null)
+  const layer = useLayer()
 
   useEffect(() => {
     activeModalZ.add(z)
@@ -90,14 +85,13 @@ export default function Modal({
   useEffect(() => {
     if (!onEscape) return
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key !== 'Escape') return
-      if (!isTopmostModal(z)) return
+      if (e.key !== 'Escape' || !isTopLayer(layer)) return
       e.preventDefault()
       onEscape()
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [onEscape, z])
+  }, [onEscape, layer])
 
   // Foco inicial + trampa de Tab: al abrir, el foco entra al diálogo (primer
   // control o la sección) y Tab/Shift+Tab ciclan dentro mientras sea el modal
@@ -118,7 +112,7 @@ export default function Modal({
       section.focus()
     }
     const trapTab = (e: KeyboardEvent) => {
-      if (e.key !== 'Tab' || !isTopmostModal(z)) return
+      if (e.key !== 'Tab' || !isTopLayer(layer)) return
       const items = focusables()
       if (items.length === 0) {
         e.preventDefault()
@@ -139,7 +133,7 @@ export default function Modal({
       document.removeEventListener('keydown', trapTab, true)
       prev?.focus?.()
     }
-  }, [z])
+  }, [z, layer])
 
   const handleBackdropClick = (e: MouseEvent<HTMLDivElement>) => {
     if (e.target === e.currentTarget) onBackdropClick?.(e)

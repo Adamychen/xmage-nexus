@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { setGateway } from '../net/commands'
 import type { Gateway } from '../net/Gateway'
-import { fetchFormatIssues, xmageDeckTypeFor, applySuggestion, applySuggestions, autoResolveFixes, deckIssueKey, fixesForIssue, issuePrintings, findFlaggedSameName, issueKeysFromReport, isSamePrinting, syncCommandersForValidation } from './deckIssues'
+import { fetchDeckIssues, fetchFormatIssues, xmageDeckTypeFor, applySuggestion, applySuggestions, autoResolveFixes, deckIssueKey, fixesForIssue, issuePrintings, findFlaggedSameName, issueKeysFromReport, isSamePrinting, syncCommandersForValidation } from './deckIssues'
 import type { DeckValidationResult } from '../net/types'
 
 const report: DeckValidationResult = {
@@ -234,5 +234,34 @@ describe('fetchFormatIssues (official XMage DeckValidator)', () => {
     send.mockRejectedValue(new Error('ws closed'))
     expect(await fetchFormatIssues(deck, 'Modern')).toBeNull()
     expect(console.warn).toHaveBeenCalled()
+  })
+})
+
+describe('fetchDeckIssues sends the same prepared deck as fetchFormatIssues', () => {
+  const send = vi.fn()
+
+  beforeEach(() => {
+    send.mockReset()
+    send.mockResolvedValue({ ok: true, data: { ready: true, missing: [], mismatches: [] } })
+    setGateway({ send } as unknown as Gateway)
+    vi.spyOn(console, 'warn').mockImplementation(() => {})
+  })
+
+  afterEach(() => {
+    setGateway(null)
+    vi.restoreAllMocks()
+  })
+
+  it('fills the missing basic printings before validating', async () => {
+    await fetchDeckIssues({ name: 'Test', cards: [{ cardName: 'Island', setCode: '', cardNumber: '', amount: 10 }], sideboard: [] }, 'Standard')
+    const sent = send.mock.calls[0][1].deck
+    expect(sent.cards[0].setCode).not.toBe('')
+    expect(sent.cards[0].cardNumber).not.toBe('')
+  })
+
+  it('moves commanders into the commanders list for commander formats', async () => {
+    const cmd = { cardName: 'Atraxa, Praetors\' Voice', setCode: 'C16', cardNumber: '189', amount: 1 }
+    await fetchDeckIssues({ name: 'CMD', cards: [cmd], sideboard: [], commanderCard: cmd }, 'Commander')
+    expect(send.mock.calls[0][1].deck.commanders).toEqual([cmd])
   })
 })

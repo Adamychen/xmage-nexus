@@ -12,6 +12,32 @@ export interface GameFrame {
   method: string
   objectId?: string | null
   data?: Record<string, unknown> & { gameView?: Record<string, unknown> }
+  /** Capture sequence number (see captureFrame): stable across buffer trimming. */
+  seq?: number
+}
+
+const nextSeqByFrames = new WeakMap<object, number>()
+
+/** Appends a received frame to a capture buffer, stamping it with a monotonic sequence
+ *  number and trimming to the last `maxFrames`. Cursors are sequence numbers, so they keep
+ *  pointing at the same frame after the buffer is trimmed (array indexes do not). */
+export function captureFrame(frames: Array<Record<string, unknown> | null>, frame: Record<string, unknown> | null, maxFrames: number): void {
+  const seq = nextSeqByFrames.get(frames) ?? 0
+  nextSeqByFrames.set(frames, seq + 1)
+  if (frame) frame.__seq = seq
+  frames.push(frame)
+  if (frames.length > maxFrames) frames.splice(0, frames.length - maxFrames)
+}
+
+/** Sequence number the next captured frame will get: a cursor that searches from here
+ *  only sees frames that arrive later. */
+export function nextSeqOf(frames: Array<Record<string, unknown> | null>): number {
+  return nextSeqByFrames.get(frames) ?? 0
+}
+
+/** First frame at or after `cursor` (a sequence number) matching `predicate`. */
+export function frameAfter(parsed: GameFrame[], cursor: number, predicate: (frame: GameFrame) => boolean): GameFrame | undefined {
+  return parsed.find((frame) => (frame.seq ?? 0) >= cursor && predicate(frame))
 }
 
 export interface FieldPermanent {
@@ -31,8 +57,9 @@ export function sentOf(page: Page): Array<Record<string, unknown> | null> {
   return (page as unknown as { __sent: Array<Record<string, unknown> | null> }).__sent
 }
 
+/** Cursor for the frames that arrive from now on (a sequence number, not an index). */
 export function parsedLen(page: Page): number {
-  return parseFrames(framesOf(page)).length
+  return nextSeqOf(framesOf(page))
 }
 
 export function parseFrames(frames: Array<Record<string, unknown> | null>): GameFrame[] {
@@ -40,7 +67,12 @@ export function parseFrames(frames: Array<Record<string, unknown> | null>): Game
   for (const frame of frames) {
     if (!frame || typeof frame !== 'object') continue
     if (typeof frame.method === 'string') {
-      out.push({ method: frame.method, objectId: frame.objectId as string | null | undefined, data: frame.data as GameFrame['data'] })
+      out.push({
+        method: frame.method,
+        objectId: frame.objectId as string | null | undefined,
+        data: frame.data as GameFrame['data'],
+        seq: typeof frame.__seq === 'number' ? frame.__seq : undefined,
+      })
     }
   }
   return out
@@ -79,7 +111,7 @@ export function myHandEntries(view: Record<string, unknown> | null): [string, { 
 }
 
 export function controlledPlayer(view: Record<string, unknown> | null) {
-  const players = (view?.players ?? []) as { playerId?: string; name?: string; controlled?: boolean }[]
+  const players = (view?.players ?? []) as { playerId?: string; name?: string; controlled?: boolean; life?: number }[]
   return players.find((p) => p.controlled)
 }
 
@@ -120,7 +152,7 @@ export function crossZoneIdInView(view: Record<string, unknown> | null, name: st
   const objects = (view.canPlayObjects as Record<string, unknown> | undefined)?.objects as Record<string, unknown> | undefined
   if (!objects) return null
   const myHand = (view.myHand ?? {}) as Record<string, { name?: string; displayName?: string }>
-  const me = (view.players ?? []).find((p) => (p as { controlled?: boolean }).controlled) as
+  const me = ((view.players ?? []) as { controlled?: boolean }[]).find((p) => p.controlled) as
    | { graveyard?: Record<string, { name?: string; displayName?: string }>; exile?: Record<string, { name?: string; displayName?: string }> }
    | undefined
   if (!me) return null
@@ -200,6 +232,21 @@ export function nextManaSource(view: Record<string, unknown> | null, preferredNa
   )
 }
 
+/** Pila mutada del frame: cartas constituyentes (`mutateView.cards`) y las que se
+ *  renderizan debajo de la carta de arriba (todas menos el permanente host). */
+export function mutatePileOf(view: Record<string, unknown> | null): { cards: number; under: { id: string; name?: string }[] } | null {
+  const players = (view?.players ?? []) as { battlefield?: Record<string, { mutateView?: { cards?: Record<string, { name?: string }> } }> }[]
+  for (const player of players) {
+    for (const [permId, perm] of Object.entries(player.battlefield ?? {})) {
+      const cards = perm.mutateView?.cards ?? {}
+      const ids = Object.keys(cards)
+      if (ids.length === 0) continue
+      return { cards: ids.length, under: ids.filter((id) => id !== permId).map((id) => ({ id, name: cards[id]?.name })) }
+    }
+  }
+  return null
+}
+
 export function targetIdsOf(frame: GameFrame): string[] {
   const data = frame.data
   if (!data) return []
@@ -265,12 +312,7 @@ export function waitFrame(
   return new Promise<GameFrame>((resolve, reject) => {
     const started = Date.now()
     const tick = () => {
-      const parsed = parseFrames(framesOf(page))
-      // sin clamp al último frame (un cursor fuera del array no debe re-matchear
-      // el frame actual como si fuera el siguiente): evita re-consumir un ask de
-      // maná ya pagado o un targeting ya resuelto
-      const start = Math.min(startIndex, parsed.length)
-      const found = parsed.slice(start).find(predicate)
+      const found = frameAfter(parseFrames(framesOf(page)), startIndex, predicate)
       if (found) return resolve(found)
       if (Date.now() - started > timeoutMs) return reject(new Error(`timeout esperando ${label}`))
       setTimeout(tick, 200)
@@ -289,11 +331,8 @@ export function waitFrameAt(
   return new Promise((resolve, reject) => {
     const started = Date.now()
     const tick = () => {
-      const parsed = parseFrames(framesOf(page))
-      const start = Math.min(startIndex, parsed.length)
-      for (let i = start; i < parsed.length; i++) {
-        if (predicate(parsed[i])) return resolve({ frame: parsed[i], index: i })
-      }
+      const found = frameAfter(parseFrames(framesOf(page)), startIndex, predicate)
+      if (found) return resolve({ frame: found, index: found.seq ?? 0 })
       if (Date.now() - started > timeoutMs) return reject(new Error(`timeout esperando ${label}`))
       setTimeout(tick, 200)
     }

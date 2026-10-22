@@ -97,7 +97,7 @@ export function controlScenario(): Scenario {
       activePlayerId: CONTROL_SIM_ID,
       activePlayerName: CONTROL_SIM_NAME,
       priorityPlayerName: CONTROL_SIM_NAME,
-      combat: simCreatureAttacking ? [{ attackers: { [CONTROL_CREATURE_ID]: {} } }] : [],
+      combat: simCreatureAttacking ? [{ attackers: { [CONTROL_CREATURE_ID]: {} } as unknown as unknown[] }] : [],
       turn: 3,
     })
   }

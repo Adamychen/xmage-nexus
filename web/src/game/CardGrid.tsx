@@ -61,6 +61,7 @@ export default function CardGrid({ prompt, selected, setSelected, send, busy }: 
   }
 
   const confirmMulti = () => {
+    if (selected.length === 0) return
     void send(async () => {
       let result: { ok: boolean; error?: string } = { ok: true }
       for (const value of selected) {
@@ -161,7 +162,7 @@ export default function CardGrid({ prompt, selected, setSelected, send, busy }: 
           )}
           {isMulti && (
             <Button variant="primary"
-              disabled={busy || selected.length < prompt.min}
+              disabled={busy || selected.length < Math.max(prompt.min, 1)}
               onClick={confirmMulti}
             >
               {t('dialogs','cardgrid_confirm', { selected: selected.length, max: prompt.max })}

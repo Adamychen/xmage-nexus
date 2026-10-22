@@ -9,6 +9,7 @@ import { TABLE } from '../table-names'
  */
 
 import { makeBaseScenario } from '../fake'
+import type { Scenario } from '../fake'
 import { commanderInfoRule, makeCard, makePermanent } from '../../src/__fixtures__/gameViews'
 import type { CardView, GameView, PlayerView } from '../../src/net/types'
 import {
@@ -65,7 +66,7 @@ export function allInteractionsScenario(): Scenario {
           cardTypes: ['Land'],
         }),
       },
-    }
+    } as unknown as PlayerView
 
     const simPlayer: PlayerView = {
       playerId: SIM_PLAYER_ID,
@@ -78,10 +79,9 @@ export function allInteractionsScenario(): Scenario {
       handCount: 5,
       libraryCount: 40,
       battlefield: {},
-    }
+    } as unknown as PlayerView
 
     return {
-      gameId,
       turn: 2,
       phase: 'PRECOMBAT_MAIN',
       step: 'PRECOMBAT_MAIN',
@@ -113,7 +113,7 @@ export function allInteractionsScenario(): Scenario {
           'hand-ponder': { basicCastAbilities: [{ id: 'hand-ponder', value: 'Cast' }] },
         },
       },
-    }
+    } as unknown as GameView
   }
 
   const tutorCards: Record<string, CardView> = {

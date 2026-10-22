@@ -58,7 +58,19 @@ describe('useInviteLink server switch', () => {
     expect(confirmDialog).toHaveBeenCalledTimes(1)
   })
 
-    it('descarta la invitación al rechazar el cambio de servidor', async () => {
+    it('never sends the saved password to a different server', async () => {
+    vi.mocked(confirmDialog).mockResolvedValue(true)
+    await act(async () => {
+      setState({ pendingDeepLink: { kind: 'watch', tableId: 't1', serverHost: 'evil.example', serverPort: 17171 } } as any)
+    })
+    renderHook((p: any) => useInviteLink(p), { initialProps: deps() as any })
+    await act(async () => {})
+    expect(doConnect).toHaveBeenCalledTimes(1)
+    expect(doConnect).toHaveBeenCalledWith('localhost', 8787, 'evil.example', 17171, 'u', '', undefined, undefined)
+    expect(vi.mocked(doConnect).mock.calls.some((c) => c.includes('x'))).toBe(false)
+  })
+
+  it('descarta la invitación al rechazar el cambio de servidor', async () => {
 
     vi.mocked(confirmDialog).mockResolvedValue(false)
     await act(async () => {

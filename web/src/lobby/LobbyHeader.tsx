@@ -10,7 +10,7 @@ import AvatarImage from './AvatarImage'
 import PingBadge from './PingBadge'
 import RankBadge from './RankBadge'
 import Icon from '../ui/Icon'
-import { useTranslation } from '../i18n'
+import { useTranslation, plural } from '../i18n'
 import type { LobbyTab } from './lobbyUtils'
 
 interface Props {
@@ -72,7 +72,7 @@ export default function LobbyHeader({
           <h1 className="lobby-main-heading">XMage Nexus</h1>
           <span className="conn-info">
             <span className="conn-status-dot" />
-            {conn?.serverHost}:{conn?.port} · {onlineCount} {t('lobby', onlineCount === 1 ? 'online_count_one' : 'online_count')}
+            {conn?.serverHost}:{conn?.port} · {onlineCount} {plural('lobby', 'online_count', onlineCount)}
           </span>
         </div>
       </div>

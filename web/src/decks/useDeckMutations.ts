@@ -12,7 +12,7 @@ import {
   mergeIntoList, insertOrIncrement, addSearchResult, replaceBasicLands,
   dropOnCommander, stripMetaFromSearch, type SuggestedLand,
 } from './deckCardOps'
-import { applyPrintingsByName, countUnresolved, resolveDeckPrintings } from './importResolve'
+import { applyPrintingsByName, countUnresolved, resolveDeckPrintings, type PrintingStrategy } from './importResolve'
 import { normalizeDeckCard } from './deckNormalize'
 import { setCardArtPreference } from '../cards/artPreferences'
 import { canPairCommanders, isCommanderEligible } from './deckUtils'
@@ -32,6 +32,15 @@ interface Deps {
   commanderEligibilityMap?: Map<string, boolean> | null
 }
 
+function adoptedCommandersOf(commanders?: DeckCard[]) {
+  const commander = commanders?.[0]
+  const partner = commanders?.[1]
+  return {
+    commander,
+    partner: commander && partner && deckCardKey(commander) !== deckCardKey(partner) ? partner : undefined,
+  }
+}
+
 /** Todos los handlers de mutación del mazo (añadir/mover/inc/dec/borrar/importar/imprenta/tierras). */
 export function useDeckMutations(deps: Deps) {
   const {
@@ -43,15 +52,19 @@ export function useDeckMutations(deps: Deps) {
   const deckRef = useRef(deck)
   deckRef.current = deck
 
-  const handleResolvePrintings = async () => {
-    const start = deckRef.current
-    if (!start || countUnresolved(start) === 0) return
-    const res = await resolveDeckPrintings(start, { strategy: 'default' })
+  const resolvePrintingsOf = async (start: DeckV2, strategy: PrintingStrategy) => {
+    if (countUnresolved(start) === 0) return
+    const res = await resolveDeckPrintings(start, { strategy })
     const latest = deckRef.current
     if (!latest || latest.id !== start.id || res.printingsByName.size === 0) return
     const next = applyPrintingsByName(latest, res.printingsByName)
-    schedulePersist({ ...latest, cards: next.cards, sideboard: next.sideboard })
+    schedulePersist({ ...latest, ...next })
     updateMetaForDeck([...next.cards, ...next.sideboard])
+  }
+
+  const handleResolvePrintings = async () => {
+    const start = deckRef.current
+    if (start) await resolvePrintingsOf(start, 'default')
   }
 
   const handleAddFromSearch = (card: ScryfallSearchCard) => {
@@ -331,14 +344,10 @@ export function useDeckMutations(deps: Deps) {
     setPrintingTargetCard(null)
   }
 
-  const handleApplyImport = (result: ImportResult) => {
+  const handleApplyImport = (result: ImportResult & { strategy?: PrintingStrategy }) => {
     if (!deck) return
-    const adoptedCommander = result.commanders?.[0]
-    const adoptedPartner = result.commanders?.[1]
-    const distinctPartner = adoptedCommander && adoptedPartner
-      && deckCardKey(adoptedCommander) !== deckCardKey(adoptedPartner)
-      ? adoptedPartner
-      : undefined
+    const adopted = adoptedCommandersOf(result.commanders)
+    let next: DeckV2
     if (result.mode === 'replace') {
       const nextCards = result.cards
       const nextSide = result.sideboard
@@ -347,29 +356,30 @@ export function useDeckMutations(deps: Deps) {
           n.cardName === c.cardName && n.setCode === c.setCode && n.cardNumber === c.cardNumber)
         ? c
         : undefined
-      schedulePersist({
+      next = {
         ...deck,
         cards: nextCards,
         sideboard: nextSide,
         coverCard: nextCards[0] ?? null,
-        commanderCard: adoptedCommander ?? stillPresent(deck.commanderCard),
-        partnerCard: distinctPartner ?? stillPresent(deck.partnerCard),
-      })
+        commanderCard: adopted.commander ?? stillPresent(deck.commanderCard),
+        partnerCard: adopted.partner ?? stillPresent(deck.partnerCard),
+      }
       updateMetaForDeck([...nextCards, ...nextSide])
     } else {
       const mergedCards = mergeIntoList(deck.cards, result.cards)
       const mergedSide = mergeIntoList(deck.sideboard, result.sideboard)
-      schedulePersist({
+      next = {
         ...deck,
         cards: mergedCards,
         sideboard: mergedSide,
         coverCard: deck.coverCard ?? mergedCards[0] ?? null,
-        commanderCard: deck.commanderCard ?? adoptedCommander,
-        partnerCard: deck.partnerCard ?? distinctPartner,
-      })
+        commanderCard: deck.commanderCard ?? adopted.commander,
+        partnerCard: deck.partnerCard ?? adopted.partner,
+      }
       updateMetaForDeck([...result.cards, ...result.sideboard])
     }
-    void handleResolvePrintings().catch(() => {})
+    schedulePersist(next)
+    void resolvePrintingsOf(next, result.strategy ?? 'default').catch(() => {})
   }
 
   const handleDropFile = async (f: File) => {
@@ -380,9 +390,17 @@ export function useDeckMutations(deps: Deps) {
       setStoreError(tStatic('errors', 'deck_parse_failed'))
       return
     }
-    const merged = mergeIntoList(deck.cards, parsed.cards)
-    const mergedSide = mergeIntoList(deck.sideboard, parsed.sideboard)
-    schedulePersist({ ...deck, cards: merged, sideboard: mergedSide })
+    const adopted = adoptedCommandersOf(parsed.commanders)
+    const next: DeckV2 = {
+      ...deck,
+      cards: mergeIntoList(deck.cards, parsed.cards),
+      sideboard: mergeIntoList(deck.sideboard, parsed.sideboard),
+      commanderCard: deck.commanderCard ?? adopted.commander,
+      partnerCard: deck.partnerCard ?? adopted.partner,
+    }
+    schedulePersist(next)
+    updateMetaForDeck([...parsed.cards, ...parsed.sideboard])
+    void resolvePrintingsOf(next, 'default').catch(() => {})
   }
 
   return {

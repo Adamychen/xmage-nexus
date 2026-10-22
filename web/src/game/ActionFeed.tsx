@@ -8,7 +8,7 @@ import FormattedText from './FormattedText'
 import { formatFeedTime } from './feedTime'
 import FloatingCardPreview from '../board/FloatingCardPreview'
 import type { CardView, PermanentView } from '../net/types'
-import { useTranslation } from '../i18n'
+import { useTranslation, plural } from '../i18n'
 import './ActionFeed.css'
 
 interface ActionFeedProps {
@@ -88,7 +88,7 @@ export default function ActionFeed({ onHover }: ActionFeedProps) {
             { id: 'raw', icon: 'scrollText', label: t('game', 'text_feed'), title: t('game', 'text_feed') },
           ]}
         />
-        <span className="action-count-tag">{feedItems.length === 1 ? t('game', 'feed_events_one') : t('game', 'feed_events', { count: feedItems.length })}</span>
+        <span className="action-count-tag">{plural('game', 'feed_events', feedItems.length)}</span>
       </div>
 
       <div

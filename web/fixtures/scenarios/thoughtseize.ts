@@ -25,7 +25,7 @@ export function thoughtseizeScenario(): Scenario {
   }
 
   const gameView = makeGameView({
-    ...({ gameId: GAME_ID, priorityPlayerId: HUMAN_PLAYER_ID } as unknown as Partial<GameView>),
+    ...({ priorityPlayerId: HUMAN_PLAYER_ID } as unknown as Partial<GameView>),
     turn: 3,
     phase: 'PRECOMBAT_MAIN',
     step: 'PRECOMBAT_MAIN',

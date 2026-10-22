@@ -124,7 +124,7 @@ export function fullFlowScenario(options: FullFlowOptions = {}): Scenario {
         clearInterval(updateTimer)
       }
     },
-    onAction(conn, action, args, requestId) {
+    onAction(conn, action, _args, requestId) {
       switch (action) {
         case 'connect':
           conn.ok(requestId, action, {})

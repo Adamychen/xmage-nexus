@@ -882,6 +882,24 @@ function withKeywordGainBear(game: GameView): GameView {
   }))
 }
 
+function withAuraGainBear(game: GameView): GameView {
+  return mapControlled(withKeywordGainBear(game), (p) => ({
+    ...p,
+    battlefield: {
+      ...p.battlefield,
+      'gallery-aura': { id: 'gallery-aura', name: 'Flight Aura', displayName: 'Flight Aura', manaValue: 2, cardTypes: ['Enchantment'], subtypes: ['Aura'], tapped: false, rules: [] },
+    },
+  }))
+}
+
+function withAuraAttached(game: GameView, hostId: string, auraId: string, rules: string[]): GameView {
+  return mapControlled(game, (p) => {
+    const host = p.battlefield?.[hostId]
+    if (!host) return p
+    return { ...p, battlefield: { ...p.battlefield, [hostId]: { ...host, rules, attachments: [auraId] } } }
+  })
+}
+
 function sendToGraveyard(game: GameView, id: string): GameView {
   return mapControlled(game, (p) => {
     const perm = p.battlefield?.[id]
@@ -1654,6 +1672,11 @@ const KWFX_DREADMAW_ID = 'gallery-kwfx-dreadmaw'
 const KWFX_BEARS_ID = 'gallery-kwfx-bears'
 const KWFX_CHILD_ID = 'gallery-kwfx-child'
 const KWFX_MYR_ID = 'gallery-kwfx-myr'
+const KWFX_BLOCKING_RATS_ID = 'gallery-kwfx-rats-opp'
+const KWFX_VIPER_ID = 'gallery-kwfx-viper'
+const KWFX_BEARS_OPP_1_ID = 'gallery-kwfx-bears-opp-1'
+const KWFX_BEARS_OPP_2_ID = 'gallery-kwfx-bears-opp-2'
+const KWFX_WALKER_ID = 'gallery-kwfx-walker'
 
 interface KwFxCard {
   name: string
@@ -1677,6 +1700,8 @@ const KWFX_KNIGHT: KwFxCard = {
 
 const KWFX_BEARS: KwFxCard = { name: 'Grizzly Bears', power: '2', toughness: '2', manaValue: 2, subtypes: ['Bear'], rules: [] }
 
+const KWFX_VIPER: KwFxCard = { name: 'Deadly Viper', power: '3', toughness: '3', manaValue: 3, subtypes: ['Snake'], rules: ['Deathtouch'] }
+
 function kwFxPermanent(id: string, card: KwFxCard, tapped: boolean): PermanentView {
   return {
     id,
@@ -1691,6 +1716,21 @@ function kwFxPermanent(id: string, card: KwFxCard, tapped: boolean): PermanentVi
     summoningSickness: false,
     rules: card.rules,
     cardIcons: card.cardIcons,
+  }
+}
+
+function kwFxWalker(id: string, loyalty: string): PermanentView {
+  return {
+    id,
+    name: 'Ember Oracle',
+    displayName: 'Ember Oracle',
+    manaValue: 4,
+    cardTypes: ['Planeswalker'],
+    subTypes: ['Oracle'],
+    loyalty,
+    tapped: false,
+    summoningSickness: false,
+    rules: [],
   }
 }
 
@@ -3144,6 +3184,17 @@ export function buildGalleryEntries(): GalleryEntry[] {
       gameId,
       action: { label: 'Replay', run: replayQuiet(keywordGainBase, gameId, (g) => withRules(g, 'gallery-kw-gain', ['Flying'])) },
     })
+    const auraGainBase = withAuraGainBear(animBase)
+    entries.push({
+      id: 'anim:aura-keyword-gain',
+      group: 'Animaciones',
+      label: 'Aura grants flying: the coin still pops',
+      description: '"Replay" attaches a flying Aura to Grizzly Bears: the bear is re-nested under the Aura, and its flying coin still pops in and the blue aura flares once.',
+      phase: 'game',
+      game: auraGainBase,
+      gameId,
+      action: { label: 'Replay', run: replayQuiet(auraGainBase, gameId, (g) => withAuraAttached(g, 'gallery-kw-gain', 'gallery-aura', ['Flying'])) },
+    })
     entries.push({
       id: 'anim:dissolve',
       group: 'Animaciones',
@@ -3995,6 +4046,78 @@ export function buildGalleryEntries(): GalleryEntry[] {
       game: kwFxIndestructibleBase,
       gameId,
       action: { label: 'Replay', run: replayQuiet(kwFxIndestructibleBase, gameId, (g) => addDamage(g, KWFX_MYR_ID, 3)) },
+    })
+    const kwFxBlockerDeathtouchBase = kwFxBase(
+      game,
+      kwFxCombat(game, [KWFX_BEARS_ID], [KWFX_BLOCKING_RATS_ID]),
+      { [KWFX_BEARS_ID]: kwFxPermanent(KWFX_BEARS_ID, KWFX_BEARS, true) },
+      { [KWFX_BLOCKING_RATS_ID]: kwFxPermanent(KWFX_BLOCKING_RATS_ID, KEYWORD_AURA_CREATURES.deathtouch, false) },
+    )
+    entries.push({
+      id: 'anim:kw-blocker-deathtouch',
+      group: 'Animaciones',
+      label: 'Keyword: deathtouch blocker kills my attacker',
+      description: '"Replay" deals combat damage: your Grizzly Bears, blocked by the Typhoid Rats, is killed by the Rats\' deathtouch, a skull ring marks the hit, and the Rats die to the Bears\' 2 damage; both go to their graveyards.',
+      phase: 'game',
+      game: kwFxBlockerDeathtouchBase,
+      gameId,
+      action: {
+        label: 'Replay',
+        run: replayQuiet(kwFxBlockerDeathtouchBase, gameId, (g) => ({
+          ...toGraveyards(withStep(g, 'COMBAT', 'COMBAT_DAMAGE'), [KWFX_BEARS_ID, KWFX_BLOCKING_RATS_ID]),
+          combat: [] as unknown as GameView['combat'],
+        })),
+      },
+    })
+    const kwFxDoubleBlockBase = kwFxBase(
+      game,
+      kwFxCombat(game, [KWFX_VIPER_ID], [KWFX_BEARS_OPP_1_ID, KWFX_BEARS_OPP_2_ID]),
+      { [KWFX_VIPER_ID]: kwFxPermanent(KWFX_VIPER_ID, KWFX_VIPER, true) },
+      {
+        [KWFX_BEARS_OPP_1_ID]: kwFxPermanent(KWFX_BEARS_OPP_1_ID, KWFX_BEARS, false),
+        [KWFX_BEARS_OPP_2_ID]: kwFxPermanent(KWFX_BEARS_OPP_2_ID, KWFX_BEARS, false),
+      },
+    )
+    entries.push({
+      id: 'anim:kw-double-block-deathtouch',
+      group: 'Animaciones',
+      label: 'Keyword: deathtouch kills two blockers',
+      description: '"Replay" deals combat damage: your Deadly Viper, double-blocked by two Grizzly Bears, kills both with deathtouch, a skull ring marks each of them, and the Viper dies to their 4 damage; all three go to their graveyards.',
+      phase: 'game',
+      game: kwFxDoubleBlockBase,
+      gameId,
+      action: {
+        label: 'Replay',
+        run: replayQuiet(kwFxDoubleBlockBase, gameId, (g) => ({
+          ...toGraveyards(withStep(g, 'COMBAT', 'COMBAT_DAMAGE'), [KWFX_VIPER_ID, KWFX_BEARS_OPP_1_ID, KWFX_BEARS_OPP_2_ID]),
+          combat: [] as unknown as GameView['combat'],
+        })),
+      },
+    })
+    const kwFxWalkerBase = kwFxBase(
+      game,
+      { ...kwFxCombat(game, [KWFX_DREADMAW_ID], [KWFX_BEARS_ID]), defenderId: KWFX_WALKER_ID, defenderName: 'Ember Oracle' },
+      { [KWFX_DREADMAW_ID]: kwFxPermanent(KWFX_DREADMAW_ID, KEYWORD_AURA_CREATURES.trample, true) },
+      { [KWFX_BEARS_ID]: kwFxPermanent(KWFX_BEARS_ID, KWFX_BEARS, false), [KWFX_WALKER_ID]: kwFxWalker(KWFX_WALKER_ID, '5') },
+    )
+    entries.push({
+      id: 'anim:kw-trample-planeswalker',
+      group: 'Animaciones',
+      label: 'Keyword: trample overflow hits a planeswalker',
+      description: '"Replay" deals combat damage: the Colossal Dreadmaw kills the blocking Grizzly Bears, and the 4 damage that does not fit becomes a wave that crosses to Ember Oracle, whose loyalty drops from 5 to 1; the Dreadmaw keeps 2 damage.',
+      phase: 'game',
+      game: kwFxWalkerBase,
+      gameId,
+      action: {
+        label: 'Replay',
+        run: replayQuiet(kwFxWalkerBase, gameId, (g) => ({
+          ...mapOpponent(toGraveyards(addDamage(withStep(g, 'COMBAT', 'COMBAT_DAMAGE'), KWFX_DREADMAW_ID, 2), [KWFX_BEARS_ID]), (p) => ({
+            ...p,
+            battlefield: { ...p.battlefield, [KWFX_WALKER_ID]: kwFxWalker(KWFX_WALKER_ID, '1') },
+          })),
+          combat: [] as unknown as GameView['combat'],
+        })),
+      },
     })
     entries.push({
       id: 'anim:destroy',

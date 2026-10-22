@@ -4,7 +4,7 @@ import { TABLE } from '../table-names'
  * chat en partida. Emite CHATMESSAGE cuando el cliente envía mensajes.
  */
 
-import type { FakeConn, Scenario } from '../fake'
+import type { Scenario } from '../fake'
 import { makeGameView } from '../../src/__fixtures__/gameViews'
 import type { GameView, TableView } from '../../src/net/types'
 
@@ -52,7 +52,6 @@ function demoTable(): TableView {
 }
 
 export function chatScenario(): Scenario {
-  let watching = false
   let chatSeq = 0
 
   return {
@@ -103,7 +102,6 @@ export function chatScenario(): Scenario {
           break
         case 'watchGame':
           conn.ok(requestId, action, {})
-          watching = true
           conn.event('GAME_INIT', { gameView: playerView() }, GAME_ID)
           break
         case 'joinGame':

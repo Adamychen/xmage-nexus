@@ -8,10 +8,10 @@ import { TABLE } from '../table-names'
  * 5. Resolución de daño de combate.
  */
 
-import type { FakeConn } from '../fake'
 import { makeBaseScenario } from '../fake'
+import type { Scenario } from '../fake'
 import { makePermanent } from '../../src/__fixtures__/gameViews'
-import type { CardView, GameView, PermanentView } from '../../src/net/types'
+import type { CardView, GameView, ManaPoolView, PermanentView, PlayerView } from '../../src/net/types'
 import {
   GAME_ID, TABLE_ID, SIM_NAME, HUMAN_NAME, HUMAN_PLAYER_ID, SIM_PLAYER_ID,
 } from '../humanGameConstants'
@@ -49,16 +49,14 @@ export function combatMultiBlockScenario(): Scenario {
   })
 
   let stage: 'attack' | 'blocked' | 'order' | 'damage' | 'resolved' = 'attack'
-  let activeConn: FakeConn | null = null
 
   const getGameView = (combatGroups: unknown[] = []): GameView => ({
-    gameId,
     turn: 3,
     phase: 'COMBAT',
     step: stage === 'attack' ? 'DECLARE_ATTACKERS' : stage === 'blocked' || stage === 'order' ? 'DECLARE_BLOCKERS' : stage === 'damage' ? 'COMBAT_DAMAGE' : 'POSTCOMBAT_MAIN',
     activePlayerId: HUMAN_PLAYER_ID,
     priorityPlayerId: HUMAN_PLAYER_ID,
-    combat: combatGroups,
+    combat: combatGroups as unknown as GameView['combat'],
     players: [
       {
         playerId: HUMAN_PLAYER_ID,
@@ -72,9 +70,9 @@ export function combatMultiBlockScenario(): Scenario {
         handCount: 5,
         graveyard: {},
         exile: {},
-        commandObjectList: [],
-        manaPool: {},
-      },
+        commandList: [],
+        manaPool: {} as ManaPoolView,
+      } as unknown as PlayerView,
       {
         playerId: SIM_PLAYER_ID,
         name: SIM_NAME,
@@ -99,30 +97,20 @@ export function combatMultiBlockScenario(): Scenario {
               }
             : {},
         exile: {},
-        commandObjectList: [],
-        manaPool: {},
-      },
+        commandList: [],
+        manaPool: {} as ManaPoolView,
+      } as unknown as PlayerView,
     ],
     stack: {},
     canPlayObjects: {},
-  })
-
-  const emit = (method: string, data: Record<string, unknown>) => {
-    if (activeConn) activeConn.broadcast(method, data, gameId)
-  }
-
-  const track = (conn: FakeConn): void => {
-    activeConn = conn
-  }
+  } as unknown as GameView)
 
   return makeBaseScenario({
     tableId,
     tableName: TABLE.combatMultiBlock,
     gameId,
     getGameView: () => getGameView(),
-    onConnect: track,
     onStartMatch: (conn) => {
-      track(conn)
       conn.broadcast(
         'GAME_SELECT',
         {
@@ -134,7 +122,6 @@ export function combatMultiBlockScenario(): Scenario {
       )
     },
     onSendPlayerUUID: (conn) => {
-      track(conn)
       // Declaring Colossal Dreadmaw as attacker (taps because no vigilance)
       myAttacker.tapped = true
       const combatGroups = [{ attackers: { [myAttacker.parentId!]: {} } }]
@@ -150,7 +137,6 @@ export function combatMultiBlockScenario(): Scenario {
       )
     },
     onSendPlayerBoolean: (conn) => {
-      track(conn)
       if (stage === 'attack') {
         // Confirm attackers -> Sim declares 2 blockers on Colossal Dreadmaw!
         stage = 'blocked'
@@ -206,7 +192,6 @@ export function combatMultiBlockScenario(): Scenario {
       }
     },
     onSendPlayerString: (conn) => {
-      track(conn)
       if (stage === 'order') {
         // Blocker order confirmed -> Prompt for damage distribution
         stage = 'damage'

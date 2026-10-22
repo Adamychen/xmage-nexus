@@ -10,7 +10,7 @@ import Icon from '../ui/Icon'
 import './TournamentBracket.css'
 import TournamentStandings from './TournamentStandings'
 import { stateLabel } from './lobbyUtils'
-import { useTranslation, toBcp47Locale } from '../i18n'
+import { useTranslation, toBcp47Locale, plural } from '../i18n'
 import { confirmDialog } from '../ui/confirmDialog'
 
 export interface TournamentBracketProps {
@@ -109,7 +109,7 @@ export function TournamentBracketHeader({ view, tournamentId, onClose, onQuit, c
       )}
       <div className="tournament-header-footer">
         <span className="tournament-meta" data-testid="tournament-meta">
-          {view.rounds.length} {view.rounds.length === 1 ? t('lobby', 'tournament_round_single') : t('lobby', 'tournament_round_plural')} · {view.players.length} {view.players.length === 1 ? t('lobby', 'tournament_player_single') : t('lobby', 'tournament_player_plural')}
+          {view.rounds.length} {plural('lobby', 'tournament_round', view.rounds.length)} · {view.players.length} {plural('lobby', 'tournament_player', view.players.length)}
         </span>
         {view.startTime != null && view.startTime > 0 && (
           <span className="tournament-dates" data-testid="tournament-dates">

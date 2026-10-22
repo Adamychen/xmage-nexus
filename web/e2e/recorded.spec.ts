@@ -7,6 +7,7 @@ import { quickStartGame } from './support/start-game'
 import { withFakeServer } from './support/fake-backend'
 import { playableInSceneByName } from './support/scene'
 import { expectStackCount, openDrawerTab } from './support/game-screen'
+import { mutatePileOf } from './support/frames'
 import { replayRecordedScenario } from '../fixtures/scenarios/replay-recorded'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -65,7 +66,10 @@ test.describe('Recorded real frames (anti-drift smoke)', { tag: '@recorded' }, (
 
         if (entry.assert === 'hasMutatedPermanent') {
           await expect(page.locator('.player-zone .card-mutate-pile')).toBeVisible()
-          await expect(page.locator('.player-zone .card-mutate-pile .mutate-part')).toHaveCount(2)
+          const pile = mutatePileOf((JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'fixtures', 'recorded', entry.file), 'utf8')) as { gameView: Record<string, unknown> }).gameView)
+          expect(pile, `${entry.file}: el frame debe tener una pila mutada`).not.toBeNull()
+          expect(pile!.under).toHaveLength(pile!.cards - 1)
+          await expect(page.locator('.player-zone .card-mutate-pile .mutate-part')).toHaveCount(pile!.under.length)
         }
         if (entry.assert === 'hasNonMutatedCreature') {
           await expect(page.locator('.player-zone .card-slot[data-card-name="Elvish Mystic"]')).toBeVisible()

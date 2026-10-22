@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render } from '@testing-library/react'
+import { act, cleanup, fireEvent, render } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import ChatBox, { formatChatTime, MAX_CHAT_MESSAGE_SIZE, sanitizeOutgoingChatText } from './ChatBox'
 import * as cmds from '../net/commands'
@@ -196,5 +196,83 @@ describe('ChatBox component', () => {
     } finally {
       spy.mockRestore()
     }
+  })
+
+  it.each([
+    'I think he has joined the table',
+    'I think he has left the building',
+    'my cat has lost connection to my wifi',
+    'honestly he has disconnected, cheater',
+  ])('a player writing "%s" keeps their author and text', (phrase) => {
+    setState({
+      chatMessages: [{ chatId: 'chat-123', username: 'Alice', message: phrase, messageType: 'TALK' }],
+      roomChatId: 'chat-123',
+    })
+    const { container, getByText } = render(<ChatBox />)
+
+    expect(container.querySelectorAll('.system-msg').length).toBe(0)
+    expect(getByText('Alice:')).not.toBeNull()
+    expect(getByText(phrase)).not.toBeNull()
+  })
+
+  it('a player with those phrases keeps their message when system notices are hidden', () => {
+    setState({
+      chatMessages: [
+        { chatId: 'chat-123', username: 'Alice', message: 'I think he has left the building', messageType: 'TALK' },
+        { chatId: 'chat-123', username: '', message: 'di2aco has left' },
+      ],
+      roomChatId: 'chat-123',
+    })
+    const { getByText, queryByText } = render(<ChatBox />)
+    fireEvent.click(getByText('Avisos visibles'))
+
+    expect(getByText('I think he has left the building')).not.toBeNull()
+    expect(queryByText('di2aco has left')).toBeNull()
+  })
+
+  describe('chat history scrolling', () => {
+    function fakeScrollBox(box: HTMLElement, client = 200) {
+      let top = 0
+      let height = 1000
+      Object.defineProperties(box, {
+        scrollTop: { get: () => top, set: (v: number) => { top = Math.min(v, Math.max(0, height - client)) }, configurable: true },
+        scrollHeight: { get: () => height, configurable: true },
+        clientHeight: { get: () => client, configurable: true },
+        scrollTo: { value: (opts: { top: number }) => { box.scrollTop = opts.top }, configurable: true },
+      })
+      return {
+        grow: (h: number) => { height = h },
+        get top() { return top },
+      }
+    }
+
+    const talk = (n: number) => ({ chatId: 'chat-123', username: 'Bob', message: `msg ${n}`, messageType: 'TALK' })
+
+    it('follows the bottom when the reader is at the bottom', () => {
+      setState({ chatMessages: [talk(1), talk(2), talk(3)], roomChatId: 'chat-123' })
+      const { container } = render(<ChatBox />)
+      const box = fakeScrollBox(container.querySelector<HTMLElement>('.chat-list')!)
+
+      box.grow(1200)
+      act(() => setState({ chatMessages: [talk(1), talk(2), talk(3), talk(4)] }))
+      expect(box.top).toBe(1000)
+    })
+
+    it('does not drag a reader who scrolled up when a message arrives', () => {
+      setState({ chatMessages: [talk(1), talk(2), talk(3)], roomChatId: 'chat-123' })
+      const { container } = render(<ChatBox />)
+      const list = container.querySelector<HTMLElement>('.chat-list')!
+      const box = fakeScrollBox(list)
+
+      box.grow(1200)
+      act(() => setState({ chatMessages: [talk(1), talk(2), talk(3), talk(4)] }))
+      expect(box.top).toBe(1000)
+
+      list.scrollTop = 0
+      fireEvent.scroll(list)
+      box.grow(1400)
+      act(() => setState({ chatMessages: [talk(1), talk(2), talk(3), talk(4), talk(5)] }))
+      expect(box.top).toBe(0)
+    })
   })
 })

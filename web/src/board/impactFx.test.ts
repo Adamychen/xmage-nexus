@@ -76,6 +76,13 @@ describe('impact store', () => {
     expect(getImpacts()).toHaveLength(0)
   })
 
+  it('keeps keyword impacts when generic sparks pile up past the cap', () => {
+    spawnImpact('first-strike', rect(10, 20))
+    spawnImpact('deathtouch', rect(10, 20))
+    for (let i = 0; i < 14; i++) spawnImpact('sparks', rect(10, 20))
+    expect(getImpacts().map((f) => f.kind)).toEqual(expect.arrayContaining(['first-strike', 'deathtouch']))
+  })
+
   it('ignores positioned impacts without a usable rect', () => {
     expect(spawnImpact('destroy', null)).toBeNull()
     expect(spawnImpact('destroy', rect(0, 0, 0, 0))).toBeNull()

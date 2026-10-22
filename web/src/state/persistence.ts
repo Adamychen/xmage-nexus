@@ -268,11 +268,25 @@ export function loadActiveDraft(): ActiveDraftPersistence | null {
     typeof parsed.savedAt === 'number'
   ) {
     if (Date.now() - parsed.savedAt < ACTIVE_DRAFT_MAX_AGE_MS) {
-      return parsed
+      return withElapsedPickTime(parsed)
     }
     clearActiveDraft()
   }
   return null
+}
+
+/** The pick that was running keeps running on the server, so the time that
+ *  passed since the snapshot was saved comes off its timeout (the snapshot is
+ *  only written when a pick view arrives, so `savedAt` is the pick's start). */
+function withElapsedPickTime(parsed: ActiveDraftPersistence): ActiveDraftPersistence {
+  const pick = parsed.draft.message.draftPickView
+  if (!pick?.picking) return parsed
+  const elapsedSecs = (Date.now() - parsed.savedAt) / 1000
+  const timeout = Math.max(0, Math.round(pick.timeout - elapsedSecs))
+  return {
+    ...parsed,
+    draft: { ...parsed.draft, message: { ...parsed.draft.message, draftPickView: { ...pick, timeout } } },
+  }
 }
 
 export function saveActiveDraft(draft: DraftState | null, tournamentId?: string | null) {
@@ -429,7 +443,7 @@ export interface FxSettings {
   animationSpeed: number
 }
 
-const FX_SETTINGS_KEY = 'mage-web-settings'
+export const FX_SETTINGS_KEY = 'mage-web-settings'
 const FX_SPEEDS = [0.5, 1, 1.5]
 export const DEFAULT_FX_SETTINGS: FxSettings = { effects: true, animationSpeed: 1 }
 
@@ -457,7 +471,7 @@ export interface AutoAnswerStored {
   key?: string
 }
 
-const AUTO_ANSWERS_KEY = 'mage-web-auto-answers'
+export const AUTO_ANSWERS_KEY = 'mage-web-auto-answers'
 
 export function loadAutoAnswers(): AutoAnswerStored[] {
   const parsed = readJson<unknown>(AUTO_ANSWERS_KEY)
@@ -485,7 +499,7 @@ export interface ChoiceMemoryStored {
   value: string
 }
 
-const CHOICE_MEMORY_KEY = 'mage-web-choice-memory'
+export const CHOICE_MEMORY_KEY = 'mage-web-choice-memory'
 
 export function loadChoiceMemory(): ChoiceMemoryStored[] {
   const parsed = readJson<unknown>(CHOICE_MEMORY_KEY)
@@ -512,7 +526,7 @@ export interface ManaPaymentStored {
   smart: boolean
 }
 
-const MANA_PAYMENT_KEY = 'mage-web-mana-payment'
+export const MANA_PAYMENT_KEY = 'mage-web-mana-payment'
 export const DEFAULT_MANA_PAYMENT: ManaPaymentStored = {
   auto: true,
   restricted: true,
@@ -555,7 +569,7 @@ export function saveHandRequestsAllowed(allowed: boolean) {
   writeJson(HAND_REQUESTS_KEY, allowed)
 }
 
-const SMART_STOPS_KEY = 'mage-web-smart-stops'
+export const SMART_STOPS_KEY = 'mage-web-smart-stops'
 
 export function loadSmartStops(): boolean {
   try {
@@ -630,7 +644,7 @@ export function saveNotificationAsked() {
   } catch {}
 }
 
-const PHASE_STOPS_KEY = 'mage-web-phase-stops'
+export const PHASE_STOPS_KEY = 'mage-web-phase-stops'
 export function loadPhaseStops(): PhaseStops {
   const parsed = readJson<unknown>(PHASE_STOPS_KEY)
   if (parsed) return mergePhaseStops(parsed)
@@ -661,7 +675,7 @@ export interface AudioSettings {
   prioritySound: PrioritySoundMode
 }
 
-const AUDIO_SETTINGS_KEY = 'mage-web-audio'
+export const AUDIO_SETTINGS_KEY = 'mage-web-audio'
 export const DEFAULT_AUDIO_SETTINGS: AudioSettings = {
   soundEnabled: true,
   masterVolume: 0.8,
@@ -693,7 +707,7 @@ export interface MusicSettings {
   musicVolume: number
 }
 
-const MUSIC_SETTINGS_KEY = 'mage-web-music'
+export const MUSIC_SETTINGS_KEY = 'mage-web-music'
 export const DEFAULT_MUSIC_SETTINGS: MusicSettings = { musicEnabled: true, musicVolume: 0.35 }
 
 export function loadMusicSettings(): MusicSettings {

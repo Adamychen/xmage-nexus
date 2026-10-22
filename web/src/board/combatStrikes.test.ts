@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   clearCombatSnapshots,
   combatImpactRemaining,
+  planBlockerStrikes,
   planDamageStrikes,
   primeCombatHolds,
   playDamageStrikes,
@@ -63,6 +64,19 @@ describe('planDamageStrikes', () => {
     expect(regular.map((p) => p.attackerId)).toEqual(['ds', 'plain'])
   })
 
+  it('strikes a double striker once per damage step when both pass in one update', () => {
+    const groups = [{ attackers: { ds: doubleStriker }, blockers: [], defenderId: 'p-opp' }]
+    const plans = planDamageStrikes(view('DECLARE_BLOCKERS', groups), view('COMBAT_DAMAGE', groups))
+    expect(plans).toEqual([{ attackerId: 'ds', targetId: 'p-opp' }, { attackerId: 'ds', targetId: 'p-opp' }])
+  })
+
+  it('strikes a blocked trampler whose blockers have all left combat at the defender, and no one else', () => {
+    const groups = [{ attackers: { t1: { rules: ['Trample'] }, plain: {} }, blockers: [], isBlocked: true, defenderId: 'p-opp' }]
+    expect(planDamageStrikes(view('DECLARE_BLOCKERS', groups), view('COMBAT_DAMAGE', groups))).toEqual([
+      { attackerId: 't1', targetId: 'p-opp' },
+    ])
+  })
+
   it('strikes when the server jumps from blockers straight past combat damage', () => {
     const groups = [{ attackers: { fs: firstStriker, plain: {} }, blockers: [], defenderId: 'p-opp' }]
     const prev = view('DECLARE_BLOCKERS', groups)
@@ -76,6 +90,34 @@ describe('planDamageStrikes', () => {
     expect(planDamageStrikes(view('COMBAT_DAMAGE', groups), view('COMBAT_DAMAGE', groups))).toEqual([])
     expect(planDamageStrikes(view('COMBAT_DAMAGE', groups), view('END_COMBAT', groups))).toEqual([])
     expect(planDamageStrikes(view('END_COMBAT', groups), makeGameView({ step: 'POSTCOMBAT_MAIN' }))).toEqual([])
+  })
+})
+
+describe('planBlockerStrikes', () => {
+  const knight = makePermanent({ id: 'b1', name: 'Knight', ...firstStriker })
+  const bear = makePermanent({ id: 'b2', name: 'Bear' })
+  const players = [
+    makePlayer({ playerId: 'p-opp', name: 'Opp', battlefield: { b1: knight, b2: bear } }),
+    makePlayer({ playerId: 'p-me', name: 'Me', battlefield: { a1: makePermanent({ id: 'a1', name: 'Attacker' }) } }),
+  ]
+  const groups = [{ attackers: ['a1'], blockers: ['b1', 'b2'], defenderId: 'p-opp' }]
+  const declare = view('DECLARE_BLOCKERS', groups, { players })
+
+  it('sends a first striker blocker at the attacker in the first-strike step only', () => {
+    expect(planBlockerStrikes(declare, view('FIRST_COMBAT_DAMAGE', groups, { players }))).toEqual([{ attackerId: 'b1', targetId: 'a1' }])
+  })
+
+  it('sends the regular blockers at the attacker in the regular step, after the first strikers', () => {
+    expect(planBlockerStrikes(declare, view('COMBAT_DAMAGE', groups, { players }))).toEqual([
+      { attackerId: 'b1', targetId: 'a1' },
+      { attackerId: 'b2', targetId: 'a1' },
+    ])
+  })
+
+  it('plans nothing while blockers are only being declared, or for an unblocked attacker', () => {
+    expect(planBlockerStrikes(declare, declare)).toEqual([])
+    const unblocked = [{ attackers: ['a1'], blockers: [], defenderId: 'p-opp' }]
+    expect(planBlockerStrikes(view('DECLARE_BLOCKERS', unblocked, { players }), view('COMBAT_DAMAGE', unblocked, { players }))).toEqual([])
   })
 })
 

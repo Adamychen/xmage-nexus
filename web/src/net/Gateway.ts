@@ -1,6 +1,7 @@
 import { DemoSocket } from '../demo/DemoSocket'
 import type { EventEnvelope, LobbyEnvelope, ProxyMessage, ResultEnvelope } from './types'
 import { recordFrame } from './frameBuffer'
+import { recordError } from '../system/errorLog'
 
 export interface GatewayEvents {
   onMessage?: (msg: ProxyMessage) => void
@@ -18,8 +19,20 @@ export const HEARTBEAT_TIMEOUT_MS = 10000
 interface PendingRequest<T = unknown> {
   id: string
   action: string
+  timer: ReturnType<typeof setTimeout>
   resolve: (res: ResultEnvelope & { data?: T }) => void
 }
+
+/** A request the proxy never answers (a proxy that still pings) must not hang its caller. */
+export const REQUEST_TIMEOUT_MS = 30000
+/** Actions the server runs for a while: joining a table or draft, deck validation, bulk lookups. */
+export const SLOW_REQUEST_TIMEOUT_MS = 120000
+const SLOW_ACTIONS = new Set([
+  'connect', 'joinGame', 'watchGame', 'watchTable', 'watchTournamentTable', 'joinTable', 'joinTournamentTable',
+  'createTable', 'createTournamentTable', 'joinDraft', 'joinTournament', 'startMatch', 'startTournament',
+  'replayGame', 'getFinishedMatches', 'report_issue', 'validateDeck', 'validateDeckFormat',
+  'commanderEligibility', 'resolvePrintings', 'cardPrintings', 'fetchOnlineDeck',
+])
 
 /**
  * Cliente WebSocket del proxy: reconexión con backoff, promesas por acción,
@@ -86,6 +99,7 @@ export class Gateway {
     const ws = __DEMO__ ? (new DemoSocket() as unknown as WebSocket) : new WebSocket(this.url)
     this.ws = ws
     ws.onopen = () => {
+      if (this.ws !== ws) return
       this.reconnectAttempts = 0
       this.connectedAt = Date.now()
       this.lastInboundAt = this.connectedAt
@@ -241,7 +255,11 @@ export class Gateway {
       this.lastSeq = seq
     }
     recordFrame(msg, raw.length)
-    this.events.onMessage?.(msg)
+    try {
+      this.events.onMessage?.(msg)
+    } catch (e) {
+      recordError('app', e instanceof Error ? e.message : String(e))
+    }
   }
 
   /** A login onto another proxy stream (a new proxy session) restarts its numbering. */
@@ -273,11 +291,13 @@ export class Gateway {
     const req = this.pending.get(requestId)
     if (!req) return
     this.pending.delete(requestId)
+    clearTimeout(req.timer)
     req.resolve(msg)
   }
 
   private rejectAll(reason: string) {
     for (const [, req] of this.pending) {
+      clearTimeout(req.timer)
       req.resolve({ type: 'result', action: req.action, requestId: req.id, ok: false, error: reason, data: undefined })
     }
     this.pending.clear()
@@ -289,12 +309,19 @@ export class Gateway {
     if (!this.isOpen) return Promise.resolve({ type: 'result', action, ok: false, error: 'not connected', errorCode: 'NOT_CONNECTED', data: undefined })
     const id = String(this.seq++)
     return new Promise<ResultEnvelope & { data?: T }>((resolve) => {
-      this.pending.set(id, { id, action, resolve: resolve as PendingRequest['resolve'] })
+      const timer = setTimeout(() => this.expire(id), SLOW_ACTIONS.has(action) ? SLOW_REQUEST_TIMEOUT_MS : REQUEST_TIMEOUT_MS)
+      this.pending.set(id, { id, action, timer, resolve: resolve as PendingRequest['resolve'] })
       const ids = this.pendingByAction.get(action) ?? []
       ids.push(id)
       this.pendingByAction.set(action, ids)
       this.ws?.send(JSON.stringify({ requestId: id, action, args }))
     })
+  }
+
+  private expire(id: string) {
+    const req = this.pending.get(id)
+    if (!req) return
+    this.resolvePending({ type: 'result', action: req.action, requestId: id, ok: false, error: 'timeout', errorCode: 'TIMEOUT', data: undefined })
   }
 
   close() {

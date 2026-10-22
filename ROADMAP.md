@@ -166,11 +166,16 @@ Shipped with the keyword auras and combat moments (`board/keywordAura.ts`, `boar
 
 | Open item | Why |
 |---|---|
-| Blockers get no keyword moments | `planDamageStrikes` (`combatStrikes.ts`) plans attacker strikes only, so a blocker's deathtouch, lifelink or first strike shows nothing, and a lifelinking blocker's +N does not wait for its motes |
-| Several blockers share one skull | A strike plan targets `blockers[0]` only, so a deathtouch attacker that kills two blockers shows one skull (`planKeywordStrikes`) |
-| Trample over a planeswalker or battle shows no wave | `lifeOf(defenderId)` is null for a permanent defender |
-| Keyword gains replay on remount | `gainedKeywords` in `CardSlot` never expires, so toggling *Keyword effects* off → on, or a remounted coin, replays the flare and the pop |
 | Morph or disguise turned face up pops every keyword | Every keyword counts as "gained". Decide whether that is intended, then pin it with a test |
+| Stale callbacks after a relink can bypass the proxy's ordering | Needs the fork to fence callbacks per CallbackHandler (Mage.Proxy CallbackSequencer; reset during relink) |
+| Double strike: the second hit is not scheduled for blocker keyword moments | A double-striking attacker's second hit is not scheduled separately, so the keyword moments of its blockers fire for the first hit only (`board/keywordStrikeFx.ts`) |
+
+### 4.11 Lobby, invites and proxy restore
+
+| Open item | Why |
+|---|---|
+| Invite links to another server connect with an empty password | An invite link to another server connects with an empty password instead of the saved one. Better: open the login screen prefilled with the target server and username |
+| `RestoreIds` keys ignore the port | `mage-proxy` sets the keys without the port. Cross-port restore is pinned by `RestoreIdsTest`, which has to change with the fix |
 
 ### 4.4 Test-infrastructure risk
 

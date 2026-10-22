@@ -80,6 +80,15 @@ describe('stackGroupKeyOf', () => {
 })
 
 describe('groupStackables', () => {
+  it('keeps excluded ids (targets, busy) out of a collapsed pile for every kind', () => {
+    const tokens: [string, PermanentView][] = ['a', 'b', 'c', 'd'].map((id) => [id, token('Clue')])
+    const creatures: [string, PermanentView][] = ['a', 'b', 'c', 'd'].map((id) => [id, creatureToken('Soldier')])
+    for (const [entries, kind] of [[tokens, 'other'], [creatures, 'creatures']] as const) {
+      const { groups, solos } = groupStackables(entries, kind, { excludeIds: new Set(['b']) })
+      expect(groups[0].items.map(([id]) => id)).toEqual(['a', 'c', 'd'])
+      expect(solos.map(([id]) => id)).toEqual(['b'])
+    }
+  })
   it('splits lands into a tapped pile and an untapped pile, keeping order within each', () => {
     const { groups, solos } = groupStackables(
       entries([

@@ -80,8 +80,9 @@ export interface TournamentScenarioOptions {
   includeStartTournament?: boolean
   includeInit?: boolean
   emitUpdates?: number
-  /** Al hacer watchTable (Espectar), responde SHOW_TOURNAMENT con el id real del
-   *  torneo (como el server para mesas de torneo). */
+  /** On watchTable (Espectar) the server answers SHOW_TOURNAMENT with the real
+   *  tournament id, as it does for tournament tables. watchTournamentTable always
+   *  does: the bracket resolves a table's tournament id through that callback. */
   emitShowTournamentOnWatch?: boolean
 }
 
@@ -172,7 +173,7 @@ export function makeTournamentScenario(opts: TournamentScenarioOptions = {}): Sc
         case 'watchTable':
         case 'watchTournamentTable':
           conn.ok(requestId, action, { tableId: TABLE_ID })
-          if (action === 'watchTable' && opts.emitShowTournamentOnWatch) {
+          if (action === 'watchTournamentTable' || opts.emitShowTournamentOnWatch) {
             setTimeout(() => {
               conn.broadcast('SHOW_TOURNAMENT', { currentTableId: TABLE_ID, parentTableId: null }, TOURNAMENT_ID)
             }, 20)

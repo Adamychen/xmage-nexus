@@ -141,6 +141,28 @@ Deck
     expect(archidektFormat(undefined, false, 60)).toBe('Standard')
   })
 
+  it('moxfield: a row without edition stays unprinted instead of getting M10/1', async () => {
+    mockedFetchOnlineDeckJson.mockResolvedValueOnce({
+      name: 'No printing',
+      format: 'standard',
+      mainboard: {
+        a: { quantity: 4, card: { name: 'Lightning Bolt' } },
+      },
+    })
+    const deck = await fetchMoxfieldDeck('https://moxfield.com/decks/nop')
+    expect(deck?.cards[0]).toMatchObject({ cardName: 'Lightning Bolt', setCode: '', cardNumber: '', amount: 4 })
+  })
+
+  it('archidekt: a row without edition stays unprinted instead of getting M10/1', async () => {
+    mockedFetchOnlineDeckJson.mockResolvedValueOnce({
+      name: 'No printing',
+      deckFormat: 2,
+      cards: [{ quantity: 4, categories: ['Main'], card: { name: 'Lightning Bolt' } }],
+    })
+    const deck = await fetchArchidektDeck('https://archidekt.com/decks/nop')
+    expect(deck?.cards[0]).toMatchObject({ cardName: 'Lightning Bolt', setCode: '', cardNumber: '', amount: 4 })
+  })
+
   it('moxfield: si el proxy no está conectado, degrada a null en vez de lanzar', async () => {
     mockedFetchOnlineDeckJson.mockRejectedValueOnce(new Error('gateway no inicializado'))
     const deck = await fetchMoxfieldDeck('https://moxfield.com/decks/abc')

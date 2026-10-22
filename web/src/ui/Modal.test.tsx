@@ -120,6 +120,15 @@ describe('Modal', () => {
     }
   })
 
+  it('keeps a later modal above an open one after the counter would have wrapped', () => {
+    __modalAllocator.active.add(1000)
+    try {
+      for (let i = 0; i < 1500; i++) expect(__modalAllocator.next()).toBeGreaterThan(1000)
+    } finally {
+      __modalAllocator.active.delete(1000)
+    }
+  })
+
   it('does not run onEscape after the modal unmounts', () => {
     const onEscape = vi.fn()
     const { unmount } = render(

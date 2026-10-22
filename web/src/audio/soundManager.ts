@@ -35,7 +35,7 @@ class SoundManager {
       this.ensureContext()
       if (this.ctx) {
         if (this.ctx.state === 'suspended') {
-          void this.ctx.resume()
+          void this.ctx.resume().catch(() => {})
         }
         try {
           const buf = this.ctx.createBuffer(1, 1, 22050)
@@ -187,7 +187,7 @@ class SoundManager {
     if (!this.ensureContext() || !this.ctx) return
 
     if (this.ctx.state === 'suspended') {
-      void this.ctx.resume()
+      void this.ctx.resume().catch(() => {})
     }
 
     const buffer = this.getBuffer(key)

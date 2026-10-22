@@ -179,4 +179,13 @@ describe('CardGrid', () => {
     expect(cells[1].disabled).toBe(true)
     expect(cells[2].disabled).toBe(false)
   })
+
+  it('keeps the multi-select Confirm disabled while nothing is selected (min 0)', () => {
+    const send = vi.fn()
+    const { container } = render(<CardGrid prompt={makePrompt({ method: 'GAME_SELECT_CARDS', min: 0, max: 2 })} selected={[]} setSelected={vi.fn()} send={send} busy={false} />)
+    const confirm = container.querySelector<HTMLButtonElement>('.card-grid-actions button')!
+    expect(confirm.disabled).toBe(true)
+    fireEvent.click(confirm)
+    expect(send).not.toHaveBeenCalled()
+  })
 })

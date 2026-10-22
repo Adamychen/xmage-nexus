@@ -322,6 +322,7 @@ export default function GameScreen() {
       if (released) released.blur()
       if (released || !isSpaceShortcutBlocked(e.target)) {
         e.preventDefault()
+        if (e.repeat) return
         // No enviar pass a ciegas si hay un diálogo de maná o target abierto
         if (feedback && feedback.mode !== 'combat') return
         if (rollbackBlocking) return
@@ -353,6 +354,7 @@ export default function GameScreen() {
       if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) return
       if (e.key !== CANCEL_SKIP_SHORTCUT && !skipForShortcut(e.key)) return
       e.preventDefault()
+      if (e.repeat) return
       // Sin diálogos modales abiertos (misma guarda que Space)
       if (feedback && feedback.mode !== 'combat') return
       if (rollbackBlocking) return

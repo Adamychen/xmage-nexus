@@ -3,6 +3,7 @@
   width: var(--card-w, 100px);
   height: calc(var(--card-w, 100px) * var(--card-h-ratio, 1.4));
   position: relative;
+  isolation: isolate;
   border-radius: var(--r-base);
   overflow: hidden;
   box-sizing: border-box;

@@ -1,4 +1,5 @@
-import { test, expect, type Page } from './fixtures'
+import { test, expect } from './fixtures'
+import type { Page } from '@playwright/test'
 import { fakeOnly } from './support/fake-mode'
 import { dismissSetupWizard } from './support/start-game'
 import { richCommanderGame, showGame } from './support/rich-game'

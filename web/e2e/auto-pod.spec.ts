@@ -52,11 +52,11 @@ async function loadGame(page: Page, settings: Record<string, unknown>) {
   await page.waitForFunction(() =>
     Boolean((globalThis as unknown as { __mageStore?: unknown }).__mageStore),
   )
-  await page.evaluate(([gv, s]) => {
+  await page.evaluate<void, [unknown, Record<string, unknown>]>(([gv, s]) => {
     const store = (globalThis as unknown as { __mageStore?: { getState: () => Record<string, any>; setState: (st: unknown) => void } }).__mageStore
     const st = store?.getState() as { settings: Record<string, unknown> }
-    store?.setState({ phase: 'game', settings: { ...st.settings, ...(s as Record<string, unknown>) }, game: gv })
-  }, [autoPodGame(), settings] as unknown as unknown)
+    store?.setState({ phase: 'game', settings: { ...st.settings, ...s }, game: gv })
+  }, [autoPodGame(), settings])
   await page.waitForFunction(
     () => (globalThis as unknown as { __mageStore?: { getState: () => { phase?: string } } }).__mageStore?.getState?.().phase === 'game',
   )

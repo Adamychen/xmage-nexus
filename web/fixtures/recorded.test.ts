@@ -138,7 +138,7 @@ type AssertKind =
 
 type ManifestKind = 'game' | 'construct' | 'tournament' | 'sequence'
 
-function getMe(gv: GameView): GameView['players'][number] | undefined {
+function getMe(gv: GameView): NonNullable<GameView['players']>[number] | undefined {
   return gv.players?.find((p) => p?.controlled)
 }
 
@@ -166,7 +166,7 @@ function runAssert(kind: AssertKind, gv: GameView): boolean {
       return names.some((n) => /counterspell/i.test(n)) && names.some((n) => /lightning bolt/i.test(n))
     }
     case 'hasAttachedAura':
-      return bf.some((c) => ((c as { attachments?: unknown }).attachments as unknown[] | undefined)?.length > 0)
+      return bf.some((c) => (((c as { attachments?: unknown }).attachments as unknown[] | undefined)?.length ?? 0) > 0)
         && bf.some((c) => /rancor/i.test(String((c as { name?: unknown }).name ?? '')))
     case 'hasTokens':
       return bf.filter((c) => (c as { isToken?: unknown }).isToken === true).length >= 2
@@ -325,7 +325,7 @@ function runAssert(kind: AssertKind, gv: GameView): boolean {
       // ofrecer habilidades de maná (las Montañas destapadas) y nunca el Bolt
       // que sigue en mano. La UI debe distinguirlo (el Bolt no es jugable).
       const stack = Object.values(gv.stack ?? {})
-      const hand = gv.myHand ?? gv.hand ?? {}
+      const hand = gv.myHand ?? {}
       const handNames = Object.values(hand).map((c) => String((c as { name?: unknown })?.name ?? ''))
       const offered = gv.canPlayObjects?.objects ?? {}
       const boltId = Object.entries(hand).find(([, c]) =>
@@ -564,7 +564,7 @@ function runAssert(kind: AssertKind, gv: GameView): boolean {
       return names.some((n) => /saw it coming/i.test(n)) && names.some((n) => /^opt$/i.test(n)) && exileCount === 0
     }
     case 'hasNinjutsu': {
-      const hand = Object.values(gv.myHand ?? gv.hand ?? {})
+      const hand = Object.values(gv.myHand ?? {})
       const bearBack = hand.some((c) => /runeclaw bear/i.test(String((c as { name?: unknown })?.name ?? '')))
       const ninjaAttacking = (gv.combat ?? []).some((group) => {
         const record = group as unknown as Record<string, unknown>
@@ -660,7 +660,7 @@ function runAssert(kind: AssertKind, gv: GameView): boolean {
     case 'hasBrainstorm': {
       const me2 = getMe(gv)
       const gy = Object.values(me2?.graveyard ?? {}).map((c) => String((c as { name?: unknown })?.name ?? '').toLowerCase())
-      const hand = Object.values(gv.myHand ?? gv.hand ?? {}).map((c) => String((c as { name?: unknown })?.name ?? '').toLowerCase())
+      const hand = Object.values(gv.myHand ?? {}).map((c) => String((c as { name?: unknown })?.name ?? '').toLowerCase())
       return (
         gy.includes('brainstorm') &&
         gy.includes('opt') &&
@@ -676,7 +676,7 @@ function runAssert(kind: AssertKind, gv: GameView): boolean {
           String((c as { name?: unknown })?.name ?? '').toLowerCase(),
         )
       const gy = names(me2?.graveyard)
-      const hand = names(gv.myHand ?? gv.hand)
+      const hand = names(gv.myHand)
       return (
         gy.includes('ponder') &&
         hand.includes('grizzly bears') &&
@@ -690,7 +690,7 @@ function runAssert(kind: AssertKind, gv: GameView): boolean {
         Object.values((o ?? {}) as Record<string, unknown>).map((c) =>
           String((c as { name?: unknown })?.name ?? '').toLowerCase(),
         )
-      const pool = [...names(gv.myHand ?? gv.hand), ...names(me2?.graveyard)]
+      const pool = [...names(gv.myHand), ...names(me2?.graveyard)]
       const revealed = ['grizzly bears', 'runeclaw bear', 'forest', 'mountain']
       return names(me2?.graveyard).includes('fact or fiction') && revealed.every((n) => pool.filter((x) => x === n).length === 1)
     }
@@ -1106,8 +1106,7 @@ function runAssert(kind: AssertKind, gv: GameView): boolean {
     }
     case 'hasFloatingMana': {
       const me2 = getMe(gv)
-      const pool = (me2 as { manaPool?: Record<string, number> })?.manaPool ?? {}
-      const total = Object.values(pool).reduce((a, b) => a + Number(b ?? 0), 0)
+      const total = Object.values(me2?.manaPool ?? {}).reduce((a, b) => a + Number(b ?? 0), 0)
       return total > 0 && Object.keys(gv.stack ?? {}).length === 0
     }
     case 'hasDayNight': {
@@ -1293,7 +1292,7 @@ function runAssert(kind: AssertKind, gv: GameView): boolean {
       // visible en la zona de compañero (RevealedView del rival).
       const me2 = getMe(gv)
       const myName = String((me2 as { name?: unknown })?.name ?? '')
-      const hand = Object.values(gv.myHand ?? gv.hand ?? {}).map((c) =>
+      const hand = Object.values(gv.myHand ?? {}).map((c) =>
         String((c as { name?: unknown })?.name ?? ''),
       )
       const rivalCompanion = (gv.companion ?? []).some((v) => {
@@ -1316,7 +1315,7 @@ function runAssert(kind: AssertKind, gv: GameView): boolean {
         return Object.keys((v as { cards?: Record<string, unknown> })?.cards ?? {})
       })[0]
       if (!myCompanionId) return false
-      const hand = Object.values(gv.myHand ?? gv.hand ?? {}).map((c) =>
+      const hand = Object.values(gv.myHand ?? {}).map((c) =>
         String((c as { name?: unknown })?.name ?? ''),
       )
       if (hand.some((n) => /lurrus/i.test(n))) return false

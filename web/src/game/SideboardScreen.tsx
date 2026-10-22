@@ -8,6 +8,8 @@ import type { SideboardCard } from '../state/state'
 import type { DeckCard } from '../lobby/decks'
 import { ArenaCardStrip } from '../decks/ArenaCardStrip'
 import Icon from '../ui/Icon'
+import ErrorBanner from '../ui/ErrorBanner'
+import { completeMainWithBasics } from './ConstructScreen'
 import type { CardStripMeta } from '../decks/ArenaCardStrip'
 import { validateDeckForFormat, type DeckValidationReport } from '../decks/formatRules'
 import type { DeckFormat, DeckV2 } from '../decks/types'
@@ -57,12 +59,13 @@ export default function SideboardScreen() {
   const timeLeft = useTickingTimer(screen?.timeLeft ?? 0, !!screen)
   const [busy, setBusy] = useState(false)
   const [submitted, setSubmitted] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
   const [hoverPreview, setHoverPreview] = useState<{ url: string; backUrl?: string | null; x: number; y: number; name?: string } | null>(null)
   const [mainFilter, setMainFilter] = useState('')
   const [sideFilter, setSideFilter] = useState('')
   const [isMainDragOver, setIsMainDragOver] = useState(false)
   const [isSideDragOver, setIsSideDragOver] = useState(false)
-  const submitRef = useRef<() => Promise<void>>(async () => {})
+  const submitRef = useRef<(autoComplete?: boolean) => Promise<void>>(async () => {})
   const autoSubmitArmRef = useRef<string | null>(null)
   const initialMainRef = useRef<DeckCard[]>([])
   const initialSideRef = useRef<DeckCard[]>([])
@@ -249,30 +252,36 @@ export default function SideboardScreen() {
     } catch {}
   }, [moveOneToSide])
 
-  const submitDeck = useCallback(async () => {
+  const minMain = screen?.limited ? 40 : 60
+
+  const submitDeck = useCallback(async (autoComplete = false) => {
     if (!screen || busy || submitted) return
+    const cards = autoComplete ? completeMainWithBasics(main, minMain, metaMap) : main
+    if (cards !== main) setMain(cards)
     setBusy(true)
+    setSubmitError(null)
     try {
       const deck = {
         name: screen.deckName,
-        cards: main,
+        cards,
         sideboard: side,
       }
       const result = await cmds.submitDeck(screen.tableId, deck)
       if (result.ok) {
-        // No limpiamos `sideboardScreen` aquí: el jugador se queda en esta
-        // pantalla mostrando "esperando al rival" hasta que llegue el próximo
-        // GAME_INIT (nueva partida del match) o un nuevo evento SIDEBOARD, que
-        // sí la limpian/reinicializan (ver events/game.ts y el efecto de arriba).
+        // We keep `sideboardScreen` here: the player stays on this screen showing
+        // "waiting for the opponent" until the next GAME_INIT (new game of the match)
+        // or a new SIDEBOARD event, which clear/reinitialise it (see events/game.ts and the effect above).
         setSubmitted(true)
         addLog('partida', t('game', 'sideboard_submit'))
       } else {
-        addLog('error', `${t('errors', 'send_failed')}: ${result.error ?? t('errors', 'generic_error')}`)
+        const message = `${t('errors', 'send_failed')}: ${result.error ?? t('errors', 'generic_error')}`
+        addLog('error', message)
+        setSubmitError(message)
       }
     } finally {
       setBusy(false)
     }
-  }, [screen, main, side, busy, submitted])
+  }, [screen, main, side, busy, submitted, metaMap, minMain])
 
   useEffect(() => { submitRef.current = submitDeck }, [submitDeck])
 
@@ -284,7 +293,7 @@ export default function SideboardScreen() {
     }
     if (timeLeft === 0 && screen.timeLeft > 0 && autoSubmitArmRef.current === screen.tableId) {
       autoSubmitArmRef.current = null
-      void submitRef.current()
+      void submitRef.current(true)
     }
   }, [timeLeft, screen?.tableId, submitted])
 
@@ -344,7 +353,6 @@ export default function SideboardScreen() {
 
   const mainTotal = main.reduce((s, c) => s + c.amount, 0)
   const sideTotal = side.reduce((s, c) => s + c.amount, 0)
-  const minMain = screen.limited ? 40 : 60
   const mainValid = mainTotal >= minMain
   const sideValid = validation.issues.filter((i) => i.type === 'sideboard_size').length === 0
   const timerPct = Math.max(0, (timeLeft / (screen.timeLeft || 1)) * 100)
@@ -530,6 +538,8 @@ export default function SideboardScreen() {
             ))}
           </div>
         )}
+
+        <ErrorBanner message={submitError} onClose={() => setSubmitError(null)} testId="sideboard-submit-error" />
 
         <div className="sideboard-footer">
           <div className="sideboard-counts">

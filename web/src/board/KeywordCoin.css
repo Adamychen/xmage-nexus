@@ -67,21 +67,41 @@
 }
 
 .kw-coin.kw-gained {
+  position: relative;
   animation: kwCoinGained calc(0.9s / var(--fx-speed, 1)) cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-@keyframes kwCoinGained {
-  0% { scale: 0.2; opacity: 0; box-shadow: 0 0 0 0 rgb(var(--kw-rgb) / 0.95); }
-  45% { scale: 1.45; opacity: 1; box-shadow: 0 0 0 5px rgb(var(--kw-rgb) / 0.5), 0 0 12px 3px rgb(var(--kw-rgb) / 0.9); }
-  100% { scale: 1; opacity: 1; box-shadow: 0 0 0 0 rgb(var(--kw-rgb) / 0); }
+.kw-coin.kw-gained::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: inherit;
+  box-shadow: 0 0 12px 3px rgb(var(--kw-rgb) / 0.9);
+  pointer-events: none;
+  opacity: 0;
+  animation: kwCoinGlow calc(0.9s / var(--fx-speed, 1)) ease-out;
 }
 
-html.fx-off .kw-coin.kw-gained {
+@keyframes kwCoinGained {
+  0% { transform: scale(0.2); opacity: 0; }
+  45% { transform: scale(1.45); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes kwCoinGlow {
+  0% { opacity: 0; }
+  45% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+html.fx-off .kw-coin.kw-gained,
+html.fx-off .kw-coin.kw-gained::after {
   animation: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .kw-coin.kw-gained {
+  .kw-coin.kw-gained,
+  .kw-coin.kw-gained::after {
     animation: none;
   }
 }

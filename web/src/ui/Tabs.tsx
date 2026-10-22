@@ -42,13 +42,14 @@ export default function Tabs<T extends string>({
 }: TabsProps<T>) {
   const listRef = useRef<HTMLDivElement>(null)
   const visible = items.filter((item) => !item.hidden)
+  const focusable = visible.find((item) => item.id === value && !item.disabled) ?? visible.find((item) => !item.disabled)
 
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     const enabled = visible.filter((item) => !item.disabled)
     const index = enabled.findIndex((item) => item.id === value)
     let next = -1
-    if (event.key === 'ArrowRight') next = (index + 1) % enabled.length
-    else if (event.key === 'ArrowLeft') next = (index - 1 + enabled.length) % enabled.length
+    if (event.key === 'ArrowRight') next = index < 0 ? 0 : (index + 1) % enabled.length
+    else if (event.key === 'ArrowLeft') next = index < 0 ? enabled.length - 1 : (index - 1 + enabled.length) % enabled.length
     else if (event.key === 'Home') next = 0
     else if (event.key === 'End') next = enabled.length - 1
     if (next < 0 || enabled.length === 0) return
@@ -71,7 +72,7 @@ export default function Tabs<T extends string>({
             id={idPrefix ? `${idPrefix}-tab-${item.id}` : undefined}
             aria-selected={selected}
             aria-controls={idPrefix ? `${idPrefix}-panel-${item.id}` : undefined}
-            tabIndex={selected ? 0 : -1}
+            tabIndex={item.id === focusable?.id ? 0 : -1}
             className={['ui-tab', item.label ? '' : 'ui-tab--icon', item.className].filter(Boolean).join(' ')}
             data-testid={item.testId}
             title={item.title}

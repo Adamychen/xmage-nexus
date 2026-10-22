@@ -91,6 +91,22 @@ describe('attachGateway — re-unión al reconectar', () => {
     expect(cmds.joinTournament).toHaveBeenCalledWith('t-persisted')
   })
 
+  it('after a reload 20 s after saving, the restored pick timeout is reduced by the elapsed time', async () => {
+    const events = await attachStub()
+    const now = vi.spyOn(Date, 'now').mockReturnValue(1_000_000)
+    saveActiveDraft({ draftId: 'draft-persisted', message: { draftView: { boosterNum: 1 }, draftPickView: { booster: {}, picks: {}, picking: true, timeout: 60 } } } as never, 't-persisted')
+    now.mockReturnValue(1_020_000)
+    setState({
+      conn: { serverHost: 'h', port: 1, username: 'u', password: 'x' },
+      phase: 'lobby',
+      draft: null,
+      tournament: null,
+    } as never)
+    await events.onOpen?.()
+    now.mockRestore()
+    expect(getState().draft?.message.draftPickView?.timeout).toBe(40)
+  })
+
   it('la instantánea en espera no habilita el pick (sin DRAFT_PICK fresco)', async () => {
     const events = await attachStub()
     saveActiveDraft(snapshot('draft-persisted', false))

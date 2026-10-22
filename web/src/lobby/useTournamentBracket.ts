@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
-import { useStore } from '../state/store'
+import { getState, useStore } from '../state/store'
 import * as cmds from '../net/commands'
 import type { TableView, TournamentView } from '../net/types'
-import { withTimeout } from './lobbyUtils'
+import { isMyTable, withTimeout } from './lobbyUtils'
 
-/** Ve una partida del torneo por su tableId (botón ojo del bracket, como el desktop). */
+/** Watches a tournament match by its tableId (the bracket's eye button, as in the desktop client). */
 export async function watchTournamentMatch(tableId: string): Promise<boolean> {
   try {
     const res = await withTimeout(cmds.watchTournamentTable(tableId), 15000, 'watchTournamentTable')
@@ -16,6 +16,7 @@ export async function watchTournamentMatch(tableId: string): Promise<boolean> {
 
 export function useTournamentBracket() {
   const tournamentState = useStore((s) => s.tournament)
+  const username = useStore((s) => s.conn?.username)
   const [bracketTable, setBracketTable] = useState<TableView | null>(null)
   const [bracketView, setBracketView] = useState<TournamentView | null>(null)
   const [bracketLoading, setBracketLoading] = useState(false)
@@ -23,17 +24,22 @@ export function useTournamentBracket() {
   const [watchingMatchId, setWatchingMatchId] = useState<string | null>(null)
   const [bracketTournamentId, setBracketTournamentId] = useState<string | null>(null)
 
-  /** El torneo cacheado en el store es de la mesa pedida (el usuario jugó/creó
-   *  ese torneo). Para mesas ajenas NO vale como fallback: pintar el torneo
-   *  propio en el cuadro de otro torneo es un bug (visto en vivo 2026-09-14). */
-  const isOwnTournament = (t: TableView): boolean =>
-    !!tournamentState && tournamentState.view?.tournamentName === t.tableName
+  /** A table is ours if it is a match of our tournament (its tableId is in the
+   *  rounds) or the tournament table we are seated at. Never by name: two
+   *  tournaments can share a name. For other people's tables the cached tournament
+   *  is NOT a fallback: drawing our own tournament in someone else's bracket is a
+   *  bug (seen live 2026-09-14). */
+  const isOwnTournament = (t: TableView): boolean => {
+    if (!tournamentState || !t.isTournament) return false
+    const playedHere = (tournamentState.view?.rounds ?? []).some((r) => r.games?.some((g) => g.tableId === t.tableId))
+    return playedHere || isMyTable(t, username)
+  }
 
   /**
-   * Abre el cuadro de la mesa. `tournamentId` explícito es la resolución
-   * tableId→tournamentId ya conocida (callback SHOW_TOURNAMENT). Si es un torneo
-   * ajeno sin resolver todavía, se dispara el watch y el lobby reabre con el id
-   * cuando llegue el callback (el server no resuelve ids de mesa).
+   * Opens the table's bracket. An explicit `tournamentId` is the tableId→tournamentId
+   * resolution already known (SHOW_TOURNAMENT callback). If it is someone else's
+   * tournament and still unresolved, the watch is triggered and the lobby reopens
+   * with the id when the callback arrives (the server does not resolve table ids).
    */
   const openBracket = async (t: TableView, tournamentId?: string) => {
     setBracketTable(t)
@@ -88,21 +94,27 @@ export function useTournamentBracket() {
     }
   }
 
+  const cachedOwnView = (tid: string): TournamentView | null => {
+    const cached = getState().tournament
+    return cached && cached.tournamentId === tid ? cached.view : null
+  }
+
   const refreshBracket = async () => {
     if (!bracketTable || !bracketTournamentId) return
     setBracketLoading(true)
     setBracketError(null)
     try {
-      void cmds.watchTournamentTable(bracketTable.tableId)
       const data = await withTimeout(cmds.getTournament(bracketTournamentId) as Promise<unknown>, 8000, 'getTournament')
       if (data && typeof data === 'object' && 'tournamentName' in (data as Record<string, unknown>)) {
         setBracketView(data as TournamentView)
-      } else if (bracketTournamentId === tournamentState?.tournamentId && tournamentState?.view) {
-        setBracketView(tournamentState.view)
+      } else {
+        const cached = cachedOwnView(bracketTournamentId)
+        if (cached) setBracketView(cached)
       }
     } catch (e) {
-      if (bracketTournamentId === tournamentState?.tournamentId && tournamentState?.view) {
-        setBracketView(tournamentState.view)
+      const cached = cachedOwnView(bracketTournamentId)
+      if (cached) {
+        setBracketView(cached)
       } else {
         setBracketError((e as Error).message)
       }
@@ -113,7 +125,7 @@ export function useTournamentBracket() {
 
   useEffect(() => {
     if (!bracketTable) return
-    // Solo el torneo propio cacheado corresponde a esta mesa; el ajeno no.
+    // Only our cached tournament belongs to this table; someone else's does not.
     if (tournamentState?.view && bracketTournamentId === tournamentState.tournamentId) {
       setBracketView(tournamentState.view)
     }
@@ -129,7 +141,7 @@ export function useTournamentBracket() {
 
   return {
     bracketTable, bracketView, bracketLoading, bracketError, bracketTournamentId,
-    canQuit: !!bracketTable && isOwnTournament(bracketTable),
+    canQuit: !!bracketTable && !!bracketTournamentId && bracketTournamentId === tournamentState?.tournamentId,
     openBracket, closeBracket, refreshBracket, watchMatch, watchingMatchId,
   }
 }

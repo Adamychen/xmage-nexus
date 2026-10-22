@@ -18,8 +18,9 @@ import { TABLE } from '../table-names'
 
 import type { FakeConn } from '../fake'
 import { makeBaseScenario } from '../fake'
+import type { Scenario } from '../fake'
 import { makeCard } from '../../src/__fixtures__/gameViews'
-import type { CardView, GameView, PlayerView } from '../../src/net/types'
+import type { GameView, PlayerView } from '../../src/net/types'
 import {
   GAME_ID, TABLE_ID, SIM_NAME, HUMAN_NAME, HUMAN_PLAYER_ID, SIM_PLAYER_ID,
 } from '../humanGameConstants'
@@ -51,15 +52,15 @@ export function learnScenario(): Scenario {
         rules: ['Search your library for a basic land card, reveal it, put it into your hand, then shuffle. You gain 2 life.'],
       }),
     },
-  }
+  } as unknown as PlayerView
   const sim: PlayerView = {
     playerId: SIM_PLAYER_ID, name: SIM_NAME, life: 20, controlled: false,
     isHuman: false, hasPriority: false, isActive: false, handCount: 7, libraryCount: 53,
     battlefield: {},
-  }
+  } as unknown as PlayerView
 
   const getGameView = (): GameView => ({
-    gameId, turn: 1, phase: 'POSTCOMBAT_MAIN', step: 'POSTCOMBAT_MAIN',
+    turn: 1, phase: 'POSTCOMBAT_MAIN', step: 'POSTCOMBAT_MAIN',
     activePlayerId: HUMAN_PLAYER_ID, priorityPlayerId: HUMAN_PLAYER_ID,
     players: [human, sim],
     myHand: {
@@ -67,7 +68,7 @@ export function learnScenario(): Scenario {
       'hand-bolt': makeCard({ id: 'hand-bolt', name: 'Lightning Bolt', displayName: 'Lightning Bolt', manaCostLeftStr: ['{R}'], manaValue: 1 }),
     },
     canPlayObjects: { objects: {} },
-  })
+  } as unknown as GameView)
 
   const emit = (method: string, data: unknown): void => {
     activeConn?.broadcast(method, data, gameId)

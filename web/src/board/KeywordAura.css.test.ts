@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest'
 import { AURA_KEYWORDS, auraKeyframes } from './keywordAura'
 
 const css = readFileSync(fileURLToPath(new URL('./KeywordAura.css', import.meta.url)), 'utf8')
+const coinCss = readFileSync(fileURLToPath(new URL('./KeywordCoin.css', import.meta.url)), 'utf8')
 
 const CSS_KEYWORDS = new Set([
   'none', 'infinite', 'alternate', 'alternate-reverse', 'linear', 'ease', 'ease-in', 'ease-out', 'ease-in-out',
@@ -18,8 +19,8 @@ function ruleBlock(selector: string): string {
   return match[1]
 }
 
-function keyframesBlocks(): Array<{ name: string; body: string }> {
-  return [...css.matchAll(/@keyframes\s+([\w-]+)\s*\{((?:[^{}]|\{[^{}]*\})*)\}/g)].map((m) => ({
+function keyframesBlocks(source: string = css): Array<{ name: string; body: string }> {
+  return [...source.matchAll(/@keyframes\s+([\w-]+)\s*\{((?:[^{}]|\{[^{}]*\})*)\}/g)].map((m) => ({
     name: m[1],
     body: m[2],
   }))
@@ -75,9 +76,9 @@ describe('KeywordAura.css', () => {
     }
   })
 
-  it('only animates transform and opacity inside keyframes', () => {
+  it.each([['KeywordAura.css', css], ['KeywordCoin.css', coinCss]])('only animates transform and opacity inside %s keyframes', (_file, source) => {
     const allowed = new Set(['transform', 'opacity'])
-    const blocks = keyframesBlocks()
+    const blocks = keyframesBlocks(source)
     expect(blocks.length).toBeGreaterThan(0)
     for (const { name, body } of blocks) {
       for (const inner of body.matchAll(/\{([^{}]*)\}/g)) {

@@ -213,6 +213,8 @@ export default function AppearanceSettingsModal({ onClose }: Props) {
               </Button>
             ))}
           </div>
+          <h4 className="appearance-section-title">{t('lobby', 'keyword_aura_title')}</h4>
+          <p className="appearance-section-hint">{t('lobby', 'keyword_aura_hint')}</p>
           <div className="board-layout-grid">
             {KEYWORD_AURA_MODES.map((mode) => (
               <Button

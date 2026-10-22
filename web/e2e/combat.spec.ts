@@ -4,6 +4,7 @@ import { test, expect } from './fixtures'
 import type { Page } from '@playwright/test'
 import { controlledPlayer, framesOf, lastGameView, opponentBattlefield, parseFrames } from './support/frames'
 import { quickStartGame } from './support/start-game'
+import { FAKE_MODE } from './dual'
 import { combatScenario } from '../fixtures/scenarios/combat'
 import { withFakeServer } from './support/fake-backend'
 import { retryTimingSpecInCi } from './support/timing'
@@ -58,8 +59,7 @@ test('combate determinista: el Sim lanza una criatura, ataca con todo y el daño
       tableName: TABLE.combat,
       // mazo humano solo tierras: la partida no avanza sola (nada que lanzar) y el
       // Sim (tierras + Raging Goblin) ataca; el helper pasa las prioridades
-      deck: DECK.lands,
-      simDeck: DECK.combatSim,
+      ...(FAKE_MODE ? {} : { deck: DECK.lands, simDeck: DECK.combatSim }),
     })
     void frames
 

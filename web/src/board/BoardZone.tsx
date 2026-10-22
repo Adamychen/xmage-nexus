@@ -108,26 +108,21 @@ export default function BoardZone({
     [boardFill, player, effectiveControlled, helperEmblems, statusSide],
   )
   const { cardW, ref: zoneRef } = useZoneScale(cardAspect, shares.tallest)
-  const creaturesBandRef = useDragScroll<HTMLDivElement>()
-  const permanentsBandRef = useDragScroll<HTMLDivElement>()
-  const marqueeRef = useDragScroll<HTMLDivElement>()
   const [creaturesBandEl, setCreaturesBandEl] = useState<HTMLDivElement | null>(null)
   const [permanentsBandEl, setPermanentsBandEl] = useState<HTMLDivElement | null>(null)
-  const setCreaturesBand = useCallback((node: HTMLDivElement | null) => {
-    creaturesBandRef.current = node
-    setCreaturesBandEl(node)
-  }, [creaturesBandRef])
-  const setPermanentsBand = useCallback((node: HTMLDivElement | null) => {
-    permanentsBandRef.current = node
-    setPermanentsBandEl(node)
-  }, [permanentsBandRef])
+  const [marqueeEl, setMarqueeEl] = useState<HTMLDivElement | null>(null)
+  const setCreaturesBand = useCallback((node: HTMLDivElement | null) => setCreaturesBandEl(node), [])
+  const setPermanentsBand = useCallback((node: HTMLDivElement | null) => setPermanentsBandEl(node), [])
+  useDragScroll(creaturesBandEl)
+  useDragScroll(permanentsBandEl)
+  useDragScroll(marqueeEl)
   useBandFit(creaturesBandEl, cardW, compactPod, cardAspect)
   useBandFit(permanentsBandEl, cardW, compactPod, cardAspect)
   useTapFlip(permanentsBandEl)
   const gameId = useStore((s) => s.gameId)
   const gamePlayers = useStore((s) => s.game?.players)
   const gameCycle = useStore((s) => s.game?.gameCycle)
-  const bandEls = [permanentsBandEl, creaturesBandEl]
+  const bandEls = useMemo(() => [permanentsBandEl, creaturesBandEl], [permanentsBandEl, creaturesBandEl])
   useUntapWave(bandEls, tiltedTaps)
   useTokenPop(bandEls, player)
   useBattlefieldDissolve(bandEls, gameId, player, { players: gamePlayers, gameCycle })
@@ -167,6 +162,7 @@ export default function BoardZone({
     }
     return busy
   }, [combatSelectableSet, combatChosenSet, attackingSet, blockingSet])
+  const stackExcludedIds = useMemo(() => new Set([...busyIds, ...targetIds]), [busyIds, targetIds])
 
   const finalHand = useMemo((): CardsView => {
     if (!player) return {}
@@ -322,16 +318,15 @@ export default function BoardZone({
     const isAttacking = attackingSet.has(id)
     const isBlocking = blockingSet.has(id) || (isChosen && combatMode === 'block')
     const isTapped = perm.tapped === true || (isAttacking && !hasVigilance(perm))
-    const attachments = perm.attachments ?? []
+    const attachments = (perm.attachments ?? []).filter((attId) => battlefield[attId])
     const mutateParts = perm.mutated
-      ? (Object.values(perm.mutateView?.cards ?? {}).filter(Boolean) as CardView[])
+      ? Object.entries(perm.mutateView?.cards ?? {}).filter(([partId, part]) => part && partId !== id).map(([, part]) => part as CardView)
       : []
 
     const renderAttachments = (offsetPx = 0) => (
       <div className="attachments-list">
         {attachments.map((attId, ai) => {
           const attCard = battlefield[attId]
-          if (!attCard) return null
           return (
             <CardSlot
               key={attId}
@@ -344,6 +339,7 @@ export default function BoardZone({
               className="attachment-subcard"
               compact={compactCards}
               showManaSource={showManaSource}
+              keywordAura
               style={{ left: `calc(${offsetPx}px + ${ai + 1} * var(--attach-step))`, zIndex: attachments.length - ai }}
             />
           )
@@ -368,6 +364,7 @@ export default function BoardZone({
                 key={part.id ?? `mp-${mi}`}
                 card={part}
                 className="mutate-part"
+                keywordAura
                 compact={compactCards}
                 showManaSource={showManaSource}
                 style={{ left: `${(mi + 1) * 12}px`, top: `${(mi + 1) * 6}px` }}
@@ -451,9 +448,9 @@ export default function BoardZone({
     )
   }
 
-  const { groups: landGroups, solos: landSolos } = groupStackables(lands, 'lands')
-  const { groups: tokenGroups, solos: otherSolos } = groupStackables(restOthers, 'other')
-  const { groups: creatureTokenGroups, solos: creatureSolos } = groupStackables(creatures, 'creatures', { busyIds })
+  const { groups: landGroups, solos: landSolos } = groupStackables(lands, 'lands', { excludeIds: stackExcludedIds })
+  const { groups: tokenGroups, solos: otherSolos } = groupStackables(restOthers, 'other', { excludeIds: stackExcludedIds })
+  const { groups: creatureTokenGroups, solos: creatureSolos } = groupStackables(creatures, 'creatures', { excludeIds: stackExcludedIds })
 
   const renderStackGroup = (group: StackGroup, isCreature: boolean) => (
     <StackPile
@@ -461,6 +458,7 @@ export default function BoardZone({
       className={`stack-group${group.kind === 'land' ? ' land-group' : ''} stack-group--${group.kind}`}
       name={group.name}
       count={group.items.length}
+      cardIds={group.items.map(([id]) => id)}
       landName={group.kind === 'land' ? group.name : undefined}
     >
       {group.items.map(([id, perm]) => renderCardItem(id, perm, isCreature))}
@@ -592,7 +590,7 @@ export default function BoardZone({
         {creatureSolos.map(([id, perm]) => renderCardItem(id, perm, true))}
       </div>
       {marqueeEntries.length > 0 && (
-        <div ref={marqueeRef} className="bz-marquee oz-marquee pz-marquee">
+        <div ref={setMarqueeEl} className="bz-marquee oz-marquee pz-marquee">
           {marqueeEntries.map(([id, perm]) => renderCardItem(id, perm, false))}
         </div>
       )}

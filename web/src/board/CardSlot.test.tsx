@@ -1,6 +1,6 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
 import { act, StrictMode } from 'react'
-import { fireEvent, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import CardSlot from './CardSlot'
 import type { PermanentView } from '../net/types'
 import type { FeedbackPrompt } from '../game/feedback'
@@ -16,6 +16,10 @@ vi.mock('./cardPositionRegistry', () => ({
 vi.mock('../cards/cardImages', async (importOriginal) => {
   const mod = await importOriginal<typeof import('../cards/cardImages')>()
   return { ...mod, awaitImageUrl: vi.fn(async () => 'https://img.test/art.jpg') }
+})
+
+afterEach(() => {
+  cleanup()
 })
 
 describe('CardSlot face-down permanents', () => {
@@ -1001,7 +1005,8 @@ describe('CardSlot keyword aura', () => {
       ],
     })
     const { container } = render(<CardSlot card={card} keywordAura />)
-    expect(container.querySelectorAll('.keyword-badge')).toHaveLength(5)
+    expect(container.querySelectorAll('.keyword-badge:not(.keyword-badge-more)')).toHaveLength(5)
+    expect(container.querySelector('.keyword-badge-more')?.textContent).toBe('+1')
     expect(container.querySelector('[data-kw-aura]')?.getAttribute('data-kw-aura')).toBe('indestructible')
   })
 
@@ -1022,5 +1027,22 @@ describe('CardSlot keyword aura', () => {
     rerender(<CardSlot card={creature({ rules: ['Flying'] })} keywordAura />)
     expect(container.querySelector('.kw-coin.kw-flying')?.classList.contains('kw-gained')).toBe(true)
     expect(container.querySelector('.kw-aura-flare.kw-aura-flare--flying')).not.toBeNull()
+  })
+})
+
+describe('CardSlot keyword overflow', () => {
+  it('counts every keyword past the five badges shown in the +N badge', () => {
+    const icons = ['ABILITY_FLYING', 'ABILITY_DEATHTOUCH', 'ABILITY_LIFELINK', 'ABILITY_DOUBLE_STRIKE', 'ABILITY_FIRST_STRIKE', 'ABILITY_TRAMPLE', 'ABILITY_HEXPROOF']
+    const card = {
+      id: 'k7',
+      name: 'Many Keywords',
+      cardTypes: ['Creature'],
+      power: '2',
+      toughness: '2',
+      cardIcons: icons.map((cardIconType) => ({ cardIconType, hint: cardIconType })),
+    } as unknown as PermanentView
+    const { container } = render(<CardSlot card={card} />)
+    expect(container.querySelectorAll('.keyword-badge:not(.keyword-badge-more)')).toHaveLength(5)
+    expect(container.querySelector('.keyword-badge-more')?.textContent).toBe('+2')
   })
 })

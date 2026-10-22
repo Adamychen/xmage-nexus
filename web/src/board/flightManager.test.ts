@@ -176,6 +176,21 @@ describe('flightManager', () => {
     expect(landed).toHaveBeenCalledTimes(1)
   })
 
+  it('a redirect lands on the original schedule, not a full duration after the redirect', () => {
+    const landed = vi.fn()
+    const flightId = startCardFlight(dummyCard, fromRect, toRect, 1000)
+    onFlightLanded(flightId!, landed)
+
+    vi.advanceTimersByTime(400)
+    const altDest = { ...toRect, left: 700, top: 100 } as DOMRect
+    expect(startCardFlight(dummyCard, fromRect, altDest, 1000)).toBe(flightId)
+
+    vi.advanceTimersByTime(919)
+    expect(landed).not.toHaveBeenCalled()
+    vi.advanceTimersByTime(1)
+    expect(landed).toHaveBeenCalledTimes(1)
+  })
+
   it('keeps landed listeners when a burst chains onto the flight', () => {
     const landed = vi.fn()
     const firstId = startCardFlight(dummyCard, fromRect, toRect, 500)

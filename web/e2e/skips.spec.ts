@@ -65,7 +65,7 @@ test('skips: teclas F + menú ▾ envían PASS_PRIORITY_* y marcan el skip activ
     const { pageErrors, frames: sessionFrames, helper: sessionHelper } = await quickStartGame(page, {
       prefix: 'skips',
       tableName: TABLE.skips,
-      ...(FAKE_MODE ? { deck: DECK.lands, simDeck: DECK.aiLands } : {}),
+      ...(FAKE_MODE ? {} : { deck: DECK.lands, simDeck: DECK.aiLands }),
     })
 
     // el toggle ▾ existe cuando hay jugador controlado (ambos modos)

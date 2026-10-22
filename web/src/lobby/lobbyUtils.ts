@@ -190,6 +190,10 @@ export function isUserInGame(infoGames?: string | null): boolean {
   return /Match:|Sideb:|Draft:|Const:|Tourn:/.test(infoGames)
 }
 
+export function tableOwnerName(t: TableView): string {
+  return (t.controllerName ?? '').split(',')[0].trim()
+}
+
 /** Comprueba si el usuario conectado es el creador o un jugador de la mesa. */
 export function isMyTable(table: TableView, username?: string, stagingTableId?: string | null): boolean {
   if (!table) return false
@@ -197,7 +201,7 @@ export function isMyTable(table: TableView, username?: string, stagingTableId?: 
   if (!username) return false
   const norm = username.trim().toLowerCase()
   if (!norm) return false
-  const isOwner = (table.controllerName ?? '').toLowerCase().includes(norm)
+  const isOwner = tableOwnerName(table).toLowerCase() === norm
   const isSeated = table.seats?.some((s) => s.playerName?.toLowerCase() === norm) ?? false
   return isOwner || isSeated
 }

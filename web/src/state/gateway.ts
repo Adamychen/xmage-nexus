@@ -7,10 +7,12 @@ import { saveConn, loadActiveGame, clearActiveGame, loadActiveDraft, clearActive
 import { resetGameEventOrder } from './gameUtils'
 import { t } from '../i18n'
 import { versionMismatchOf, type VersionMismatch } from '../net/versionMismatch'
+import { cancelTournamentPanelJoin } from './events/tournament'
 import type { ProxyMessage, ServerLinkEnvelope } from '../net/types'
 
 let gateway: Gateway | null = null
 let activeAttempt = 0
+let reloginEpoch = 0
 let inFlight: { key: string; promise: Promise<void> } | null = null
 
 /** "Already connected" retries: the server may still hold the account's previous session
@@ -65,7 +67,7 @@ const RELOGIN_BASE_DELAY_MS = 1500
  *  login (`already connected` while the old session is still closing,
  *  `WARMING_UP` after a restart) instead of leaving an open socket where every
  *  command answers NOT_AUTHORIZED. */
-async function relogin(g: Gateway, conn: ConnectionInfo, attempt: number): Promise<void> {
+async function relogin(g: Gateway, conn: ConnectionInfo, attempt: number, epoch: number): Promise<void> {
   const res = await cmds.connect(
     conn.serverHost,
     conn.port,
@@ -75,7 +77,7 @@ async function relogin(g: Gateway, conn: ConnectionInfo, attempt: number): Promi
     conn.avatarId,
     g.resumeToken(),
   )
-  if (gateway !== g) return
+  if (gateway !== g || epoch !== reloginEpoch) return
   if (res.ok) {
     setState({ link: 'ok', linkAttempt: 0 })
     if (!isAttached(res.data)) resetGameEventOrder()
@@ -104,10 +106,10 @@ async function relogin(g: Gateway, conn: ConnectionInfo, attempt: number): Promi
   setState({ link: 'relogin-retry', linkAttempt: attempt + 1 })
   addLog('conexión', `re-login fallido (${res.error ?? res.errorCode ?? '?'}): reintento ${attempt + 1}`)
   await new Promise((r) => setTimeout(r, Math.min(RELOGIN_BASE_DELAY_MS * 2 ** attempt, 15000)))
-  if (gateway !== g || !g.isOpen) return
+  if (gateway !== g || epoch !== reloginEpoch || !g.isOpen) return
   const s = getState()
   if (!s.conn || s.phase === 'idle' || s.phase === 'connecting') return
-  await relogin(g, s.conn, attempt + 1)
+  await relogin(g, s.conn, attempt + 1, epoch)
 }
 
 /** The proxy lost the XMage server and logs the session in again by itself:
@@ -201,11 +203,12 @@ export function attachGateway(g: Gateway) {
   g.events.onMessage = dispatch
   g.events.onOpen = async () => {
     const s = getState()
+    const epoch = ++reloginEpoch
     setState({ connecting: false, wsAlive: true, error: null })
-    if (s.conn && s.phase !== 'connecting') {
+    if (s.conn && s.phase !== 'idle' && s.phase !== 'connecting') {
       addLog('conexión', 'reconectado: re-logueando…')
       setState({ link: 'relogging', linkAttempt: 0 })
-      await relogin(g, s.conn, 0)
+      await relogin(g, s.conn, 0, epoch)
     }
   }
   g.events.onPageHide = () => {
@@ -234,7 +237,13 @@ export function getGateway(): Gateway | null {
 }
 
 export function proxyUrl(wsHost: string, proxyPort: number): string {
-  return wsHost.includes('://') ? wsHost : `ws://${wsHost}:${proxyPort}`
+  if (wsHost.includes('://')) return wsHost
+  const bracketed = /^\[([^\]]+)\](?::(\d+))?$/.exec(wsHost)
+  if (bracketed) return `ws://[${bracketed[1]}]:${bracketed[2] ?? proxyPort}`
+  if ((wsHost.match(/:/g) ?? []).length > 1) return `ws://[${wsHost}]:${proxyPort}`
+  const hostPort = /^([^:]+):(\d+)$/.exec(wsHost)
+  if (hostPort) return `ws://${hostPort[1]}:${hostPort[2]}`
+  return `ws://${wsHost}:${proxyPort}`
 }
 
 export function doConnect(
@@ -279,6 +288,7 @@ async function runConnect(
   const conn: ConnectionInfo = { wsHost, proxyPort, serverHost, port, username, password, flagName, avatarId }
   setState({ phase: 'connecting', conn, connecting: true, error: null, link: 'ok', linkAttempt: 0, loginRetry: null })
   detachGateway()
+  cancelTournamentPanelJoin()
   const g = new Gateway()
   attachGateway(g)
   cmds.setGateway(g)
@@ -288,6 +298,7 @@ async function runConnect(
     await g.connect(url)
   } catch (e) {
     if (stale()) return
+    detachGateway()
     setState({ phase: 'idle', connecting: false, error: `no se pudo conectar al proxy en ${url}: ${(e as Error).message}` })
     return
   }
@@ -336,6 +347,7 @@ async function runConnect(
 export function reset() {
   activeAttempt++
   inFlight = null
+  cancelTournamentPanelJoin()
   gateway?.close()
   saveConn(null)
   clearResumeToken()

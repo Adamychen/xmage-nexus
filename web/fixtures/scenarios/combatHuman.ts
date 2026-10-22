@@ -25,6 +25,7 @@ export function combatHumanBlockScenario() {
     myBattle: ['Raging Goblin'],
     simBattle: ['Raging Goblin'],
     simAttack: true,
+    simCombatDamage: 1,
     humanBlock: true,
   })
   return game.scenario()

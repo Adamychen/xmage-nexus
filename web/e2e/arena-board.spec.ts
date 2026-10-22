@@ -9,6 +9,8 @@ fakeOnly()
 
 const SHOTS_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), 'shots')
 
+type Rect = { x: number; y: number; width: number; height: number }
+
 const RECT_OF =
   'const rectOf = (el) => { const r = el.getBoundingClientRect(); return { x: r.x, y: r.y, width: r.width, height: r.height } };'
 
@@ -80,7 +82,7 @@ test('arena layout: mi campo a ancho completo, rivales en columnas, mano overlay
   // mano overlay presente y anclada al fondo del tablero
   const bar = page.locator('[data-testid="hand-bar"]')
   await expect(bar).toBeVisible()
-  const boxes = await page.evaluate(`${RECT_OF}
+  const boxes = await page.evaluate<{ bar: Rect; board: Rect; zone: Rect }>(`${RECT_OF}
     (() => {
       const bar = document.querySelector('[data-testid="hand-bar"]')
       const board = document.querySelector('[data-testid="arena-board"]')

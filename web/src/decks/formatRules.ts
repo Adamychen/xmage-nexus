@@ -246,9 +246,9 @@ const MAX_COPIES_OVERRIDES: Record<string, number> = {
   'templar knight': Infinity,
 }
 
-/** Minúsculas y sin diacríticos ("Nazgûl" de Scryfall = "Nazgul" de XMage). */
+/** Minúsculas, sin diacríticos ("Nazgûl" de Scryfall = "Nazgul" de XMage) y con apóstrofe recto. */
 function foldCardName(name: string): string {
-  return name.trim().normalize('NFD').replace(/\p{M}+/gu, '').toLowerCase()
+  return name.trim().replace(/[’']/g, "'").normalize('NFD').replace(/\p{M}+/gu, '').toLowerCase()
 }
 
 /** Máximo de copias de una carta en un formato con `defaultMax` por carta. */
@@ -480,11 +480,11 @@ export function validateDeckForFormat(
   // 2. Count combined copies per card name
   const combinedCounts = new Map<string, number>()
   for (const c of deck.cards) {
-    const name = c.cardName
+    const name = foldCardName(c.cardName)
     combinedCounts.set(name, (combinedCounts.get(name) ?? 0) + c.amount)
   }
   for (const c of deck.sideboard) {
-    const name = c.cardName
+    const name = foldCardName(c.cardName)
     combinedCounts.set(name, (combinedCounts.get(name) ?? 0) + c.amount)
   }
 
@@ -515,6 +515,7 @@ export function validateDeckForFormat(
           })
         }
       }
+      if (metas.some((meta) => !meta)) commanderColors = null
       if (metas[0] && isBackgroundCard(metas[0]) && commanders.length === 1) {
         issues.push({
           type: 'commander',
@@ -546,7 +547,7 @@ export function validateDeckForFormat(
   const allCards = [...deck.cards, ...deck.sideboard]
   for (const c of allCards) {
     const name = c.cardName
-    const count = combinedCounts.get(name) ?? 0
+    const count = combinedCounts.get(foldCardName(name)) ?? 0
     const meta = metaMap.get(`${c.setCode}/${c.cardNumber}`) ?? metaMap.get(name.toLowerCase())
     const cardKey = `${c.setCode}:${c.cardNumber}:${name}`
 

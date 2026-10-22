@@ -50,6 +50,10 @@ class FakeWebSocket {
     this.readyState = FakeWebSocket.OPEN
     this.onopen?.()
   }
+
+  triggerMessage(data: string) {
+    this.onmessage?.({ data })
+  }
 }
 
 describe('doConnect — intentos concurrentes', () => {
@@ -191,7 +195,29 @@ describe('doConnect — intentos concurrentes', () => {
     FakeWebSocket.instances[0].triggerOpen()
     await vi.advanceTimersByTimeAsync(100)
     await done
+    FakeWebSocket.instances[0].triggerMessage(JSON.stringify({ type: 'connected', message: 'Connected (attached to existing session)' }))
     expect(gameEventOrder('g-1', 5)).toBe('older')
+  })
+
+  it('a first connect the proxy never answered does not log in by itself when the socket comes back', async () => {
+    const failed = doConnect('localhost', 8787, 'localhost', 17171, 'u', 'p')
+    await vi.advanceTimersByTimeAsync(6000)
+    await failed
+    expect(getState().phase).toBe('idle')
+    FakeWebSocket.instances[0].triggerOpen()
+    await vi.advanceTimersByTimeAsync(100)
+    expect(cmds.connect).not.toHaveBeenCalled()
+    expect(getState().phase).toBe('idle')
+  })
+
+  it('a first connect that failed stops reconnecting', async () => {
+    const failed = doConnect('localhost', 8787, 'localhost', 17171, 'u', 'p')
+    await vi.advanceTimersByTimeAsync(6000)
+    await failed
+    FakeWebSocket.instances[0].onclose?.({ code: 1006 })
+    await vi.advanceTimersByTimeAsync(60_000)
+    expect(FakeWebSocket.instances).toHaveLength(1)
+    expect(cmds.connect).not.toHaveBeenCalled()
   })
 
   it('an automatic WS reconnect that lands on a new XMage session resets the game event order', async () => {

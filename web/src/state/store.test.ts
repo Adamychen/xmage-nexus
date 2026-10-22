@@ -170,15 +170,18 @@ describe('handleMessage', () => {
     expect(getState().game).toBe(newer)
   })
 
-  it('a re-attach (`connected`) mid-game keeps the board and accepts the rejoin replay', () => {
+  it('a re-attach (`connected`) mid-game keeps the board and the event order of the same XMage session', () => {
     const blockers = makeGameView({ turn: 6, phase: 'COMBAT', step: 'DECLARE_BLOCKERS' })
     const extraCombat = makeGameView({ turn: 6, phase: 'COMBAT', step: 'BEGIN_COMBAT' })
+    const newer = makeGameView({ turn: 6, phase: 'COMBAT', step: 'DECLARE_ATTACKERS' })
     handleMessage({ type: 'event', method: 'GAME_UPDATE', messageId: 400, objectId: 'g-1', data: blockers })
     handleMessage({ type: 'connected', message: 'Connected (attached to existing session)' })
     expect(getState().phase).toBe('game')
     expect(getState().game).toBe(blockers)
     handleMessage({ type: 'event', method: 'GAME_UPDATE', messageId: 3, objectId: 'g-1', data: extraCombat })
-    expect(getState().game).toBe(extraCombat)
+    expect(getState().game).toBe(blockers)
+    handleMessage({ type: 'event', method: 'GAME_UPDATE', messageId: 401, objectId: 'g-1', data: newer })
+    expect(getState().game).toBe(newer)
   })
 
   it('a GAME_INIT of a new server session re-bases the order: its low ids are not dropped as stale', () => {

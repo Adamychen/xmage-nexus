@@ -17,7 +17,7 @@ import Icon from '../ui/Icon'
 import ErrorBanner from '../ui/ErrorBanner'
 import MatchesSection from './MatchesSection'
 import { t as tStatic, translateError } from '../i18n'
-import { useTranslation } from '../i18n'
+import { useTranslation, plural } from '../i18n'
 import { setState } from '../state/state'
 import LobbyHeader from './LobbyHeader'
 import { LobbyMobileNav } from './LobbySidebar'
@@ -442,7 +442,7 @@ export default function LobbyScreen() {
             <div className="debug-drawer-panel panel">
               <div className="debug-drawer-header">
                 <h3>{t('lobby','debug_ws_log')}</h3>
-                <span className="debug-count">{events.length === 1 ? t('game','feed_events_one') : t('game','feed_events', { count: events.length })}</span>
+                <span className="debug-count">{plural('game', 'feed_events', events.length)}</span>
               </div>
               <ul className="events-list">
                 {events.slice(-50).map((e, i) => (

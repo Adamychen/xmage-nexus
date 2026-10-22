@@ -155,20 +155,20 @@ async function payManaInner(page: Page, helper: HumanHelper, fromIndex?: number)
   throw new Error('no se pudo pagar el maná del hechizo')
 }
 
-const PAYMENT_SETTLED_METHODS = new Set(['GAME_SELECT', 'GAME_OVER', 'END_GAME_INFO'])
+const PAYMENT_SETTLED_METHODS = new Set(['GAME_SELECT', 'GAME_TARGET', 'GAME_CHOOSE_ABILITY', 'GAME_GET_AMOUNT', 'GAME_ASK', 'GAME_OVER', 'END_GAME_INFO'])
 
-/** Índice del siguiente GAME_PLAY_MANA desde `cursor`, o -1 si el pago terminó.
- *  En real se espera la ventana completa de 5 s. En fake el servidor resuelve en
- *  el mismo tick: un frame de resolución seguido de 300 ms sin otro ask cierra el
- *  pago (esperar 5 s fijos por Bolt dominaba best-of/defeat). */
+/** Sequence number of the next GAME_PLAY_MANA from `cursor`, or -1 if the payment ended.
+ *  In real it waits the full 5 s window. In fake the server resolves in the same tick: a
+ *  settling frame followed by 300 ms without another ask closes the payment (waiting 5 s
+ *  for every Bolt dominated best-of/defeat). */
 async function nextManaAsk(page: Page, cursor: number): Promise<number> {
   const deadline = Date.now() + 5_000
   let settledAt = 0
   while (Date.now() < deadline) {
-    const parsed = parseFrames(framesOf(page))
-    for (let j = Math.min(cursor, parsed.length); j < parsed.length; j++) {
-      if (parsed[j].method === 'GAME_PLAY_MANA') return j
-      if (FAKE_MODE && !settledAt && PAYMENT_SETTLED_METHODS.has(String(parsed[j].method))) settledAt = Date.now()
+    for (const frame of parseFrames(framesOf(page))) {
+      if ((frame.seq ?? 0) < cursor) continue
+      if (frame.method === 'GAME_PLAY_MANA') return frame.seq ?? 0
+      if (FAKE_MODE && !settledAt && PAYMENT_SETTLED_METHODS.has(frame.method)) settledAt = Date.now()
     }
     if (settledAt && Date.now() - settledAt >= 300) return -1
     await new Promise((r) => setTimeout(r, 100))

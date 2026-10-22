@@ -1,8 +1,10 @@
 import { describe, it, expect, vi } from 'vitest'
+import { act, renderHook, waitFor } from '@testing-library/react'
 import {
   scryfallCardImage,
   scryfallCardBackImage,
   scryfallCardArtCrop,
+  useScryfallSearch,
   type ScryfallSearchCard,
 } from './scryfallSearch'
 
@@ -137,5 +139,26 @@ describe('scryfallSearch', () => {
     expect(String(fetchSpy.mock.calls[0][0])).toContain('lang%3Aes')
     fetchSpy.mockRestore()
   })
-})
 
+  it('loadMore keeps the lang:any fallback of page 1 when the localized query is empty (item 7)', async () => {
+    const bolt = { id: 'bolt', name: 'Lightning Bolt', set: 'm10', collector_number: '146', cmc: 1, type_line: 'Instant', colors: ['R'], color_identity: ['R'] } as ScryfallSearchCard
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockImplementation(async (input) => {
+      const url = String(input)
+      const body = url.includes('lang%3Aes')
+        ? { data: [], has_more: false }
+        : url.includes('page=2')
+          ? { data: [{ ...bolt, id: 'bolt-2' }], has_more: false }
+          : { data: [bolt], has_more: true }
+      return { ok: true, status: 200, json: async () => body } as any
+    })
+
+    const { result } = renderHook(() => useScryfallSearch('Relámpago', 'es', 0))
+    await waitFor(() => expect(result.current.cards.map((c) => c.id)).toEqual(['bolt']))
+    expect(result.current.hasMore).toBe(true)
+
+    await act(() => result.current.loadMore())
+    expect(result.current.cards.map((c) => c.id)).toEqual(['bolt', 'bolt-2'])
+    expect(String(fetchSpy.mock.calls.at(-1)![0])).toContain('lang%3Aany')
+    fetchSpy.mockRestore()
+  })
+})

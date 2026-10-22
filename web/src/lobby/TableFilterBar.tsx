@@ -7,7 +7,7 @@ import Checkbox from '../ui/Checkbox'
 import type { TableView } from '../net/types'
 import Icon, { type IconName } from '../ui/Icon'
 import { useTranslation } from '../i18n'
-import { isMyTable } from './lobbyUtils'
+import { isMyTable, tableOwnerName } from './lobbyUtils'
 import './TableFilterBar.css'
 
 export interface TableFilters {
@@ -44,14 +44,10 @@ export const INITIAL_TABLE_FILTERS: TableFilters = {
   sort: 'desktop',
 }
 
-export function tableOwnerName(t: TableView): string {
-  return (t.controllerName ?? '').split(',')[0].trim()
-}
-
 /**
- * Normaliza pares mutuamente excluyentes (filtros guardados de versiones
- * anteriores podían traer ambos a true y garantizaban lista vacía).
- * En conflicto gana el "Only", que es el más específico.
+ * Normalizes mutually exclusive pairs (filters saved by earlier versions could
+ * carry both flags set to true, which guaranteed an empty list).
+ * On conflict the "Only" filter wins, since it is the more specific one.
  */
 export function sanitizeTableFilters(f: TableFilters): TableFilters {
   const next = { ...f }

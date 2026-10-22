@@ -1,22 +1,24 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, render } from '@testing-library/react'
+import { cleanup, render, act } from '@testing-library/react'
+import { useState } from 'react'
 import { useDragScroll } from './useDragScroll'
 
 if (typeof window.PointerEvent === 'undefined') {
   window.PointerEvent = window.MouseEvent as any
 }
 
-function TestBand() {
-  const ref = useDragScroll<HTMLDivElement>()
-  return (
+function TestBand({ mounted = true }: { mounted?: boolean }) {
+  const [band, setBand] = useState<HTMLDivElement | null>(null)
+  useDragScroll<HTMLDivElement>(band)
+  return mounted ? (
     <div
-      ref={ref}
+      ref={setBand}
       data-testid="band"
       style={{ width: 200, overflowX: 'auto' }}
     >
       <div style={{ width: 600 }}>Inner content</div>
     </div>
-  )
+  ) : null
 }
 
 describe('useDragScroll', () => {
@@ -103,5 +105,36 @@ describe('useDragScroll', () => {
     band.dispatchEvent(wheelEvt)
 
     expect(band.scrollLeft).toBe(45)
+  })
+
+  it('wires up a band that mounts after the first render', () => {
+    const { queryByTestId, rerender } = render(<TestBand mounted={false} />)
+    expect(queryByTestId('band')).toBeNull()
+    rerender(<TestBand mounted />)
+    const band = queryByTestId('band')!
+    Object.defineProperty(band, 'clientWidth', { value: 200, configurable: true })
+    Object.defineProperty(band, 'scrollWidth', { value: 600, configurable: true })
+    Object.defineProperty(band, 'scrollLeft', { value: 0, writable: true, configurable: true })
+
+    const wheel = new WheelEvent('wheel', { deltaY: 45, deltaX: 0, cancelable: true })
+    act(() => {
+      band.dispatchEvent(wheel)
+    })
+    expect(wheel.defaultPrevented).toBe(true)
+    expect(band.scrollLeft).toBe(45)
+  })
+
+  it('detaches from a band that unmounts', () => {
+    const { queryByTestId, rerender } = render(<TestBand />)
+    const band = queryByTestId('band')!
+    Object.defineProperty(band, 'clientWidth', { value: 200, configurable: true })
+    Object.defineProperty(band, 'scrollWidth', { value: 600, configurable: true })
+    Object.defineProperty(band, 'scrollLeft', { value: 0, writable: true, configurable: true })
+    rerender(<TestBand mounted={false} />)
+
+    const wheel = new WheelEvent('wheel', { deltaY: 45, deltaX: 0, cancelable: true })
+    band.dispatchEvent(wheel)
+    expect(wheel.defaultPrevented).toBe(false)
+    expect(band.scrollLeft).toBe(0)
   })
 })

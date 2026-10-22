@@ -13,11 +13,12 @@ Orchestrator: `node scripts/test.mjs [layer...] [--skip=unit,e2e]`.
 | `java` | Maven/JUnit | `mvn -f Mage.Proxy/pom.xml test` (needs the fork artifacts in `~/.m2`) | no (uses local `.m2`) |
 | `self-test` | headless WS | `node scripts/self-test.mjs` | yes |
 | `human-test` | WS driver | `node scripts/human-test.mjs` | yes |
-| `verify` | 9 anti-drift scripts | `verify-player-leave` (runs first: it is the most sensitive), `multi-tenant-test`, `verify-wizard-matrix`, `verify-hand-permission`, `verify-spectator-end`, `verify-range-attack`, `verify-rollback-vote`, `verify-swiss`, `verify-tournament-watch` — the list lives in `VERIFY_SCRIPTS` in `scripts/test.mjs` | yes |
+| `verify` | 10 anti-drift scripts | `verify-player-leave` (runs first: it is the most sensitive), `multi-tenant-test`, `verify-wizard-matrix`, `verify-hand-permission`, `verify-spectator-end`, `verify-range-attack`, `verify-rollback-vote`, `verify-swiss`, `verify-tournament-watch`, `verify-report` (runs last) — the list lives in `VERIFY_SCRIPTS` in `scripts/test.mjs` | yes |
 | `verify-restart` | reconnect check | `node scripts/verify-reconnect.mjs` — restarts the proxy, so it runs alone | yes |
 | `fuzz` | self-play soak | `node scripts/fuzz.mjs` (20 games by default; nightly, not per push) | yes |
 | `e2e` | Playwright | `npm --prefix web run test:e2e` | vite only (fake) / full stack (real) |
 | `i18n` | coverage | `node scripts/i18n-coverage.mjs` | no |
+| `scripts` | node --test | `node --test scripts/*.test.mjs` (dashboard and CI helpers; also a step of the `web` job in `web-ci.yml`) | no |
 
 The stack layers wait for the proxy's `/ready`, not just for its port (a proxy that answers while still
 building its card database fails every script with `Proxy is still loading card data`), and they warn when
@@ -30,7 +31,7 @@ Rules: after touching `web/`, run `unit` + `typecheck` (`build` if the build cha
 
 - Fake (default): `npm run test:e2e` — `FixtureServer` on a per-test dynamic WS port (the dedicated 8789 is its default; the Java proxy owns 8787/8788), vite on **5175** (`E2E_PORT` overrides it, so two Playwright runs can share the tree), deterministic scenarios in `web/fixtures/scenarios/`, helpers in `web/e2e/support/` (`frames`, `start-game`, `game-screen`, `scene`, `canvas`, `fake-backend`, `fake-mode`, `fake-port`, `info-windows`, `perf`, `timing`), fragile play via `wshelper.ts` `HumanHelper`. No Java, no flakes by design.
 - Real (anti-drift): `E2E_BACKEND=real npm run test:e2e:real` — needs `node scripts/ctl.mjs start all`. Same specs against the live server; failures here mean protocol drift or timing, not logic bugs.
-- Tags: `@spells` `@targeting` `@combat` `@fullflow` `@board` `@site` are the primary split and each has a `test:e2e:<tag>` script; `@reveal` `@draft` `@keywords` `@voting` `@planeswalker` `@chat` `@decks` `@latency` are secondary markers inside those files. `@timing` marks the tests whose verdict depends on wall-clock timing or animation ordering (`test:e2e:timing`): CI runs them in their own job with retries and excludes them from the shards. `test:e2e:changed` runs only the specs affected by the diff against `origin/master`. `test:e2e:site` runs a single spec, `test:e2e:visual` regenerates the gallery baselines.
+- Tags: `@spells` `@targeting` `@combat` `@fullflow` `@board` `@site` are the primary split and each has a `test:e2e:<tag>` script; `@reveal` `@draft` `@keywords` `@voting` `@planeswalker` `@chat` `@decks` `@latency` are secondary markers inside those files. `@timing` marks the tests whose verdict depends on wall-clock timing or animation ordering (`test:e2e:timing`): CI runs them in their own job with retries and excludes them from the shards. `test:e2e:changed` runs only the specs the diff reaches through their imports against `origin/master`: a diff that touches only `src/` usually selects zero specs and passes without running anything, so run the related specs by name as well. `test:e2e:site` runs a single spec, `test:e2e:visual` regenerates the gallery baselines.
 - Assertions: `window.__mageScene` (published by `web/src/board/sceneBridge.ts`) + the DOM. The board renders in DOM/CSS — there is no canvas to pixel-diff. Failure artefacts: `web/test-results/` (screenshots, traces, `ws-frames`, `pageerrors`, `select-dump`).
 
 ## Recorded-frame pipeline (real protocol without depending on beta)

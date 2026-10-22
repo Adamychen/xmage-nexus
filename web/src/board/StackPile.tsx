@@ -4,6 +4,7 @@ import { BOARD_RELAYOUT_EVENT } from './useBandFit'
 
 const SPREAD_GAP = 6
 const BAND_EDGE = 4
+const SPREAD_SETTLE_MS = 250
 
 function pileItems(pile: HTMLElement): HTMLElement[] {
   return (Array.from(pile.children) as HTMLElement[]).filter((c) => !c.classList.contains('stack-group-badge'))
@@ -40,6 +41,15 @@ function spread(pile: HTMLElement): void {
   pile.dataset.spread = ''
 }
 
+function announceRelayout(): void {
+  window.dispatchEvent(new Event(BOARD_RELAYOUT_EVENT))
+}
+
+function announceSettledRelayout(): void {
+  announceRelayout()
+  setTimeout(announceRelayout, SPREAD_SETTLE_MS)
+}
+
 function followers(pile: HTMLElement): HTMLElement[] {
   const out: HTMLElement[] = []
   for (let el = pile.nextElementSibling; el; el = el.nextElementSibling) out.push(el as HTMLElement)
@@ -62,6 +72,7 @@ interface StackPileProps {
   className: string
   name: string
   count: number
+  cardIds: string[]
   landName?: string
   children: ReactNode
 }
@@ -75,15 +86,16 @@ interface StackPileProps {
  * the fan reaches past the pile, so a mana rock beside a land pile is never
  * covered.
  */
-export default function StackPile({ className, name, count, landName, children }: StackPileProps) {
+export default function StackPile({ className, name, count, cardIds, landName, children }: StackPileProps) {
   const ref = useRef<HTMLDivElement>(null)
+  const cardKey = cardIds.join('|')
 
   const refresh = useCallback(() => {
     const pile = ref.current
     if (pile && pile.dataset.spread !== undefined) spread(pile)
   }, [])
 
-  useLayoutEffect(refresh)
+  useLayoutEffect(() => refresh(), [refresh, cardKey])
 
   useEffect(() => {
     window.addEventListener(BOARD_RELAYOUT_EVENT, refresh)
@@ -102,8 +114,14 @@ export default function StackPile({ className, name, count, landName, children }
       data-count={count}
       data-land-name={landName}
       title={`${name} (×${count})`}
-      onPointerEnter={(e) => spread(e.currentTarget)}
-      onPointerLeave={(e) => collapse(e.currentTarget)}
+      onPointerEnter={(e) => {
+        spread(e.currentTarget)
+        announceSettledRelayout()
+      }}
+      onPointerLeave={(e) => {
+        collapse(e.currentTarget)
+        announceSettledRelayout()
+      }}
     >
       {children}
       <span className="stack-group-badge land-group-badge">×{count}</span>

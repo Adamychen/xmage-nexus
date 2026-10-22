@@ -4,7 +4,7 @@ import Chip from '../ui/Chip'
 import EmptyState from '../ui/EmptyState'
 import CardSlot from '../board/CardSlot'
 import DialogShell from '../ui/DialogShell'
-import { useTranslation } from '../i18n'
+import { useTranslation, plural } from '../i18n'
 
 export default function LimitedDeckDialog() {
   const { t } = useTranslation()
@@ -23,7 +23,7 @@ export default function LimitedDeckDialog() {
       kickerIcon="layers"
       kickerLabel={t('dialogs', 'viewer_title')}
       title={<>{viewer.title} <Chip tone="brand" size="md">
-        {viewer.cards.length} {viewer.cards.length === 1 ? t('dialogs', 'viewer_card_single') : t('dialogs', 'viewer_card_plural')}
+        {viewer.cards.length} {plural('dialogs', 'viewer_card', viewer.cards.length)}
       </Chip></>}
       onBackdropClick={close}
     >

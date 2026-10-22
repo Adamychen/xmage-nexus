@@ -13,7 +13,7 @@ import { watchTournamentMatch } from '../lobby/useTournamentBracket'
 import * as cmds from '../net/commands'
 import Icon from '../ui/Icon'
 import Modal from '../ui/Modal'
-import { useTranslation } from '../i18n'
+import { useTranslation, plural } from '../i18n'
 import { confirmDialog } from '../ui/confirmDialog'
 import { clampDragPos, useDraggablePos } from '../ui/useDraggablePos'
 import './TournamentPanel.css'
@@ -147,7 +147,7 @@ export default function TournamentPanel() {
         data-testid="tournament-panel-mini"
         title={t('game', 'tournament_view_bracket_tooltip')}
       >
-        <Icon name="trophy" size={13} /> {view.tournamentName} — {stateLabel(t, view.tournamentState)} · {view.players.length} {t('lobby', view.players.length === 1 ? 'tournament_player_single' : 'tournament_player_plural')}
+        <Icon name="trophy" size={13} /> {view.tournamentName} — {stateLabel(t, view.tournamentState)} · {view.players.length} {plural('lobby', 'tournament_player', view.players.length)}
         <span className="tournament-mini-expand">{t('game', 'tournament_view_bracket')}</span>
       </button>
     )

@@ -42,7 +42,7 @@ export function concedeScenario(): ReturnType<HumanGame['scenario']> {
           return
         }
       }
-      base.onAction(conn, action, args, requestId)
+      base.onAction!(conn, action, args, requestId)
     },
   }
 }

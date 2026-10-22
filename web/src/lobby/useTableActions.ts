@@ -10,9 +10,8 @@ import { AI_OPPONENT_DECK, type Deck } from './decks'
 import { normalizeSeatType } from './CreateTable/constants'
 import { tournamentJoinNeedsDeck } from './CreateTable/tableKind'
 import { isUserIgnored } from './ignoreList'
-import { tableOwnerName } from './TableFilterBar'
 import { prepareDeckForXMage } from '../decks/deckNormalize'
-import { isDirectTournamentJoin, withTimeout } from './lobbyUtils'
+import { isDirectTournamentJoin, tableOwnerName, withTimeout } from './lobbyUtils'
 
 export function useTableActions(conn: ConnectionInfo | null) {
   const [joiningTable, setJoiningTable] = useState<TableView | null>(null)
@@ -31,7 +30,7 @@ export function useTableActions(conn: ConnectionInfo | null) {
     setState({ error: null })
     setNotice(ignoredOwnerNotice(t))
     setJoinPassword(presetPassword)
-    const seat = (t.seats ?? []).find((s) => !s.playerName)
+    const seat = (t.seats ?? []).find((s) => !s.playerName && (!s.playerType || s.playerType === 'HUMAN'))
     if (!seat) {
       setState({ error: translateError(tStatic('errors','table_no_seats')) })
       return

@@ -41,10 +41,10 @@ export function syncCommandersForValidation<D extends DeckLike>(deck: D): D {
  * que el servidor XMage objetivo). Devuelve null si el proxy no pudo validar
  * (sin conexión o BD de cartas no disponible) — la validación es advisory.
  */
-export async function fetchDeckIssues(deck: DeckLike): Promise<DeckValidationResult | null> {
+export async function fetchDeckIssues(deck: DeckLike, format?: DeckFormat): Promise<DeckValidationResult | null> {
   try {
-    const payload = syncCommandersForValidation(deck)
-    const report = await validateDeck(payload as never)
+    const deckType = format ? xmageDeckTypeFor(format) ?? undefined : undefined
+    const report = await validateDeck(prepareDeckForXMage(deck, deckType) as never)
     return report && report.ready ? report : null
   } catch (e) {
     console.warn('[deckIssues] validateDeck no disponible:', e instanceof Error ? e.message : e)

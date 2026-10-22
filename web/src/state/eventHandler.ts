@@ -5,7 +5,7 @@ import { getState, setState, addLog } from './state'
 import { translateError } from '../i18n'
 import { attributeStackControllers } from '../game/stackAttribution'
 import {
-  gameViewFrom, isOlderThanCurrentGame, gameEventOrder, noteGameEvent, resetGameEventOrder,
+  gameViewFrom, isOlderThanCurrentGame, gameEventOrder, noteGameEvent,
 } from './gameUtils'
 import { switchableHandKeys } from '../board/handSwitch'
 import { dispatchGameSounds } from '../audio/gameSoundDispatcher'
@@ -34,7 +34,6 @@ import { applyRollbackOutcome } from './rollbackVote'
 export function handleMessage(msg: ProxyMessage) {
   switch (msg.type) {
     case 'connected': {
-      resetGameEventOrder()
       // A re-attach after a network blip also announces `connected`: keep the
       // board of the game in progress (the rejoin replay refreshes it) instead
       // of dropping the player into the lobby.
@@ -90,6 +89,7 @@ export function handleMessage(msg: ProxyMessage) {
       break
     }
     case 'event':
+      if (typeof msg.method !== 'string') break
       perfMark('event', msg.method, undefined, { gameId: msg.objectId ?? null })
       handleEvent(msg.method, msg.objectId ?? null, msg.data, msg.messageId)
       break

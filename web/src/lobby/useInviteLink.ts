@@ -70,7 +70,7 @@ export function useInviteLink({ conn, tables, hasLobby, joinHuman, watchTable, s
         void doConnect(
           conn.wsHost, conn.proxyPort,
           targetHost, targetPort,
-          conn.username, conn.password, conn.flagName, conn.avatarId,
+          conn.username, '', conn.flagName, conn.avatarId,
         )
       })
       return

@@ -90,6 +90,9 @@ const WHITELIST = new Set<string>([
   'keywords.mentor_name',
   'keywords.modular_name',
   'keywords.ninjutsu_name',
+  'keywords.opus_name',
+  'keywords.station_name',
+  'keywords.warp_name',
 ])
 
 function flatten(obj: TranslationSchema): Record<string, string> {

@@ -141,10 +141,10 @@ async function expectNoTruncation(page: Page, label: string) {
     expect(state.fitsBand).toBe(true)
     expect(state.stripOverflows).toBe(false)
     expect(state.rowOverflows).toBe(false)
-    const shown = state.seats.filter((s) => s.shown)
+    const shown = (state.seats ?? []).filter((s) => s.shown)
     expect(shown.length).toBeGreaterThan(0)
     // either the whole row, or the active seat alone: never a cut name
-    expect(shown.length === state.seats.length || shown.length === 1).toBe(true)
+    expect(shown.length === (state.seats ?? []).length || shown.length === 1).toBe(true)
     for (const s of shown) expect(s.clipped).toBe(false)
     expect(shown.some((s) => s.active)).toBe(true)
   }
@@ -201,9 +201,9 @@ test('the 1v1 walkway never truncates a name, narrow or wide font @board', async
       expect(state.rowOverflows).toBe(false)
       // the walkway noticed: 240px of band is under the row's natural width
       expect(state.fit).not.toBe('full')
-      const shown = state.seats.filter((s) => s.shown)
+      const shown = (state.seats ?? []).filter((s) => s.shown)
       expect(shown.length).toBeGreaterThan(0)
-      expect(shown.length === state.seats.length || shown.length === 1).toBe(true)
+      expect(shown.length === (state.seats ?? []).length || shown.length === 1).toBe(true)
       for (const s of shown) expect(s.clipped).toBe(false)
       expect(shown.some((s) => s.active)).toBe(true)
     }

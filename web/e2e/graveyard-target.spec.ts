@@ -86,7 +86,7 @@ test(
       await waitFrame(
         page,
         (f) => {
-          const view = lastGameView(parseFrames([f]))
+          const view = lastGameView([f])
           return Object.values(myBattlefield(view)).some((c) => c.name === 'Grizzly Bears')
         },
         'Grizzly Bears reanimado en el campo propio',

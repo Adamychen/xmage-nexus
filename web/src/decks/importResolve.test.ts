@@ -5,7 +5,7 @@ vi.mock('../cards/scryfallClient', () => ({ scryfallJson }))
 const xmagePrintingsFor = vi.hoisted(() => vi.fn())
 vi.mock('./xmageCatalog', () => ({ xmagePrintingsFor }))
 
-import { countUnresolved, isCommanderDeckFormat, resolveDeckPrintings, suggestFormat } from './importResolve'
+import { applyPrintingsByName, countUnresolved, isCommanderDeckFormat, resolveDeckPrintings, suggestFormat } from './importResolve'
 import type { DeckCard } from '../lobby/decks'
 
 const card = (cardName: string, amount = 1, setCode = '', cardNumber = ''): DeckCard => ({ cardName, setCode, cardNumber, amount })
@@ -134,5 +134,46 @@ describe('resolveDeckPrintings', () => {
 
   it('counts unresolved printings by unique name', () => {
     expect(countUnresolved({ cards: [card('A'), card('a', 2), card('B', 1, 'X', '1')], sideboard: [card('C')] })).toBe(2)
+  })
+})
+
+describe('import merges and fuzzy matches', () => {
+  beforeEach(() => {
+    scryfallJson.mockReset()
+    xmagePrintingsFor.mockReset()
+    xmagePrintingsFor.mockResolvedValue(null)
+  })
+
+  it('merges case-variant names of the same printing within a zone', async () => {
+    scryfallJson.mockImplementation(async (url: string) =>
+      url.includes('Lightning%20Bolt') ? scry('Lightning Bolt', 'm10', '146') : null)
+    const res = await resolveDeckPrintings(
+      { cards: [card('Lightning Bolt', 4, 'M10', '146'), card('lightning bolt', 2, 'M10', '146')], sideboard: [] },
+      { strategy: 'keep' },
+    )
+    expect(res.cards).toEqual([card('Lightning Bolt', 6, 'M10', '146')])
+  })
+
+  it('reports a fuzzy name hit as fellBack under the default strategy', async () => {
+    scryfallJson.mockImplementation(async (url: string) =>
+      url.includes('fuzzy=') ? scry('Lightning Bolt', 'clu', '141') : null)
+    const res = await resolveDeckPrintings({ cards: [card('Lightnng Bolt', 4)], sideboard: [] }, { strategy: 'default' })
+    expect(res.cards[0]).toMatchObject({ setCode: 'CLU', cardNumber: '141', amount: 4 })
+    expect(res.fellBack).toEqual(['Lightnng Bolt'])
+  })
+})
+
+describe('applyPrintingsByName', () => {
+  it('prints the designated commander and partner along with the zones', () => {
+    const atraxa = card("Atraxa, Praetors' Voice", 1)
+    const out = applyPrintingsByName(
+      { cards: [atraxa], sideboard: [], commanderCard: atraxa, partnerCard: card('Tymna the Weaver', 1) },
+      new Map([
+        ["atraxa, praetors' voice", { setCode: 'C16', cardNumber: '189' }],
+        ['tymna the weaver', { setCode: 'C16', cardNumber: '190' }],
+      ]),
+    )
+    expect(out.commanderCard).toEqual(card("Atraxa, Praetors' Voice", 1, 'C16', '189'))
+    expect(out.partnerCard).toEqual(card('Tymna the Weaver', 1, 'C16', '190'))
   })
 })

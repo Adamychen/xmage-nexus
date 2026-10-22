@@ -7,7 +7,7 @@ import { clearImpacts, getImpacts } from './impactFx'
 import { clearFlights } from './flightManager'
 import { clearCardPositionRegistry } from './cardPositionRegistry'
 import { damageNumbersFor } from './DamageNumber'
-import { makeGameView, makePermanent, makePlayer } from '../__fixtures__/gameViews'
+import { makeCard, makeGameView, makePermanent, makePlayer } from '../__fixtures__/gameViews'
 import type { GameView } from '../net/types'
 
 const rect = (left: number, top: number, width = 80, height = 112): DOMRect =>
@@ -96,6 +96,41 @@ describe('planKeywordStrikes', () => {
     expect(planKeywordStrikes(prev, next, [{ attackerId: 'a1', targetId: 'b1' }])).toEqual([])
   })
 
+  it('reports trample damage to the defender when a blocked trampler has no blockers left', () => {
+    const trampler = makePermanent({ id: 'a1', name: 'Charger', rules: ['Trample'], power: '3', toughness: '3' })
+    const groups: Array<Record<string, unknown>> = [{ attackers: ['a1'], blockers: [], isBlocked: true, defenderId: 'p-opp' }]
+    const board = (life: number) => [
+      makePlayer({ playerId: 'p-opp', name: 'Opp', life }),
+      makePlayer({ playerId: 'p-me', name: 'Me', battlefield: { a1: trampler } }),
+    ]
+    const prev = game(board(20), { combat: groups as GameView['combat'] })
+    const hurt = game(board(17), { combat: groups as GameView['combat'] })
+    const untouched = game(board(20), { combat: groups as GameView['combat'] })
+    expect(planKeywordStrikes(prev, hurt, [{ attackerId: 'a1', targetId: 'p-opp' }])).toEqual([
+      { attackerId: 'a1', targetId: 'p-opp', firstStrike: false, deathtouchKill: false, lifelinkTo: null, trampleTo: 'p-opp' },
+    ])
+    expect(planKeywordStrikes(prev, untouched, [{ attackerId: 'a1', targetId: 'p-opp' }])).toEqual([])
+  })
+
+  it('reads deathtouch as a kill only when the blocker reached a graveyard', () => {
+    const viper = makePermanent({ id: 'a1', name: 'Viper', rules: ['Deathtouch'] })
+    const bear = makePermanent({ id: 'b1', name: 'Grizzly Bears' })
+    const me = makePlayer({ playerId: 'p-me', name: 'Me', battlefield: { a1: viper } })
+    const plans = [{ attackerId: 'a1', targetId: 'b1' }]
+    const killed = (deathtouchKill: boolean) => [
+      { attackerId: 'a1', targetId: 'b1', firstStrike: false, deathtouchKill, lifelinkTo: null, trampleTo: null },
+    ]
+    const prev = game([makePlayer({ playerId: 'p-opp', name: 'Opp', battlefield: { b1: bear } }), me])
+    const bounced = game([makePlayer({ playerId: 'p-opp', name: 'Opp' }), me], { myHand: { b1: makeCard({ id: 'b1', name: 'Grizzly Bears' }) } })
+    expect(planKeywordStrikes(prev, bounced, plans)).toEqual([])
+    const buried = game([makePlayer({ playerId: 'p-opp', name: 'Opp', graveyard: { b1: bear } }), me])
+    expect(planKeywordStrikes(prev, buried, plans)).toEqual(killed(true))
+    const token = makePermanent({ id: 'b1', name: 'Goblin', isToken: true })
+    const tokenPrev = game([makePlayer({ playerId: 'p-opp', name: 'Opp', battlefield: { b1: token } }), me])
+    const tokenGone = game([makePlayer({ playerId: 'p-opp', name: 'Opp' }), me])
+    expect(planKeywordStrikes(tokenPrev, tokenGone, plans)).toEqual(killed(true))
+  })
+
   it('counts deathtouch as one lethal damage per blocker', () => {
     const viper = makePermanent({ id: 'a1', name: 'Viper', rules: ['Trample', 'Deathtouch'], power: '2', toughness: '2' })
     const juggernaut = makePermanent({ id: 'b1', name: 'Juggernaut', power: '5', toughness: '5' })
@@ -125,6 +160,145 @@ describe('planKeywordStrikes', () => {
     const plain = makePermanent({ id: 'a1', name: 'Bear' })
     const prev = game([makePlayer({ playerId: 'p-me', name: 'Me', battlefield: { a1: plain } })])
     expect(planKeywordStrikes(prev, prev, [{ attackerId: 'a1', targetId: 'p-opp' }])).toEqual([])
+  })
+
+  describe('blockers', () => {
+    const blockedBy = (blocker: ReturnType<typeof makePermanent>, attacker = makePermanent({ id: 'a1', name: 'Grizzly Bears' })) => {
+      const groups: Array<Record<string, unknown>> = [{ attackers: ['a1'], blockers: ['b1'], defenderId: 'p-opp' }]
+      const board = (step: string, attackerAlive: boolean) => makeGameView({
+        phase: 'COMBAT',
+        step,
+        combat: groups as GameView['combat'],
+        players: [
+          makePlayer({ playerId: 'p-opp', name: 'Opp', battlefield: { b1: blocker } }),
+          makePlayer({
+            playerId: 'p-me',
+            name: 'Me',
+            battlefield: attackerAlive ? { a1: attacker } : {},
+            graveyard: attackerAlive ? {} : { a1: attacker },
+          }),
+        ],
+      })
+      return { prev: board('DECLARE_BLOCKERS', true), next: board('COMBAT_DAMAGE', false) }
+    }
+    const blockerLifeGain = (next: GameView) => {
+      return makeGameView({ ...next, players: next.players!.map((p) => (p.playerId === 'p-opp' ? { ...p, life: 22 } : p)) })
+    }
+
+    it('gives a deathtouch blocker a kill moment on the attacker it blocks', () => {
+      const viper = makePermanent({ id: 'b1', name: 'Viper', rules: ['Deathtouch'] })
+      const { prev, next } = blockedBy(viper)
+      expect(planKeywordStrikes(prev, next, planDamageStrikes(prev, next))).toEqual([
+        { attackerId: 'b1', targetId: 'a1', firstStrike: false, deathtouchKill: true, lifelinkTo: null, trampleTo: null, fromBlocker: true },
+      ])
+    })
+
+    it('gives a first-strike blocker its strike moment on the attacker it blocks', () => {
+      const knight = makePermanent({ id: 'b1', name: 'Knight', ...firstStriker })
+      const groups: Array<Record<string, unknown>> = [{ attackers: ['a1'], blockers: ['b1'], defenderId: 'p-opp' }]
+      const board = makeGameView({
+        phase: 'COMBAT',
+        step: 'DECLARE_BLOCKERS',
+        combat: groups as GameView['combat'],
+        players: [
+          makePlayer({ playerId: 'p-opp', name: 'Opp', battlefield: { b1: knight } }),
+          makePlayer({ playerId: 'p-me', name: 'Me', battlefield: { a1: makePermanent({ id: 'a1', name: 'Grizzly Bears' }) } }),
+        ],
+      })
+      const firstStep = makeGameView({ ...board, step: 'FIRST_COMBAT_DAMAGE' })
+      expect(planKeywordStrikes(board, firstStep, planDamageStrikes(board, firstStep))).toEqual([
+        { attackerId: 'b1', targetId: 'a1', firstStrike: true, deathtouchKill: false, lifelinkTo: null, trampleTo: null, fromBlocker: true },
+      ])
+    })
+
+    it('credits a lifelinking blocker to its controller only when that life went up', () => {
+      const leech = makePermanent({ id: 'b1', name: 'Leech', rules: ['Lifelink'] })
+      const { prev, next } = blockedBy(leech)
+      const gained = blockerLifeGain(next)
+      expect(planKeywordStrikes(prev, gained, planDamageStrikes(prev, gained))).toEqual([
+        { attackerId: 'b1', targetId: 'a1', firstStrike: false, deathtouchKill: false, lifelinkTo: 'p-opp', trampleTo: null, fromBlocker: true },
+      ])
+      expect(planKeywordStrikes(prev, next, planDamageStrikes(prev, next))).toEqual([])
+    })
+
+    it('gives a plain blocker no moment', () => {
+      const { prev, next } = blockedBy(makePermanent({ id: 'b1', name: 'Grizzly Bears' }))
+      expect(planKeywordStrikes(prev, next, planDamageStrikes(prev, next))).toEqual([])
+    })
+  })
+
+  it('gives each deathtouch kill of a multi-blocked attacker its own skull', () => {
+    const viper = makePermanent({ id: 'a1', name: 'Viper', rules: ['Deathtouch'], power: '3', toughness: '3' })
+    const bear = makePermanent({ id: 'b1', name: 'Grizzly Bears', power: '2', toughness: '2' })
+    const bear2 = makePermanent({ id: 'b2', name: 'Grizzly Bears', power: '2', toughness: '2' })
+    const groups: Array<Record<string, unknown>> = [{ attackers: ['a1'], blockers: ['b1', 'b2'], defenderId: 'p-opp' }]
+    const board = (step: string, deadBlockers: string[]) => makeGameView({
+      phase: 'COMBAT',
+      step,
+      combat: groups as GameView['combat'],
+      players: [
+        makePlayer({
+          playerId: 'p-opp',
+          name: 'Opp',
+          battlefield: { ...(deadBlockers.includes('b1') ? {} : { b1: bear }), ...(deadBlockers.includes('b2') ? {} : { b2: bear2 }) },
+          graveyard: { ...(deadBlockers.includes('b1') ? { b1: bear } : {}), ...(deadBlockers.includes('b2') ? { b2: bear2 } : {}) },
+        }),
+        makePlayer({ playerId: 'p-me', name: 'Me', battlefield: { a1: viper } }),
+      ],
+    })
+    const prev = board('DECLARE_BLOCKERS', [])
+    const both = board('COMBAT_DAMAGE', ['b1', 'b2'])
+    const kill = (targetId: string) => ({ attackerId: 'a1', targetId, firstStrike: false, deathtouchKill: true, lifelinkTo: null, trampleTo: null })
+    expect(planKeywordStrikes(prev, both, planDamageStrikes(prev, both))).toEqual([kill('b1'), kill('b2')])
+    const oneLeft = board('COMBAT_DAMAGE', ['b1'])
+    expect(planKeywordStrikes(prev, oneLeft, planDamageStrikes(prev, oneLeft))).toEqual([kill('b1')])
+  })
+
+  describe('trample over a permanent', () => {
+    const groups: Array<Record<string, unknown>> = [{ attackers: ['a1'], blockers: ['b1'], defenderId: 'pw' }]
+    const attacker = makePermanent({ id: 'a1', name: 'Charger', rules: ['Trample'], power: '5', toughness: '5' })
+    const bear = makePermanent({ id: 'b1', name: 'Grizzly Bears', power: '2', toughness: '2' })
+    const walker = (loyalty: string) => makePermanent({ id: 'pw', name: 'Ember Oracle', cardTypes: ['Planeswalker'], loyalty })
+    const battle = (defense: string) => makePermanent({ id: 'pw', name: 'Siege Keep', cardTypes: ['Battle'], defense })
+    const board = (step: string, defender: ReturnType<typeof makePermanent> | null) => makeGameView({
+      phase: 'COMBAT',
+      step,
+      combat: groups as GameView['combat'],
+      players: [
+        makePlayer({ playerId: 'p-opp', name: 'Opp', battlefield: { b1: bear, ...(defender ? { pw: defender } : {}) } }),
+        makePlayer({ playerId: 'p-me', name: 'Me', battlefield: { a1: attacker } }),
+      ],
+    })
+
+    it('sends the overflow to a planeswalker whose loyalty went down', () => {
+      const prev = board('DECLARE_BLOCKERS', walker('5'))
+      const next = board('COMBAT_DAMAGE', walker('1'))
+      expect(planKeywordStrikes(prev, next, planDamageStrikes(prev, next))).toEqual([
+        { attackerId: 'a1', targetId: 'b1', firstStrike: false, deathtouchKill: false, lifelinkTo: null, trampleTo: 'pw' },
+      ])
+    })
+
+    it('sends the overflow to a battle whose defense went down', () => {
+      const prev = board('DECLARE_BLOCKERS', battle('5'))
+      const next = board('COMBAT_DAMAGE', battle('1'))
+      expect(planKeywordStrikes(prev, next, planDamageStrikes(prev, next))).toEqual([
+        { attackerId: 'a1', targetId: 'b1', firstStrike: false, deathtouchKill: false, lifelinkTo: null, trampleTo: 'pw' },
+      ])
+    })
+
+    it('counts a planeswalker that the overflow killed as down to zero loyalty', () => {
+      const prev = board('DECLARE_BLOCKERS', walker('3'))
+      const next = board('COMBAT_DAMAGE', null)
+      expect(planKeywordStrikes(prev, next, planDamageStrikes(prev, next))).toEqual([
+        { attackerId: 'a1', targetId: 'b1', firstStrike: false, deathtouchKill: false, lifelinkTo: null, trampleTo: 'pw' },
+      ])
+    })
+
+    it('does not send a wave when the permanent kept its loyalty', () => {
+      const prev = board('DECLARE_BLOCKERS', walker('5'))
+      const next = board('COMBAT_DAMAGE', walker('5'))
+      expect(planKeywordStrikes(prev, next, planDamageStrikes(prev, next))).toEqual([])
+    })
   })
 })
 
@@ -195,6 +369,12 @@ describe('playKeywordStrikes', () => {
     expect(hits.lifeGains.get('p-me')).toBe(100 + LIFELINK_TRAVEL_MS)
   })
 
+  it('records no life gain when the controller has no element to draw the lifelink mote on', () => {
+    document.querySelector('.player-zone[data-player-id="p-me"]')?.remove()
+    const hits = playKeywordStrikes([strike({ lifelinkTo: 'p-me' })], { holdMs: 0, impactAt: new Map([['a1', 100]]) })
+    expect(hits.lifeGains.has('p-me')).toBe(false)
+  })
+
   it('keeps the earliest trample arrival and the latest lifelink arrival', () => {
     const schedule = { holdMs: 0, impactAt: new Map([['a1', 100], ['a2', 300]]) }
     const hits = playKeywordStrikes([
@@ -210,6 +390,21 @@ describe('playKeywordStrikes', () => {
   it('skips strikes whose attacker has no landing time', () => {
     const hits = playKeywordStrikes([strike({ attackerId: 'ghost', trampleTo: 'p-opp' })], { holdMs: 0, impactAt: new Map() })
     expect(hits.playerHits.size).toBe(0)
+  })
+
+  it('lands a blocker strike on the blocked attacker\'s impact', () => {
+    const schedule = { holdMs: 0, impactAt: new Map([['a1', 100]]) }
+    playKeywordStrikes([strike({ attackerId: 'b1', targetId: 'a1', fromBlocker: true, deathtouchKill: true })], schedule)
+    vi.advanceTimersByTime(99)
+    expect(getImpacts()).toHaveLength(0)
+    vi.advanceTimersByTime(1)
+    expect(getImpacts().map((f) => f.kind)).toEqual(['deathtouch'])
+  })
+
+  it('lands a blocker strike at once when its attacker does not strike in this step', () => {
+    playKeywordStrikes([strike({ attackerId: 'b1', targetId: 'a1', fromBlocker: true, firstStrike: true })], { holdMs: 0, impactAt: new Map() })
+    vi.advanceTimersByTime(1)
+    expect(getImpacts().map((f) => f.kind)).toEqual(['first-strike'])
   })
 
   it('spawns each keyword moment when its strike lands', () => {
@@ -303,6 +498,57 @@ describe('keyword strike engine integration', () => {
     vi.advanceTimersByTime(1)
     expect(damageNumbersFor('player:p-opp').map((d) => d.amount)).toEqual([3])
   })
+
+  it('shows the deathtouch skull on the attacker that a deathtouch blocker kills, when the attacker\'s strike lands', () => {
+    const viper = makePermanent({ id: 'b1', name: 'Viper', rules: ['Deathtouch'] })
+    const bear = makePermanent({ id: 'a1', name: 'Grizzly Bears' })
+    const groups: Array<Record<string, unknown>> = [{ attackers: ['a1'], blockers: ['b1'], defenderId: 'p-opp' }]
+    const declare = makeGameView({
+      phase: 'COMBAT',
+      step: 'DECLARE_BLOCKERS',
+      combat: groups as GameView['combat'],
+      players: [makePlayer({ playerId: 'p-opp', name: 'Opp', battlefield: { b1: viper } }), makePlayer({ playerId: 'p-me', name: 'Me', battlefield: { a1: bear } })],
+    })
+    const damage = makeGameView({
+      ...declare,
+      step: 'COMBAT_DAMAGE',
+      players: [makePlayer({ playerId: 'p-opp', name: 'Opp', battlefield: { b1: viper } }), makePlayer({ playerId: 'p-me', name: 'Me', graveyard: { a1: bear } })],
+    })
+    detectAndAnimateTransitions(declare, damage)
+    vi.advanceTimersByTime(STRIKE_LANDS_MS - 1)
+    expect(getImpacts().map((f) => f.kind)).not.toContain('deathtouch')
+    vi.advanceTimersByTime(1)
+    expect(getImpacts().map((f) => f.kind)).toContain('deathtouch')
+  })
+
+  it('sends a trample wave to the planeswalker the overflow hit, landing on its card', () => {
+    const charger = makePermanent({ id: 'a1', name: 'Charger', rules: ['Trample'], power: '5', toughness: '5' })
+    const bear = makePermanent({ id: 'b1', name: 'Grizzly Bears', power: '2', toughness: '2' })
+    const oracle = makePermanent({ id: 'pw', name: 'Ember Oracle', cardTypes: ['Planeswalker'], loyalty: '5' })
+    const groups: Array<Record<string, unknown>> = [{ attackers: ['a1'], blockers: ['b1'], defenderId: 'pw' }]
+    const board = (step: string, loyalty: string) => makeGameView({
+      phase: 'COMBAT',
+      step,
+      combat: groups as GameView['combat'],
+      players: [
+        makePlayer({ playerId: 'p-opp', name: 'Opp', battlefield: { b1: bear, pw: { ...oracle, loyalty } } }),
+        makePlayer({ playerId: 'p-me', name: 'Me', battlefield: { a1: charger } }),
+      ],
+    })
+    const prev = board('DECLARE_BLOCKERS', '5')
+    const next = board('COMBAT_DAMAGE', '1')
+    const walkerSlot = document.createElement('div')
+    walkerSlot.className = 'card-slot'
+    walkerSlot.dataset.cardId = 'pw'
+    document.querySelector('.opponent-zone .creatures-band')!.appendChild(walkerSlot)
+    vi.spyOn(walkerSlot, 'getBoundingClientRect').mockReturnValue(rect(200, 120))
+
+    detectAndAnimateTransitions(prev, next)
+    vi.advanceTimersByTime(STRIKE_LANDS_MS)
+    const wave = getImpacts().find((f) => f.kind === 'trample')
+    expect(wave?.toX).toBe(240)
+    expect(wave?.toY).toBe(176)
+  })
 })
 
 describe('keyword strikes on a combatant that left its slot', () => {
@@ -384,6 +630,22 @@ describe('keyword strikes on a combatant that left its slot', () => {
     playKeywordStrikes(planKeywordStrikes(prev, next, plans), schedule)
     vi.advanceTimersByTime(schedule.impactAt.get('a1') ?? 0)
     expect(getImpacts().map((f) => f.kind)).toContain('deathtouch')
+  })
+
+  it('lands the keyword moment of each hit of a double striker crossing both damage steps', () => {
+    const blade = makePermanent({ id: 'a1', name: 'Swordsman', rules: ['Double strike'] })
+    const groups: Array<Record<string, unknown>> = [{ attackers: ['a1'], blockers: [], defenderId: 'p-opp' }]
+    const players = [
+      makePlayer({ playerId: 'p-opp', name: 'Opp', life: 20 }),
+      makePlayer({ playerId: 'p-me', name: 'Me', battlefield: { a1: blade } }),
+    ]
+    const prev = game(players, { combat: groups as GameView['combat'] })
+    const next = game(players, { step: 'COMBAT_DAMAGE', combat: groups as GameView['combat'] })
+    detectAndAnimateTransitions(prev, next)
+    vi.advanceTimersByTime(300)
+    expect(getImpacts().filter((f) => f.kind === 'first-strike')).toHaveLength(1)
+    vi.advanceTimersByTime(240)
+    expect(getImpacts().filter((f) => f.kind === 'first-strike')).toHaveLength(2)
   })
 
   it('keeps the stand-in through the whole transition, so deathtouch still lands after the snapshot is pruned', () => {

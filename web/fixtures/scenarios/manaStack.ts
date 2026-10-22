@@ -2,6 +2,7 @@ import { TABLE } from '../table-names'
 
 
 import { makeBaseScenario } from '../fake'
+import type { Scenario } from '../fake'
 import { makePermanent } from '../../src/__fixtures__/gameViews'
 import type { GameView, PlayerView } from '../../src/net/types'
 import {
@@ -66,7 +67,7 @@ export function manaStackScenario(): Scenario {
       timerActive: false,
       statesSavedSize: 0,
       priorityTimeSavedTimeMs: 0,
-    }
+    } as unknown as PlayerView
 
     const simPlayer: PlayerView = {
       playerId: SIM_PLAYER_ID,
@@ -94,7 +95,7 @@ export function manaStackScenario(): Scenario {
       timerActive: false,
       statesSavedSize: 0,
       priorityTimeSavedTimeMs: 0,
-    }
+    } as unknown as PlayerView
 
     return {
       gameCycle: 1,

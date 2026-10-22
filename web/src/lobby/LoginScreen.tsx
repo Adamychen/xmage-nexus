@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import Tabs from '../ui/Tabs'
 import IconButton from '../ui/IconButton'
 import CloseButton from '../ui/CloseButton'
-import { clearError, doConnect, useStore, loadConn, clearActiveGame, clearActiveDraft, clearActiveConstruct, isSameAccount } from '../state/store'
+import { clearError, doConnect, useStore, loadConn, clearActiveGame, clearActiveDraft, clearActiveConstruct, isSameAccount, setStoreError } from '../state/store'
 import CountryFlag from './CountryFlag'
 import AvatarImage from './AvatarImage'
 import AvatarPickerModal from './AvatarPickerModal'
@@ -66,6 +66,13 @@ const BAKED_XDHS_PROXY_PORT = Number(import.meta.env.VITE_DEFAULT_XDHS_PROXY_POR
 const XDHS_SERVER_HOST = 'mage.xdhs.net'
 const isLoopbackHost = (h: string) => h === 'localhost' || h === '127.0.0.1' || h === '::1'
 const REMOTE_PROXY = !!BAKED_PROXY_HOST && !isLoopbackHost(BAKED_PROXY_HOST)
+function parsePort(raw: string): number | null {
+  const value = raw.trim()
+  if (!/^\d+$/.test(value)) return null
+  const port = Number(value)
+  return port >= 1 && port <= 65535 ? port : null
+}
+
 const presetOf = (host: string): ServerPreset =>
   host === 'beta.xmage.today' ? 'official' : host === XDHS_SERVER_HOST ? 'xdhs' : isLoopbackHost(host) ? 'local' : 'custom'
 
@@ -74,7 +81,7 @@ export default function LoginScreen() {
   const phase = useStore((s) => s.phase)
   const error = useStore((s) => s.error)
   const [proxyHost, setProxyHost] = useState(import.meta.env.VITE_DEFAULT_PROXY_HOST ?? 'localhost')
-  const [proxyPort, setProxyPort] = useState(Number(import.meta.env.VITE_DEFAULT_PROXY_PORT) || 8787)
+  const [proxyPort, setProxyPort] = useState(String(Number(import.meta.env.VITE_DEFAULT_PROXY_PORT) || 8787))
   const [serverHost, setServerHost] = useState(BAKED_SERVER_HOST)
   const [port, setPort] = useState(import.meta.env.VITE_DEFAULT_SERVER_PORT ?? '17171')
   const [username, setUsername] = useState(import.meta.env.DEV ? 'player1' : '')
@@ -109,7 +116,7 @@ export default function LoginScreen() {
     if (saved && !staleLocalConn) {
       const sameUser = !url.username || url.username === saved.username
       setProxyHost(url.proxyHost ?? saved.wsHost)
-      setProxyPort(url.proxyPort ?? saved.proxyPort)
+      setProxyPort(String(url.proxyPort ?? saved.proxyPort))
       setServerHost(url.serverHost ?? saved.serverHost)
       setPort(String(url.serverPort ?? saved.port))
       setUsername(url.username ?? saved.username)
@@ -129,7 +136,7 @@ export default function LoginScreen() {
       }
     } else {
       if (url.proxyHost) setProxyHost(url.proxyHost)
-      if (url.proxyPort != null) setProxyPort(url.proxyPort)
+      if (url.proxyPort != null) setProxyPort(String(url.proxyPort))
       if (url.serverHost) setServerHost(url.serverHost)
       if (url.serverPort != null) setPort(String(url.serverPort))
       if (url.username) setUsername(url.username)
@@ -143,7 +150,7 @@ export default function LoginScreen() {
       setProxyHost(conn.wsHost)
       // un ?proxyPort= explícito en la URL SIEMPRE gana (lo fijan los e2e para
       // el FixtureServer; el wizard/defaults no debe pisarlo)
-      setProxyPort(urlProxyPort() ?? conn.proxyPort)
+      setProxyPort(String(urlProxyPort() ?? conn.proxyPort))
       setServerHost(conn.serverHost)
       setPort(String(conn.port))
       setUsername(conn.username)
@@ -168,17 +175,17 @@ export default function LoginScreen() {
     setPreset(nextPreset)
     if (nextPreset === 'local') {
       setProxyHost('localhost')
-      setProxyPort(8787)
+      setProxyPort('8787')
       setServerHost('localhost')
       setPort('17171')
     } else if (nextPreset === 'official') {
       setProxyHost(REMOTE_PROXY ? BAKED_PROXY_HOST : 'localhost')
-      setProxyPort(REMOTE_PROXY ? BAKED_PROXY_PORT : 8787)
+      setProxyPort(String(REMOTE_PROXY ? BAKED_PROXY_PORT : 8787))
       setServerHost('beta.xmage.today')
       setPort('17171')
     } else if (nextPreset === 'xdhs') {
       setProxyHost(REMOTE_PROXY ? BAKED_XDHS_PROXY_HOST || BAKED_PROXY_HOST : 'localhost')
-      setProxyPort(REMOTE_PROXY ? BAKED_XDHS_PROXY_PORT : 8797)
+      setProxyPort(String(REMOTE_PROXY ? BAKED_XDHS_PROXY_PORT : 8797))
       setServerHost(XDHS_SERVER_HOST)
       setPort('17171')
     }
@@ -197,17 +204,23 @@ export default function LoginScreen() {
   const submit = (e: React.FormEvent) => {
     e.preventDefault()
     if (busy) return
+    const wsPort = parsePort(proxyPort)
+    const serverPort = parsePort(port)
+    if (wsPort === null || serverPort === null) {
+      setStoreError(t('errors', 'invalid_port'))
+      return
+    }
     // the same account logging in again (its session was lost) resumes its game
-    if (!isSameAccount(loadConn(), serverHost.trim() || proxyHost.trim(), parseInt(port, 10) || 17171, username.trim())) {
+    if (!isSameAccount(loadConn(), serverHost.trim() || proxyHost.trim(), serverPort, username.trim())) {
       clearActiveGame()
       clearActiveDraft()
       clearActiveConstruct()
     }
     void doConnect(
       proxyHost.trim(),
-      proxyPort,
+      wsPort,
       serverHost.trim() || proxyHost.trim(),
-      parseInt(port, 10) || 17171,
+      serverPort,
       username.trim(),
       passwordValue,
       flagName,
@@ -369,7 +382,7 @@ export default function LoginScreen() {
                 <input
                   value={proxyPort}
                   onChange={(e) => {
-                    setProxyPort(Number(e.target.value) || 8787)
+                    setProxyPort(e.target.value)
                     setPreset('custom')
                   }}
                   type="number"

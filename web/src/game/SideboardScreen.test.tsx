@@ -133,6 +133,25 @@ describe('SideboardScreen', () => {
     }
   })
 
+  it('shows the error banner when the expiry auto-submit is rejected', async () => {
+    vi.mocked(submitDeck).mockResolvedValueOnce({ ok: false, error: 'Deck is not legal' } as never)
+    vi.useFakeTimers()
+    let rendered: ReturnType<typeof render> | undefined
+    try {
+      rendered = render(<SideboardScreen />)
+      await act(async () => {
+        setState({ sideboardScreen: makeScreen({ tableId: 't-expire', timeLeft: 3 }) })
+      })
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(5000)
+      })
+    } finally {
+      vi.useRealTimers()
+    }
+    expect(submitDeck).toHaveBeenCalledTimes(1)
+    expect(rendered?.getByTestId('sideboard-submit-error').textContent).toContain('Deck is not legal')
+  })
+
   function legalMaindeck() {
     return Array.from({ length: 60 }, (_, i) => ({
       instanceId: `m-${i}`, setCode: 'TEST', cardNumber: String(i), name: `Card ${i}`,

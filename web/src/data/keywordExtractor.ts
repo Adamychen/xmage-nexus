@@ -62,26 +62,15 @@ function keywordAbilityItems(textLines: string[]): string[] {
 }
 
 /**
- * Normalizes rule text and extracts matching MTG keywords from a card's rules,
- * abilities, and sub-abilities. Includes keywords that are only referenced by
- * the text (glossary use); see `extractOwnedKeywords` for the abilities the
- * object actually has.
- */
-export function extractKeywordsFromCard(card: CardView | PermanentView | null): DetectedKeyword[] {
-  if (!card) return []
-  return detectKeywords(cardTextLines(card), false)
-}
-
-/**
  * Keyword abilities the object actually has: only keyword-ability lines count,
  * so a keyword named inside another ability's text is ignored.
  */
 export function extractOwnedKeywords(card: CardView | PermanentView | null): DetectedKeyword[] {
   if (!card) return []
-  return detectKeywords(keywordAbilityItems(cardTextLines(card)), true)
+  return detectKeywords(keywordAbilityItems(cardTextLines(card)))
 }
 
-function detectKeywords(textLines: string[], anchored: boolean): DetectedKeyword[] {
+function detectKeywords(textLines: string[]): DetectedKeyword[] {
   if (textLines.length === 0) return []
 
   const combinedText = textLines.join('\n')
@@ -89,7 +78,7 @@ function detectKeywords(textLines: string[], anchored: boolean): DetectedKeyword
   const seenIds = new Set<string>()
 
   for (const kw of MTG_KEYWORDS) {
-    if (anchored && kw.type !== 'ability') continue
+    if (kw.type !== 'ability') continue
     if (kw.parameterRegex) {
       const match = combinedText.match(kw.parameterRegex)
       if (match) {
@@ -129,9 +118,7 @@ function detectKeywords(textLines: string[], anchored: boolean): DetectedKeyword
       }
     }
 
-    // Exact word boundary matching (e.g. \bFlying\b, \bTrample\b, \bVigilance\b)
-    const escapedName = escapeRegex(kw.name)
-    const regex = anchored ? new RegExp(`^${escapedName}\\b`, 'im') : new RegExp(`\\b${escapedName}\\b`, 'i')
+    const regex = new RegExp(`^${escapeRegex(kw.name)}\\b`, 'im')
 
     if (regex.test(combinedText) && !seenIds.has(kw.id)) {
       seenIds.add(kw.id)

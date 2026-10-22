@@ -4,7 +4,7 @@ import { stringList } from '../state/gameUtils'
 import { fxMotionDuration } from './fx'
 import { spawnImpact } from './impactFx'
 import { iconKeywordId } from './cardBadges'
-import { combatantRect, strikeKind, strikeTargetElement, type StrikePlan, type StrikeSchedule } from './combatStrikes'
+import { combatantRect, planBlockerStrikes, strikeHitKey, strikeKind, strikeTargetElement, type StrikePlan, type StrikeSchedule } from './combatStrikes'
 import type { CardIconLike } from './cardIconFx'
 
 export const LIFELINK_TRAVEL_MS = 420
@@ -17,6 +17,7 @@ export interface KeywordStrike {
   deathtouchKill: boolean
   lifelinkTo: string | null
   trampleTo: string | null
+  fromBlocker?: boolean
 }
 
 export interface KeywordHits {
@@ -54,6 +55,10 @@ function onBattlefield(game: GameView, id: string): boolean {
   return (game.players ?? []).some((p) => (p.battlefield ?? {})[id] !== undefined)
 }
 
+function inAnyGraveyard(game: GameView, id: string): boolean {
+  return (game.players ?? []).some((p) => (p.graveyard ?? {})[id] !== undefined)
+}
+
 function lifeOf(game: GameView, playerId: string): number | null {
   const p = (game.players ?? []).find((player) => player.playerId === playerId)
   return typeof p?.life === 'number' ? p.life : null
@@ -85,42 +90,84 @@ function combatGroups(prevGame: GameView, nextGame: GameView): GameView {
   return (prevGame.combat ?? []).length > 0 ? prevGame : nextGame
 }
 
+function isDeathtouchKill(prevGame: GameView, nextGame: GameView, deathtouch: boolean, id: string): boolean {
+  return deathtouch
+    && onBattlefield(prevGame, id)
+    && !onBattlefield(nextGame, id)
+    && (inAnyGraveyard(nextGame, id) || locate(prevGame, id)?.card.isToken === true)
+}
+
+function lifelinkGain(prevGame: GameView, nextGame: GameView, keywords: Set<string>, controllerId: string): string | null {
+  const before = lifeOf(prevGame, controllerId)
+  const after = lifeOf(nextGame, controllerId)
+  return keywords.has('lifelink') && before !== null && after !== null && after > before ? controllerId : null
+}
+
+function permanentMeter(game: GameView, id: string): number | null {
+  const card = locate(game, id)?.card
+  const n = parseInt(String(card?.loyalty || card?.defense || ''), 10)
+  return Number.isFinite(n) ? n : null
+}
+
+function damageMeter(prevGame: GameView, nextGame: GameView, id: string): { before: number; after: number } | null {
+  const before = lifeOf(prevGame, id) ?? permanentMeter(prevGame, id)
+  if (before === null) return null
+  const left = onBattlefield(prevGame, id) && !onBattlefield(nextGame, id) ? 0 : null
+  const after = lifeOf(nextGame, id) ?? permanentMeter(nextGame, id) ?? left
+  return after === null ? null : { before, after }
+}
+
 /** The keyword effects of each planned strike: first strike, deathtouch kills, lifelink gains and trample overflow. */
 export function planKeywordStrikes(prevGame: GameView, nextGame: GameView, plans: StrikePlan[]): KeywordStrike[] {
   const out: KeywordStrike[] = []
+  const skulls = new Set<string>()
+  const claimSkull = (id: string) => {
+    if (skulls.has(id)) return false
+    skulls.add(id)
+    return true
+  }
   for (const plan of plans) {
     const attacker = locate(prevGame, plan.attackerId) ?? locate(nextGame, plan.attackerId)
     if (!attacker) continue
     const keywords = cardKeywordIds(attacker.card)
     const firstStrike = strikeKind(attacker.card) !== null
-    const deathtouchKill = keywords.has('deathtouch')
-      && onBattlefield(prevGame, plan.targetId)
-      && !onBattlefield(nextGame, plan.targetId)
-
-    const controllerPrev = lifeOf(prevGame, attacker.controllerId)
-    const controllerNext = lifeOf(nextGame, attacker.controllerId)
-    const lifelinkTo = keywords.has('lifelink') && controllerPrev !== null && controllerNext !== null && controllerNext > controllerPrev
-      ? attacker.controllerId
-      : null
+    const deathtouch = keywords.has('deathtouch')
+    const deathtouchKill = isDeathtouchKill(prevGame, nextGame, deathtouch, plan.targetId) && claimSkull(plan.targetId)
+    const lifelinkTo = lifelinkGain(prevGame, nextGame, keywords, attacker.controllerId)
 
     const group = combatGroupOf(combatGroups(prevGame, nextGame), plan.attackerId)
     const defender = blockedDefender(group)
-    const defenderPrev = defender ? lifeOf(prevGame, defender) : null
-    const defenderNext = defender ? lifeOf(nextGame, defender) : null
+    const damage = defender ? damageMeter(prevGame, nextGame, defender) : null
     const power = parseInt(String(attacker.card.power), 10)
+    const blockedWithoutBlockers = group !== undefined && group.isBlocked === true && stringList(group.blockers).length === 0
     const trampleTo = keywords.has('trample')
-      && defender !== null
-      && plan.targetId !== defender
-      && defenderPrev !== null
-      && defenderNext !== null
-      && defenderNext < defenderPrev
+      && damage !== null
+      && damage.after < damage.before
       && group !== undefined
-      && excessPastBlockers(prevGame, group, power, keywords.has('deathtouch'))
+      && (plan.targetId === defender
+        ? blockedWithoutBlockers
+        : excessPastBlockers(prevGame, group, power, deathtouch))
       ? defender
       : null
 
-    if (!firstStrike && !deathtouchKill && !lifelinkTo && !trampleTo) continue
-    out.push({ attackerId: plan.attackerId, targetId: plan.targetId, firstStrike, deathtouchKill, lifelinkTo, trampleTo })
+    if (firstStrike || deathtouchKill || lifelinkTo || trampleTo) {
+      out.push({ attackerId: plan.attackerId, targetId: plan.targetId, firstStrike, deathtouchKill, lifelinkTo, trampleTo })
+    }
+    for (const blockerId of stringList(group?.blockers)) {
+      if (blockerId !== plan.targetId && isDeathtouchKill(prevGame, nextGame, deathtouch, blockerId) && claimSkull(blockerId)) {
+        out.push({ attackerId: plan.attackerId, targetId: blockerId, firstStrike: false, deathtouchKill: true, lifelinkTo: null, trampleTo: null })
+      }
+    }
+  }
+  for (const plan of planBlockerStrikes(prevGame, nextGame)) {
+    const blocker = locate(prevGame, plan.attackerId) ?? locate(nextGame, plan.attackerId)
+    if (!blocker) continue
+    const keywords = cardKeywordIds(blocker.card)
+    const firstStrike = strikeKind(blocker.card) !== null
+    const deathtouchKill = isDeathtouchKill(prevGame, nextGame, keywords.has('deathtouch'), plan.targetId) && claimSkull(plan.targetId)
+    const lifelinkTo = lifelinkGain(prevGame, nextGame, keywords, blocker.controllerId)
+    if (!firstStrike && !deathtouchKill && !lifelinkTo) continue
+    out.push({ attackerId: plan.attackerId, targetId: plan.targetId, firstStrike, deathtouchKill, lifelinkTo, trampleTo: null, fromBlocker: true })
   }
   return out
 }
@@ -162,15 +209,23 @@ function fire(strike: KeywordStrike): void {
 export function playKeywordStrikes(strikes: KeywordStrike[], schedule: StrikeSchedule): KeywordHits {
   const hits: KeywordHits = { playerHits: new Map(), lifeGains: new Map() }
   const hasDom = typeof document !== 'undefined'
+  const hitsBy = new Map<string, number>()
   for (const strike of strikes) {
-    const at = schedule.impactAt.get(strike.attackerId)
+    let at: number | undefined
+    if (strike.fromBlocker) {
+      at = schedule.impactAt.get(strike.targetId) ?? 0
+    } else {
+      const n = hitsBy.get(strike.attackerId) ?? 0
+      hitsBy.set(strike.attackerId, n + 1)
+      at = (n > 0 ? schedule.impactAt.get(strikeHitKey(strike.attackerId, n)) : undefined) ?? schedule.impactAt.get(strike.attackerId)
+    }
     if (at === undefined) continue
     if (strike.trampleTo) {
       const ms = at + fxMotionDuration(TRAMPLE_TRAVEL_MS)
       const known = hits.playerHits.get(strike.trampleTo)
       if (known === undefined || ms < known) hits.playerHits.set(strike.trampleTo, ms)
     }
-    if (strike.lifelinkTo) {
+    if (strike.lifelinkTo && (!hasDom || strikeTargetElement(strike.lifelinkTo))) {
       const ms = at + fxMotionDuration(LIFELINK_TRAVEL_MS)
       const known = hits.lifeGains.get(strike.lifelinkTo)
       if (known === undefined || ms > known) hits.lifeGains.set(strike.lifelinkTo, ms)

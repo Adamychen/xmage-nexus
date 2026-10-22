@@ -115,7 +115,7 @@ test('targeting visual: humano lanza Lightning Bolt y el tablero resalta objetiv
     (f) => {
       const view = gameViewOf(f)
       const opp = opponentPlayer(view)
-      return opp?.playerId === opponent?.playerId && opp.life === 17
+      return opp?.playerId === opponent?.playerId && opp?.life === 17
     },
     'Bolt resuelto (vida del oponente 17)',
     15_000,

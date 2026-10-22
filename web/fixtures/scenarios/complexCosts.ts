@@ -9,6 +9,7 @@ import { TABLE } from '../table-names'
  */
 
 import { makeBaseScenario } from '../fake'
+import type { Scenario } from '../fake'
 import { makeCard, makePermanent } from '../../src/__fixtures__/gameViews'
 import type { CardView, GameView, PlayerView } from '../../src/net/types'
 import {
@@ -89,7 +90,7 @@ export function complexCostsScenario(): Scenario {
           rules: ['{T}: Add {G}.', 'Convoke (Your creatures can help pay for this spell.)'],
         }),
       },
-    }
+    } as unknown as PlayerView
 
     const simPlayer: PlayerView = {
       playerId: SIM_PLAYER_ID,
@@ -113,7 +114,7 @@ export function complexCostsScenario(): Scenario {
           cardTypes: ['Creature'],
         }),
       },
-    }
+    } as unknown as PlayerView
 
     const handCards: Record<string, CardView> = {
       'hand-probe': makeCard({
@@ -166,7 +167,6 @@ export function complexCostsScenario(): Scenario {
     }
 
     return {
-      gameId,
       turn: 3,
       phase: 'PRECOMBAT_MAIN',
       step: 'PRECOMBAT_MAIN',
@@ -185,7 +185,7 @@ export function complexCostsScenario(): Scenario {
           'creature-llanowar-elves': { basicCastAbilities: [{ id: 'creature-llanowar-elves', value: 'Tap for mana / Convoke' }] },
         },
       },
-    }
+    } as unknown as GameView
   }
 
   return makeBaseScenario({

@@ -1,6 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { handleMessage } from '../eventHandler'
 import { getState, setState } from '../state'
+import { clearActiveGame, loadActiveGame } from '../persistence'
+import { emptyCombat } from '../gameUtils'
 import { makeGameView, makePlayer } from '../../__fixtures__/gameViews'
 import { startCardFlight, getActiveFlights, clearFlights } from '../../board/flightManager'
 import type { CardView } from '../../net/types'
@@ -112,5 +114,90 @@ describe('handleGameUpdate — GAME_INIT', () => {
     } as never)
 
     expect(getActiveFlights()).toHaveLength(1)
+  })
+})
+
+describe('handleGameUpdate — persisted role', () => {
+  beforeEach(() => {
+    clearActiveGame()
+    clearFlights()
+    setState({ phase: 'lobby', gameId: null, game: null })
+  })
+
+  it('keeps the watcher role saved by WATCHGAME when GAME_UPDATE arrives', () => {
+    handleMessage({ type: 'event', method: 'WATCHGAME', messageId: 1, objectId: 'g-watch', data: {} } as never)
+    handleMessage({
+      type: 'event',
+      method: 'GAME_UPDATE',
+      messageId: 2,
+      objectId: 'g-watch',
+      data: { gameView: readableGameView() },
+    } as never)
+    expect(loadActiveGame()).toMatchObject({ gameId: 'g-watch', role: 'watcher' })
+  })
+
+  it('saves the player role for a game the player is in', () => {
+    setState({ phase: 'game', gameId: 'g-play' })
+    handleMessage({
+      type: 'event',
+      method: 'GAME_UPDATE',
+      messageId: 3,
+      objectId: 'g-play',
+      data: { gameView: readableGameView() },
+    } as never)
+    expect(loadActiveGame()).toMatchObject({ gameId: 'g-play', role: 'player' })
+  })
+})
+
+describe('game end and new game clear the pending prompt', () => {
+  const TARGET_PROMPT = {
+    message: 'Choose a target',
+    targets: ['card-1'],
+    cardsView1: { 'card-1': { id: 'card-1', name: 'Forest' } },
+  }
+
+  function leavePendingPrompt(gameId: string) {
+    setState({ phase: 'game', gameId, game: readableGameView(), playableIds: ['card-1'], playableWindow: null, combat: emptyCombat() })
+    handleMessage({ type: 'event', method: 'GAME_TARGET', messageId: 1, objectId: gameId, data: TARGET_PROMPT } as never)
+    expect(getState().feedback?.method).toBe('GAME_TARGET')
+  }
+
+  beforeEach(() => {
+    clearActiveGame()
+    setState({ gameEnd: null, rollbackVote: null, feedback: null, playableIds: [], playableWindow: null, combat: null })
+  })
+
+  it('GAME_OVER clears a pending target prompt, playables and combat', () => {
+    leavePendingPrompt('g-end')
+    handleMessage({ type: 'event', method: 'GAME_OVER', messageId: 2, objectId: 'g-end', data: { message: 'Game over', winnerName: 'Opp' } } as never)
+    expect(getState().feedback).toBeNull()
+    expect(getState().playableIds).toEqual([])
+    expect(getState().playableWindow).toBeNull()
+    expect(getState().combat).toBeNull()
+  })
+
+  it('END_GAME_INFO of a game that does not end the match clears the pending prompt', () => {
+    leavePendingPrompt('g-end')
+    handleMessage({
+      type: 'event',
+      method: 'END_GAME_INFO',
+      messageId: 2,
+      objectId: 'g-end',
+      data: { gameInfo: 'Opp won game 1', matchInfo: 'Game 1 of 3 finished' },
+    } as never)
+    expect(getState().gameEnd).not.toBeNull()
+    expect(getState().feedback).toBeNull()
+    expect(getState().playableIds).toEqual([])
+    expect(getState().playableWindow).toBeNull()
+    expect(getState().combat).toBeNull()
+  })
+
+  it('START_GAME for another game clears the previous game prompt', () => {
+    leavePendingPrompt('g-old')
+    handleMessage({ type: 'event', method: 'START_GAME', messageId: 2, data: { gameId: 'g-new', tableName: 'T' } } as never)
+    expect(getState().gameId).toBe('g-new')
+    expect(getState().feedback).toBeNull()
+    expect(getState().playableIds).toEqual([])
+    expect(getState().combat).toBeNull()
   })
 })

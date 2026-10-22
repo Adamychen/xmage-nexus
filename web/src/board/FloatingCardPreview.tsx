@@ -3,7 +3,7 @@ import type { CardView, PermanentView } from '../net/types'
 import { cardName, getSourceCardName, hiddenFaceDownName, isAbilityCard } from '../cards/cardImages'
 import { useCardImageUrl } from '../cards/useCardImageUrl'
 import { activeCardFace } from './cardFaces'
-import { extractKeywordsFromCard } from '../data/keywordExtractor'
+import { extractOwnedKeywords } from '../data/keywordExtractor'
 import { keywordDisplayName, keywordSummary } from '../data/keywordI18n'
 import FormattedText from '../game/FormattedText'
 import { ManaCost } from '../decks/ArenaManaSymbols'
@@ -109,7 +109,7 @@ export default function FloatingCardPreview({
 
   const imgUrl = useCardImageUrl(activeCard, !((!inModal && modalOpen) || !activeCard || activeCard.faceDown))
 
-  const keywords = useMemo(() => extractKeywordsFromCard(activeCard), [activeCard])
+  const keywords = useMemo(() => extractOwnedKeywords(activeCard), [activeCard])
 
   if ((!inModal && modalOpen) || !card || !anchorRect || (card.faceDown && !hiddenName) || !activeCard) {
     return null

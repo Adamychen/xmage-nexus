@@ -1,9 +1,10 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import ConstructScreen, { poolToDeckCards, restoreConstructSelection } from './ConstructScreen'
+import ConstructScreen, { completeMainWithBasics, poolToDeckCards, restoreConstructSelection } from './ConstructScreen'
 import { setState } from '../state/store'
 import { clearActiveConstruct, saveConstructSelection } from '../state/persistence'
 import { submitDeck } from '../net/commands'
+import type { CardStripMeta } from '../decks/ArenaCardStrip'
 
 vi.mock('../net/commands', async (importOriginal) => ({
   ...(await importOriginal<typeof import('../net/commands')>()),
@@ -170,5 +171,51 @@ describe('ConstructScreen — restore del armado en curso', () => {
     expect(container.querySelector('.basic-land-btn-count')?.textContent).toBe('3')
     expect((screen.getByTestId('construct-submit') as HTMLButtonElement).disabled).toBe(true)
     clearActiveConstruct()
+  })
+})
+
+describe('ConstructScreen — auto-submit on timer expiry', () => {
+  it('shows the error banner when the expiry auto-submit is rejected', async () => {
+    vi.mocked(submitDeck).mockResolvedValueOnce({ ok: false, error: 'Deck is not legal' } as never)
+    vi.useFakeTimers()
+    try {
+      setState({ construct: null } as never)
+      render(<ConstructScreen />)
+      await act(async () => {
+        setState({
+          construct: { deckName: 'Pool', pool: {}, tableId: 't-expire', parentTableId: null, timeLeft: 3 },
+        } as never)
+      })
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(5000)
+      })
+    } finally {
+      vi.useRealTimers()
+    }
+    expect(submitDeck).toHaveBeenCalledTimes(1)
+    expect(screen.getByTestId('construct-submit-error').textContent).toContain('Deck is not legal')
+  })
+})
+
+describe('completeMainWithBasics', () => {
+  const meta = new Map([
+    ['IMA/165', { manaCost: '{1}{G}', typeLine: 'Creature — Bear' }],
+  ]) as never as Map<string, CardStripMeta>
+
+  it('fills a short main with basics for its colours up to the minimum', () => {
+    const main = [{ cardName: 'Grizzly Bears', setCode: 'IMA', cardNumber: '165', amount: 10 }]
+    const result = completeMainWithBasics(main, 40, meta)
+    expect(result.reduce((sum, c) => sum + c.amount, 0)).toBe(40)
+    expect(result[0]).toEqual(main[0])
+    expect(result.find((c) => c.cardName === 'Forest')?.amount).toBe(30)
+  })
+
+  it('leaves a main that already meets the minimum untouched', () => {
+    const main = [{ cardName: 'Grizzly Bears', setCode: 'IMA', cardNumber: '165', amount: 40 }]
+    expect(completeMainWithBasics(main, 40, meta)).toBe(main)
+  })
+
+  it('returns the main unchanged when there are no colours to derive basics from', () => {
+    expect(completeMainWithBasics([], 40, meta)).toEqual([])
   })
 })

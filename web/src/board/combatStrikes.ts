@@ -16,6 +16,10 @@ export interface StrikeSchedule {
   impactAt: Map<string, number>
 }
 
+export function strikeHitKey(attackerId: string, hit: number): string {
+  return `${attackerId}#${hit}`
+}
+
 const STRIKE_MS = 560
 const STRIKE_GAP_MS = 240
 const IMPACT_AT = 0.5
@@ -34,6 +38,12 @@ export function strikeKind(card: unknown): StrikeKind {
     if (keywords.includes('first strike')) return 'first'
   }
   return null
+}
+
+function hasTrample(card: unknown): boolean {
+  const c = card as { cardIcons?: Array<{ cardIconType?: string } | null>; rules?: unknown[] } | null | undefined
+  if ((c?.cardIcons ?? []).some((i) => String(i?.cardIconType ?? '') === 'ABILITY_TRAMPLE')) return true
+  return (c?.rules ?? []).some((line) => String(line).replace(/<[^>]+>/g, '').toLowerCase().split(/[,;.]/).map((s) => s.trim()).includes('trample'))
 }
 
 function cardOf(game: GameView, group: Record<string, unknown>, id: string): unknown {
@@ -88,12 +98,33 @@ export function planDamageStrikes(prevGame: GameView, nextGame: GameView): Strik
     const blockers = stringList(rec.blockers)
     const blocked = blockers.length > 0 || rec.isBlocked === true
     const defender = (typeof rec.defenderId === 'string' && rec.defenderId) || stringList(rec.defenders)[0] || null
-    const targetId = blockers[0] ?? (blocked ? null : defender)
-    if (!targetId) continue
     for (const attackerId of stringList(rec.attackers)) {
-      const kind = strikeKind(cardOf(source, rec, attackerId))
+      const card = cardOf(source, rec, attackerId)
+      const kind = strikeKind(card)
+      const targetId = blockers[0] ?? (blocked ? (hasTrample(card) ? defender : null) : defender)
+      if (!targetId) continue
       if (crossed.first && kind !== null) firstStrikes.push({ attackerId, targetId })
-      else if (crossed.regular && kind !== 'first') regularStrikes.push({ attackerId, targetId })
+      if (crossed.regular && kind !== 'first') regularStrikes.push({ attackerId, targetId })
+    }
+  }
+  return [...firstStrikes, ...regularStrikes]
+}
+
+export function planBlockerStrikes(prevGame: GameView, nextGame: GameView): StrikePlan[] {
+  const crossed = crossedDamage(prevGame, nextGame)
+  if (!crossed.first && !crossed.regular) return []
+  const source = (prevGame.combat ?? []).length > 0 ? prevGame : nextGame
+  const firstStrikes: StrikePlan[] = []
+  const regularStrikes: StrikePlan[] = []
+  for (const group of source.combat ?? []) {
+    const rec = group as Record<string, unknown>
+    const attackers = stringList(rec.attackers)
+    for (const blockerId of stringList(rec.blockers)) {
+      const kind = strikeKind(cardOf(source, rec, blockerId))
+      for (const attackerId of attackers) {
+        if (crossed.first && kind !== null) firstStrikes.push({ attackerId: blockerId, targetId: attackerId })
+        if (crossed.regular && kind !== 'first') regularStrikes.push({ attackerId: blockerId, targetId: attackerId })
+      }
     }
   }
   return [...firstStrikes, ...regularStrikes]
@@ -245,10 +276,14 @@ function holdCombatants(ids: Iterable<string>, ms: number): void {
 function impactSchedule(plans: StrikePlan[], duration: number): Map<string, number> {
   const gap = fxMotionDuration(STRIKE_GAP_MS)
   const impactAt = new Map<string, number>()
+  const hitsBy = new Map<string, number>()
   plans.slice(0, MAX_STRIKES).forEach((plan, i) => {
     const hit = i * gap + Math.round(duration * IMPACT_AT)
     if (!impactAt.has(plan.targetId)) impactAt.set(plan.targetId, hit)
     if (!impactAt.has(plan.attackerId)) impactAt.set(plan.attackerId, hit)
+    const n = hitsBy.get(plan.attackerId) ?? 0
+    hitsBy.set(plan.attackerId, n + 1)
+    if (n > 0) impactAt.set(strikeHitKey(plan.attackerId, n), hit)
   })
   return impactAt
 }

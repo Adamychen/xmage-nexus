@@ -4,7 +4,7 @@ import { cardName, hiddenFaceDownName } from '../cards/cardImages'
 import { useCardImageUrl } from '../cards/useCardImageUrl'
 import RenderedCard from '../cards/rendered/RenderedCard'
 import { getPreviousCardPosition, getPreviousCardSize, getPreviousCardZone, recordCardPosition } from './cardPositionRegistry'
-import { startCardFlight, onFlightLanded, getActiveFlights, subscribeFlights, noteFlightEvent, ENTER_FLIGHT_MS } from './flightManager'
+import { startCardFlight, onFlightLanded, getActiveFlights, subscribeFlights, noteFlightEvent, flightLandingDelay, ENTER_FLIGHT_MS } from './flightManager'
 import { combatHoldRemaining, isOffBattlefield } from './combatStrikes'
 import { CONTROL_FLIGHT_MS, controlChangeTint } from './controlFx'
 import { COMMAND_FLIGHT_MS, commandReturnSource } from './commandFx'
@@ -43,6 +43,11 @@ import './manaParticle.css'
 
 /** Cota del acuse optimista si el eco del servidor no llega nunca. */
 const PENDING_ACK_MS = 3000
+/** Grace after the clone's landing time before the real card is revealed anyway. */
+const FLIGHT_BACKSTOP_MARGIN_MS = 40
+const FLIGHT_LAND_FADE_MS = 180
+const seenKeywordsByCard = new Map<string, string>()
+const KEYWORD_GAIN_MS = 900
 
 interface CardSlotProps {
   cardId?: string
@@ -117,12 +122,11 @@ export default function CardSlot({
   const slotRef = useRef<HTMLDivElement>(null)
   const isFirstMountRef = useRef(true)
   const [entering, setEntering] = useState(false)
-  const enterTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [flightState, setFlightState] = useState<'none' | 'hidden' | 'landing'>('none')
-  const flightStateRef = useRef(flightState)
-  flightStateRef.current = flightState
+  const [flightId, setFlightId] = useState<string | null>(null)
   const [held, setHeld] = useState(false)
-  const holdTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [hold, setHold] = useState<{ ms: number } | null>(null)
+  const holdFlyRef = useRef<((rect: DOMRect) => void) | null>(null)
 
   const effectiveId = cardId || card.id
   const recapMark = useStore((s) => (effectiveId ? s.turnRecap?.marks[effectiveId] : undefined))
@@ -163,8 +167,57 @@ export default function CardSlot({
 
   useEffect(() => () => {
     if (pendingTimerRef.current) clearTimeout(pendingTimerRef.current)
-    if (holdTimerRef.current) clearTimeout(holdTimerRef.current)
   }, [])
+
+  useEffect(() => {
+    if (!hold) return
+    const release = setTimeout(() => {
+      setHold(null)
+      setHeld(false)
+      const fly = holdFlyRef.current
+      holdFlyRef.current = null
+      const el = slotRef.current
+      if (el?.isConnected && fly) fly(el.getBoundingClientRect())
+    }, hold.ms)
+    return () => clearTimeout(release)
+  }, [hold])
+
+  useEffect(() => {
+    if (!entering) return
+    const release = setTimeout(() => setEntering(false), 250)
+    return () => clearTimeout(release)
+  }, [entering])
+
+  useEffect(() => {
+    if (flightState !== 'landing') return
+    const fade = setTimeout(() => setFlightState('none'), FLIGHT_LAND_FADE_MS)
+    return () => clearTimeout(fade)
+  }, [flightState])
+
+  useEffect(() => {
+    if (!flightId) return
+    let backstop: ReturnType<typeof setTimeout> | undefined
+    const detach = () => {
+      clearTimeout(backstop)
+      offLanded()
+      unsub()
+    }
+    const settle = () => {
+      detach()
+      setFlightState('landing')
+    }
+    const check = () => {
+      const left = flightLandingDelay(flightId)
+      if (left === null || left <= 0) settle()
+      else backstop = setTimeout(check, left + FLIGHT_BACKSTOP_MARGIN_MS)
+    }
+    const offLanded = onFlightLanded(flightId, settle)
+    const unsub = subscribeFlights(() => {
+      if (!getActiveFlights().some((f) => f.flightId === flightId)) settle()
+    })
+    backstop = setTimeout(check, (flightLandingDelay(flightId) ?? 0) + FLIGHT_BACKSTOP_MARGIN_MS)
+    return detach
+  }, [flightId])
 
   useLayoutEffect(() => {
     const el = slotRef.current
@@ -196,41 +249,24 @@ export default function CardSlot({
               const flightId = startCardFlight(card, prev, toRect, duration, `[data-card-id="${effectiveId}"]`, { sourceSize, toCompact: compact, variant, tint: tint ?? undefined })
               if (!flightId) return
               setFlightState('hidden')
-              const land = () => {
-                if (flightStateRef.current !== 'hidden') return
-                setFlightState('landing')
-                setTimeout(() => setFlightState('none'), 180)
-              }
-              const offLanded = onFlightLanded(flightId, land)
-              const unsub = subscribeFlights(() => {
-                if (!getActiveFlights().some((f) => f.flightId === flightId)) {
-                  land()
-                  offLanded()
-                  unsub()
-                }
-              })
+              setFlightId(flightId)
             }
             const holdMs = combatHoldRemaining(String(effectiveId))
             if (holdMs > 0) {
               setHeld(true)
-              holdTimerRef.current = setTimeout(() => {
-                holdTimerRef.current = null
-                setHeld(false)
-                if (el.isConnected) flyIn(el.getBoundingClientRect())
-              }, holdMs)
+              holdFlyRef.current = flyIn
+              setHold({ ms: holdMs })
             } else {
               flyIn(lastRect)
             }
           } else {
             noteFlightEvent({ kind: 'skip', reason: 'same-zone', cardId: String(effectiveId), detail: `slot:${prevZone || '?'}>${curZoneClass || '?'}` })
             setEntering(true)
-            enterTimerRef.current = setTimeout(() => { enterTimerRef.current = null; setEntering(false) }, 250)
           }
         } else {
           const mountZone = el.closest('.opponent-zone, .player-zone, .stack-zone, .hand-zone')
           noteFlightEvent({ kind: 'skip', reason: 'no-prev', cardId: String(effectiveId), detail: `slot-mount:${mountZone ? mountZone.className.split(' ')[0] : '?'}` })
           setEntering(true)
-          enterTimerRef.current = setTimeout(() => { enterTimerRef.current = null; setEntering(false) }, 250)
         }
       }
     }
@@ -258,12 +294,6 @@ export default function CardSlot({
     const release = setTimeout(() => setHeld(false), holdMs + 40 + fxMotionDuration(420))
     return () => clearTimeout(release)
   }, [effectiveId])
-
-  useEffect(() => {
-    if (flightState !== 'hidden') return
-    const safety = setTimeout(() => setFlightState('landing'), 700)
-    return () => clearTimeout(safety)
-  }, [flightState])
 
   const perm = card as PermanentView
   const counters = card.counters ?? []
@@ -293,26 +323,41 @@ export default function CardSlot({
     ? t('game', 'pt_base', { pt: `${basePower}/${baseToughness}` })
     : undefined
 
+  const hideFaceDownKeywords = isFaceDownCard && (!localPlayerId || card.controllerId !== localPlayerId)
   const allKeywords = useMemo(() => {
+    if (hideFaceDownKeywords) return []
     const merged = mergeBadgeKeywords(card.cardIcons, extractOwnedKeywords(card), Infinity)
     return perm.mutated === true ? [{ id: 'mutate', name: 'Mutate', icon: '', category: 'mechanic' as const }, ...merged] : merged
-  }, [perm.mutated, card.rules, card.cardIcons, (card as unknown as { abilities?: unknown }).abilities, card.name])
+  }, [hideFaceDownKeywords, perm.mutated, card.rules, card.cardIcons, (card as unknown as { abilities?: unknown }).abilities, card.name])
   const keywordBadges = useMemo(() => allKeywords.slice(0, MAX_BADGES), [allKeywords])
 
   const allKeywordIdsKey = allKeywords.map((kw) => kw.id).join('|')
-  const [seenKeywordIds, setSeenKeywordIds] = useState(allKeywordIdsKey)
+  const [seenKeywordIds, setSeenKeywordIds] = useState(() => seenKeywordsByCard.get(String(effectiveId)) ?? allKeywordIdsKey)
   const [gainedKeywords, setGainedKeywords] = useState<string[]>([])
   if (seenKeywordIds !== allKeywordIdsKey) {
     setSeenKeywordIds(allKeywordIdsKey)
-    setGainedKeywords(gainedKeywordIds(seenKeywordIds.split('|'), allKeywordIdsKey.split('|')))
+    const fresh = gainedKeywordIds(seenKeywordIds.split('|'), allKeywordIdsKey.split('|'))
+    setGainedKeywords((running) => [...running, ...fresh.filter((id) => !running.includes(id))])
   }
+  useEffect(() => {
+    const key = String(effectiveId)
+    seenKeywordsByCard.set(key, allKeywordIdsKey)
+    return () => {
+      seenKeywordsByCard.delete(key)
+    }
+  }, [effectiveId, allKeywordIdsKey])
+  useEffect(() => {
+    if (gainedKeywords.length === 0) return
+    const expire = setTimeout(() => setGainedKeywords([]), KEYWORD_GAIN_MS)
+    return () => clearTimeout(expire)
+  }, [gainedKeywords])
   const auraKeyword = keywordAura && auraMode !== 'off' && !showBack && !isFaceDownCard
     ? dominantAuraKeyword(allKeywords.map((kw) => kw.id))
     : null
 
   const badgeRowRef = useRef<HTMLDivElement>(null)
   const shownBadges = useBadgeFit(badgeRowRef, keywordBadges.length)
-  const hiddenBadges = keywordBadges.slice(shownBadges)
+  const hiddenBadges = allKeywords.slice(shownBadges)
   useBadgeLayout(slotRef)
 
   const designations = useMemo(() => cardDesignations(card.rules), [card.rules])
@@ -687,7 +732,7 @@ const showPtBadge =
         </BadgeTip>
       )}
 
-      <CardIcons icons={card.cardIcons} />
+      <CardIcons icons={hideFaceDownKeywords ? undefined : card.cardIcons} />
 
       {(designations.length > 0 || roomSides !== '') && (
         <div className="designation-badges" data-badge-zone="designation">

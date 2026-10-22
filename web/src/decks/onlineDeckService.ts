@@ -44,8 +44,8 @@ function moxfieldRow(entry: MoxfieldEntry): DeckCard {
   const card = entry.card || entry
   return {
     cardName: card.name,
-    setCode: card.set?.toUpperCase() || 'M10',
-    cardNumber: card.cn || card.collector_number || '1',
+    setCode: card.set?.toUpperCase() || '',
+    cardNumber: card.cn || card.collector_number || '',
     amount: entry.quantity || 1,
   }
 }
@@ -198,8 +198,8 @@ export async function fetchArchidektDeck(urlOrId: string): Promise<DeckV2 | null
         if ((entry.categories || []).some((c) => excluded.has(c))) continue
         const cardName = entry.card?.oracleCard?.name || entry.card?.name
         if (!cardName) continue
-        const setCode = entry.card?.edition?.editioncode?.toUpperCase() || 'M10'
-        const cardNumber = entry.card?.collectorNumber || '1'
+        const setCode = entry.card?.edition?.editioncode?.toUpperCase() || ''
+        const cardNumber = entry.card?.collectorNumber || ''
         const amount = entry.quantity || 1
         const categories = entry.categories || []
 

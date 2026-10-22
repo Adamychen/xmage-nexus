@@ -76,6 +76,22 @@ describe('useBattlefieldDissolve', () => {
     expect(ghosts()[0].dataset.cardId).toBeUndefined()
   })
 
+  it('drops the aura flare and the keyword gain pop from the ghost copy', () => {
+    const scope = board(['c1'])
+    const card = scope.querySelector<HTMLElement>('[data-card-id="c1"]')!
+    card.insertAdjacentHTML('beforeend', '<span class="kw-aura kw-aura--flying"></span><span class="kw-aura-flare kw-aura-flare--flying"></span><span class="keyword-badge kw-coin kw-gained kw-flying"></span>')
+    const { rerender } = renderHook(
+      ({ p }: { p: PlayerView }) => useBattlefieldDissolve([scope], 'g1', p),
+      { initialProps: { p: playerWith({ battlefield: ['c1'] }) } },
+    )
+    removeCard(scope, 'c1')
+    rerender({ p: playerWith({ graveyard: ['c1'] }) })
+    expect(ghosts()).toHaveLength(1)
+    expect(ghosts()[0].querySelector('.kw-aura-flare')).toBeNull()
+    expect(ghosts()[0].querySelector('.kw-gained')).toBeNull()
+    expect(ghosts()[0].querySelector('.kw-aura')).not.toBeNull()
+  })
+
   it('spawns a ghost for an exile destination too', () => {
     const scope = board(['c1'])
     const { rerender } = renderHook(
@@ -232,5 +248,18 @@ describe('useBattlefieldDissolve', () => {
     expect(ghosts()).toHaveLength(1)
     unmount()
     expect(ghosts()).toHaveLength(0)
+  })
+
+  it('does not re-read the board boxes on a render that brings no new player state', () => {
+    const scope = board(['c1', 'c2'])
+    const p = playerWith({ battlefield: ['c1', 'c2'] })
+    const scopes = [scope]
+    const { rerender } = renderHook(
+      ({ p }: { p: PlayerView }) => useBattlefieldDissolve(scopes, 'g1', p),
+      { initialProps: { p } },
+    )
+    const read = vi.spyOn(scope.querySelector<HTMLElement>('[data-card-id="c1"]')!, 'getBoundingClientRect')
+    rerender({ p })
+    expect(read).not.toHaveBeenCalled()
   })
 })

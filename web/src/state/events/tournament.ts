@@ -1,5 +1,6 @@
 import { getState, setState, addLog } from '../state'
 import { exitTournamentChat } from '../actions'
+import { loadActiveDraft, saveActiveDraft } from '../persistence'
 import * as cmds from '../../net/commands'
 import { translateError } from '../../i18n'
 import type { TournamentView } from '../../net/types.generated'
@@ -15,6 +16,13 @@ function isSeatedForTournament(username: string, tables: { tableId: string; seat
         (seat) => (seat.playerName ?? '').toLowerCase() === username && (!seat.playerType || seat.playerType === 'HUMAN'),
       ),
   )
+}
+
+let panelJoinTimer: number | null = null
+
+export function cancelTournamentPanelJoin(): void {
+  if (panelJoinTimer !== null) window.clearTimeout(panelJoinTimer)
+  panelJoinTimer = null
 }
 
 function attemptPanelJoin(tournamentId: string, username: string, currentTableId: string | undefined, attempt: number): void {
@@ -40,10 +48,10 @@ function attemptPanelJoin(tournamentId: string, username: string, currentTableId
     return
   }
   addLog('torneo', `Mesa del torneo aún no visible, reintentando… (${attempt + 1}/${TOURNAMENT_JOIN_RETRY_DELAYS_MS.length + 1})`)
-  window.setTimeout(
-    () => attemptPanelJoin(tournamentId, username, currentTableId, attempt + 1),
-    TOURNAMENT_JOIN_RETRY_DELAYS_MS[attempt],
-  )
+  panelJoinTimer = window.setTimeout(() => {
+    panelJoinTimer = null
+    attemptPanelJoin(tournamentId, username, currentTableId, attempt + 1)
+  }, TOURNAMENT_JOIN_RETRY_DELAYS_MS[attempt])
 }
 
 export function handleStartTournament(objectId: string | null, data: unknown): void {
@@ -55,6 +63,7 @@ export function handleStartTournament(objectId: string | null, data: unknown): v
   const s = getState()
   const username = s.conn?.username?.toLowerCase()
   if (!username) return
+  cancelTournamentPanelJoin()
   attemptPanelJoin(tournamentId, username, d?.currentTableId, 0)
 }
 
@@ -69,7 +78,9 @@ export function handleTournamentUpdate(objectId: string | null, data: unknown): 
 export function handleTournamentOver(data: unknown): void {
   const text = typeof data === 'string' ? data : (data as { message?: string } | null)?.message ?? 'Torneo terminado'
   exitTournamentChat()
-  setState({ draftOverAt: null, lastDraftEventAt: null, lastDraftMethod: null })
+  const persisted = loadActiveDraft()
+  if (persisted?.tournamentId) saveActiveDraft(persisted.draft, null)
+  setState({ tournament: null, draftOverAt: null, lastDraftEventAt: null, lastDraftMethod: null })
   addLog('torneo', text)
 }
 

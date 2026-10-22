@@ -62,6 +62,8 @@ function spawnGhost(node: HTMLElement, box: Box, host: HTMLElement | null, ghost
   ghost.querySelectorAll<HTMLImageElement>('img').forEach((img) => {
     img.alt = ''
   })
+  ghost.querySelectorAll('.kw-aura-flare').forEach((flare) => flare.remove())
+  ghost.querySelectorAll('.kw-gained').forEach((coin) => coin.classList.remove('kw-gained'))
 
   const inHost = host?.isConnected === true
   const origin = inHost ? host.getBoundingClientRect() : null
@@ -101,6 +103,8 @@ export function useBattlefieldDissolve(
 ): void {
   const snapshotRef = useRef<Snapshot | null>(null)
   const ghostsRef = useRef<Ghosts>(new Map())
+  const players = context?.players
+  const gameCycle = context?.gameCycle
 
   useEffect(() => {
     const ghosts = ghostsRef.current
@@ -123,10 +127,9 @@ export function useBattlefieldDissolve(
     const battlefield = player.battlefield ?? {}
     const onField = new Set(Object.keys(battlefield))
 
-    const gameCycle = context?.gameCycle
     const rolledBack = prev?.gameCycle !== undefined && gameCycle !== undefined && gameCycle < prev.gameCycle
     if (prev && allowed && !rolledBack && prev.gameId === gameId && prev.playerId === player.playerId) {
-      const zonePlayers = context?.players ?? [player]
+      const zonePlayers = players ?? [player]
       const toZone = new Set(zonePlayers.flatMap((p) => [...Object.keys(p.graveyard ?? {}), ...Object.keys(p.exile ?? {})]))
       for (const [id, entry] of prev.cards) {
         if (!onField.has(id) && toZone.has(id)) spawnGhost(entry.node, entry.box, prev.host, ghostsRef.current, boardWipeDelay(id))
@@ -142,5 +145,5 @@ export function useBattlefieldDissolve(
       if (onField.has(id)) cards.set(id, { node, box: captureBox(node) })
     }
     snapshotRef.current = { gameId, playerId: player.playerId, host: hostOf(scopes), gameCycle, cards }
-  })
+  }, [player, gameId, players, gameCycle, scopes])
 }

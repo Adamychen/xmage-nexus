@@ -7,6 +7,7 @@ import { TABLE } from '../table-names'
  */
 
 import { makeBaseScenario } from '../fake'
+import type { Scenario } from '../fake'
 import { makeCard, makePermanent } from '../../src/__fixtures__/gameViews'
 import type { CardView, GameView, PlayerView } from '../../src/net/types'
 import {
@@ -29,7 +30,6 @@ export function stackPriorityScenario(): Scenario {
 
   let humanLife = 20
   let simLife = 20
-  let holdingPriority = false
 
   const getGameView = (): GameView => {
     const stackCards: Record<string, CardView> = {}
@@ -210,7 +210,7 @@ export function stackPriorityScenario(): Scenario {
       timerActive: false,
       statesSavedSize: 0,
       priorityTimeSavedTimeMs: 0,
-    }
+    } as unknown as PlayerView
 
     const simPlayer: PlayerView = {
       playerId: SIM_PLAYER_ID,
@@ -249,7 +249,7 @@ export function stackPriorityScenario(): Scenario {
       timerActive: false,
       statesSavedSize: 0,
       priorityTimeSavedTimeMs: 0,
-    }
+    } as unknown as PlayerView
 
     return {
       gameCycle: 1,
@@ -295,10 +295,8 @@ export function stackPriorityScenario(): Scenario {
     selectMessage: 'Prioridad en Fase Principal (M1) — Lanza Infernal Tutor con prioridad retenida:',
     onSendPlayerAction: (_conn, value) => {
       if (value === 'HOLD_PRIORITY') {
-        holdingPriority = true
         stage = 'hold_priority_active'
       } else if (value === 'UNHOLD_PRIORITY') {
-        holdingPriority = false
         stage = 'hold_priority_idle'
       }
     },

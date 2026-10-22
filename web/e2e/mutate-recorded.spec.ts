@@ -4,11 +4,13 @@ import { fileURLToPath } from 'node:url'
 import { test, expect } from './fixtures'
 import { fakeOnly } from './support/fake-mode'
 import { quickStartGame } from './support/start-game'
+import { mutatePileOf } from './support/frames'
 import { withFakeServer } from './support/fake-backend'
 import { replayRecordedScenario } from '../fixtures/scenarios/replay-recorded'
 fakeOnly()
 
 const SHOTS_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), 'shots')
+const FIXTURES_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'fixtures', 'recorded')
 
 test.describe('Mutate mechanic (real recorded frame)', { tag: '@mutate-recorded' }, () => {
   test('renders the real mutateView pile captured from a live XMage server', async ({ page }) => {
@@ -25,13 +27,17 @@ test.describe('Mutate mechanic (real recorded frame)', { tag: '@mutate-recorded'
       const myPile = page.locator('.player-zone .card-mutate-pile')
       await expect(myPile).toBeVisible()
       await expect(myPile.locator('.mutated-badge')).toBeVisible()
-      // El mutateView real tiene 2 partes constituyentes.
-      await expect(myPile.locator('.mutate-part')).toHaveCount(2)
-      // La carta de arriba (la que mutó) es Gemrazer; debajo, Elvish Mystic.
-      // Se scopea a .mutate-part porque el permanente fusionado también lleva
-      // data-card-name="Elvish Mystic" como carta frontal de la pila.
-      await expect(myPile.locator('.mutate-part[data-card-name="Gemrazer"]')).toBeVisible()
-      await expect(myPile.locator('.mutate-part[data-card-name="Elvish Mystic"]')).toBeVisible()
+      // Las partes bajo la carta de arriba son las constituyentes del frame real
+      // menos el host (el permanente lleva la carta frontal; no se duplica como parte).
+      const pile = mutatePileOf((JSON.parse(fs.readFileSync(path.join(FIXTURES_DIR, 'mutate.json'), 'utf8')) as { gameView: Record<string, unknown> }).gameView)
+      expect(pile, 'el frame real debe tener una pila mutada').not.toBeNull()
+      expect(pile!.under.length, 'debe quedar al menos una carta bajo el host').toBeGreaterThan(0)
+      expect(pile!.under).toHaveLength(pile!.cards - 1)
+      await expect(myPile.locator('.mutate-part')).toHaveCount(pile!.under.length)
+      for (const card of pile!.under) {
+        await expect(myPile.locator(`.mutate-part[data-card-name="${card.name}"]`)).toBeVisible()
+      }
+      await expect(myPile.locator('[data-card-name="Elvish Mystic"]').first()).toBeVisible()
 
       // No debe renderizarse como grupo de attachments (comportamiento heredado).
       await expect(page.locator('.card-attachment-group')).toHaveCount(0)

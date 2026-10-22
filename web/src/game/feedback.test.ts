@@ -682,6 +682,21 @@ describe('parseFeedback', () => {
     ])
   })
 
+  it('takes the required flag from the Choice (ChoiceImpl.required) and defaults to required when absent', () => {
+    const optional = parseFeedback('GAME_CHOOSE_CHOICE', 'game-5h', {
+      choice: { message: 'Choose a mode', keyChoices: { 'mode-a': 'First mode' }, required: false },
+    })
+    expect(optional?.required).toBe(false)
+    const mandatory = parseFeedback('GAME_CHOOSE_CHOICE', 'game-5i', {
+      choice: { message: 'Choose a mode', keyChoices: { 'mode-a': 'First mode' }, required: true },
+    })
+    expect(mandatory?.required).toBe(true)
+    const absent = parseFeedback('GAME_CHOOSE_CHOICE', 'game-5j', {
+      choice: { message: 'Choose a mode', keyChoices: { 'mode-a': 'First mode' } },
+    })
+    expect(absent?.required).toBe(true)
+  })
+
   it('extracts choices from ChoiceImpl.choices array when keyChoices is empty (ChoiceColor)', () => {
     const prompt = parseFeedback('GAME_CHOOSE_CHOICE', 'game-25', {
       choice: {

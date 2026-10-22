@@ -38,6 +38,8 @@ export const ENTER_FLIGHT_MS = 1100
 /** Fracción de ENTER_FLIGHT_MS en la que la carta toca el suelo. */
 export const ENTER_LAND_AT = 0.8
 export const CAST_FLIGHT_MS = 900
+/** The clone lands this long after its flight duration elapses (its settle pause). */
+const FLIGHT_LAND_LAG_MS = 120
 
 export type FlightVariant = 'destroy' | 'exile' | 'heavy' | 'land' | 'enter' | 'phase' | 'sacrifice' | 'copy' | 'control' | 'command' | 'tuck' | 'mutate' | 'animate'
 
@@ -342,18 +344,29 @@ export function startCardFlight(
   return flightId
 }
 
+function landingDelayOf(record: FlightRecord, now: number): number {
+  return Math.max(0, record.startTime + record.duration + FLIGHT_LAND_LAG_MS - now)
+}
+
+/** Ms until the clone of a tracked flight lands, or null once it is no longer tracked. */
+export function flightLandingDelay(flightId: string): number | null {
+  const record = activeFlights.find((f) => f.flightId === flightId)
+  return record ? landingDelayOf(record, performance.now()) : null
+}
+
 /** Timers de backstop + limpieza de un vuelo. Se guardan en el record para
  *  poder reprogramarlos al encadenar un redirect en ráfaga. */
 function scheduleFlightTimers(record: FlightRecord): Array<ReturnType<typeof setTimeout>> {
-  const { flightId, duration } = record
+  const { flightId } = record
+  const landIn = landingDelayOf(record, performance.now())
   return [
-    setTimeout(() => markFlightLanded(flightId), duration + 120),
+    setTimeout(() => markFlightLanded(flightId), landIn),
     // El clon permanece montado durante el fade-out posterior al aterrizaje.
     setTimeout(() => {
       activeFlights = activeFlights.filter((f) => f.flightId !== flightId)
       landedListeners.delete(flightId)
       notify()
-    }, duration + 240),
+    }, landIn + 120),
   ]
 }
 

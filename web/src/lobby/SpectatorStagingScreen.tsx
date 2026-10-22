@@ -116,11 +116,11 @@ export default function SpectatorStagingScreen({
   const [myReadyState, setMyReadyState] = useState(true)
   const [starting, setStarting] = useState(false)
 
-  const playerReadyMap = useMemo(() => {
+  const readyScopeId = tableChatId ?? chatId
+  const windowReadyMap = useMemo(() => {
     const map: Record<string, boolean> = {}
-    const scopeId = tableChatId ?? chatId
     for (const m of messages) {
-      if (scopeId && m.chatId && m.chatId !== scopeId) continue
+      if (readyScopeId && m.chatId && m.chatId !== readyScopeId) continue
       const marker = m.message ? parseReadyMarker(m.message) : null
       if (!marker) continue
       const embedded = marker.user?.toLowerCase()
@@ -130,7 +130,18 @@ export default function SpectatorStagingScreen({
       if (user) map[user] = marker.ready
     }
     return map
-  }, [messages, tableChatId, chatId])
+  }, [messages, readyScopeId])
+  const [readyHistory, setReadyHistory] = useState<{ scope: string | null; map: Record<string, boolean> }>({ scope: null, map: {} })
+  useEffect(() => {
+    setReadyHistory((prev) => ({
+      scope: readyScopeId,
+      map: { ...(prev.scope === readyScopeId ? prev.map : {}), ...windowReadyMap },
+    }))
+  }, [readyScopeId, windowReadyMap])
+  const playerReadyMap = useMemo(
+    () => ({ ...(readyHistory.scope === readyScopeId ? readyHistory.map : {}), ...windowReadyMap }),
+    [readyHistory, readyScopeId, windowReadyMap],
+  )
 
   const myUsername = conn?.username?.toLowerCase()
   const myIsReady = myUsername && playerReadyMap[myUsername] !== undefined ? playerReadyMap[myUsername] : myReadyState

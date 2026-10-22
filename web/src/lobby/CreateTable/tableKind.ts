@@ -177,7 +177,7 @@ export function validateDraftSets(
 ): DraftSetsError {
   const parsed = parseLimitedSetCodes(raw)
   if (parsed.length === 0) return 'draft_no_sets'
-  if (!opts?.cube && !opts?.random && parsed.length > 1 && parsed.length < boosters) {
+  if (!opts?.cube && !opts?.random && parsed.length > 1 && parsed.length !== boosters) {
     return 'draft_sets_count_mismatch'
   }
   return null
@@ -225,7 +225,7 @@ export function buildCreateTournamentArgs(a: TournamentArgsInput): Record<string
     .map((s) => s.trim())
     .filter(Boolean)
   return {
-    name: a.name || `${a.username}'s table`,
+    name: a.name.trim() || `${a.username}'s table`,
     tournamentType: a.tournamentType,
     gameType: a.gameType,
     deckType: a.draft ? 'Limited' : a.deckType,
@@ -290,7 +290,7 @@ export function buildCreateMatchArgs(a: MatchArgsInput): CreateTableArgs {
     .map((s) => s.trim())
     .filter(Boolean)
   return {
-    name: a.name || `${a.username}'s table`,
+    name: a.name.trim() || `${a.username}'s table`,
     gameType: a.gameType,
     deckType: a.deckType,
     winsNeeded: a.wins,

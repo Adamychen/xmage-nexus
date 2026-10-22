@@ -160,11 +160,12 @@ Orchestrator: `node scripts/test.mjs [layer...] [--skip=unit,e2e]` — layers:
 `build` (tsc -b && vite build) · `java` (mvn -f Mage.Proxy/pom.xml test) ·
 `self-test` (headless E2E against the proxy; requires stack) ·
 `human-test` (E2E human player vs AI; requires stack) ·
-`verify` (9 anti-drift scripts: multi-tenant isolation, hand permissions, player leave,
-range attack, rollback vote, spectator end, swiss, tournament watch, create-table matrix) ·
+`verify` (10 anti-drift scripts, listed in `VERIFY_SCRIPTS` in `scripts/test.mjs`: player leave (first),
+multi-tenant isolation, create-table matrix, hand permissions, spectator end, range attack, rollback vote,
+swiss, tournament watch, verify-report (last)) ·
 `verify-restart` (`verify-reconnect.mjs`; restarts the proxy, so it runs alone) ·
 `fuzz` (`fuzz.mjs` self-play soak; nightly, not per push) ·
-`e2e` (playwright in web; requires vite) · `i18n` (translation coverage guard)
+`e2e` (playwright in web; requires vite) · `i18n` (translation coverage guard) · `scripts` (`node --test scripts/*.test.mjs`, dashboard and CI helpers)
 
 The stack layers wait for the proxy's `/ready`, not just for its port: a proxy that has just
 started answers on 8787 while its card database is still building, and every script then fails
@@ -305,7 +306,9 @@ for `mechanics.spec.ts`, so a fixture change must be checked against every spec 
   (`build.mjs proxy`) + restart proxy.
 - **Before declaring a task "done"**: the layers the change touches — for `web/`, `unit` + `typecheck` and
   `npm --prefix web run test:e2e:changed` (Playwright `--only-changed`: the specs your diff reaches through
-  their imports); the full fake e2e (`node scripts/test.mjs e2e`) when touching `e2e/support/`, `fixtures/`
+  their imports). `--only-changed` follows imports, so a diff that touches only `web/src/` usually selects
+  ZERO specs and the command passes without running anything: also run the related specs by name
+  (`npx playwright test e2e/<spec>.spec.ts`); the full fake e2e (`node scripts/test.mjs e2e`) when touching `e2e/support/`, `fixtures/`
   or the FakeServer; the stack layers (`self-test`, `human-test`, `verify`) with the stack up when the proxy
   or the protocol changed — **and the remote CI green afterwards** (`gh run list -R Adamychen/xmage-nexus -L 5`),
   which runs the whole fake e2e sharded on every push. `Web client CI` once sat red on

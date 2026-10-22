@@ -32,7 +32,8 @@ export function deckIssuesScenario(): ReturnType<typeof makeBaseScenario> {
       { playerName: 'host-e2e', seatIndex: 0, playerType: 'HUMAN' },
       { playerName: '', seatIndex: 1, playerType: 'HUMAN' },
     ],
-    onValidateDeck(deck?: DeckArg): DeckValidationResult {
+    onValidateDeck(input?: unknown): DeckValidationResult {
+      const deck = input as DeckArg | undefined
       const cards = [...(deck?.cards ?? []), ...(deck?.sideboard ?? [])]
       const hasBad = cards.some(
         (c) => c.cardName === BAD_CARD.cardName && c.setCode === BAD_CARD.setCode && c.cardNumber === BAD_CARD.cardNumber,

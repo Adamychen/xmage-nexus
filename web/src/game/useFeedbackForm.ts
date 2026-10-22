@@ -144,7 +144,7 @@ export function useFeedbackForm(): UseFeedbackForm {
   }
 
   const confirmSelected = () => {
-    if (!prompt) return
+    if (!prompt || selected.length === 0) return
     const current = prompt
     void send(async () => {
       let result: { ok: boolean; error?: string } = { ok: true }
@@ -162,6 +162,7 @@ export function useFeedbackForm(): UseFeedbackForm {
       void send(() => cmds.sendPlayerManaType(prompt.gameId, prompt.playerId as string, String(amount)), t('errors', 'send_failed_mana'))
       return
     }
+    if (!Number.isInteger(amount) || amount < prompt.min || amount > prompt.max) return
     void send(() => cmds.sendPlayerInteger(amount, prompt.gameId), t('errors', 'send_failed_amount'))
   }
 

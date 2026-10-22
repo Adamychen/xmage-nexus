@@ -9,7 +9,7 @@ import { getFinishedMatches, replayGame } from '../net/commands'
 import AvatarImage from './AvatarImage'
 import CountryFlag from './CountryFlag'
 import Icon from '../ui/Icon'
-import { useTranslation } from '../i18n'
+import { useTranslation, plural } from '../i18n'
 import { t as tStatic } from '../i18n'
 import './FinishedMatchesPanel.css'
 
@@ -415,7 +415,7 @@ export default function FinishedMatchesPanel({
                           disabled={replayingGameId === gId}
                           title={`${t('common', 'loading')} #${gIdx + 1}`}>
                           <span className="replay-icon"><Icon name="play" size={12} /></span>
-                          <span>{replayingGameId === gId ? t('common', 'loading') : m.games!.length === 1 ? t('lobby', 'match_replay_single') : t('lobby', 'match_replay_number', { number: String(gIdx + 1) })}</span>
+                          <span>{replayingGameId === gId ? t('common', 'loading') : plural('lobby', 'match_replay', m.games!.length, { number: String(gIdx + 1) })}</span>
                         </Button>
                       ))}
                     </div>

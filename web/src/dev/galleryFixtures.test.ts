@@ -98,6 +98,7 @@ describe('galería de estados (P3)', () => {
       'anim:entered-glow',
       'anim:keyword-auras',
       'anim:keyword-gain',
+      'anim:aura-keyword-gain',
       'anim:dissolve',
       'anim:stack-trail',
       'anim:land-slide',
@@ -139,6 +140,9 @@ describe('galería de estados (P3)', () => {
       'anim:kw-lifelink',
       'anim:kw-trample',
       'anim:kw-indestructible',
+      'anim:kw-blocker-deathtouch',
+      'anim:kw-double-block-deathtouch',
+      'anim:kw-trample-planeswalker',
       'anim:destroy',
       'anim:exile',
       'anim:discard',
@@ -490,6 +494,44 @@ describe('galería de estados (P3)', () => {
     const strikes = planKeywordStrikes(base, next, planDamageStrikes(base, next))
     expect(strikes).toEqual([
       { attackerId: 'gallery-kwfx-dreadmaw', targetId: 'gallery-kwfx-bears', firstStrike: false, deathtouchKill: false, lifelinkTo: null, trampleTo: opponent(base).playerId },
+    ])
+  })
+
+  it('anim:kw-blocker-deathtouch replay plans the blocker\'s kill of my attacker', () => {
+    const { base, next } = replayPair(entries, 'anim:kw-blocker-deathtouch')
+    expect(base.step).toBe('DECLARE_BLOCKERS')
+    expect(next.step).toBe('COMBAT_DAMAGE')
+    expect(next.combat ?? []).toHaveLength(0)
+    const allNext = next.players!.flatMap((p) => Object.keys(p.battlefield ?? {}))
+    expect(allNext).not.toContain('gallery-kwfx-bears')
+    expect(allNext).not.toContain('gallery-kwfx-rats-opp')
+    const strikes = planKeywordStrikes(base, next, planDamageStrikes(base, next))
+    expect(strikes).toEqual([
+      { attackerId: 'gallery-kwfx-rats-opp', targetId: 'gallery-kwfx-bears', firstStrike: false, deathtouchKill: true, lifelinkTo: null, trampleTo: null, fromBlocker: true },
+    ])
+  })
+
+  it('anim:kw-double-block-deathtouch replay plans one skull for each blocker the deathtouch attacker kills', () => {
+    const { base, next } = replayPair(entries, 'anim:kw-double-block-deathtouch')
+    expect(base.step).toBe('DECLARE_BLOCKERS')
+    expect(next.step).toBe('COMBAT_DAMAGE')
+    expect(next.combat ?? []).toHaveLength(0)
+    const strikes = planKeywordStrikes(base, next, planDamageStrikes(base, next))
+    const kill = (targetId: string) => ({ attackerId: 'gallery-kwfx-viper', targetId, firstStrike: false, deathtouchKill: true, lifelinkTo: null, trampleTo: null })
+    expect(strikes).toEqual([kill('gallery-kwfx-bears-opp-1'), kill('gallery-kwfx-bears-opp-2')])
+  })
+
+  it('anim:kw-trample-planeswalker replay plans the overflow wave to the planeswalker', () => {
+    const { base, next } = replayPair(entries, 'anim:kw-trample-planeswalker')
+    expect(base.step).toBe('DECLARE_BLOCKERS')
+    expect(next.step).toBe('COMBAT_DAMAGE')
+    const opponent = (g: GameView) => g.players!.find((p) => !p.controlled)!
+    expect(opponent(base).battlefield?.['gallery-kwfx-walker']?.loyalty).toBe('5')
+    expect(opponent(next).battlefield?.['gallery-kwfx-walker']?.loyalty).toBe('1')
+    expect(opponent(next).life).toBe(opponent(base).life)
+    const strikes = planKeywordStrikes(base, next, planDamageStrikes(base, next))
+    expect(strikes).toEqual([
+      { attackerId: 'gallery-kwfx-dreadmaw', targetId: 'gallery-kwfx-bears', firstStrike: false, deathtouchKill: false, lifelinkTo: null, trampleTo: 'gallery-kwfx-walker' },
     ])
   })
 

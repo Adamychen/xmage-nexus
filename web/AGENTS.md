@@ -27,7 +27,9 @@ proxy over a JSON WebSocket and contains **no XMage/Java code**.
   workers (`E2E_WORKERS` to override; ~10.5 min for the whole suite on 12 cores).
   Vite listens on 5175 unless `E2E_PORT` is set, so two runs can share the tree.
 - `npm run test:e2e:changed` — only the specs the diff against `origin/master` reaches
-  (Playwright `--only-changed`): the default loop while iterating.
+  (Playwright `--only-changed`): the default loop while iterating. It selects specs through their
+  imports, so a diff that touches only `src/` usually selects ZERO specs and passes without running
+  anything; run the related specs by name too (`npx playwright test e2e/<spec>.spec.ts`).
 - `npm run test:e2e:timing` — the `@timing` lane (wall-clock / animation-order specs; CI
   runs it as its own job with retries and excludes it from the shards).
 - `E2E_BACKEND=real npm run test:e2e:real` — against a live stack (needs the

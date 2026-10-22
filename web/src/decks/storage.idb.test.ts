@@ -7,6 +7,7 @@ import type { DeckV2 } from './types'
 // localStorage fallback), not idb-keyval.
 const idb = new Map<string, unknown>()
 const idbFail = { keys: false, get: false, set: false, del: false }
+let idbSetBudget = Infinity
 
 vi.mock('idb-keyval', () => ({
   // The real createStore opens the DB right away: without `indexedDB` it throws.
@@ -23,7 +24,7 @@ vi.mock('idb-keyval', () => ({
     return idb.get(k)
   },
   set: async (k: string, v: unknown) => {
-    if (idbFail.set) throw new Error('idb set')
+    if (idbFail.set || idbSetBudget-- <= 0) throw new Error('idb set')
     idb.set(k, v)
   },
   del: async (k: string) => {
@@ -77,6 +78,7 @@ beforeEach(() => {
   idb.clear()
   ls.clear()
   Object.assign(idbFail, { keys: false, get: false, set: false, del: false })
+  idbSetBudget = Infinity
   vi.stubGlobal('localStorage', fakeLS)
   vi.stubGlobal('indexedDB', {})
   vi.spyOn(console, 'info').mockImplementation(() => {})
@@ -140,6 +142,26 @@ describe('IdbDeckStorage', () => {
     expect((await s.get('a'))!.name).toBe('renamed')
   })
 
+  it('list includes decks that were saved to localStorage while IndexedDB write failed', async () => {
+    const s = await freshStorage()
+    await s.put(make('a'))
+    idbFail.set = true
+    await s.put(make('b'))
+
+    expect((await s.list()).map((d) => d.id).sort()).toEqual(['a', 'b'])
+  })
+
+  it('list keeps the newer copy when a deck exists in both IndexedDB and localStorage', async () => {
+    idb.set('deck:a', make('a', { name: 'idb old', updatedAt: 5 }))
+    idb.set('deck:b', make('b', { name: 'idb new', updatedAt: 20 }))
+    ls.set(LS_V2, JSON.stringify([make('a', { name: 'ls new', updatedAt: 10 }), make('b', { name: 'ls old', updatedAt: 10 })]))
+    const s = await freshStorage()
+
+    const decks = await s.list()
+    expect(decks.map((d) => [d.id, d.name])).toEqual([['b', 'idb new'], ['a', 'ls new']])
+    expect((await s.get('a'))!.name).toBe('ls new')
+  })
+
   it('del removes from both places even if IndexedDB fails', async () => {
     ls.set(LS_V2, JSON.stringify([make('a'), make('b')]))
     const s = await freshStorage()
@@ -199,6 +221,21 @@ describe('migration from the legacy decks (mage_custom_decks)', () => {
 
     expect(ls.has(MIGRATED)).toBe(false)
     expect(ls.get(LEGACY)).toBe(JSON.stringify(legacy))
+  })
+
+  it('a rerun after IndexedDB failed midway does not duplicate the decks already written', async () => {
+    ls.set(LEGACY, JSON.stringify(legacy))
+    idbSetBudget = 1
+    const first = await freshStorage()
+    await first.list()
+    expect(idb.size).toBe(1)
+    expect(ls.has(MIGRATED)).toBe(false)
+
+    idbSetBudget = Infinity
+    const second = await freshStorage()
+    expect((await second.list()).map((d) => d.name).sort()).toEqual(['Burn', 'Edh'])
+    expect(idb.size).toBe(2)
+    expect(ls.get(MIGRATED)).toBe('1')
   })
 
   it('without legacy decks it only marks the migration', async () => {

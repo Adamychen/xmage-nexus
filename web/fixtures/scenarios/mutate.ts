@@ -1,12 +1,12 @@
 import { TABLE } from '../table-names'
 import type { Scenario } from '../fake'
 import { makeBaseScenario } from '../fake'
-import { makeGameView, makePermanent, makePlayer, makeCard } from '../../src/__fixtures__/gameViews'
+import { makeGameView, makePermanent, makePlayer } from '../../src/__fixtures__/gameViews'
+import type { GameView } from '../../src/net/types'
 import { GAME_ID, HUMAN_NAME, HUMAN_PLAYER_ID, SIM_NAME, SIM_PLAYER_ID, TABLE_ID } from '../humanGameConstants'
 
 export function mutateScenario(): Scenario {
   const gameView = makeGameView({
-    gameId: GAME_ID,
     turn: 4,
     phase: 'PRECOMBAT_MAIN',
     step: 'PRECOMBAT_MAIN',
@@ -112,7 +112,7 @@ export function mutateScenario(): Scenario {
         },
       },
     },
-  })
+  } as Partial<GameView>)
 
   return makeBaseScenario({
     tableId: TABLE_ID,

@@ -62,6 +62,10 @@ export function ensureLocaleLoaded(lang: SupportedLanguage): Promise<void> {
     })
     .catch(() => {
       // a chunk that fails to arrive leaves English in place, which is better than a blank UI
+      if (currentLanguage === lang) {
+        currentLanguage = 'en'
+        notifyListeners()
+      }
     })
     .finally(() => {
       inFlight.delete(lang)
@@ -80,10 +84,10 @@ const STORAGE_KEY_CARD_LANG = 'nexus_card_lang'
 function getInitialLanguage(): SupportedLanguage {
   try {
     const saved = localStorage.getItem(STORAGE_KEY_LANG) as SupportedLanguage | null
-    if (saved && saved in LOCALE_LOADERS) return saved
+    if (saved && Object.hasOwn(LOCALE_LOADERS, saved)) return saved
 
     const browserLang = navigator.language.slice(0, 2).toLowerCase()
-    if (browserLang in LOCALE_LOADERS) return browserLang as SupportedLanguage
+    if (Object.hasOwn(LOCALE_LOADERS, browserLang)) return browserLang as SupportedLanguage
   } catch {}
   return 'en'
 }
@@ -106,7 +110,11 @@ const listeners = new Set<() => void>()
  * fire-and-forget and the app never waits on it; the listeners re-render when it resolves.
  */
 export function preloadInitialLocale(): void {
-  void ensureLocaleLoaded(currentLanguage)
+  try {
+    void ensureLocaleLoaded(currentLanguage)
+  } catch {
+    currentLanguage = 'en'
+  }
 }
 
 function notifyListeners() {
@@ -127,7 +135,7 @@ export function toBcp47Locale(lang: SupportedLanguage): string {
 }
 
 export function setLanguage(lang: SupportedLanguage): void {
-  if (lang in LOCALE_LOADERS && lang !== currentLanguage) {
+  if (Object.hasOwn(LOCALE_LOADERS, lang) && lang !== currentLanguage) {
     currentLanguage = lang
     try {
       localStorage.setItem(STORAGE_KEY_LANG, lang)
@@ -223,11 +231,8 @@ export function t(
   if (typeof current !== 'string') return path
 
   if (effectiveParams) {
-    let text = current
-    for (const [k, v] of Object.entries(effectiveParams)) {
-      text = text.replace(new RegExp(`\\{${k}\\}`, 'g'), String(v))
-    }
-    return text
+    const params = effectiveParams
+    return current.replace(/\{(\w+)\}/g, (match, k: string) => (Object.hasOwn(params, k) ? String(params[k]) : match))
   }
 
   return current
@@ -252,6 +257,12 @@ export function translateError(error: string | null | undefined, action?: string
   if (lower.startsWith(joinFailedLower + ':') || lower.startsWith(createFailedLower + ':')) {
     return str
   }
+
+  const isJoin = action === 'joinTable' || action === 'joinTournamentTable'
+  const isCreate = action === 'createTable' || action === 'createTournamentTable'
+  const joinFailed = t('errors.join_table_failed')
+  const createFailed = t('errors.create_table_failed')
+  const prefixFor = (detail: string) => `${(isJoin ? joinFailed : isCreate ? createFailed : createFailed)}: ${detail}`
 
   if (action === 'removeTable') {
     if (str === 'NOT_AUTHORIZED' || lower.includes('only the table owner')) return t('errors.remove_table_not_owner')
@@ -291,13 +302,8 @@ export function translateError(error: string | null | undefined, action?: string
     return t('errors.deck_read_failed')
   }
   if (lower.includes('card not found') || str === 'CARD_NOT_FOUND') {
-    return lower.includes('card not found') ? `${t('errors.join_table_failed')}: ${str}` : t('errors.card_not_found')
+    return lower.includes('card not found') ? prefixFor(str) : t('errors.card_not_found')
   }
-  const isJoin = action === 'joinTable' || action === 'joinTournamentTable'
-  const isCreate = action === 'createTable' || action === 'createTournamentTable'
-  const joinFailed = t('errors.join_table_failed')
-  const createFailed = t('errors.create_table_failed')
-  const prefixFor = (detail: string) => `${(isJoin ? joinFailed : isCreate ? createFailed : createFailed)}: ${detail}`
 
   if (lower.includes('quit ratio') || str === 'QUIT_RATIO' || lower.includes('quit_ratio')) {
     return lower.includes('quit ratio') ? prefixFor(str) : t('errors.quit_ratio')
@@ -351,6 +357,13 @@ export type DynamicT = (category: keyof TranslationSchema, key: string, params?:
  */
 export function dynamicT(fn: typeof t): DynamicT {
   return fn as unknown as DynamicT
+}
+
+export function plural(category: keyof TranslationSchema, key: string, count: number, params?: Record<string, string | number>): string {
+  const rule = new Intl.PluralRules(toBcp47Locale(currentLanguage)).select(count)
+  const strings = (localeOf(currentLanguage) as unknown as Record<string, Record<string, unknown>>)[category]
+  const form = [`${key}_${rule}`, `${key}_other`, key].find((name) => typeof strings[name] === 'string') ?? key
+  return t(`${category}.${form}`, { count, ...params })
 }
 
 export function useTranslation() {

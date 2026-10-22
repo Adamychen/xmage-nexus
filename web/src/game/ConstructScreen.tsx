@@ -9,9 +9,10 @@ import type { SimpleCardView } from '../net/types'
 import type { DeckCard } from '../lobby/decks'
 import { ArenaCardStrip } from '../decks/ArenaCardStrip'
 import { BasicLandAdder } from '../decks/BasicLandAdder'
-import { basicLandKind, type BasicLandPreset } from '../decks/deckUtils'
-import { replaceBasicLands, type SuggestedLand } from '../decks/deckCardOps'
+import { basicLandKind, countManaPips, loadBasicLandSet, suggestBasicLands, type BasicLandPreset } from '../decks/deckUtils'
+import { mergeIntoList, replaceBasicLands, type SuggestedLand } from '../decks/deckCardOps'
 import Icon from '../ui/Icon'
+import ErrorBanner from '../ui/ErrorBanner'
 import { fetchCardJson } from '../cards/scryfallCards'
 import { hoverPreviewPosition } from '../decks/DeckHoverPreview'
 import type { CardStripMeta } from '../decks/ArenaCardStrip'
@@ -82,6 +83,16 @@ export function restoreConstructSelection(serverPool: DeckCard[], saved: Constru
   return { main, pool }
 }
 
+/** Tops the main up to `minMain` with basics for its colours (the same suggestion the adder
+ *  offers). Returns `main` itself when it is already legal size or has no coloured cards to base them on. */
+export function completeMainWithBasics(main: DeckCard[], minMain: number, metaMap: Map<string, CardStripMeta>): DeckCard[] {
+  const total = main.reduce((sum, c) => sum + c.amount, 0)
+  if (total >= minMain) return main
+  const suggested = suggestBasicLands(countManaPips(main, metaMap), minMain - total, loadBasicLandSet())
+  if (suggested.length === 0) return main
+  return mergeIntoList(main, suggested.map((s) => ({ cardName: s.name, setCode: s.setCode, cardNumber: s.cardNumber, amount: s.amount })))
+}
+
 function categorizeCard(typeLine?: string): string {
   if (!typeLine) return tStatic('game', 'category_other')
   const lower = typeLine.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
@@ -113,13 +124,14 @@ export default function ConstructScreen() {
   const [metaMap, setMetaMap] = useState<Map<string, CardStripMeta>>(new Map())
   const timeLeft = useTickingTimer(construct?.timeLeft ?? 0, !!construct)
   const [busy, setBusy] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
   const [hoverPreview, setHoverPreview] = useState<{ url: string; backUrl?: string | null; x: number; y: number; name?: string } | null>(null)
   const [mainFilter, setMainFilter] = useState('')
   const [poolFilter, setPoolFilter] = useState('')
   const [poolSort, setPoolSort] = useState<PoolSort>('color')
   const [isMainDragOver, setIsMainDragOver] = useState(false)
   const [isPoolDragOver, setIsPoolDragOver] = useState(false)
-  const submitRef = useRef<() => Promise<void>>(async () => {})
+  const submitRef = useRef<(autoComplete?: boolean) => Promise<void>>(async () => {})
   const autoSubmitArmRef = useRef<string | null>(null)
   const poolSize = useMemo(() => {
     if (!construct?.pool) return 0
@@ -310,13 +322,18 @@ export default function ConstructScreen() {
     } catch {}
   }, [moveOneToPool])
 
-  const submitDeck = useCallback(async () => {
+  const minMain = 40
+
+  const submitDeck = useCallback(async (autoComplete = false) => {
     if (!construct || busy) return
+    const cards = autoComplete ? completeMainWithBasics(main, minMain, metaMap) : main
+    if (cards !== main) setMain(cards)
     setBusy(true)
+    setSubmitError(null)
     try {
       const deck = {
         name: construct.deckName,
-        cards: main,
+        cards,
         sideboard: pool,
       }
       const result = await cmds.submitDeck(construct.tableId, deck)
@@ -325,12 +342,14 @@ export default function ConstructScreen() {
         clearActiveConstruct()
         addLog('torneo', t('game', 'sideboard_submit'))
       } else {
-        addLog('error', `${t('errors', 'send_failed')}: ${result.error ?? t('errors', 'generic_error')}`)
+        const message = `${t('errors', 'send_failed')}: ${result.error ?? t('errors', 'generic_error')}`
+        addLog('error', message)
+        setSubmitError(message)
       }
     } finally {
       setBusy(false)
     }
-  }, [construct, main, pool, busy])
+  }, [construct, main, pool, busy, metaMap])
 
   useEffect(() => { submitRef.current = submitDeck }, [submitDeck])
 
@@ -342,7 +361,7 @@ export default function ConstructScreen() {
     }
     if (timeLeft === 0 && construct.timeLeft > 0 && autoSubmitArmRef.current === construct.tableId) {
       autoSubmitArmRef.current = null
-      void submitRef.current()
+      void submitRef.current(true)
     }
   }, [timeLeft, construct?.tableId])
 
@@ -370,7 +389,6 @@ export default function ConstructScreen() {
 
   const mainTotal = main.reduce((s, c) => s + c.amount, 0)
   const poolTotal = pool.reduce((s, c) => s + c.amount, 0)
-  const minMain = 40
   const mainValid = mainTotal >= minMain
   const timerPct = Math.max(0, (timeLeft / (construct.timeLeft || 1)) * 100)
   const timerUrgent = timeLeft <= 30
@@ -565,6 +583,8 @@ export default function ConstructScreen() {
             ))}
           </div>
         )}
+
+        <ErrorBanner message={submitError} onClose={() => setSubmitError(null)} testId="construct-submit-error" />
 
         <div className="construct-footer">
           <div className="construct-counts">

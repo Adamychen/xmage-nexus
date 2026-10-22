@@ -19,7 +19,7 @@ export function planeswalkerScenario(): Scenario {
     isHuman: false, hasPriority: false, isActive: false, handCount: 0, libraryCount: 40, battlefield: {},
   } as unknown as PlayerView
   const getGameView = (): GameView => ({
-    gameId, turn: 1, phase: 'PRECOMBAT_MAIN', step: 'PRECOMBAT_MAIN',
+    turn: 1, phase: 'PRECOMBAT_MAIN', step: 'PRECOMBAT_MAIN',
     activePlayerId: HUMAN_PLAYER_ID, priorityPlayerId: HUMAN_PLAYER_ID,
     players: [human, sim], myHand: {}, canPlayObjects: { objects: {} },
   } as unknown as GameView)

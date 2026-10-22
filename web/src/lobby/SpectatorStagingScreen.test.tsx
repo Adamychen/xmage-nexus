@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, waitFor } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import SpectatorStagingScreen from './SpectatorStagingScreen'
 import ConfirmHost from '../ui/ConfirmHost'
@@ -259,6 +259,61 @@ describe('SpectatorStagingScreen', () => {
     fireEvent.click(getByTestId('confirm-modal-cancel'))
     await waitFor(() => expect(queryByTestId('confirm-modal')).toBeNull())
     expect(startMatchMock).not.toHaveBeenCalled()
+  })
+
+  it('a NOT_READY marker that scrolls out of the chat window is still remembered', async () => {
+    const readyBob = { chatId: 'c1', username: 'Bob', message: '[NEXUS_READY] Bob' }
+    setState({
+      conn: { username: 'Bob' } as never,
+      stagingTableId: MOCK_COMMANDER_TABLE.tableId,
+      lobby: { type: 'lobby', tables: [MOCK_COMMANDER_TABLE] } as never,
+      chatMessages: [
+        readyBob,
+        { chatId: 'c1', username: 'Charlie', message: '[NEXUS_READY] Charlie' },
+        { chatId: 'c1', username: 'Charlie', message: '[NEXUS_NOT_READY] Charlie' },
+        { chatId: 'c1', username: 'Diana', message: '[NEXUS_READY] Diana' },
+        { chatId: 'c1', username: 'Evan', message: '[NEXUS_READY] Evan' },
+      ],
+    })
+    const { getByTestId, findByTestId, queryByTestId } = render(<><SpectatorStagingScreen mode="player" /><ConfirmHost /></>)
+
+    act(() => {
+      setState({
+        chatMessages: [
+          readyBob,
+          { chatId: 'c1', username: 'Diana', message: '[NEXUS_READY] Diana' },
+          { chatId: 'c1', username: 'Evan', message: '[NEXUS_READY] Evan' },
+        ],
+      })
+    })
+    fireEvent.click(getByTestId('staging-start'))
+    expect(await findByTestId('confirm-modal')).not.toBeNull()
+    fireEvent.click(getByTestId('confirm-modal-cancel'))
+    await waitFor(() => expect(queryByTestId('confirm-modal')).toBeNull())
+    expect(startMatchMock).not.toHaveBeenCalled()
+  })
+
+  it('an AI seat counts as ready, so Empezar does not ask for confirmation for it', async () => {
+    const tableWithBot: TableView = {
+      ...MOCK_DUEL_TABLE,
+      controllerName: 'Bob',
+      tableState: 'READY_TO_START',
+      seats: [
+        { playerName: 'Bob', seatIndex: 0, playerType: 'HUMAN' },
+        { playerName: 'Computer - mad', seatIndex: 1, playerType: 'COMPUTER_MAD' },
+      ],
+    }
+    setState({
+      conn: { username: 'Bob' } as never,
+      stagingTableId: tableWithBot.tableId,
+      lobby: { type: 'lobby', tables: [tableWithBot] } as never,
+      chatMessages: [{ chatId: 'c1', username: 'Bob', message: '[NEXUS_READY] Bob' }],
+    })
+    const { getByTestId, queryByTestId } = render(<><SpectatorStagingScreen mode="player" /><ConfirmHost /></>)
+
+    fireEvent.click(getByTestId('staging-start'))
+    await waitFor(() => expect(startMatchMock).toHaveBeenCalledWith(tableWithBot.tableId))
+    expect(queryByTestId('confirm-modal')).toBeNull()
   })
 
   it('mesa de torneo arranca con startTournament', () => {

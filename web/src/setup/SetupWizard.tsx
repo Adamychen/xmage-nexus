@@ -21,9 +21,16 @@ const STEPS: StepId[] = ['language', 'identity', 'server', 'board', 'soundplay',
 interface ServerDraft {
   preset: ServerPreset
   proxyHost: string
-  proxyPort: number
+  proxyPort: string
   serverHost: string
   port: string
+}
+
+function parsePort(raw: string): number | null {
+  const value = raw.trim()
+  if (!/^\d+$/.test(value)) return null
+  const port = Number(value)
+  return port >= 1 && port <= 65535 ? port : null
 }
 
 function initialServerDraft(): ServerDraft {
@@ -31,7 +38,7 @@ function initialServerDraft(): ServerDraft {
   const base: ServerDraft = {
     preset: 'local',
     proxyHost: import.meta.env.VITE_DEFAULT_PROXY_HOST ?? 'localhost',
-    proxyPort: Number(import.meta.env.VITE_DEFAULT_PROXY_PORT) || 8787,
+    proxyPort: String(Number(import.meta.env.VITE_DEFAULT_PROXY_PORT) || 8787),
     serverHost: import.meta.env.VITE_DEFAULT_SERVER_HOST ?? 'localhost',
     port: import.meta.env.VITE_DEFAULT_SERVER_PORT ?? '17171',
   }
@@ -39,7 +46,7 @@ function initialServerDraft(): ServerDraft {
   const draft: ServerDraft = {
     preset: 'custom',
     proxyHost: saved.wsHost,
-    proxyPort: saved.proxyPort,
+    proxyPort: String(saved.proxyPort),
     serverHost: saved.serverHost,
     port: String(saved.port),
   }
@@ -50,9 +57,9 @@ function initialServerDraft(): ServerDraft {
 }
 
 function applyPreset(p: ServerPreset, prev: ServerDraft): ServerDraft {
-  if (p === 'local') return { ...prev, preset: p, proxyHost: 'localhost', proxyPort: 8787, serverHost: 'localhost', port: '17171' }
-  if (p === 'official') return { ...prev, preset: p, proxyHost: 'localhost', proxyPort: 8787, serverHost: 'beta.xmage.today', port: '17171' }
-  if (p === 'xdhs') return { ...prev, preset: p, proxyHost: 'localhost', proxyPort: 8797, serverHost: 'mage.xdhs.net', port: '17171' }
+  if (p === 'local') return { ...prev, preset: p, proxyHost: 'localhost', proxyPort: '8787', serverHost: 'localhost', port: '17171' }
+  if (p === 'official') return { ...prev, preset: p, proxyHost: 'localhost', proxyPort: '8787', serverHost: 'beta.xmage.today', port: '17171' }
+  if (p === 'xdhs') return { ...prev, preset: p, proxyHost: 'localhost', proxyPort: '8797', serverHost: 'mage.xdhs.net', port: '17171' }
   return { ...prev, preset: p }
 }
 
@@ -66,12 +73,14 @@ export default function SetupWizard({ onClose }: { onClose: () => void }) {
   const [showAvatarPicker, setShowAvatarPicker] = useState(false)
   const [server, setServer] = useState<ServerDraft>(initialServerDraft)
   const [identityError, setIdentityError] = useState(false)
+  const [portError, setPortError] = useState(false)
 
   const stepId = STEPS[step]
   const isLast = stepId === 'done'
   // U4-2: el servidor público (beta) no usa contraseñas; el campo se
   // deshabilita, se limpia y no viaja en la conexión guardada.
   const passwordDisabledOnBeta = server.serverHost.trim() === 'beta.xmage.today'
+  const customPortsValid = parsePort(server.proxyPort) !== null && parsePort(server.port) !== null
 
   useEffect(() => {
     if (passwordDisabledOnBeta && password) setPassword('')
@@ -82,15 +91,19 @@ export default function SetupWizard({ onClose }: { onClose: () => void }) {
       setIdentityError(true)
       return
     }
+    if (stepId === 'server' && server.preset === 'custom' && !customPortsValid) {
+      setPortError(true)
+      return
+    }
     setIdentityError(false)
     setStep(step + 1)
   }
 
   const buildConn = (): ConnectionInfo => ({
     wsHost: server.proxyHost.trim() || 'localhost',
-    proxyPort: server.proxyPort,
+    proxyPort: parsePort(server.proxyPort) ?? 8787,
     serverHost: server.serverHost.trim() || server.proxyHost.trim() || 'localhost',
-    port: parseInt(server.port, 10) || 17171,
+    port: parsePort(server.port) ?? 17171,
     username: username.trim(),
     password: passwordDisabledOnBeta ? '' : password,
     flagName,
@@ -101,6 +114,11 @@ export default function SetupWizard({ onClose }: { onClose: () => void }) {
     if (!username.trim()) {
       setStep(STEPS.indexOf('identity'))
       setIdentityError(true)
+      return
+    }
+    if (server.preset === 'custom' && !customPortsValid) {
+      setStep(STEPS.indexOf('server'))
+      setPortError(true)
       return
     }
     const conn = buildConn()
@@ -207,15 +225,28 @@ export default function SetupWizard({ onClose }: { onClose: () => void }) {
             </div>
             {server.preset === 'custom' && (
               <div className="setup-network">
-                <Field className="setup-field" label={t('login', 'proxy')}>
-                  <input value={server.proxyHost} onChange={(e) => setServer((s) => ({ ...s, proxyHost: e.target.value }))} data-testid="setup-proxy-host" />
-                </Field>
+                <div className="setup-network-row">
+                  <Field className="setup-field" label={t('login', 'proxy')}>
+                    <input value={server.proxyHost} onChange={(e) => setServer((s) => ({ ...s, proxyHost: e.target.value }))} data-testid="setup-proxy-host" />
+                  </Field>
+                  <Field
+                    className="setup-field setup-field-port"
+                    label={t('login', 'port')}
+                    error={portError && parsePort(server.proxyPort) === null && <span data-testid="setup-proxy-port-error">{t('errors', 'invalid_port')}</span>}
+                  >
+                    <input value={server.proxyPort} onChange={(e) => { setServer((s) => ({ ...s, proxyPort: e.target.value })); setPortError(false) }} type="number" data-testid="setup-proxy-port" />
+                  </Field>
+                </div>
                 <div className="setup-network-row">
                   <Field className="setup-field" label={t('login', 'xmage_server')}>
                     <input value={server.serverHost} onChange={(e) => setServer((s) => ({ ...s, serverHost: e.target.value }))} data-testid="setup-server-host" />
                   </Field>
-                  <Field className="setup-field setup-field-port" label={t('login', 'port')}>
-                    <input value={server.port} onChange={(e) => setServer((s) => ({ ...s, port: e.target.value }))} type="number" data-testid="setup-port" />
+                  <Field
+                    className="setup-field setup-field-port"
+                    label={t('login', 'port')}
+                    error={portError && parsePort(server.port) === null && <span data-testid="setup-server-port-error">{t('errors', 'invalid_port')}</span>}
+                  >
+                    <input value={server.port} onChange={(e) => { setServer((s) => ({ ...s, port: e.target.value })); setPortError(false) }} type="number" data-testid="setup-port" />
                   </Field>
                 </div>
               </div>

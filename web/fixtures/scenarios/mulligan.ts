@@ -1,6 +1,7 @@
 import { TABLE } from '../table-names'
 import type { Scenario } from '../fake'
 import { makeGameView, makePlayer, makePermanent, makeCard } from '../../src/__fixtures__/gameViews'
+import type { GameView } from '../../src/net/types'
 import { GAME_ID, HUMAN_NAME, HUMAN_PLAYER_ID, SIM_NAME, SIM_PLAYER_ID, TABLE_ID } from '../humanGameConstants'
 
 const HAND_IDS = ['h0', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6']
@@ -23,7 +24,6 @@ export function mulliganScenario(): Scenario {
   })
 
   const gameView = makeGameView({
-    gameId: GAME_ID,
     turn: 1,
     phase: 'PRECOMBAT_MAIN',
     step: 'PRECOMBAT_MAIN',
@@ -52,7 +52,7 @@ export function mulliganScenario(): Scenario {
         },
       }),
     ],
-  })
+  } as Partial<GameView>)
 
   const table = (name: string) => ({
     tableId: TABLE_ID,
@@ -83,7 +83,7 @@ export function mulliganScenario(): Scenario {
 
   let bottomLeft = 0
 
-  const askBottom = (conn: Parameters<Scenario['onAction']>[0]) =>
+  const askBottom = (conn: Parameters<NonNullable<Scenario['onAction']>>[0]) =>
     conn.broadcast(
       'GAME_TARGET',
       {
@@ -99,7 +99,7 @@ export function mulliganScenario(): Scenario {
       GAME_ID,
     )
 
-  const proceed = (conn: Parameters<Scenario['onAction']>[0]) =>
+  const proceed = (conn: Parameters<NonNullable<Scenario['onAction']>>[0]) =>
     conn.broadcast(
       'GAME_SELECT',
       { message: 'Main 1: Cast spells or activate abilities', options: { specialButton: 'Pass' }, gameView },

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatSeatHistory, isDirectTournamentJoin, isUserInGame } from './lobbyUtils'
+import { formatSeatHistory, getMyActiveTables, isDirectTournamentJoin, isMyTable, isUserInGame, tableOwnerName } from './lobbyUtils'
 import type { TableView } from '../net/types'
 
 function table(over: Partial<TableView>): TableView {
@@ -79,3 +79,30 @@ describe('formatSeatHistory', () => {
   })
 })
 
+
+describe('isMyTable owner match', () => {
+  it("does not count another player's table as mine just because its name contains the user", () => {
+    const joanna = table({ tableId: 'j', controllerName: 'joanna' })
+    expect(isMyTable(joanna, 'ann')).toBe(false)
+    expect(getMyActiveTables([joanna], 'ann')).toEqual([])
+  })
+
+  it('recognizes the owner by exact name, ignoring case and surrounding spaces', () => {
+    const mine = table({ tableId: 'm', controllerName: 'Ann' })
+    expect(isMyTable(mine, 'ann')).toBe(true)
+    expect(isMyTable(mine, ' ANN ')).toBe(true)
+    expect(getMyActiveTables([mine], 'ann')).toEqual([mine])
+  })
+
+  it('uses the first controllerName entry as the owner, like TableCard', () => {
+    const shared = table({ tableId: 's', controllerName: 'ann, joanna' })
+    expect(isMyTable(shared, 'ann')).toBe(true)
+    expect(isMyTable(shared, 'joanna')).toBe(false)
+  })
+})
+
+describe('tableOwnerName', () => {
+  it('returns the first controller name, trimmed', () => {
+    expect(tableOwnerName(table({ controllerName: ' host , guest ' }))).toBe('host')
+  })
+})

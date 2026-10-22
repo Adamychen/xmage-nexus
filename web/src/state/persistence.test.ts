@@ -270,6 +270,39 @@ describe('persistence', () => {
       expect(loadActiveDraft()).toBeNull()
       expect(mockStorage['mage-web-active-draft']).toBeUndefined()
     })
+
+    describe('pick timer', () => {
+      const pickSnapshot = (timeout: number, picking = true) =>
+        ({ draftId: 'draft-uuid-123', message: { draftView: { boosterNum: 1 }, draftPickView: { booster: {}, picks: {}, picking, timeout } } }) as never
+
+      afterEach(() => {
+        vi.useRealTimers()
+      })
+
+      it('restores the pick timeout minus the time elapsed since the snapshot was saved', () => {
+        vi.useFakeTimers()
+        vi.setSystemTime(new Date('2026-10-17T10:00:00Z'))
+        saveActiveDraft(pickSnapshot(60))
+        vi.setSystemTime(new Date('2026-10-17T10:00:20Z'))
+        expect(loadActiveDraft()?.draft.message.draftPickView?.timeout).toBe(40)
+      })
+
+      it('never restores a negative pick timeout', () => {
+        vi.useFakeTimers()
+        vi.setSystemTime(new Date('2026-10-17T10:00:00Z'))
+        saveActiveDraft(pickSnapshot(60))
+        vi.setSystemTime(new Date('2026-10-17T10:01:30Z'))
+        expect(loadActiveDraft()?.draft.message.draftPickView?.timeout).toBe(0)
+      })
+
+      it('leaves the timeout of a snapshot that is not picking untouched', () => {
+        vi.useFakeTimers()
+        vi.setSystemTime(new Date('2026-10-17T10:00:00Z'))
+        saveActiveDraft(pickSnapshot(0, false))
+        vi.setSystemTime(new Date('2026-10-17T10:00:20Z'))
+        expect(loadActiveDraft()?.draft.message.draftPickView?.timeout).toBe(0)
+      })
+    })
   })
 
   describe('active construct persistence', () => {

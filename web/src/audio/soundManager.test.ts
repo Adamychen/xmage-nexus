@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { soundManager } from './soundManager'
 import { synthesizeSound } from './soundSynthesizer'
 import { dispatchGameSounds } from './gameSoundDispatcher'
@@ -119,6 +119,55 @@ describe('soundManager', () => {
       uiVolume: 0.7,
     })
     expect(() => soundManager.play('tap', 'game')).not.toThrow()
+  })
+})
+
+describe('soundManager resume before a user gesture', () => {
+  afterEach(() => {
+    delete (window as unknown as { AudioContext?: unknown }).AudioContext
+    ;(soundManager as unknown as { ctx: AudioContext | null }).ctx = null
+  })
+
+  it('handles a refused resume so it cannot surface as an unhandled rejection', () => {
+    soundManager.setSettings({ soundEnabled: true, masterVolume: 0.8, sfxVolume: 0.8, uiVolume: 0.7 })
+    const onCatch = vi.fn(() => Promise.resolve())
+    const ctx = {
+      ...createMockAudioContext(),
+      state: 'suspended',
+      resume: vi.fn(() => ({ catch: onCatch })),
+    }
+    class SuspendedAudioContext {
+      constructor() {
+        return ctx as unknown as SuspendedAudioContext
+      }
+    }
+    ;(window as unknown as { AudioContext?: unknown }).AudioContext = SuspendedAudioContext
+    soundManager.play('shuffle')
+    expect(ctx.resume).toHaveBeenCalledTimes(1)
+    expect(onCatch).toHaveBeenCalledTimes(1)
+  })
+
+  it('handles a refused resume from the first user gesture too', () => {
+    soundManager.setSettings({ soundEnabled: true, masterVolume: 0.8, sfxVolume: 0.8, uiVolume: 0.7 })
+    const onCatch = vi.fn(() => Promise.resolve())
+    const ctx = {
+      ...createMockAudioContext(),
+      state: 'suspended',
+      resume: vi.fn(() => ({ catch: onCatch })),
+    }
+    class SuspendedAudioContext {
+      constructor() {
+        return ctx as unknown as SuspendedAudioContext
+      }
+    }
+    ;(window as unknown as { AudioContext?: unknown }).AudioContext = SuspendedAudioContext
+    ;(soundManager as unknown as { initialized: boolean }).initialized = false
+    soundManager.init()
+    window.dispatchEvent(new Event('pointerdown'))
+    expect(ctx.resume).toHaveBeenCalledTimes(1)
+    expect(onCatch).toHaveBeenCalledTimes(1)
+    ctx.state = 'running'
+    window.dispatchEvent(new Event('pointerdown'))
   })
 })
 

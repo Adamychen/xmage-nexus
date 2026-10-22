@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import type { DeckCard } from '../lobby/decks'
 import { parseDck, exportDck, exportArena, exportDek, parseAnyDeck, parseDekXml, parseCodXml, parseO8dXml, parseDraftLog, parseMtgjson } from './parseDck'
 
 describe('parseDck', () => {
@@ -87,6 +88,54 @@ Sideboard
     const out = exportArena(deck)
     expect(out).toContain('Deck')
     expect(out).toContain('20 Mountain (LEA) 292')
+  })
+
+  it('arena round-trip keeps unprinted and printed cards (item 4)', () => {
+    const deck = {
+      name: 'RT',
+      cards: [
+        { cardName: 'Lightning Bolt', setCode: '', cardNumber: '', amount: 4 },
+        { cardName: 'Mountain', setCode: 'LEA', cardNumber: '292', amount: 20 },
+      ],
+      sideboard: [],
+    }
+    const out = exportArena(deck)
+    expect(out).not.toContain('()')
+    expect(out).toContain('4 Lightning Bolt\n')
+    expect(parseAnyDeck(out)!.cards).toEqual(deck.cards)
+  })
+
+  it('arena round-trip keeps a name with parentheses, printed or not (item 4)', () => {
+    const deck = {
+      name: 'BFM',
+      cards: [
+        { cardName: 'B.F.M. (Big Furry Monster)', setCode: '', cardNumber: '', amount: 1 },
+      ],
+      sideboard: [
+        { cardName: 'B.F.M. (Big Furry Monster)', setCode: 'UNH', cardNumber: '52', amount: 1 },
+      ],
+    }
+    const back = parseAnyDeck(exportArena(deck))!
+    expect(back.cards).toEqual(deck.cards)
+    expect(back.sideboard).toEqual(deck.sideboard)
+  })
+
+  it('drops a line whose quantity is 0 in every text format (item 6)', () => {
+    expect(parseAnyDeck('0 [M10:146] Island\n4 [M10:146] Lightning Bolt')!.cards.map((c) => c.cardName)).toEqual(['Lightning Bolt'])
+    expect(parseAnyDeck('0 Island\n4 Lightning Bolt')!.cards.map((c) => c.cardName)).toEqual(['Lightning Bolt'])
+    expect(parseDekXml('<Cards CatID="1" Quantity="0" Sideboard="false" Name="Island" />\n<Cards CatID="2" Quantity="4" Sideboard="false" Name="Lightning Bolt" />')!.cards.map((c) => c.cardName)).toEqual(['Lightning Bolt'])
+    expect(parseCodXml('<cockatrice_deck><zone name="main"><card number="0" name="Island"/><card number="4" name="Lightning Bolt"/></zone></cockatrice_deck>')!.cards.map((c) => c.cardName)).toEqual(['Lightning Bolt'])
+    expect(parseO8dXml('<deck><section name="Main"><card qty="0">Island</card><card qty="4">Lightning Bolt</card></section></deck>')!.cards.map((c) => c.cardName)).toEqual(['Lightning Bolt'])
+    expect(parseMtgjson(JSON.stringify({ data: { name: 'x', mainBoard: [{ name: 'Island', count: 0 }, { name: 'Lightning Bolt', count: 4 }] } }))!.cards.map((c) => c.cardName)).toEqual(['Lightning Bolt'])
+  })
+
+  it('clamps huge quantities to 100 in every text format (item 6)', () => {
+    expect(parseAnyDeck('999999 Island')!.cards[0].amount).toBe(100)
+    expect(parseAnyDeck('999999 [M10:146] Island')!.cards[0].amount).toBe(100)
+    expect(parseDekXml('<Cards CatID="1" Quantity="999999" Sideboard="false" Name="Island" />')!.cards[0].amount).toBe(100)
+    expect(parseCodXml('<cockatrice_deck><zone name="main"><card number="999999" name="Island"/></zone></cockatrice_deck>')!.cards[0].amount).toBe(100)
+    expect(parseO8dXml('<deck><section name="Main"><card qty="999999">Island</card></section></deck>')!.cards[0].amount).toBe(100)
+    expect(parseMtgjson(JSON.stringify({ data: { mainBoard: [{ name: 'Island', count: 999999 }] } }))!.cards[0].amount).toBe(100)
   })
 
   it('parses Spanish and Japanese Arena formats with basic land normalization', () => {
@@ -317,6 +366,41 @@ Sideboard (2)
     const back = parseAnyDeck(out)!
     expect(back.commanders).toMatchObject([{ cardName: "Atraxa, Praetors' Voice" }])
     expect(back.cards.filter((c) => c.cardName === "Atraxa, Praetors' Voice")).toHaveLength(1)
+  })
+
+  it('dck export writes the commander section and round-trips the commanders (item 5)', () => {
+    const atraxa = { cardName: "Atraxa, Praetors' Voice", setCode: 'C16', cardNumber: '28', amount: 1 }
+    const tana = { cardName: 'Tana, the Bloodsower', setCode: 'C16', cardNumber: '60', amount: 1 }
+    const out = exportDck({
+      name: 'CMD',
+      cards: [atraxa, tana, { cardName: 'Sol Ring', setCode: 'C16', cardNumber: '272', amount: 1 }],
+      sideboard: [],
+      commanderCard: atraxa,
+      partnerCard: tana,
+    })
+    expect(out).toContain('[COMMANDER]\n1 [C16:28] ' + "Atraxa, Praetors' Voice")
+    expect(out.match(/Atraxa/g)).toHaveLength(1)
+    const back = parseDck(out)!
+    expect(back.commanders).toEqual([atraxa, tana])
+    expect(back.cards.filter((c) => c.cardName === "Atraxa, Praetors' Voice")).toHaveLength(1)
+  })
+
+  it('exports a designated commander without amount and keeps it through dck and arena', () => {
+    const atraxa = { cardName: "Atraxa, Praetors' Voice", setCode: 'C16', cardNumber: '28' } as DeckCard
+    const deck = {
+      name: 'CMD',
+      cards: [atraxa, { cardName: 'Sol Ring', setCode: 'C16', cardNumber: '272', amount: 1 }],
+      sideboard: [],
+      commanderCard: atraxa,
+    }
+    const dck = exportDck(deck)
+    expect(dck).not.toContain('undefined')
+    const dckBack = parseAnyDeck(dck)!
+    expect(dckBack.commanders).toEqual([{ cardName: "Atraxa, Praetors' Voice", setCode: 'C16', cardNumber: '28', amount: 1 }])
+    const arena = exportArena(deck)
+    expect(arena).not.toContain('undefined')
+    const arenaBack = parseAnyDeck(arena)!
+    expect(arenaBack.commanders).toEqual([{ cardName: "Atraxa, Praetors' Voice", setCode: 'C16', cardNumber: '28', amount: 1 }])
   })
 
   it('parseDck enruta la sección [COMMANDER] sin duplicar (AUDIT)', () => {

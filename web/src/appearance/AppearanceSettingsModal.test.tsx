@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import AppearanceSettingsModal from './AppearanceSettingsModal'
 import { getState, setSetting } from '../state/store'
+import { t as tStatic } from '../i18n'
 
 afterEach(() => {
   setSetting('playmatId', 'classic')
@@ -33,5 +34,12 @@ describe('AppearanceSettingsModal', () => {
     render(<AppearanceSettingsModal onClose={() => {}} />)
     expect(screen.getByTestId('sleeve-custom')).toBeTruthy()
     expect(screen.getByTestId('playmat-custom')).toBeTruthy()
+  })
+})
+describe('AppearanceSettingsModal keyword effects', () => {
+  it('titles the keyword effect choices with a heading and hint', () => {
+    render(<AppearanceSettingsModal onClose={() => {}} />)
+    expect(screen.getByText(tStatic('lobby', 'keyword_aura_title'))).toBeTruthy()
+    expect(screen.getByText(tStatic('lobby', 'keyword_aura_hint'))).toBeTruthy()
   })
 })

@@ -63,7 +63,7 @@ export function spellWeight(card: CardView | null | undefined): SpellWeight {
 let impacts: ImpactFx[] = []
 let counter = 0
 const listeners = new Set<() => void>()
-const MAX_IMPACTS = 12
+const MAX_IMPACTS = 32
 
 function notify() {
   listeners.forEach((fn) => fn())

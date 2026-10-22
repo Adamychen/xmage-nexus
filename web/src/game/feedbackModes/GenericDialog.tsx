@@ -2,7 +2,7 @@ import * as cmds from '../../net/commands'
 import IconButton from '../../ui/IconButton'
 import Checkbox from '../../ui/Checkbox'
 import EmptyState from '../../ui/EmptyState'
-import type { FeedbackPrompt } from '../feedback'
+import type { FeedbackOption, FeedbackPrompt } from '../feedback'
 import FormattedText from '../FormattedText'
 import DialogShell from '../../ui/DialogShell'
 import { useEffect, useMemo, useState } from 'react'
@@ -20,6 +20,13 @@ import ClaimedInfoCards from './ClaimedInfoCards'
 import './GenericDialog.css'
 
 const GRID_SEARCH_THRESHOLD = 7
+
+function resolveTypedChoice(query: string, filtered: FeedbackOption[]): string | null {
+  const q = query.trim().toLowerCase()
+  const exact = filtered.find((opt) => opt.value.toLowerCase() === q || opt.label.toLowerCase() === q)
+  if (exact) return exact.value
+  return filtered.length === 1 && filtered[0] ? filtered[0].value : null
+}
 
 function getFeedbackKicker(prompt: FeedbackPrompt, t: (ns: 'game' | 'dialogs' | 'common' | 'errors', key: string) => string): { icon: IconName; label: string } {
   if (prompt.isStartingPlayer) return { icon: 'dice', label: t('game', 'who_starts') }
@@ -136,7 +143,7 @@ export default function GenericDialog({ form }: { form: UseFeedbackForm }) {
   const onGridKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'ArrowDown') {
       e.preventDefault()
-      setActiveIdx((i) => Math.min(i + 1, gridOptions.length - 1))
+      setActiveIdx((i) => Math.max(0, Math.min(i + 1, gridOptions.length - 1)))
     } else if (e.key === 'ArrowUp') {
       e.preventDefault()
       setActiveIdx((i) => Math.max(i - 1, 0))
@@ -162,7 +169,7 @@ export default function GenericDialog({ form }: { form: UseFeedbackForm }) {
     if (e.key === 'ArrowDown' || e.key === 'ArrowRight' || e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
       e.preventDefault()
       const dir = e.key === 'ArrowDown' || e.key === 'ArrowRight' ? 1 : -1
-      const next = Math.min(Math.max(activeIdx + dir, 0), gridOptions.length - 1)
+      const next = Math.max(0, Math.min(activeIdx + dir, gridOptions.length - 1))
       setActiveIdx(next)
       focusOption(e.currentTarget, next)
     } else if (e.key === 'Enter' && (e.target as HTMLElement)?.classList?.contains('feedback-options-grid')) {
@@ -186,15 +193,13 @@ export default function GenericDialog({ form }: { form: UseFeedbackForm }) {
     }
     void send(() => cmds.sendPlayerString(value, prompt.gameId), t('errors', 'send_failed_choice'))
   }
+  const typedValue = prompt.options.length === 0
+    ? textValue.trim() || null
+    : resolveTypedChoice(textValue, filteredStringOptions)
   const sendChoiceFromInput = () => {
-    const query = textValue.trim()
-    if (query === '' && filteredStringOptions.length === 1 && filteredStringOptions[0]) {
-      sendChoice(filteredStringOptions[0].value)
-      return
-    }
-    if (query === '') return
-    sendChoice(query)
+    if (typedValue !== null) sendChoice(typedValue)
   }
+  const amountValid = Number.isInteger(amount) && amount >= prompt.min && amount <= prompt.max
 
   return (
     <DialogShell
@@ -294,8 +299,8 @@ export default function GenericDialog({ form }: { form: UseFeedbackForm }) {
           )}
           <div className="feedback-dialog-actions">
             <Button variant="primary"
-              disabled={busy || textValue.trim() === ''}
-              onClick={() => sendChoice(textValue.trim())}
+              disabled={busy || typedValue === null}
+              onClick={sendChoiceFromInput}
             >
               {t('game', 'string_confirm')}
             </Button>
@@ -311,7 +316,7 @@ export default function GenericDialog({ form }: { form: UseFeedbackForm }) {
           <div className="feedback-amount-stepper">
             <IconButton label={t('game', 'amount_decrease')} size="xl" round
               disabled={busy || amount <= prompt.min}
-              onClick={() => setAmount((v) => Math.max(prompt.min, v - 1))}>
+              onClick={() => setAmount((v) => Number.isNaN(v) ? prompt.min : Math.max(prompt.min, v - 1))}>
               −
             </IconButton>
             <div className="stepper-display">
@@ -320,15 +325,18 @@ export default function GenericDialog({ form }: { form: UseFeedbackForm }) {
                 type="number"
                 min={prompt.min}
                 max={prompt.max}
-                value={amount}
-                onChange={(event) => setAmount(Number(event.target.value))}
+                value={Number.isNaN(amount) ? '' : amount}
+                aria-invalid={amountValid ? undefined : true}
+                onChange={(event) => setAmount(event.target.value === '' ? Number.NaN : Number(event.target.value))}
                 className="stepper-input"
               />
-              <span className="stepper-range">{t('game', 'amount_range', { min: prompt.min, max: prompt.max })}</span>
+              {amountValid
+                ? <span className="stepper-range">{t('game', 'amount_range', { min: prompt.min, max: prompt.max })}</span>
+                : <span className="ui-field-error" role="alert">{t('game', 'amount_range', { min: prompt.min, max: prompt.max })}</span>}
             </div>
             <IconButton label={t('game', 'amount_increase')} size="xl" round
               disabled={busy || amount >= prompt.max}
-              onClick={() => setAmount((v) => Math.min(prompt.max, v + 1))}>
+              onClick={() => setAmount((v) => Number.isNaN(v) ? prompt.min : Math.min(prompt.max, v + 1))}>
               +
             </IconButton>
           </div>
@@ -347,7 +355,7 @@ export default function GenericDialog({ form }: { form: UseFeedbackForm }) {
             </div>
           )}
           <div className="feedback-dialog-actions">
-            <Button variant="primary" disabled={busy} onClick={confirmAmount}>{t('game', 'integer_confirm')}</Button>
+            <Button variant="primary" disabled={busy || !amountValid} onClick={confirmAmount}>{t('game', 'integer_confirm')}</Button>
             {prompt.required === false && (
               <Button variant="subtle" disabled={busy} onClick={cancel} className="cancel-btn">{t('game', 'string_cancel')}</Button>
             )}
@@ -429,7 +437,7 @@ export default function GenericDialog({ form }: { form: UseFeedbackForm }) {
           {(prompt.mode === 'uuid' && prompt.max > 1 || prompt.required === false) && (
             <div className="feedback-dialog-actions">
               {prompt.mode === 'uuid' && prompt.max > 1 && (
-                <Button variant="primary" disabled={busy || selected.length < prompt.min} onClick={confirmSelected}>
+                <Button variant="primary" disabled={busy || selected.length < Math.max(prompt.min, 1)} onClick={confirmSelected}>
                   {t('game', 'selected_count', { count: selected.length })}
                 </Button>
               )}

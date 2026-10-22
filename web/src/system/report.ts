@@ -14,6 +14,7 @@ export const REPORT_LIMITS = {
   MAX_WHOLE_FRAMES: 12,
   MAX_LOG_LINES: 120,
   SHORT_LOG_LINES: 40,
+  MAX_TEXT_CHARS: 8000,
 } as const
 
 export type ReportKind = 'bug' | 'feedback'
@@ -101,8 +102,13 @@ export function fingerprintOf(kind: ReportKind): string {
   return `${kind}|${turn}|${step}|${key || 'empty'}`
 }
 
+function capText(text: string): string {
+  return text.length > REPORT_LIMITS.MAX_TEXT_CHARS ? `${text.slice(0, REPORT_LIMITS.MAX_TEXT_CHARS)}\n[truncated]` : text
+}
+
 /** The snapshot a report carries: the diagnostics bundle, shrunk to what a report can hold. */
-export function buildReport(kind: ReportKind, text: string): DraftReport {
+export function buildReport(kind: ReportKind, reportText: string): DraftReport {
+  const text = capText(reportText)
   const viewport =
     typeof window !== 'undefined'
       ? {
@@ -179,7 +185,7 @@ export function reportToMarkdown(draft: DraftReport): string {
     '',
     '**Errors**',
     '',
-    draft.wire.errors.length > 0 ? draft.wire.errors.map((e) => `- ${e.text}`).join('\n') : '- none recorded',
+    draft.wire.errors.length > 0 ? draft.wire.errors.map((e) => `- ${e.text}${(e.count ?? 1) > 1 ? ` (x${e.count})` : ''}`).join('\n') : '- none recorded',
     '',
     `_Fingerprint: \`${draft.fingerprint}\` - payload ${draft.bytes} bytes_`,
   ].join('\n')
