@@ -30,20 +30,20 @@ function table(over: Partial<TableView>): TableView {
 }
 
 describe('isDirectTournamentJoin', () => {
-  it('torneo limitado sin password entra directo', () => {
+  it('LBY-7: a limited tournament without a password is joined directly', () => {
     expect(isDirectTournamentJoin(table({ isTournament: true, gameType: 'Booster Draft' }))).toBe(true)
     expect(isDirectTournamentJoin(table({ isTournament: true, gameType: 'Sealed Deck' }))).toBe(true)
   })
 
-  it('torneo construido pide mazo en el diálogo', () => {
+  it('LBY-7: a constructed tournament asks for a deck in the dialog', () => {
     expect(isDirectTournamentJoin(table({ isTournament: true, gameType: 'Constructed - Modern' }))).toBe(false)
   })
 
-  it('torneo con password pide mazo en el diálogo', () => {
+  it('LBY-7: a tournament with a password asks for a deck in the dialog', () => {
     expect(isDirectTournamentJoin(table({ isTournament: true, gameType: 'Booster Draft', passworded: true }))).toBe(false)
   })
 
-  it('mesa normal nunca entra directo', () => {
+  it('LBY-7: a regular table is never joined directly', () => {
     expect(isDirectTournamentJoin(table({ isTournament: false, gameType: 'Booster Draft' }))).toBe(false)
   })
 })

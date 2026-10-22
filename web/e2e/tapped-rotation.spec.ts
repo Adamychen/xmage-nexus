@@ -16,7 +16,7 @@ const ROT_90 = 'matrix(0, 1, -1, 0, 0, 0)'
  * independientes `translate`/`scale`, que se componen con el giro.
  */
 test.describe('Rotación de cartas giradas', () => {
-  test('una carta girada nunca se endereza por hover ni al montarse @fullflow @tapped', async ({ page }) => {
+  test('FX-11: a tapped card never straightens on hover or on mount @fullflow @tapped', async ({ page }) => {
     await withFakeServer(tokensScenario, async () => {
       const { pageErrors } = await quickStartGame(page, { prefix: 'tap' })
 

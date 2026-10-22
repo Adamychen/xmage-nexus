@@ -50,7 +50,7 @@ describe('RewindBar', () => {
     expect(getRewind().viewing).toBeNull()
   })
 
-  it('steps with the arrow keys and leaves with Escape while viewing', () => {
+  it('KEY-12: steps with the arrow keys and leaves with Escape while viewing', () => {
     captureRewind('g1', view(1, 'UPKEEP'))
     captureRewind('g1', view(1, 'DRAW'))
     captureRewind('g1', view(1, 'PRECOMBAT_MAIN'))

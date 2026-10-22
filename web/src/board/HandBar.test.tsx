@@ -40,7 +40,7 @@ describe('HandBar', () => {
     expect(getByTestId('hand-bar').getAttribute('data-hand-count')).toBe('3')
   })
 
-  it('shows the printed mana cost as bubbles, both halves for split cards and none for lands', () => {
+  it('HND-6: shows the printed mana cost as bubbles, both halves for split cards and none for lands', () => {
     const { container } = render(
       <HandBar
         cards={{
@@ -59,7 +59,7 @@ describe('HandBar', () => {
     expect(sizes.size, 'one bubble size for the whole hand').toBe(1)
   })
 
-  it('splits a cost entry that packs several symbols into one bubble each', () => {
+  it('HND-6: splits a cost entry that packs several symbols into one bubble each', () => {
     const { container } = render(
       <HandBar cards={{ cultivate: makeCard({ id: 'cultivate', name: 'Cultivate', manaCostLeftStr: ['{2}{G}'] }) }} />,
     )
@@ -69,7 +69,7 @@ describe('HandBar', () => {
 
   // Issue #12: "I don't want the mana cost symbols floating above the cards in
   // my hand". The image already shows them; the pips are an extra layer.
-  it('drops the printed cost bubbles when showHandCost is off', () => {
+  it('HND-6: drops the printed cost bubbles when showHandCost is off', () => {
     setSetting('showHandCost', false)
     try {
       const { container } = render(
@@ -82,7 +82,7 @@ describe('HandBar', () => {
     }
   })
 
-  it('exposes sizing CSS variables, sink and the visible band height', () => {
+  it('HND-1: exposes sizing CSS variables, sink and the visible band height', () => {
     const { getByTestId } = render(<HandBar cards={hand()} />)
     const bar = getByTestId('hand-bar') as HTMLElement
     const cardH = HAND_BAR_MAX_CARD_W * HAND_CARD_ASPECT
@@ -92,7 +92,7 @@ describe('HandBar', () => {
     expect(bar.style.height).toBe(`${cardH * HAND_BAR_PEEK_RATIO + HAND_BAR_PADDING_Y}px`)
   })
 
-  it.each([12, 15])('%i cards spread the rendered row across the container width', (count) => {
+  it.each([12, 15])('HND-2: %i cards spread the rendered row across the container width', (count) => {
     const containerW = 1008
     const spy = vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(
       () => ({ x: 0, y: 0, left: 0, top: 0, right: containerW, bottom: 100, width: containerW, height: 100, toJSON: () => ({}) }) as DOMRect,
@@ -112,7 +112,7 @@ describe('HandBar', () => {
     }
   })
 
-  it('routes clicks through onCardClick', () => {
+  it('HND-4: routes clicks through onCardClick', () => {
     const onCardClick = vi.fn()
     const { container } = render(<HandBar cards={hand()} onCardClick={onCardClick} />)
     const slots = container.querySelectorAll('.hand-card-slot')
@@ -133,7 +133,7 @@ describe('HandBar', () => {
     expect(onHover).toHaveBeenLastCalledWith(null)
   })
 
-  it('marks playable and targetable cards', () => {
+  it('TGT-5, HND-4: marks playable and targetable cards', () => {
     const { container } = render(
       <HandBar cards={hand()} playableIds={new Set(['h-1'])} targetIds={new Set(['h-3'])} />,
     )
@@ -142,7 +142,7 @@ describe('HandBar', () => {
     expect(cards[2].classList.contains('targetable')).toBe(true)
   })
 
-  it('rearranges the hand by dragging, swallows the drop click and keeps the order across updates', () => {
+  it('HND-5: rearranges the hand by dragging, swallows the drop click and keeps the order across updates', () => {
     const onCardClick = vi.fn()
     const { container, rerender } = render(<HandBar cards={hand()} onCardClick={onCardClick} />)
     const mockRects = () => {
@@ -170,7 +170,7 @@ describe('HandBar', () => {
     expect(ids()).toEqual(['h-2', 'h-3', 'h-1', 'h-4'])
   })
 
-  it('treats a press without movement as a plain click', () => {
+  it('HND-5: treats a press without movement as a plain click', () => {
     const onCardClick = vi.fn()
     const { container } = render(<HandBar cards={hand()} onCardClick={onCardClick} />)
     const slot = container.querySelectorAll('.hand-card-slot')[1]

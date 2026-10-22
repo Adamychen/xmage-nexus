@@ -34,11 +34,11 @@ afterEach(() => {
 })
 
 describe('bootPlan', () => {
-  it('a device that never played shows the wizard and has nothing to restore', () => {
+  it('LBY-12: a device that never played shows the wizard and has nothing to restore', () => {
     expect(bootPlan(false, false)).toEqual({ restore: false, showWizard: true })
   })
 
-  it('a stored connection restores even when the setup wizard was never finished', () => {
+  it('LBY-12: a stored connection restores even when the setup wizard was never finished', () => {
     // The regression: isSetupDone() used to gate the re-login too, so dismissing the
     // wizard with the X switched restoring off and landed the player back on login.
     expect(bootPlan(false, true)).toEqual({ restore: true, showWizard: false })
@@ -61,7 +61,7 @@ describe('bootPlanFromStorage', () => {
     expect(bootPlanFromStorage()).toEqual({ restore: true, showWizard: false })
   })
 
-  it('a saved connection made after closing the wizard with the X still restores', () => {
+  it('LBY-12: a saved connection made after closing the wizard with the X still restores', () => {
     // what the player who dismissed the wizard and then logged in has on the device
     saveConn(conn)
     expect(isSetupDone()).toBe(false)

@@ -116,7 +116,7 @@ describe('FinishedMatchesPanel helpers', () => {
     expect(scores[1].quit).toBe(true)
   })
 
-  it('parses a multiplayer pod with every player and a single winner', () => {
+  it('LBY-11: parses a multiplayer pod with every player and a single winner', () => {
     const scores = parseMatchResult(
       'Ari [2-0], Bea [1-1], Cid [1-1], Dora [0-2]',
       'Ari, Bea, Cid, Dora',
@@ -127,13 +127,13 @@ describe('FinishedMatchesPanel helpers', () => {
     expect(scores[0]).toMatchObject({ name: 'Ari', wins: 2, losses: 0, isWinner: true })
   })
 
-  it('parses [wins-draws-losses] when the match had draws', () => {
+  it('LBY-11: parses [wins-draws-losses] when the match had draws', () => {
     const scores = parseMatchResult('Ari [1-2-3], Bea [1-0-3]', 'Ari, Bea')
     expect(scores[0]).toMatchObject({ name: 'Ari', wins: 1, draws: 2, losses: 3 })
     expect(scores[1]).toMatchObject({ name: 'Bea', wins: 1, draws: 0, losses: 3 })
   })
 
-  it('merges quit markers from the players string into the result scores', () => {
+  it('LBY-11: merges quit markers from the players string into the result scores', () => {
     const scores = parseMatchResult('Ari [2-0], Bea [0-2], Cid [1-1]', 'Ari, Bea [timer], Cid')
     expect(scores[1]).toMatchObject({ name: 'Bea', quit: true, timeoutType: 'timer' })
     expect(scores[0].quit).toBeUndefined()
@@ -180,7 +180,7 @@ describe('FinishedMatchesPanel component', () => {
     expect(document.querySelector('.ui-empty')).toBeNull()
   })
 
-  it('renders every player of a multiplayer match', async () => {
+  it('LBY-11: renders every player of a multiplayer match', async () => {
     render(<FinishedMatchesPanel roomId="room-1" users={mockUsers} />)
 
     await waitFor(() => {

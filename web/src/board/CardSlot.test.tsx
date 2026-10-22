@@ -175,7 +175,7 @@ describe('CardSlot', () => {
     expect(slot.getAttribute('tabindex')).toBeNull()
   })
 
-  it('inside the game region Space does not activate the card (Space passes priority), Enter does', () => {
+  it('KEY-2: inside the game region Space does not activate the card (Space passes priority), Enter does', () => {
     const onClick = vi.fn()
     const card = {
       id: 'kb3',
@@ -414,7 +414,7 @@ describe('CardSlot target feedback (C1)', () => {
 
   afterEach(() => setState({ feedback: null }))
 
-  it('a required target gets the beacon and no optional class', () => {
+  it('TGT-2: a required target gets the beacon and no optional class', () => {
     setState({ feedback: choice(true) })
     const slot = render(<CardSlot card={target} isTarget />).container.querySelector('.card-slot')!
     expect(slot.classList.contains('targetable')).toBe(true)
@@ -422,7 +422,7 @@ describe('CardSlot target feedback (C1)', () => {
     expect(slot.classList.contains('target-optional')).toBe(false)
   })
 
-  it('an optional target keeps the static border: no beacon', () => {
+  it('TGT-2: an optional target keeps the static border: no beacon', () => {
     setState({ feedback: choice(false) })
     const slot = render(<CardSlot card={target} isTarget />).container.querySelector('.card-slot')!
     expect(slot.classList.contains('targetable')).toBe(true)
@@ -430,7 +430,7 @@ describe('CardSlot target feedback (C1)', () => {
     expect(slot.classList.contains('target-beacon')).toBe(false)
   })
 
-  it('a chosen target drops the beacon and gets the chosen class', () => {
+  it('TGT-2: a chosen target drops the beacon and gets the chosen class', () => {
     setState({ feedback: choice(true) })
     const slot = render(<CardSlot card={target} isTarget isChosen />).container.querySelector('.card-slot')!
     expect(slot.classList.contains('chosen')).toBe(true)
@@ -438,7 +438,7 @@ describe('CardSlot target feedback (C1)', () => {
     expect(slot.classList.contains('target-optional')).toBe(false)
   })
 
-  it('a click on a required target stops the beacon while the echo is pending', () => {
+  it('TGT-2, TGT-3: a click on a required target stops the beacon while the echo is pending', () => {
     setState({ feedback: choice(true) })
     const view = render(<CardSlot card={target} isTarget onClick={vi.fn()} />)
     const slot = view.container.querySelector('.card-slot')!
@@ -448,7 +448,7 @@ describe('CardSlot target feedback (C1)', () => {
     expect(slot.classList.contains('target-beacon')).toBe(false)
   })
 
-  it('a target without a GAME_TARGET prompt counts as required', () => {
+  it('TGT-2: a target without a GAME_TARGET prompt counts as required', () => {
     const slot = render(<CardSlot card={target} isTarget />).container.querySelector('.card-slot')!
     expect(slot.classList.contains('target-beacon')).toBe(true)
   })
@@ -501,7 +501,7 @@ describe('CardSlot acuse optimista (plan4 §5.4)', () => {
     expect(view.container.querySelector('.card-slot')!.className).not.toContain('casting-press')
   })
 
-  it('pinta is-chosen-pending al elegir objetivo, no reenvía el mismo target y reconcilia con isChosen', () => {
+  it('TGT-3: marks is-chosen-pending on a target click, does not resend the same target and reconciles with isChosen', () => {
     const onClick = vi.fn()
     const card = makeSlotCard('ack-2')
     const view = render(<CardSlot card={card} isTarget onClick={onClick} />)

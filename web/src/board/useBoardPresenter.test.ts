@@ -203,7 +203,7 @@ describe('useBoardPresenter handleCardClick dispatcher', () => {
   // el click en isPlayable — ver CardPanel.mouseClicked). Fix: durante un
   // feedback de maná (`feedback.mode === 'mana'`), cualquier permanente
   // clicado se reenvía igual, aunque no esté en playableIds.
-  it('forwards a permanent click during mana payment even when playableIds is empty', () => {
+  it('MNA-2: forwards a permanent click during mana payment even when playableIds is empty', () => {
     setState({ feedback: { mode: 'mana' } as unknown as ReturnType<typeof getState>['feedback'] })
     const onPlayableClick = vi.fn()
     const { result } = renderHook(() =>
@@ -217,7 +217,7 @@ describe('useBoardPresenter handleCardClick dispatcher', () => {
     expect(onPlayableClick).toHaveBeenCalledWith('treasure-1')
   })
 
-  it('does not forward clicks outside mana payment when the id is not playable', () => {
+  it('MNA-2: does not forward clicks outside mana payment when the id is not playable', () => {
     setState({ feedback: null })
     const onPlayableClick = vi.fn()
     const { result } = renderHook(() =>
@@ -231,7 +231,7 @@ describe('useBoardPresenter handleCardClick dispatcher', () => {
     expect(onPlayableClick).not.toHaveBeenCalled()
   })
 
-  it('still prefers combat/target/playable dispatch over the mana fallback', () => {
+  it('MNA-2, TGT-4: still prefers combat/target/playable dispatch over the mana fallback', () => {
     setState({ feedback: { mode: 'mana' } as unknown as ReturnType<typeof getState>['feedback'] })
     const onPlayableClick = vi.fn()
     const onTargetClick = vi.fn()

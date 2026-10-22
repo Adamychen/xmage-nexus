@@ -161,7 +161,7 @@ describe('CreateTableDialog', () => {
     expect((passwordInput as HTMLInputElement).value).toBe('secret123')
   })
 
-  it('mantiene la contraseña operativa en beta.xmage.today (mesas privadas del servidor público)', async () => {
+  it('LBY-3: keeps the table password working on beta.xmage.today (private tables on the public server)', async () => {
     setState({ conn: { serverHost: 'beta.xmage.today' } } as never)
     render(<CreateTableDialog onClose={onClose} />)
 
@@ -224,7 +224,7 @@ describe('CreateTableDialog', () => {
     })
   })
 
-  it('deletes the just-created table when joining the own seat fails, so retries leave no stray tables', async () => {
+  it('LBY-6: deletes the just-created table when joining the own seat fails, so retries leave no stray tables', async () => {
     vi.mocked(cmds.joinTable).mockResolvedValueOnce({ ok: false, error: 'Invalid deck' } as never)
     render(<CreateTableDialog onClose={onClose} />)
     fireEvent.change(screen.getByPlaceholderText(/Ej. Modern Casual Bo3/), { target: { value: 'Broken Deck Duel' } })
@@ -286,7 +286,7 @@ describe('CreateTableDialog', () => {
     })
   })
 
-  it('HUMAN: plaza en espera para humanos, sin bot ni mazo SIM', async () => {
+  it('LBY-5: an open seat waits for a human, with no bot and no SIM deck', async () => {
     render(<CreateTableDialog onClose={onClose} />)
 
     fireEvent.change(screen.getByPlaceholderText(/Ej. Modern Casual Bo3/), { target: { value: 'Humans Only' } })
@@ -602,7 +602,7 @@ describe('CreateTableDialog', () => {
     await waitFor(() => expect((editBtn as HTMLButtonElement).disabled).toBe(true))
   })
 
-  it('T13: creates table with COMPUTER_MAD and joins both the bot and human player', async () => {
+  it('LBY-5: creates a table with COMPUTER_MAD and joins both the bot and the human player', async () => {
     await renderDialog()
 
     const nameInput = screen.getByPlaceholderText(/Ej. Modern Casual Bo3/)

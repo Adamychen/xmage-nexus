@@ -37,7 +37,7 @@ test.describe('Player staging room (JOINED_TABLE)', () => {
     })
   })
 
-  test('volver al lobby conserva el asiento y permite regresar con "Ir a la mesa"', async ({ page }) => {
+  test('LBY-9: going back to the lobby keeps the seat and "Return to table" goes back to it', async ({ page }) => {
     await withFakeServer(stagingScenario, async () => {
       await createAndWaitStaging(page)
       await page.getByTestId('staging-back').click()
@@ -118,7 +118,7 @@ test.describe('Player staging room (JOINED_TABLE)', () => {
     })
   })
 
-  test('empezar sin readys pide confirmación y arranca al aceptar', async ({ page }) => {
+  test('LBY-9: starting without readies asks for confirmation and starts on accept', async ({ page }) => {
     await withFakeServer(stagingScenario, async () => {
       await createAndWaitStaging(page)
       await page.getByTestId('staging-toggle-ready').click()
@@ -131,7 +131,7 @@ test.describe('Player staging room (JOINED_TABLE)', () => {
     })
   })
 
-  test('empezar sin readys se cancela al rechazar la confirmación', async ({ page }) => {
+  test('LBY-9: starting without readies is cancelled when the confirmation is declined', async ({ page }) => {
     await withFakeServer(stagingScenario, async () => {
       await createAndWaitStaging(page)
       await page.getByTestId('staging-toggle-ready').click()
@@ -176,7 +176,7 @@ test.describe('Player staging room (JOINED_TABLE)', () => {
     })
   })
 
-  test('unirse a torneo limitado sin password entra directo sin diálogo de mazo', async ({ page }) => {
+  test('LBY-7: joining a limited tournament without a password skips the deck dialog', async ({ page }) => {
     const tournamentScenario = () =>
       makeBaseScenario({
         tableId: 'table-tny-1',

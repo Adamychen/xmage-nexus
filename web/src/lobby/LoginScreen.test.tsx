@@ -29,7 +29,7 @@ describe('LoginScreen ports', () => {
     cleanup()
   })
 
-  it('an empty server port is not replaced by 17171: it warns and does not connect', () => {
+  it('LBY-1: an empty server port is not replaced by 17171: it warns and does not connect', () => {
     const { container } = render(<LoginScreen />)
     const { server } = portInputs(container)
     fireEvent.change(server, { target: { value: '' } })
@@ -39,7 +39,7 @@ describe('LoginScreen ports', () => {
     expect(container.querySelector('.error-box')?.textContent).toMatch(/65535/)
   })
 
-  it('the proxy port can be cleared and retyped (does not snap back to 8787)', () => {
+  it('LBY-1: the proxy port can be cleared and retyped (does not snap back to 8787)', () => {
     const { container } = render(<LoginScreen />)
     const { proxy } = portInputs(container)
     fireEvent.change(proxy, { target: { value: '' } })
@@ -48,7 +48,7 @@ describe('LoginScreen ports', () => {
     expect(proxy.value).toBe('9000')
   })
 
-  it('rejects ports outside 1-65535 without connecting', () => {
+  it('LBY-1: rejects ports outside 1-65535 without connecting', () => {
     const { container } = render(<LoginScreen />)
     const { proxy, server } = portInputs(container)
     fireEvent.change(server, { target: { value: '70000' } })
@@ -62,7 +62,7 @@ describe('LoginScreen ports', () => {
     expect(container.querySelector('.error-box')?.textContent).toMatch(/65535/)
   })
 
-  it('valid ports connect with those ports', () => {
+  it('LBY-1: valid ports connect with those ports', () => {
     const { container } = render(<LoginScreen />)
     const { proxy, server } = portInputs(container)
     fireEvent.change(proxy, { target: { value: '8790' } })

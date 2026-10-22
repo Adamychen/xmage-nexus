@@ -10,7 +10,7 @@ describe('parseDeepLink', () => {
     expect(parseDeepLink('#join&foo=1')).toBeNull()
   })
 
-  it('parsea enlace join completo con password y servidor', () => {
+  it('LBY-10: parses a full join link with password and server', () => {
     expect(parseDeepLink('#join=abc123&pwd=s3cret&server=beta.xmage.today:17171')).toEqual({
       kind: 'join',
       tableId: 'abc123',
@@ -20,7 +20,7 @@ describe('parseDeepLink', () => {
     })
   })
 
-  it('parsea enlace watch sin password', () => {
+  it('LBY-10: parses a watch link without a password', () => {
     expect(parseDeepLink('#watch=table-9&server=localhost:17171')).toEqual({
       kind: 'watch',
       tableId: 'table-9',

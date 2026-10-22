@@ -3,7 +3,7 @@ import { cardsContainTarget, resolveTargetHits, targetZoneKindOf } from './targe
 import { makeCard, makeGameView, makePermanent, makePlayer } from '../__fixtures__/gameViews'
 
 describe('targetZoneKindOf', () => {
-  it('maps the engine Zone names HumanPlayer.getOptions sends as targetZone', () => {
+  it('PRM-8: maps the engine Zone names HumanPlayer.getOptions sends as targetZone', () => {
     expect(targetZoneKindOf('HAND')).toBe('hand')
     expect(targetZoneKindOf('GRAVEYARD')).toBe('graveyard')
     expect(targetZoneKindOf('EXILED')).toBe('exile')
@@ -50,7 +50,7 @@ describe('resolveTargetHits', () => {
     ],
   })
 
-  it('marks every card zone and its owner', () => {
+  it('PRM-8: marks every card zone and its owner', () => {
     const hits = resolveTargetHits(game, [
       'h-1', 's-1', 'perm-1', 'g-1', 'e-1', 'lib-1', 'cmd-1',
       'perm-2', 'g-2', 'oh-1', 'wh-1', 'rev-1',
@@ -61,7 +61,7 @@ describe('resolveTargetHits', () => {
     expect(hits.owners).toEqual(new Set(['p1', 'p2', 'Carol']))
   })
 
-  it('resolves the owner from the hand views so the right hand highlights', () => {
+  it('PRM-8: resolves the owner from the hand views so the right hand highlights', () => {
     const oppHand = resolveTargetHits(game, ['oh-1'])
     expect(oppHand.zones.has('hand')).toBe(true)
     expect(oppHand.owners.has('p2')).toBe(true)

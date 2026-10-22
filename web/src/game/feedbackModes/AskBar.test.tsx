@@ -77,7 +77,7 @@ describe('AskBar', () => {
     expect(busyOption).not.toHaveBeenCalled()
   })
 
-  it('digit shortcuts answer the ask', () => {
+  it('KEY-7: digit shortcuts answer the ask', () => {
     const selectOption = vi.fn()
     render(<AskBar form={stubForm(askPrompt, { selectOption })} />)
     fireEvent.keyDown(document.querySelector('.feedback-options-grid')!, { key: '2' })

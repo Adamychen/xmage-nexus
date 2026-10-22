@@ -11,7 +11,7 @@ function Overlay({ onClose, testId }: { onClose: () => void; testId: string }) {
 }
 
 describe('useEscape layer stack', () => {
-  it('closes only the topmost layer on one Escape', () => {
+  it('DLG-2: closes only the topmost layer on one Escape', () => {
     const onOverlay = vi.fn()
     const onModal = vi.fn()
     render(
@@ -27,7 +27,7 @@ describe('useEscape layer stack', () => {
     expect(onOverlay).not.toHaveBeenCalled()
   })
 
-  it('hands Escape to the layer beneath once the top one unmounts', () => {
+  it('DLG-2: hands Escape to the layer beneath once the top one unmounts', () => {
     const lower = vi.fn()
     const upper = vi.fn()
     const { rerender } = render(<Overlay onClose={lower} testId="lower" />)
@@ -47,7 +47,7 @@ describe('useEscape layer stack', () => {
     expect(upper).toHaveBeenCalledTimes(1)
   })
 
-  it('keeps the stack order when an overlay re-renders with a new callback', () => {
+  it('DLG-2: keeps the stack order when an overlay re-renders with a new callback', () => {
     const lower = vi.fn()
     const upper = vi.fn()
     const { rerender } = render(

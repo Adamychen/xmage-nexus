@@ -88,7 +88,7 @@ describe('galería de estados (P3)', () => {
     expect(mana?.playableIds?.length).toBeGreaterThan(0)
   })
 
-  it('animation entries: each has the action its state needs and a base that can show it', () => {
+  it('FX-12: animation entries: each has the action its state needs and a base that can show it', () => {
     const withAction = [
       'anim:untap-wave',
       'anim:life-5',

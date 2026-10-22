@@ -52,7 +52,7 @@ describe('what App does on load', () => {
     )
   })
 
-  it('logs back in even when the setup wizard was never completed', async () => {
+  it('LBY-12: logs back in even when the setup wizard was never completed', async () => {
     // The device state of the bug: the wizard was dismissed with the X, so no setup
     // flag, and the saved connection is what should bring the session back.
     store.set('mage-web-conn', JSON.stringify(session))

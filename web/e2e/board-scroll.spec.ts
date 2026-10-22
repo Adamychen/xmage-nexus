@@ -21,7 +21,7 @@ async function scrolledBoxes(page: Page): Promise<string[]> {
   })
 }
 
-test('focusing a hand card that peeks below the edge never scrolls the board @hand-bar', async ({ page }) => {
+test('HND-11: focusing a hand card that peeks below the edge never scrolls the board @hand-bar', async ({ page }) => {
   await page.setViewportSize({ width: 1600, height: 880 })
   await withFakeServer(() => spellsScenario('blaze'), async () => {
     const { pageErrors } = await quickStartGame(page, { prefix: 'bsc', skipAsks: true })

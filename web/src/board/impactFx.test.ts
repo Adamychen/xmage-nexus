@@ -25,22 +25,22 @@ describe('cardManaColors', () => {
 })
 
 describe('spellWeight', () => {
-  it('keeps cheap non-mythic spells light', () => {
+  it('FX-8: keeps cheap non-mythic spells light', () => {
     expect(spellWeight(makeCard({ name: 'Lightning Bolt', manaValue: 1, rarity: 'UNCOMMON' }))).toBe(0)
   })
 
-  it('marks five-drops and mythics as heavy', () => {
+  it('FX-8: marks five-drops and mythics as heavy', () => {
     expect(spellWeight(makeCard({ name: 'Wrath of God', manaValue: 5, rarity: 'RARE' }))).toBe(1)
     expect(spellWeight(makeCard({ name: 'Ragavan', manaValue: 1, rarity: 'MYTHIC' }))).toBe(1)
   })
 
-  it('marks seven-drops and expensive mythics as epic', () => {
+  it('FX-8: marks seven-drops and expensive mythics as epic', () => {
     expect(spellWeight(makeCard({ name: 'Emrakul', manaValue: 15, rarity: 'MYTHIC' }))).toBe(2)
     expect(spellWeight(makeCard({ name: 'Craterhoof', manaValue: 8, rarity: 'RARE' }))).toBe(2)
     expect(spellWeight(makeCard({ name: 'Elspeth', manaValue: 5, rarity: 'MYTHIC' }))).toBe(2)
   })
 
-  it('never weighs abilities', () => {
+  it('FX-8: never weighs abilities', () => {
     expect(spellWeight(makeCard({ name: 'Ability', manaValue: 9, isAbility: true, rarity: 'MYTHIC' }))).toBe(0)
   })
 })
@@ -88,7 +88,7 @@ describe('impact store', () => {
     expect(spawnImpact('destroy', rect(0, 0, 0, 0))).toBeNull()
   })
 
-  it('slams a heavy spell after the landing delay and quakes the board', () => {
+  it('FX-8: slams a heavy spell after the landing delay and quakes the board', () => {
     document.body.innerHTML = '<div class="board-shell"></div>'
     const weight = slamSpell(makeCard({ name: 'Ulamog', manaValue: 10, color: {} }))
     expect(weight).toBe(2)
@@ -98,7 +98,7 @@ describe('impact store', () => {
     expect(document.querySelector('.board-shell')?.classList.contains('fx-quake-2')).toBe(true)
   })
 
-  it('does not slam light spells', () => {
+  it('FX-8: does not slam light spells', () => {
     expect(slamSpell(makeCard({ name: 'Opt', manaValue: 1 }))).toBe(0)
     vi.advanceTimersByTime(1000)
     expect(getImpacts()).toHaveLength(0)
@@ -189,14 +189,14 @@ describe('transition engine impacts', () => {
       makeGameView({ players: [makePlayer({ playerId: 'p-bob', name: 'Bob', ...bob })], stack, priorityPlayerName: 'Bob', ...extra })
     const slams = () => getImpacts().filter((f) => f.kind === 'slam')
 
-    it('does not slam while the spell is on the stack, even once the cast is paid', () => {
+    it('FX-8: does not slam while the spell is on the stack, even once the cast is paid', () => {
       detectAndAnimateTransitions(view({}), view({ 's-titan': titan }))
       detectAndAnimateTransitions(view({ 's-titan': titan }), view({ 's-titan': titan }, {}, { priorityPlayerName: 'Alice' }))
       vi.advanceTimersByTime(1000)
       expect(slams()).toHaveLength(0)
     })
 
-    it('slams when a permanent spell resolves onto the battlefield', () => {
+    it('FX-8: slams when a permanent spell resolves onto the battlefield', () => {
       detectAndAnimateTransitions(view({}), view({ 's-titan': titan }))
       detectAndAnimateTransitions(view({ 's-titan': titan }), view({}, { battlefield: { 's-titan': makePermanent({ id: 's-titan', name: 'Titan' }) } }))
       vi.advanceTimersByTime(400)
@@ -205,14 +205,14 @@ describe('transition engine impacts', () => {
       expect(slams()).toEqual([expect.objectContaining({ weight: 2 })])
     })
 
-    it('slams when an instant or sorcery resolves to the graveyard', () => {
+    it('FX-8: slams when an instant or sorcery resolves to the graveyard', () => {
       detectAndAnimateTransitions(view({}), view({ 's-wrath': wrath }))
       detectAndAnimateTransitions(view({ 's-wrath': wrath }), view({}, { graveyard: { 's-wrath': wrath } }))
       vi.advanceTimersByTime(400)
       expect(slams()).toHaveLength(1)
     })
 
-    it('never slams a countered creature or a cast cancelled back to hand', () => {
+    it('FX-8: never slams a countered creature or a cast cancelled back to hand', () => {
       detectAndAnimateTransitions(view({}), view({ 's-titan': titan }))
       detectAndAnimateTransitions(view({ 's-titan': titan }), view({}, { graveyard: { 's-titan': titan } }))
       detectAndAnimateTransitions(view({}), view({ 's-titan': titan }))

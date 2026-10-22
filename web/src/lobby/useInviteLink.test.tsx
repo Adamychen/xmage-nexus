@@ -38,7 +38,7 @@ describe('useInviteLink server switch', () => {
     cleanup()
   })
 
-  it('reanuda la invitación tras aceptar el cambio de servidor (AUDIT bloqueante)', async () => {
+  it('LBY-10: resumes the invitation after the server switch is accepted', async () => {
     vi.mocked(confirmDialog).mockResolvedValue(true)
     await act(async () => {
       setState({ pendingDeepLink: { kind: 'watch', tableId: 't1', serverHost: 'server-b', serverPort: 17172 } } as any)
@@ -58,7 +58,7 @@ describe('useInviteLink server switch', () => {
     expect(confirmDialog).toHaveBeenCalledTimes(1)
   })
 
-    it('never sends the saved password to a different server', async () => {
+    it('LBY-10: never sends the saved password to a different server', async () => {
     vi.mocked(confirmDialog).mockResolvedValue(true)
     await act(async () => {
       setState({ pendingDeepLink: { kind: 'watch', tableId: 't1', serverHost: 'evil.example', serverPort: 17171 } } as any)
@@ -84,7 +84,7 @@ describe('useInviteLink server switch', () => {
     expect(d.watchTable).not.toHaveBeenCalled()
   })
 
-  it('deja rastro visible al cancelar la invitación (C.13-mayores §3)', async () => {
+  it('LBY-10: leaves a visible note when the invitation is cancelled', async () => {
     vi.mocked(confirmDialog).mockResolvedValue(false)
     await act(async () => {
       setState({ pendingDeepLink: { kind: 'watch', tableId: 't1', serverHost: 'server-b', serverPort: 17172 } } as any)
@@ -96,7 +96,7 @@ describe('useInviteLink server switch', () => {
     expect(String(d.setNotice.mock.calls[0][0])).toMatch(/cancelada/i)
   })
 
-  it('muestra estado pendiente mientras reintenta la mesa ausente (C.13-mayores §3)', async () => {
+  it('LBY-10: shows a pending state while it retries a missing table', async () => {
     await act(async () => {
       setState({ pendingDeepLink: { kind: 'join', tableId: 't-ausente' } } as any)
     })
@@ -108,7 +108,7 @@ describe('useInviteLink server switch', () => {
     expect(String(d.setNotice.mock.calls[0][0])).toMatch(/buscando/i)
   })
 
-  it('avisa al agotar los reintentos de mesa ausente (C.13-mayores §3)', async () => {
+  it('LBY-10: warns when the retries for a missing table run out', async () => {
     vi.useFakeTimers()
     try {
       await act(async () => {

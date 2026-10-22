@@ -32,7 +32,7 @@ describe('Modal', () => {
     expect(dialog.getAttribute('aria-label')).toBe('Draft')
   })
 
-  it('forwards backdrop clicks when a handler is provided', () => {
+  it('DLG-4: forwards backdrop clicks when a handler is provided', () => {
     const onBackdropClick = vi.fn()
     render(
       <Modal backdropClassName="x-backdrop" dialogClassName="x-dialog" labelledBy="t" onBackdropClick={onBackdropClick}>
@@ -57,7 +57,7 @@ describe('Modal', () => {
     expect(dialog.compareDocumentPosition(preview) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })
 
-  it('renders no click handler by default', () => {    const { container } = render(
+  it('DLG-4: a backdrop click does nothing unless the caller opts in', () => {    const { container } = render(
       <Modal backdropClassName="voting-backdrop" dialogClassName="voting-dialog" labelledBy="voting-title">
         <h2 id="voting-title">Vote</h2>
       </Modal>,
@@ -68,7 +68,7 @@ describe('Modal', () => {
     expect(screen.getByRole('dialog')).toBeDefined()
   })
 
-  it('stacks later modals above earlier ones (auto z-index)', () => {
+  it('DLG-1: stacks later modals above earlier ones (auto z-index)', () => {
     render(
       <>
         <Modal backdropClassName="a-backdrop" dialogClassName="a-dialog" labelledBy="a" testId="modal-a"><span>a</span></Modal>
@@ -90,7 +90,7 @@ describe('Modal', () => {
     expect(screen.getByTestId('modal-top').parentElement?.style.zIndex).toBe('2000')
   })
 
-  it('runs onEscape only for the topmost modal', () => {
+  it('DLG-2: runs onEscape only for the topmost modal', () => {
     const onEscapeBottom = vi.fn()
     const onEscapeTop = vi.fn()
     render(
@@ -104,7 +104,7 @@ describe('Modal', () => {
     expect(onEscapeBottom).not.toHaveBeenCalled()
   })
 
-  it('envuelve el contador sin atascarse en 1999 (AUDIT)', () => {
+  it('DLG-1: wraps the counter without sticking at 1999', () => {
     __modalAllocator.active.add(1500)
     try {
       let max = 0
@@ -120,7 +120,7 @@ describe('Modal', () => {
     }
   })
 
-  it('keeps a later modal above an open one after the counter would have wrapped', () => {
+  it('DLG-1: keeps a later modal above an open one after the counter would have wrapped', () => {
     __modalAllocator.active.add(1000)
     try {
       for (let i = 0; i < 1500; i++) expect(__modalAllocator.next()).toBeGreaterThan(1000)
@@ -129,7 +129,7 @@ describe('Modal', () => {
     }
   })
 
-  it('does not run onEscape after the modal unmounts', () => {
+  it('DLG-2: does not run onEscape after the modal unmounts', () => {
     const onEscape = vi.fn()
     const { unmount } = render(
       <Modal backdropClassName="x-backdrop" dialogClassName="x-dialog" labelledBy="t" onEscape={onEscape}><span>x</span></Modal>,
@@ -139,7 +139,7 @@ describe('Modal', () => {
     expect(onEscape).not.toHaveBeenCalled()
   })
 
-  it('Alt held peeks at the board behind the backdrop (visual only)', () => {
+  it('DLG-5: Alt held peeks at the board behind the backdrop (visual only)', () => {
     render(
       <Modal backdropClassName="x-backdrop" dialogClassName="x-dialog" labelledBy="t">
         <h2 id="t">Title</h2>
@@ -153,7 +153,7 @@ describe('Modal', () => {
     expect(backdrop.getAttribute('data-peek')).toBeNull()
   })
 
-  it('mueve el foco al primer control al abrir y lo restaura al cerrar (AUDIT)', () => {
+  it('DLG-3: moves focus to the first control on open and restores it on close', () => {
     const outside = document.createElement('button')
     outside.textContent = 'fuera'
     document.body.appendChild(outside)
@@ -170,7 +170,7 @@ describe('Modal', () => {
     outside.remove()
   })
 
-  it('atrapa Tab dentro del diálogo y envuelve al principio/fin (AUDIT)', () => {
+  it('DLG-3: traps Tab inside the dialog and wraps at both ends', () => {
     render(
       <Modal backdropClassName="x-backdrop" dialogClassName="x-dialog" labelledBy="t">
         <button>uno</button>

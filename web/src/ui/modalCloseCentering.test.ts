@@ -7,7 +7,7 @@ import { describe, expect, it } from 'vitest'
 const SRC = fileURLToPath(new URL('..', import.meta.url))
 
 describe('close buttons', () => {
-  it('the shared .ui-close centers its icon without depending on font metrics', () => {
+  it('DLG-9: the shared .ui-close centers its icon without depending on font metrics', () => {
     const css = readFileSync(join(SRC, 'ui/primitives.css'), 'utf8')
     const match = css.match(/\.ui-close\s*\{([^}]*)\}/)
     expect(match).not.toBeNull()
@@ -16,7 +16,7 @@ describe('close buttons', () => {
     expect(match![1]).toContain('justify-content: center')
   })
 
-  it('no component hand-rolls a close (X) button instead of using CloseButton', () => {
+  it('DLG-9: no component hand-rolls a close (X) button instead of using CloseButton', () => {
     const offenders: string[] = []
     const files = readdirSync(SRC, { recursive: true, encoding: 'utf8' })
       .map((rel) => join(SRC, rel))

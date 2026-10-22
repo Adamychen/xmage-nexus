@@ -5,7 +5,7 @@ import { quickStartGame } from './support/start-game'
 import { withFakeServer } from './support/fake-backend'
 import { thoughtseizeScenario } from '../fixtures/scenarios/thoughtseize'
 
-test('descarte interactivo desde mano revelada (Thoughtseize) @reveal', async ({ page }) => {
+test('HND-8: interactive discard from a revealed hand (Thoughtseize) @reveal', async ({ page }) => {
   await withFakeServer(
     () => thoughtseizeScenario(),
     async () => {

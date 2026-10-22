@@ -52,7 +52,7 @@ function assertCombat(seen: { goblin: boolean; attack: boolean; damaged: boolean
   expect(seen.tapped, 'el atacante debería verse girado (clase tapped en su CardSlot) durante el combate').toBeTruthy()
 }
 
-test('combate determinista: el Sim lanza una criatura, ataca con todo y el daño baja la vida', { tag: ['@combat', '@timing'] }, async ({ page }) => {
+test('CMB-3: the Sim casts a creature and attacks, the attacker is drawn tapped and the damage lowers life', { tag: ['@combat', '@timing'] }, async ({ page }) => {
   await withFakeServer(() => combatScenario(), async () => {
     const { frames, pageErrors } = await quickStartGame(page, {
       prefix: 'cb',

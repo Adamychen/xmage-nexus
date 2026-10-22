@@ -8,7 +8,7 @@ import { retryTimingSpecInCi } from './support/timing'
 
 retryTimingSpecInCi()
 
-test('combat strikes: attackers lunge when combat damage resolves, not when they are declared', { tag: ['@combat', '@timing'] }, async ({ page }) => {
+test('FX-6, CMB-6: combat strikes: attackers lunge when combat damage resolves, not when they are declared', { tag: ['@combat', '@timing'] }, async ({ page }) => {
   await page.addInitScript(() => {
     const w = window as unknown as { __strikeLog: Array<{ step: string; ghosts: number }>; __combatOrder: string[]; __ghosts: HTMLElement[] }
     w.__strikeLog = []

@@ -9,7 +9,7 @@ fakeOnly()
 const zOf = (page: import('@playwright/test').Page, sel: string) =>
   page.locator(sel).first().evaluate((el) => Number(getComputedStyle(el).zIndex))
 
-test('el menú de partida (⋯) manda sobre el dock y las flechas ceden con él abierto', { tag: '@combat' }, async ({ page }) => {
+test('CMB-5: the game menu (⋯) paints over the dock and the combat arrows yield while it is open', { tag: '@combat' }, async ({ page }) => {
   await withFakeServer(() => combatHumanBlockScenario(), async () => {
     await quickStartGame(page, {
       prefix: 'gmo',

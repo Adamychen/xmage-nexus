@@ -17,7 +17,7 @@ describe('HandZone back stacking (pod/arena)', () => {
     setLanguage('es')
   })
 
-  it('renders one slot per card without stackBacks', () => {
+  it('HND-8: renders one slot per card without stackBacks', () => {
     const { container } = render(
       <HandZone cards={Object.fromEntries([back('a'), back('b'), back('c')])} compact />
     )
@@ -26,7 +26,7 @@ describe('HandZone back stacking (pod/arena)', () => {
     expect(container.querySelector('.hand-zone')?.getAttribute('data-hand-count')).toBe('3')
   })
 
-  it('collapses 3+ backs into one ×N stack with stackBacks', () => {
+  it('HND-8: collapses two or more backs into one ×N stack with stackBacks', () => {
     const { container } = render(
       <HandZone cards={Object.fromEntries([back('a'), back('b'), back('c'), back('d')])} compact stackBacks />
     )
@@ -38,7 +38,7 @@ describe('HandZone back stacking (pod/arena)', () => {
     expect(container.querySelector('.hand-zone')?.getAttribute('data-hand-count')).toBe('4')
   })
 
-  it('keeps a single back as a plain slot', () => {
+  it('HND-8: keeps a single back as a plain slot', () => {
     const { container } = render(
       <HandZone cards={Object.fromEntries([back('a')])} compact stackBacks />
     )
@@ -46,7 +46,7 @@ describe('HandZone back stacking (pod/arena)', () => {
     expect(container.querySelectorAll('.hand-card-slot').length).toBe(1)
   })
 
-  it('keeps known face-up cards inline next to the backs stack', () => {
+  it('HND-8: keeps known face-up cards inline next to the backs stack', () => {
     const { container } = render(
       <HandZone
         cards={Object.fromEntries([faceUp('k1', 'Lightning Bolt'), faceUp('k2', 'Shock'), back('a'), back('b'), back('c')])}
@@ -65,7 +65,7 @@ describe('HandZone back stacking (pod/arena)', () => {
     expect(stack?.getAttribute('title')).toContain('Ver mano')
   })
 
-  it('opens the viewer even on a fully unknown stack (backs only)', () => {
+  it('HND-9: opens the viewer even on a fully unknown stack (backs only)', () => {
     const onViewHand = vi.fn()
     const { container } = render(
       <HandZone cards={Object.fromEntries([back('a'), back('b')])} compact stackBacks onViewHand={onViewHand} />
@@ -78,7 +78,7 @@ describe('HandZone back stacking (pod/arena)', () => {
     expect(onViewHand).toHaveBeenCalledTimes(1)
   })
 
-  it('opens the viewer on click when viewable', () => {
+  it('HND-9: opens the viewer on click when viewable', () => {
     const onViewHand = vi.fn()
     const { container } = render(
       <HandZone
@@ -111,7 +111,7 @@ describe('HandZone back stacking (pod/arena)', () => {
     expect(onCardClick).toHaveBeenCalledWith('k2')
   })
 
-  it('never stacks an all face-up hand (my own cards)', () => {
+  it('HND-8: never stacks an all face-up hand (my own cards)', () => {
     const { container } = render(
       <HandZone cards={Object.fromEntries([faceUp('k1', 'Bolt'), faceUp('k2', 'Shock')])} stackBacks />
     )

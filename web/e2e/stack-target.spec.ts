@@ -6,7 +6,7 @@ import { RELEASE_STACK_TARGET, stackTargetScenario } from '../fixtures/scenarios
 fakeOnly()
 
 test.describe('Targeting a spell on the stack', () => {
-  test('a stack spell can be chosen as a target, even after closing the drawer or switching tabs @fullflow @stack-target', async ({ page }) => {
+  test('TGT-7: a stack spell can be chosen as a target, even after closing the drawer or switching tabs @fullflow @stack-target', async ({ page }) => {
     await withFakeServer(stackTargetScenario, async () => {
       const { pageErrors, helper } = await quickStartGame(page, { prefix: 'st' })
 

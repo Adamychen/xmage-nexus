@@ -68,40 +68,40 @@ describe('ManaBar smart mana payment', () => {
     setSetting('manaPayment', { ...DEFAULT_MANA_PAYMENT })
   })
 
-  it('taps one source for a solvable prompt when the toggle is on', async () => {
+  it('MNA-7: taps one source for a solvable prompt when the toggle is on', async () => {
     render(<ManaBar form={form(prompt('Pay {G}{1}'))} />)
     await waitFor(() => expect(sendPlayerUUID).toHaveBeenCalledTimes(1))
     expect(['f1', 'f2']).toContain(sendPlayerUUID.mock.calls[0][0])
     expect(sendPlayerUUID.mock.calls[0][1]).toBe('g1')
   })
 
-  it('does nothing while the toggle is off (default)', async () => {
+  it('MNA-7: does nothing while the toggle is off (default)', async () => {
     setSetting('manaPayment', { ...DEFAULT_MANA_PAYMENT, smart: false })
     render(<ManaBar form={form(prompt('Pay {G}{1}'))} />)
     await new Promise((r) => setTimeout(r, 20))
     expect(sendPlayerUUID).not.toHaveBeenCalled()
   })
 
-  it('does nothing while the prompt form is busy', async () => {
+  it('MNA-7: does nothing while the prompt form is busy', async () => {
     render(<ManaBar form={form(prompt('Pay {G}{1}'), true)} />)
     await new Promise((r) => setTimeout(r, 20))
     expect(sendPlayerUUID).not.toHaveBeenCalled()
   })
 
-  it('does nothing when the cost cannot be paid from known sources', async () => {
+  it('MNA-7: does nothing when the cost cannot be paid from known sources', async () => {
     render(<ManaBar form={form(prompt('Pay {R}'))} />)
     await new Promise((r) => setTimeout(r, 20))
     expect(sendPlayerUUID).not.toHaveBeenCalled()
   })
 
-  it('continues on the follow-up prompt when the cost dropped by exactly one', async () => {
+  it('MNA-7: continues on the follow-up prompt when the cost dropped by exactly one', async () => {
     const view = render(<ManaBar form={form(prompt('Pay {G}{1}'))} />)
     await waitFor(() => expect(sendPlayerUUID).toHaveBeenCalledTimes(1))
     view.rerender(<ManaBar form={form(prompt('Pay {1}'))} />)
     await waitFor(() => expect(sendPlayerUUID).toHaveBeenCalledTimes(2))
   })
 
-  it('stops for the rest of the payment when the follow-up cost is not what it expected', async () => {
+  it('MNA-7: stops for the rest of the payment when the follow-up cost is not what it expected', async () => {
     const view = render(<ManaBar form={form(prompt('Pay {G}{1}'))} />)
     await waitFor(() => expect(sendPlayerUUID).toHaveBeenCalledTimes(1))
     view.rerender(<ManaBar form={form(prompt('Pay {G}{1}'))} />)

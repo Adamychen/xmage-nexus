@@ -84,7 +84,7 @@ async function confirmMyAttackWindows(page: Page): Promise<SceneCombat> {
   throw new Error('demasiadas ventanas de ataque sin llegar al bloqueo')
 }
 
-test('combate humano: el humano declara atacantes por la UI y el daño baja la vida del Sim', { tag: '@combat' }, async ({ page }) => {
+test('CMB-1, CMB-2: the human declares an attacker on the board, confirms, and the damage lowers the Sim\'s life', { tag: '@combat' }, async ({ page }) => {
   fs.mkdirSync(SHOTS_DIR, { recursive: true })
   await withFakeServer(() => combatHumanAttackScenario(), async () => {
     const { helper, pageErrors } = await quickStartGame(page, {
@@ -141,7 +141,7 @@ test('combate humano: el humano declara atacantes por la UI y el daño baja la v
   })
 })
 
-test('combate humano: el humano bloquea por la UI y el ataque del Sim no hace daño', { tag: '@combat' }, async ({ page }) => {
+test('CMB-1: the human blocks on the board and the Sim\'s attack deals no damage', { tag: '@combat' }, async ({ page }) => {
   fs.mkdirSync(SHOTS_DIR, { recursive: true })
   await withFakeServer(() => combatHumanBlockScenario(), async () => {
     const { helper, pageErrors } = await quickStartGame(page, {

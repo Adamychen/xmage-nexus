@@ -26,7 +26,7 @@ describe('HandViewer', () => {
     )
   }
 
-  it('renders in a portal with known cards face-up and the backs stack', () => {
+  it('HND-9: renders in a portal with known cards face-up and the backs stack', () => {
     openViewer()
     const viewer = document.body.querySelector('[data-testid="hand-viewer"]')
     expect(viewer).not.toBeNull()
@@ -47,14 +47,14 @@ describe('HandViewer', () => {
     })
   })
 
-  it('numbers known cards #1..#K and backs after them', () => {
+  it('HND-9: numbers known cards #1..#K and backs after them', () => {
     openViewer()
     const viewer = document.body.querySelector('[data-testid="hand-viewer"]')!
     const badges = viewer.querySelectorAll('.pile-card-wrapper .pile-position-badge')
     expect([...badges].map((b) => b.textContent)).toEqual(['#1', '#2', '#3', '#4', '#5'])
   })
 
-  it('closes on ✕ button and on Escape', () => {
+  it('HND-9: closes on ✕ button and on Escape', () => {
     const onClose = vi.fn()
     const first = openViewer({ onClose })
     fireEvent.click(document.body.querySelector('.pile-overlay-close')!)
@@ -66,7 +66,7 @@ describe('HandViewer', () => {
     expect(onClose).toHaveBeenCalledTimes(2)
   })
 
-  it('forwards clicks only on targeted/playable known cards', () => {
+  it('TGT-5, HND-9: forwards clicks only on targeted/playable known cards', () => {
     const onCardClick = vi.fn()
     openViewer({ targetIds: new Set(['k1']), onCardClick })
     const slots = document.body.querySelectorAll('[data-testid="hand-viewer"] .pile-card-wrapper.is-revealed')

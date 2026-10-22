@@ -168,7 +168,7 @@ describe('submit: constructed tournament with native AI', () => {
     expect(vi.mocked(cmds.joinTournamentTable).mock.calls[0][0].playerName).toBe('Computer')
   })
 
-  it('if a bot cannot join, the just-created table is removed', async () => {
+  it('LBY-6: if a bot cannot join, the just-created table is removed', async () => {
     const m = await constructedTourneyWithBots(2)
     vi.mocked(cmds.joinTournamentTable).mockResolvedValueOnce({ ok: false, error: 'boom' } as any)
     await act(() => m.form().submit())
@@ -179,7 +179,7 @@ describe('submit: constructed tournament with native AI', () => {
     expect(m.onClose).not.toHaveBeenCalled()
   })
 
-  it('cancelling the deck check of a bot removes the table', async () => {
+  it('LBY-6: cancelling the deck check of a bot removes the table', async () => {
     const m = await constructedTourneyWithBots(1)
     vi.mocked(requestDeckValidation)
       .mockImplementationOnce(async (deck) => deck) // human
@@ -191,7 +191,7 @@ describe('submit: constructed tournament with native AI', () => {
     expect(m.onClose).not.toHaveBeenCalled()
   })
 
-  it('if the human cannot join, the table is removed', async () => {
+  it('LBY-6: if the human cannot join, the table is removed', async () => {
     const m = await constructedTourneyWithBots(1)
     vi.mocked(cmds.joinTournamentTable)
       .mockResolvedValueOnce({ ok: true } as any)
@@ -202,7 +202,7 @@ describe('submit: constructed tournament with native AI', () => {
     expect(m.onClose).not.toHaveBeenCalled()
   })
 
-  it('cancelling the human deck check creates nothing', async () => {
+  it('LBY-6: cancelling the human deck check creates nothing', async () => {
     const m = await constructedTourneyWithBots(1)
     vi.mocked(requestDeckValidation).mockResolvedValueOnce(null)
     await act(() => m.form().submit())
@@ -240,7 +240,7 @@ describe('submit: match with native AI', () => {
     expect(m.onClose).toHaveBeenCalled()
   })
 
-  it('cancelling the bot deck check does not create the table', async () => {
+  it('LBY-6: cancelling the bot deck check does not create the table', async () => {
     const m = await duelVsBot()
     vi.mocked(requestDeckValidation)
       .mockImplementationOnce(async (deck) => deck)

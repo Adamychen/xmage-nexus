@@ -172,7 +172,7 @@ test.describe('Latencia percibida (acuse <100ms + eco con retardo)', { tag: ['@l
     }, { echoDelayMs: LATENCY_ECHO_MS })
   })
 
-  test('elegir objetivo: is-chosen-pending inmediato y eco que lo confirma', async ({ page }) => {
+  test('TGT-3: choosing a target shows is-chosen-pending at once and the echo confirms it', async ({ page }) => {
     test.skip(!FAKE_MODE, FAKE_ONLY_REASON)
     await withFakeServer(latencyTargetScenario, async () => {
       const { pageErrors, helper } = await startGame(page, { prefix: 'ltt', tableName: 'latency-target', deck: DECK.lands })

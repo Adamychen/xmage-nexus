@@ -21,7 +21,7 @@ describe('card render settings', () => {
 })
 
 describe('HandRail', () => {
-  it('lists every card of the hand as readable text in rendered mode and flags playable ones', () => {
+  it('HND-7: lists every card of the hand as readable text in rendered mode and flags playable ones', () => {
     setState({ settings: { ...getState().settings, cardRender: 'rendered', handRail: true, handRailWidth: 240 } })
     const clicked: string[] = []
     const { container } = render(<HandRail cards={hand} playableIds={new Set(['a'])} onCardClick={(id) => clicked.push(id)} />)

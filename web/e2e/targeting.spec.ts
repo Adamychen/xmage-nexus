@@ -22,7 +22,7 @@ import { feedbackDialog, payMana } from './support/game-screen'
 
 const SHOTS_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), 'shots')
 
-test('targeting visual: humano lanza Lightning Bolt y el tablero resalta objetivos (pulso + línea)', { tag: '@targeting' }, async ({ page }) => {
+test('TGT-1: casting Lightning Bolt marks its legal targets on the board, players included, and clears them once it resolves', { tag: '@targeting' }, async ({ page }) => {
   await withFakeServer(() => targetingScenario(), async () => {
   const { frames, pageErrors, helper } = await quickStartGame(page, { prefix: 'tg' })
 

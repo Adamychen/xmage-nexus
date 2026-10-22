@@ -26,7 +26,7 @@ describe('HelpWikiModal', () => {
     expect(screen.queryByText(/^Flying$/i)).toBeNull()
   })
 
-  it('switches between tabs (Fases y Atajos)', () => {
+  it('KEY-8: switches between tabs (Phases and Shortcuts)', () => {
     const onClose = vi.fn()
     render(<HelpWikiModal onClose={onClose} />)
 

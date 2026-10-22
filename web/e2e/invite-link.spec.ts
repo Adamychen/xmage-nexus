@@ -24,7 +24,7 @@ function inviteScenario() {
 }
 
 test.describe('Invite deep links (#join= / #watch=)', () => {
-  test('watch link especta la mesa y muestra botones de invitación', async ({ page }) => {
+  test('LBY-10: a watch link watches the table and shows the invite buttons', async ({ page }) => {
     await withFakeServer(inviteScenario, async () => {
       await login(page, 'e2e')
       await page.evaluate((id) => {
@@ -36,7 +36,7 @@ test.describe('Invite deep links (#join= / #watch=)', () => {
     })
   })
 
-  test('join link abre el diálogo de mazo', async ({ page }) => {
+  test('LBY-10: a join link opens the deck dialog', async ({ page }) => {
     await withFakeServer(inviteScenario, async () => {
       await login(page, 'e2e')
       await page.evaluate((id) => {

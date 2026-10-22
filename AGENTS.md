@@ -7,7 +7,10 @@ client (`web`, React 19 + TypeScript + Vite).
 **Docs model — no work log**: the narrative of a task lives in its commit
 message; do not keep a dated log. When finishing a task update only the
 affected docs — pending work in `ROADMAP.md` §4, durable lessons in
-`docs/lessons.md`, phases/features in `site/content.json` — and keep the
+`docs/lessons.md`, phases/features in `site/content.json`, product behaviour
+decisions in `docs/specs/<area>.md` (numbered rules whose tests carry the rule
+id in their title; `web/src/specCoverage.test.ts` fails when a rule and its
+tests drift apart, see `docs/specs/README.md`) — and keep the
 interaction coverage matrix `web/INTERACTION_COVERAGE.md` in sync (mark
 implemented/tested + test ref + date per callback/interaction); the guard
 `callbackCoverage.test.ts` enforces that every server callback has a handler or
@@ -301,6 +304,10 @@ for `mechanics.spec.ts`, so a fixture change must be checked against every spec 
   the translation locales (`web/src/i18n/locales/*`) and quoted server output.
   Existing Spanish prose is migrated to English as its file is touched; do not
   do unrelated mass rewrites.
+- **Before changing how the client behaves**, read the spec of that area in
+  `docs/specs/`. A change to a rule goes in the same commit as the code: edit
+  the rule and its `Why:`, then the tests named after it. A new decision gets a
+  new rule; behaviour that looks like a bug is reported, not written down.
 - **After touching `web`**: run `unit` and `typecheck` (and `build` if
   the build changed). After touching proxy Java: `java` + rebuild jar
   (`build.mjs proxy`) + restart proxy.

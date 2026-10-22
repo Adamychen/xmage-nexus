@@ -89,7 +89,7 @@ describe('PileOverlay', () => {
     expect(onClose).toHaveBeenCalled()
   })
 
-  it('lets a graveyard/exile card be clicked when it is a valid target', () => {
+  it('TGT-5: lets a graveyard/exile card be clicked when it is a valid target', () => {
     const onTargetClick = vi.fn()
     const cards: Record<string, CardView> = {
       'c-1': { id: 'c-1', name: 'Lightning Bolt', manaValue: 1 },
@@ -109,7 +109,7 @@ describe('PileOverlay', () => {
     expect(onTargetClick).toHaveBeenCalledWith('c-1')
   })
 
-  it('does not attach a click handler for a non-target, non-playable card', () => {
+  it('TGT-5: does not attach a click handler for a non-target, non-playable card', () => {
     const onTargetClick = vi.fn()
     const onPlayCard = vi.fn()
     const cards: Record<string, CardView> = {

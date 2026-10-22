@@ -76,7 +76,7 @@ describe('KeywordAura.css', () => {
     }
   })
 
-  it.each([['KeywordAura.css', css], ['KeywordCoin.css', coinCss]])('only animates transform and opacity inside %s keyframes', (_file, source) => {
+  it.each([['KeywordAura.css', css], ['KeywordCoin.css', coinCss]])('FX-11: only animates transform and opacity inside %s keyframes', (_file, source) => {
     const allowed = new Set(['transform', 'opacity'])
     const blocks = keyframesBlocks(source)
     expect(blocks.length).toBeGreaterThan(0)
@@ -91,7 +91,7 @@ describe('KeywordAura.css', () => {
     }
   })
 
-  it('turns decorative animation off under fx-off and reduced motion', () => {
+  it('FX-1, FX-2: turns decorative animation off under fx-off and reduced motion', () => {
     expect(css).toContain('html.fx-off .kw-aura')
     expect(css).toContain('prefers-reduced-motion')
   })

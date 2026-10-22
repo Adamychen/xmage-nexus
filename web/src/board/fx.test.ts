@@ -21,7 +21,7 @@ describe('fx helpers', () => {
     document.documentElement.style.removeProperty('--fx-speed')
   })
 
-  it('fxDuration only scales by the speed setting', () => {
+  it('FX-3: fxDuration only scales by the speed setting', () => {
     expect(fxDuration(400)).toBe(400)
     setFx(true, 0.5)
     expect(fxDuration(400)).toBe(800)
@@ -30,7 +30,7 @@ describe('fx helpers', () => {
     expect(fxDuration(10)).toBe(60)
   })
 
-  it('fxDuration ignores the effects switch and reduced motion', () => {
+  it('FX-3: fxDuration ignores the effects switch and reduced motion', () => {
     setFx(false)
     expect(fxDuration(400)).toBe(400)
     setFx(true)
@@ -38,13 +38,13 @@ describe('fx helpers', () => {
     expect(fxDuration(400)).toBe(400)
   })
 
-  it('fxMotionDuration keeps the scaled duration when motion is allowed', () => {
+  it('FX-3: fxMotionDuration keeps the scaled duration when motion is allowed', () => {
     expect(fxMotionDuration(400)).toBe(400)
     setFx(true, 0.5)
     expect(fxMotionDuration(400)).toBe(800)
   })
 
-  it('fxMotionDuration returns 0 with effects off or reduced motion', () => {
+  it('FX-1, FX-2: fxMotionDuration returns 0 with effects off or reduced motion', () => {
     setFx(false)
     expect(fxMotionDuration(400)).toBe(0)
     setFx(true)
@@ -53,18 +53,18 @@ describe('fx helpers', () => {
     expect(fxMotionAllowed()).toBe(false)
   })
 
-  it('fxOpacityDuration keeps opacity feedback under reduced motion, capped at 150 ms', () => {
+  it('FX-2: fxOpacityDuration keeps opacity feedback under reduced motion, capped at 150 ms', () => {
     setReducedMotion(true)
     expect(fxOpacityDuration(400)).toBe(150)
     expect(fxOpacityDuration(100)).toBe(100)
   })
 
-  it('fxOpacityDuration returns 0 only when effects are off', () => {
+  it('FX-1: fxOpacityDuration returns 0 only when effects are off', () => {
     setFx(false)
     expect(fxOpacityDuration(400)).toBe(0)
   })
 
-  it('applyFxRoot mirrors the effects switch and speed on the root', () => {
+  it('FX-1, FX-3: applyFxRoot mirrors the effects switch and speed on the root', () => {
     setFx(false, 1.5)
     applyFxRoot()
     expect(document.documentElement.classList.contains('fx-off')).toBe(true)

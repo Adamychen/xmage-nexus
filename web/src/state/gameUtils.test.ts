@@ -19,7 +19,7 @@ describe('combatActorsFrom', () => {
     expect(combatActorsFrom(gameWithCombat([]))).toEqual({ attackingIds: [], blockingIds: [] })
   })
 
-  it('collects attackers and blockers from combat groups (object form)', () => {
+  it('CMB-3: collects attackers and blockers from combat groups (object form)', () => {
     const game = gameWithCombat([
       { attackers: { 'a-1': {}, 'a-2': {} }, blockers: { 'b-1': {} } },
       { attackers: { 'a-3': {} }, blockers: {} },
@@ -29,14 +29,14 @@ describe('combatActorsFrom', () => {
     expect(actors.blockingIds).toEqual(['b-1'])
   })
 
-  it('collects attackers and blockers from combat groups (array form)', () => {
+  it('CMB-3: collects attackers and blockers from combat groups (array form)', () => {
     const game = gameWithCombat([{ attackers: ['a-1', 'a-2'], blockers: ['b-9'] }])
     const actors = combatActorsFrom(game)
     expect(actors.attackingIds.sort()).toEqual(['a-1', 'a-2'])
     expect(actors.blockingIds).toEqual(['b-9'])
   })
 
-  it('works for spectator-style views without controlled player', () => {
+  it('CMB-3: works for spectator-style views without controlled player', () => {
     const game = gameWithCombat([{ attackers: { 'x-1': {} }, defenders: ['p-2'] }])
     expect(combatActorsFrom(game).attackingIds).toEqual(['x-1'])
   })

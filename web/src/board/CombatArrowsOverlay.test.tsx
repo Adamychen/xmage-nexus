@@ -14,7 +14,7 @@ describe('CombatArrowsOverlay', () => {
     expect(container.firstChild).toBeNull()
   })
 
-  it('renders attack arrows when combat groups contain attackers and defender', () => {
+  it('CMB-4: renders attack arrows when combat groups contain attackers and defender', () => {
     const boardDiv = document.createElement('div')
     document.body.appendChild(boardDiv)
 
@@ -66,7 +66,7 @@ describe('CombatArrowsOverlay', () => {
     boardDiv.remove()
   })
 
-  it('renders targeting arrows from spells in the stack to targets on the board', () => {
+  it('TGT-9: renders targeting arrows from spells in the stack to targets on the board', () => {
     const containerDiv = document.createElement('div')
     document.body.appendChild(containerDiv)
 
@@ -116,7 +116,7 @@ describe('CombatArrowsOverlay', () => {
     containerDiv.remove()
   })
 
-  it('aims attack arrows at the deepest player element (avatar anchor), not the zone root', () => {
+  it('CMB-4: aims attack arrows at the deepest player element (avatar anchor), not the zone root', () => {
     const boardDiv = document.createElement('div')
     document.body.appendChild(boardDiv)
 
@@ -178,7 +178,7 @@ describe('CombatArrowsOverlay', () => {
     boardDiv.remove()
   })
 
-  it('v2 colours an attack arrow by the attacker\'s seat and lands it on the defender\'s edge', () => {
+  it('CMB-4: v2 colours an attack arrow by the attacker\'s seat and lands it on the defender\'s edge', () => {
     const boardDiv = document.createElement('div')
     document.body.appendChild(boardDiv)
     const rect = (left: number, top: number, width: number, height: number) =>

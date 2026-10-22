@@ -111,7 +111,7 @@ describe('ArenaBoard', () => {
     setSetting('gameUi', 'v2')
   })
 
-  it('v2: a visible hand is opened from its badge instead of a face-down stack', () => {
+  it('HND-9: v2: a visible hand is opened from its badge instead of a face-down stack', () => {
     setSetting('gameUi', 'v2')
     const game = multiplayerGame({
       myPlayerId: 'p1',

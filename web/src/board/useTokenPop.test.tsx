@@ -45,7 +45,7 @@ describe('useTokenPop', () => {
     document.body.innerHTML = ''
   })
 
-  it('does not pop the existing tokens at mount', () => {
+  it('FX-5: does not pop the existing tokens at mount', () => {
     const scope = board(['t1', 't2'])
     const player = playerWith({
       t1: makePermanent({ name: 'Soldier', isToken: true }),
@@ -55,7 +55,7 @@ describe('useTokenPop', () => {
     expect(animate).not.toHaveBeenCalled()
   })
 
-  it('pops a token that appears after mount', () => {
+  it('FX-5: pops a token that appears after mount', () => {
     const scope = board(['t1'])
     const first = playerWith({ t1: makePermanent({ name: 'Soldier', isToken: true }) })
     const { rerender } = renderHook(({ p }: { p: PlayerView }) => useTokenPop([scope], p), { initialProps: { p: first } })
@@ -90,7 +90,7 @@ describe('useTokenPop', () => {
     expect(animate).not.toHaveBeenCalled()
   })
 
-  it('does not pop on a re-render where the token already existed', () => {
+  it('FX-5: does not pop on a re-render where the token already existed', () => {
     const scope = board(['t1'])
     const player = playerWith({ t1: makePermanent({ name: 'Soldier', isToken: true }) })
     const { rerender } = renderHook(({ p }: { p: PlayerView }) => useTokenPop([scope], p), { initialProps: { p: player } })
@@ -98,7 +98,7 @@ describe('useTokenPop', () => {
     expect(animate).not.toHaveBeenCalled()
   })
 
-  it('records the battlefield of a different player without popping its tokens', () => {
+  it('FX-5: records the battlefield of a different player without popping its tokens', () => {
     const scope = board(['t1'])
     const first = playerWith({}, 'p1')
     const { rerender } = renderHook(({ p }: { p: PlayerView }) => useTokenPop([scope], p), { initialProps: { p: first } })
@@ -106,7 +106,7 @@ describe('useTokenPop', () => {
     expect(animate).not.toHaveBeenCalled()
   })
 
-  it('fades only, under reduced motion', () => {
+  it('FX-2: fades only, under reduced motion', () => {
     setReducedMotion(true)
     const scope = board(['t1'])
     const { rerender } = renderHook(({ p }: { p: PlayerView }) => useTokenPop([scope], p), {
@@ -119,7 +119,7 @@ describe('useTokenPop', () => {
     expect(frames[0]).toMatchObject({ opacity: 0 })
   })
 
-  it('does nothing when effects are off', () => {
+  it('FX-1: does nothing when effects are off', () => {
     setFx(false)
     const scope = board(['t1'])
     const { rerender } = renderHook(({ p }: { p: PlayerView }) => useTokenPop([scope], p), {

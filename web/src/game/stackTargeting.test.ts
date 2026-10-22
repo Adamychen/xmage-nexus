@@ -4,11 +4,11 @@ import { targetsStackObject } from './stackTargeting'
 describe('targetsStackObject', () => {
   const stack = { 'spell-1': {}, 'ab-2': {} }
 
-  it('is true when a valid target is an object on the stack', () => {
+  it('TGT-7: is true when a valid target is an object on the stack', () => {
     expect(targetsStackObject(stack, ['p1', 'spell-1'])).toBe(true)
   })
 
-  it('is false when no valid target is on the stack', () => {
+  it('TGT-7: is false when no valid target is on the stack', () => {
     expect(targetsStackObject(stack, ['p1', 'perm-9'])).toBe(false)
   })
 

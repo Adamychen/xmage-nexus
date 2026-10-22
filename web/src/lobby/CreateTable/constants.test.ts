@@ -43,7 +43,7 @@ describe('seat types (U3 plazas HUMAN)', () => {
     expect(isNativeAiSeatType('SIM')).toBe(false)
   })
 
-  it('aiSeatTypes excludes HUMAN and SIM without duplicates', () => {
+  it('LBY-5: aiSeatTypes excludes HUMAN and SIM without duplicates', () => {
     expect(aiSeatTypes(['HUMAN', 'SIM', 'COMPUTER_MAD', 'Human', 'COMPUTER_DRAFT'])).toEqual([
       'COMPUTER_MAD',
       'COMPUTER_DRAFT_BOT',

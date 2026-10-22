@@ -152,7 +152,7 @@ describe('SpectatorStagingScreen', () => {
     expect(getAllByTitle(/anfitrión/i).length).toBeGreaterThan(0)
   })
 
-  it('modo jugador: no owner no ve Empezar ni Eliminar', () => {
+  it('LBY-9: player mode: a non-owner sees neither Start nor Delete', () => {
     setState({
       conn: { username: 'Charlie' } as never,
       stagingTableId: MOCK_COMMANDER_TABLE.tableId,
@@ -196,7 +196,7 @@ describe('SpectatorStagingScreen', () => {
     expect(queryByText(/Preparándose/i)).toBeNull()
   })
 
-  it('ignora marcadores cuyo usuario embebido no coincide con el remitente (anti-spoof)', () => {
+  it('LBY-9: ignores ready markers whose embedded user is not the sender (anti-spoof)', () => {
     setState({
       conn: { username: 'Bob' } as never,
       stagingTableId: MOCK_COMMANDER_TABLE.tableId,
@@ -224,7 +224,7 @@ describe('SpectatorStagingScreen', () => {
     expect(getByText(/Preparándose/i)).not.toBeNull()
   })
 
-  it('Empezar sigue habilitado sin readys pero pide confirmación (aviso, no bloqueo)', async () => {
+  it('LBY-9: Start stays enabled without readies but asks for confirmation (a warning, not a block)', async () => {
     setState({
       conn: { username: 'Bob' } as never,
       stagingTableId: MOCK_COMMANDER_TABLE.tableId,
@@ -243,7 +243,7 @@ describe('SpectatorStagingScreen', () => {
     await waitFor(() => expect(startMatchMock).toHaveBeenCalledWith(MOCK_COMMANDER_TABLE.tableId))
   })
 
-  it('cancelar la confirmación no arranca la partida', async () => {
+  it('LBY-9: cancelling the confirmation does not start the match', async () => {
     setState({
       conn: { username: 'Bob' } as never,
       stagingTableId: MOCK_COMMANDER_TABLE.tableId,
@@ -293,7 +293,7 @@ describe('SpectatorStagingScreen', () => {
     expect(startMatchMock).not.toHaveBeenCalled()
   })
 
-  it('an AI seat counts as ready, so Empezar does not ask for confirmation for it', async () => {
+  it('LBY-9: an AI seat counts as ready, so Start does not ask for confirmation for it', async () => {
     const tableWithBot: TableView = {
       ...MOCK_DUEL_TABLE,
       controllerName: 'Bob',

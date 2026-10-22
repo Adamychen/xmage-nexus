@@ -108,7 +108,7 @@ async function passButton(page: Page) {
   return btn
 }
 
-test('game-feel: reduced-motion apaga el movimiento y la entrada sigue viva @gamefeel', async ({ page }) => {
+test('FX-2: game-feel: reduced motion turns movement off and input stays live @gamefeel', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await withFakeServer(gameFeelScenario, async () => {
     const { pageErrors } = await startFeelGame(page)
@@ -129,7 +129,7 @@ test('game-feel: reduced-motion apaga el movimiento y la entrada sigue viva @gam
   })
 })
 
-test('game-feel: un vuelo activo no bloquea el pase de prioridad @gamefeel', async ({ page }) => {
+test('FX-4: game-feel: a running flight does not block passing priority @gamefeel', async ({ page }) => {
   await withFakeServer(gameFeelScenario, async () => {
     const { pageErrors } = await startFeelGame(page)
 
@@ -164,7 +164,7 @@ test('game-feel: un vuelo activo no bloquea el pase de prioridad @gamefeel', asy
   })
 })
 
-test('game-feel: tras recargar no quedan animaciones colgadas y el tablero pinta @gamefeel', async ({ page }) => {
+test('FX-4: game-feel: after a reload no animation is left hanging and the board paints @gamefeel', async ({ page }) => {
   await withFakeServer(gameFeelScenario, async () => {
     const { pageErrors } = await startFeelGame(page)
 

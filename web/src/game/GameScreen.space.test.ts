@@ -13,59 +13,59 @@ afterEach(() => {
 })
 
 describe('isSpaceShortcutTargetIgnored (Space shortcut guard)', () => {
-  it('ignores native controls: button, select, input, textarea, links', () => {
+  it('KEY-3: ignores native controls: button, select, input, textarea, links', () => {
     for (const tag of ['button', 'select', 'input', 'textarea', 'a']) {
       expect(isSpaceShortcutTargetIgnored(el(tag)), tag).toBe(true)
     }
   })
 
-  it('ignores descendants of native controls (e.g. a span inside a button)', () => {
+  it('KEY-3: ignores descendants of native controls (e.g. a span inside a button)', () => {
     const btn = el('button')
     const span = el('span', {}, btn)
     expect(isSpaceShortcutTargetIgnored(span)).toBe(true)
   })
 
-  it('ignores ARIA interactive roles (button, menuitem, option) outside the game region', () => {
+  it('KEY-3: ignores ARIA interactive roles (button, menuitem, option) outside the game region', () => {
     for (const role of ['button', 'menuitem', 'option']) {
       expect(isSpaceShortcutTargetIgnored(el('div', { role })), role).toBe(true)
     }
   })
 
-  it('lets Space through on ARIA buttons inside the game region (Space passes priority there)', () => {
+  it('KEY-2: lets Space through on ARIA buttons inside the game region (Space passes priority there)', () => {
     const region = el('div', { 'data-space-passes-priority': 'true' })
     for (const role of ['button', 'menuitem', 'option']) {
       expect(isSpaceShortcutTargetIgnored(el('div', { role }, region)), role).toBe(false)
     }
   })
 
-  it('still ignores native controls inside the game region (no double action)', () => {
+  it('KEY-3: still ignores native controls inside the game region (no double action)', () => {
     const region = el('div', { 'data-space-passes-priority': 'true' })
     for (const tag of ['button', 'input', 'select', 'a']) {
       expect(isSpaceShortcutTargetIgnored(el(tag, {}, region)), tag).toBe(true)
     }
   })
 
-  it('ignores descendants of game-region ARIA controls (span inside a card)', () => {
+  it('KEY-2: lets Space through on descendants of game-region ARIA controls (span inside a card)', () => {
     const region = el('div', { 'data-space-passes-priority': 'true' })
     const card = el('div', { role: 'button' }, region)
     const span = el('span', {}, card)
     expect(isSpaceShortcutTargetIgnored(span)).toBe(false)
   })
 
-  it('allows Space on plain board surfaces (no double action there)', () => {
+  it('KEY-1: allows Space on plain board surfaces (no double action there)', () => {
     expect(isSpaceShortcutTargetIgnored(el('div'))).toBe(false)
     expect(isSpaceShortcutTargetIgnored(document.body)).toBe(false)
     expect(isSpaceShortcutTargetIgnored(null)).toBe(false)
   })
 })
 
-describe('isSpaceShortcutBlocked (Space shortcut guard + visores abiertos)', () => {
-  it('sin overlays abiertos solo decide el foco', () => {
+describe('isSpaceShortcutBlocked (Space shortcut guard + open viewers)', () => {
+  it('KEY-4: with no viewer open only the focus decides', () => {
     expect(isSpaceShortcutBlocked(document.body)).toBe(false)
     expect(isSpaceShortcutBlocked(el('div'))).toBe(false)
   })
 
-  it('bloquea Space con un visor abierto aunque el foco esté en body o en una carta de la región', () => {
+  it('KEY-4: blocks Space while a viewer is open, even with focus on body or on a card in the region', () => {
     const region = el('div', { 'data-space-passes-priority': 'true' })
     const overlay = el('div', { 'data-space-shortcut-off': 'true' }, region)
     const card = el('div', { role: 'button' }, overlay)
@@ -78,7 +78,7 @@ describe('isSpaceShortcutBlocked (Space shortcut guard + visores abiertos)', () 
 })
 
 describe('mouseFocusedGameControl (Space releases mouse-focused game controls)', () => {
-  it('releases buttons and toggles inside the game screen (e.g. the log drawer toggle)', () => {
+  it('KEY-2: releases buttons and toggles inside the game screen (e.g. the log drawer toggle)', () => {
     const root = el('div')
     const toolbar = el('div', { role: 'toolbar' }, root)
     const logToggle = el('button', { 'aria-pressed': 'true' }, toolbar)
@@ -89,7 +89,7 @@ describe('mouseFocusedGameControl (Space releases mouse-focused game controls)',
     expect(mouseFocusedGameControl(tab, root)).toBe(tab)
   })
 
-  it('keeps text entry, dialogs and menus untouched', () => {
+  it('KEY-3: keeps text entry, dialogs and menus untouched', () => {
     const root = el('div')
     for (const tag of ['input', 'textarea', 'select']) {
       expect(mouseFocusedGameControl(el(tag, {}, root), root), tag).toBeNull()
@@ -100,7 +100,7 @@ describe('mouseFocusedGameControl (Space releases mouse-focused game controls)',
     expect(mouseFocusedGameControl(el('button', {}, menu), root)).toBeNull()
   })
 
-  it('ignores controls outside the game screen and plain surfaces', () => {
+  it('KEY-2: ignores controls outside the game screen and plain surfaces', () => {
     const root = el('div')
     expect(mouseFocusedGameControl(el('button'), root)).toBeNull()
     expect(mouseFocusedGameControl(el('div', {}, root), root)).toBeNull()

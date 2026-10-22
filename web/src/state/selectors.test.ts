@@ -6,41 +6,41 @@ import type { AppState } from './state'
 const base = (): AppState => structuredClone(initialState)
 
 describe('isBlockingModal', () => {
-  it('is false on a normal in-game state', () => {
+  it('PRM-1: is false on a normal in-game state', () => {
     expect(isBlockingModal(base())).toBe(false)
   })
 
-  it('is false for the keep/mulligan decision (bar over the hand)', () => {
+  it('PRM-2: is false for the keep/mulligan decision (bar over the hand)', () => {
     const s = base()
     s.feedback = { method: 'GAME_ASK', isMulligan: true, gameId: 'g', title: '', message: '', min: 0, max: 0 } as never
     expect(isBlockingModal(s)).toBe(false)
   })
 
-  it('is true for the London bottom pick', () => {
+  it('PRM-2: is true for the London bottom pick', () => {
     const s = base()
     s.feedback = { method: 'GAME_TARGET', isMulliganLondon: true, cards: [{}], gameId: 'g', title: '', message: '', min: 1, max: 1 } as never
     expect(isBlockingModal(s)).toBe(true)
   })
 
-  it('is true for starting-player feedback', () => {
+  it('PRM-1: is true for starting-player feedback', () => {
     const s = base()
     s.feedback = { method: 'GAME_ASK', isStartingPlayer: true, gameId: 'g', title: '', message: '', options: [], min: 0, max: 0 } as never
     expect(isBlockingModal(s)).toBe(true)
   })
 
-  it('is true for library-order (mode order) feedback', () => {
+  it('PRM-1: is true for library-order (mode order) feedback', () => {
     const s = base()
     s.feedback = { method: 'GAME_CHOOSE_CARDS_ORDER', mode: 'order', gameId: 'g', title: '', message: '', items: [], min: 0, max: 0 } as never
     expect(isBlockingModal(s)).toBe(true)
   })
 
-  it('is true for a card-grid GAME_TARGET feedback', () => {
+  it('PRM-1: is true for a card-grid GAME_TARGET feedback', () => {
     const s = base()
     s.feedback = { method: 'GAME_TARGET', options: [], cards: [{ id: 'c1', name: 'Forest' }], sourceName: '', min: 0, max: 0, gameId: 'g' } as never
     expect(isBlockingModal(s)).toBe(true)
   })
 
-  it('is false when every card of the GAME_TARGET is in the controller hand (hand pick bar)', () => {
+  it('PRM-4: is false when every card of the GAME_TARGET is in the controller hand (hand pick bar)', () => {
     const s = base()
     s.feedback = {
       method: 'GAME_TARGET',
@@ -55,7 +55,7 @@ describe('isBlockingModal', () => {
     expect(isBlockingModal(s)).toBe(false)
   })
 
-  it('is true when the GAME_TARGET mixes hand cards with other zones', () => {
+  it('PRM-4: is true when the GAME_TARGET mixes hand cards with other zones', () => {
     const s = base()
     s.feedback = {
       method: 'GAME_TARGET',
@@ -70,13 +70,13 @@ describe('isBlockingModal', () => {
     expect(isBlockingModal(s)).toBe(true)
   })
 
-  it('is false for a plain GAME_TARGET (in-board targeting bar)', () => {
+  it('PRM-1: is false for a plain GAME_TARGET (in-board targeting bar)', () => {
     const s = base()
     s.feedback = { method: 'GAME_TARGET', options: [], sourceName: '', min: 0, max: 0, gameId: 'g' } as never
     expect(isBlockingModal(s)).toBe(false)
   })
 
-  it('is true when userRequest, sideboardScreen or viewer are open', () => {
+  it('PRM-1: is true when userRequest, sideboardScreen or viewer are open', () => {
     const a = base()
     a.userRequest = { title: '', message: '', buttons: [] }
     expect(isBlockingModal(a)).toBe(true)
@@ -106,7 +106,7 @@ describe('isBlockingModal', () => {
     expect(isBlockingModal(g)).toBe(true)
   })
 
-  it('is true for any general modal feedback prompts like mode and color', () => {
+  it('PRM-1: is true for any general modal feedback prompts like mode and color', () => {
     const s2 = base()
     s2.feedback = { method: 'GAME_CHOOSE_MODE', title: 'Mode', message: '', min: 0, max: 0, gameId: 'g' } as never
     expect(isBlockingModal(s2)).toBe(true)
@@ -116,13 +116,13 @@ describe('isBlockingModal', () => {
     expect(isBlockingModal(s3)).toBe(true)
   })
 
-  it('is false for a plain yes/no ask (non-modal bar: pay life, optional costs)', () => {
+  it('PRM-3: is false for a plain yes/no ask (non-modal bar: pay life, optional costs)', () => {
     const s = base()
     s.feedback = { method: 'GAME_ASK', mode: 'boolean', title: 'Confirm', message: 'Pay 2 life?', min: 0, max: 0, gameId: 'g' } as never
     expect(isBlockingModal(s)).toBe(false)
   })
 
-  it('is true for boolean asks with a dedicated dialog (voting, starting player)', () => {
+  it('PRM-3: is true for boolean asks with a dedicated dialog (voting, starting player)', () => {
     const voting = base()
     voting.feedback = { method: 'GAME_ASK', mode: 'boolean', isVoting: true, title: '', message: '', options: [], min: 0, max: 0, gameId: 'g' } as never
     expect(isBlockingModal(voting)).toBe(true)
@@ -132,7 +132,7 @@ describe('isBlockingModal', () => {
     expect(isBlockingModal(starting)).toBe(true)
   })
 
-  it('is false for in-board action bars (mana and combat)', () => {
+  it('PRM-1: is false for in-board action bars (mana and combat)', () => {
     const s1 = base()
     s1.feedback = { method: 'GAME_PLAY_MANA', mode: 'mana', title: '', message: '', min: 0, max: 0, gameId: 'g' } as never
     expect(isBlockingModal(s1)).toBe(false)

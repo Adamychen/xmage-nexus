@@ -25,21 +25,21 @@ describe('DialogShell escape', () => {
     cleanup()
   })
 
-  it('closes with Escape through onClose', () => {
+  it('DLG-2: closes with Escape through onClose', () => {
     const onClose = vi.fn()
     renderShell({ onClose })
     fireEvent.keyDown(window, { key: 'Escape' })
     expect(onClose).toHaveBeenCalledTimes(1)
   })
 
-  it('closes with Escape through onEscape when the caller draws its own ✕ (no onClose)', () => {
+  it('DLG-2: closes with Escape through onEscape when the caller draws its own ✕ (no onClose)', () => {
     const onEscape = vi.fn()
     renderShell({ onEscape, topRight: true })
     fireEvent.keyDown(window, { key: 'Escape' })
     expect(onEscape).toHaveBeenCalledTimes(1)
   })
 
-  it('does not steal Escape when it has no close path', () => {
+  it('DLG-2: does not steal Escape when it has no close path', () => {
     renderShell({})
     const ev = new KeyboardEvent('keydown', { key: 'Escape', cancelable: true })
     window.dispatchEvent(ev)

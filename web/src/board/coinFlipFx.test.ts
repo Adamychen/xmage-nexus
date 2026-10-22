@@ -57,14 +57,14 @@ describe('coin flip trigger', () => {
     vi.restoreAllMocks()
   })
 
-  it('does not fire on the mulligan view (turn 1, phase and step null) and does not consume the once guard', () => {
+  it('FX-9: does not fire on the mulligan view (turn 1, phase and step null) and does not consume the once guard', () => {
     expect(observeCoinFlip(mulligan(), g1)).toBe(0)
     expect(soundManager.play).not.toHaveBeenCalled()
     expect(observeCoinFlip(upkeep('p-bob'), g1)).toBe(COIN_FLIP_MS)
     expect(soundManager.play).toHaveBeenCalledTimes(1)
   })
 
-  it('fires on the first phased turn-1 view with the active player as the first player', () => {
+  it('FX-9: fires on the first phased turn-1 view with the active player as the first player', () => {
     observeCoinFlip(mulligan(), g1)
     const { result } = renderHook(() => useCoinFlipFx())
     act(() => {
@@ -74,7 +74,7 @@ describe('coin flip trigger', () => {
     expect(soundManager.play).toHaveBeenCalledTimes(1)
   })
 
-  it('falls back to the isActive player when activePlayerId is missing', () => {
+  it('FX-9: falls back to the isActive player when activePlayerId is missing', () => {
     const { result } = renderHook(() => useCoinFlipFx())
     const view = upkeep(null)
     view.players = (view.players ?? []).map((p) => ({ ...p, isActive: p.playerId === 'p-alice' }))
@@ -84,7 +84,7 @@ describe('coin flip trigger', () => {
     expect(result.current?.name).toBe('Alice')
   })
 
-  it('does not fire again for later views of the same game', () => {
+  it('FX-9: does not fire again for later views of the same game', () => {
     observeCoinFlip(mulligan(), g1)
     observeCoinFlip(upkeep('p-bob'), g1)
     expect(observeCoinFlip(upkeep('p-bob'), g1)).toBe(0)
@@ -93,7 +93,7 @@ describe('coin flip trigger', () => {
     expect(soundManager.play).toHaveBeenCalledTimes(1)
   })
 
-  it('tracks each game id on its own', () => {
+  it('FX-9: tracks each game id on its own', () => {
     observeCoinFlip(mulligan(), g1)
     observeCoinFlip(upkeep('p-bob'), g1)
     observeCoinFlip(mulligan(), g2)
@@ -101,12 +101,12 @@ describe('coin flip trigger', () => {
     expect(soundManager.play).toHaveBeenCalledTimes(2)
   })
 
-  it('does not fire when the first view a client sees is mid-game (reconnect or spectator)', () => {
+  it('FX-9: does not fire when the first view a client sees is mid-game (reconnect or spectator)', () => {
     expect(observeCoinFlip(turn(20, 'p-bob', { phase: 'MAIN', step: 'PRECOMBAT_MAIN' }), g1)).toBe(0)
     expect(soundManager.play).not.toHaveBeenCalled()
   })
 
-  it('does not fire when the step is null even if the phase is set', () => {
+  it('FX-9: does not fire when the step is null even if the phase is set', () => {
     expect(observeCoinFlip(turn(1, 'p-bob', { phase: 'BEGINNING', step: null }), g1)).toBe(0)
     expect(soundManager.play).not.toHaveBeenCalled()
   })
@@ -124,14 +124,14 @@ describe('coin flip trigger', () => {
     expect(soundManager.play).not.toHaveBeenCalled()
   })
 
-  it('plays the coin sound once at the toss', () => {
+  it('FX-9: plays the coin sound once at the toss', () => {
     observeCoinFlip(mulligan(), g1)
     observeCoinFlip(upkeep('p-bob'), g1)
     expect(vi.mocked(soundManager.play)).toHaveBeenCalledWith('coin_flip', 'game')
     expect(vi.mocked(soundManager.play).mock.calls.filter(([key]) => key === 'coin_flip')).toHaveLength(1)
   })
 
-  it('does not fire when effects are off, and does not run the coin on the phased view', () => {
+  it('FX-1, FX-9: does not fire when effects are off, and does not run the coin on the phased view', () => {
     const prev = getState().settings
     setState({ settings: { ...prev, effects: false } })
     try {
@@ -143,7 +143,7 @@ describe('coin flip trigger', () => {
     }
   })
 
-  it('the turn-1 banner waits for the coin after the mulligan view', () => {
+  it('FX-10: the turn-1 banner waits for the coin after the mulligan view', () => {
     const prev = mulligan()
     const next = upkeep('p-bob')
     observeCoinFlip(prev, g1)
@@ -155,7 +155,7 @@ describe('coin flip trigger', () => {
     expect(getFeedbackFxState().banner?.text).toContain('Bob')
   })
 
-  it('a turn banner is not delayed when no coin runs for that view', () => {
+  it('FX-10: a turn banner is not delayed when no coin runs for that view', () => {
     const turnOne = upkeep('p-bob')
     const turnTwo = turn(2, 'p-alice', { phase: 'BEGINNING', step: 'UPKEEP' })
     observeCoinFlip(mulligan(), g1)
@@ -166,13 +166,13 @@ describe('coin flip trigger', () => {
     expect(getFeedbackFxState().banner?.text).toContain('Alice')
   })
 
-  it('the turn banner is not announced for the mulligan view (turn 1, phase null)', () => {
+  it('FX-10: the turn banner is not announced for the mulligan view (turn 1, phase null)', () => {
     const pregame = turn(0, null, { phase: 'MAIN', step: 'PRECOMBAT_MAIN' })
     detectAndAnimateTransitions(pregame, mulligan(), 0)
     expect(getFeedbackFxState().banner).toBeNull()
   })
 
-  it('startCoinFlip plays the toss sound once and returns 0 when effects are off', () => {
+  it('FX-1: startCoinFlip plays the toss sound once and returns 0 when effects are off', () => {
     const prev = getState().settings
     setState({ settings: { ...prev, effects: false } })
     try {

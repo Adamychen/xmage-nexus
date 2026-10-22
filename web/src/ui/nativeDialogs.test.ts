@@ -24,7 +24,7 @@ function* walk(dir: string): Generator<string> {
 }
 
 describe('native dialogs — prohibidos en src', () => {
-  it('ningún fichero usa confirm()/alert()/prompt() nativos (no existen en el webview de Tauri/macOS)', () => {
+  it('DLG-8: no file uses the native confirm()/alert()/prompt() (the Tauri/macOS webview has none)', () => {
     const hits: string[] = []
     for (const file of walk(SRC)) {
       const base = file.split('/').pop() ?? file

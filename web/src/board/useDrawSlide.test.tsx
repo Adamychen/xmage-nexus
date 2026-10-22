@@ -32,12 +32,12 @@ describe('useDrawSlide', () => {
     delete (window as { matchMedia?: unknown }).matchMedia
   })
 
-  it('does not animate the opening hand', () => {
+  it('FX-5: does not animate the opening hand', () => {
     const { result } = renderDraws(['a', 'b', 'c'])
     expect(result.current.size).toBe(0)
   })
 
-  it('marks a card added during the game as a slide', () => {
+  it('FX-5: marks a card added during the game as a slide', () => {
     const { result, rerenderIds } = renderDraws(['a', 'b'])
     rerenderIds(['a', 'b', 'c'])
     expect(result.current.get('c')).toBe('slide')
@@ -51,26 +51,26 @@ describe('useDrawSlide', () => {
     expect(result.current.size).toBe(0)
   })
 
-  it('does not animate a full hand refresh', () => {
+  it('FX-5: does not animate a full hand refresh', () => {
     const { result, rerenderIds } = renderDraws(['a', 'b'])
     rerenderIds(['x', 'y', 'z'])
     expect(result.current.size).toBe(0)
   })
 
-  it('does nothing while disabled (mulligan)', () => {
+  it('FX-5: does nothing while disabled (mulligan)', () => {
     const { result, rerenderIds } = renderDraws(['a', 'b'], false)
     rerenderIds(['a', 'b', 'c'], false)
     expect(result.current.size).toBe(0)
   })
 
-  it('falls back to an opacity-only fade under reduced motion', () => {
+  it('FX-2: falls back to an opacity-only fade under reduced motion', () => {
     setReducedMotion(true)
     const { result, rerenderIds } = renderDraws(['a'])
     rerenderIds(['a', 'b'])
     expect(result.current.get('b')).toBe('fade')
   })
 
-  it('does nothing with effects turned off', () => {
+  it('FX-1: does nothing with effects turned off', () => {
     setFx(false)
     const { result, rerenderIds } = renderDraws(['a'])
     rerenderIds(['a', 'b'])

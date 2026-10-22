@@ -73,7 +73,7 @@ describe('LobbyScreen', () => {
     expect(screen.getByRole('heading', { name: /Nueva mesa|Crear Mesa/i })).toBeTruthy()
   })
 
-  it('restores saved table filters and survives corrupted ones', () => {
+  it('LBY-4: restores saved table filters and survives corrupted ones', () => {
     localStorage.setItem('lobby_filters', '{not json')
     expect(() => show()).not.toThrow()
     cleanup()

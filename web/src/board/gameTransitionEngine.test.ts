@@ -327,7 +327,7 @@ describe('gameTransitionEngine', () => {
     expect(flight?.duration).toBe(380)
   })
 
-  it('a cast spell starts no flight under reduced motion', () => {
+  it('FX-2: a cast spell starts no flight under reduced motion', () => {
     const original = window.matchMedia
     window.matchMedia = vi.fn().mockReturnValue({ matches: true }) as unknown as typeof window.matchMedia
     try {
@@ -344,7 +344,7 @@ describe('gameTransitionEngine', () => {
     }
   })
 
-  it('a cast spell starts no flight when effects are disabled', async () => {
+  it('FX-1: a cast spell starts no flight when effects are disabled', async () => {
     const { setState, getState } = await import('../state/state')
     const prev = getState().settings
     setState({ settings: { ...prev, effects: false } } as never)
@@ -577,7 +577,7 @@ describe('gameTransitionEngine', () => {
     expect(source?.classList.contains('stack-source-pulse')).toBe(false)
   })
 
-  it('does not pulse the source when effects are disabled', async () => {
+  it('FX-1: does not pulse the source when effects are disabled', async () => {
     const { setState, getState } = await import('../state/state')
     const prev = getState().settings
     setState({ settings: { ...prev, effects: false } } as never)

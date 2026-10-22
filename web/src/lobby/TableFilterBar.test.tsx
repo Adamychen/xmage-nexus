@@ -96,13 +96,13 @@ const MOCK_TABLES: TableView[] = [
 ]
 
 describe('filterTables logic', () => {
-  it('returns all tables when initial filters are active, desktop order', () => {
+  it('LBY-4: returns all tables when initial filters are active, desktop order', () => {
     const res = filterTables(MOCK_TABLES, INITIAL_TABLE_FILTERS)
     expect(res.length).toBe(3)
     expect(res.map((t) => t.tableId)).toEqual(['t-3', 't-1', 't-2'])
   })
 
-  it('sorts newest/oldest explicitly, desktop default keeps free seats first', () => {
+  it('LBY-4: sorts newest/oldest explicitly, desktop default keeps free seats first', () => {
     const newest = filterTables(MOCK_TABLES, { ...INITIAL_TABLE_FILTERS, sort: 'newest' })
     expect(newest.map((t) => t.tableId)).toEqual(['t-3', 't-2', 't-1'])
 
@@ -110,7 +110,7 @@ describe('filterTables logic', () => {
     expect(oldest.map((t) => t.tableId)).toEqual(['t-1', 't-2', 't-3'])
   })
 
-  it('filters by search query matching table name or host', () => {
+  it('LBY-4: filters by search query matching table name or host', () => {
     const resName = filterTables(MOCK_TABLES, {
       ...INITIAL_TABLE_FILTERS,
       searchQuery: 'Commander',
@@ -204,7 +204,7 @@ describe('filterTables logic', () => {
     expect(passworded.map((t) => t.tableId)).toEqual(['t-2'])
   })
 
-  it('sanea pares contradictorios guardados: gana el Only (AUDIT)', () => {
+  it('LBY-4: sanitizes saved contradictory pairs: the Only filter wins', () => {
     const fixed = sanitizeTableFilters({
       ...INITIAL_TABLE_FILTERS,
       hidePassworded: true,
@@ -219,7 +219,7 @@ describe('filterTables logic', () => {
     expect(filterTables(MOCK_TABLES, fixed).length).toBeGreaterThan(0)
   })
 
-  it('hides tables owned by ignored users only when the toggle is on', () => {
+  it('LBY-4: hides tables owned by ignored users only when the toggle is on', () => {
     const shown = filterTables(MOCK_TABLES, INITIAL_TABLE_FILTERS, ['bob'])
     expect(shown.map((t) => t.tableId)).toEqual(['t-3', 't-1', 't-2'])
 
@@ -231,7 +231,7 @@ describe('filterTables logic', () => {
     expect(hidden.map((t) => t.tableId)).toEqual(['t-3', 't-1'])
   })
 
-  it('splits tournaments into constructed vs limited like the desktop', () => {
+  it('LBY-4: splits tournaments into constructed vs limited like the desktop', () => {
     const base: TableView = {
       ...MOCK_TABLES[0],
       isTournament: true,
@@ -257,7 +257,7 @@ describe('filterTables logic', () => {
     expect(lim.map((t) => t.tableId)).toEqual(['t-l'])
   })
 
-  it('pins user active tables to top when myUsername is provided in desktop sort', () => {
+  it('LBY-4: pins user active tables to top when myUsername is provided in desktop sort', () => {
     // In MOCK_TABLES, t-2 is Bob's Commander Pod (DUELING, no free seats, created at 2000).
     // Normally t-3 (free seat, created at 3000) or t-1 (free seat, created at 1000) comes before t-2 because t-2 has no free seats.
     // But with myUsername='Bob', t-2 should be pinned to the top!

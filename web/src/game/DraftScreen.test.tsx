@@ -298,7 +298,7 @@ describe('DraftScreen', () => {
     await waitFor(() => expect(mockSendCardPick).toHaveBeenCalledWith('draft-1', 'c-1', ['p-1']))
   })
 
-  it('F9 shows hidden picks again (U9-1)', async () => {
+  it('KEY-12: F9 shows hidden picks again (U9-1)', async () => {
     setState({
       draft: {
         draftId: 'draft-1',

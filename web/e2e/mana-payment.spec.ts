@@ -13,7 +13,7 @@ async function openMenu(page: import('@playwright/test').Page) {
 }
 
 test.describe('Mana payment prefs', { tag: '@manapayment' }, () => {
-  test('syncs prefs on game start and toggles send server actions', async ({ page }) => {
+  test('MNA-4: syncs prefs on game start and toggles send server actions', async ({ page }) => {
     MANA_ACTIONS.length = 0
     await withFakeServer(manaPaymentScenario, async () => {
       const { pageErrors } = await quickStartGame(page, {
@@ -45,7 +45,7 @@ test.describe('Mana payment prefs', { tag: '@manapayment' }, () => {
     })
   })
 
-  test('pool pips pay mana manually via sendPlayerManaType', async ({ page }) => {
+  test('MNA-3: pool pips pay mana manually via sendPlayerManaType', async ({ page }) => {
     MANA_TYPES.length = 0
     await withFakeServer(manaPaymentScenario, async () => {
       const { pageErrors } = await quickStartGame(page, {
@@ -60,7 +60,7 @@ test.describe('Mana payment prefs', { tag: '@manapayment' }, () => {
     })
   })
 
-  test('confirm checkbox syncs the server flag and pass goes straight through', async ({ page }) => {
+  test('MNA-5: confirm checkbox syncs the server flag and pass goes straight through', async ({ page }) => {
     MANA_PREFS.length = 0
     await withFakeServer(manaPaymentScenario, async () => {
       const { pageErrors } = await quickStartGame(page, {

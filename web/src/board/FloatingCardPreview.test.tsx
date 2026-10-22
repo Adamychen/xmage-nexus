@@ -202,7 +202,7 @@ describe('FloatingCardPreview', () => {
     expect(pwContainer.textContent).toContain('3')
   })
 
-  it('renders flip badge for double-faced cards and toggles face on Shift key', async () => {
+  it('KEY-9: renders flip badge for double-faced cards and toggles face on Shift key', async () => {
     const tdfcCard: CardView = {
       name: 'Delver of Secrets',
       manaValue: 1,

@@ -55,7 +55,7 @@ function trackPageErrors(page: Page): string[] {
 }
 
 test.describe('animations really play @board', { tag: '@timing' }, () => {
-  test('anim:countered runs counteredDrain', async ({ page }) => {
+  test('FX-12: anim:countered runs counteredDrain', async ({ page }) => {
     const pageErrors = trackPageErrors(page)
     await openGallery(page)
     await replayEntry(page, 'anim:countered')
@@ -63,7 +63,7 @@ test.describe('animations really play @board', { tag: '@timing' }, () => {
     expect(pageErrors).toEqual([])
   })
 
-  test('anim:fizzle runs fizzleSmoke', async ({ page }) => {
+  test('FX-12: anim:fizzle runs fizzleSmoke', async ({ page }) => {
     const pageErrors = trackPageErrors(page)
     await openGallery(page)
     await replayEntry(page, 'anim:fizzle')
@@ -71,7 +71,7 @@ test.describe('animations really play @board', { tag: '@timing' }, () => {
     expect(pageErrors).toEqual([])
   })
 
-  test('anim:designation-monstrous runs designationGlow and designationSwell', async ({ page }) => {
+  test('FX-12: anim:designation-monstrous runs designationGlow and designationSwell', async ({ page }) => {
     const pageErrors = trackPageErrors(page)
     await openGallery(page)
     await replayEntry(page, 'anim:designation-monstrous')
@@ -80,7 +80,7 @@ test.describe('animations really play @board', { tag: '@timing' }, () => {
     expect(pageErrors).toEqual([])
   })
 
-  test('anim:designation-suspected runs designationJolt', async ({ page }) => {
+  test('FX-12: anim:designation-suspected runs designationJolt', async ({ page }) => {
     const pageErrors = trackPageErrors(page)
     await openGallery(page)
     await replayEntry(page, 'anim:designation-suspected')
@@ -88,7 +88,7 @@ test.describe('animations really play @board', { tag: '@timing' }, () => {
     expect(pageErrors).toEqual([])
   })
 
-  test('anim:designation-classlevel runs designationGlow', async ({ page }) => {
+  test('FX-12: anim:designation-classlevel runs designationGlow', async ({ page }) => {
     const pageErrors = trackPageErrors(page)
     await openGallery(page)
     await replayEntry(page, 'anim:designation-classlevel')
@@ -96,7 +96,7 @@ test.describe('animations really play @board', { tag: '@timing' }, () => {
     expect(pageErrors).toEqual([])
   })
 
-  test('anim:designation-casesolved runs designationGlow', async ({ page }) => {
+  test('FX-12: anim:designation-casesolved runs designationGlow', async ({ page }) => {
     const pageErrors = trackPageErrors(page)
     await openGallery(page)
     await replayEntry(page, 'anim:designation-casesolved')
@@ -104,7 +104,7 @@ test.describe('animations really play @board', { tag: '@timing' }, () => {
     expect(pageErrors).toEqual([])
   })
 
-  test('anim:scry runs peekLift with two cards', async ({ page }) => {
+  test('FX-12: anim:scry runs peekLift with two cards', async ({ page }) => {
     const pageErrors = trackPageErrors(page)
     await openGallery(page)
     await replayEntry(page, 'anim:scry')
@@ -113,7 +113,7 @@ test.describe('animations really play @board', { tag: '@timing' }, () => {
     expect(pageErrors).toEqual([])
   })
 
-  test('anim:surveil-opp shows the opponent library peek with three cards', async ({ page }) => {
+  test('FX-12: anim:surveil-opp shows the opponent library peek with three cards', async ({ page }) => {
     const pageErrors = trackPageErrors(page)
     await openGallery(page)
     await replayEntry(page, 'anim:surveil-opp')
@@ -121,7 +121,7 @@ test.describe('animations really play @board', { tag: '@timing' }, () => {
     expect(pageErrors).toEqual([])
   })
 
-  test('anim:pay-paid runs payPaid', async ({ page }) => {
+  test('FX-12: anim:pay-paid runs payPaid', async ({ page }) => {
     const pageErrors = trackPageErrors(page)
     await openGallery(page)
     await replayEntry(page, 'anim:pay-paid')
@@ -129,7 +129,7 @@ test.describe('animations really play @board', { tag: '@timing' }, () => {
     expect(pageErrors).toEqual([])
   })
 
-  test('anim:pay-declined-opp runs payDeclined', async ({ page }) => {
+  test('FX-12: anim:pay-declined-opp runs payDeclined', async ({ page }) => {
     const pageErrors = trackPageErrors(page)
     await openGallery(page)
     await replayEntry(page, 'anim:pay-declined-opp')
@@ -137,7 +137,7 @@ test.describe('animations really play @board', { tag: '@timing' }, () => {
     expect(pageErrors).toEqual([])
   })
 
-  test('anim:chosen-card shows the Blue floater', async ({ page }) => {
+  test('FX-12: anim:chosen-card shows the Blue floater', async ({ page }) => {
     const pageErrors = trackPageErrors(page)
     await openGallery(page)
     await replayEntry(page, 'anim:chosen-card')
@@ -145,7 +145,7 @@ test.describe('animations really play @board', { tag: '@timing' }, () => {
     expect(pageErrors).toEqual([])
   })
 
-  test('anim:behold runs beholdLift', async ({ page }) => {
+  test('FX-12: anim:behold runs beholdLift', async ({ page }) => {
     const pageErrors = trackPageErrors(page)
     await openGallery(page)
     await replayEntry(page, 'anim:behold')
@@ -153,7 +153,7 @@ test.describe('animations really play @board', { tag: '@timing' }, () => {
     expect(pageErrors).toEqual([])
   })
 
-  test('anim:dungeon-complete runs badgeDungeonComplete', async ({ page }) => {
+  test('FX-12: anim:dungeon-complete runs badgeDungeonComplete', async ({ page }) => {
     const pageErrors = trackPageErrors(page)
     await openGallery(page)
     await replayEntry(page, 'anim:dungeon-complete')
@@ -161,7 +161,7 @@ test.describe('animations really play @board', { tag: '@timing' }, () => {
     expect(pageErrors).toEqual([])
   })
 
-  test('anim:goad runs goadPulse', async ({ page }) => {
+  test('FX-12: anim:goad runs goadPulse', async ({ page }) => {
     const pageErrors = trackPageErrors(page)
     await openGallery(page)
     await replayEntry(page, 'anim:goad')
@@ -169,7 +169,7 @@ test.describe('animations really play @board', { tag: '@timing' }, () => {
     expect(pageErrors).toEqual([])
   })
 
-  test('anim:player-conceded shows the conceded overlay without eliminated', async ({ page }) => {
+  test('FX-12: anim:player-conceded shows the conceded overlay without eliminated', async ({ page }) => {
     const pageErrors = trackPageErrors(page)
     await openGallery(page)
     await replayEntry(page, 'anim:player-conceded')
@@ -178,7 +178,7 @@ test.describe('animations really play @board', { tag: '@timing' }, () => {
     expect(pageErrors).toEqual([])
   })
 
-  test('anim:player-eliminated shows the eliminated overlay', async ({ page }) => {
+  test('FX-12: anim:player-eliminated shows the eliminated overlay', async ({ page }) => {
     const pageErrors = trackPageErrors(page)
     await openGallery(page)
     await replayEntry(page, 'anim:player-eliminated')
@@ -186,7 +186,7 @@ test.describe('animations really play @board', { tag: '@timing' }, () => {
     expect(pageErrors).toEqual([])
   })
 
-  test('anim:keyword-auras runs one looping aura per keyword', async ({ page }) => {
+  test('FX-12: anim:keyword-auras runs one looping aura per keyword', async ({ page }) => {
     const pageErrors = trackPageErrors(page)
     await openGallery(page)
     await replayEntry(page, 'anim:keyword-auras')
@@ -200,7 +200,7 @@ test.describe('animations really play @board', { tag: '@timing' }, () => {
     expect(pageErrors).toEqual([])
   })
 
-  test('anim:keyword-gain pops the coin and flares the aura', async ({ page }) => {
+  test('FX-12: anim:keyword-gain pops the coin and flares the aura', async ({ page }) => {
     const pageErrors = trackPageErrors(page)
     await openGallery(page)
     await replayEntry(page, 'anim:keyword-gain')
@@ -209,7 +209,7 @@ test.describe('animations really play @board', { tag: '@timing' }, () => {
     expect(pageErrors).toEqual([])
   })
 
-  test('anim:kw-first-strike flashes the first-strike slash', async ({ page }) => {
+  test('FX-12: anim:kw-first-strike flashes the first-strike slash', async ({ page }) => {
     const pageErrors = trackPageErrors(page)
     await openGallery(page)
     await replayEntry(page, 'anim:kw-first-strike')
@@ -217,7 +217,7 @@ test.describe('animations really play @board', { tag: '@timing' }, () => {
     expect(pageErrors).toEqual([])
   })
 
-  test('anim:kw-deathtouch shows the deathtouch kill', async ({ page }) => {
+  test('FX-12: anim:kw-deathtouch shows the deathtouch kill', async ({ page }) => {
     const pageErrors = trackPageErrors(page)
     await openGallery(page)
     await replayEntry(page, 'anim:kw-deathtouch')
@@ -225,7 +225,7 @@ test.describe('animations really play @board', { tag: '@timing' }, () => {
     expect(pageErrors).toEqual([])
   })
 
-  test('anim:kw-lifelink sends the lifelink motes', async ({ page }) => {
+  test('FX-12: anim:kw-lifelink sends the lifelink motes', async ({ page }) => {
     const pageErrors = trackPageErrors(page)
     await openGallery(page)
     await replayEntry(page, 'anim:kw-lifelink')
@@ -233,7 +233,7 @@ test.describe('animations really play @board', { tag: '@timing' }, () => {
     expect(pageErrors).toEqual([])
   })
 
-  test('anim:kw-trample sends the overflow wave to the player', async ({ page }) => {
+  test('FX-12: anim:kw-trample sends the overflow wave to the player', async ({ page }) => {
     const pageErrors = trackPageErrors(page)
     await openGallery(page)
     await replayEntry(page, 'anim:kw-trample')
@@ -241,7 +241,7 @@ test.describe('animations really play @board', { tag: '@timing' }, () => {
     expect(pageErrors).toEqual([])
   })
 
-  test('anim:kw-indestructible flashes the burst on the surviving creature', async ({ page }) => {
+  test('FX-12: anim:kw-indestructible flashes the burst on the surviving creature', async ({ page }) => {
     const pageErrors = trackPageErrors(page)
     await openGallery(page)
     await replayEntry(page, 'anim:kw-indestructible')

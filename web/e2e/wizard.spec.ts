@@ -67,7 +67,7 @@ test.describe('Wizard crear mesa (U3)', () => {
     })
   })
 
-  test('HUMAN: plaza en espera llega al submit sin simDecks', async ({ page }) => {    await withFakeServer(wizardScenario, async () => {
+  test('LBY-5: an open human seat reaches the submit without simDecks', async ({ page }) => {    await withFakeServer(wizardScenario, async () => {
       const buffers: CaptureBuffers = { frames: [], sent: [], pageErrors: [] }
       installCapture(page, buffers)
       await login(page, 'wiz')
@@ -90,7 +90,7 @@ test.describe('Wizard crear mesa (U3)', () => {
     })
   })
 
-  test('DUEL: bot MAD se une con mazo construido', async ({ page }) => {
+  test('LBY-5: a Mad AI bot joins with a constructed deck', async ({ page }) => {
     await withFakeServer(wizardScenario, async () => {
       const buffers: CaptureBuffers = { frames: [], sent: [], pageErrors: [] }
       installCapture(page, buffers)

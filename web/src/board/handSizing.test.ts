@@ -59,7 +59,7 @@ describe('computeHandBarSizing', () => {
     expect(s.barHeight).toBe(bandHeight(s.cardW))
   })
 
-  it('very wide screens: the hand never spans beyond the max span', () => {
+  it('HND-2: very wide screens: the hand never spans beyond the max span', () => {
     for (const availW of [1286, 1686, 2400]) {
       expect(renderedRowW(availW, 7)).toBeLessThanOrEqual(HAND_BAR_MAX_SPAN + 1e-9)
     }
@@ -72,14 +72,14 @@ describe('computeHandBarSizing', () => {
     expect(handRestStripWidth(s.cardW, s.gap)).toBeGreaterThanOrEqual(s.cardW * HAND_BAR_MIN_VISIBLE_RATIO - 1e-9)
   })
 
-  it('very narrow width: clamps at min card width and still respects the ratio', () => {
+  it('HND-2: very narrow width: clamps at min card width and still respects the ratio', () => {
     const s = computeHandBarSizing(200, 7)
     expect(s.cardW).toBe(HAND_BAR_MIN_CARD_W)
     expect(handRestStripWidth(s.cardW, s.gap)).toBeGreaterThanOrEqual(s.cardW * HAND_BAR_MIN_VISIBLE_RATIO - 1e-9)
     expect(s.barHeight).toBe(bandHeight(s.cardW))
   })
 
-  it('cards never grow when the hand gets bigger', () => {
+  it('HND-2: cards never grow when the hand gets bigger', () => {
     let prev = HAND_BAR_MAX_CARD_W + 1
     for (let count = 1; count <= 12; count++) {
       const s = computeHandBarSizing(640, count)
@@ -88,14 +88,14 @@ describe('computeHandBarSizing', () => {
     }
   })
 
-  it('bar height is the visible band (half-sunken hand)', () => {
+  it('HND-1: bar height is the visible band (half-sunken hand)', () => {
     for (const [w, c] of [[1600, 4], [900, 8], [420, 10]] as const) {
       const s = computeHandBarSizing(w, c)
       expect(s.barHeight).toBe(bandHeight(s.cardW))
     }
   })
 
-  it('peek ratios keep the hand half-visible at rest and ~90% on hover', () => {
+  it('HND-1: peek ratios keep the hand half-visible at rest and ~90% on hover', () => {
     expect(HAND_BAR_PEEK_RATIO).toBeGreaterThan(0.25)
     expect(HAND_BAR_PEEK_RATIO).toBeLessThan(0.75)
   })
@@ -121,7 +121,7 @@ describe('the hand spreads across the width as cards are added', () => {
     expect(renderedRowW(availW, count)).toBeCloseTo(usableHandW(availW), 0)
   })
 
-  it('cards keep their size until the maximum overlap is reached, then shrink', () => {
+  it('HND-2: cards keep their size until the maximum overlap is reached, then shrink', () => {
     for (let count = 1; count <= 15; count++) {
       const s = computeHandBarSizing(availW, count)
       if (s.cardW < HAND_BAR_MAX_CARD_W - 1e-9) {
@@ -141,11 +141,11 @@ describe('the hand stays in the centre band between the side panels', () => {
     expect(computeHandSideReserve(band, [])).toEqual({ left: 0, right: 0 })
   })
 
-  it('a left panel reserves its inner edge plus the gap, measured from the band edge', () => {
+  it('HND-2: a left panel reserves its inner edge plus the gap, measured from the band edge', () => {
     expect(computeHandSideReserve(band, [leftPanel])).toEqual({ left: 254 + HAND_BAR_PANEL_GAP_PX, right: 0 })
   })
 
-  it('a right panel reserves its inner edge plus the gap on the right', () => {
+  it('HND-2: a right panel reserves its inner edge plus the gap on the right', () => {
     expect(computeHandSideReserve(band, [dock])).toEqual({ left: 0, right: 1008 - 742 + HAND_BAR_PANEL_GAP_PX })
   })
 
@@ -181,7 +181,7 @@ describe('computeHandArc', () => {
     expect(computeHandArc(1, HAND_BAR_MAX_CARD_W)).toEqual([{ rot: 0, rise: 0 }])
   })
 
-  it('the arc is symmetric around the center card', () => {
+  it('HND-1: the arc is symmetric around the center card', () => {
     for (const count of [2, 3, 5, 7, 10]) {
       const arc = computeHandArc(count, HAND_BAR_MAX_CARD_W)
       const mid = (count - 1) / 2
@@ -193,7 +193,7 @@ describe('computeHandArc', () => {
     }
   })
 
-  it('edges rotate outward and only the center rises to the max', () => {
+  it('HND-1: edges rotate outward and only the center rises to the max', () => {
     const arc = computeHandArc(7, HAND_BAR_MAX_CARD_W)
     expect(arc[0].rot).toBeLessThan(0)
     expect(arc[6].rot).toBeGreaterThan(0)
@@ -220,23 +220,23 @@ describe('computeHandArc', () => {
 })
 
 describe('computeHandHoverScale', () => {
-  it('grows the hovered card to the legible target width on a tall viewport', () => {
+  it('HND-3: grows the hovered card to the legible target width on a tall viewport', () => {
     expect(computeHandHoverScale(130, 1000) * 130).toBeCloseTo(HAND_HOVER_TARGET_W, 6)
   })
 
-  it('caps the grown card height on short viewports', () => {
+  it('HND-3: caps the grown card height on short viewports', () => {
     const scale = computeHandHoverScale(100, 500)
     expect(scale * 100 * HAND_CARD_ASPECT).toBeLessThanOrEqual(500 * 0.55 + 1e-6)
   })
 
-  it('always grows at least a little, even when the card is already large', () => {
+  it('HND-3: always grows at least a little, even when the card is already large', () => {
     expect(computeHandHoverScale(HAND_BAR_MAX_CARD_W * 2, 1000)).toBe(HAND_HOVER_MIN_SCALE)
     expect(computeHandHoverScale(0, 1000)).toBe(HAND_HOVER_MIN_SCALE)
   })
 })
 
 describe('cost bubbles', () => {
-  it('uses one size proportional to the card, bounded by the visible strip', () => {
+  it('HND-6: uses one size proportional to the card, bounded by the visible strip', () => {
     expect(computeCostPipSize(200, 156)).toBe(Math.round(156 * HAND_COST_PIP_CARD_RATIO))
     expect(computeCostPipSize(30, 156)).toBe(Math.round(30 * HAND_COST_PIP_STRIP_RATIO))
     expect(computeCostPipSize(5, 156)).toBe(HAND_COST_PIP_MIN_PX)

@@ -22,7 +22,7 @@ async function zoomOf(page: import('@playwright/test').Page) {
 }
 
 test.describe('UI zoom (browser-like)', () => {
-  test('Ctrl+= / Ctrl+0 cambian el zoom global', async ({ page }) => {
+  test('KEY-11: Ctrl+= / Ctrl+0 change the global zoom', async ({ page }) => {
     await withFakeServer(lobbyScenario, async () => {
       await login(page, 'e2e')
       await expect(page.getByTestId('open-settings')).toBeVisible({ timeout: 15_000 })

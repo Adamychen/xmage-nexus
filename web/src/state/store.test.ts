@@ -59,7 +59,7 @@ describe('handleMessage', () => {
     expect(getState().gameId).toBe('g-1')
   })
 
-  it('limpia switchedHandKey cuando la mano controlada desaparece del GameView', () => {
+  it('HND-10: clears switchedHandKey when the controlled hand leaves the GameView', () => {
     const withHand = makeGameView({
       opponentHands: { Bob: { 'oh-1': { id: 'oh-1', name: 'Lightning Bolt' } } },
     })
@@ -146,7 +146,7 @@ describe('handleMessage', () => {
     expect(getState().game).toBe(t3)
   })
 
-  it('accepts an extra combat: the step goes back within the same turn (board no longer freezes)', () => {
+  it('CMB-7: accepts an extra combat: the step goes back within the same turn (board no longer freezes)', () => {
     const endCombat = makeGameView({ turn: 4, phase: 'COMBAT', step: 'END_COMBAT' })
     const extraCombat = makeGameView({ turn: 4, phase: 'COMBAT', step: 'DECLARE_ATTACKERS' })
     handleMessage({ type: 'event', method: 'GAME_UPDATE', messageId: 10, objectId: 'g-1', data: endCombat })
@@ -154,7 +154,7 @@ describe('handleMessage', () => {
     expect(getState().game).toBe(extraCombat)
   })
 
-  it('accepts the combat damage steps after blockers', () => {
+  it('CMB-7: accepts the combat damage steps after blockers', () => {
     const blockers = makeGameView({ turn: 2, phase: 'COMBAT', step: 'DECLARE_BLOCKERS' })
     const damage = makeGameView({ turn: 2, phase: 'COMBAT', step: 'COMBAT_DAMAGE' })
     handleMessage({ type: 'event', method: 'GAME_UPDATE', messageId: 5, objectId: 'g-1', data: blockers })

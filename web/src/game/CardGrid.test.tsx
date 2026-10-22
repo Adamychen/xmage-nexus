@@ -59,7 +59,7 @@ describe('CardGrid', () => {
     expect(container.textContent).not.toContain('Card 0')
   })
 
-  it('hides the cancel button when the prompt is required (sending false makes the server re-ask)', () => {
+  it('PRM-7: hides the cancel button when the prompt is required (sending false makes the server re-ask)', () => {
     const { container } = render(<CardGrid prompt={makePrompt()} selected={[]} setSelected={vi.fn()} send={vi.fn()} busy={false} />)
     expect(container.querySelector('.card-grid-actions button')).toBeNull()
   })
@@ -69,7 +69,7 @@ describe('CardGrid', () => {
     expect(container.textContent).toContain('Confirmar')
   })
 
-  it('never batches GAME_TARGET picks behind a confirm button (the server keeps only the latest answer)', () => {
+  it('PRM-6: never batches GAME_TARGET picks behind a confirm button (the server keeps only the latest answer)', () => {
     const { container } = render(<CardGrid prompt={makePrompt({ max: 3 })} selected={['c-1', 'c-2']} setSelected={vi.fn()} send={vi.fn()} busy={false} />)
     expect(container.textContent).not.toContain('Confirmar')
   })
@@ -95,7 +95,7 @@ describe('CardGrid', () => {
     expect(container.textContent).toContain('No se encontraron cartas')
   })
 
-  it('shows the optional finish button (and no cancel) when required is false', () => {
+  it('PRM-7: shows the optional finish button (and no cancel) when required is false', () => {
     const send = vi.fn()
     const { container } = render(<CardGrid prompt={makePrompt({ required: false, max: 3 })} selected={[]} setSelected={vi.fn()} send={send} busy={false} />)
     expect(container.textContent).toContain('Terminar selección')
@@ -104,7 +104,7 @@ describe('CardGrid', () => {
     expect(send).toHaveBeenCalledTimes(1)
   })
 
-  it('shows server-side picks as chosen and sends one card per click (GAME_TARGET)', async () => {
+  it('PRM-6: shows server-side picks as chosen and sends one card per click (GAME_TARGET)', async () => {
     const send = vi.fn(async (action: () => Promise<{ ok: boolean }>) => { await action() })
     const commands = await import('../net/commands')
     const uuid = vi.spyOn(commands, 'sendPlayerUUID').mockResolvedValue({ ok: true } as never)
@@ -130,7 +130,7 @@ describe('CardGrid', () => {
     uuid.mockRestore()
   })
 
-  it('pre-filters the grid to the server-selectable cards (the request filter)', () => {
+  it('PRM-5: pre-filters the grid to the server-selectable cards (the request filter)', () => {
     const prompt = makePrompt({
       message: 'Search your library for an artifact card',
       options: [{ id: 'c-3', label: 'Island', value: 'c-3' }],
@@ -144,7 +144,7 @@ describe('CardGrid', () => {
     expect(container.querySelector('.ui-chip')?.textContent).toContain('1 / 3')
   })
 
-  it('toggles between only valid cards and the full candidate list', () => {
+  it('PRM-5: toggles between only valid cards and the full candidate list', () => {
     const prompt = makePrompt({
       options: [{ id: 'c-3', label: 'Island', value: 'c-3' }],
     })
@@ -159,7 +159,7 @@ describe('CardGrid', () => {
     expect(container.querySelectorAll('.card-grid-cell').length).toBe(1)
   })
 
-  it('keeps chosen cards visible even when they are no longer selectable', () => {
+  it('PRM-5: keeps chosen cards visible even when they are no longer selectable', () => {
     const prompt = makePrompt({
       chosenTargets: ['c-1'],
       options: [{ id: 'c-3', label: 'Island', value: 'c-3' }],
@@ -170,7 +170,7 @@ describe('CardGrid', () => {
     expect(container.textContent).not.toContain('Lightning Bolt')
   })
 
-  it('disables the non-selectable cells when the full list is shown', () => {
+  it('PRM-5: disables the non-selectable cells when the full list is shown', () => {
     const prompt = makePrompt({ options: [{ id: 'c-3', label: 'Island', value: 'c-3' }] })
     const { container } = render(<CardGrid prompt={prompt} selected={[]} setSelected={vi.fn()} send={vi.fn()} busy={false} />)
     fireEvent.click(container.querySelector('.card-grid-scope-toggle')!)

@@ -24,7 +24,7 @@ const SHOTS_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), 'shots
  * propio, NO jugable desde ahí) reproduce exactamente ese path.
  */
 test(
-  'objetivo dentro del cementerio via PileOverlay: Reanimate apunta a Grizzly Bears @graveyard-target',
+  'PRM-8: a target inside the graveyard rings the pile, opens it and closes it when the targeting ends (Reanimate on Grizzly Bears) @graveyard-target',
   async ({ page }) => {
     await withFakeServer(() => reanimateTargetScenario(), async () => {
       const { frames, pageErrors, helper } = await quickStartGame(page, {

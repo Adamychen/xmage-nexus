@@ -36,7 +36,7 @@ describe('useDisplayedGame', () => {
     document.body.innerHTML = ''
   })
 
-  it('keeps the life from before a spell hit until its projectile lands', async () => {
+  it('FX-6: keeps the life from before a spell hit until its projectile lands', async () => {
     recordCardPosition('bolt-1', rect(1000, 500), 'stack-zone')
     const prev = game(20, { 'bolt-1': bolt })
     const next = game(17, {})
@@ -52,7 +52,7 @@ describe('useDisplayedGame', () => {
     expect(result.current?.players?.[0].life).toBe(17)
   })
 
-  it('shows the raw game when the view is frozen (rewind)', () => {
+  it('FX-6: shows the raw game when the view is frozen (rewind)', () => {
     const prev = game(20, { 'bolt-1': bolt })
     const next = game(17, {})
     const { result, rerender } = renderHook(({ g, frozen }) => useDisplayedGame(g, 'hold-frozen', frozen), {

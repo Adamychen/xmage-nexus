@@ -56,7 +56,7 @@ describe('GenericDialog hooks', () => {
     vi.restoreAllMocks()
   })
 
-  it('grid: roving tabindex with arrow navigation, Enter and digit shortcuts (1-9)', () => {
+  it('KEY-7: grid: roving tabindex with arrow navigation, Enter and digit shortcuts (1-9)', () => {
     const options = [
       { id: 'o1', label: 'Alpha', value: 'a' },
       { id: 'o2', label: 'Beta', value: 'b' },
@@ -352,7 +352,7 @@ describe('GenericDialog amount range (integer mode)', () => {
     cleanup()
   })
 
-  it('disables Confirm and flags the range hint when the amount is outside [min, max]', () => {
+  it('MNA-10: disables Confirm and flags the range hint when the amount is outside [min, max]', () => {
     const { container, rerender } = render(<GenericDialog form={{ ...stubForm(amountPrompt), amount: 7 }} />)
     const confirm = container.querySelector<HTMLButtonElement>('.feedback-dialog-actions button')!
     expect(confirm.disabled).toBe(true)

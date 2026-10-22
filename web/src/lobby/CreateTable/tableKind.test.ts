@@ -167,7 +167,7 @@ describe('clampNumPlayers', () => {
     expect(clampNumPlayers(n, opts, min, max)).toBe(expected)
   })
 
-  it('defaultSeatTypeFor: extra seats wait for humans (bots are opt-in)', () => {
+  it('LBY-5: defaultSeatTypeFor: extra seats wait for humans (bots are opt-in)', () => {
     expect(defaultSeatTypeFor(true)).toBe('HUMAN')
     expect(defaultSeatTypeFor(false)).toBe('HUMAN')
   })
@@ -197,7 +197,7 @@ describe('computeTournamentSeats / computeMatchSeats', () => {
     expect(playerTypesFinal).toEqual(['HUMAN', 'SIM'])
   })
 
-  it('match rellena con SIM y trunca sobrantes', () => {
+  it('LBY-5: a match pads with open human seats and drops the extra ones', () => {
     const { playerTypesFinal } = computeMatchSeats({
       seatConfigs: [
         { type: 'HUMAN', deckName: '', skill: 2 },

@@ -30,7 +30,7 @@ function stubForm(prompt: FeedbackPrompt): UseFeedbackForm {
 }
 
 describe('prompt bars live hints', () => {
-  it('ManaBar announces the hint via role=status', () => {
+  it('MNA-1: ManaBar announces the hint via role=status', () => {
     const { container } = render(
       <ManaBar form={stubForm({
         method: 'GAME_PLAY_MANA',
@@ -48,7 +48,7 @@ describe('prompt bars live hints', () => {
     expect(hint.getAttribute('aria-live')).toBe('polite')
   })
 
-  it('TargetBar announces the hint via role=status', () => {
+  it('TGT-1: TargetBar announces the hint via role=status', () => {
     const { container } = render(
       <TargetBar form={stubForm({
         method: 'GAME_TARGET',
@@ -66,7 +66,7 @@ describe('prompt bars live hints', () => {
     expect(hint.getAttribute('aria-live')).toBe('polite')
   })
 
-  it('TargetBar hides every action when the target is required (sending false only makes the server re-ask)', () => {
+  it('PRM-7: TargetBar hides every action when the target is required (sending false only makes the server re-ask)', () => {
     const { container } = render(
       <TargetBar form={stubForm({
         method: 'GAME_TARGET',
@@ -83,7 +83,7 @@ describe('prompt bars live hints', () => {
     expect(container.querySelector('.action-prompt-actions button')).toBeNull()
   })
 
-  it('TargetBar offers only the optional finish button (no cancel) when required is false', () => {
+  it('PRM-7: TargetBar offers only the optional finish button (no cancel) when required is false', () => {
     const finishOptionalTarget = vi.fn()
     const { container } = render(
       <TargetBar form={{

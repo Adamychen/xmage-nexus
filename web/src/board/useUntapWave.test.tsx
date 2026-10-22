@@ -49,13 +49,13 @@ describe('useUntapWave', () => {
     document.body.innerHTML = ''
   })
 
-  it('does not wave at mount, even with cards already untapped or tapped', () => {
+  it('FX-5: does not wave at mount, even with cards already untapped or tapped', () => {
     const scope = board([{ id: 'a', tapped: true }, { id: 'b', tapped: true }, { id: 'c', tapped: false }])
     renderWave(scope)
     expect(animate).not.toHaveBeenCalled()
   })
 
-  it('does not wave on a re-render without tap changes', () => {
+  it('FX-5: does not wave on a re-render without tap changes', () => {
     const scope = board([{ id: 'a', tapped: true }, { id: 'b', tapped: true }])
     const { rerender } = renderWave(scope)
     rerender({ t: false })
@@ -121,7 +121,7 @@ describe('useUntapWave', () => {
     expect(frames[0]).toMatchObject({ rotate: '90deg', scale: '0.75' })
   })
 
-  it('does nothing under reduced motion', () => {
+  it('FX-2: does nothing under reduced motion', () => {
     setReducedMotion(true)
     const scope = board([{ id: 'a', tapped: true }, { id: 'b', tapped: true }])
     const { rerender } = renderWave(scope)
@@ -131,7 +131,7 @@ describe('useUntapWave', () => {
     expect(animate).not.toHaveBeenCalled()
   })
 
-  it('does nothing when effects are off', () => {
+  it('FX-1: does nothing when effects are off', () => {
     setFx(false)
     const scope = board([{ id: 'a', tapped: true }, { id: 'b', tapped: true }])
     const { rerender } = renderWave(scope)

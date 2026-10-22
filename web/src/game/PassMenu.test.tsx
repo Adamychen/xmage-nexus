@@ -12,7 +12,7 @@ vi.mock('../net/commands', () => ({
 }))
 
 describe('skips', () => {
-  it('defines 6 one-shot skips and no F6', () => {
+  it('KEY-6: defines 6 one-shot skips and no F6', () => {
     expect(SKIPS.map((s) => s.shortcut)).toEqual(['F4', 'F5', 'F7', 'F9', 'F10', 'F11'])
   })
 
@@ -40,7 +40,7 @@ describe('PassMenu', () => {
     })
   }
 
-  it('renders the 6 skips with their shortcuts', () => {
+  it('KEY-6, KEY-8: renders the 6 skips with their shortcuts', () => {
     const { container } = render(<PassMenu game={gameWith()} onSkip={() => {}} />)
     for (const key of ['turn', 'endStep', 'nextMain', 'myTurn', 'stack', 'beforeMine']) {
       expect(container.querySelector(`[data-testid="skip-${key}"]`)).not.toBeNull()
@@ -49,12 +49,12 @@ describe('PassMenu', () => {
     expect(keys).toEqual(expect.arrayContaining(['F4', 'F5', 'F7', 'F9', 'F10', 'F11']))
   })
 
-  it('hides the cancel button without an active skip', () => {
+  it('KEY-6: hides the cancel button without an active skip', () => {
     const { container } = render(<PassMenu game={gameWith()} onSkip={() => {}} />)
     expect(container.querySelector('[data-testid="skip-cancel"]')).toBeNull()
   })
 
-  it('marks the active skip and offers cancel', () => {
+  it('KEY-6: marks the active skip and offers cancel', () => {
     const onSkip = vi.fn()
     const { container } = render(<PassMenu game={gameWith({ passedAllTurns: true })} onSkip={onSkip} />)
     expect(container.querySelector('[data-testid="skip-myTurn"]')?.classList.contains('ui-menu-item--selected')).toBe(true)

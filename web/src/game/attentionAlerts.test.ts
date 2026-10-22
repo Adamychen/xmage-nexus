@@ -27,7 +27,7 @@ describe('attentionAlerts', () => {
     expect(attentionReason(snap({ promptSig: 'a' }), snap({ promptSig: null }))).toBeNull()
   })
 
-  it('builds snapshots from the controlled player only', () => {
+  it('CMB-9: builds snapshots from the controlled player only, a combat window counting as a prompt', () => {
     const game = makeGameView({ turn: 4, activePlayerId: 'me', players: [makePlayer({ playerId: 'me', name: 'Me', controlled: true })] })
     const fb = { method: 'GAME_ASK', gameId: 'g', title: '', message: 'Keep?', mode: 'boolean', options: [], min: 0, max: 0 } as FeedbackPrompt
     expect(attentionSnapshot(game, 'g', null, null)).toEqual({ gameId: 'g', turn: 4, myTurn: true, promptSig: null })

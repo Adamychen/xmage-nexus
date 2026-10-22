@@ -63,7 +63,7 @@ describe('CoinFlipOverlay', () => {
     expect(container.querySelector('.coin-flip-coin')).toBeNull()
   })
 
-  it('does not spin under reduced motion: it only fades', () => {
+  it('FX-2: does not spin under reduced motion: it only fades', () => {
     stubReducedMotion(true)
     const { container } = render(<CoinFlipOverlay />)
     act(() => {

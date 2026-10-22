@@ -435,13 +435,13 @@ describe('hasVigilance', () => {
     expect(hasVigilance({ name: 'Goblin Piledriver', rules: ['Provoke'] } as unknown as CardView)).toBe(false)
   })
 
-  it('ignores vigilance mentioned inside another ability', () => {
+  it('CMB-3: ignores vigilance mentioned inside another ability', () => {
     expect(
       hasVigilance({ name: 'Healer of the Pride', rules: ['<i>Heroic</i> &mdash; Whenever you cast a spell that targets {this}, create a 1/1 white Cat Soldier creature token with vigilance.'] } as unknown as CardView)
     ).toBe(false)
   })
 
-  it('trusts the server ABILITY_VIGILANCE icon', () => {
+  it('CMB-3: trusts the server ABILITY_VIGILANCE icon', () => {
     expect(hasVigilance({ name: 'X', rules: [], cardIcons: [{ cardIconType: 'ABILITY_VIGILANCE' }] } as unknown as CardView)).toBe(true)
   })
 

@@ -110,7 +110,7 @@ describe('ResourceBar', () => {
     expect(rayCard?.getAttribute('data-card-name')).toBe('Faithless Looting')
   })
 
-  it('shows only the mana actually held inline, without any dropdown', () => {
+  it('MNA-3: shows only the mana actually held inline, without any dropdown', () => {
     const { container } = render(<ResourceBar player={basePlayer} side="my" />)
 
     expect(container.querySelector('[data-testid="mana-inline"]')).toBeTruthy()

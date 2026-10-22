@@ -19,7 +19,7 @@ describe('useCombatHeld', () => {
     vi.useRealTimers()
   })
 
-  it('keeps the previous value until the strike on that id lands', () => {
+  it('FX-6: keeps the previous value until the strike on that id lands', () => {
     const { result, rerender } = renderHook(({ life }) => useCombatHeld('p-opp', life), { initialProps: { life: 20 } })
     primeCombatHolds(view('DECLARE_BLOCKERS'), view('COMBAT_DAMAGE'))
     rerender({ life: 17 })
@@ -30,14 +30,14 @@ describe('useCombatHeld', () => {
     expect(result.current).toBe(17)
   })
 
-  it('follows the value immediately when no strike targets the id', () => {
+  it('FX-6: follows the value immediately when no strike targets the id', () => {
     const { result, rerender } = renderHook(({ life }) => useCombatHeld('p-me', life), { initialProps: { life: 20 } })
     primeCombatHolds(view('DECLARE_BLOCKERS'), view('COMBAT_DAMAGE'))
     rerender({ life: 23 })
     expect(result.current).toBe(23)
   })
 
-  it('jumps to the latest value when it changes again during the hold', () => {
+  it('FX-6: jumps to the latest value when it changes again during the hold', () => {
     const { result, rerender } = renderHook(({ life }) => useCombatHeld('p-opp', life), { initialProps: { life: 20 } })
     primeCombatHolds(view('DECLARE_BLOCKERS'), view('COMBAT_DAMAGE'))
     rerender({ life: 17 })

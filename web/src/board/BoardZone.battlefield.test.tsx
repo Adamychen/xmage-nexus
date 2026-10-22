@@ -116,7 +116,7 @@ describe('BoardZone battlefield rendering', () => {
     expect(container.querySelectorAll('.stack-group')).toHaveLength(1)
   })
 
-  it('keeps a targeted land out of its pile', () => {
+  it('TGT-6: keeps a targeted land out of its pile', () => {
     const forest = (id: string) => makePermanent({ name: 'Forest', id, cardTypes: ['Land'] })
     const player = playerWith({ f1: forest('f1'), f2: forest('f2'), f3: forest('f3'), f4: forest('f4') })
     setState({ game: makeGameView({ players: [player] }) as never })

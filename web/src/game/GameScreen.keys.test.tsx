@@ -49,7 +49,7 @@ afterEach(() => {
 })
 
 describe('GameScreen held keys', () => {
-  it('a held Space sends one pass, not one per auto-repeat keydown', async () => {
+  it('KEY-1, KEY-5: a held Space sends one pass, not one per auto-repeat keydown', async () => {
     render(<GameScreen />)
     await act(async () => { press(' ', 'Space', false) })
     expect(cmds.sendPlayerBoolean).toHaveBeenCalledTimes(1)
@@ -58,7 +58,7 @@ describe('GameScreen held keys', () => {
     expect(cmds.sendPlayerBoolean).toHaveBeenCalledTimes(1)
   })
 
-  it('a held skip key (F4) sends one skip, not one per auto-repeat keydown', async () => {
+  it('KEY-5, KEY-6: a held skip key (F4) sends one skip, not one per auto-repeat keydown', async () => {
     render(<GameScreen />)
     await act(async () => { press('F4', 'F4', true) })
     expect(cmds.sendPlayerAction).not.toHaveBeenCalled()

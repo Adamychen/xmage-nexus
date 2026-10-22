@@ -177,6 +177,20 @@ Shipped with the keyword auras and combat moments (`board/keywordAura.ts`, `boar
 | Invite links to another server connect with an empty password | An invite link to another server connects with an empty password instead of the saved one. Better: open the login screen prefilled with the target server and username |
 | `RestoreIds` keys ignore the port | `mage-proxy` sets the keys without the port. Cross-port restore is pinned by `RestoreIdsTest`, which has to change with the fix |
 
+### 4.12 Behaviour specs and usability checks
+
+Design: `docs/plans/2026-10-22-behavior-specs-design.md`. Phase 1 shipped 2026-10-22: `docs/specs/` with one file per area and `web/src/specCoverage.test.ts` linking each rule to the tests named after it.
+
+- Rules marked `Guard: none yet` need a test (`grep -n "none yet" docs/specs/*.md`). DLG-6 and DLG-7 are guarded by PR #24's tests once it merges: rename them to the rule ids.
+- Areas without a spec are written the first time someone changes them (stack, log and chat, deck builder, draft, settings, spectating).
+- Findings while writing the specs (not made rules). Confirmed in code:
+  - Combat labels are wrong in fr/de/it/ru/ja/zhs: `ActionButton.tsx`, `feedbackModes/CombatBar.tsx` and `GenericDialog.tsx` tell attackers from blockers by finding `atacan`/`attack` in the *translated* title (`feedback/parse.ts`), so those locales show the blockers label in the attack window. Carry the mode on the prompt.
+  - `state/events/game.ts` clears an open `GAME_PLAY_MANA` prompt on any update whose stack is non-empty, and a spell being paid for is already on the stack. Whether the real server sends an update between mana asks needs a recorded frame.
+  - `board/revealedCards.ts` `opponentRevealedCards` adds every revealed group to each opponent's known hand, whatever zone or player it came from (`handRevealFx.ts` filters by the group name).
+  - To check: skip keys (F4–F11) fire with Settings/wiki/game menu open; F5/F11 are always prevented on the game screen; Ctrl/Shift-click to hold priority cannot reach `onPlayableClick` from the hand (`CardSlot.onClick` drops the event); the AskBar 1–9 digits need focus inside the bar; `__mageScene.targeting.source` is always null although `AGENTS.md` documents it; the combat ledger and the life-loss sound mute key off damage-step frames the real server rarely sends (the CMB-6 trap); combat `selectable` may outlive the declaration window; `resolveTargetSourceId` matches the arrow source by card name; `CardSlot.css` `sicknessFloat`/`enteredGlow` loop forever and two of them ignore `--fx-speed`; the wiki's Shortcuts tab has placeholder copy; unadvertised shortcuts (zoom, rewind arrows/Esc, Shift-click on stops, digits, Alt peek).
+- Phase 2: a Playwright sweep of every gallery state with generic usability checks (nothing covers the top layer, decision context visible, a visible way out, controls fit, axe on game states), an `expectVisuallyHidden` helper, a static guard for hold-a-modifier keyup handling and a shortcut registry.
+- Phase 3: an exploratory usability agent (per gallery state and per task, Playwright MCP + screenshots, report under `.run/ux-review/`), never gating CI; confirmed findings become spec rules.
+
 ### 4.4 Test-infrastructure risk
 
 - The nightly real-mode job covers 5 of 312 specs plus the `verify` layer; a ~15-spec protocol-sensitive set would shrink drift risk.

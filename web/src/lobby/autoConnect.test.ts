@@ -12,7 +12,7 @@ describe('parseAutoConnect', () => {
     expect(parsed.proxyHost).toBeUndefined()
   })
 
-  it('separa host y puerto de proxy=host:port', () => {
+  it('LBY-1: splits proxy=host:port into host and port', () => {
     const parsed = parseAutoConnect('?proxy=abc.playit.gg:61101')
     expect(parsed.proxyHost).toBe('abc.playit.gg')
     expect(parsed.proxyPort).toBe(61101)
@@ -30,7 +30,7 @@ describe('parseAutoConnect', () => {
     expect(parsed.proxyPort).toBe(8443)
   })
 
-  it('lee server=host:port y serverPort', () => {
+  it('LBY-1: reads server=host:port and serverPort', () => {
     const withPort = parseAutoConnect('?server=beta.xmage.today:17172')
     expect(withPort.serverHost).toBe('beta.xmage.today')
     expect(withPort.serverPort).toBe(17172)

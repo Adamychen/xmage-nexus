@@ -104,7 +104,7 @@ test('pod: la banda de tierras existe aunque solo haya criaturas (sin division d
   expect(boxes.permanents.height, 'banda de tierras reserva su mitad').toBeGreaterThan(10)
 })
 
-test('pod: la mano enemiga colapsa a stack ×N sin marca de vista (privada) @pod', async ({ page }) => {
+test('HND-8: pod: an opponent hand collapses into a ×N stack with no view mark (private) @pod', async ({ page }) => {
   await loadPodGame(page, podGame({}, 5))
   const stack = page.locator('[data-testid="opp-hand-stack"]')
   await expect(stack, 'stack de dorsos visible').toBeVisible({ timeout: 10_000 })
@@ -113,7 +113,7 @@ test('pod: la mano enemiga colapsa a stack ×N sin marca de vista (privada) @pod
   await expect(stack).not.toHaveClass(/is-viewable/)
 })
 
-test('pod: mano revelada abre el visor con conocidas + dorsos @pod', async ({ page }) => {
+test('HND-9: pod: a revealed hand opens the viewer with known cards + backs @pod', async ({ page }) => {
   const bolt = { id: 'rk1', name: 'Lightning Bolt', manaValue: 1, expansionSetCode: 'lea', cardNumber: '1' }
   const shock = { id: 'rk2', name: 'Shock', manaValue: 1, expansionSetCode: 'lea', cardNumber: '2' }
   await loadPodGame(page, podGame({}, 4, [{ name: 'Bob', cards: { rk1: bolt, rk2: shock } }]))

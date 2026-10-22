@@ -29,13 +29,13 @@ describe('BoardZone Switch Hands', () => {
     cleanup()
   })
 
-  it('sin opponentHands no muestra el toggle', () => {
+  it('HND-10: shows no toggle without opponentHands', () => {
     setGame({})
     const { queryByTestId } = render(<BoardZone player={alice()} hand={ownHand} />)
     expect(queryByTestId('hand-switch-btn')).toBeNull()
   })
 
-  it('con mano controlada muestra el toggle y alterna la mano visible', () => {
+  it('HND-10: with a controlled hand shows the toggle and switches the visible hand', () => {
     setGame(bobsHand as never)
     const { getByTestId, queryByText } = render(<BoardZone player={alice()} hand={ownHand} />)
     const btn = getByTestId('hand-switch-btn')
@@ -53,7 +53,7 @@ describe('BoardZone Switch Hands', () => {
     expect(queryByText('Mindslaver Prize')).toBeNull()
   })
 
-  it('en zona rival no muestra el toggle aunque haya opponentHands', () => {
+  it('HND-10: an opponent zone shows no toggle even with opponentHands', () => {
     setGame(bobsHand as never)
     const { queryByTestId } = render(<BoardZone player={bob()} />)
     expect(queryByTestId('hand-switch-btn')).toBeNull()

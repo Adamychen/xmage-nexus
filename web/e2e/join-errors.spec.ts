@@ -29,7 +29,7 @@ function failingScenario(failActions: Record<string, { error: string; errorCode?
 }
 
 test.describe('Errores de unión a mesa', () => {
-  test('el fallo al unirse se muestra dentro del diálogo, traducido y con cierre', async ({ page }) => {
+  test('LBY-7: a failed join is shown inside the dialog, translated and dismissable', async ({ page }) => {
     await withFakeServer(
       failingScenario({ joinTable: { error: 'Join Table Wrong password.', errorCode: 'PASSWORD' } }),
       async () => {

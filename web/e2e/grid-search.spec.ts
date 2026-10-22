@@ -7,7 +7,7 @@ import { parseSent, sentOf } from './support/frames'
 fakeOnly()
 
 test.describe('Grid search (U14 P14-1/P14-6)', { tag: '@feedback' }, () => {
-  test('filter narrows a 12-option grid and Enter sends the match', async ({ page }) => {
+  test('PRM-10: filter narrows a 12-option grid and Enter sends the match', async ({ page }) => {
     await withFakeServer(gridSearchScenario, async () => {
       const { pageErrors } = await quickStartGame(page, {
         prefix: 'gridsearch',
@@ -29,7 +29,7 @@ test.describe('Grid search (U14 P14-1/P14-6)', { tag: '@feedback' }, () => {
     })
   })
 
-  test('double-click chooses immediately in a single-choice grid', async ({ page }) => {
+  test('PRM-10: double-click chooses immediately in a single-choice grid', async ({ page }) => {
     await withFakeServer(gridSearchScenario, async () => {
       const { pageErrors } = await quickStartGame(page, {
         prefix: 'gridsearch2',

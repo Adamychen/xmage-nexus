@@ -3,7 +3,7 @@ import { DEFAULT_MANA_PAYMENT, loadManaPayment, saveManaPayment } from '../state
 import { manaPaymentActions, manaTypeOf } from './manaPayment'
 
 describe('manaPayment (pure)', () => {
-  it('maps settings to the 3 server actions', () => {
+  it('MNA-4: maps settings to the 3 server actions', () => {
     expect(manaPaymentActions({ auto: true, restricted: true, useFirstAbility: false, confirmEmptyPool: true, smart: false })).toEqual([
       'MANA_AUTO_PAYMENT_ON',
       'MANA_AUTO_PAYMENT_RESTRICTED_ON',
@@ -16,7 +16,7 @@ describe('manaPayment (pure)', () => {
     ])
   })
 
-  it('maps pool keys to server ManaType names', () => {
+  it('MNA-3: maps pool keys to server ManaType names', () => {
     expect(manaTypeOf('white')).toBe('WHITE')
     expect(manaTypeOf('blue')).toBe('BLUE')
     expect(manaTypeOf('black')).toBe('BLACK')
@@ -27,7 +27,7 @@ describe('manaPayment (pure)', () => {
     expect(manaTypeOf('')).toBeNull()
   })
 
-  it('persists mana payment prefs round-trip', () => {
+  it('MNA-4: persists mana payment prefs round-trip', () => {
     expect(loadManaPayment()).toEqual(DEFAULT_MANA_PAYMENT)
     saveManaPayment({ auto: false, restricted: false, useFirstAbility: true, confirmEmptyPool: false, smart: true })
     expect(loadManaPayment()).toEqual({ auto: false, restricted: false, useFirstAbility: true, confirmEmptyPool: false, smart: true })

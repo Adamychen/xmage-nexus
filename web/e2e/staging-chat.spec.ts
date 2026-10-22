@@ -38,7 +38,7 @@ test.describe('Staging table chat (U4-11)', () => {
     })
   })
 
-  test('el toggle Listo emite la marca al chat de la mesa', async ({ page }) => {
+  test('LBY-9: the Ready toggle posts its mark to the table chat', async ({ page }) => {
     await withFakeServer(chatStagingScenario, async () => {
       await login(page, 'e2e')
       await createTable(page, TABLE_NAME)

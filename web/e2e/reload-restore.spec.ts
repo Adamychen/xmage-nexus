@@ -72,7 +72,7 @@ function reloadScenario() {
  * wizard with "skip" (which does set the flag), so the gate was invisible from the
  * test suite. This spec removes it on purpose.
  */
-test('recargar con sesión guardada y el asistente sin terminar reabre la partida', async ({ page }) => {
+test('LBY-12: a reload with a saved session and an unfinished wizard reopens the game', async ({ page }) => {
   await withFakeServer(() => reloadScenario(), async () => {
     const session = await quickStartGame(page, {
       prefix: 'rel',

@@ -38,7 +38,7 @@ describe('strikeKind', () => {
 })
 
 describe('planDamageStrikes', () => {
-  it('never strikes while attackers are only being declared', () => {
+  it('FX-6: never strikes while attackers are only being declared', () => {
     const prev = view('DECLARE_ATTACKERS', [])
     const next = view('DECLARE_ATTACKERS', [{ attackers: ['a1'], blockers: [], defenderId: 'p-opp' }])
     expect(planDamageStrikes(prev, next)).toEqual([])
@@ -77,7 +77,7 @@ describe('planDamageStrikes', () => {
     ])
   })
 
-  it('strikes when the server jumps from blockers straight past combat damage', () => {
+  it('FX-6, CMB-6: strikes when the server jumps from blockers straight past combat damage', () => {
     const groups = [{ attackers: { fs: firstStriker, plain: {} }, blockers: [], defenderId: 'p-opp' }]
     const prev = view('DECLARE_BLOCKERS', groups)
     expect(planDamageStrikes(prev, view('END_COMBAT', groups)).map((p) => p.attackerId)).toEqual(['fs', 'plain'])
@@ -85,7 +85,7 @@ describe('planDamageStrikes', () => {
     expect(planDamageStrikes(prev, makeGameView({ step: 'UPKEEP', turn: 2, combat: [] }))).toHaveLength(2)
   })
 
-  it('does not strike once combat has already been resolved', () => {
+  it('CMB-6: does not strike once combat has already been resolved', () => {
     const groups = [{ attackers: ['a1'], defenderId: 'p-opp' }]
     expect(planDamageStrikes(view('COMBAT_DAMAGE', groups), view('COMBAT_DAMAGE', groups))).toEqual([])
     expect(planDamageStrikes(view('COMBAT_DAMAGE', groups), view('END_COMBAT', groups))).toEqual([])
@@ -210,7 +210,7 @@ describe('strike sequence', () => {
     expect((document.querySelector('[data-card-id="a1"]') as HTMLElement).style.visibility).toBe('')
   })
 
-  it('holds each combatant until its own strike lands, before the board re-renders', () => {
+  it('FX-6: holds each combatant until its own strike lands, before the board re-renders', () => {
     const groups = [
       { attackers: ['a1'], blockers: [], defenderId: 'p-opp' },
       { attackers: ['a2'], blockers: ['b1'], defenderId: 'p-opp' },
@@ -226,7 +226,7 @@ describe('strike sequence', () => {
     expect(combatImpactRemaining('b1')).toBe(0)
   })
 
-  it('declaring attackers alone does not animate or sound a hit', () => {
+  it('FX-6: declaring attackers alone does not animate or sound a hit', () => {
     const me = makePlayer({ playerId: 'p-me', name: 'Me', controlled: true })
     const prev = view('DECLARE_ATTACKERS', [], { players: [me] })
     const next = view('DECLARE_ATTACKERS', [{ attackers: ['a1'], blockers: [], defenderId: 'p-opp' }], { players: [me] })

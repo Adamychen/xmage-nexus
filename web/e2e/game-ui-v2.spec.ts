@@ -103,7 +103,7 @@ test('v2 portraits show the hand count, mechanic chips and commander damage @gam
   await page.screenshot({ path: testInfo.outputPath('v2-portraits.png') })
 })
 
-test('v2 hand badge opens a visible hand and announces card count changes @gameui', async ({ page }, testInfo) => {
+test('HND-9: v2 hand badge opens a visible hand and announces card count changes @gameui', async ({ page }, testInfo) => {
   const game = richCommanderGame() as { players: Array<Record<string, unknown>>; opponentHands: Record<string, unknown> }
   const mira = game.players.find((p) => p.playerId === 'p-mira') as Record<string, unknown>
   mira.handCount = 5
@@ -180,7 +180,7 @@ test('v2 arrows take the seat colour of their source and stay thin and dashed @g
   await expect(page.locator('.arrow-shadow')).toHaveCount(0)
 })
 
-test('v2 hand column gives way to the fan while the side panel is open @gameui', async ({ page }) => {
+test('HND-7: v2 hand column gives way to the fan while the side panel is open @gameui', async ({ page }) => {
   await showGame(page, richCommanderGame(), { ...V2, handRail: true, cardRender: 'rendered' })
   await expect(page.getByTestId('hand-rail')).toBeVisible({ timeout: 10_000 })
   await expect(page.getByTestId('hand-bar')).toHaveCount(0)

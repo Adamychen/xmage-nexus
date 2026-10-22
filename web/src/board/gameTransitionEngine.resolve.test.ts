@@ -201,7 +201,7 @@ describe('gameTransitionEngine — stack resolution and feedback', () => {
     expect(getFeedbackFxState().floaters.some((f) => f.text === '-3')).toBe(false)
   })
 
-  it('shows a creature hit only when the spell projectile lands', async () => {
+  it('FX-6: shows a creature hit only when the spell projectile lands', async () => {
     const damaged = { id: 'c9', name: 'Grizzly Bears', cardTypes: ['Creature'], damage: 3 }
     const intact = { id: 'c9', name: 'Grizzly Bears', cardTypes: ['Creature'], damage: 0 }
     document.body.innerHTML = '<div data-player-id="p1"><div class="card-slot" data-card-id="c9"></div></div>'
@@ -318,7 +318,7 @@ describe('gameTransitionEngine — stack resolution and feedback', () => {
     expect(getImpacts().some((fx) => fx.kind === 'transform')).toBe(true)
   })
 
-  it('announces a banner on turn change only', () => {
+  it('FX-10: announces a banner on turn change only', () => {
     detectAndAnimateTransitions(baseGame({ turn: 1 }), baseGame({ turn: 1 }))
     expect(getFeedbackFxState().banner).toBeNull()
 

@@ -16,7 +16,7 @@ describe('useDisplayedStack', () => {
     vi.useRealTimers()
   })
 
-  it('keeps a spell that left the stack on display until its resolution is done', () => {
+  it('FX-7: keeps a spell that left the stack on display until its resolution is done', () => {
     const { result, rerender } = renderHook(({ game }) => useDisplayedStack(game, 'g1'), {
       initialProps: { game: { stack: stackOf('a', 'b') } },
     })
@@ -36,7 +36,7 @@ describe('useDisplayedStack', () => {
     expect(Object.keys(result.current)).toEqual(['b'])
   })
 
-  it('a spell that is still on the stack is never released by its resolution', () => {
+  it('FX-7: a spell that is still on the stack is never released by its resolution', () => {
     const { result, rerender } = renderHook(({ game }) => useDisplayedStack(game, 'g1'), {
       initialProps: { game: { stack: stackOf('a') } },
     })
@@ -54,7 +54,7 @@ describe('useDisplayedStack', () => {
     expect(Object.keys(result.current)).toEqual(['a'])
   })
 
-  it('shows nothing held once the game changes', () => {
+  it('FX-7: shows nothing held once the game changes', () => {
     const { result, rerender } = renderHook(({ game, id }) => useDisplayedStack(game, id), {
       initialProps: { game: { stack: stackOf('a') } as { stack?: Record<string, CardView> } | null, id: 'g1' as string | null },
     })
@@ -75,7 +75,7 @@ describe('enqueueStackResolve', () => {
     vi.useRealTimers()
   })
 
-  it('runs one resolution at a time, the next one after the previous one is done and a beat has passed', () => {
+  it('FX-7: runs one resolution at a time, the next one after the previous one is done and a beat has passed', () => {
     const { rerender } = renderHook(({ game }) => useDisplayedStack(game, 'g1'), {
       initialProps: { game: { stack: stackOf('a', 'b') } as { stack?: Record<string, CardView> } | null },
     })

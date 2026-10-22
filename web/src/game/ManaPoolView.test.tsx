@@ -7,7 +7,7 @@ describe('ManaPoolView', () => {
     cleanup()
   })
 
-  it('renders only the colours holding mana outside of payment', () => {
+  it('MNA-3: renders only the colours holding mana outside of payment', () => {
     const { container } = render(
       <ManaPoolView pool={{ white: 0, blue: 1, black: 0, red: 2, green: 0, colorless: 0 }} />
     )
@@ -18,7 +18,7 @@ describe('ManaPoolView', () => {
     expect(container.querySelector('button')).toBeNull()
   })
 
-  it('keeps the six pips with showAll (mana payment in progress)', () => {
+  it('MNA-3: keeps the six pips with showAll (mana payment in progress)', () => {
     const { container } = render(
       <ManaPoolView pool={{ white: 0, blue: 1, black: 0, red: 2, green: 0, colorless: 0 }} showAll canPay onPay={() => {}} />
     )
@@ -27,21 +27,21 @@ describe('ManaPoolView', () => {
     expect(container.querySelectorAll('.mana-inline-pip.is-zero')).toHaveLength(4)
   })
 
-  it('canPay alone does NOT force the six pips (es true toda la partida)', () => {
+  it('MNA-3: canPay alone does NOT force the six pips (it is true all game long)', () => {
     const { container } = render(
       <ManaPoolView pool={{ white: 0, blue: 1, black: 0, red: 2, green: 0, colorless: 0 }} canPay onPay={() => {}} />
     )
     expect(container.querySelectorAll('.mana-inline-pip')).toHaveLength(2)
   })
 
-  it('renders a placeholder when the pool is empty', () => {
+  it('MNA-3: renders a placeholder when the pool is empty', () => {
     const { container } = render(<ManaPoolView pool={{}} />)
     expect(container.querySelectorAll('.mana-inline-pip')).toHaveLength(0)
     expect(container.querySelector('.mana-inline-empty')).toBeTruthy()
     expect(container.querySelector('.mana-inline.is-empty')).toBeTruthy()
   })
 
-  it('makes non-zero pips clickable when canPay with onPay', () => {
+  it('MNA-3: makes non-zero pips clickable when canPay with onPay', () => {
     const onPay = vi.fn()
     const { container } = render(
       <ManaPoolView pool={{ white: 0, blue: 0, black: 0, red: 2, green: 0, colorless: 0 }} canPay onPay={onPay} />
@@ -53,7 +53,7 @@ describe('ManaPoolView', () => {
     expect(container.querySelector('[data-testid="mana-pay-W"]')).toBeNull()
   })
 
-  it('renders nothing clickable for opponents', () => {
+  it('MNA-3: renders nothing clickable for opponents', () => {
     const onPay = vi.fn()
     const { container } = render(
       <ManaPoolView pool={{ white: 3, blue: 0, black: 0, red: 0, green: 0, colorless: 0 }} onPay={onPay} />

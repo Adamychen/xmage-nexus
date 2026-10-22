@@ -56,7 +56,7 @@ async function openHand(page: Page, entry: string): Promise<HandMetrics> {
 test.describe('the hand spreads across the width as cards are added @hand-bar', () => {
   test.use({ viewport: { width: 1280, height: 800 } })
 
-  test('12 and 15 cards reach the container edge and keep the card size of a short hand', async ({ page }) => {
+  test('HND-2: 12 and 15 cards reach the container edge and keep the card size of a short hand', async ({ page }) => {
     const three = await openHand(page, 'game:hand-3')
     const twelve = await openHand(page, 'game:hand-12')
     const fifteen = await openHand(page, 'game:hand-15')
@@ -78,7 +78,7 @@ test.describe('the hand spreads across the width as cards are added @hand-bar', 
   })
 
   for (const entry of ['game:hand-8', 'game:hand-15']) {
-    test(`${entry} stays in the centre band between the side panels`, async ({ page }) => {
+    test(`HND-2: ${entry} stays in the centre band between the side panels`, async ({ page }) => {
     const hand = await openHand(page, entry)
     expect(hand.pool, 'the bottom-left pool row is on screen').not.toBeNull()
     expect(hand.dock, 'the command wheel dock is on screen').not.toBeNull()

@@ -29,7 +29,7 @@ function sourcesOf(battlefield: Record<string, PermanentView>, pool: Partial<Rec
 }
 
 describe('parseRemainingManaCost', () => {
-  it('reads generic and colored pips from the plain prompt message', () => {
+  it('MNA-7: reads generic and colored pips from the plain prompt message', () => {
     expect(parseRemainingManaCost('Pay {2}{R}{R} Krenko [304]')).toEqual({
       generic: 2,
       pips: [{ options: ['R'] }, { options: ['R'] }],
@@ -37,30 +37,30 @@ describe('parseRemainingManaCost', () => {
     })
   })
 
-  it('reads hybrid, phyrexian and colorless pips', () => {
+  it('MNA-7: reads hybrid, phyrexian and colorless pips', () => {
     const cost = parseRemainingManaCost('Pay {W/B}{U/P}{C}')
     expect(cost.pips).toEqual([{ options: ['W', 'B'] }, { options: ['U'] }, { options: ['C'] }])
     expect(cost.unresolved).toEqual([])
   })
 
-  it('flags tokens it cannot model instead of guessing', () => {
+  it('MNA-7: flags tokens it cannot model instead of guessing', () => {
     expect(parseRemainingManaCost('Pay {X}{R}').unresolved).toEqual(['X'])
     expect(parseRemainingManaCost('Pay {S}').unresolved).toEqual(['S'])
     expect(parseRemainingManaCost('Pay {2/W}').unresolved).toEqual(['2/W'])
   })
 
-  it('returns an empty cost when the message has no symbols', () => {
+  it('MNA-7: returns an empty cost when the message has no symbols', () => {
     expect(parseRemainingManaCost('Pay mana')).toEqual({ generic: 0, pips: [], unresolved: [] })
   })
 })
 
 describe('ownManaSources', () => {
-  it('lists untapped permanents with a plain tap-for-mana ability', () => {
+  it('MNA-8: lists untapped permanents with a plain tap-for-mana ability', () => {
     const sources = sourcesOf({ f1: forest(), f2: forest({ tapped: true }), i1: island() })
     expect(sources.map((s) => s.key).sort()).toEqual(['tap:f1', 'tap:i1'])
   })
 
-  it('skips summoning-sick creatures and phased-out permanents', () => {
+  it('MNA-8: skips summoning-sick creatures and phased-out permanents', () => {
     const elf = makePermanent({ name: 'Llanowar Elves', cardTypes: ['CREATURE'], rules: ['{T}: Add {G}.'] })
     const sources = sourcesOf({
       sick: { ...elf, summoningSickness: true },
@@ -70,7 +70,7 @@ describe('ownManaSources', () => {
     expect(sources.map((s) => s.key)).toEqual(['tap:ready'])
   })
 
-  it('parses duals and any-color sources', () => {
+  it('MNA-8: parses duals and any-color sources', () => {
     const sources = sourcesOf({
       dual: land('Tundra', '{T}: Add {W} or {U}.'),
       tri: land('Tri', '{T}: Add {B}, {R}, or {G}.'),
@@ -81,7 +81,7 @@ describe('ownManaSources', () => {
     expect(sources.find((s) => s.id === 'any')?.produces).toEqual(['W', 'U', 'B', 'R', 'G'])
   })
 
-  it('leaves out abilities with extra costs, restrictions or multiple mana', () => {
+  it('MNA-8: leaves out abilities with extra costs, restrictions or multiple mana', () => {
     const sources = sourcesOf({
       treasure: makePermanent({ name: 'Treasure', cardTypes: ['ARTIFACT'], rules: ['{T}, Sacrifice this artifact: Add one mana of any color.'] }),
       cavern: land('Cavern', '{T}: Add one mana of any color. Spend this mana only to cast a creature spell of the chosen type.'),
@@ -91,7 +91,7 @@ describe('ownManaSources', () => {
     expect(sources.map((s) => s.id)).toEqual(['plain'])
   })
 
-  it('flags pain lands whose mana rules cost life or damage', () => {
+  it('MNA-9: flags pain lands whose mana rules cost life or damage', () => {
     const sources = sourcesOf({
       wastes: land('Llanowar Wastes', '{T}: Add {C}.'),
     })
@@ -118,7 +118,7 @@ describe('ownManaSources', () => {
     expect(painful.find((s) => s.id === 'shock')?.painful).toBe(false)
   })
 
-  it('adds one source per floating mana in the pool', () => {
+  it('MNA-8: adds one source per floating mana in the pool', () => {
     const sources = sourcesOf({}, { red: 2, colorless: 1 })
     expect(sources.map((s) => [s.kind, s.poolColor])).toEqual([
       ['pool', 'red'],
@@ -127,7 +127,7 @@ describe('ownManaSources', () => {
     ])
   })
 
-  it('real frame: finds untapped Forests even though canPlayObjects arrives empty', () => {
+  it('MNA-8: real frame: finds untapped Forests even though canPlayObjects arrives empty', () => {
     const game = (attackCostFrame as unknown as { gameView: GameView }).gameView
     expect(Object.keys(game.canPlayObjects?.objects ?? {})).toEqual([])
     const player = game.players!.find((p) => p.controlled)!
@@ -140,33 +140,33 @@ describe('ownManaSources', () => {
 describe('computeNextManaAction', () => {
   const cost = (msg: string) => parseRemainingManaCost(msg)
 
-  it('taps a matching source for a colored pip', () => {
+  it('MNA-8: taps a matching source for a colored pip', () => {
     const sources = sourcesOf({ f1: forest(), f2: forest() })
     const action = computeNextManaAction(cost('Pay {G}{G}'), sources)
     expect(action?.kind).toBe('tapPermanent')
   })
 
-  it('keeps the any-color source for later and uses the Forest for the pip', () => {
+  it('MNA-8: keeps the any-color source for later and uses the Forest for the pip', () => {
     const sources = sourcesOf({ dork: land('Birds', '{T}: Add one mana of any color.'), f1: forest() })
     expect(computeNextManaAction(cost('Pay {1}{G}'), sources)).toEqual({ kind: 'tapPermanent', id: 'f1' })
   })
 
-  it('spends colorless sources on generic before colored ones', () => {
+  it('MNA-8: spends colorless sources on generic before colored ones', () => {
     const sources = sourcesOf({ a: forest(), b: island(), z: land('Wastes', '{T}: Add {C}.') })
     expect(computeNextManaAction(cost('Pay {2}'), sources)).toEqual({ kind: 'tapPermanent', id: 'z' })
   })
 
-  it('pays from the floating pool first', () => {
+  it('MNA-8: pays from the floating pool first', () => {
     const sources = sourcesOf({ m1: land('Mountain', '{T}: Add {R}.') }, { red: 1 })
     expect(computeNextManaAction(cost('Pay {R}{1}'), sources)).toEqual({ kind: 'payPool', color: 'red' })
   })
 
-  it('satisfies a hybrid pip with either color', () => {
+  it('MNA-8: satisfies a hybrid pip with either color', () => {
     const sources = sourcesOf({ s1: land('Swamp', '{T}: Add {B}.') })
     expect(computeNextManaAction(cost('Pay {W/B}'), sources)).toEqual({ kind: 'tapPermanent', id: 's1' })
   })
 
-  it('only lets colorless sources pay a {C} pip', () => {
+  it('MNA-8: only lets colorless sources pay a {C} pip', () => {
     expect(computeNextManaAction(cost('Pay {C}'), sourcesOf({ f1: forest() }))).toBeNull()
     expect(computeNextManaAction(cost('Pay {C}'), sourcesOf({ f1: forest(), w: land('Wastes', '{T}: Add {C}.') }))).toEqual({
       kind: 'tapPermanent',
@@ -174,12 +174,12 @@ describe('computeNextManaAction', () => {
     })
   })
 
-  it('returns null when the cost cannot be paid', () => {
+  it('MNA-7: returns null when the cost cannot be paid', () => {
     expect(computeNextManaAction(cost('Pay {R}'), sourcesOf({ f1: forest() }))).toBeNull()
     expect(computeNextManaAction(cost('Pay {3}'), sourcesOf({ f1: forest(), f2: forest() }))).toBeNull()
   })
 
-  it('never spends a pain land on generic while a painless source is open', () => {
+  it('MNA-9: never spends a pain land on generic while a painless source is open', () => {
     const wastes = makePermanent({
       name: 'Llanowar Wastes',
       cardTypes: ['LAND'],
@@ -191,7 +191,7 @@ describe('computeNextManaAction', () => {
     })
   })
 
-  it('still taps the pain land for generic when it is the only source left', () => {
+  it('MNA-9: still taps the pain land for generic when it is the only source left', () => {
     const wastes = makePermanent({
       name: 'Llanowar Wastes',
       cardTypes: ['LAND'],
@@ -203,12 +203,12 @@ describe('computeNextManaAction', () => {
     })
   })
 
-  it('bails on unresolved tokens and empty costs', () => {
+  it('MNA-7: bails on unresolved tokens and empty costs', () => {
     expect(computeNextManaAction(cost('Pay {X}'), sourcesOf({ f1: forest() }))).toBeNull()
     expect(computeNextManaAction(cost('Pay nothing'), sourcesOf({ f1: forest() }))).toBeNull()
   })
 
-  it('reassigns sources when a greedy pick would strand a later pip', () => {
+  it('MNA-8: reassigns sources when a greedy pick would strand a later pip', () => {
     const sources = sourcesOf({
       a: land('Tundra', '{T}: Add {W} or {U}.'),
       b: land('Plains', '{T}: Add {W}.'),
@@ -217,20 +217,20 @@ describe('computeNextManaAction', () => {
     expect(action).not.toBeNull()
   })
 
-  it('keeps the last source of a color an instant in hand needs', () => {
+  it('MNA-8: keeps the last source of a color an instant in hand needs', () => {
     const sources = sourcesOf({ a: island(), b: forest() })
     expect(computeNextManaAction(cost('Pay {1}'), sources)).toEqual({ kind: 'tapPermanent', id: 'a' })
     expect(computeNextManaAction(cost('Pay {1}'), sources, new Set(['U']))).toEqual({ kind: 'tapPermanent', id: 'b' })
   })
 
-  it('never lets the reserve change feasibility', () => {
+  it('MNA-8: never lets the reserve change feasibility', () => {
     const sources = sourcesOf({ a: island() })
     expect(computeNextManaAction(cost('Pay {U}'), sources, new Set(['U']), 6)).toEqual({ kind: 'tapPermanent', id: 'a' })
   })
 })
 
 describe('public-information signals', () => {
-  it('reserves the colors of instant and flash cards in the own hand', () => {
+  it('MNA-8: reserves the colors of instant and flash cards in the own hand', () => {
     const hand = {
       h1: makeCard({ name: 'Counterspell', cardTypes: ['INSTANT'], manaCostLeftStr: ['{U}', '{U}'] }),
       h2: makeCard({ name: 'Shock Sorcery', cardTypes: ['SORCERY'], manaCostLeftStr: ['{R}'] }),
@@ -239,7 +239,7 @@ describe('public-information signals', () => {
     expect([...reservedColorsForInstants(hand)].sort()).toEqual(['G', 'U'])
   })
 
-  it('counts only untapped mana producers on opponent battlefields', () => {
+  it('MNA-8: counts only untapped mana producers on opponent battlefields', () => {
     const game = makeGameView({
       players: [
         me({ mine: forest() }),
@@ -253,7 +253,7 @@ describe('public-information signals', () => {
     expect(opponentOpenManaCount(game)).toBe(1)
   })
 
-  it('real frame: plans a tap for the attack tax although canPlayObjects is empty', () => {
+  it('MNA-8: real frame: plans a tap for the attack tax although canPlayObjects is empty', () => {
     const game = (attackCostFrame as unknown as { gameView: GameView }).gameView
     const player = game.players!.find((p) => p.controlled)!
     const action = nextSmartManaAction(game, 'Pay {2} Propaganda [4f7]', EMPTY_POOL)

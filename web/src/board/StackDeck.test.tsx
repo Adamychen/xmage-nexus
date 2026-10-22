@@ -158,7 +158,7 @@ describe('StackDeck', () => {
     expect(onOpenChange).toHaveBeenLastCalledWith(false)
   })
 
-  it('clicking a tab opens the stack, or picks it as a target when it is targetable', () => {
+  it('TGT-7: clicking a tab opens the stack, or picks it as a target when it is targetable', () => {
     const stack = stackOf(spell('s1', 'Counterspell', 'p-mira'), spell('s2', 'Lightning Bolt', 'p-me'))
     const onOpenChange = vi.fn()
     const onCardClick = vi.fn()
@@ -171,7 +171,7 @@ describe('StackDeck', () => {
     expect(onCardClick).toHaveBeenCalledWith('s2')
   })
 
-  it('reports the top object and the hovered tab as the focus of the target arrows', () => {
+  it('TGT-9: reports the top object and the hovered tab as the focus of the target arrows', () => {
     const stack = stackOf(spell('s1', 'Counterspell', 'p-mira'), spell('s2', 'Lightning Bolt', 'p-me'), spell('s3', 'Shock', 'p-me'))
     const onFocusIds = vi.fn()
     const { container, unmount } = render(<StackDeck {...BASE} onFocusIds={onFocusIds} stack={stack} />)

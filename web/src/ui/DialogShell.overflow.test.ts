@@ -26,11 +26,11 @@ function rule(css: string, selector: string): string {
 describe('dialog height is a share of the screen', () => {
   // Los popups toman el 70% del alto de la pantalla (issue #12). Si alguien
   // vuelve a un valor en px o sube el porcentaje, este caso lo dice.
-  it('caps every dialog at 70% of the viewport height', () => {
+  it('DLG-10: caps every dialog at 70% of the viewport height', () => {
     expect(styles).toContain('--dlg-max-h: 70vh')
   })
 
-  it('leaves no popup taller than that share', () => {
+  it('DLG-10: leaves no popup taller than that share', () => {
     const taller: string[] = []
     for (const file of popups) {
       const css = readFileSync(fileURLToPath(new URL(`../${file}`, import.meta.url)), 'utf8')

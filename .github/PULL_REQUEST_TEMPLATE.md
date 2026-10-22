@@ -19,6 +19,7 @@
 - [ ] No hand-edited generated files (`types.generated.ts`, `schema.generated.ts` — regenerated via `gen-types`/`gen-zod` + `:validate`)
 - [ ] New UI strings added to **all 9 locales** (`web/src/i18n/`)
 - [ ] Affected docs updated when needed (`ROADMAP.md` §4, `docs/lessons.md`, `web/INTERACTION_COVERAGE.md`, `web/COMPONENT_PARITY.md`, `site/content.json`)
+- [ ] `docs/specs/` rule added or changed for any behaviour decision, with the tests named after it (`it('DLG-6: …')`)
 - [ ] `web/INTERACTION_COVERAGE.md` updated (handler/interaction changes)
 - [ ] `web/COMPONENT_PARITY.md` / `site/content.json` updated (parity or phase changes)
 - [ ] No generated/runtime files committed (`dist/`, `.run/`, `target/`, `node_modules/`)

@@ -266,7 +266,7 @@ describe('StackZone', () => {
     expect(onCardClick).not.toHaveBeenCalledWith('s1')
   })
 
-  it('no agrupa entradas que son objetivo elegible, para poder elegir una concreta', () => {
+  it('TGT-6: does not group entries that are legal targets, so a specific one can be chosen', () => {
     const stack: Record<string, CardView> = {
       t1: trigger('You gain 1 life.'),
       t2: trigger('You gain 1 life.'),
@@ -276,7 +276,7 @@ describe('StackZone', () => {
     expect(container.querySelectorAll('.stack-tl-entry').length).toBe(2)
   })
 
-  it('marks eligible targets on the stack as targetable and clickable, and only those', () => {
+  it('TGT-7: marks eligible targets on the stack as targetable and clickable, and only those', () => {
     const onCardClick = vi.fn()
     const stack: Record<string, CardView> = {
       'spell-2': { name: 'Lightning Bolt', cardTypes: ['INSTANT'], manaValue: 1 },

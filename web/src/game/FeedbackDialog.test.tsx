@@ -189,7 +189,7 @@ describe('FeedbackDialog (componente)', () => {
     expect(screen.queryByText('Zombie')).toBeNull()
   })
 
-  it('muestra la barra no-modal para GAME_ASK Sí/No con sourceName', () => {
+  it('PRM-3: a plain GAME_ASK yes/no is a non-modal bar that names its source', () => {
     handleMessage({
       type: 'event',
       method: 'GAME_ASK',
@@ -214,7 +214,7 @@ describe('FeedbackDialog (componente)', () => {
     expect(screen.queryByText('ASK')).toBeNull()
   })
 
-  it('resuelve el descarte desde la mano en barra y deja ampliar al grid', () => {
+  it('PRM-4: a discard from the hand resolves from the bar and can still expand to the grid', () => {
     const hand = {
       'h-1': { id: 'h-1', name: 'Lightning Bolt', expansionSetCode: 'LEA', cardNumber: '161' },
       'h-2': { id: 'h-2', name: 'Forest', expansionSetCode: 'LEA', cardNumber: '294' },
@@ -243,7 +243,7 @@ describe('FeedbackDialog (componente)', () => {
     expect(document.querySelector('.card-grid-dialog')).toBeTruthy()
   })
 
-  it('mantiene el grid cuando el GAME_TARGET no es de la mano propia', () => {
+  it('PRM-4: keeps the grid when the GAME_TARGET is not from the own hand', () => {
     const other = {
       'g-1': { id: 'g-1', name: 'Serra Angel', expansionSetCode: 'LEA', cardNumber: '36' },
     }
@@ -277,7 +277,7 @@ describe('FeedbackDialog (componente)', () => {
     } as never)
   }
 
-  it('muestra búsqueda en el grid con más de 7 opciones y filtra al escribir', () => {
+  it('PRM-10: shows a search box above 7 grid options and filters while typing', () => {
     openGridPrompt()
     render(<FeedbackDialog />)
     const search = screen.getByPlaceholderText('Filtrar opciones…')
@@ -288,7 +288,7 @@ describe('FeedbackDialog (componente)', () => {
     expect(screen.getByRole('button', { name: /Ancient Dragon/ })).toBeTruthy()
   })
 
-  it('Enter elige la opción filtrada en el grid', async () => {
+  it('PRM-10: Enter picks the filtered grid option', async () => {
     openGridPrompt()
     render(<FeedbackDialog />)
     fireEvent.change(screen.getByPlaceholderText('Filtrar opciones…'), { target: { value: 'dragon' } })
@@ -299,7 +299,7 @@ describe('FeedbackDialog (componente)', () => {
     })
   })
 
-  it('doble-click elige en el grid de elección única', async () => {
+  it('PRM-10: double-click picks in a single-choice grid', async () => {
     openGridPrompt()
     render(<FeedbackDialog />)
     fireEvent.doubleClick(screen.getByRole('button', { name: /Ancient Dragon/ }))
@@ -309,7 +309,7 @@ describe('FeedbackDialog (componente)', () => {
     })
   })
 
-  it('no muestra búsqueda con 4 o menos opciones', () => {
+  it('PRM-10: shows no search box with 4 options or fewer', () => {
     openGridPrompt(4)
     render(<FeedbackDialog />)
     expect(screen.queryByPlaceholderText('Filtrar opciones…')).toBeNull()
@@ -362,7 +362,7 @@ describe('FeedbackDialog (componente)', () => {
     setSetting('choiceMemory', [])
   })
 
-  it('Enter con una sola opción la envía directamente (preselección)', async () => {    handleMessage({
+  it('PRM-10: Enter sends the only option directly (preselected)', async () => {    handleMessage({
       type: 'event',
       method: 'GAME_CHOOSE_CHOICE',
       messageId: 31,

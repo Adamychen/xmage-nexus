@@ -25,7 +25,7 @@ describe('clickableProps (AUDIT a11y)', () => {
     expect(onClick).toHaveBeenCalledTimes(2)
   })
 
-  it('dentro de la región de juego Space no activa el control (Enter sí)', () => {
+  it('KEY-2: inside the game region Space does not activate the control (Enter does)', () => {
     const onClick = vi.fn()
     const props = clickableProps(onClick)
     const region = document.createElement('div')
@@ -40,7 +40,7 @@ describe('clickableProps (AUDIT a11y)', () => {
     expect(onClick).toHaveBeenCalledTimes(1)
   })
 
-  it('en overlays con el atajo apagado Space vuelve a activar (como en diálogos)', () => {
+  it('KEY-4: in overlays with the shortcut off Space activates the control again (as in dialogs)', () => {
     const onClick = vi.fn()
     const props = clickableProps(onClick)
     const region = document.createElement('div')

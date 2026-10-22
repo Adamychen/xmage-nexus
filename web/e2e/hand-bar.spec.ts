@@ -135,7 +135,7 @@ async function expectHandBarLayout(page: Page): Promise<void> {
   await expectOverlayLayout(page)
 }
 
-test('la mano propia flota como overlay anclado al fondo sin consumir layout (standard) @fullflow @hand-bar', async ({ page }) => {
+test('HND-1, HND-2: the own hand floats as an overlay anchored to the bottom without taking layout space (standard) @fullflow @hand-bar', async ({ page }) => {
   await withFakeServer(() => spellsScenario('blaze'), async () => {
     const { pageErrors } = await quickStartGame(page, {
       prefix: 'hb',
@@ -146,7 +146,7 @@ test('la mano propia flota como overlay anclado al fondo sin consumir layout (st
   })
 })
 
-test('hovering an own hand card grows it in place until legible, without a floating preview @fullflow @hand-bar', async ({ page }) => {
+test('HND-3: hovering an own hand card grows it in place until legible, without a floating preview @fullflow @hand-bar', async ({ page }) => {
   await withFakeServer(() => spellsScenario('blaze'), async () => {
     const { pageErrors } = await quickStartGame(page, {
       prefix: 'hbh',
@@ -202,7 +202,7 @@ test('hovering an own hand card grows it in place until legible, without a float
   })
 })
 
-test('hovering a battlefield land still opens the floating preview @fullflow @hand-bar', async ({ page }) => {
+test('HND-3: hovering a battlefield land still opens the floating preview @fullflow @hand-bar', async ({ page }) => {
   await withFakeServer(mechanicsScenario, async () => {
     const { pageErrors } = await quickStartGame(page, {
       prefix: 'hbl',
@@ -226,7 +226,7 @@ test('hovering a battlefield land still opens the floating preview @fullflow @ha
   })
 })
 
-test('la mano propia ocupa toda la fila inferior del pod 1v1 @fullflow @hand-bar', async ({ page }) => {
+test('HND-1: the own hand spans the whole bottom row of a 1v1 pod @fullflow @hand-bar', async ({ page }) => {
   await withFakeServer(() => spellsScenario('blaze'), async () => {
     const { pageErrors } = await quickStartGame(page, {
       prefix: 'hbp',

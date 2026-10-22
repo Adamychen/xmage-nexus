@@ -263,7 +263,7 @@ describe('parseFeedback', () => {
     expect(multi?.items).toEqual([{ id: 'x', label: 'First', min: 1, max: 2, defaultValue: 2 }])
   })
 
-  it('marks multi-amount cancellable only when options.canCancel is true (MultiAmountType.isCanCancel)', () => {
+  it('CMB-8: marks multi-amount cancellable only when options.canCancel is true (MultiAmountType.isCanCancel)', () => {
     const payload = {
       min: 0,
       max: 5,
@@ -348,7 +348,7 @@ describe('parseFeedback', () => {
     expect(choose?.message).toBe('Search your library for a card')
   })
 
-  it('maps pile choices to booleans and mana to a controlled player', () => {
+  it('MNA-1: maps pile choices to booleans and mana to a controlled player', () => {
     const pile = parseFeedback('GAME_CHOOSE_PILE', 'game-4', { cardsView1: { a: {} }, cardsView2: { b: {}, c: {} } })
     expect(pile?.options.map((option) => option.value)).toEqual(['true', 'false'])
 
@@ -535,7 +535,7 @@ describe('parseFeedback', () => {
     expect(prompt).toMatchObject({ mode: 'integer', min: 1, max: 5 })
   })
 
-  it('maps GAME_PLAY_XMANA to a boolean (Confirmar/Cancelar)', () => {
+  it('MNA-10: maps GAME_PLAY_XMANA to a boolean (Confirm/Cancel)', () => {
     const prompt = parseFeedback('GAME_PLAY_XMANA', 'game-10', { message: 'Pay X mana?' })
     expect(prompt?.mode).toBe('boolean')
     expect(prompt?.options.map((option) => option.value)).toEqual(['true', 'false'])
@@ -646,7 +646,7 @@ describe('parseFeedback', () => {
     expect(prompt?.isPlaneswalkerAbility).toBeUndefined()
   })
 
-  it('filters out XMage server metadata from GAME_ASK (e.g. unspent mana warning)', () => {
+  it('MNA-5: filters out XMage server metadata from GAME_ASK (e.g. unspent mana warning)', () => {
     const prompt = parseFeedback('GAME_ASK', 'game-23', {
       message: 'You still have mana in your mana pool and it will be lost. Pass anyway?',
       options: {

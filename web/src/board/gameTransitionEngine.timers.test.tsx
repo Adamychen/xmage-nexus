@@ -38,7 +38,7 @@ describe('useGameTransitions timers', () => {
     vi.useRealTimers()
   })
 
-  it('drops the banner of a finished game instead of firing it in the next one', () => {
+  it('FX-10: drops the banner of a finished game instead of firing it in the next one', () => {
     const { rerender } = renderHook(({ g, id }: { g: GameView | null; id: string | null }) => useGameTransitions(g, id), {
       initialProps: { g: null as GameView | null, id: null as string | null },
     })
@@ -49,7 +49,7 @@ describe('useGameTransitions timers', () => {
     expect(announceBanner).not.toHaveBeenCalled()
   })
 
-  it('drops the banner of the previous game when a new game id arrives', () => {
+  it('FX-10: drops the banner of the previous game when a new game id arrives', () => {
     const { rerender } = renderHook(({ g, id }: { g: GameView | null; id: string | null }) => useGameTransitions(g, id), {
       initialProps: { g: null as GameView | null, id: null as string | null },
     })
@@ -60,7 +60,7 @@ describe('useGameTransitions timers', () => {
     expect(announceBanner).not.toHaveBeenCalled()
   })
 
-  it('still announces the banner of a game that keeps running', () => {
+  it('FX-10: still announces the banner of a game that keeps running', () => {
     const { rerender } = renderHook(({ g, id }: { g: GameView | null; id: string | null }) => useGameTransitions(g, id), {
       initialProps: { g: null as GameView | null, id: null as string | null },
     })

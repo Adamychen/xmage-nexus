@@ -85,7 +85,7 @@ describe('GameBoard bajo control del turno ajeno (Mindslaver)', () => {
     expect(onCombatClick).toHaveBeenCalledWith('opp-perm')
   })
 
-  it('la barra de mano muestra la mano controlada al activar Switch Hands y su click envía el id', () => {
+  it('HND-10: Switch Hands shows the controlled hand in the hand bar and its click sends the id', () => {
     setState({ game: controlledGame(), gameId: 'g-1' })
     const onPlayableClick = vi.fn()
     const { getByTestId, container } = render(

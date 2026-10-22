@@ -44,7 +44,7 @@ describe('spawnProjectile', () => {
     expect(getProjectiles()).toHaveLength(1)
   })
 
-  it('calls onLand exactly when the projectile arrives', () => {
+  it('FX-6: calls onLand exactly when the projectile arrives', () => {
     const onLand = vi.fn()
     const ms = spawnProjectile(rect(0, 0), () => rect(300, 0), [], onLand)
     vi.advanceTimersByTime(ms - 1)

@@ -82,7 +82,7 @@ describe('InfoWindows', () => {
     expect(onPlay).toHaveBeenCalledWith('c-1')
   })
 
-  it('targets a targetable card from a floating viewer', () => {
+  it('TGT-5: targets a targetable card from a floating viewer', () => {
     setState({ game: makeGameView({ revealed: [reveal] }) as never })
     const onTarget = vi.fn()
     render(<InfoWindows targetIds={new Set(['r-1'])} onTargetClick={onTarget} />)

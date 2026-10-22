@@ -75,7 +75,7 @@ describe('JoinTableDialog', () => {
     expect(getAllByText(/Mage Web bolt/).length).toBeGreaterThanOrEqual(1)
   })
 
-  it('requires password when table is passworded and calls onJoin with password', async () => {
+  it('LBY-7: requires password when table is passworded and calls onJoin with password', async () => {
     const onJoin = vi.fn().mockResolvedValue(undefined)
     const onClose = vi.fn()
 
@@ -99,7 +99,7 @@ describe('JoinTableDialog', () => {
     })
   })
 
-  it('prefills the password from an invite deep link', async () => {
+  it('LBY-10: prefills the password from an invite deep link', async () => {
     const onJoin = vi.fn().mockResolvedValue(undefined)
     const onClose = vi.fn()
 
@@ -205,7 +205,7 @@ describe('JoinTableDialog UX (C.13-mayores §4)', () => {
     expect(container.querySelectorAll('.join-deck-group-label').length).toBe(0)
   })
 
-  it('el fallo de unión se muestra dentro del diálogo, traducido y con cierre', async () => {
+  it('LBY-7: a failed join is shown inside the dialog, translated and dismissable', async () => {
     const onJoin = vi.fn().mockRejectedValue(new Error('table full'))
     const { getByRole, getByTestId, queryByTestId } = render(
       <JoinTableDialog table={MOCK_TABLE} onClose={() => {}} onJoin={onJoin} />
@@ -221,7 +221,7 @@ describe('JoinTableDialog UX (C.13-mayores §4)', () => {
     expect(getByTestId('join-table-dialog')).not.toBeNull()
   })
 
-  it('mantiene la contraseña operativa en beta.xmage.today (mesas privadas del servidor público)', async () => {
+  it('LBY-3: keeps the table password working on beta.xmage.today (private tables on the public server)', async () => {
     setState({ conn: { serverHost: 'beta.xmage.today' } } as never)
     const onJoin = vi.fn().mockResolvedValue(undefined)
 
