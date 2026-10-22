@@ -43,11 +43,11 @@ node src/index.ts    # servidor stdio (espera JSON-RPC por stdin)
 | `mage_lobby` | `limit?`, `session?` | Mesas de la sala (id, tipo, asientos, estado) + resumen de usuarios. |
 | `mage_create_table` | `name?`, `gameType?`, `deckType?`, `winsNeeded?`, `playerTypes?`, `simDecks?`, `seatSkills?`, `skipInitShuffling?`, `skipStartingPlayerChoice?`, `session?` | Crea mesa (default HUMAN+SIM) y devuelve `tableId`. |
 | `mage_join_table` | `tableId`, `deck` (DeckJson), `playerName?`, `playerType?`, `skill?`, `password?`, `session?` | Se une como jugador con mazo. |
-| `mage_start_match` | `tableId?`, `waitMs?`, `session?` | Arranca y espera `START_GAME`; devuelve `gameId`. |
+| `mage_start_match` | `tableId?`, `waitMs?`, `session?` | Starts the match and waits for the `START_GAME` event emitted after the call (`seq` cursor; late events of the previous game are ignored); returns `gameId`. |
 | `mage_leave_table` | `tableId?`, `remove?`, `session?` | Sale de la mesa o la elimina (dueño). |
-| `mage_session` | `session?` | Estado de la sesión (pin o activa: id, conexión, mesa, gameId, turno/fase/prioridad) + cola de eventos. |
+| `mage_session` | `session?` | Estado de la sesión (pin o activa: id, conexión, mesa, gameId, turno/fase/prioridad) + cola de eventos. Every event carries a monotonic per-session `seq`. |
 | `mage_sessions` | — | Lista todas las sesiones nombradas (id, activa, conexión, username, mesa, gameId). |
-| `mage_use_session` | `session` | Cambia la sesión activa; las demás siguen recibiendo eventos (y auto-pass) en segundo plano. |
+| `mage_use_session` | `session` | Cambia la sesión activa; las demás siguen recibiendo eventos (y auto-pass) en segundo plano. An unknown `session` is an error here and in every tool with `session?` (only `mage_connect` creates a session; `mage_sessions` lists them). |
 
 | Tool | Args | Qué hace |
 |---|---|---|
@@ -75,12 +75,12 @@ igual que `gameId` de `START_GAME`/`GAME_*`, así que `join/get` lo resuelven po
 |---|---|---|
 | `mage_game_state` | `level`(compact/full), `session?` | Estado compacto (turno/fase/prioridad, vidas, mano, battlefield, stack, jugables, combate) + prompt pendiente. |
 | `mage_wait_for_prompt` | `timeoutMs?`, `afterSeq?`, `session?` | Bloquea hasta que el servidor pida decisión o la partida acabe; devuelve el prompt normalizado con opciones. |
-| `mage_action` | `kind`(uuid/boolean/integer/string/manaType/playerAction), `value?`, `action?`, `data?`, `playerId?`, `force?`, `session?` | Respuesta cruda validada contra el prompt pendiente. |
+| `mage_action` | `kind`(uuid/boolean/integer/string/manaType/playerAction), `value?`, `action?`, `data?`, `playerId?`, `force?`, `session?` | Raw answer validated against the pending prompt: refused when no prompt is pending or the kind does not match its mode, unless `force=true`. `kind=boolean` requires `value`. |
 | `mage_choose` | `optionId?`, `value?`, `values?`, `session?` | Responde por opción/valor; sin args pasa (select/combat). |
-| `mage_play_card` | `cardId`, `session?` | `sendPlayerUUID` de una carta/fuente/habilidad jugable. |
-| `mage_pay_mana` | `sourceId?`, `manaType?`, `session?` | Paga con una fuente (`sendPlayerUUID`) o del pool (`sendPlayerManaType`). |
-| `mage_pass_priority` | `session?` | `sendPlayerBoolean(false)`: pasar/confirmar/rechazar. |
-| `mage_combat` | `attackers?`, `blockers?`, `blockTargets?`, `confirm?`, `targetTimeoutMs?`, `session?` | Declara atacantes; bloqueadoras de una en una respondiendo el `GAME_TARGET` intercalado con `blockTargets[i]` (gang-block). |
+| `mage_play_card` | `cardId`, `session?` | `sendPlayerUUID` de una carta/fuente/habilidad jugable. Requires a pending prompt that accepts a uuid (`requireDecision`). |
+| `mage_pay_mana` | `sourceId?`, `manaType?`, `session?` | Paga con una fuente (`sendPlayerUUID`) o del pool (`sendPlayerManaType`). Requires a pending prompt (`requireDecision`); `special` needs a mana prompt. |
+| `mage_pass_priority` | `session?` | `sendPlayerBoolean(false)`: pasar/confirmar/rechazar. Requires a pending boolean-compatible prompt (`requireDecision`). |
+| `mage_combat` | `attackers?`, `blockers?`, `blockTargets?`, `confirm?`, `targetTimeoutMs?`, `session?` | Declara atacantes; bloqueadoras de una en una respondiendo el `GAME_TARGET` intercalado con `blockTargets[i]` (gang-block). Result: `stopped` (see below), `ok` (= `stopped === null`), `confirmed` (true only when the final boolean was sent), `sent`, `targetsAnswered`, `unresolved`. |
 | `mage_auto_pass` | `enabled`, `session?` | Auto-pass en ventanas de prioridad del rival o sin jugables (default ON; nunca en asks/maná). Anti-flood: si el servidor repite el mismo prompt >5 veces, lo desactiva y registra `AUTO_PASS_STOPPED`. |
 | `mage_concede` | `session?` | `sendPlayerAction CONCEDE`. |
 | `mage_chat` | `text`, `chatId?`, `session?` | Chat de la partida. |
@@ -91,6 +91,21 @@ igual que `gameId` de `START_GAME`/`GAME_*`, así que `join/get` lo resuelven po
 > juego paralelo (varios agentes/partidas en un proceso MCP): sin pin, dos
 > agentes conmutando `mage_use_session` se pisan (acciones caídas en la partida
 > ajena). Verificado con self-play PvP + oleada paralela.
+
+> **Decision guards**: `mage_play_card`, `mage_pay_mana`, `mage_pass_priority`, `mage_combat`
+> and `mage_action` (without `force`) go through `requireDecision`: they refuse when no prompt
+> is pending or when the prompt mode does not accept the answer kind. An answer whose prompt was
+> consumed in the meantime (for example by auto-pass) is rejected with "no longer pending".
+> `mage_concede` stays unconditional.
+>
+> **`mage_combat` stops**: `stopped` is `null` when the declaration completed,
+> `"pendingTarget"` when a `GAME_TARGET` has no known attacker (answer it with `mage_choose`), and
+> `"noResponse"` when the server did not reply within `targetTimeoutMs` after a blocker. Nothing is
+> sent after a stop and the call is not confirmed.
+>
+> **Event `seq`**: each event in `mage_session` carries a monotonic per-session `seq`. Tools that
+> wait for an event (`mage_watch_tournament_match`, `mage_start_match`) use `seq > mark` instead of
+> array positions, so a full 200-entry ring does not lose the wait.
 
 ### Bucle de juego
 

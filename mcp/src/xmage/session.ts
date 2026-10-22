@@ -36,6 +36,7 @@ const limitedOptionsSchema = z.object({
 })
 
 interface SessionEvent {
+  seq: number
   at: number
   method: string
   objectId: string | null
@@ -62,7 +63,8 @@ interface SessionState {
   lastGameView: unknown
   lastConnectAttached: boolean | null
   events: SessionEvent[]
-  prompts: PromptEntry[]
+  eventSeq: number
+  retiredGameId: string | null
   promptSeq: number
   pendingPrompt: PromptEntry | null
   autoPass: boolean
@@ -90,7 +92,8 @@ function createSessionState(): SessionState {
     lastGameView: null,
     lastConnectAttached: null,
     events: [],
-    prompts: [],
+    eventSeq: 0,
+    retiredGameId: null,
     promptSeq: 0,
     pendingPrompt: null,
     autoPass: true,
@@ -110,11 +113,29 @@ function resolveSession(id: string): SessionState {
   return session
 }
 
+function existingSession(id: string): SessionState {
+  const session = sessions.get(id)
+  if (!session) throw new Error(`unknown session "${id}" — list them with mage_sessions or create one with mage_connect`)
+  return session
+}
+
 let activeState: SessionState = resolveSession(DEFAULT_SESSION)
+
+export function closeAllSessions(): void {
+  for (const state of sessions.values()) {
+    state.client?.close()
+    state.client = null
+  }
+}
 
 function activateSession(id: string): SessionState {
   activeState = resolveSession(id)
   return activeState
+}
+
+function recordEvent(state: SessionState, method: string, objectId: string | null): void {
+  state.events.push({ seq: ++state.eventSeq, at: Date.now(), method, objectId })
+  if (state.events.length > EVENT_RING) state.events.shift()
 }
 
 function sessionIdOf(target: SessionState): string {
@@ -127,7 +148,10 @@ function sessionIdOf(target: SessionState): string {
 function attach(state: SessionState, client: ProxyClient): void {
   client.on('event', (event: ProxyEvent) => {
     const method = String(event.method ?? '')
-    if (event.objectId && (method === 'START_GAME' || method.startsWith('GAME_'))) {
+    if (
+      event.objectId &&
+      (method === 'START_GAME' || (method.startsWith('GAME_') && String(event.objectId) !== state.retiredGameId))
+    ) {
       state.gameId = String(event.objectId)
     }
     if (
@@ -152,8 +176,6 @@ function attach(state: SessionState, client: ProxyClient): void {
     const prompt = normalizePrompt(method, data, state.gameId)
     if (prompt) {
       const entry: PromptEntry = { seq: ++state.promptSeq, at: Date.now(), method, view: prompt }
-      state.prompts.push(entry)
-      if (state.prompts.length > 50) state.prompts.shift()
       state.pendingPrompt = entry
       void maybeAutoPass(state, entry)
     }
@@ -161,19 +183,14 @@ function attach(state: SessionState, client: ProxyClient): void {
       state.gameOver = { at: Date.now(), data }
       state.pendingPrompt = null
     }
-    state.events.push({
-      at: Date.now(),
-      method,
-      objectId: event.objectId ? String(event.objectId) : null,
-    })
-    if (state.events.length > EVENT_RING) state.events.shift()
+    recordEvent(state, method, event.objectId ? String(event.objectId) : null)
   })
   client.on('closed', () => {
     if (state.client === client && !client.autoReconnect) {
       state.client = null
     }
     state.loggedIn = false
-    state.events.push({ at: Date.now(), method: 'WS_CLOSED', objectId: null })
+    recordEvent(state, 'WS_CLOSED', null)
   })
   client.on('reopened', () => {
     void resyncAfterReconnect(state, client)
@@ -182,7 +199,7 @@ function attach(state: SessionState, client: ProxyClient): void {
 
 function controlledPlayerId(state: SessionState): string | undefined {
   const view = state.lastGameView as GameView | null
-  return view?.players?.find((player) => player.controlled === true)?.playerId
+  return view?.players?.find((player) => player?.controlled === true)?.playerId
 }
 
 function canAutoPass(state: SessionState, entry: PromptEntry): boolean {
@@ -190,7 +207,7 @@ function canAutoPass(state: SessionState, entry: PromptEntry): boolean {
   if (entry.view.mode !== 'select') return false
   if (Date.now() < state.payingUntil) return false
   const view = state.lastGameView as GameView | null
-  const me = view?.players?.find((player) => player.controlled === true)
+  const me = view?.players?.find((player) => player?.controlled === true)
   if (me?.isActive === true && entry.view.options.length > 0) return false
   return true
 }
@@ -202,28 +219,33 @@ function autoPassSignatureOf(state: SessionState, entry: PromptEntry): string {
 }
 
 async function maybeAutoPass(state: SessionState, entry: PromptEntry): Promise<void> {
-  if (!canAutoPass(state, entry)) return
-  const client = state.client
-  const gameId = state.gameId
-  if (!client?.isOpen || !gameId) return
-  const signature = autoPassSignatureOf(state, entry)
-  if (signature === state.autoPassSignature) {
-    state.autoPassRepeats++
-  } else {
-    state.autoPassSignature = signature
-    state.autoPassRepeats = 1
-  }
-  if (state.autoPassRepeats > AUTO_PASS_MAX_REPEATS) {
-    state.autoPass = false
-    state.events.push({ at: Date.now(), method: `AUTO_PASS_STOPPED ${signature}`, objectId: gameId })
-    return
-  }
   try {
-    await client.requestOk('sendPlayerBoolean', { gameId, value: false }, 10_000)
+    if (!canAutoPass(state, entry)) return
+    const client = state.client
+    const gameId = state.gameId
+    if (!client?.isOpen || !gameId) return
+    const signature = autoPassSignatureOf(state, entry)
+    if (signature === state.autoPassSignature) {
+      state.autoPassRepeats++
+    } else {
+      state.autoPassSignature = signature
+      state.autoPassRepeats = 1
+    }
+    if (state.autoPassRepeats > AUTO_PASS_MAX_REPEATS) {
+      state.autoPass = false
+      recordEvent(state, `AUTO_PASS_STOPPED ${signature}`, gameId)
+      return
+    }
     if (state.pendingPrompt?.seq === entry.seq) state.pendingPrompt = null
-    state.events.push({ at: Date.now(), method: 'AUTO_PASS', objectId: gameId })
+    try {
+      await client.requestOk('sendPlayerBoolean', { gameId, value: false }, 10_000)
+      recordEvent(state, 'AUTO_PASS', gameId)
+    } catch (error) {
+      if (!state.pendingPrompt && state.promptSeq === entry.seq) state.pendingPrompt = entry
+      recordEvent(state, `AUTO_PASS_FAILED ${(error as Error).message}`, gameId)
+    }
   } catch (error) {
-    state.events.push({ at: Date.now(), method: `AUTO_PASS_FAILED ${(error as Error).message}`, objectId: gameId })
+    recordEvent(state, `AUTO_PASS_FAILED ${(error as Error).message}`, state.gameId)
   }
 }
 
@@ -269,7 +291,7 @@ async function connectToProxy(state: SessionState, input: {
   state.tableId = null
   state.tournamentId = null
   state.lastGameView = null
-  state.prompts = []
+  state.retiredGameId = null
   state.promptSeq = 0
   state.pendingPrompt = null
   state.gameOver = null
@@ -303,7 +325,7 @@ async function connectToProxy(state: SessionState, input: {
 }
 
 async function resyncAfterReconnect(state: SessionState, client: ProxyClient): Promise<{ ok: boolean; error?: string }> {
-  state.events.push({ at: Date.now(), method: 'WS_REOPENED', objectId: null })
+  recordEvent(state, 'WS_REOPENED', null)
   try {
     if (!state.host || !state.username) throw new Error('sin credenciales guardadas para re-loguear')
     const data = (await client.requestOk(
@@ -322,7 +344,7 @@ async function resyncAfterReconnect(state: SessionState, client: ProxyClient): P
       state.gameId = null
       state.lastGameView = null
       state.tournamentId = null
-      state.events.push({ at: Date.now(), method: 'RECONNECT_NEW_SESSION', objectId: gameId })
+      recordEvent(state, 'RECONNECT_NEW_SESSION', gameId)
     } else if (gameId) {
       state.lastGameView = null
       const joined = await client.requestOk('joinGame', { gameId }, 20_000)
@@ -330,16 +352,16 @@ async function resyncAfterReconnect(state: SessionState, client: ProxyClient): P
       try {
         await waitFor(() => state.lastGameView, 15_000, 'gameView tras reconectar')
       } catch {
-        state.events.push({ at: Date.now(), method: 'RESYNC_NO_GAMEVIEW', objectId: gameId })
+        recordEvent(state, 'RESYNC_NO_GAMEVIEW', gameId)
       }
     }
-    state.events.push({ at: Date.now(), method: 'RECONNECTED', objectId: gameId })
+    recordEvent(state, 'RECONNECTED', gameId)
     return { ok: true }
   } catch (error) {
     state.loggedIn = false
     state.gameId = null
     state.lastGameView = null
-    state.events.push({ at: Date.now(), method: `RECONNECT_FAILED ${(error as Error).message}`, objectId: null })
+    recordEvent(state, `RECONNECT_FAILED ${(error as Error).message}`, null)
     return { ok: false, error: (error as Error).message }
   }
 }
@@ -357,6 +379,9 @@ export function registerSessionTools(server: McpServer): void {
 
   async function answer(state: SessionState, action: string, args: Record<string, unknown>, entry: PromptEntry | null): Promise<unknown> {
     const client = requireClient(state)
+    if (entry && state.pendingPrompt?.seq !== entry.seq) {
+      throw new Error(`prompt ${entry.seq} is no longer pending (promptSeq ${state.promptSeq}) — use mage_wait_for_prompt`)
+    }
     const data = await client.requestOk(action, { ...args, gameId: requireGameId(state) }, 20_000)
     if (entry && state.pendingPrompt?.seq === entry.seq) state.pendingPrompt = null
     state.autoPassSignature = null
@@ -377,6 +402,14 @@ export function registerSessionTools(server: McpServer): void {
     return modes.includes(view.mode) ? null : `kind "${kind}" no responde a un prompt modo "${view.mode}" (${view.method})`
   }
 
+  function requireDecision(state: SessionState, kind: string): PromptEntry {
+    const entry = state.pendingPrompt
+    if (!entry) throw new Error(`no prompt is pending (promptSeq ${state.promptSeq}) — use mage_wait_for_prompt`)
+    const mismatch = modeMismatch(kind, entry.view)
+    if (mismatch) throw new Error(`${mismatch}. Call mage_wait_for_prompt/mage_game_state`)
+    return entry
+  }
+
   const compactState = (state: SessionState) => {
     const view = state.lastGameView as GameView | null
     return view ? compactGameView(view) : null
@@ -391,18 +424,18 @@ export function registerSessionTools(server: McpServer): void {
     'Pin anti-carreras: opera sobre esta sesión MCP sin cambiar la activa global ' +
     '(equivale a mage_use_session solo para esta llamada). Imprescindible en juego paralelo.'
 
-  const pickState = (session?: string): SessionState => (session ? resolveSession(session) : activeState)
+  const pickState = (session?: string): SessionState => (session ? existingSession(session) : activeState)
 
-  async function waitTargetUuid(state: SessionState, afterSeq: number, timeoutMs: number): Promise<PromptEntry | null> {
+  async function waitBlockerReply(state: SessionState, afterSeq: number, timeoutMs: number): Promise<PromptEntry | 'settled' | 'timeout'> {
     const started = Date.now()
     while (Date.now() - started < timeoutMs) {
-      const entry = state.pendingPrompt
-      if (entry && entry.seq > afterSeq && (entry.method === 'GAME_TARGET' || entry.view.mode === 'uuid')) {
-        return entry
+      if (state.promptSeq > afterSeq) {
+        const entry = state.pendingPrompt
+        return entry?.method === 'GAME_TARGET' ? entry : 'settled'
       }
       await sleep(150)
     }
-    return null
+    return 'timeout'
   }
 
   server.registerTool(
@@ -644,11 +677,18 @@ export function registerSessionTools(server: McpServer): void {
       const client = requireClient(state)
       const id = tableId ?? state.tableId
       if (!id) throw new Error('sin tableId — pasa uno o crea/únete a una mesa primero')
+      const mark = state.eventSeq
+      state.retiredGameId = state.gameId
       state.gameId = null
       await client.requestOk('startMatch', { tableId: id }, 30_000)
       state.tableId = id
-      const gameId = await waitFor(() => state.gameId, waitMs, 'START_GAME')
-      return textResult(`partida arrancada\n\n${json({ tableId: id, gameId, session: sessionSnapshot(state) })}`)
+      const started = await waitFor(
+        () => state.events.find((event) => event.seq > mark && event.method === 'START_GAME') ?? null,
+        waitMs,
+        'START_GAME',
+      )
+      if (!started.objectId) throw new Error('START_GAME carried no gameId')
+      return textResult(`partida arrancada\n\n${json({ tableId: id, gameId: started.objectId, session: sessionSnapshot(state) })}`)
     },
   )
 
@@ -879,7 +919,7 @@ export function registerSessionTools(server: McpServer): void {
           await waitFor(() => state.lastGameView, waitMs, 'gameView tras joinGame')
           fresh = true
         } catch {
-          state.events.push({ at: Date.now(), method: 'JOINGAME_NO_GAMEVIEW', objectId: id })
+          recordEvent(state, 'JOINGAME_NO_GAMEVIEW', id)
         }
       }
       return textResult(json({ ok: true, gameId: id, freshGameView: fresh, session: sessionSnapshot(state) }))
@@ -904,14 +944,14 @@ export function registerSessionTools(server: McpServer): void {
     async ({ session, tableId, waitMs }) => {
       const state = pickState(session)
       const client = requireClient(state)
-      const mark = state.events.length
+      const mark = state.eventSeq
       await client.requestOk('watchTournamentTable', { tableId }, 20_000)
       let gameId: string | null = null
       let fresh = false
       if (waitMs > 0) {
         try {
           const watcher = await waitFor(
-            () => state.events.slice(mark).find((e) => e.method === 'WATCHGAME') ?? null,
+            () => state.events.find((e) => e.seq > mark && e.method === 'WATCHGAME') ?? null,
             waitMs,
             'WATCHGAME tras watchTournamentTable',
           )
@@ -923,10 +963,10 @@ export function registerSessionTools(server: McpServer): void {
             await waitFor(() => state.lastGameView, waitMs, 'gameView del match')
             fresh = true
           } catch {
-            state.events.push({ at: Date.now(), method: 'WATCHGAME_NO_GAMEVIEW', objectId: gameId })
+            recordEvent(state, 'WATCHGAME_NO_GAMEVIEW', gameId)
           }
         } catch {
-          state.events.push({ at: Date.now(), method: 'WATCHGAME_TIMEOUT', objectId: tableId })
+          recordEvent(state, 'WATCHGAME_TIMEOUT', tableId)
         }
       }
       return textResult(json({ ok: true, tableId, gameId, freshGameView: fresh, session: sessionSnapshot(state) }))
@@ -1134,7 +1174,8 @@ export function registerSessionTools(server: McpServer): void {
       const state = pickState(session)
       const pending = state.pendingPrompt
       if (kind !== 'playerAction' && !force) {
-        const mismatch = modeMismatch(kind, pending?.view ?? null)
+        if (!pending) throw new Error(`no prompt is pending (promptSeq ${state.promptSeq}) — use mage_wait_for_prompt, or pass force=true`)
+        const mismatch = modeMismatch(kind, pending.view)
         if (mismatch) {
           throw new Error(`${mismatch}. Llama a mage_wait_for_prompt/mage_game_state, o pasa force=true`)
         }
@@ -1146,6 +1187,7 @@ export function registerSessionTools(server: McpServer): void {
           break
         }
         case 'boolean': {
+          if (value === undefined) throw new Error('kind=boolean requires value:boolean')
           await answer(state, 'sendPlayerBoolean', { value: value === true || value === 'true' }, pending)
           break
         }
@@ -1252,7 +1294,7 @@ export function registerSessionTools(server: McpServer): void {
     },
     async ({ session, cardId }) => {
       const state = pickState(session)
-      await answer(state, 'sendPlayerUUID', { value: cardId }, state.pendingPrompt)
+      await answer(state, 'sendPlayerUUID', { value: cardId }, requireDecision(state, 'uuid'))
       return textResult(json({ ok: true, cardId, promptSeq: state.promptSeq, pending: promptSummary(state) }))
     },
   )
@@ -1277,13 +1319,14 @@ export function registerSessionTools(server: McpServer): void {
     async ({ session, sourceId, manaType, special }) => {
       const state = pickState(session)
       if (special) {
-        await answer(state, 'sendPlayerString', { value: 'special' }, state.pendingPrompt)
+        await answer(state, 'sendPlayerString', { value: 'special' }, requireDecision(state, 'manaType'))
       } else if (sourceId) {
-        await answer(state, 'sendPlayerUUID', { value: sourceId }, state.pendingPrompt)
+        await answer(state, 'sendPlayerUUID', { value: sourceId }, requireDecision(state, 'uuid'))
       } else if (manaType) {
-        const targetPlayer = state.pendingPrompt?.view.playerId ?? controlledPlayerId(state)
+        const entry = requireDecision(state, 'manaType')
+        const targetPlayer = entry.view.playerId ?? controlledPlayerId(state)
         if (!targetPlayer) throw new Error('sin playerId de maná')
-        await answer(state, 'sendPlayerManaType', { playerId: targetPlayer, manaType: manaType.toUpperCase() }, state.pendingPrompt)
+        await answer(state, 'sendPlayerManaType', { playerId: targetPlayer, manaType: manaType.toUpperCase() }, entry)
       } else {
         throw new Error('pasa sourceId, manaType o special=true')
       }
@@ -1303,7 +1346,7 @@ export function registerSessionTools(server: McpServer): void {
     },
     async ({ session }) => {
       const state = pickState(session)
-      await answer(state, 'sendPlayerBoolean', { value: false }, state.pendingPrompt)
+      await answer(state, 'sendPlayerBoolean', { value: false }, requireDecision(state, 'boolean'))
       return textResult(json({ ok: true, promptSeq: state.promptSeq, pending: promptSummary(state) }))
     },
   )
@@ -1313,11 +1356,13 @@ export function registerSessionTools(server: McpServer): void {
     {
       title: 'Declare attackers/blockers (gang-block aware)',
       description:
-        'Declara combate. Atacantes: un sendPlayerUUID por id. Bloqueadoras: de una en una; tras cada ' +
-        'bloqueador el servidor puede pedir GAME_TARGET (elegir atacante cuando hay varios): se responde ' +
-        'con blockTargets[i] (o con el único atacante si solo hay uno). blockTargets alinea cada bloqueador ' +
-        'con su atacante; sin atacante conocido el bloqueador queda en "unresolved" sin bloquear la llamada. ' +
-        'confirm=true envía sendPlayerBoolean(false) al final. session fija la sesión MCP sin cambiar la activa.',
+        'Declares combat. Attackers: one sendPlayerUUID per id. Blockers: one at a time; after each blocker ' +
+        'the server may ask GAME_TARGET (pick the attacker when there are several): it is answered with ' +
+        'blockTargets[i] (or the only attacker when there is one). blockTargets pairs each blocker with its ' +
+        'attacker. If a GAME_TARGET has no known attacker the call stops with stopped="pendingTarget" (answer ' +
+        'it with mage_choose); if the server does not reply after a blocker, stopped="noResponse". In both cases ' +
+        'nothing else is sent and the call is not confirmed. confirm=true sends sendPlayerBoolean(false) at the ' +
+        'end. session pins the MCP session without changing the active one.',
       inputSchema: {
         session: z.string().optional().describe(PIN_DESC),
         attackers: z.array(z.string()).optional(),
@@ -1333,32 +1378,61 @@ export function registerSessionTools(server: McpServer): void {
     },
     async ({ session, attackers, blockers, blockTargets, confirm, targetTimeoutMs }) => {
       const state = pickState(session)
+      const attackerIds = attackers ?? []
+      const blocks = blockers ?? []
+      if (attackerIds.length || blocks.length) requireDecision(state, 'uuid')
       const sent: string[] = []
-      for (const id of attackers ?? []) {
+      for (const id of attackerIds) {
         await answer(state, 'sendPlayerUUID', { value: id }, null)
         sent.push(id)
       }
       const targetsAnswered: { blocker: string; attacker: string }[] = []
       const unresolved: string[] = []
-      const blocks = blockers ?? []
-      for (let i = 0; i < blocks.length; i++) {
-        const before = state.promptSeq
-        await answer(state, 'sendPlayerUUID', { value: blocks[i] }, null)
-        sent.push(blocks[i])
-        const target = await waitTargetUuid(state, before, targetTimeoutMs)
-        if (!target) continue
-        const attacker = blockTargets?.[i] ?? (attackers?.length === 1 ? attackers[0] : undefined)
-        if (!attacker) {
+      let stopped: 'pendingTarget' | 'noResponse' | null = null
+      for (let i = 0; i < blocks.length && !stopped; i++) {
+        if (!state.pendingPrompt) {
           unresolved.push(blocks[i])
-          continue
+          stopped = 'noResponse'
+          break
         }
-        await answer(state, 'sendPlayerUUID', { value: attacker }, target)
-        sent.push(attacker)
-        targetsAnswered.push({ blocker: blocks[i], attacker })
+        let before = state.promptSeq
+        await answer(state, 'sendPlayerUUID', { value: blocks[i] }, state.pendingPrompt)
+        sent.push(blocks[i])
+        let reply = await waitBlockerReply(state, before, targetTimeoutMs)
+        while (typeof reply !== 'string') {
+          const attacker = blockTargets?.[i] ?? (attackers?.length === 1 ? attackers[0] : undefined)
+          if (!attacker) {
+            unresolved.push(blocks[i])
+            stopped = 'pendingTarget'
+            break
+          }
+          before = state.promptSeq
+          await answer(state, 'sendPlayerUUID', { value: attacker }, reply)
+          sent.push(attacker)
+          targetsAnswered.push({ blocker: blocks[i], attacker })
+          reply = await waitBlockerReply(state, before, targetTimeoutMs)
+        }
+        if (reply === 'timeout') {
+          unresolved.push(blocks[i])
+          stopped = 'noResponse'
+        }
       }
-      if (confirm) await answer(state, 'sendPlayerBoolean', { value: false }, state.pendingPrompt)
+      let confirmed = false
+      if (confirm && !stopped && state.pendingPrompt && !modeMismatch('boolean', state.pendingPrompt.view)) {
+        await answer(state, 'sendPlayerBoolean', { value: false }, state.pendingPrompt)
+        confirmed = true
+      }
       return textResult(
-        json({ ok: true, sent, targetsAnswered, unresolved, confirmed: confirm, promptSeq: state.promptSeq, pending: promptSummary(state) }),
+        json({
+          ok: stopped === null,
+          sent,
+          targetsAnswered,
+          unresolved,
+          stopped,
+          confirmed,
+          promptSeq: state.promptSeq,
+          pending: promptSummary(state),
+        }),
       )
     },
   )
@@ -1486,8 +1560,8 @@ export function registerSessionTools(server: McpServer): void {
       annotations: { readOnlyHint: false },
     },
     async ({ session }) => {
-      const state = activateSession(session)
-      return textResult(json({ sessionId: session, ...sessionSnapshot(state) }))
+      activeState = existingSession(session)
+      return textResult(json({ sessionId: session, ...sessionSnapshot(activeState) }))
     },
   )
 }
@@ -1514,7 +1588,7 @@ function sessionSnapshot(state: SessionState) {
         players?: { controlled?: boolean; hasPriority?: boolean }[]
       }
     | null
-  const me = view?.players?.find((player) => player.controlled)
+  const me = view?.players?.find((player) => player?.controlled)
   return {
     connected: state.client?.isOpen ?? false,
     loggedIn: state.loggedIn,

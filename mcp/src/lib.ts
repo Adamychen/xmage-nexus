@@ -1,11 +1,56 @@
-import { spawn } from 'node:child_process'
+import { spawn, type ChildProcess } from 'node:child_process'
 import fs from 'node:fs'
 import path from 'node:path'
+import { StringDecoder } from 'node:string_decoder'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 
 export const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..')
 
-const MAX_CAPTURE = 1_000_000
+const HEAD_CAPTURE = 200_000
+const TAIL_CAPTURE = 800_000
+const STDIO_GRACE_MS = 2_000
+
+class OutputCapture {
+  private readonly decoder = new StringDecoder('utf8')
+  private head = ''
+  private tail = ''
+  private total = 0
+
+  push(chunk: Buffer): void {
+    this.add(this.decoder.write(chunk))
+  }
+
+  text(): string {
+    this.add(this.decoder.end())
+    const tail = this.tail.slice(-TAIL_CAPTURE)
+    const dropped = this.total - this.head.length - tail.length
+    return dropped > 0 ? `${this.head}\n…[truncated ${dropped} chars]…\n${tail}` : this.head + tail
+  }
+
+  private add(text: string): void {
+    this.total += text.length
+    const room = HEAD_CAPTURE - this.head.length
+    if (room > 0) this.head += text.slice(0, room)
+    const rest = room > 0 ? text.slice(room) : text
+    if (!rest) return
+    this.tail += rest
+    if (this.tail.length > 2 * TAIL_CAPTURE) this.tail = this.tail.slice(-TAIL_CAPTURE)
+  }
+}
+
+function killTree(child: ChildProcess): void {
+  if (!child.pid) return
+  if (process.platform === 'win32') {
+    const killer = spawn('taskkill', ['/pid', String(child.pid), '/T', '/F'], { stdio: 'ignore', windowsHide: true })
+    killer.once('error', () => child.kill('SIGKILL'))
+    return
+  }
+  try {
+    process.kill(-child.pid, 'SIGKILL')
+  } catch {
+    child.kill('SIGKILL')
+  }
+}
 
 export interface RunResult {
   code: number
@@ -29,30 +74,34 @@ export function runCommand(command: string, args: string[] = [], options: RunOpt
       cwd,
       env: env ? { ...process.env, ...env } : process.env,
       stdio: ['ignore', 'pipe', 'pipe'],
+      detached: process.platform !== 'win32',
+      windowsHide: true,
     })
-    let stdout = ''
-    let stderr = ''
+    const stdout = new OutputCapture()
+    const stderr = new OutputCapture()
     let timedOut = false
-    const append = (current: string, chunk: Buffer) =>
-      current.length >= MAX_CAPTURE ? current : current + chunk.toString('utf8')
-    child.stdout.on('data', (chunk: Buffer) => {
-      stdout = append(stdout, chunk)
-    })
-    child.stderr.on('data', (chunk: Buffer) => {
-      stderr = append(stderr, chunk)
-    })
+    let settled = false
+    let graceTimer: NodeJS.Timeout | null = null
+    const finish = (code: number, extraStderr = '') => {
+      if (settled) return
+      settled = true
+      clearTimeout(timer)
+      if (graceTimer) clearTimeout(graceTimer)
+      child.stdout.destroy()
+      child.stderr.destroy()
+      resolve({ code, timedOut, seconds: elapsed(started), stdout: stdout.text(), stderr: stderr.text() + extraStderr })
+    }
+    child.stdout.on('data', (chunk: Buffer) => stdout.push(chunk))
+    child.stderr.on('data', (chunk: Buffer) => stderr.push(chunk))
     const timer = setTimeout(() => {
       timedOut = true
-      child.kill('SIGKILL')
+      killTree(child)
     }, timeoutMs)
-    child.once('error', (error) => {
-      clearTimeout(timer)
-      resolve({ code: 127, timedOut, seconds: elapsed(started), stdout, stderr: `${stderr}\n${error.message}` })
+    child.once('error', (error) => finish(127, `\n${error.message}`))
+    child.once('exit', (code) => {
+      graceTimer = setTimeout(() => finish(code ?? 1), STDIO_GRACE_MS)
     })
-    child.once('close', (code) => {
-      clearTimeout(timer)
-      resolve({ code: code ?? 1, timedOut, seconds: elapsed(started), stdout, stderr })
-    })
+    child.once('close', (code) => finish(code ?? 1))
   })
 }
 

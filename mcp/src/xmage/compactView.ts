@@ -138,7 +138,7 @@ function combatActors(game: GameView, key: 'attackers' | 'blockers'): string[] {
 }
 
 export function compactGameView(game: GameView): CompactGame {
-  const players = game.players ?? []
+  const players = (game.players ?? []).filter((player) => player != null)
   const me = players.find((player) => player.controlled === true) ?? null
   const playable = new Set(Object.keys(game.canPlayObjects?.objects ?? {}))
   if (me?.isActive === true && me.hasPriority === true && game.phase === 'PRECOMBAT_MAIN') {

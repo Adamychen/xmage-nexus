@@ -76,8 +76,21 @@ async function converge(action: 'start' | 'stop' | 'restart', waitMs: number, be
 }
 
 const MAX_TAIL_BYTES = 1_500_000
+const MAX_GREP_PATTERN = 200
+const MAX_SCANNED_LINE = 2_000
+const NESTED_QUANTIFIER = /\([^()]*[*+]\)[*+{]/
 
-function readTailLines(file: string, maxLines: number, grep: string | undefined, ignoreCase: boolean): string {
+export function compileLogGrep(grep: string, ignoreCase: boolean): RegExp {
+  if (grep.length > MAX_GREP_PATTERN) throw new Error(`grep pattern too long (max ${MAX_GREP_PATTERN} chars)`)
+  if (NESTED_QUANTIFIER.test(grep)) throw new Error('grep pattern rejected: nested quantifiers like (x+)+ can hang the server')
+  try {
+    return new RegExp(grep, ignoreCase ? 'i' : '')
+  } catch (error) {
+    throw new Error(`invalid regex: ${(error as Error).message}`)
+  }
+}
+
+export function readTailLines(file: string, maxLines: number, grep: string | undefined, ignoreCase: boolean): string {
   try {
     const stat = fs.statSync(file)
     const start = Math.max(0, stat.size - MAX_TAIL_BYTES)
@@ -91,8 +104,8 @@ function readTailLines(file: string, maxLines: number, grep: string | undefined,
     }
     let lines = buffer.toString('utf8').split(/\r?\n/)
     if (grep) {
-      const regex = new RegExp(grep, ignoreCase ? 'i' : '')
-      lines = lines.filter((line) => regex.test(line))
+      const regex = compileLogGrep(grep, ignoreCase)
+      lines = lines.filter((line) => regex.test(line.slice(0, MAX_SCANNED_LINE)))
     }
     if (!lines.length) return grep ? '(sin coincidencias)' : '(sin contenido)'
     return lines.slice(-maxLines).join('\n')
@@ -164,6 +177,7 @@ export function registerStackTools(server: McpServer): void {
       annotations: { readOnlyHint: true },
     },
     async ({ target, lines, grep, ignoreCase }) => {
+      if (grep) compileLogGrep(grep, ignoreCase)
       const lib = await scriptLib()
       const blocks: string[] = []
       for (const component of componentsFor(target)) {

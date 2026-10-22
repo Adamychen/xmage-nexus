@@ -74,6 +74,10 @@ function stringValue(value: unknown): string | undefined {
   return typeof value === 'string' ? value : value == null ? undefined : String(value)
 }
 
+function labelText(value: unknown): string | undefined {
+  return typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean' ? String(value) : undefined
+}
+
 function numberValue(value: unknown, fallback: number): number {
   const number = typeof value === 'number' ? value : Number(value)
   return Number.isFinite(number) ? number : fallback
@@ -98,7 +102,7 @@ function optionEntries(value: unknown): PromptOption[] {
     return value.map((item, index) => {
       const record = asRecord(item)
       const id = stringValue(record.id) ?? String(index)
-      const label = stringValue(record.label) ?? stringValue(record.name) ?? stringValue(item) ?? id
+      const label = labelText(record.label) ?? labelText(record.name) ?? labelText(record.text) ?? labelText(item) ?? id
       return { id, label, value: stringValue(record.value) ?? id }
     })
   }
@@ -106,7 +110,7 @@ function optionEntries(value: unknown): PromptOption[] {
     .filter(([id]) => !METADATA_OPTION_KEYS.has(id))
     .map(([id, item]) => {
       const record = asRecord(item)
-      const label = stringValue(record.label) ?? stringValue(record.name) ?? stringValue(item) ?? id
+      const label = labelText(record.label) ?? labelText(record.name) ?? labelText(record.text) ?? labelText(item) ?? id
       return { id, label, value: stringValue(record.value) ?? id }
     })
 }
@@ -218,10 +222,10 @@ function controlledPlayerId(gameView: unknown): string | undefined {
 }
 
 function booleanValueOf(label: string, index: number): string {
-  if (/mulligan/i.test(label)) return 'true'
-  if (/keep/i.test(label)) return 'false'
-  if (/no|cancel/i.test(label)) return 'false'
-  if (/yes|confirm|ok/i.test(label)) return 'true'
+  if (/\bmulligan\b/i.test(label)) return 'true'
+  if (/\bkeep\b/i.test(label)) return 'false'
+  if (/\b(no|cancel)\b/i.test(label)) return 'false'
+  if (/\b(yes|confirm|ok|done)\b/i.test(label)) return 'true'
   return index === 0 ? 'true' : 'false'
 }
 
@@ -323,7 +327,10 @@ export function normalizePrompt(method: string, raw: unknown, gameId: string | n
       } else {
         const entries = optionEntries(optionsRecord)
         options = entries.length
-          ? entries.map((option, index) => ({ ...option, value: booleanValueOf(option.label, index) || option.value }))
+          ? entries.map((option, index) => ({
+              ...option,
+              value: stringValue(asRecord(optionsRecord[option.id]).value) ?? booleanValueOf(option.label, index),
+            }))
           : isMulliganAsk(message)
             ? [
                 { id: 'keep', label: 'keep', value: 'false' },

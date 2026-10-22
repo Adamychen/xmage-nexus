@@ -3,9 +3,16 @@ import path from 'node:path'
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { repoRoot } from './lib.ts'
 
+const MAX_RESOURCE_CHARS = 200_000
+
+export function capResourceText(text: string): string {
+  if (text.length <= MAX_RESOURCE_CHARS) return text
+  return `${text.slice(0, MAX_RESOURCE_CHARS)}\n…[truncated ${text.length - MAX_RESOURCE_CHARS} chars]…`
+}
+
 function readFileOr(file: string, fallback: string): string {
   try {
-    return fs.readFileSync(file, 'utf8')
+    return capResourceText(fs.readFileSync(file, 'utf8'))
   } catch {
     return fallback
   }
