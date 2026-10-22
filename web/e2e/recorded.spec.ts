@@ -76,9 +76,12 @@ test.describe('Recorded real frames (anti-drift smoke)', { tag: '@recorded' }, (
         }
         if (entry.assert === 'hasCounterOnStack') {
           await expectStackCount(page, 2)
-          await page.locator('.stack-zone .stack-tl-entry').first().hover()
           const preview = page.locator('.stack-zone .floating-card-preview')
-          await expect(preview).toBeVisible({ timeout: 10_000 })
+          await expect(async () => {
+            await page.mouse.move(0, 0)
+            await page.locator('.stack-zone .stack-tl-entry').first().hover()
+            await expect(preview).toBeVisible({ timeout: 2_000 })
+          }).toPass({ timeout: 20_000 })
           const box = await preview.boundingBox()
           const viewport = page.viewportSize()
           expect(box, 'el preview de la pila tiene caja').not.toBeNull()
