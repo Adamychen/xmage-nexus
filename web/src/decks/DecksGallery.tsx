@@ -389,8 +389,7 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
         key={viewingDeck.id}
         deck={viewingDeck}
         onClose={() => {
-          setViewingId(null)
-          void load()
+          void load().finally(() => setViewingId(null))
         }}
         onEdit={() => {
           setViewingId(null)

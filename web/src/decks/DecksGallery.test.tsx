@@ -4,7 +4,7 @@ import DecksGallery, { mergeEnrichedColors, pruneSelectedId } from './DecksGalle
 import { cloneDeckForEdit } from './cloneDeck'
 import type { DeckV2 } from './types'
 
-const storeState = vi.hoisted(() => ({ decks: [] as DeckV2[] }))
+const storeState = vi.hoisted(() => ({ decks: [] as DeckV2[], listGate: null as Promise<void> | null }))
 const confirmState = vi.hoisted(() => ({ calls: [] as string[], resolve: true }))
 
 vi.mock('./storage', async (importOriginal) => {
@@ -12,7 +12,10 @@ vi.mock('./storage', async (importOriginal) => {
   return {
     ...actual,
     getDeckStorage: () => ({
-      list: async () => [...storeState.decks],
+      list: async () => {
+        if (storeState.listGate) await storeState.listGate
+        return [...storeState.decks]
+      },
       get: async (id: string) => storeState.decks.find((d) => d.id === id) ?? null,
       put: async (d: DeckV2) => {
         const i = storeState.decks.findIndex((x) => x.id === d.id)
@@ -50,6 +53,7 @@ const customDeck = (over: Partial<DeckV2> = {}): DeckV2 => ({
 
 beforeEach(() => {
   storeState.decks = []
+  storeState.listGate = null
   confirmState.calls = []
   confirmState.resolve = true
   vi.stubGlobal('fetch', vi.fn(async () => ({ ok: false }) as never))
@@ -264,5 +268,29 @@ describe('DecksGallery empty state (gallery polish)', () => {
     fireEvent.click(comfort)
     await waitFor(() => expect(document.querySelector('.decks-grid')?.classList.contains('decks-grid--compact')).toBe(false))
     if (safeGet() !== null) expect(safeGet()).toBe('comfortable')
+  })
+
+  it('reopening a deck right after Done in the stacks editor shows the saved edit, not the stale list', async () => {
+    storeState.decks = [customDeck()]
+    render(<DecksGallery onEdit={() => {}} />)
+    await screen.findAllByText('Mi Burn')
+    fireEvent.click(document.querySelector('.decks-stacks-btn') as HTMLElement)
+    const bolt = await waitFor(() => {
+      const el = document.querySelector('.stacks-editor-main .arena-stack-card')
+      if (!el) throw new Error('stacks editor not open')
+      return el as HTMLElement
+    })
+    fireEvent.click(bolt)
+    let release!: () => void
+    storeState.listGate = new Promise<void>((resolve) => { release = resolve })
+    fireEvent.click(screen.getByTestId('stacks-editor-done'))
+    setTimeout(() => release(), 50)
+    const reopen = await waitFor(() => {
+      const el = document.querySelector('.decks-stacks-btn')
+      if (!el) throw new Error('gallery not back')
+      return el as HTMLElement
+    })
+    fireEvent.click(reopen)
+    await waitFor(() => expect(document.querySelector('.stacks-editor-main .arena-stack-qty')?.textContent).toBe('3x'))
   })
 })
