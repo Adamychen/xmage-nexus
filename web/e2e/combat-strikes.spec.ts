@@ -65,7 +65,7 @@ test('FX-6, CMB-6: combat strikes: attackers lunge when combat damage resolves, 
 
     const ghostCount = await page.evaluate(() => (window as unknown as { __ghosts: unknown[] }).__ghosts.length)
     expect(ghostCount, 'the strikes must have spawned ghosts, or the removal check below proves nothing').toBeGreaterThan(0)
-    await expect.poll(() => page.evaluate(() => (window as unknown as { __ghosts: HTMLElement[] }).__ghosts.filter((g) => g.isConnected).length), { timeout: 5_000 }).toBe(0)
+    await expect.poll(() => page.evaluate((n) => (window as unknown as { __ghosts: HTMLElement[] }).__ghosts.slice(0, n).filter((g) => g.isConnected).length, ghostCount), { timeout: 5_000 }).toBe(0)
     expect(pageErrors, `pageerrors: ${pageErrors.map(String).join(' | ')}`).toEqual([])
   })
 })

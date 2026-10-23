@@ -24,6 +24,7 @@ const STRIKE_MS = 560
 const STRIKE_GAP_MS = 240
 const IMPACT_AT = 0.5
 const MAX_STRIKES = 10
+const HOLD_SAFETY_MS = 3000
 
 type StrikeKind = 'first' | 'double' | null
 
@@ -152,6 +153,26 @@ function slotElement(id: string): HTMLElement | null {
 
 const holds = new Map<string, number>()
 const impacts = new Map<string, number>()
+const impactListeners = new Set<() => void>()
+
+export function subscribeCombatImpacts(listener: () => void): () => void {
+  impactListeners.add(listener)
+  return () => { impactListeners.delete(listener) }
+}
+
+export function combatImpactUntil(id: string | null | undefined): number {
+  return (id && impacts.get(id)) || 0
+}
+
+function impactsChanged(): void {
+  impactListeners.forEach((listener) => listener())
+}
+
+function landImpacts(ids: string[]): void {
+  let changed = false
+  for (const id of ids) if (impacts.delete(id)) changed = true
+  if (changed) impactsChanged()
+}
 
 function remaining(timers: Map<string, number>, id: string | null | undefined): number {
   if (!id) return 0
@@ -289,8 +310,8 @@ function impactSchedule(plans: StrikePlan[], duration: number): Map<string, numb
 }
 
 function holdUntilImpact(impactAt: Map<string, number>): void {
-  const now = Date.now()
-  impactAt.forEach((ms, id) => impacts.set(id, now + ms))
+  const until = Date.now() + HOLD_SAFETY_MS
+  impactAt.forEach((ms, id) => impacts.set(id, until + ms))
 }
 
 export function primeCombatHolds(prevGame: GameView | null | undefined, nextGame: GameView | null | undefined): void {
@@ -306,7 +327,9 @@ export function primeCombatHolds(prevGame: GameView | null | undefined, nextGame
 export function clearCombatSnapshots(): void {
   snapshots.clear()
   holds.clear()
+  const hadImpacts = impacts.size > 0
   impacts.clear()
+  if (hadImpacts) impactsChanged()
 }
 
 export function strikeVector(from: DOMRect, to: DOMRect): { dx: number; dy: number } {
@@ -357,18 +380,25 @@ function runStrike(
     { duration, fill: 'forwards' },
   )
 
-  const impact = setTimeout(() => {
+  let landed = false
+  const land = () => {
+    if (landed) return
+    landed = true
+    clearTimeout(impact)
     impactFeedback(strikeTargetElement(plan.targetId) ?? targetEl)
-  }, Math.round(duration * IMPACT_AT))
+    landImpacts([plan.targetId, plan.attackerId])
+  }
+  const impact = setTimeout(land, Math.round(duration * IMPACT_AT))
 
   let done = false
   const finish = () => {
     if (done) return
     done = true
-    clearTimeout(impact)
-    if (!live) return
-    ghost.remove()
-    if (live.isConnected) live.style.visibility = prevVisibility
+    if (live) {
+      ghost.remove()
+      if (live.isConnected) live.style.visibility = prevVisibility
+    }
+    land()
   }
   anim.finished.then(finish, finish)
   setTimeout(finish, duration + 400)
@@ -406,12 +436,14 @@ export function playDamageStrikes(plans: StrikePlan[], combatants: string[]): St
         const el = strikeTargetElement(plan.targetId) ?? standIns.get(plan.targetId)
         if (el) impactFeedback(el)
         else soundManager.play('combat_hit', 'game')
+        landImpacts([plan.targetId, plan.attackerId])
       }
     }, i * gap)
   })
   schedule.holdMs = sequenceMs(strikes.length, duration)
   holdCombatants(combatants, schedule.holdMs)
   holdUntilImpact(schedule.impactAt)
+  impactsChanged()
   setTimeout(() => standIns.forEach((ghost) => ghost.remove()), schedule.holdMs + 30)
   return schedule
 }

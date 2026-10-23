@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react'
-import { combatImpactRemaining } from './combatStrikes'
+import { useEffect, useState, useSyncExternalStore } from 'react'
+import { combatImpactUntil, subscribeCombatImpacts } from './combatStrikes'
 
 export function useCombatHeld<T>(id: string | null | undefined, value: T): T {
   const [released, setReleased] = useState(value)
-  const wait = Object.is(released, value) ? 0 : combatImpactRemaining(id)
+  const until = useSyncExternalStore(subscribeCombatImpacts, () => combatImpactUntil(id))
+  const wait = Object.is(released, value) ? 0 : Math.max(0, until - Date.now())
   const holding = wait > 0
 
   useEffect(() => {
@@ -13,7 +14,7 @@ export function useCombatHeld<T>(id: string | null | undefined, value: T): T {
     }
     const timer = setTimeout(() => setReleased(value), wait)
     return () => clearTimeout(timer)
-  }, [value, holding])
+  }, [value, holding, until])
 
   return holding ? released : value
 }
