@@ -62,13 +62,17 @@ a re-render with the same state starts nothing.
 ### FX-6 · A hit shows when it lands
 Combat strikes start when combat damage is dealt, never while attackers or blockers are being
 declared. A creature's damage and a player's life keep their previous value on screen until the
-strike or the spell projectile aimed at them lands, then change with the hit. When several
-attackers hit the same player, the whole loss shows on the first hit. With effects off nothing is
-held, and a frozen (rewound) view shows the real game.
+strike or the spell projectile aimed at them lands, then change with the hit, however late the
+strike runs; a strike that never lands lets go after a 3 s safety net. A strike whose animation
+ends before its impact still shows the hit. When several attackers hit the same player, the whole
+loss shows on the first hit. With effects off nothing is held, and a frozen (rewound) view shows
+the real game.
 
 - Why: `94c95017d1` (the life counter dropped before the attacker even moved) and `5dd25ca220` (the
   same for spell hits). The real server usually sends no frame for the damage steps, so damage is
-  detected by the transition crossing them (`docs/lessons.md`, Web client).
+  detected by the transition crossing them (`docs/lessons.md`, Web client). Release on the landing,
+  not on a clock: under CI load the strike's timers ran ~1 s late and the life still dropped on the
+  planned 280 ms (`combat-strikes.spec.ts` red as `life,hit,hit` on five branches).
 - Guard: `src/board/useCombatHeld.test.ts` · `src/board/damageHold.test.ts` · `src/board/combatStrikes.test.ts` · `src/board/projectileFx.test.ts` · `src/board/gameTransitionEngine.resolve.test.ts` · `e2e/combat-strikes.spec.ts`
 
 ### FX-7 · Spells leave the stack one at a time

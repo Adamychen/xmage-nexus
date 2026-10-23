@@ -18,6 +18,8 @@ import { clearFlights } from './flightManager'
 import { clearCardPositionRegistry, recordCardPosition } from './cardPositionRegistry'
 import { makeGameView, makePermanent, makePlayer } from '../__fixtures__/gameViews'
 import type { GameView } from '../net/types'
+import { act, renderHook } from '@testing-library/react'
+import { useCombatHeld } from './useCombatHeld'
 
 const rect = (left: number, top: number, width = 80, height = 112): DOMRect =>
   ({ left, top, width, height, right: left + width, bottom: top + height, x: left, y: top, toJSON: () => {} } as DOMRect)
@@ -210,20 +212,66 @@ describe('strike sequence', () => {
     expect((document.querySelector('[data-card-id="a1"]') as HTMLElement).style.visibility).toBe('')
   })
 
-  it('FX-6: holds each combatant until its own strike lands, before the board re-renders', () => {
+  it('FX-6: holds each combatant before the board re-renders, with a safety net past its own planned impact', () => {
     const groups = [
       { attackers: ['a1'], blockers: [], defenderId: 'p-opp' },
       { attackers: ['a2'], blockers: ['b1'], defenderId: 'p-opp' },
     ]
     primeCombatHolds(view('DECLARE_BLOCKERS', groups), view('COMBAT_DAMAGE', groups))
-    expect(combatImpactRemaining('p-opp')).toBe(280)
-    expect(combatImpactRemaining('b1')).toBe(520)
-    expect(combatImpactRemaining('a2')).toBe(520)
-    vi.advanceTimersByTime(300)
+    expect(combatImpactRemaining('p-opp')).toBe(3280)
+    expect(combatImpactRemaining('b1')).toBe(3520)
+    expect(combatImpactRemaining('a2')).toBe(3520)
+    vi.advanceTimersByTime(3300)
     expect(combatImpactRemaining('p-opp')).toBe(0)
     expect(combatImpactRemaining('b1')).toBe(220)
     clearCombatSnapshots()
     expect(combatImpactRemaining('b1')).toBe(0)
+  })
+
+  it('FX-6: releases each combatant when its own strike lands, not on a clock', () => {
+    const groups = [
+      { attackers: ['a1'], blockers: [], defenderId: 'p-opp' },
+      { attackers: ['a2'], blockers: ['b1'], defenderId: 'p-opp' },
+    ]
+    primeCombatHolds(view('DECLARE_BLOCKERS', groups), view('COMBAT_DAMAGE', groups))
+    playDamageStrikes(planDamageStrikes(view('DECLARE_BLOCKERS', groups), view('COMBAT_DAMAGE', groups)), ['a1', 'a2', 'b1'])
+    vi.advanceTimersByTime(279)
+    expect(combatImpactRemaining('p-opp')).toBeGreaterThan(0)
+    vi.advanceTimersByTime(2)
+    expect(combatImpactRemaining('p-opp')).toBe(0)
+    expect(combatImpactRemaining('b1')).toBeGreaterThan(0)
+    vi.advanceTimersByTime(240)
+    expect(combatImpactRemaining('b1')).toBe(0)
+    expect(combatImpactRemaining('a2')).toBe(0)
+  })
+
+  it('FX-6: life holds until the strike lands even when the strikes start long after the board re-rendered', () => {
+    const groups = [{ attackers: ['a1'], blockers: [], defenderId: 'p-opp' }]
+    const { result, rerender } = renderHook(({ life }) => useCombatHeld('p-opp', life), { initialProps: { life: 20 } })
+    primeCombatHolds(view('DECLARE_BLOCKERS', groups), view('COMBAT_DAMAGE', groups))
+    rerender({ life: 17 })
+    act(() => { vi.advanceTimersByTime(250) })
+    act(() => { playDamageStrikes([{ attackerId: 'a1', targetId: 'p-opp' }], ['a1']) })
+    act(() => { vi.advanceTimersByTime(100) })
+    expect(result.current).toBe(20)
+    act(() => { vi.advanceTimersByTime(179) })
+    expect(hits()).toBe(0)
+    expect(result.current).toBe(20)
+    act(() => { vi.advanceTimersByTime(2) })
+    expect(hits()).toBe(1)
+    expect(result.current).toBe(17)
+  })
+
+  it('FX-6: a strike whose animation ends before its impact timer still lands the hit once', async () => {
+    animate.mockImplementation(() => ({ finished: Promise.resolve() } as unknown as Animation))
+    playDamageStrikes([{ attackerId: 'a1', targetId: 'p-opp' }], ['a1'])
+    expect(combatImpactRemaining('p-opp')).toBeGreaterThan(0)
+    await vi.advanceTimersByTimeAsync(0)
+    expect(hits()).toBe(1)
+    expect(combatImpactRemaining('p-opp')).toBe(0)
+    expect(document.querySelectorAll('.combat-strike-ghost')).toHaveLength(0)
+    await vi.advanceTimersByTimeAsync(2000)
+    expect(hits()).toBe(1)
   })
 
   it('FX-6: declaring attackers alone does not animate or sound a hit', () => {
