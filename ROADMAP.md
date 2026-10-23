@@ -193,11 +193,21 @@ Design: `docs/plans/2026-10-22-behavior-specs-design.md`. Phase 1 shipped 2026-1
 
 ### 4.4 Test-infrastructure risk
 
-- The nightly real-mode job covers 11 of 312 specs plus the `verify` layer; the `REAL_E2E_SPECS`
-  set grows as more protocol-sensitive specs are tagged `@real` (TST-5).
+Shipped 2026-10-23 (branch `feat/test-robustez-tst`, PR #28): the **TST guard package**
+(`docs/specs/testing.md`, rules held by rule-id-named tests, `specCoverage` also scans `scripts/*.mjs`):
+
+- **TST-1/2** — game-state integrity invariants (no object id in two zones; zone counts match) run over every recorded frame in unit, no Java.
+- **TST-3** — fuzz anomaly triage: a new livelock signature fails the fuzz run until it joins `scripts/fuzz-known-signatures.json` with a reason. The allowlist carries the confirmed 2026-10-19..23 triage (7× state-loop + 1× prompt-storm: server-side prompt loops; SimPlayer hardened with a repeatable-cost decline and a 20-identical-ask fail-safe; a directed `record.mjs` driver proved a human `false` decline closes the dialog).
+- **TST-4** — the nightly integration/re-record/validate steps no longer run with `continue-on-error` (`workflows.test.mjs` forbids it).
+- **TST-5** — `REAL_E2E_SPECS` is a drift-checked bijection with `@real` tags; the real-mode set grew 5 → 11 protocol-sensitive specs.
+- **TST-6** — every guard has a verified fail mode (coverage gate, engine-view baseline versioning with `gapHash`/`sourceCommit`, invariants).
+- Coverage **no-regression gate** (fails when a metric drops >1.0 pt vs `web/coverage-previous.json`) wired into `test.mjs`, `dashboard-ci.mjs` and push CI (`web-ci.yml`); baseline committed.
+
+Still open:
+
 - `verify` scripts are order-sensitive (`verify-player-leave` is the most sensitive and runs second); isolating each with a fresh proxy would remove that class of flake.
-- Replay files exist (§4.2); loading one in the GitHub Pages demo is still open.
 - Mobile layout: the full board stays desktop-only on purpose. Since 2026-10-15 a phone-width window (≤ 600 px) has a compact spectator view (`game/MobileSpectator.tsx`: scoreboard, turn/phase, stack, feed and chat, "Full board" button), the lobby and chat already fit, and dialogs no longer overflow (`ui/DialogShell.css` caps the panel at the window minus the backdrop padding; the create-table wizard hides inactive step labels and stacks its type cards). Guard: `e2e/mobile.spec.ts` at 390 px (verified red with the dialog fix removed). The draft header fits since the same day (same guard, verified red without its CSS). Still open: playing a seat on a phone and the deck builder editor at 390 px.
+- Replay files exist (§4.2); loading one in the GitHub Pages demo is still open.
 
 ### 4.5 Out of scope on purpose
 
