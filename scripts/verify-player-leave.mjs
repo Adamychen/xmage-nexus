@@ -19,7 +19,12 @@
 // El servidor local tiene un flake conocido de callbacks (`SESSION CALLBACK
 // EXCEPTION - ... not being connected to server`) que congela la partida; el
 // script detecta la congelación (sin vistas >20 s) y reintenta el flujo hasta
-// 3 veces, quedándose con el resultado del último intento.
+// 3 times, keeping the result of the last attempt. The first retry waits a warm settle
+// (WARM_RETRY_WAIT_MS): right after the flake the server is still tearing down the frozen
+// game's callback socket, and a longer pause lets the callback channel re-establish before the
+// next game starts. Each attempt closes the game/table and disconnect+close of both sessions in
+// its `finally`, so no error path (including throws and early returns) leaves an orphaned session
+// in grace.
 //
 // Uso: node scripts/verify-player-leave.mjs
 // Requiere: servidor local (testMode) + proxy (node scripts/ctl.mjs status).
@@ -36,6 +41,11 @@ const SERVER_PORT = 17171
 // and the game resumed at 28 s, plain quiet, not a stall.
 const FROZEN_AFTER_MS = 35000
 const STAMP = Date.now() % 100000
+// Delay between retries. The first retry uses the warm settle: after the known cold-start
+// SESSION CALLBACK EXCEPTION flake the server is still tearing down the frozen game's callback
+// socket, so a longer pause lets the callback channel re-establish before the next game starts.
+const RETRY_WAIT_MS = 3000
+const WARM_RETRY_WAIT_MS = 15000
 
 // Mazos todo-Montaña: los SIM llevan el deck de tierras del rec-lib; los
 // humanos solo pasan prioridad (no castean), así que el juego avanza solo.
@@ -169,15 +179,19 @@ async function attempt() {
 
     // Los waiters se registran ANTES de startMatch: START_GAME es un evento
     // puntual y puede llegar a B mientras A aún hace joinGame (sin replay).
-    const startAP = A.wait((m) => m.method === 'START_GAME', 30000, 'START_GAME (A)')
-    const startBP = B.wait((m) => m.method === 'START_GAME', 30000, 'START_GAME (B)')
+    const startAP = A.wait((m) => m.method === 'START_GAME', 30000, 'START_GAME (A)').catch(() => null)
+    const startBP = B.wait((m) => m.method === 'START_GAME', 30000, 'START_GAME (B)').catch(() => null)
     res = await A.call('startMatch', { tableId })
     if (!check('startMatch', !!res.ok, res.error ?? '')) return
 
     // Ambos deben unirse a la partida (joinGame), como el cliente web/MCP.
     const startA = await startAP
-    await A.call('joinGame', { gameId: String(startA.objectId) })
     const startB = await startBP
+    if (!startA || !startB) {
+      check('START_GAME + joinGame en ambos', false, 'timeout esperando START_GAME')
+      return
+    }
+    await A.call('joinGame', { gameId: String(startA.objectId) })
     await B.call('joinGame', { gameId: String(startB.objectId) })
     check('START_GAME + joinGame en ambos', !!A.gameId && !!B.gameId, `gameId=${String(A.gameId).slice(0, 8)}…`)
 
@@ -285,7 +299,10 @@ for (let n = 1; n <= 3; n++) {
   attemptNo = n
   if (n > 1) {
     console.log(`[player-leave] reintento ${n}/3 (el intento anterior no cerró)…`)
-    await sleep(3000)
+    // First retry waits the warm settle: after a frozen game the server is still releasing the
+    // broken callback socket, so a longer pause avoids a second immediate failure on the same
+    // cold-start flake. Later retries keep the short wait.
+    await sleep(n === 2 ? WARM_RETRY_WAIT_MS : RETRY_WAIT_MS)
   }
   try {
     await attempt()

@@ -6,6 +6,8 @@
 // Uso: node scripts/verify-wizard-matrix.mjs
 
 const WS_URL = 'ws://127.0.0.1:8787'
+const WS_CONNECT_ATTEMPTS = 3
+const WS_CONNECT_BACKOFF_MS = 500
 const SERVER_HOST = process.env.E2E_SERVER_HOST || 'localhost'
 const SERVER_PORT = Number(process.env.E2E_SERVER_PORT || '17171')
 const USER = `wm${Date.now() % 10000}`
@@ -16,7 +18,40 @@ const MOUNTAIN_DECK = {
   sideboard: [],
 }
 
-const ws = new WebSocket(WS_URL)
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
+
+// The stack restart runs this script right after the new proxy binds its WS port; if the old
+// process is still dying or the new JVM is still warming up, the first connect can be refused.
+// Retry only connection-level failures (bounded), never game logic.
+async function connectWsWithRetry() {
+  let lastError = null
+  for (let attempt = 1; attempt <= WS_CONNECT_ATTEMPTS; attempt++) {
+    const sock = new WebSocket(WS_URL)
+    try {
+      await new Promise((resolve, reject) => {
+        const fail = (err) => {
+          sock.removeEventListener('open', resolve)
+          sock.removeEventListener('error', fail)
+          sock.removeEventListener('close', fail)
+          try {
+            sock.close()
+          } catch {}
+          reject(err)
+        }
+        sock.addEventListener('open', resolve)
+        sock.addEventListener('error', () => fail(new Error('connection refused')))
+        sock.addEventListener('close', () => fail(new Error('connection closed before open')))
+      })
+      return sock
+    } catch (e) {
+      lastError = e
+      if (attempt < WS_CONNECT_ATTEMPTS) await sleep(WS_CONNECT_BACKOFF_MS)
+    }
+  }
+  throw new Error(`could not connect to proxy ${WS_URL} after ${WS_CONNECT_ATTEMPTS} attempts (${lastError?.message ?? 'unknown error'})`)
+}
+
+const ws = await connectWsWithRetry()
 const pending = new Map()
 ws.onmessage = (msg) => {
   let m
@@ -54,10 +89,6 @@ const check = (label, cond, extra = '') => {
 }
 const errOf = (r) => JSON.stringify(r).slice(0, 220)
 
-await new Promise((res, rej) => {
-  ws.onopen = res
-  ws.onerror = () => rej(new Error('no proxy'))
-})
 check(
   'connect',
   (await send('connect', { host: SERVER_HOST, port: SERVER_PORT, username: USER, password: 'x' })).ok,
