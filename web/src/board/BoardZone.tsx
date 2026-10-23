@@ -1,4 +1,4 @@
-import { useCallback, useLayoutEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import type { CardView, CardsView, PermanentView, PlayerView } from '../net/types'
 import CardSlot from './CardSlot'
@@ -29,6 +29,8 @@ import { cardAspectFor } from './compactCard'
 import { EMPTY_TARGET_ZONES, type TargetZoneKind } from './targetZones'
 import { isPlayerDefeated, isPlayerOut } from './boardShared'
 import { useBattlefieldPulse } from './seatFocus'
+import { useMeasuredWidth } from './useMeasuredWidth'
+import { pileCornerReaches } from './pileCorner'
 import { useSeatColor } from './seatColor'
 import './BoardZone.css'
 import './PortraitBoard.css'
@@ -62,6 +64,9 @@ export interface BoardZoneProps {
   kindColumns?: boolean
   statusOnly?: boolean
   seatFocus?: SeatFocusControl
+  /** BRD-12: the piles are cards in a corner of the board instead of chips on the status row. */
+  pileCards?: boolean
+  stackHand?: boolean
 }
 
 export interface SeatFocusControl {
@@ -70,6 +75,30 @@ export interface SeatFocusControl {
   showAll: () => void
   /** Ancho de carta del propio tablero: la carta del foco nunca lo supera. */
   maxCardW?: number
+}
+
+/** BRD-12: whether the pile corner reaches into the lands/others row, which then keeps room for it. */
+function usePileCornerReach(corner: HTMLElement | null): boolean {
+  const [reach, setReach] = useState(false)
+  useEffect(() => {
+    const zone = corner?.parentElement
+    const row = zone?.querySelector<HTMLElement>(':scope > .bz-permanents-row')
+    if (!corner || !zone || !row || typeof ResizeObserver === 'undefined') {
+      setReach(false)
+      return
+    }
+    const shell = zone.closest<HTMLElement>('.board-shell')
+    const hand = shell?.querySelector<HTMLElement>('[data-testid="hand-bar"]')
+    const measure = () => {
+      const next = pileCornerReaches(corner.getBoundingClientRect(), row.getBoundingClientRect())
+      setReach((prev) => (prev === next ? prev : next))
+    }
+    const ro = new ResizeObserver(measure)
+    for (const el of [zone, corner, row, shell, hand]) if (el) ro.observe(el)
+    measure()
+    return () => ro.disconnect()
+  }, [corner])
+  return reach
 }
 
 export default function BoardZone({
@@ -100,6 +129,8 @@ export default function BoardZone({
   kindColumns = false,
   statusOnly = false,
   seatFocus,
+  pileCards = false,
+  stackHand = false,
 }: BoardZoneProps) {
   const effectivePosition = position ?? (mirrored ? 'bottom' : 'top')
   const effectiveControlled = isControlled ?? (player?.controlled === true)
@@ -175,6 +206,9 @@ export default function BoardZone({
   useTokenPop(bandEls, player)
   useBattlefieldDissolve(bandEls, gameId, player, { players: gamePlayers, gameCycle })
   const pulseTick = useBattlefieldPulse(player, statusOnly)
+  const [pileCornerEl, setPileCornerEl] = useState<HTMLDivElement | null>(null)
+  const pileCornerW = useMeasuredWidth(pileCornerEl)
+  const pileCornerReach = usePileCornerReach(pileCornerEl)
   const { t } = useTranslation()
 
   // Switch Hands (Mindslaver & cía.): el servidor envía la mano controlada en `opponentHands`.
@@ -296,6 +330,11 @@ export default function BoardZone({
     [handEntries],
   )
   const unknownHandCount = handEntries.length - knownHandEntries.length
+  const stackedHand = useMemo((): CardsView => (
+    stackHand && unknownHandCount > 0
+      ? Object.fromEntries(handEntries.filter(([, card]) => card.faceDown === true))
+      : finalHand
+  ), [stackHand, unknownHandCount, handEntries, finalHand])
   const [handViewerOpen, setHandViewerOpen] = useState(false)
   const handViewable = !effectiveControlled && knownHandEntries.length > 0
 
@@ -533,7 +572,7 @@ export default function BoardZone({
   const statusRow = (
     <div
       key="status-row"
-      className={`bz-row bz-status-row ${isTop ? 'oz-top-row' : 'pz-bottom-row'}`}
+      className={`bz-row bz-status-row ${isTop ? 'oz-top-row' : 'pz-bottom-row'}${pileCards ? ' has-pile-corner' : ''}`}
     >
       <PlayerInfoBar
         player={player}
@@ -553,6 +592,7 @@ export default function BoardZone({
             side={statusSide}
             compact
             stats
+            noPiles={pileCards}
             crossZonePlayables={effectiveControlled ? crossZonePlayables : undefined}
             onPlayCrossZone={effectiveControlled ? onPlayCrossZone : undefined}
             onCardHover={onCardHover}
@@ -599,14 +639,15 @@ export default function BoardZone({
       )}
       {!statusOnly && showHand && (!portrait || handTargeted || effectiveControlled) && (
         <HandZone
-          cards={finalHand}
+          cards={stackedHand}
           onCardClick={onHandCardClick ?? onCardClick}
           onHover={onCardHover}
           playableIds={playableIds}
           targetIds={targetIds}
           isTargetZone={handTargeted}
-          compact={isTop || compactPod}
-          stackBacks={compactPod}
+          compact={isTop || compactPod || stackHand}
+          stackBacks={compactPod || stackHand}
+          alwaysStack={stackHand}
           viewable={handViewable}
           viewKnownCount={knownHandEntries.length}
           onViewHand={() => setHandViewerOpen(true)}
@@ -621,6 +662,7 @@ export default function BoardZone({
         side={statusSide}
         compact
         micro={compactPod}
+        noPiles={pileCards}
         crossZonePlayables={effectiveControlled ? crossZonePlayables : undefined}
         onPlayCrossZone={effectiveControlled ? onPlayCrossZone : undefined}
         onCardHover={onCardHover}
@@ -664,10 +706,32 @@ export default function BoardZone({
   const landSlots = landGroups.length + landSolos.length
   const otherSlots = tokenGroups.length + otherSolos.length
 
+  const pileCorner = pileCards ? (
+    <div
+      ref={setPileCornerEl}
+      className="bz-pile-corner"
+      data-testid="pile-corner"
+      style={{ '--pile-card-w': 'calc(var(--card-w) * 0.45)' } as React.CSSProperties}
+    >
+      <ResourceBar
+        player={player}
+        side={statusSide}
+        pileCards
+        crossZonePlayables={effectiveControlled ? crossZonePlayables : undefined}
+        onPlayCrossZone={effectiveControlled ? onPlayCrossZone : undefined}
+        onCardHover={onCardHover}
+        targetIds={targetIds}
+        targetZone={targetZone}
+        targetZones={targetZones}
+        onTargetClick={onCardClick}
+      />
+    </div>
+  ) : null
+
   const permanentsRow = (
     <div
       key="permanents-row"
-      className={`bz-row bz-permanents-row oz-permanents-row pz-permanents-row${permanentsRowTargeted ? ' target-zone' : ''}`}
+      className={`bz-row bz-permanents-row oz-permanents-row pz-permanents-row${permanentsRowTargeted ? ' target-zone' : ''}${pileCornerReach ? ' pile-corner-reach' : ''}`}
     >
       {kindColumns ? (
         <>
@@ -759,6 +823,7 @@ export default function BoardZone({
     compactPod ? 'compact-pod' : '',
     compactCards ? 'card-style-compact' : '',
     hasMarqueeColumn ? 'has-marquee-column' : '',
+    pileCards ? 'has-pile-corner' : '',
     tiltedTaps ? 'tap-tilted' : '',
     noCreatures ? 'no-creatures' : '',
     noPermanents ? 'no-permanents' : '',
@@ -779,6 +844,7 @@ export default function BoardZone({
       style={{
         '--card-w': `${cardW}px`,
         '--seat': seatColor,
+        ...(pileCards ? { '--pile-corner-w': `${pileCornerW}px` } : null),
         ...(shares.uneven
           ? { gridTemplateRows: isTop ? `auto ${shares.permanentsFr}fr ${shares.creaturesFr}fr` : `${shares.creaturesFr}fr ${shares.permanentsFr}fr auto` }
           : null),
@@ -799,6 +865,7 @@ export default function BoardZone({
       )}
 
       {isTop ? [statusRow, permanentsRow, creaturesRow] : [creaturesRow, permanentsRow, statusRow]}
+      {pileCorner}
       {marqueeColumn}
       {handViewerOpen && (
         <HandViewer

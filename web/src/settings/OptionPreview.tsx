@@ -6,7 +6,7 @@ import BoardDemo from './BoardDemo'
 import '../appearance/playmats.css'
 import './OptionPreview.css'
 
-export type OptionPreviewKind = 'handCost' | 'manaSource' | 'rendered' | 'boardFill' | 'handRail' | 'handRow' | 'stackCaption'
+export type OptionPreviewKind = 'handCost' | 'manaSource' | 'rendered' | 'boardFill' | 'boardSpotlight' | 'handRail' | 'handRow' | 'stackCaption'
 
 const HAND_SAMPLE = [
   { name: 'Shivan Dragon', cost: '{4}{R}{R}' },
@@ -78,6 +78,31 @@ function RenderedPreview({ on }: { on: boolean }) {
   )
 }
 
+function SpotlightPreview({ on }: { on: boolean }) {
+  if (on) {
+    return (
+      <span className="opt-preview-spot">
+        <span className="opt-preview-spot-main" />
+        <span className="opt-preview-spot-panel">
+          <span className="opt-preview-spot-copy" />
+          <span className="opt-preview-spot-copy" />
+          <span className="opt-preview-spot-copy" />
+        </span>
+      </span>
+    )
+  }
+  return (
+    <span className="opt-preview-spot is-stacked">
+      <span className="opt-preview-spot-row">
+        <span className="opt-preview-spot-copy" />
+        <span className="opt-preview-spot-copy" />
+        <span className="opt-preview-spot-copy" />
+      </span>
+      <span className="opt-preview-spot-main" />
+    </span>
+  )
+}
+
 function HandRailPreview({ on }: { on: boolean }) {
   return (
     <span className="opt-preview-mat" aria-hidden="true">
@@ -127,6 +152,7 @@ export default function OptionPreview({ kind, on = true }: { kind: OptionPreview
       {kind === 'manaSource' && <BoardDemo spec={{ kind: 'manaSource', value: on }} />}
       {kind === 'rendered' && <RenderedPreview on={on} />}
       {kind === 'boardFill' && <Tiles fill={on} />}
+      {kind === 'boardSpotlight' && <SpotlightPreview on={on} />}
       {kind === 'handRail' && <HandRailPreview on={on} />}
       {kind === 'handRow' && <HandRowPreview on={on} />}
       {kind === 'stackCaption' && <StackCaptionPreview on={on} />}

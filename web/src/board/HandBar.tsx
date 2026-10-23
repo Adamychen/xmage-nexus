@@ -25,7 +25,9 @@ import './drawSlide.css'
 
 const HAND_DRAG_THRESHOLD_PX = 8
 /** Side panels the hand must not cover: the bottom-left player panel (its mana pool row) and the command wheel. */
-const HAND_SIDE_PANELS = '.pz-bottom-row, [data-testid="game-dock"]'
+const HAND_SIDE_PANELS = '.pz-bottom-row, [data-testid="game-dock"], .spotlight-panel'
+const SCALED_COPY = '.spotlight-copy'
+const SPOTLIGHT_MAIN_ROW = '.spotlight-main .pz-bottom-row'
 import './targetZone.css'
 
 /** Printed mana cost as bubbles over the card's top edge (split cards show
@@ -146,6 +148,7 @@ export default function HandBar({
       if (hostRect.width <= 0) return
       const barRect = el.getBoundingClientRect()
       const panels = Array.from(scope.querySelectorAll<HTMLElement>(HAND_SIDE_PANELS))
+        .filter((panel) => !panel.closest(SCALED_COPY) && !panel.matches(SPOTLIGHT_MAIN_ROW))
         .map((panel) => panel.getBoundingClientRect())
         .filter((r) => r.width > 0 && r.top < barRect.bottom && r.bottom > barRect.top)
       const reserve = computeHandSideReserve({ left: hostRect.left, right: hostRect.right }, panels)
@@ -162,7 +165,9 @@ export default function HandBar({
     window.addEventListener('resize', measure)
     const ro = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(measure)
     ro?.observe(host)
-    scope.querySelectorAll(HAND_SIDE_PANELS).forEach((panel) => ro?.observe(panel))
+    scope.querySelectorAll<HTMLElement>(HAND_SIDE_PANELS).forEach((panel) => {
+      if (!panel.closest(SCALED_COPY)) ro?.observe(panel)
+    })
     const mo = typeof MutationObserver === 'undefined' ? null : new MutationObserver(measure)
     mo?.observe(scope, { childList: true })
     return () => {

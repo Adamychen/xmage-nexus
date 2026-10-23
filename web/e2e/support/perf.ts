@@ -105,10 +105,19 @@ export interface AckProbeExpect {
 export async function armAckProbe(page: Page, selector: string, expect: AckProbeExpect): Promise<void> {
   await page.evaluate(
     ({ selector, expect }) => {
-      const state: { t0: number; elapsed: number; ok: boolean | null; observer?: MutationObserver } = {
+      const state: {
+        t0: number
+        elapsed: number
+        ok: boolean | null
+        clickTaskOver: boolean
+        sameTask: boolean
+        observer?: MutationObserver
+      } = {
         t0: -1,
         elapsed: -1,
         ok: null,
+        clickTaskOver: false,
+        sameTask: false,
       }
       ;(window as unknown as { __mageAck?: unknown }).__mageAck = state
       const matches = (): boolean => {
@@ -124,9 +133,13 @@ export async function armAckProbe(page: Page, selector: string, expect: AckProbe
         if (matches()) {
           state.ok = true
           state.elapsed = performance.now() - state.t0
+          state.sameTask = !state.clickTaskOver
         }
       }
-      document.addEventListener('click', () => { state.t0 = performance.now() }, { capture: true, once: true })
+      document.addEventListener('click', () => {
+        state.t0 = performance.now()
+        setTimeout(() => { state.clickTaskOver = true }, 0)
+      }, { capture: true, once: true })
       state.observer = new MutationObserver(check)
       state.observer.observe(document.body, {
         subtree: true,
@@ -140,20 +153,26 @@ export async function armAckProbe(page: Page, selector: string, expect: AckProbe
   )
 }
 
-/** Ms hasta el primer cambio visual observado; -1 si no llegó. */
-export async function readAckMs(page: Page, timeoutMs = 3000): Promise<number> {
+export interface Ack {
+  /** Ms hasta el primer cambio visual observado; -1 si no llegó. */
+  ms: number
+  /** The change was observed before the browser ran any task queued after the click. */
+  sameTask: boolean
+}
+
+export async function readAck(page: Page, timeoutMs = 3000): Promise<Ack> {
   const deadline = Date.now() + timeoutMs
   for (;;) {
     const res = await page.evaluate(() => {
       const s = (window as unknown as {
-        __mageAck?: { ok: boolean | null; elapsed: number; observer?: MutationObserver }
+        __mageAck?: { ok: boolean | null; elapsed: number; sameTask: boolean; observer?: MutationObserver }
       }).__mageAck
       if (!s || s.ok === null) return { done: false as const }
       s.observer?.disconnect()
-      return { done: true as const, ok: s.ok, elapsed: s.elapsed }
+      return { done: true as const, ok: s.ok, elapsed: s.elapsed, sameTask: s.sameTask }
     })
-    if (res.done) return res.ok ? res.elapsed : -1
-    if (Date.now() > deadline) return -1
+    if (res.done) return res.ok ? { ms: res.elapsed, sameTask: res.sameTask } : { ms: -1, sameTask: false }
+    if (Date.now() > deadline) return { ms: -1, sameTask: false }
     await page.waitForTimeout(20)
   }
 }

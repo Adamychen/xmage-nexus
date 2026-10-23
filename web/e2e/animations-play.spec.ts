@@ -194,6 +194,14 @@ test.describe('animations really play @board', { tag: '@timing' }, () => {
     expect(pageErrors).toEqual([])
   })
 
+  test('FX-12, BRD-8: anim:spotlight-copy-pulse pulses the copy once', async ({ page }) => {
+    const pageErrors = trackPageErrors(page)
+    await openGallery(page)
+    await replayEntry(page, 'anim:spotlight-copy-pulse')
+    await expectAnimation(page, '.spotlight-copy-pulse', 'spotlightCopyPulse')
+    expect(pageErrors).toEqual([])
+  })
+
   test('FX-12: anim:keyword-auras runs one looping aura per keyword', async ({ page }) => {
     const pageErrors = trackPageErrors(page)
     await openGallery(page)

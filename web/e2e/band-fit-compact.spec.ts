@@ -75,15 +75,32 @@ test('compact bands settle on one fit instead of flipping every frame when they 
     store.setState({ phase: 'game', settings: { ...st.settings, cardStyle: 'compact', tapStyle: 'tilted' }, game: gameView })
   }, spectatedPod())
   await expect(page.locator('.board-zone .card-slot.is-compact').first()).toBeVisible({ timeout: 10_000 })
-  await page.waitForTimeout(800)
+  await expect.poll(() => page.evaluate(() => [...document.images].every((img) => img.complete)), { timeout: 20_000 }).toBe(true)
 
   const probe = await page.evaluate(() => new Promise<{ flips: Record<string, number>; overflowing: string[] }>((resolve) => {
     const bands = [...document.querySelectorAll<HTMLElement>('.board-zone .bz-band')]
     const key = (b: HTMLElement) => `${b.closest('.board-zone')?.getAttribute('data-player-name')}:${b.classList.contains('permanents-band') ? 'permanents' : 'creatures'}`
     const state = (b: HTMLElement) => `${b.style.getPropertyValue('--card-w')}|${b.getAttribute('data-band-lines') ?? ''}`
+    const snapshot = () => bands.map(state).join(',')
+    const settleFrames = 30
+    const settleCapMs = 5000
+    const started = performance.now()
+    let calm = 0
+    let before = snapshot()
+    const settle = () => {
+      const now = snapshot()
+      calm = now === before ? calm + 1 : 0
+      before = now
+      if (calm >= settleFrames || performance.now() - started > settleCapMs) observe()
+      else requestAnimationFrame(settle)
+    }
     const last = new Map(bands.map((b) => [b, state(b)]))
     const flips: Record<string, number> = {}
     let frames = 0
+    const observe = () => {
+      for (const b of bands) last.set(b, state(b))
+      requestAnimationFrame(tick)
+    }
     const tick = () => {
       for (const b of bands) {
         const s = state(b)
@@ -93,7 +110,7 @@ test('compact bands settle on one fit instead of flipping every frame when they 
       if (++frames < 90) requestAnimationFrame(tick)
       else resolve({ flips, overflowing: bands.filter((b) => b.scrollWidth > b.clientWidth + 2).map(key) })
     }
-    requestAnimationFrame(tick)
+    requestAnimationFrame(settle)
   }))
 
   await page.screenshot({ path: test.info().outputPath('band-fit-compact.png') })

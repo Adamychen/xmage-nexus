@@ -11,6 +11,8 @@ import {
   loadActiveGame,
   loadConn,
   loadAppearanceSettings,
+  saveAppearanceSettings,
+  DEFAULT_APPEARANCE,
   loadFxSettings,
   saveActiveDraft,
   saveActiveGame,
@@ -478,6 +480,17 @@ describe('persistence', () => {
       expect(loaded.sicknessStyle).toBe('badge')
       expect(loaded.keywordIcons).toBe('coins')
       expect(loaded.keywordAura).toBe('subtle')
+    })
+  })
+
+  describe('board spotlight settings persistence', () => {
+    it('BRD-6, BRD-13: appearance settings keep boardSpotlight and boardSpotlightPanel across a save and load', () => {
+      expect(DEFAULT_APPEARANCE.boardSpotlight).toBe(false)
+      expect(DEFAULT_APPEARANCE.boardSpotlightPanel).toBe(22)
+      saveAppearanceSettings({ ...DEFAULT_APPEARANCE, boardSpotlight: true, boardSpotlightPanel: 31 })
+      const loaded = loadAppearanceSettings()
+      expect(loaded.boardSpotlight).toBe(true)
+      expect(loaded.boardSpotlightPanel).toBe(31)
     })
   })
 

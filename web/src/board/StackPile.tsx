@@ -68,6 +68,12 @@ function collapse(pile: HTMLElement): void {
   unpush(pile)
 }
 
+function leave(pile: HTMLElement): void {
+  if (pile.dataset.spread === undefined) return
+  collapse(pile)
+  announceSettledRelayout()
+}
+
 interface StackPileProps {
   className: string
   name: string
@@ -118,10 +124,8 @@ export default function StackPile({ className, name, count, cardIds, landName, c
         spread(e.currentTarget)
         announceSettledRelayout()
       }}
-      onPointerLeave={(e) => {
-        collapse(e.currentTarget)
-        announceSettledRelayout()
-      }}
+      onPointerLeave={(e) => leave(e.currentTarget)}
+      onMouseLeave={(e) => leave(e.currentTarget)}
     >
       {children}
       <span className="stack-group-badge land-group-badge">×{count}</span>

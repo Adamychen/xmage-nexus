@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { CardView } from '../net/types'
 import CardSlot from './CardSlot'
-import { galleryPinnedStatusH } from './useZoneScale'
+import { galleryPinnedStatusH, layoutSize } from './useZoneScale'
 import Icon from '../ui/Icon'
 import { clickableProps } from '../ui/clickable'
 import { useTranslation } from '../i18n'
@@ -24,6 +24,7 @@ interface HandZoneProps {
   compact?: boolean
   /** Colapsa los dorsos en un stack ×N (manos enemigas en pod/arena). */
   stackBacks?: boolean
+  alwaysStack?: boolean
   /** Hay cartas conocidas: el stack es clicable y abre el visor. */
   viewable?: boolean
   viewKnownCount?: number
@@ -40,6 +41,7 @@ export default function HandZone({
   faceDown = false,
   compact = false,
   stackBacks = false,
+  alwaysStack = false,
   viewable = false,
   viewKnownCount = 0,
   onViewHand,
@@ -55,8 +57,7 @@ export default function HandZone({
     if (!el) return
 
     const measure = () => {
-      const availW = el.getBoundingClientRect().width
-      const availH = el.getBoundingClientRect().height
+      const { width: availW, height: availH } = layoutSize(el)
       const count = entries.length
       if (count === 0 || availW <= 0) return
 
@@ -93,7 +94,7 @@ export default function HandZone({
 
   const faceUp = entries.filter(([, card]) => !(faceDown || card.faceDown === true))
   const faceDownEntries = entries.filter(([, card]) => faceDown || card.faceDown === true)
-  const collapseBacks = stackBacks && faceDownEntries.length > 1
+  const collapseBacks = stackBacks && faceDownEntries.length > (alwaysStack ? 0 : 1)
   const shownFaceUp = collapseBacks ? faceUp : entries
   const drawn = useDrawSlide(zoneRef, shownFaceUp.map(([id]) => id), true, { scope: '.bz-status-row', select: '.library-chip, .library-stack' })
   // El stack siempre abre el visor (aunque todo esté oculto: muestra dorsos).

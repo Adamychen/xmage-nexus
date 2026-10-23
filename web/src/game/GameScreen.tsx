@@ -3,6 +3,8 @@ import { createPortal } from 'react-dom'
 import GameBoard from '../board/GameBoard'
 import PodBoard from '../board/PodBoard'
 import ArenaBoard from '../board/ArenaBoard'
+import SpotlightBoard from '../board/SpotlightBoard'
+import { spotlightActive, useSpotlight } from '../board/spotlight'
 import OpponentSwitcherBar from '../board/OpponentSwitcherBar'
 import { DividerSlotContext } from '../board/BoardShell'
 import TurnOrderRing from '../board/TurnOrderRing'
@@ -69,7 +71,7 @@ import { crossZonePlayables } from '../board/crossZone'
 import { resolveTargetHits, targetZoneKindOf } from '../board/targetZones'
 import { combatActorsFrom } from '../state/gameUtils'
 import { effectiveBoardLayout } from '../board/boardLayout'
-import { MAX_BOARD_PLAYERS } from '../board/boardShared'
+import { MAX_BOARD_PLAYERS, spectatorHomeSeat } from '../board/boardShared'
 import { useOverlayGutters } from './useOverlayGutters'
 import { useTranslation } from '../i18n'
 import { soundManager } from '../audio/soundManager'
@@ -399,6 +401,14 @@ export default function GameScreen() {
   const seatLiveIds = liveOpponentIds(game?.players)
   const seatFocus = useSeatFocus(seatLiveIds, game)
   const seatPillsClickable = v2 && isArenaLayout && !isSpectator && seatLiveIds.length >= 2
+  const homeId = me?.playerId ?? spectatorHomeSeat(opps)?.playerId
+  const spotlight = useSpotlight(game, homeId, seatLiveIds, isSpectator ? null : combat?.mode ?? null)
+  const spotlightOn = spotlightActive({
+    enabled: settings.boardSpotlight,
+    arenaLayout: isArenaLayout,
+    isSpectator,
+    liveOppCount: seatLiveIds.length,
+  }) && !!spotlight.mainId
 
   useDockOffset(boardWrapRef, [effectiveLayout, isSpectator, !!game, game?.turn, v2])
   const [turnGlow, clearTurnGlow] = useChangeFlag(game?.turn)
@@ -415,12 +425,13 @@ export default function GameScreen() {
   useOverlayGutters(boardWrapRef, v2 && isArenaLayout, `${isSpectator}|${!!game}|${chromeLeft}|${chromeRight}`)
 
   const stripCenter = (
-        isPodLayout || (v2 && isArenaLayout) ? (
+        isPodLayout || (v2 && isArenaLayout) || spotlightOn ? (
           <TurnOrderRing
             players={game?.players ?? []}
             activePlayerId={game?.activePlayerId ?? ''}
-            onSeatClick={seatPillsClickable ? seatFocus.select : undefined}
-            focusedId={seatPillsClickable ? seatFocus.focusId : null}
+            onSeatClick={spotlightOn ? spotlight.select : seatPillsClickable ? seatFocus.select : undefined}
+            selfClickable={spotlightOn}
+            focusedId={spotlightOn ? spotlight.mainId : seatPillsClickable ? seatFocus.focusId : null}
           />
         ) : topOpps.length > 1 ? (
           <OpponentSwitcherBar
@@ -569,7 +580,11 @@ export default function GameScreen() {
                 <div className="playmat-layer" data-playmat={playmatId} data-testid="playmat-layer" style={matStyle} aria-hidden="true" />
               )}
               {isArenaLayout ? (
-                <ArenaBoard {...boardProps} />
+                spotlightOn ? (
+                  <SpotlightBoard {...boardProps} homeId={homeId ?? ''} mainId={spotlight.mainId!} onSelectSeat={spotlight.select} />
+                ) : (
+                  <ArenaBoard {...boardProps} />
+                )
               ) : isPodLayout ? (
                 <PodBoard {...boardProps} />
               ) : (

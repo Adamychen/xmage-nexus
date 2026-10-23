@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import MenuItem from '../ui/MenuItem'
 import CloseButton from '../ui/CloseButton'
 import Checkbox from '../ui/Checkbox'
@@ -281,9 +282,14 @@ export default function GameMenu() {
           </div>
         </>
       )}
-      {showSettings && <SettingsModal initialSection="gameplay" onClose={() => setShowSettings(false)} />}
-      {showHelp && <HelpWikiModal onClose={() => setShowHelp(false)} />}
-      {showReport && <ReportDialog kind="bug" onClose={() => setShowReport(false)} />}
+      {createPortal(
+        <>
+          {showSettings && <SettingsModal initialSection="gameplay" onClose={() => setShowSettings(false)} />}
+          {showHelp && <HelpWikiModal onClose={() => setShowHelp(false)} />}
+          {showReport && <ReportDialog kind="bug" onClose={() => setShowReport(false)} />}
+        </>,
+        document.body,
+      )}
     </div>
   )
 }

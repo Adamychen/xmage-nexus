@@ -1,0 +1,152 @@
+.board-shell.spotlight-board .spotlight-main .bz-pile-corner {
+  bottom: var(--spot-corner-lift, 0px);
+}
+
+.board-shell.spotlight-board > .hand-switch-btn {
+  right: var(--spot-switch-right, calc(216px + var(--main-inset-right, 0px)));
+  bottom: var(--spot-switch-bottom, calc(var(--dock-bottom, 104px) + 8px));
+}
+
+.board-shell.spotlight-board .bz-status-row {
+  justify-content: flex-start;
+}
+
+.board-shell.spotlight-board .bz-status-row > .player-info-bar {
+  order: -2;
+}
+
+.board-shell.spotlight-board .bz-status-row > .resource-bar {
+  margin-left: auto;
+}
+
+.board-shell.spotlight-board .bz-status-row > .hand-zone {
+  order: -1;
+  flex: 0 0 auto;
+}
+
+.spotlight-body {
+  display: flex;
+  flex: 1 1 0;
+  min-height: 0;
+  min-width: 0;
+}
+
+.spotlight-main {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  position: relative;
+}
+
+.spotlight-panel {
+  position: relative;
+  flex: 0 0 var(--spotlight-panel-w, 22%);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  padding: var(--sp-1);
+  padding-bottom: calc(var(--dock-clear, 0px) + var(--sp-1));
+  min-height: 0;
+  box-sizing: border-box;
+}
+
+.spotlight-panel-handle {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -6px;
+  width: 12px;
+  z-index: 5;
+  display: flex;
+  justify-content: center;
+  cursor: col-resize;
+  touch-action: none;
+  outline: none;
+}
+
+.spotlight-panel-handle::before {
+  content: '';
+  width: 2px;
+  height: 100%;
+  border-radius: var(--r-2xs);
+  background: var(--line-2);
+  transition: background 0.15s ease-out, box-shadow 0.15s ease-out;
+}
+
+.spotlight-panel-handle:hover::before,
+.spotlight-panel-handle:focus-visible::before {
+  background: var(--gold-500);
+  box-shadow: 0 0 8px rgb(var(--gold-rgb) / 0.5);
+}
+
+.spotlight-copy-slot {
+  flex: 1 1 0;
+  min-height: 0;
+  min-width: 0;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-md, 6px);
+  background: var(--ink-1);
+  transition: border-color 0.15s ease-out;
+}
+
+.spotlight-copy-slot:hover {
+  border-color: var(--line-3);
+}
+
+.spotlight-copy-frame {
+  display: flex;
+  flex-direction: column;
+  transform-origin: top left;
+}
+
+.spotlight-seat {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.spotlight-seat > .board-zone {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.spotlight-copy-slot.target-zone::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 2px solid var(--gold-300);
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 5;
+  animation: targetZoneRing 1.2s ease-in-out infinite;
+}
+
+.spotlight-copy-pulse {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 6;
+  background: radial-gradient(ellipse at center, rgb(var(--gold-rgb) / 0.35) 0%, transparent 70%);
+  animation: spotlightCopyPulse calc(700ms / var(--fx-speed, 1)) ease-out 1 both;
+}
+
+@keyframes spotlightCopyPulse {
+  0% {
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}

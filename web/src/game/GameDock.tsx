@@ -7,6 +7,8 @@ import './GameDock.css'
 const DOCK_GAP = 8
 const DOCK_FALLBACK = 104
 const BOTTOM_RESOURCES_SELECTOR = '.pz-bottom-row .resource-bar'
+const DOCK_SELECTOR = '[data-testid="game-dock"]'
+const SEAT_COPY_SELECTOR = '.spotlight-copy'
 
 const PromptSlotContext = createContext<HTMLElement | null>(null)
 
@@ -42,25 +44,36 @@ export function HandPrompt({ children }: { children: ReactNode }) {
   return slot ? createPortal(children, slot) : <DockPrompt>{children}</DockPrompt>
 }
 
+function ownResourceBar(wrap: HTMLElement): HTMLElement | null {
+  return Array.from(wrap.querySelectorAll<HTMLElement>(BOTTOM_RESOURCES_SELECTOR)).find((el) => !el.closest(SEAT_COPY_SELECTOR)) ?? null
+}
+
 export function useDockOffset(wrapRef: RefObject<HTMLElement | null>, deps: readonly unknown[]) {
   useLayoutEffect(() => {
     const wrap = wrapRef.current
     if (!wrap) return
     const measure = () => {
-      const bar = wrap.querySelector<HTMLElement>(BOTTOM_RESOURCES_SELECTOR)
+      const bar = ownResourceBar(wrap)
+      const dock = wrap.querySelector<HTMLElement>(DOCK_SELECTOR)
       const wrapRect = wrap.getBoundingClientRect()
       const zoom = wrap.offsetHeight > 0 ? wrapRect.height / wrap.offsetHeight : 1
       const px = bar && zoom > 0
         ? Math.round(Math.max(0, (wrapRect.bottom - bar.getBoundingClientRect().top) / zoom) + DOCK_GAP)
         : DOCK_FALLBACK
       wrap.style.setProperty('--dock-bottom', `${px}px`)
+      const clear = dock && zoom > 0
+        ? Math.round(Math.max(0, (wrapRect.bottom - dock.getBoundingClientRect().top) / zoom))
+        : 0
+      wrap.style.setProperty('--dock-clear', `${clear}px`)
     }
     measure()
     if (typeof ResizeObserver === 'undefined') return
     const observer = new ResizeObserver(measure)
     observer.observe(wrap)
-    const bar = wrap.querySelector(BOTTOM_RESOURCES_SELECTOR)
+    const bar = ownResourceBar(wrap)
     if (bar) observer.observe(bar)
+    const dock = wrap.querySelector(DOCK_SELECTOR)
+    if (dock) observer.observe(dock)
     return () => observer.disconnect()
   }, deps)
 }

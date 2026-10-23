@@ -23,6 +23,8 @@ export interface OpponentZoneProps {
   kindColumns?: boolean
   statusOnly?: boolean
   seatFocus?: SeatFocusControl
+  pileCards?: boolean
+  stackHand?: boolean
 }
 
 export default function OpponentZone(props: OpponentZoneProps) {

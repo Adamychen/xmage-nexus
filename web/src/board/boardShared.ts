@@ -12,6 +12,11 @@ export function isPlayerOut(player: PlayerView | undefined | null): boolean {
   return !!player && player.hasLeft === true
 }
 
+/** The seat a spectator's column view draws at the bottom (with its hand, if visible). */
+export function spectatorHomeSeat(opps: readonly PlayerView[]): PlayerView | undefined {
+  return opps.length >= 2 ? opps[opps.length - 1] : opps[0]
+}
+
 export function isPlayerDefeated(player: PlayerView | undefined | null): boolean {
   return isPlayerOut(player) && (player?.life ?? 1) <= 0
 }

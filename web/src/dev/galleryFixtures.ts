@@ -131,6 +131,8 @@ export interface GalleryEntry {
   myDeck?: Deck | null
   chatMessages?: ChatMessageEvent[]
   boardLayout?: 'standard' | 'pod' | 'arena'
+  /** Main board with side panel (`boardSpotlight`, BRD-6); omitted = the viewer's setting. */
+  boardSpotlight?: boolean
   seatFocus?: string
   /** Table interface for this state; omitted = the viewer's setting. */
   gameUi?: GameUi
@@ -3554,6 +3556,21 @@ export function buildGalleryEntries(): GalleryEntry[] {
         boardLayout: 'arena',
         seatFocus: opponentOfFour,
         action: { label: 'Replay', run: replayQuiet(fourPlayers, gameId, (g) => withPermanentOn(g, seatShrunk.playerId, 'gallery-seat-land')) },
+      })
+    }
+    const copySeat = opponentOfFour ? players(fourPlayers).find((p) => p.playerId !== opponentOfFour && !p.controlled) : undefined
+    if (copySeat && opponentOfFour) {
+      entries.push({
+        id: 'anim:spotlight-copy-pulse',
+        group: 'Animaciones',
+        label: 'Main board with side panel: a copy pulses when a permanent enters',
+        description: `Four-player arena with the main board setting on: ${players(fourPlayers).find((p) => p.playerId === opponentOfFour)?.name ?? 'an opponent'} fills the main area and ${copySeat.name} sits in the side panel as a copy. "Replay" puts a land on ${copySeat.name}'s battlefield: their copy pulses once in gold.`,
+        phase: 'game',
+        game: fourPlayers,
+        gameId,
+        boardLayout: 'arena',
+        boardSpotlight: true,
+        action: { label: 'Replay', run: replayQuiet(fourPlayers, gameId, (g) => withPermanentOn(g, copySeat.playerId, 'gallery-copy-land')) },
       })
     }
     entries.push({

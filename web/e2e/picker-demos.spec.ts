@@ -79,7 +79,7 @@ test.describe('Visual preset & playmat pickers', { tag: '@site' }, () => {
       }
       await expectAllImagesLoaded(page, '[data-testid^="board-demo-"] img.card-image', 20)
 
-      for (const kind of ['handCost', 'manaSource', 'rendered', 'boardFill', 'handRail', 'handRow'] as const) {
+      for (const kind of ['handCost', 'manaSource', 'rendered', 'boardFill', 'boardSpotlight', 'handRail', 'handRow'] as const) {
         for (const state of ['on', 'off'] as const) {
           await expect(page.getByTestId(`option-choice-${kind}-${state}`).getByTestId(`option-preview-${kind}-${state}`)).toBeVisible()
         }
