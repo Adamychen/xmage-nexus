@@ -143,6 +143,9 @@ jobs:
 
       - name: Regenerate status.json with demo results
         env:
+          # Same skip semantics as the dashboard generation step: on push the fake e2e ran in
+          # web-ci.yml, so the regenerated layer must stay pending, not fail for a missing report.
+          DASHBOARD_SKIP_E2E: ${{ github.event_name == 'push' && '1' || '' }}
           GITHUB_SHA: ${{ github.sha }}
           GITHUB_RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: node scripts/gen-dashboard.mjs
