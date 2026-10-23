@@ -165,7 +165,8 @@ Orchestrator: `node scripts/test.mjs [layer...] [--skip=unit,e2e]` — layers:
 `human-test` (E2E human player vs AI; requires stack) ·
 `verify` (10 anti-drift scripts, listed in `VERIFY_SCRIPTS` in `scripts/test.mjs`: player leave (first),
 multi-tenant isolation, create-table matrix, hand permissions, spectator end, range attack, rollback vote,
-swiss, tournament watch, verify-report (last)) ·
+swiss, tournament watch, verify-report (last); opt-in per-script fresh proxy via `--isolate-verify`
+(`VERIFY_ISOLATE=1`), which refuses to mix with layers holding live sessions — `docs/specs/testing.md` TST-7) ·
 `verify-restart` (`verify-reconnect.mjs`; restarts the proxy, so it runs alone) ·
 `fuzz` (`fuzz.mjs` self-play soak; nightly, not per push) ·
 `e2e` (playwright in web; requires vite) · `i18n` (translation coverage guard) · `scripts` (`node --test scripts/*.test.mjs`, dashboard and CI helpers)

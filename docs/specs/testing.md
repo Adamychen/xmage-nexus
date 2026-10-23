@@ -71,3 +71,16 @@ checks run in `scripts` or `unit`, never only manually.
 - Why: an unverified guard can be silently maintained into a no-op; the repo already applies
   this routine to its layout guards ("verify the guard can fail", `AGENTS.md`).
 - Guard: `src/state/gameInvariants.test.ts` (fail-mode tests); `scripts/coverage-gate.test.mjs`; `src/state/engineViewCoverage.test.ts`
+
+### TST-7 · Isolated verify runs each script on a fresh proxy
+The verify layer can opt in to isolation (`--isolate-verify` or `VERIFY_ISOLATE=1`): before
+each verify script the proxy is restarted and the run waits for `/ready`, so every script
+starts on a fresh proxy and clean server-side session state instead of degrading on a
+long-lived stack. Isolation refuses to run together with `self-test`/`human-test`/`fuzz`
+(those hold live sessions across a restart) and cleans the tables of the verify scripts whose
+usernames are deterministically known (`multi-tenant-test.mjs`).
+
+- Why: `AGENTS.md` documents that accumulated orphan sessions degrade the server callback
+  channel and make verify/self-test flaky; the Phase 0 baseline (fresh stack) verified 10/10
+  verify scripts in 83 s with zero residue. Default behaviour stays unchanged when isolation is off.
+- Guard: `scripts/verify-isolate.test.mjs`

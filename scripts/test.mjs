@@ -10,6 +10,7 @@ import fs from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { binName, ensureMageArtifacts, log, logError, PORTS, repoRoot, run, waitForPort, waitForPortDown } from './lib.mjs'
 import { enforceCoverageGate } from './coverage-gate.mjs'
+import { assertCanIsolate, cleanScriptTables, isVerifyIsolateEnabled, restartProxyAndWait } from './verify-isolate.mjs'
 
 const WEB_DIR = path.join(repoRoot, 'web')
 const STACK_HINT = 'el stack no está corriendo — ejecuta primero: node scripts/ctl.mjs start'
@@ -68,6 +69,8 @@ ${LAYERS.map((l) => `  ${l.name.padEnd(10)} ${l.desc}`).join('\n')}
 
 Options:
   --skip=unit,typecheck   excludes layers (comma-separated)
+  --isolate-verify        restarts the proxy before each verify script
+                          (or set VERIFY_ISOLATE=1; refuses to mix with self-test/human-test/fuzz)
   --help                  shows this help
 
 Examples:
@@ -89,6 +92,8 @@ function parseArgs(args) {
     } else if (a === '--skip') {
       const next = args[++i]
       if (next) next.split(',').forEach((s) => s.trim() && opts.skip.add(s.trim()))
+    } else if (a === '--isolate-verify') {
+      // Consumed by the verify-isolate module (isVerifyIsolateEnabled re-reads raw argv).
     } else {
       opts.layers.push(a)
     }
@@ -216,6 +221,14 @@ async function main() {
   }
 
   log(`capas a ejecutar: ${selected.join(', ')}`)
+  if (isVerifyIsolateEnabled(process.argv.slice(2))) {
+    try {
+      assertCanIsolate(selected)
+    } catch (e) {
+      logError(e.message)
+      process.exit(1)
+    }
+  }
   const startedAt = Date.now()
   const results = []
   let fails = 0
@@ -333,8 +346,19 @@ async function main() {
           break
         }
         const failed = []
+        const isolate = isVerifyIsolateEnabled(process.argv.slice(2))
         for (const file of VERIFY_SCRIPTS) {
+          if (isolate) {
+            try {
+              await restartProxyAndWait()
+            } catch (e) {
+              console.log(`  ✗ ${file} — isolation restart failed: ${e.message}`)
+              failed.push(file)
+              continue
+            }
+          }
           if (runVerifyScript(file).code !== 0) failed.push(file)
+          if (isolate) cleanScriptTables(file)
         }
         res = failed.length
           ? { code: 1, stdout: '', stderr: `${failed.length} de ${VERIFY_SCRIPTS.length} verify scripts fallaron: ${failed.join(', ')}` }
