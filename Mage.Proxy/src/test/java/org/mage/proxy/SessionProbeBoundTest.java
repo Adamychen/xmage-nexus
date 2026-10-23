@@ -23,7 +23,7 @@ class SessionProbeBoundTest {
                 new Class<?>[]{MageServer.class}, (proxy, method, args) -> {
                     if (method.getName().equals("ping")) {
                         pings.incrementAndGet();
-                        release.await();
+                        awaitIgnoringInterrupts(release);
                         return true;
                     }
                     return method.getReturnType() == boolean.class ? Boolean.FALSE : null;
@@ -38,13 +38,33 @@ class SessionProbeBoundTest {
         serverField.setAccessible(true);
         serverField.set(session, server);
         try {
-            assertFalse(SessionProbe.answers(session, 100));
+            assertFalse(SessionProbe.answers(session, 1000));
             assertEquals(1, pings.get());
 
-            assertFalse(SessionProbe.answers(session, 100));
+            assertFalse(SessionProbe.answers(session, 1000));
             assertEquals(1, pings.get(), "the probe of a session still waiting on the server is not repeated");
         } finally {
             release.countDown();
+        }
+    }
+
+    /**
+     * A hung remoting call sits in a socket read, which ignores the probe's cancel(true). An
+     * interruptible wait would end the ping on the timeout, free the session and let the second
+     * probe start another one: the race that made this test fail on CI with 2 pings.
+     */
+    private static void awaitIgnoringInterrupts(CountDownLatch latch) {
+        boolean interrupted = false;
+        while (true) {
+            try {
+                latch.await();
+                break;
+            } catch (InterruptedException ex) {
+                interrupted = true;
+            }
+        }
+        if (interrupted) {
+            Thread.currentThread().interrupt();
         }
     }
 }

@@ -15,6 +15,9 @@ test.describe('Mana permanents next to a land pile', () => {
       await page.mouse.move(2, 2)
       await pile.hover()
       await expect(pile).toHaveAttribute('data-spread', '')
+      await pile.evaluate((el) =>
+        Promise.all(el.parentElement!.getAnimations({ subtree: true }).filter((a) => a instanceof CSSTransition).map((a) => a.finished.catch(() => undefined))),
+      )
 
       await expect(pile.locator('.card-slot')).toHaveCount(3)
       for (const name of ['Sol Ring', 'Arcane Signet']) {

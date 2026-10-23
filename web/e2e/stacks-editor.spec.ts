@@ -27,10 +27,10 @@ test.describe('Stacks editor', () => {
       await expect(page.locator('.stacks-editor-main .arena-stack-col[data-column="lands"]')).toBeVisible()
       await expect(page.locator('.stacks-editor-search')).toBeVisible()
 
-      const firstCard = page.locator('.stacks-editor-main .arena-stack-card').first()
-      const before = await firstCard.locator('.arena-stack-qty').textContent()
-      await firstCard.click()
-      const after = await firstCard.locator('.arena-stack-qty').textContent()
+      const bolt = page.locator('.stacks-editor-main .arena-stack-card[data-card-key$=":Lightning Bolt"]')
+      const before = await bolt.locator('.arena-stack-qty').textContent()
+      await bolt.click()
+      const after = await bolt.locator('.arena-stack-qty').textContent()
       expect(parseInt(after ?? '', 10)).toBe(parseInt(before ?? '', 10) - 1)
 
       await page.locator('[data-testid="stacks-editor-done"]').click()
@@ -39,7 +39,7 @@ test.describe('Stacks editor', () => {
       await page.locator('.deck-box:not(.deck-box-create)').first().click()
       await page.locator('.decks-stacks-btn').click()
       await expect(page.locator('[data-testid="stacks-editor"]')).toBeVisible({ timeout: 8000 })
-      await expect(page.locator('.stacks-editor-main .arena-stack-card').first().locator('.arena-stack-qty')).toHaveText(`${parseInt(after ?? '', 10)}x`)
+      await expect(bolt.locator('.arena-stack-qty')).toHaveText(`${parseInt(after ?? '', 10)}x`)
     })
   })
 

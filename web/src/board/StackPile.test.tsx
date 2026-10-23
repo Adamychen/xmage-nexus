@@ -68,6 +68,26 @@ describe('StackPile', () => {
     expect(relayoutEvents(spy)).toBeGreaterThan(0)
   })
 
+  it('collapses on mouseleave when the pointerleave never arrives, and announces only once', () => {
+    const { container } = render(
+      <div className="permanents-band">
+        <StackPile className="stack-group" name="Forest" count={2} cardIds={['a', 'b']}>
+          <div className="card-slot" />
+          <div className="card-slot" />
+        </StackPile>
+      </div>,
+    )
+    const pile = container.querySelector<HTMLElement>('.stack-group')!
+    fireEvent.pointerEnter(pile)
+    expect(pile.dataset.spread).toBeDefined()
+    const spy = vi.spyOn(window, 'dispatchEvent')
+    fireEvent.mouseLeave(pile)
+    expect(pile.dataset.spread).toBeUndefined()
+    const announced = relayoutEvents(spy)
+    fireEvent.pointerLeave(pile)
+    expect(relayoutEvents(spy)).toBe(announced)
+  })
+
   it('does not re-measure the fanned pile on renders that leave its cards unchanged', () => {
     const cards = (
       <>
