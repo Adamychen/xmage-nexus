@@ -75,6 +75,10 @@ export interface FeedbackPrompt {
    *  genérico "Select a card" (visto en Brainstorm) no se puede distinguir con seguridad de cualquier
    *  otro GAME_TARGET de una carta, así que se queda sin marcar a propósito. */
   isLibraryOrderPick?: boolean
+  /** Combat declaration windows carry their direction from parse (`GAME_SELECT`
+   *  with `options.possibleAttackers` vs `options.possibleBlockers`), so the UI
+   *  never re-derives it from the translated title (CMB-11). Absent = blockers. */
+  isDeclaringAttackers?: boolean
 }
 
 export type JsonRecord = Record<string, unknown>

@@ -120,3 +120,14 @@ influence.
   client does not show it either); the defender prompt was recorded live in `attack-pw.json`
   (`web/INTERACTION_COVERAGE.md` §F, attacking a planeswalker or battle).
 - Guard: none yet (no test drives the defender choice of a multiplayer attack)
+
+### CMB-11 · The declaration window reads attackers vs blockers from the prompt, not from its translated title
+The combat declaration prompt carries its direction as structured data: `GAME_SELECT` with
+`options.possibleAttackers` sets `prompt.isDeclaringAttackers`, and the bar, the action button and
+any dialog read that flag — never the already-localized title. Attack windows show attacker labels
+and block windows blocker labels in every locale.
+
+- Why: the old check looked for `atacan`/`attack` in `prompt.title`, which `feedback/parse.ts`
+  sets with `t()`, so fr/de/it/ru/ja/zhs rendered the blocker label in the attack window
+  (ROADMAP §4.3 finding; `CombatBar.tsx`, `GenericDialog.tsx`, `ActionButton.tsx`).
+- Guard: `src/game/feedback.test.ts` · `src/game/feedbackModes/CombatBar.test.tsx` · `src/game/feedbackModes/GenericDialog.test.tsx` · `src/game/ActionButton.control.test.tsx`

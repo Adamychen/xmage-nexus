@@ -155,5 +155,10 @@
       "tableId",
       "winnerId"
     ]
+  },
+  "meta": {
+    "gapHash": "9e0de6c6c35bcb161fab16bf9286d819a9ec2ec765fb45adda52180067cc544d",
+    "sourceCommit": "471a0d9989718e944a0c238d6745550dbb2c8e93",
+    "generatedAt": "2026-10-23T11:18:23.634Z"
   }
 }

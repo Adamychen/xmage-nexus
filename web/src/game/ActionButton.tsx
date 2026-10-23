@@ -104,7 +104,7 @@ export default function ActionButton({
     modeClass = 'action-resolve'
     modeIcon = 'zap'
   } else if (feedback?.mode === 'combat') {
-    const isAtk = feedback.title.toLowerCase().includes('atacan') || feedback.title.toLowerCase().includes('attack')
+    const isAtk = feedback.isDeclaringAttackers === true
     label = isAtk
       ? t('game', 'confirm_attackers')
       : t('game', 'confirm_blockers')

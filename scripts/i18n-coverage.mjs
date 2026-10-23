@@ -75,6 +75,7 @@ const WHITELIST = new Set([
   'keywords.opus_name',
   'keywords.station_name',
   'keywords.warp_name',
+  'demo.scenario_planeswalker_title',
 ])
 
 function parseLocale(filePath) {

@@ -1,0 +1,17 @@
+{
+  "total": {
+    "lines": {
+      "pct": 84.84
+    },
+    "functions": {
+      "pct": 78.97
+    },
+    "branches": {
+      "pct": 73.52
+    },
+    "statements": {
+      "pct": 82.15
+    }
+  },
+  "recordedAt": "2026-10-23T11:55:02.324Z"
+}

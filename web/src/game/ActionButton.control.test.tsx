@@ -4,6 +4,7 @@ import { cleanup, render } from '@testing-library/react'
 import ActionButton from './ActionButton'
 import { makeGameView, makePlayer } from '../__fixtures__/gameViews'
 import { setLanguage } from '../i18n'
+import type { FeedbackPrompt } from './feedback'
 
 const SIM_NAME = 'sim-000040'
 
@@ -68,5 +69,33 @@ describe('ActionButton con prioridad controlada', () => {
     const { queryByText, getByRole } = renderButton(game, true)
     expect(getByRole('button', { name: /Pass Priority/ })).not.toBeNull()
     expect(queryByText(/You control/)).toBeNull()
+  })
+
+  it('CMB-11: a combat attack window labels the confirm button from the prompt flag, not the translated title', () => {
+    const game = makeGameView({ players: [alice(true), sim(false)] })
+    const feedback: FeedbackPrompt = {
+      method: 'GAME_SELECT',
+      gameId: 'g-1',
+      title: 'Déclaration des attaquants',
+      message: 'Declare attackers',
+      mode: 'combat',
+      options: [],
+      min: 0,
+      max: 0,
+      required: true,
+      isDeclaringAttackers: true,
+    }
+    const { getByRole, queryByRole } = render(
+      <ActionButton
+        game={game}
+        feedback={feedback}
+        gameId="g-1"
+        canPass
+        onPass={vi.fn()}
+        onSkip={vi.fn()}
+      />,
+    )
+    expect(getByRole('button', { name: /Confirm Attackers/ })).not.toBeNull()
+    expect(queryByRole('button', { name: /Confirm Blockers/ })).toBeNull()
   })
 })
