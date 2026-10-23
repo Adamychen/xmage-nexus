@@ -1,0 +1,4 @@
+{
+  "livelock:state-loop": "2026-10-23 triage: 7/280 games — the server re-emits ~1000x the same interactive prompt without advancing state (ReplicateAbility 'pay N times' to SIM; GAME_PLAY_MANA/CHOOSE_ABILITY/TARGET to SIM; one game also WEB prompts during declare attackers). The human receives only identical updates; the loop ends on driver teardown; wsErrors=0 -> not transport. Engine cause: ReplicateAbility.canPay checks only a single activation; dialogues do not close on cancel. SimPlayer complicit: unconditional true on 'pay N times' + naive source selection",
+  "livelock:prompt-storm": "2026-10-23 triage: 1/280 games — the server floods the HUMAN with repeated GAME_TARGET (~513 in 23s, msgId 343→858) with no new state; the driver's answer (UUID -> false) is never accepted. Not an invalid SimPlayer UUID (its dedup 'rechazado (misma firma)' works)"
+}

@@ -30,6 +30,12 @@ const REAL_E2E_SPECS = [
   "priority-stop-real.spec.ts",
   "skips.spec.ts",
   "full-flow.spec.ts",
+  "reconnect-real.spec.ts",
+  "smart-mana-real.spec.ts",
+  "smart-stops-real.spec.ts",
+  "xmage-catalog-real.spec.ts",
+  "learn-real.spec.ts",
+  "draft-real-reload.spec.ts",
 ];
 
 const LAYERS = [

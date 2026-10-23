@@ -9,7 +9,7 @@ test.skip(FAKE_MODE, 'Real only: validates smart mana payment against the GAME_P
 
 test.setTimeout(240_000)
 
-test('MNA-7: smart mana payment pays a two-color spell without manual clicks (real engine)', { tag: '@smart-mana-real' }, async ({ page }) => {
+test('MNA-7: smart mana payment pays a two-color spell without manual clicks (real engine) @real', { tag: '@smart-mana-real' }, async ({ page }) => {
   const { frames, pageErrors, helper } = await startGame(page, { prefix: 'sm', deck: DECK.advanced, simDeck: DECK.aiLands })
   await page.evaluate(() => {
     const store = (globalThis as any).__mageStore

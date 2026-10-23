@@ -27,7 +27,7 @@ async function sceneOf(page: Page): Promise<SceneState | null> {
   }
 }
 
-test('flujo completo: login -> lobby -> demo IA vs IA (espectador) -> tablero avanza sin errores', { tag: '@fullflow' }, async ({ page, fakeServer }) => {
+test('flujo completo: login -> lobby -> demo IA vs IA (espectador) -> tablero avanza sin errores @real', { tag: '@fullflow' }, async ({ page, fakeServer }) => {
   void fakeServer
   // (a) capturar todos los pageerror y console error
   const pageErrors: Error[] = []

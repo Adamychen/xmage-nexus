@@ -272,8 +272,11 @@ game per test. Common libraries in `web/e2e/support/`
 domain: `@spells`, `@targeting`, `@combat`, `@fullflow`, `@board`, `@site` (scripts
 `test:e2e:spells|targeting|combat|fullflow|board|site`). Every spec runs in fake
 (no stack; ~440 tests, ~12 min locally with 4 workers, 4 shards in CI) and can run in real; the
-nightly real-mode job covers the five protocol-sensitive specs (`deckvalidation`, `multi-user`,
-`priority-stop-real`, `skips`, `full-flow`) plus the `verify` layer, not all of them.
+nightly real-mode job covers the eleven protocol-sensitive specs (`deckvalidation`, `multi-user`,
+`priority-stop-real`, `skips`, `full-flow`, `reconnect-real`, `smart-mana-real`, `smart-stops-real`,
+`xmage-catalog-real`, `learn-real`, `draft-real-reload`) plus the `verify` layer, not all of them
+(the `REAL_E2E_SPECS` set in `scripts/integration-report.mjs` and the `@real` tags are drift-checked
+by `integration-report.test.mjs`, TST-5).
 When touching `e2e/support/` or the scenarios, run the full fake + real suite.
 **Game specs start with `quickStartGame`** (`e2e/support/start-game.ts`): in fake mode the helper
 sends `startMatch` over its WS and the scenario answers START_GAME + GAME_INIT, skipping the

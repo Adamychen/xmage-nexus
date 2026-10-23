@@ -70,7 +70,7 @@ async function inGame(page: import('@playwright/test').Page): Promise<void> {
     .toBe(true)
 }
 
-test('a dropped socket mid-game reconnects and rejoins without leaving the board', { tag: '@reconnect' }, async ({ page }) => {
+test('a dropped socket mid-game reconnects and rejoins without leaving the board @real', { tag: '@reconnect' }, async ({ page }) => {
   await trackSocketsAndPhases(page)
   const { pageErrors } = await startGame(page, { prefix: 'rcd', deck: DECK.lands, simDeck: DECK.aiLands })
   await inGame(page)
@@ -88,7 +88,7 @@ test('a dropped socket mid-game reconnects and rejoins without leaving the board
   expect(pageErrors, `pageerrors: ${pageErrors.map(String).join(' | ')}`).toEqual([])
 })
 
-test('a half-open socket is detected by the heartbeat and the game recovers without a reload', { tag: '@reconnect' }, async ({ page }) => {
+test('a half-open socket is detected by the heartbeat and the game recovers without a reload @real', { tag: '@reconnect' }, async ({ page }) => {
   await trackSocketsAndPhases(page)
   const { pageErrors } = await startGame(page, { prefix: 'rch', deck: DECK.lands, simDeck: DECK.aiLands })
   await inGame(page)
@@ -111,7 +111,7 @@ test('a half-open socket is detected by the heartbeat and the game recovers with
   expect(pageErrors, `pageerrors: ${pageErrors.map(String).join(' | ')}`).toEqual([])
 })
 
-test('a reload mid-game resumes the proxy stream and rejoins the board', { tag: '@reconnect' }, async ({ page }) => {
+test('a reload mid-game resumes the proxy stream and rejoins the board @real', { tag: '@reconnect' }, async ({ page }) => {
   const { pageErrors } = await startGame(page, { prefix: 'rcr', deck: DECK.lands, simDeck: DECK.aiLands })
   await inGame(page)
 

@@ -51,7 +51,7 @@ function autoPasses(page: Page): number {
   return parseSent(sentOf(page)).filter((f) => f.action === 'sendPlayerBoolean' && f.args?.value === false).length
 }
 
-test('smart stops pass empty windows and hold castable ones (real engine)', { tag: '@smart-stops-real' }, async ({ page }) => {
+test('smart stops pass empty windows and hold castable ones (real engine) @real', { tag: '@smart-stops-real' }, async ({ page }) => {
   const session = await startGame(page, { prefix: 'ss', deck: DECK.bolt, simDeck: DECK.aiLands })
   await session.helper.stop()
   await page.evaluate(() => {

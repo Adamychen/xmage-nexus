@@ -36,7 +36,7 @@ const LEARN_DECK = {
 
 test.skip(FAKE_MODE, 'solo stack real (proxy + XMage local)')
 
-test('LEARN real: Eyetwitch muere → learn → elegir Lesson del sideboard en el CardGrid', async ({ page }) => {
+test('LEARN real: Eyetwitch muere → learn → elegir Lesson del sideboard en el CardGrid @real', async ({ page }) => {
   // mazo del usuario vía localStorage (los precons solo existen en dev)
   await page.addInitScript((deck) => {
     localStorage.setItem('mage_decks_v2', JSON.stringify([deck]))
