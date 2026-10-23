@@ -7,7 +7,7 @@ import { FAKE_MODE } from './dual'
 //   E2E_BACKEND=real E2E_SERVER_HOST=localhost E2E_SERVER_PORT=17171 npx playwright test multi-user.spec.ts
 test.skip(FAKE_MODE, 'multi-user solo corre contra el stack real (dos cuentas distintas)')
 
-test.describe('multi-user: dos cuentas en un mismo proxy', () => {
+test.describe('multi-user: dos cuentas en un mismo proxy @real', () => {
   let ctxA: BrowserContext
   let ctxB: BrowserContext
   let pageA: Page

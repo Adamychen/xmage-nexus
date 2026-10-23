@@ -1,4 +1,6 @@
 import type { FakeConn, Scenario } from '../../fixtures/fakeCore'
+import type { TranslationSchema } from '../i18n'
+import { t } from '../i18n'
 import { spellsScenario } from '../../fixtures/scenarios/spells'
 import { combatHumanAttackScenario, combatHumanBlockScenario } from '../../fixtures/scenarios/combatHuman'
 import { targetingScenario } from '../../fixtures/scenarios/targeting'
@@ -13,8 +15,8 @@ import { demoEdhrecPage, demoExtraTables, demoRoster } from './data'
 export interface DemoScenarioDef {
   id: string
   group: 'play' | 'format'
-  title: string
-  blurb: string
+  titleKey: keyof TranslationSchema['demo']
+  blurbKey: keyof TranslationSchema['demo']
   autostart: boolean
   build: () => Scenario
 }
@@ -24,96 +26,96 @@ export const DEMO_SCENARIOS: DemoScenarioDef[] = [
     id: 'blaze',
     autostart: true,
     group: 'play',
-    title: 'Cast a spell with X',
-    blurb: 'Blaze: pick X, aim it at the opponent and pay with your lands.',
+    titleKey: 'scenario_blaze_title',
+    blurbKey: 'scenario_blaze_blurb',
     build: () => spellsScenario('blaze'),
   },
   {
     id: 'modes',
     autostart: true,
     group: 'play',
-    title: 'Modal spell',
-    blurb: 'Boros Charm: choose a mode, then pay a two-colour cost.',
+    titleKey: 'scenario_modes_title',
+    blurbKey: 'scenario_modes_blurb',
     build: () => spellsScenario('boros'),
   },
   {
     id: 'ballista',
     autostart: true,
     group: 'play',
-    title: 'Counters and abilities',
-    blurb: 'Walking Ballista: choose how to cast it and watch the counters land.',
+    titleKey: 'scenario_ballista_title',
+    blurbKey: 'scenario_ballista_blurb',
     build: () => spellsScenario('ballista'),
   },
   {
     id: 'targeting',
     autostart: true,
     group: 'play',
-    title: 'Targeting',
-    blurb: 'Lightning Bolt with the live targeting line and highlighted legal targets.',
+    titleKey: 'scenario_targeting_title',
+    blurbKey: 'scenario_targeting_blurb',
     build: () => targetingScenario(),
   },
   {
     id: 'attack',
     autostart: true,
     group: 'play',
-    title: 'Attack',
-    blurb: 'Declare attackers on your turn and see combat damage resolve.',
+    titleKey: 'scenario_attack_title',
+    blurbKey: 'scenario_attack_blurb',
     build: () => combatHumanAttackScenario(),
   },
   {
     id: 'block',
     autostart: true,
     group: 'play',
-    title: 'Block',
-    blurb: 'The opponent attacks: assign a blocker to an incoming creature.',
+    titleKey: 'scenario_block_title',
+    blurbKey: 'scenario_block_blurb',
     build: () => combatHumanBlockScenario(),
   },
   {
     id: 'planeswalker',
     autostart: true,
     group: 'play',
-    title: 'Planeswalkers',
-    blurb: 'A planeswalker on the board with loyalty counters and abilities.',
+    titleKey: 'scenario_planeswalker_title',
+    blurbKey: 'scenario_planeswalker_blurb',
     build: () => planeswalkerScenario(),
   },
   {
     id: 'tokens',
     autostart: true,
     group: 'play',
-    title: 'Tokens and counters',
-    blurb: 'Token creation and stacked permanents laid out on the table.',
+    titleKey: 'scenario_tokens_title',
+    blurbKey: 'scenario_tokens_blurb',
     build: () => tokensScenario(),
   },
   {
     id: 'thoughtseize',
     autostart: true,
     group: 'play',
-    title: 'Reveal and choose',
-    blurb: 'Thoughtseize: look at the opponent hand and choose a card.',
+    titleKey: 'scenario_thoughtseize_title',
+    blurbKey: 'scenario_thoughtseize_blurb',
     build: () => thoughtseizeScenario(),
   },
   {
     id: 'commander',
     autostart: true,
     group: 'format',
-    title: 'Commander pod',
-    blurb: 'Four-player Commander table with command zone and commander damage.',
+    titleKey: 'scenario_commander_title',
+    blurbKey: 'scenario_commander_blurb',
     build: () => commanderPlaygroundScenario(),
   },
   {
     id: 'draft',
     autostart: false,
     group: 'format',
-    title: 'Booster draft',
-    blurb: 'Pick cards pack by pack, then build the deck from the pool.',
+    titleKey: 'scenario_draft_title',
+    blurbKey: 'scenario_draft_blurb',
     build: () => draftScenario(),
   },
   {
     id: 'tournament',
     autostart: false,
     group: 'format',
-    title: 'Tournament',
-    blurb: 'Standings, pairings and the bracket of a running tournament.',
+    titleKey: 'scenario_tournament_title',
+    blurbKey: 'scenario_tournament_blurb',
     build: () => tournamentScenario(),
   },
 ]
@@ -142,7 +144,7 @@ function withRoster(conn: FakeConn): FakeConn {
   layered.lobby = (tables, users) => {
     const ids = new Set(tables.map((t) => t.tableId))
     const extra = demoExtraTables().filter((t) => !ids.has(t.tableId))
-    const title = currentDef().title
+    const title = t('demo', currentDef().titleKey)
     const own = tables.filter((t) => !t.tableId.startsWith('demo-table-'))
     const named = own.length === 1 ? tables.map((t) => (t === own[0] ? { ...t, tableName: title } : t)) : tables
     conn.lobby([...named, ...extra], users && users.length > 0 ? users : demoRoster())

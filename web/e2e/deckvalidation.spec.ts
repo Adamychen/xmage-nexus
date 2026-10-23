@@ -47,7 +47,7 @@ async function waitJoinSent(buffers: CaptureBuffers): Promise<Record<string, unk
   return joinSent as unknown as Record<string, unknown>
 }
 
-test.describe('Deck validation pre-join @deckvalidation', () => {
+test.describe('Deck validation pre-join @deckvalidation @real', () => {
   test('shows missing cards dialog and repairs via suggestion', async ({ page }) => {
     // Solo fake: en real la mesa la tendría que crear otro humano (el dueño no
     // puede abandonarla sin eliminarla — TableController.leaveTable borra la

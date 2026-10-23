@@ -24,6 +24,8 @@
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { createHash } from 'node:crypto'
+import { forkCommit, forkDir, forkPath } from './lib.mjs'
 import { fieldsFor, ROOTS } from './view-schema.mjs'
 
 const here = dirname(fileURLToPath(import.meta.url))
@@ -46,14 +48,70 @@ export function computeEngineViewGap() {
   return gap
 }
 
+function canonicalJson(value) {
+  return JSON.stringify(value, (_key, v) => {
+    if (Array.isArray(v)) return v
+    if (v && typeof v === 'object') {
+      return Object.fromEntries(Object.entries(v).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)))
+    }
+    return v
+  })
+}
+
+/** Stable sha256 of the engine→view gap (the script output), independent of key order. */
+export function gapHash(gap) {
+  return createHash('sha256').update(canonicalJson(gap)).digest('hex')
+}
+
+/** Version provenance of the current fork checkout — the commit that would produce a baseline. */
+export function engineViewSource() {
+  return { sourceCommit: forkCommit() }
+}
+
+function readBaseline(file) {
+  try {
+    return JSON.parse(readFileSync(file, 'utf8'))
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Writes the baseline with version metadata. Refuses when the fork is still at the commit that
+ * produced the current baseline yet the computed gap changed: a baseline change must accompany a
+ * fork/proxy contract change (a reviewed decision), never a silent hand edit.
+ */
+export function updateBaseline(baselinePath, gap) {
+  const hash = gapHash(gap)
+  const sourceCommit = forkCommit()
+  const previous = readBaseline(baselinePath)
+  const previousMeta = previous?.meta ?? null
+  const previousGap = previous ? { ...previous } : null
+  if (previousGap) delete previousGap.meta
+  const sourceUnchanged = previousMeta?.sourceCommit && sourceCommit && previousMeta.sourceCommit === sourceCommit
+  if (sourceUnchanged && previousGap && gapHash(previousGap) !== hash) {
+    throw new Error(
+      `Refusing to update engine-view-gap.baseline.json: the fork is still at ${sourceCommit} — ` +
+      'the commit that produced the current baseline — yet the computed gap changed. A baseline change ' +
+      'must accompany a fork/proxy contract change; merge/pin a new fork commit first, or revert the local edit.',
+    )
+  }
+  writeFileSync(
+    baselinePath,
+    JSON.stringify({ ...gap, meta: { gapHash: hash, sourceCommit, generatedAt: new Date().toISOString() } }, null, 2),
+  )
+  console.log('Updated engine-view-gap.baseline.json')
+  console.log(`  meta.sourceCommit: ${sourceCommit ?? '(no git checkout)'}`)
+  console.log(`  meta.gapHash: ${hash}`)
+}
+
 function main() {
   const gap = computeEngineViewGap()
   const dir = resolve(here, '../web/fixtures')
   mkdirSync(dir, { recursive: true })
   writeFileSync(resolve(dir, 'engine-view-gap.json'), JSON.stringify(gap, null, 2))
   if (process.argv.includes('--update-baseline')) {
-    writeFileSync(resolve(dir, 'engine-view-gap.baseline.json'), JSON.stringify(gap, null, 2))
-    console.log('Updated engine-view-gap.baseline.json')
+    updateBaseline(resolve(dir, 'engine-view-gap.baseline.json'), gap)
   }
   console.log(`Wrote ${resolve(dir, 'engine-view-gap.json')}`)
   for (const v of Object.keys(gap)) {

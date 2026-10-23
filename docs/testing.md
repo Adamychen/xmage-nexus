@@ -38,6 +38,18 @@ Rules: after touching `web/`, run `unit` + `typecheck` (`build` if the build cha
 
 `scripts/record.mjs <mechanic|all>` drives a real local game (HUMAN+SIM, `skipInitShuffling`) and dumps the first `GAME_UPDATE` matching `captureWhen` to `web/fixtures/recorded/<mechanic>.json` (+ `manifest.json` invariants). `recorded.test.ts` validates each frame against the contract schema; `recorded.spec.ts` replays it in the FakeServer and asserts rendering. After proxy/web changes, regenerate with `record.mjs all` and commit the frames.
 
+## Guard rails (behaviour specs: `docs/specs/testing.md`)
+
+The quality gates the suite must keep, each held by a test that carries its rule id:
+
+| Guard | Rule | Test |
+|---|---|---|
+| State integrity | `TST-1`/`TST-2` — no object in two zones; counts match; runs over every recorded frame | `web/src/state/gameInvariants.test.ts` |
+| Fuzz triage | `TST-3` — a new anomaly signature fails the fuzz run until triaged | `scripts/fuzz-triage.test.mjs` |
+| Nightly red gate | `TST-4` — integration/re-record/validate steps have no `continue-on-error` | `scripts/workflows.test.mjs` |
+| Real-mode set | `TST-5` — every `@real` spec is in `REAL_E2E_SPECS` and vice versa | `scripts/integration-report.test.mjs` |
+| Fail modes | `TST-6` — each guard is verified to be able to fail | `web/src/state/gameInvariants.test.ts` |
+
 ## Known flakes (do not "fix" by weakening tests)
 
 - `self-test` `WATCHGAME` fails only on the first game after a cold server start (`SESSION CALLBACK EXCEPTION - Unable to create socket` in `server.out.log`). Retry warm; run `node scripts/warmup.mjs` first. Persistent failure across warm runs is a real bug — the one time it repeated for a whole day (2026-09-18) the shaded proxy jar was missing `ObjectNameFactory`, and some AI-vs-AI demo games simply end before the watch lands.

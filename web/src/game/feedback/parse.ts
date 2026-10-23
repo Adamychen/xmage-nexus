@@ -68,7 +68,7 @@ export function parseFeedback(
       const blockers = stringList(options.possibleBlockers)
       if (attackers.length > 0 || blockers.length > 0) {
         const attacking = attackers.length > 0
-        return prompt(
+        const fp = prompt(
           method,
           gameId,
           attacking ? t('game', 'declare_attackers') : t('game', 'declare_blockers'),
@@ -83,6 +83,8 @@ export function parseFeedback(
           undefined,
           attacking && typeof options.specialButton === 'string',
         )
+        if (attacking) fp.isDeclaringAttackers = true
+        return fp
       }
       // GAME_SELECT de prioridad: sin diálogo (el tablero queda interactivo)
       return null

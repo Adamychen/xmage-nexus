@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, resolve } from 'node:path'
 // @ts-expect-error no type declarations for the oracle script (plain node .mjs)
-import { computeEngineViewGap } from '../../../scripts/engine-view-schema.mjs'
+import { computeEngineViewGap, engineViewSource, gapHash } from '../../../scripts/engine-view-schema.mjs'
 import { ENGINE_VIEW_REGISTRY, engineViewKey, type EngineViewRegistryRow } from './engineViewRegistry'
 
 const here = dirname(fileURLToPath(import.meta.url))
@@ -15,7 +15,10 @@ const here = dirname(fileURLToPath(import.meta.url))
 // the current set so a future XMage change that adds (or removes) engine-only
 // state is caught — forcing a human to triage it.
 const BASELINE = resolve(here, '../../fixtures/engine-view-gap.baseline.json')
-const baseline = JSON.parse(readFileSync(BASELINE, 'utf8'))
+const rawBaseline = JSON.parse(readFileSync(BASELINE, 'utf8')) as Record<string, { engine: string; missing: string[] }> & { meta?: Record<string, string | undefined> }
+const baselineMeta = rawBaseline.meta ?? {}
+const baseline: Record<string, { engine: string; missing: string[] }> = { ...rawBaseline }
+delete baseline.meta
 
 // Displayable state we KNOW lives in the engine but is not in the view DTO.
 // These are accepted protocol limitations (only fixable by an upstream server
@@ -104,5 +107,37 @@ describe('engine→view coverage (no unexposed engine state goes unnoticed)', ()
       }
     }
     expect(problems, problems.join('; ')).toEqual([])
+  })
+})
+
+describe('engine→view baseline versioning', () => {
+  it('TST-6: baseline carries the fork commit and the output hash that produced it', () => {
+    expect(
+      String(baselineMeta.gapHash ?? ''),
+      'baseline meta.gapHash missing — regenerate with node scripts/engine-view-schema.mjs --update-baseline',
+    ).toMatch(/^[0-9a-f]{64}$/)
+    expect(
+      String(baselineMeta.sourceCommit ?? ''),
+      'baseline meta.sourceCommit missing — regenerate with node scripts/engine-view-schema.mjs --update-baseline',
+    ).toMatch(/^[0-9a-f]{40}$/)
+  })
+
+  it('TST-6: baseline output hash matches its content', () => {
+    expect(gapHash(baseline)).toBe(baselineMeta.gapHash)
+  })
+
+  it('TST-6: a baseline content change requires a fork/proxy contract change', () => {
+    if (gapHash(computed) === gapHash(baseline)) return
+    const { sourceCommit } = engineViewSource()
+    const forkMoved =
+      typeof baselineMeta.sourceCommit === 'string' &&
+      typeof sourceCommit === 'string' &&
+      baselineMeta.sourceCommit !== sourceCommit
+    expect(
+      forkMoved,
+      `engine→view baseline changed without a fork/proxy contract change: the fork is still at ${sourceCommit}, ` +
+        'the commit that produced the recorded baseline — revert the hand edit, or update the baseline only as part ' +
+        'of a fork contract change (node scripts/engine-view-schema.mjs --update-baseline)',
+    ).toBe(true)
   })
 })

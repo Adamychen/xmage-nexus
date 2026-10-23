@@ -57,6 +57,8 @@ jobs:
       - name: Unit tests + coverage gate (vitest)
         working-directory: web
         run: npm run test:coverage
+      - name: Enforce coverage no-regression gate (TST-6)
+        run: node -e "import('./scripts/coverage-gate.mjs').then(m => { const r = m.enforceCoverageGate(); console.log(r.message); if (!r.ok) process.exit(1); })"
       - name: Scripts unit tests (node --test, dashboard and CI helpers)
         run: node --test scripts/*.test.mjs
       - name: Typecheck

@@ -59,7 +59,7 @@ async function openPassMenu(page: Page) {
   await expect(page.locator('[data-testid="pass-menu"]')).toBeVisible({ timeout: 10_000 })
 }
 
-test('KEY-6: skips: F keys and the ▾ menu send PASS_PRIORITY_* and mark the active skip', { tag: '@fullflow' }, async ({ page }) => {
+test('KEY-6: skips: F keys and the ▾ menu send PASS_PRIORITY_* and mark the active skip @real', { tag: '@fullflow' }, async ({ page }) => {
   test.setTimeout(FAKE_MODE ? 60_000 : 240_000)
   await withFakeServer(() => skipsScenario(), async () => {
     const { pageErrors, frames: sessionFrames, helper: sessionHelper } = await quickStartGame(page, {

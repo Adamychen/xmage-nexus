@@ -99,6 +99,9 @@ type AssertKind =
   | 'hasAlwaysAttack'
   | 'hasLandDropWindow'
   | 'hasManaRocks'
+  | 'hasReplicatePromptOpen'
+  | 'hasManaPaymentMidflight'
+  | 'hasTargetLoopPartiallyChosen'
   | 'hasAttackCostPaid'
   | 'hasEchoUpkeepPaid'
   | 'hasPlot'
@@ -1027,6 +1030,40 @@ function runAssert(kind: AssertKind, gv: GameView): boolean {
     case 'hasManaRocks': {
       const others = Object.values(gv.canPlayObjects?.objects ?? {}).flatMap((s) => s.other ?? [])
       return others.some((a) => /Add \{C\}\{C\}/.test(a.value)) && others.some((a) => /\{U\/R\}, \{T\}: Add/.test(a.value))
+    }
+    case 'hasReplicatePromptOpen': {
+      // Train of Thought mid-replicate: the repeatable-cost ask is open with
+      // the base cost + one replicate already paid (>=4 tapped Islands) and
+      // the spell still on the stack; if the decline closed the dialog and
+      // the spell resolved instead (healthy path), the frame must show it in
+      // the graveyard with an empty stack.
+      const me2 = getMe(gv)
+      const taps = Object.values(me2?.battlefield ?? {}).filter(
+        (c) => /island/i.test(String((c as { name?: unknown })?.name ?? '')) && (c as { tapped?: boolean })?.tapped === true,
+      ).length
+      const onStack = Object.values(gv.stack ?? {}).some((s) => /train of thought/i.test(String((s as { name?: unknown })?.name ?? '')))
+      const gy = Object.values(me2?.graveyard ?? {})
+      const resolved = gy.some((c) => /train of thought/i.test(String((c as { name?: unknown })?.name ?? '')))
+      return taps >= 4 && (onStack || (resolved && Object.keys(gv.stack ?? {}).length === 0))
+    }
+    case 'hasManaPaymentMidflight': {
+      // Supreme Verdict mid-payment: the spell is on the stack while the
+      // color-matched land taps are still in progress (>=1 tapped, >=2
+      // untapped lands left).
+      const me2 = getMe(gv)
+      const onStack = Object.values(gv.stack ?? {}).some((s) => /supreme verdict/i.test(String((s as { name?: unknown })?.name ?? '')))
+      if (!onStack) return false
+      const lands = Object.values(me2?.battlefield ?? {}).filter((c) => ((c as { cardTypes?: string[] })?.cardTypes ?? []).includes('LAND'))
+      const tapped = lands.filter((c) => (c as { tapped?: boolean })?.tapped === true).length
+      return tapped >= 1 && (lands.length - tapped) >= 2
+    }
+    case 'hasTargetLoopPartiallyChosen': {
+      // Arc Trail mid-declaration: the second serialized target prompt is
+      // open — the spell on the stack with exactly one of its two targets
+      // already chosen.
+      const arc = Object.values(gv.stack ?? {}).find((s) => /arc trail/i.test(String((s as { name?: unknown })?.name ?? '')))
+      const targets = (arc as { targets?: unknown } | undefined)?.targets
+      return Array.isArray(targets) && targets.length === 1
     }
     case 'hasLandDropWindow': {
       const hand = Object.keys(gv.myHand ?? {})

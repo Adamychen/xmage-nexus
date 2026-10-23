@@ -1,13 +1,13 @@
 // @vitest-environment node
 import { readdirSync, readFileSync } from 'node:fs'
-import { join, relative } from 'node:path'
+import { join, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 
 const WEB = fileURLToPath(new URL('..', import.meta.url))
 const SPECS = fileURLToPath(new URL('../../docs/specs/', import.meta.url))
-const TEST_ROOTS = ['src', 'e2e', 'fixtures']
-const TEST_FILE = /\.(test|spec)\.tsx?$/
+const TEST_ROOTS = ['src', 'e2e', 'fixtures', 'scripts']
+const TEST_FILE = /\.(test|spec)(\.tsx?|\.mjs)$/
 
 interface Rule {
   id: string
@@ -62,16 +62,19 @@ function taggedTests(prefixes: Set<string>): Map<string, Set<string>> {
   const byId = new Map<string, Set<string>>()
   const title = /\b(?:it|test)(?:\.(?:only|skip|fixme|fails|concurrent))*(?:\.each\s*\((?:[^()]|\((?:[^()]|\([^()]*\))*\))*\))?\(\s*(['"`])((?:[A-Z]{2,5}-\d+)(?:,\s*[A-Z]{2,5}-\d+)*):\s/g
   for (const root of TEST_ROOTS) {
-    const files = readdirSync(join(WEB, root), { recursive: true, encoding: 'utf8' })
+    const base = root === 'scripts' ? resolve(WEB, '..', 'scripts') : join(WEB, root)
+    const files = readdirSync(base, { recursive: true, encoding: 'utf8' })
       .filter((f) => TEST_FILE.test(f) && !f.includes('node_modules'))
     for (const f of files) {
-      const path = posix(relative(WEB, join(WEB, root, f)))
-      const text = readFileSync(join(WEB, root, f), 'utf8')
+      const abs = join(base, f)
+      const rel = posix(relative(WEB, abs))
+      const shown = rel.startsWith('../scripts/') ? rel.slice(3) : rel
+      const text = readFileSync(abs, 'utf8')
       for (const m of text.matchAll(title)) {
         for (const id of m[2].split(/,\s*/)) {
           if (!prefixes.has(id.split('-')[0])) continue
           if (!byId.has(id)) byId.set(id, new Set())
-          byId.get(id)!.add(path)
+          byId.get(id)!.add(shown)
         }
       }
     }

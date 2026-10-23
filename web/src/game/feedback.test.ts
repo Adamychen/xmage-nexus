@@ -282,6 +282,24 @@ describe('parseFeedback', () => {
     expect(mandatory?.required).toBe(true)
   })
 
+  it('CMB-11: carries the declaration direction on the prompt (GAME_SELECT possibleAttackers/possibleBlockers), not in the translated title', () => {
+    const attackers = parseFeedback('GAME_SELECT', 'game-cmb11', {
+      message: 'Declare attackers',
+      options: { possibleAttackers: ['a1'], specialButton: 'All attack' },
+    })
+    expect(attackers?.mode).toBe('combat')
+    expect(attackers?.isDeclaringAttackers).toBe(true)
+    expect(attackers?.special).toBe(true)
+
+    const blockers = parseFeedback('GAME_SELECT', 'game-cmb11', {
+      message: 'Declare blockers',
+      options: { possibleBlockers: ['b1'] },
+    })
+    expect(blockers?.mode).toBe('combat')
+    expect(blockers?.isDeclaringAttackers).toBeUndefined()
+    expect(blockers?.special).toBe(false)
+  })
+
   it('keeps sourceName undefined when the ability/pile/X/multi-amount payload carries no source (no fabrication)', () => {
     const ability = parseFeedback('GAME_CHOOSE_ABILITY', 'game-32', {
       message: 'Choose an ability',

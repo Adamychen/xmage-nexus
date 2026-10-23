@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { failedStatus, writeIntegrationResult } from "./integration-report.mjs";
 
 const LAYER_KEYS = ["selfTest", "humanTest", "verify", "verifyRestart", "e2eReal"];
@@ -25,4 +26,19 @@ test("the crash report is written to disk, so the dashboard reads red instead of
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
   }
+});
+
+test("TST-5: every @real spec is in REAL_E2E_SPECS and vice versa", () => {
+  const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+  const src = fs.readFileSync(path.join(repoRoot, "scripts", "integration-report.mjs"), "utf8");
+  const m = src.match(/REAL_E2E_SPECS\s*=\s*\[([^\]]*)\]/);
+  assert.ok(m, "REAL_E2E_SPECS array literal found");
+  const set = [...m[1].matchAll(/"([^"]+\.spec\.ts)"/g)].map((x) => x[1]).sort();
+  const e2eDir = path.join(repoRoot, "web", "e2e");
+  const tagged = fs
+    .readdirSync(e2eDir)
+    .filter((f) => f.endsWith(".spec.ts"))
+    .filter((f) => /@real/.test(fs.readFileSync(path.join(e2eDir, f), "utf8")))
+    .sort();
+  assert.deepEqual(set, tagged);
 });

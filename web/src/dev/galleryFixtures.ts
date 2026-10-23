@@ -2740,6 +2740,7 @@ export function buildGalleryEntries(): GalleryEntry[] {
           min: 0,
           max: 0,
           special: true,
+          isDeclaringAttackers: true,
         },
         playableIds: myPermanents,
       },

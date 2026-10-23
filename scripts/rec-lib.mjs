@@ -827,7 +827,15 @@ export async function runRecorder(driver) {
     if (driver.captureWhen(gv)) {
       recorded = { recordedAt: new Date().toISOString(), gameId: String(gameId), gameView: gv }
       log('CAPTURADO', driver.name, '— volcando y saliendo')
-      finish(0)
+      // Some drivers need to keep observing for a few moments after the
+      // capture (e.g. the replicate loop verdict: does the server re-emit the
+      // same prompt after the decline?). afterCaptureDelayMs delays the
+      // finish without changing anything else in the flow.
+      if (driver.afterCaptureDelayMs) {
+        setTimeout(() => finish(0), driver.afterCaptureDelayMs)
+      } else {
+        finish(0)
+      }
     }
   }
 

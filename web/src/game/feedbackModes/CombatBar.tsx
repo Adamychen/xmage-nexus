@@ -10,7 +10,7 @@ export default function CombatBar({ form }: { form: UseFeedbackForm }) {
   const { t } = useTranslation()
   const { prompt, busy, send } = form
   if (!prompt) return null
-  const isAtk = prompt.title.toLowerCase().includes('atacan') || prompt.title.toLowerCase().includes('attack')
+  const isAtk = prompt.isDeclaringAttackers === true
   const combatTitle = isAtk ? t('game', 'combat_attackers_title') : t('game', 'combat_blockers_title')
   const confirmLabel = isAtk ? t('game', 'combat_confirm_attackers') : t('game', 'combat_confirm_blockers')
 

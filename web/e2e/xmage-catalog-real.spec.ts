@@ -16,7 +16,7 @@ function searchCard(id: string, name: string, set: string, number: string) {
   }
 }
 
-test('deck builder marks cards and printings the server XMage does not have (real card DB)', { tag: '@decks' }, async ({ page }) => {
+test('deck builder marks cards and printings the server XMage does not have (real card DB) @real', { tag: '@decks' }, async ({ page }) => {
   // Scryfall simulado (deterministas, sin red): Lightning Bolt existe en XMage,
   // "Totally Fake Card" no; de las impresiones, M10 #146 existe y XYZ #999 no.
   await page.route('**/api.scryfall.com/cards/search**', (route) => {

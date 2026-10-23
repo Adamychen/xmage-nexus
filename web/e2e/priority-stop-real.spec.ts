@@ -50,7 +50,7 @@ async function liveGame(page: import('@playwright/test').Page) {
 }
 
 test(
-  'nunca se pasa una ventana de prioridad marcada por el jugador (phaseStops real, F-keys de fase)',
+  'nunca se pasa una ventana de prioridad marcada por el jugador (phaseStops real, F-keys de fase) @real',
   { tag: '@priority-stop-real' },
   async ({ page }) => {
     const session = await startGame(page, {

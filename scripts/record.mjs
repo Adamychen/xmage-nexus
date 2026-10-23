@@ -1198,6 +1198,9 @@ const REGISTRY = {
   'upto-zero': makeUpToZeroDriver,
   redirect: makeRedirectDriver,
   'big-stack': makeBigStackDriver,
+  replicate: makeReplicateDriver,
+  'mana-payment': makeManaPaymentDriver,
+  'target-loop': makeTargetLoopDriver,
   'sealed-pool': makeSealedPoolDriver,
   'tournament-end': makeTournamentEndDriver,
 }
@@ -3784,6 +3787,340 @@ function makeBigStackDriver() {
     },
     captureWhen(gv) {
       return Object.keys(gv?.stack ?? {}).length >= 10
+    },
+  }
+}
+
+// P4 (2026-10-23) — replicate "pay N times" via cheatSetup: Train of
+// Thought ({1}{U}, Replicate {1}{U}) against 8 Islands. We pay one replicate
+// and decline the next ask ("Pay 2 times"). Open product question: does a
+// SECOND decline close the dialog (the server moves on) or does the server
+// re-emit the same prompt (loop)? Driven as: true once, then false; if the
+// SAME "Pay 2 times" ask is re-emitted, that loop is real and we capture
+// that state (the ask open mid-loop). Otherwise we capture the resolved
+// state (Train of Thought in the graveyard). Both shapes share: tap count
+// >= 4 (base {1}{U} + 1 replicate) and the stack or the graveyard show it.
+function makeReplicateDriver() {
+  return {
+    name: 'replicate',
+    outFile: 'replicate.json',
+    deck: {
+      name: 'Mage Web replicate rec',
+      cards: [{ cardName: 'Island', setCode: 'iko', cardNumber: '271', amount: 60 }],
+      sideboard: [],
+    },
+    gameType: 'Constructed - Pioneer',
+    maxMs: 300_000,
+    // After capturing (prompt open) keep observing for ~2.5s so the verdict
+    // appears in the log: if the server re-emits the same prompt after the
+    // decline, it shows as a second GAME_ASK in the sequence.
+    afterCaptureDelayMs: 2500,
+    _acted: false,
+    _cheated: false,
+    _paidFirst: false,
+    _declinedOnce: false,
+    _loopSeen: false,
+    _captureLoop: false,
+    _captureAtDecline: false,
+    _asks: [],
+    onSelect(ctx) {
+      const gv = ctx.gv
+      const me = ctx.me
+      if (!me || me.hasPriority !== true) return
+      const isMyMain = me.isActive === true && (gv.phase === 'PRECOMBAT_MAIN' || gv.phase === 'POSTCOMBAT_MAIN')
+      if (!isMyMain) {
+        ctx.pass()
+        return
+      }
+      if (!this._acted) {
+        if (ctx.playLand()) {
+          this._acted = true
+          ctx.log('onSelect: first land')
+        } else ctx.pass()
+        return
+      }
+      if (!this._cheated) {
+        this._cheated = true
+        ctx.log('onSelect: cheatSetup (Train of Thought in hand, 8 Islands)')
+        void ctx.cheatSetup({
+          hand: ['Train of Thought'],
+          battlefield: Array(8).fill('Island'),
+        })
+        return
+      }
+      if (ctx.cardInHand('Train of Thought') && ctx.untappedMana() >= 2) {
+        ctx.log('onSelect: cast Train of Thought')
+        ctx.playCardByName('Train of Thought')
+        return
+      }
+      ctx.pass()
+    },
+    // The replicate ask is "Pay N time Replicate {1}{U} ?" (repeatable
+    // additional cost). We log the ask sequence for the verdict and drive
+    // the experiment. Default mode: true on the 1st ask (pay one replicate),
+    // false on the 2nd (first decline); if the 2nd is re-emitted identically
+    // that is the loop (second decline) and we capture it. With
+    // E2E_REPLICATE_DECLINE_FIRST=1 we decline the first ask instead (a
+    // second reading of the same experiment).
+    onAsk(q, ctx) {
+      const m = String(q ?? '').match(/^Pay (\d+) times?/)
+      if (!m) return undefined
+      const n = Number(m[1])
+      this._asks.push({ n, q: String(q ?? '').slice(0, 80), at: Date.now() })
+      ctx.log('onAsk replicate:', String(q ?? ''))
+      if (process.env.E2E_REPLICATE_DECLINE_FIRST === '1') {
+        if (n === 1 && !this._declinedOnce) {
+          this._declinedOnce = true
+          ctx.log('onAsk: decline 1st replicate (false)')
+          return false
+        }
+        if (n === 1 && this._declinedOnce) {
+          this._loopSeen = true
+          this._captureLoop = true
+          ctx.log('onAsk: same prompt re-emitted! (loop) - pay to break')
+          return true
+        }
+        return undefined
+      }
+      if (n === 1 && !this._paidFirst) {
+        this._paidFirst = true
+        ctx.log('onAsk: pay 1st replicate (true)')
+        return true
+      }
+      if (n === 2 && !this._declinedOnce) {
+        this._declinedOnce = true
+        this._captureAtDecline = true
+        ctx.log('onAsk: decline 2nd replicate (false)')
+        return false
+      }
+      if (n === 2 && this._declinedOnce) {
+        this._loopSeen = true
+        this._captureLoop = true
+        ctx.log('onAsk: same prompt re-emitted! (loop) - pay to break')
+        return true
+      }
+      if (this._asks.length > 10) return false
+      return undefined
+    },
+    captureWhen(gv) {
+      const me = (gv.players ?? []).find((p) => p?.controlled)
+      const tapped = Object.values(me?.battlefield ?? {}).filter(
+        (c) => /island/i.test(c?.name ?? '') && c?.tapped === true,
+      ).length
+      const hasTrainOnStack = Object.values(gv?.stack ?? {}).some((s) => /train of thought/i.test(s?.name ?? ''))
+      // Mid-flight capture: the "Pay 2 times" ask open (base cost + 1
+      // replicate paid, spell on the stack).
+      if (this._captureAtDecline && hasTrainOnStack && tapped >= 4) return true
+      // Real loop: the same prompt re-emitted.
+      if (this._captureLoop && hasTrainOnStack && tapped >= 4) return true
+      // Fallback (healthy server): decline → the spell resolves. Minimum tap
+      // count depends on the mode: 4 if one replicate was paid (base + 1
+      // replicate), 2 if the very first ask was declined (base only).
+      if (!this._captureAtDecline && !this._captureLoop && this._declinedOnce && !hasTrainOnStack) {
+        const needTaps = this._paidFirst ? 4 : 2
+        if (tapped >= needTaps) {
+          const gy = Object.values(me?.graveyard ?? {})
+          if (gy.some((c) => /train of thought/i.test(c?.name ?? ''))) return true
+        }
+      }
+      return false
+    },
+  }
+}
+
+// P4 (2026-10-23) — chained GAME_PLAY_MANA via cheatSetup: Supreme Verdict
+// ({1}{W}{W}{U}) against 2 Plains + 3 Islands. The four mana symbols arrive
+// as separate PLAY_MANA prompts ("Pay {W}", "Pay {U}", "Pay {1}"...); each
+// is answered with the matching untapped land and the frame is captured with
+// the payment HALF DONE (spell on the stack with some tapped lands and some
+// untapped).
+function makeManaPaymentDriver() {
+  return {
+    name: 'mana-payment',
+    outFile: 'mana-payment.json',
+    deck: {
+      name: 'Mage Web mana-payment rec',
+      cards: [
+        { cardName: 'Plains', setCode: 'iko', cardNumber: '260', amount: 30 },
+        { cardName: 'Island', setCode: 'iko', cardNumber: '271', amount: 30 },
+      ],
+      sideboard: [],
+    },
+    gameType: 'Constructed - Pioneer',
+    maxMs: 300_000,
+    _acted: false,
+    _cheated: false,
+    _taps: 0,
+    onSelect(ctx) {
+      const gv = ctx.gv
+      const me = ctx.me
+      if (!me || me.hasPriority !== true) return
+      const isMyMain = me.isActive === true && (gv.phase === 'PRECOMBAT_MAIN' || gv.phase === 'POSTCOMBAT_MAIN')
+      if (!isMyMain) {
+        ctx.pass()
+        return
+      }
+      if (!this._acted) {
+        if (ctx.playLand()) {
+          this._acted = true
+          ctx.log('onSelect: first land')
+        } else ctx.pass()
+        return
+      }
+      if (!this._cheated) {
+        this._cheated = true
+        ctx.log('onSelect: cheatSetup (Supreme Verdict in hand, 2P+3I)')
+        void ctx.cheatSetup({
+          hand: ['Supreme Verdict'],
+          battlefield: ['Plains', 'Plains', 'Island', 'Island', 'Island'],
+        })
+        return
+      }
+      if (ctx.cardInHand('Supreme Verdict') && ctx.untappedMana() >= 4) {
+        ctx.log('onSelect: cast Supreme Verdict')
+        ctx.playCardByName('Supreme Verdict')
+        return
+      }
+      ctx.pass()
+    },
+    // Pay each symbol with the land of the requested color (precedent: the
+    // modal driver — the message carries the symbol, e.g. "Pay {W}").
+    onPlayMana(ctx, m) {
+      const msg = String(m?.data?.message ?? '')
+      const wantW = /\{W\}/.test(msg)
+      const wantU = /\{U\}/.test(msg)
+      const bf = Object.values(ctx.me?.battlefield ?? {}).filter((c) => !c.tapped && (c.cardTypes ?? []).includes('LAND'))
+      const pick = bf.find((c) => wantW ? /plains/i.test(c?.name ?? '') : wantU ? /island/i.test(c?.name ?? '') : true)
+        ?? bf.find((c) => !/plains|island/i.test(c?.name ?? ''))
+        ?? bf[0]
+      if (pick) {
+        this._taps += 1
+        ctx.sendAction('sendPlayerUUID', { gameId: ctx.gameId, value: pick.id })
+        ctx.log('onPlayMana: tap', pick.name, 'for', msg.slice(0, 40))
+      }
+    },
+    captureWhen(gv) {
+      const me = (gv.players ?? []).find((p) => p?.controlled)
+      const onStack = Object.values(gv?.stack ?? {}).some((s) => /supreme verdict/i.test(s?.name ?? ''))
+      if (!onStack) return false
+      const lands = Object.values(me?.battlefield ?? {}).filter((c) => (c.cardTypes ?? []).includes('LAND'))
+      const tapped = lands.filter((c) => c?.tapped === true).length
+      const untapped = lands.length - tapped
+      return tapped >= 1 && untapped >= 2
+    },
+  }
+}
+
+// P4 (2026-10-23) — partial GAME_TARGET declaration via cheatSetup: Arc
+// Trail ({1}{R}, 2 targets: "any target" + "another target") against a SIM
+// with 2 Mystics. The server asks for the targets in serialized prompts; the
+// frame is captured with the 2nd prompt open: the spell on the stack with
+// only 1 target chosen (targets.length === 1) — the "half-declared" state
+// the fuzz triage saw repeat in a loop.
+function makeTargetLoopDriver() {
+  return {
+    name: 'target-loop',
+    outFile: 'target-loop.json',
+    deck: {
+      name: 'Mage Web target-loop rec',
+      cards: [{ cardName: 'Mountain', setCode: 'LEA', cardNumber: '292', amount: 60 }],
+      sideboard: [],
+    },
+    simDeck: {
+      name: 'Mage Sim mystics',
+      cards: [
+        { cardName: 'Forest', setCode: 'iko', cardNumber: '272', amount: 4 },
+        { cardName: 'Elvish Mystic', setCode: 'm14', cardNumber: '169', amount: 2 },
+        { cardName: 'Forest', setCode: 'iko', cardNumber: '272', amount: 54 },
+      ],
+      sideboard: [],
+    },
+    gameType: 'Constructed - Pioneer',
+    maxMs: 300_000,
+    _acted: false,
+    _cheated: false,
+    _firstTarget: false,
+    _secondPromptSeen: false,
+    _firstId: null,
+    _used: [],
+    simTargets(ctx) {
+      return Object.values((ctx.gv?.players ?? []).find((p) => !p?.controlled)?.battlefield ?? {})
+        .filter((c) => /elvish mystic/i.test(c?.name ?? ''))
+    },
+    onSelect(ctx) {
+      const gv = ctx.gv
+      const me = ctx.me
+      if (!me || me.hasPriority !== true) return
+      const isMyMain = me.isActive === true && (gv.phase === 'PRECOMBAT_MAIN' || gv.phase === 'POSTCOMBAT_MAIN')
+      if (!isMyMain) {
+        ctx.pass()
+        return
+      }
+      if (!this._acted) {
+        if (ctx.playLand()) {
+          this._acted = true
+          ctx.log('onSelect: first land')
+        } else ctx.pass()
+        return
+      }
+      if (!this._cheated) {
+        this._cheated = true
+        ctx.log('onSelect: cheatSetup (Arc Trail in hand, 2 Mountains)')
+        void ctx.cheatSetup({
+          hand: ['Arc Trail'],
+          battlefield: ['Mountain', 'Mountain'],
+        })
+        return
+      }
+      if (ctx.cardInHand('Arc Trail')) {
+        if (this.simTargets(ctx).length < 1) {
+          ctx.log('onSelect: waiting for SIM creatures')
+          ctx.pass()
+          return
+        }
+        ctx.log('onSelect: cast Arc Trail')
+        ctx.playCardByName('Arc Trail')
+        return
+      }
+      ctx.pass()
+    },
+    // Two serialized prompts: 1st → first Mystic; 2nd → the other Mystic (or
+    // the rival's face if no distinct creature remains). The 2nd prompt marks
+    // the "half-declared" state for the capture.
+    onTarget(ctx) {
+      if (!this._firstTarget) {
+        const tgt = this.simTargets(ctx)[0]
+        if (tgt) {
+          this._firstTarget = true
+          this._firstId = tgt.id
+          this._used = [tgt.id]
+          ctx.log('onTarget: 1st target -> SIM Mystic')
+          return tgt.id
+        }
+        return undefined
+      }
+      this._secondPromptSeen = true
+      const tgt = this.simTargets(ctx).find((c) => !this._used.includes(c.id))
+      if (tgt) {
+        this._used.push(tgt.id)
+        ctx.log('onTarget: 2nd target -> SIM Mystic')
+        return tgt.id
+      }
+      const opp = (ctx.gv?.players ?? []).find((p) => !p?.controlled)
+      const id = opp?.playerId ?? opp?.id
+      if (id) {
+        this._used.push(id)
+        ctx.log('onTarget: 2nd target -> opponent face')
+        return id
+      }
+      return undefined
+    },
+    captureWhen(gv) {
+      const arc = Object.values(gv?.stack ?? {}).find((s) => /arc trail/i.test(s?.name ?? ''))
+      if (!arc) return false
+      const targets = arc?.targets
+      if (Array.isArray(targets) && targets.length === 1) return true
+      return this._secondPromptSeen === true
     },
   }
 }

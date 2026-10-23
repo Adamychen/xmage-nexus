@@ -84,8 +84,7 @@ function getLocalizedTitle(prompt: FeedbackPrompt, t: (ns: 'game' | 'dialogs' | 
     default:
       if (prompt.mode === 'mana') return t('game', 'pay_mana')
       if (prompt.mode === 'combat') {
-        const isAtk = prompt.title.toLowerCase().includes('atacan') || prompt.title.toLowerCase().includes('attack')
-        return isAtk ? t('game', 'combat_attackers_title') : t('game', 'combat_blockers_title')
+        return prompt.isDeclaringAttackers === true ? t('game', 'combat_attackers_title') : t('game', 'combat_blockers_title')
       }
       return prompt.title || t('game', 'choose_option')
   }

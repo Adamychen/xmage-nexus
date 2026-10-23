@@ -873,5 +873,26 @@
     "kind": "game",
     "assert": "hasManaRocks",
     "note": "Untapped Sol Ring and Cascade Bluffs (filter land) with priority. Proves the engine files non-basic mana abilities under canPlayObjects `other` (\"{T}: Add {C}{C}.\", \"{U/R}, {T}: Add {U}{U}.\"), not `basicManaAbilities`, so smart stops must recognise them by text or they count as a playable window."
+  },
+  {
+    "file": "replicate.json",
+    "mechanic": "replicate",
+    "kind": "game",
+    "assert": "hasReplicatePromptOpen",
+    "note": "Train of Thought with Replicate {1}{U}: pay one replicate, decline the second ask (Pay 2 times). Frame captured mid-flight: the spell on the stack (plus the replicate copy Ability), 4 tapped Islands, our priority. Decline verdict: after the false the server does NOT re-emit the same prompt (no loop); the spell proceeds."
+  },
+  {
+    "file": "mana-payment.json",
+    "mechanic": "mana-payment",
+    "kind": "game",
+    "assert": "hasManaPaymentMidflight",
+    "note": "Supreme Verdict ({1}{W}{W}{U}) paid by tapping the matching lands across chained PLAY_MANA prompts; frame captured mid-payment (spell on the stack, 2 tapped Plains, 4 untapped lands)."
+  },
+  {
+    "file": "target-loop.json",
+    "mechanic": "target-loop",
+    "kind": "game",
+    "assert": "hasTargetLoopPartiallyChosen",
+    "note": "Arc Trail ({1}{R}, two serialized target prompts): frame captured with the second target prompt open — the spell on the stack with only 1 target chosen (targets.length === 1, SIM Mystic) and our priority."
   }
 ]

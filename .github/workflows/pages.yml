@@ -97,17 +97,14 @@ jobs:
 
       - name: Integration (real stack, nightly only)
         if: github.event_name == 'schedule'
-        continue-on-error: true
         run: node scripts/integration-report.mjs
 
       - name: Re-record golden frames (nightly only)
         if: github.event_name == 'schedule'
-        continue-on-error: true
         run: node scripts/record.mjs all
 
       - name: Validate re-recorded frames (nightly only)
         if: github.event_name == 'schedule'
-        continue-on-error: true
         working-directory: web
         run: npx vitest run fixtures/recorded.test.ts
 
@@ -143,6 +140,12 @@ jobs:
         id: verify-demo
         continue-on-error: true
         run: node scripts/verify-demo.mjs web/dist-demo
+
+      - name: Regenerate status.json with demo results
+        env:
+          GITHUB_SHA: ${{ github.sha }}
+          GITHUB_RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: node scripts/gen-dashboard.mjs
 
       # A broken demo is never published, but it must not block the status page either:
       # the run is failed at the very end, after the deploy.

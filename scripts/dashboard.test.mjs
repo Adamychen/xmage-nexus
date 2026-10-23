@@ -7,6 +7,7 @@ import {
   parsePlaywright,
   fakeE2eLayer,
   proxyVerdict,
+  demoVerdict,
 } from "./gen-dashboard.mjs";
 
 const vitestGreen = {
@@ -159,4 +160,16 @@ test("failing proxy tests fail the proxy layer", () => {
 
 test("a green proxy run passes the proxy layer", () => {
   assert.equal(proxyVerdict(proxyGreen, { status: "pass", code: 0 }).status, "pass");
+});
+
+test("no demo marker is pending", () => {
+  assert.equal(demoVerdict(null), "pending");
+});
+
+test("a passing verify-demo run passes the demo layer", () => {
+  assert.equal(demoVerdict({ status: "pass", checks: 14 }), "pass");
+});
+
+test("a failing verify-demo run fails the demo layer", () => {
+  assert.equal(demoVerdict({ status: "fail", failed: 2 }), "fail");
 });

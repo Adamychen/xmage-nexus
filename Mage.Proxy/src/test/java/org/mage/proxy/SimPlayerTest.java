@@ -178,8 +178,20 @@ class SimPlayerTest {
     void repeatableCostAsksAreDeclined() {
         assertTrue(SimPlayer.isRepeatableCostAsk("pay 999 times replicate {1}{r} ?"));
         assertTrue(SimPlayer.isRepeatableCostAsk("pay 3 times multikicker {1}{g} ?"));
+        assertTrue(SimPlayer.isRepeatableCostAsk("pay 1 time kicker {1}{r} ?"));
+        assertTrue(SimPlayer.isRepeatableCostAsk("pay 4 times buyback {2} ?"));
+        assertTrue(SimPlayer.isRepeatableCostAsk("Pay 2 times replicate {1}{r} ?"));
         assertTrue(!SimPlayer.isRepeatableCostAsk("pay 2 life? (otherwise steam vents becomes tapped)"));
+        assertTrue(!SimPlayer.isRepeatableCostAsk("pay the mana cost?"));
         assertTrue(!SimPlayer.isRepeatableCostAsk(null));
+    }
+
+    @Test
+    void askLoopBoundStopsInfiniteAcceptance() {
+        assertTrue(SimPlayer.withinAskLoopBound(0));
+        assertTrue(SimPlayer.withinAskLoopBound(19));
+        assertTrue(!SimPlayer.withinAskLoopBound(20));
+        assertTrue(!SimPlayer.withinAskLoopBound(1000));
     }
 
     @Test

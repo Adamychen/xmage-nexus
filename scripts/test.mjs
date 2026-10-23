@@ -9,6 +9,7 @@ import path from 'node:path'
 import fs from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { binName, ensureMageArtifacts, log, logError, PORTS, repoRoot, run, waitForPort, waitForPortDown } from './lib.mjs'
+import { enforceCoverageGate } from './coverage-gate.mjs'
 
 const WEB_DIR = path.join(repoRoot, 'web')
 const STACK_HINT = 'el stack no está corriendo — ejecuta primero: node scripts/ctl.mjs start'
@@ -257,6 +258,18 @@ async function main() {
         if (vitestRun) note = ' (shared vitest run)'
         vitestRun ??= run(binName('npm'), ['--prefix', 'web', 'run', vitestCommand])
         res = vitestVerdict(vitestRun, name)
+        // Coverage no-regression gate: the vitest thresholds catch a drop below the floor, not a
+        // drift above it. Only the coverage layer owns this gate (the unit layer passes when the
+        // tests pass even if the gate failed), and only when vitest itself passed: on a failed
+        // run the summary can be partial.
+        if (name === 'coverage' && res.code === 0) {
+          const gate = enforceCoverageGate()
+          if (!gate.ok) {
+            res = { code: 1, stdout: '', stderr: gate.message }
+          } else if (gate.recordedBaseline) {
+            log(gate.message)
+          }
+        }
         break
       case 'typecheck':
         res = run(binName('npm'), ['--prefix', 'web', 'run', 'typecheck'])

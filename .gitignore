@@ -113,3 +113,5 @@ web/.mcp-tests.json
 web/.vitest.json
 web/.e2e.json
 web/.proxy.json
+web/.demo.json
+/web/test-results.json

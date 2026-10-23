@@ -185,7 +185,6 @@ Design: `docs/plans/2026-10-22-behavior-specs-design.md`. Phase 1 shipped 2026-1
 - Rules marked `Guard: none yet` need a test (`grep -n "none yet" docs/specs/*.md`).
 - Areas without a spec are written the first time someone changes them (stack, log and chat, deck builder, draft, settings, spectating).
 - Findings while writing the specs (not made rules). Confirmed in code:
-  - Combat labels are wrong in fr/de/it/ru/ja/zhs: `ActionButton.tsx`, `feedbackModes/CombatBar.tsx` and `GenericDialog.tsx` tell attackers from blockers by finding `atacan`/`attack` in the *translated* title (`feedback/parse.ts`), so those locales show the blockers label in the attack window. Carry the mode on the prompt.
   - `state/events/game.ts` clears an open `GAME_PLAY_MANA` prompt on any update whose stack is non-empty, and a spell being paid for is already on the stack. Whether the real server sends an update between mana asks needs a recorded frame.
   - `board/revealedCards.ts` `opponentRevealedCards` adds every revealed group to each opponent's known hand, whatever zone or player it came from (`handRevealFx.ts` filters by the group name).
   - To check: skip keys (F4–F11) fire with Settings/wiki/game menu open; F5/F11 are always prevented on the game screen; Ctrl/Shift-click to hold priority cannot reach `onPlayableClick` from the hand (`CardSlot.onClick` drops the event); the AskBar 1–9 digits need focus inside the bar; `__mageScene.targeting.source` is always null although `AGENTS.md` documents it; the combat ledger and the life-loss sound mute key off damage-step frames the real server rarely sends (the CMB-6 trap); combat `selectable` may outlive the declaration window; `resolveTargetSourceId` matches the arrow source by card name; `CardSlot.css` `sicknessFloat`/`enteredGlow` loop forever and two of them ignore `--fx-speed`; the wiki's Shortcuts tab has placeholder copy; unadvertised shortcuts (zoom, rewind arrows/Esc, Shift-click on stops, digits, Alt peek).
@@ -194,7 +193,8 @@ Design: `docs/plans/2026-10-22-behavior-specs-design.md`. Phase 1 shipped 2026-1
 
 ### 4.4 Test-infrastructure risk
 
-- The nightly real-mode job covers 5 of 312 specs plus the `verify` layer; a ~15-spec protocol-sensitive set would shrink drift risk.
+- The nightly real-mode job covers 11 of 312 specs plus the `verify` layer; the `REAL_E2E_SPECS`
+  set grows as more protocol-sensitive specs are tagged `@real` (TST-5).
 - `verify` scripts are order-sensitive (`verify-player-leave` is the most sensitive and runs second); isolating each with a fresh proxy would remove that class of flake.
 - Replay files exist (§4.2); loading one in the GitHub Pages demo is still open.
 - Mobile layout: the full board stays desktop-only on purpose. Since 2026-10-15 a phone-width window (≤ 600 px) has a compact spectator view (`game/MobileSpectator.tsx`: scoreboard, turn/phase, stack, feed and chat, "Full board" button), the lobby and chat already fit, and dialogs no longer overflow (`ui/DialogShell.css` caps the panel at the window minus the backdrop padding; the create-table wizard hides inactive step labels and stacks its type cards). Guard: `e2e/mobile.spec.ts` at 390 px (verified red with the dialog fix removed). The draft header fits since the same day (same guard, verified red without its CSS). Still open: playing a seat on a phone and the deck builder editor at 390 px.
@@ -223,10 +223,10 @@ Design: `docs/plans/2026-10-09-report-pipeline-design.md`. Web path shipped.
 
 | What | Why |
 |---|---|
-| Tour copy is English only | `DemoTour.tsx` hard-codes its strings; the rest of the client has 9 locales |
+| Tour copy internationalized to 9 locales | Built: `DemoTour.tsx`/`scenarios.ts` use typed `titleKey`/`blurbKey` into `TranslationSchema['demo']`; the 12 scenarios' 24 strings exist in all 9 locales, guarded by `scripts/i18n-coverage.mjs` and `src/i18n/i18n.coverage.test.ts` |
 | EDHREC is frozen for one commander | `demoEdhrecPage` only answers `krenko-mob-boss`; card search and EDHREC resolution still call Scryfall live |
 | Roster and tables are invented | `src/demo/data.ts`. The ranking carries a "sample data" note since 2026-10-15 (`leaderboard-demo-note`, checked by `verify-demo.mjs`); the lobby table list does not |
-| Not a layer on the status dashboard | `verify-demo.mjs` fails the Pages run but `status.json` has no row for it |
+| Built: a demo layer on the status dashboard | `verify-demo.mjs` writes `web/.demo.json`; `gen-dashboard.mjs` renders it as the "Interactive demo (tour)" layer via `demoVerdict`; `pages.yml` regenerates `status.json` with the demo result and fails the run on a red demo layer |
 | Not covered: replay viewer, spectate, chat bots | Needs a scenario that streams frames |
 | Mobile layout unchecked | Verified at 1440×900 only (the client itself has a phone spectator view since 2026-10-15) |
 

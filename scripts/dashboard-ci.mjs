@@ -11,6 +11,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { run, binName, repoRoot, ensureMageArtifacts } from "./lib.mjs";
 import { build } from "./gen-dashboard.mjs";
+import { enforceCoverageGate } from "./coverage-gate.mjs";
 
 const webDir = path.join(repoRoot, "web");
 const mcpDir = path.join(repoRoot, "mcp");
@@ -30,7 +31,18 @@ async function main() {
     cwd: webDir,
     timeoutMs: 600_000,
   });
-  writeMarker(".vitest.json", vitest.code === 0 ? "pass" : "fail", { code: vitest.code });
+  let vitestStatus = vitest.code === 0 ? "pass" : "fail";
+  const vitestExtra = { code: vitest.code };
+  if (vitest.code === 0) {
+    // Coverage no-regression gate (TST-6): fail when a metric drops >1 pt vs the previous run.
+    const gate = enforceCoverageGate();
+    if (!gate.ok) {
+      vitestStatus = "fail";
+      vitestExtra.gate = gate.message;
+      console.error("[dashboard-ci]", gate.message);
+    }
+  }
+  writeMarker(".vitest.json", vitestStatus, vitestExtra);
 
   // 2. Typecheck
   const tc = run("npm", ["run", "typecheck"], { cwd: webDir, timeoutMs: 300_000 });

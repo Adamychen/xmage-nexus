@@ -99,6 +99,8 @@ public class SimPlayer implements MageClient {
     private final Set<UUID> triedManaSources = new HashSet<>();
     private String manaPaymentSignature = null;
     private String lastCastSignature = null;
+    private String lastAcceptedAsk = null;
+    private int consecutiveAcceptedAsks = 0;
     private final Retry choiceRetry = new Retry();
     private final Retry targetRetry = new Retry();
     private final Retry amountRetry = new Retry();
@@ -379,10 +381,23 @@ public class SimPlayer implements MageClient {
                     break;
                 }
                 case GAME_ASK: {
-                    // mulligan: false = mantener la mano; el resto de preguntas ("pass
-                    // anyway", opciones de elección) se aceptan con true
+                    // mulligan: false = keep the hand; other questions ("pass
+                    // anyway", choice options) are accepted with true, except
+                    // repeatable costs (replicate/multikicker and any "pay N
+                    // times...") and the fail-safe on consecutive identical asks:
+                    // if the server repeats the same prompt past the bound, decline
+                    // so the SIM never feeds an infinite loop (TST-3).
                     String msg = lower(data instanceof GameClientMessage ? ((GameClientMessage) data).getMessage() : null);
-                    boolean answer = !isMulliganAsk(msg) && !isRepeatableCostAsk(msg);
+                    boolean answer = !isMulliganAsk(msg) && !isRepeatableCostAsk(msg)
+                            && withinAskLoopBound(consecutiveAcceptedAsks);
+                    if (answer) {
+                        if (msg != null && msg.equals(lastAcceptedAsk)) {
+                            consecutiveAcceptedAsks++;
+                        } else {
+                            lastAcceptedAsk = msg;
+                            consecutiveAcceptedAsks = 1;
+                        }
+                    }
                     logger.info("sim " + username + " ask msg='" + msg + "' -> sendPlayerBoolean(" + answer + ")");
                     session.sendPlayerBoolean(gameId, answer);
                     break;
@@ -925,7 +940,20 @@ public class SimPlayer implements MageClient {
     }
 
     static boolean isRepeatableCostAsk(String msg) {
-        return msg != null && msg.contains("times") && (msg.contains("replicate") || msg.contains("multikicker"));
+        if (msg == null) {
+            return false;
+        }
+        // Any "pay N times <cost> ?" negotiation (replicate, multikicker,
+        // kicker, buyback, ...) is a repeatable cost: answering true to every
+        // server repetition feeds the loop (TST-3).
+        return msg.matches("(?i)^pay\\s+\\d+\\s+times?\\b.*");
+    }
+
+    /** Bound of consecutive identical accepted asks (fail-safe TST-3). */
+    static final int MAX_CONSECUTIVE_ACCEPTED_ASKS = 20;
+
+    static boolean withinAskLoopBound(int consecutiveAcceptedAsks) {
+        return consecutiveAcceptedAsks < MAX_CONSECUTIVE_ACCEPTED_ASKS;
     }
 
     static boolean isMulliganAsk(String msg) {

@@ -1,9 +1,10 @@
 import { cleanup, fireEvent, render } from '@testing-library/react'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import GenericDialog from './GenericDialog'
 import type { UseFeedbackForm } from '../useFeedbackForm'
 import type { FeedbackOption, FeedbackPrompt } from '../feedback/types'
 import * as cmds from '../../net/commands'
+import { setLanguage } from '../../i18n'
 
 vi.mock('../../net/commands', async (importOriginal) => ({
   ...(await importOriginal<typeof import('../../net/commands')>()),
@@ -411,5 +412,31 @@ describe('GenericDialog grid keyboard navigation on an empty grid', () => {
     fireEvent.keyDown(search, { key: 'ArrowDown' })
     fireEvent.change(search, { target: { value: '' } })
     expect(container.querySelectorAll<HTMLButtonElement>('.feedback-choice-card')[0].tabIndex).toBe(0)
+  })
+})
+
+describe('GenericDialog combat declaration direction', () => {
+  beforeEach(() => {
+    setLanguage('en')
+  })
+  afterEach(() => {
+    cleanup()
+  })
+
+  it('CMB-11: a combat prompt shows the attacker title from the prompt flag, not the translated title', () => {
+    const combatPrompt: FeedbackPrompt = {
+      method: 'GAME_SELECT',
+      gameId: 'g1',
+      title: 'Déclaration des attaquants',
+      message: 'Declare attackers',
+      mode: 'combat',
+      options: [],
+      min: 0,
+      max: 0,
+      required: true,
+      isDeclaringAttackers: true,
+    }
+    const { container } = render(<GenericDialog form={stubForm(combatPrompt)} />)
+    expect(container.querySelector('#feedback-title')?.textContent).toBe('Declare Attackers')
   })
 })

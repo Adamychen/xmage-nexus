@@ -14,7 +14,7 @@ async function createHumanDraft(page: Page, table: string) {
 }
 
 
-test.describe('Draft reload against the real stack', { tag: '@draftreal' }, () => {
+test.describe('Draft reload against the real stack @real', { tag: '@draftreal' }, () => {
   test.skip(FAKE_MODE, 'solo stack real (proxy + XMage local)')
   test('two humans draft, then reload during construction', async ({ page, browser }: { page: Page; browser: Browser }) => {
     test.setTimeout(10 * 60_000)
