@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useSettings, setSetting } from '../state/store'
 import { useTranslation } from '../i18n'
 import type { ManaPaymentStored } from '../state/persistence'
-import { saveBoardRewind, saveBrowserNotifications, saveGameLogAutoSave } from '../state/persistence'
+import { saveBoardRewind, saveBrowserNotifications, saveGameLogAutoSave, saveTurnRecap } from '../state/persistence'
 import { clearRewind } from '../game/rewind'
 import { notificationsSupported, requestNotificationPermission } from '../game/attentionAlerts'
 import { clearAutoAnswers, removeAutoAnswer } from '../game/autoAnswers'
@@ -79,6 +79,15 @@ function GameplaySection() {
         }}
         label={t('game', 'rewind_setting')}
         title={t('game', 'rewind_setting_hint')}
+      />
+      <Toggle
+        checked={settings.turnRecap}
+        onChange={(v) => {
+          setSetting('turnRecap', v)
+          saveTurnRecap(v)
+        }}
+        label={t('game', 'recap_setting')}
+        title={t('game', 'recap_setting_hint')}
       />
       {notificationsSupported() && (
         <>

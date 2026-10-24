@@ -34,6 +34,8 @@ import {
   loadResumeToken,
   clearResumeToken,
   DEFAULT_AUDIO_SETTINGS,
+  loadTurnRecap,
+  saveTurnRecap,
   type ConnectionInfo,
   type FxSettings,
   type AudioSettings,
@@ -506,6 +508,27 @@ describe('persistence', () => {
     ])('SET-1: a stored cardPreviewScale of %j loads as %s', (stored, expected) => {
       mockStorage['mage-web-appearance'] = JSON.stringify({ sleeveId: 'classic', boardLayout: 'standard', uiScale: 1, cjkBoost: true, cardPreviewScale: stored })
       expect(loadAppearanceSettings().cardPreviewScale).toBe(expected)
+    })
+  })
+
+  describe('turn recap setting persistence', () => {
+    it('SET-2: the turn recap is off until saved on, and the saved value survives a reload', () => {
+      expect(loadTurnRecap()).toBe(false)
+      saveTurnRecap(true)
+      expect(mockStorage['mage-web-turn-recap']).toBe('true')
+      expect(loadTurnRecap()).toBe(true)
+      saveTurnRecap(false)
+      expect(loadTurnRecap()).toBe(false)
+      mockStorage['mage-web-turn-recap'] = 'garbage'
+      expect(loadTurnRecap()).toBe(false)
+    })
+
+    it('SET-2: a fresh settings slice starts with the turn recap off, and on once it was saved on', async () => {
+      vi.resetModules()
+      expect((await import('./slices/settings')).initialSettings.settings.turnRecap).toBe(false)
+      saveTurnRecap(true)
+      vi.resetModules()
+      expect((await import('./slices/settings')).initialSettings.settings.turnRecap).toBe(true)
     })
   })
 

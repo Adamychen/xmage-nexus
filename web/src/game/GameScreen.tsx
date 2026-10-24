@@ -591,7 +591,7 @@ export default function GameScreen() {
                 <GameBoard {...boardProps} focusedOpponentId={currentOpp?.playerId} />
               )}
               <LowLifeVignette game={displayGame} />
-              <TurnRecapStrip />
+              {settings.turnRecap && <TurnRecapStrip />}
               <FeedbackOverlay />
               <ImpactOverlay />
               <CoinFlipOverlay />
