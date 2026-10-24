@@ -13,6 +13,7 @@ import RenderedCard from '../cards/rendered/RenderedCard'
 import Icon from '../ui/Icon'
 import { KeywordCoin } from './KeywordGlyph'
 import { fxEnabled } from './fx'
+import { CARD_PREVIEW_SCALE_MIN, KEYWORDS_BASE_WIDTH, PREVIEW_BASE_HEIGHT, PREVIEW_BASE_WIDTH, fitPreviewScale, normalizeCardPreviewScale, previewWidthAt } from './cardPreviewScale'
 import './FloatingCardPreview.css'
 
 interface FloatingCardPreviewProps {
@@ -43,9 +44,8 @@ export function tiltFromPointer(x: number, y: number, rect: Pick<DOMRect, 'left'
   }
 }
 
-const PREVIEW_WIDTH = 320
-const PREVIEW_HEIGHT = 448
-const KEYWORDS_WIDTH = 240
+const EDGE = 12
+const ANCHOR_GAP = 16
 
 export default function FloatingCardPreview({
   card,
@@ -56,7 +56,7 @@ export default function FloatingCardPreview({
   leaving = false,
 }: FloatingCardPreviewProps) {
   const modalOpen = useStore(isBlockingModal)
-  const { cardRender } = useSettings()
+  const { cardRender, cardPreviewScale } = useSettings()
   const { t, lang } = useTranslation()
   const [showBackFace, setShowBackFace] = useState(false)
   const mainRef = useRef<HTMLDivElement>(null)
@@ -116,39 +116,52 @@ export default function FloatingCardPreview({
   }
 
   let style: React.CSSProperties = {}
-  const totalWidth = keywords.length > 0 ? PREVIEW_WIDTH + KEYWORDS_WIDTH + 10 : PREVIEW_WIDTH
+  const hasKeywords = keywords.length > 0
+  const chosenScale = normalizeCardPreviewScale(cardPreviewScale)
+  let scale = chosenScale
 
   if (boardRect) {
     const relLeft = anchorRect.left - boardRect.left
     const relTop = anchorRect.top - boardRect.top
     const relRight = anchorRect.right - boardRect.left
     const relBottom = anchorRect.bottom - boardRect.top
+    const availableWidth = boardRect.width - EDGE * 2
+    const availableHeight = boardRect.height - EDGE * 2
 
     const isHandCard = relBottom > boardRect.height - 140
 
     if (isHandCard) {
+      const aboveHeight = relTop - EDGE * 2
+      const floorHeight = Math.min(availableHeight, PREVIEW_BASE_HEIGHT * CARD_PREVIEW_SCALE_MIN)
+      scale = fitPreviewScale(chosenScale, availableWidth, Math.max(aboveHeight, floorHeight), hasKeywords)
+      const previewWidth = PREVIEW_BASE_WIDTH * scale
+      const previewHeight = PREVIEW_BASE_HEIGHT * scale
+      const totalWidth = previewWidthAt(scale, hasKeywords)
       const left = Math.max(
-        12,
-        Math.min(boardRect.width - totalWidth - 12, relLeft + anchorRect.width / 2 - PREVIEW_WIDTH / 2)
+        EDGE,
+        Math.min(boardRect.width - totalWidth - EDGE, relLeft + anchorRect.width / 2 - previewWidth / 2)
       )
-      const bottom = Math.max(12, boardRect.height - relTop + 12)
+      const bottom = Math.max(EDGE, Math.min(boardRect.height - relTop + EDGE, boardRect.height - previewHeight - EDGE))
       style = {
         position: 'absolute',
         left: `${left}px`,
         bottom: `${bottom}px`,
-        height: `${PREVIEW_HEIGHT}px`,
+        height: `${previewHeight}px`,
       }
     } else {
-      const fitsRight = relRight + 16 + totalWidth <= boardRect.width - 12
+      scale = fitPreviewScale(chosenScale, availableWidth, availableHeight, hasKeywords)
+      const previewHeight = PREVIEW_BASE_HEIGHT * scale
+      const totalWidth = previewWidthAt(scale, hasKeywords)
+      const fitsRight = relRight + ANCHOR_GAP + totalWidth <= boardRect.width - EDGE
       const left = fitsRight
-        ? relRight + 16
-        : Math.max(12, relLeft - totalWidth - 16)
+        ? relRight + ANCHOR_GAP
+        : Math.max(EDGE, relLeft - totalWidth - ANCHOR_GAP)
 
       const top = Math.max(
-        12,
+        EDGE,
         Math.min(
-          boardRect.height - PREVIEW_HEIGHT - 12,
-          relTop + anchorRect.height / 2 - PREVIEW_HEIGHT / 2
+          boardRect.height - previewHeight - EDGE,
+          relTop + anchorRect.height / 2 - previewHeight / 2
         )
       )
 
@@ -156,20 +169,23 @@ export default function FloatingCardPreview({
         position: 'absolute',
         left: `${left}px`,
         top: `${top}px`,
-        height: `${PREVIEW_HEIGHT}px`,
+        height: `${previewHeight}px`,
       }
     }
   } else {
-    const fitsLeft = anchorRect.left - totalWidth - 16 >= 12
+    scale = fitPreviewScale(chosenScale, window.innerWidth - EDGE * 2, window.innerHeight - EDGE * 2, hasKeywords)
+    const previewHeight = PREVIEW_BASE_HEIGHT * scale
+    const totalWidth = previewWidthAt(scale, hasKeywords)
+    const fitsLeft = anchorRect.left - totalWidth - ANCHOR_GAP >= EDGE
     const left = fixedSide === 'left' || fitsLeft
-      ? Math.max(12, anchorRect.left - totalWidth - 16)
-      : Math.min(window.innerWidth - totalWidth - 12, anchorRect.right + 16)
+      ? Math.max(EDGE, anchorRect.left - totalWidth - ANCHOR_GAP)
+      : Math.min(window.innerWidth - totalWidth - EDGE, anchorRect.right + ANCHOR_GAP)
 
     const top = Math.max(
-      12,
+      EDGE,
       Math.min(
-        window.innerHeight - PREVIEW_HEIGHT - 12,
-        anchorRect.top + anchorRect.height / 2 - PREVIEW_HEIGHT / 2
+        window.innerHeight - previewHeight - EDGE,
+        anchorRect.top + anchorRect.height / 2 - previewHeight / 2
       )
     )
 
@@ -177,10 +193,12 @@ export default function FloatingCardPreview({
       position: 'fixed',
       left: `${left}px`,
       top: `${top}px`,
-      height: `${PREVIEW_HEIGHT}px`,
+      height: `${previewHeight}px`,
       zIndex: 10000,
     }
   }
+
+  style = { ...style, '--card-preview-zoom': String(scale) } as React.CSSProperties
 
   const isAbility = isAbilityCard(activeCard)
   const perm = activeCard as PermanentView
@@ -188,12 +206,13 @@ export default function FloatingCardPreview({
   const manaCost = (activeCard.manaCostLeftStr ?? []).join('')
   const rules = activeCard.rules ?? []
 
-  const isNearRightEdge = style.left ? parseInt(String(style.left), 10) + PREVIEW_WIDTH + KEYWORDS_WIDTH > (boardRect?.width ?? window.innerWidth) - 20 : false
+  const isNearRightEdge = style.left ? parseInt(String(style.left), 10) + (PREVIEW_BASE_WIDTH + KEYWORDS_BASE_WIDTH) * scale > (boardRect?.width ?? window.innerWidth) - 20 : false
 
   return (
     <div
       className={`floating-card-preview ${isNearRightEdge ? 'flip-keywords' : ''}${leaving ? ' is-leaving' : ''}`}
       style={style}
+      data-preview-scale={scale}
     >
       <div className="floating-card-main" ref={mainRef}>
         <div className="floating-card-inner" data-foil={imgUrl ? foilKind(activeCard.rarity) ?? undefined : undefined}>

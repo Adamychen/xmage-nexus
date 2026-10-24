@@ -17,6 +17,7 @@ import { boardLayoutChoiceOf, chooseBoardLayout, type BoardLayoutChoice } from '
 import { KEYWORD_AURA_MODES, KEYWORD_ICON_SETS, PT_BADGE_MODES, SICKNESS_STYLES } from '../board/cardOverlays'
 import Button from '../ui/Button'
 import { CARD_STYLES, TAP_STYLES } from '../board/compactCard'
+import { CARD_PREVIEW_SCALE_DEFAULT, CARD_PREVIEW_SCALE_MAX, CARD_PREVIEW_SCALE_MIN, CARD_PREVIEW_SCALE_STEP, cardPreviewPercent, normalizeCardPreviewScale } from '../board/cardPreviewScale'
 import './SettingsModal.css'
 import '../appearance/SleevePickerModal.css'
 
@@ -113,6 +114,43 @@ export function InterfaceSection() {
         disabled={!cjkLang}
         title={cjkLang ? undefined : t('lobby', 'cjk_boost_only')}
       />
+      <CardPreviewSizeControl />
+    </div>
+  )
+}
+
+function CardPreviewSizeControl() {
+  const { t } = useTranslation()
+  const { cardPreviewScale } = useSettings()
+  const percent = cardPreviewPercent(cardPreviewScale)
+  return (
+    <div className="settings-preview-size" data-testid="settings-card-preview-size">
+      <h3 className="settings-section-title">{t('lobby', 'card_preview_size_title')}</h3>
+      <p className="settings-hint">{t('lobby', 'card_preview_size_hint')}</p>
+      <div className="settings-preview-size-row">
+        <input
+          type="range"
+          min={CARD_PREVIEW_SCALE_MIN}
+          max={CARD_PREVIEW_SCALE_MAX}
+          step={CARD_PREVIEW_SCALE_STEP}
+          className="audio-slider"
+          value={normalizeCardPreviewScale(cardPreviewScale)}
+          aria-label={t('lobby', 'card_preview_size_title')}
+          aria-valuetext={`${percent}%`}
+          data-testid="settings-card-preview-scale"
+          onChange={(e) => setSetting('cardPreviewScale', normalizeCardPreviewScale(Number(e.target.value)))}
+        />
+        <span className="settings-preview-size-value" data-testid="settings-card-preview-value">{percent}%</span>
+        <Button
+          size="sm"
+          variant="ghost"
+          disabled={percent === 100}
+          onClick={() => setSetting('cardPreviewScale', CARD_PREVIEW_SCALE_DEFAULT)}
+          data-testid="settings-card-preview-reset"
+        >
+          {t('lobby', 'card_preview_size_reset')}
+        </Button>
+      </div>
     </div>
   )
 }

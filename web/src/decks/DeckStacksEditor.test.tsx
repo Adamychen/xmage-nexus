@@ -3,6 +3,8 @@ import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/re
 import { DeckStacksEditor } from './DeckStacksEditor'
 import type { DeckV2 } from './types'
 import type { CardStripMeta } from './ArenaCardStrip'
+import { getState, setState } from '../state/store'
+import { stackColumnWidth } from './useStackColumnWidth'
 
 const { putSpy, metaMap } = vi.hoisted(() => {
   const bolt = { manaCost: '{R}', cmc: 1, typeLine: 'Instant', colors: ['R'] }
@@ -58,6 +60,7 @@ function renderEditor(overrides: { onClose?: () => void; onEdit?: () => void } =
 afterEach(() => {
   cleanup()
   putSpy.mockClear()
+  setState({ settings: { ...getState().settings, deckStacksScale: 100 } })
 })
 
 describe('DeckStacksEditor', () => {
@@ -119,6 +122,65 @@ describe('DeckStacksEditor', () => {
     const duplicateKeyWarnings = errorSpy.mock.calls.filter((args) => args.map(String).join(' ').includes('same key'))
     errorSpy.mockRestore()
     expect(duplicateKeyWarnings).toEqual([])
+  })
+
+  it('DCK-1: the header has a card size slider from 50% to 200% in steps of 10, 100% by default', () => {
+    renderEditor()
+    const slider = screen.getByRole('slider') as HTMLInputElement
+    expect(slider.closest('.stacks-editor-head')).not.toBeNull()
+    expect(slider.min).toBe('50')
+    expect(slider.max).toBe('200')
+    expect(slider.step).toBe('10')
+    expect(slider.value).toBe('100')
+    expect(document.querySelector('.stacks-editor-head .arena-grid-size-value')?.textContent).toBe('100%')
+    const main = screen.getByTestId('stacks-editor-main')
+    expect(main.style.getPropertyValue('--stack-scale')).toBe('1')
+  })
+
+  it('DCK-1: moving the slider scales the main deck columns, leaves the sideboard alone and saves the setting', () => {
+    renderEditor()
+    const slider = screen.getByRole('slider')
+    fireEvent.change(slider, { target: { value: '200' } })
+    expect(getState().settings.deckStacksScale).toBe(200)
+    expect(screen.getByTestId('stacks-editor-main').style.getPropertyValue('--stack-scale')).toBe('2')
+    expect(document.querySelector('.stacks-editor-head .arena-grid-size-value')?.textContent).toBe('200%')
+    const side = document.querySelector('.stacks-editor-side') as HTMLElement
+    expect(side.style.getPropertyValue('--stack-scale')).toBe('')
+    expect(side.closest('[style*="--stack-scale"]')).toBeNull()
+    fireEvent.change(slider, { target: { value: '50' } })
+    expect(getState().settings.deckStacksScale).toBe(50)
+    expect(screen.getByTestId('stacks-editor-main').style.getPropertyValue('--stack-scale')).toBe('0.5')
+  })
+
+  it('DCK-1: a stored size is applied on open and clicks still edit the deck at that size', () => {
+    setState({ settings: { ...getState().settings, deckStacksScale: 160 } })
+    renderEditor()
+    expect((screen.getByRole('slider') as HTMLInputElement).value).toBe('160')
+    expect(screen.getByTestId('stacks-editor-main').style.getPropertyValue('--stack-scale')).toBe('1.6')
+    const bolt = document.querySelector('.stacks-editor-main .arena-stack-card[data-card-key="M10:146:Lightning Bolt"]') as HTMLElement
+    fireEvent.click(bolt)
+    expect(bolt.querySelector('.arena-stack-qty')?.textContent).toBe('3x')
+    fireEvent.click(bolt, { shiftKey: true })
+    expect(document.querySelector('.stacks-editor-side-count')?.textContent).toBe('3')
+  })
+
+  it.each([
+    [900, 12],
+    [1180, 12],
+    [613, 12],
+  ])('DCK-1: in a %ipx main area a column at 200%% is twice its 100%% width and 100%% fills the row exactly', (available, gap) => {
+    const base = stackColumnWidth(available, gap, 1)!
+    const count = Math.floor((available + gap) / (base + gap))
+    expect(count * base + (count - 1) * gap).toBeLessThanOrEqual(available)
+    expect(available - (count * base + (count - 1) * gap)).toBeLessThan(1)
+    expect(stackColumnWidth(available, gap, 2)! / base).toBeCloseTo(2, 2)
+    expect(stackColumnWidth(available, gap, 0.5)! / base).toBeCloseTo(0.5, 2)
+  })
+
+  it('DCK-1: a main area narrower than one column keeps today\'s minimum column width', () => {
+    expect(stackColumnWidth(150, 12, 1)).toBe(180)
+    expect(stackColumnWidth(150, 12, 2)).toBe(360)
+    expect(stackColumnWidth(0, 12, 1)).toBeNull()
   })
 
   it('Edit hands over to the classic builder', async () => {

@@ -197,3 +197,18 @@ copy never scrolls sideways.
   screen; the issue asked for a resizable panel.
 - Guard: `src/board/SpotlightBoard.test.tsx` · `src/board/cardOverlays.test.ts` · `src/state/persistence.test.ts` · `e2e/spotlight.spec.ts`
 
+
+### BRD-14 · The phase dial's centre is big enough for what it says
+The round button at the centre of the phase dial (v2 chrome) is large enough to hold its longest
+everyday text — "Waiting for <name>" with a 14-character name, and the clock line under it
+("Thinking 0:00 · 07:13 left") — without spilling past the circle's edge. Text inside it wraps only
+between words, never inside one ("BLACKMAGI / C", "THINKIN / G" are bugs); a name that still does
+not fit is cut with an ellipsis and the full text stays in the button's tooltip. The phase pips
+move out with the bigger centre, so no pip overlaps it and the pips keep their spacing, and the
+whole dial still fits the dock corner it sits in without covering the hand or the side panel. The
+fit is measured against the rendered text, not a fixed pixel budget, so a wider font (injected
+`--font-ui`) still fits.
+
+- Why: a 112 px centre broke "Waiting for BlackMagic" into "BLACKMAGI / C", "Thinking" into
+  "THINKIN / G" and clipped "07:13 left" at the edge (user report with screenshot, 2026-10-24).
+- Guard: `src/game/PhaseDial.test.tsx` · `e2e/game-ui-v2.spec.ts`

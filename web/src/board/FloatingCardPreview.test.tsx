@@ -2,6 +2,7 @@ import { act, cleanup, fireEvent, render } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import FloatingCardPreview from './FloatingCardPreview'
 import { setLanguage } from '../i18n'
+import { setSetting } from '../state/store'
 import type { CardView, PermanentView } from '../net/types'
 
 vi.mock('../cards/cardImages', async (importOriginal) => ({
@@ -338,5 +339,82 @@ describe('FloatingCardPreview', () => {
     rerender(<FloatingCardPreview card={ability('a2', 'Jace')} anchorRect={anchor} boardRect={null} fixedSide="left" />)
     await act(async () => {})
     expect(container.querySelector('img.floating-card-img')?.getAttribute('src')).toBe('https://img.test/Jace.jpg')
+  })
+  describe('card preview size', () => {
+    afterEach(() => setSetting('cardPreviewScale', 1))
+
+    const goblin: PermanentView = { name: 'Raging Goblin', manaValue: 1, cardTypes: ['CREATURE'], power: '1', toughness: '1' }
+    const flyer: CardView = { name: 'Serra Angel', manaValue: 5, rules: ['Flying, vigilance'] }
+    const midAnchor = { left: 300, top: 300, right: 390, bottom: 426, width: 90, height: 126 } as DOMRect
+    const edgeAnchor = { left: 1080, top: 300, right: 1170, bottom: 426, width: 90, height: 126 } as DOMRect
+
+    const renderPreview = (card: CardView, anchor: DOMRect, board: DOMRect | null = dummyBoardRect) => {
+      const { container } = render(<FloatingCardPreview card={card} anchorRect={anchor} boardRect={board} />)
+      return container.querySelector('.floating-card-preview') as HTMLElement
+    }
+    const px = (v: string) => parseFloat(v)
+    const zoomOf = (el: HTMLElement) => Number(el.style.getPropertyValue('--card-preview-zoom'))
+
+    it('SET-1: the preview size follows the cardPreviewScale setting', () => {
+      const base = renderPreview(goblin, midAnchor)
+      expect(zoomOf(base)).toBe(1)
+      expect(px(base.style.height)).toBe(448)
+      cleanup()
+
+      setSetting('cardPreviewScale', 1.5)
+      const big = renderPreview(goblin, midAnchor)
+      expect(zoomOf(big)).toBe(1.5)
+      expect(px(big.style.height)).toBe(448 * 1.5)
+      cleanup()
+
+      setSetting('cardPreviewScale', 0.75)
+      const small = renderPreview(goblin, midAnchor)
+      expect(zoomOf(small)).toBe(0.75)
+      expect(px(small.style.height)).toBe(448 * 0.75)
+    })
+
+    it('SET-1: a size that does not fit shrinks to the largest size that fits the board', () => {
+      setSetting('cardPreviewScale', 2)
+      const preview = renderPreview(flyer, midAnchor)
+      const zoom = zoomOf(preview)
+      expect(zoom).toBeLessThan(2)
+      expect(zoom).toBeGreaterThan(1.7)
+      const top = px(preview.style.top)
+      const height = px(preview.style.height)
+      expect(top).toBeGreaterThanOrEqual(12)
+      expect(top + height).toBeLessThanOrEqual(dummyBoardRect.height - 12)
+      const left = px(preview.style.left)
+      expect(left + (320 + 240) * zoom + 10).toBeLessThanOrEqual(dummyBoardRect.width)
+      cleanup()
+
+      const smallBoard = { left: 0, top: 0, right: 700, bottom: 420, width: 700, height: 420 } as DOMRect
+      const tight = renderPreview(goblin, { left: 100, top: 100, right: 190, bottom: 226, width: 90, height: 126 } as DOMRect, smallBoard)
+      expect(px(tight.style.top)).toBeGreaterThanOrEqual(12)
+      expect(px(tight.style.top) + px(tight.style.height)).toBeLessThanOrEqual(smallBoard.height - 12)
+      expect(zoomOf(tight)).toBeCloseTo((smallBoard.height - 24) / 448, 2)
+    })
+
+    it('SET-1: a hand preview at a large size stays above the hand and inside the board', () => {
+      setSetting('cardPreviewScale', 2)
+      const handCardAnchor = { left: 500, top: 680, right: 590, bottom: 790, width: 90, height: 110 } as DOMRect
+      const preview = renderPreview(goblin, handCardAnchor)
+      const bottom = px(preview.style.bottom)
+      const height = px(preview.style.height)
+      expect(bottom).toBeGreaterThanOrEqual(dummyBoardRect.height - handCardAnchor.top + 12)
+      expect(dummyBoardRect.height - bottom - height).toBeGreaterThanOrEqual(12)
+    })
+
+    it.each([0.75, 1, 1.5, 2])('SET-1: placement still flips at the board edge at %s', (scale) => {
+      setSetting('cardPreviewScale', scale)
+      const right = renderPreview(goblin, midAnchor)
+      expect(px(right.style.left)).toBe(midAnchor.right + 16)
+      cleanup()
+
+      const flipped = renderPreview(goblin, edgeAnchor)
+      const zoom = zoomOf(flipped)
+      const left = px(flipped.style.left)
+      expect(left).toBeGreaterThanOrEqual(12)
+      expect(left + 320 * zoom).toBeLessThanOrEqual(edgeAnchor.left - 16 + 0.001)
+    })
   })
 })

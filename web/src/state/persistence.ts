@@ -3,6 +3,7 @@ import { normalizePrioritySound, type PrioritySoundMode } from '../audio/priorit
 import type { DeckJson } from '../net/types'
 import type { ConstructState, DraftState } from './slices/limited'
 import { mergePhaseStops } from '../game/phaseStops'
+import { normalizeDeckStacksScale } from '../decks/stacksScale'
 
 export interface ConnectionInfo {
   /** Host del proxy WebSocket (ws://wsHost:proxyPort). */
@@ -584,6 +585,16 @@ export function saveSmartStops(enabled: boolean) {
   } catch {}
 }
 
+export const DECK_STACKS_SCALE_KEY = 'mage-web-deck-stacks-scale'
+
+export function loadDeckStacksScale(): number {
+  return normalizeDeckStacksScale(readJson<unknown>(DECK_STACKS_SCALE_KEY))
+}
+
+export function saveDeckStacksScale(scale: number) {
+  writeJson(DECK_STACKS_SCALE_KEY, normalizeDeckStacksScale(scale))
+}
+
 const GAMEPLAY_PRESET_KEY = 'mage-web-gameplay-preset'
 
 export function loadGameplayPreset(): string | null {
@@ -728,6 +739,7 @@ export function saveMusicSettings(settings: MusicSettings) {
 import { ZOOM_DEFAULT, normalizeZoom } from '../appearance/zoom'
 import { normalizeCardStyle, normalizeTapStyle, type CardStyle, type TapStyle } from '../board/compactCard'
 import { normalizeGameUi, DEFAULT_GAME_UI, type GameUi } from '../game/gameUi'
+import { CARD_PREVIEW_SCALE_DEFAULT, normalizeCardPreviewScale } from '../board/cardPreviewScale'
 import { normalizeBoardSpotlight, normalizeBoardSpotlightPanel, normalizeBoardFill, normalizeStackCaption, normalizeCardRender, normalizeHandRail, normalizeHandRailWidth, normalizeHandRow, normalizePtBadgeMode, normalizeShowHandCost, normalizeShowManaSource, normalizeSicknessStyle, normalizeKeywordIconSet, normalizeKeywordAuraMode, type CardRender, type KeywordIconSet, type KeywordAuraMode, type PtBadgeMode, type SicknessStyle } from '../board/cardOverlays'
 
 export type BoardLayoutPref = 'standard' | 'pod' | 'arena'
@@ -758,10 +770,11 @@ export interface AppearanceSettings {
   boardSpotlightPanel?: number
   stackCaption?: boolean
   gameUi?: GameUi
+  cardPreviewScale?: number
 }
 
 export const APPEARANCE_KEY = 'mage-web-appearance'
-export const DEFAULT_APPEARANCE: AppearanceSettings = { sleeveId: 'classic', boardLayout: 'standard', uiScale: ZOOM_DEFAULT, cjkBoost: true, boardLayoutManual: false, transparentDialogs: false, showHandCost: true, showManaSource: false, ptBadgeMode: 'always', sicknessStyle: 'badge', keywordAura: 'subtle', cardRender: 'image', handRail: false, handRailWidth: 260, handRow: false, boardFill: true, boardSpotlight: false, boardSpotlightPanel: 22, stackCaption: true, gameUi: DEFAULT_GAME_UI }
+export const DEFAULT_APPEARANCE: AppearanceSettings = { sleeveId: 'classic', boardLayout: 'standard', uiScale: ZOOM_DEFAULT, cjkBoost: true, boardLayoutManual: false, transparentDialogs: false, showHandCost: true, showManaSource: false, ptBadgeMode: 'always', sicknessStyle: 'badge', keywordAura: 'subtle', cardRender: 'image', handRail: false, handRailWidth: 260, handRow: false, boardFill: true, boardSpotlight: false, boardSpotlightPanel: 22, stackCaption: true, gameUi: DEFAULT_GAME_UI, cardPreviewScale: CARD_PREVIEW_SCALE_DEFAULT }
 
 const VALID_LAYOUTS: BoardLayoutPref[] = ['standard', 'pod', 'arena']
 
@@ -776,7 +789,7 @@ export function loadAppearanceSettings(): AppearanceSettings {
     const cjkBoost = typeof parsed.cjkBoost === 'boolean' ? parsed.cjkBoost : DEFAULT_APPEARANCE.cjkBoost
     const playmatId = typeof parsed.playmatId === 'string' ? parsed.playmatId : undefined
     const transparentDialogs = parsed.transparentDialogs === true
-    return { sleeveId: sid, boardLayout: layout, uiScale: scale, cjkBoost, boardLayoutManual: parsed.boardLayoutManual === true, cardStyle: normalizeCardStyle(parsed.cardStyle), tapStyle: normalizeTapStyle(parsed.tapStyle), transparentDialogs, showHandCost: normalizeShowHandCost(parsed.showHandCost), showManaSource: normalizeShowManaSource(parsed.showManaSource), ptBadgeMode: normalizePtBadgeMode(parsed.ptBadgeMode), sicknessStyle: normalizeSicknessStyle(parsed.sicknessStyle), keywordIcons: normalizeKeywordIconSet(parsed.keywordIcons), keywordAura: normalizeKeywordAuraMode(parsed.keywordAura), cardRender: normalizeCardRender(parsed.cardRender), handRail: normalizeHandRail(parsed.handRail), handRailWidth: normalizeHandRailWidth(parsed.handRailWidth), handRow: normalizeHandRow(parsed.handRow), boardFill: normalizeBoardFill(parsed.boardFill), boardSpotlight: normalizeBoardSpotlight(parsed.boardSpotlight), boardSpotlightPanel: normalizeBoardSpotlightPanel(parsed.boardSpotlightPanel), stackCaption: normalizeStackCaption(parsed.stackCaption), gameUi: normalizeGameUi(parsed.gameUi), ...(playmatId ? { playmatId } : null) }
+    return { sleeveId: sid, boardLayout: layout, uiScale: scale, cjkBoost, boardLayoutManual: parsed.boardLayoutManual === true, cardStyle: normalizeCardStyle(parsed.cardStyle), tapStyle: normalizeTapStyle(parsed.tapStyle), transparentDialogs, showHandCost: normalizeShowHandCost(parsed.showHandCost), showManaSource: normalizeShowManaSource(parsed.showManaSource), ptBadgeMode: normalizePtBadgeMode(parsed.ptBadgeMode), sicknessStyle: normalizeSicknessStyle(parsed.sicknessStyle), keywordIcons: normalizeKeywordIconSet(parsed.keywordIcons), keywordAura: normalizeKeywordAuraMode(parsed.keywordAura), cardRender: normalizeCardRender(parsed.cardRender), handRail: normalizeHandRail(parsed.handRail), handRailWidth: normalizeHandRailWidth(parsed.handRailWidth), handRow: normalizeHandRow(parsed.handRow), boardFill: normalizeBoardFill(parsed.boardFill), boardSpotlight: normalizeBoardSpotlight(parsed.boardSpotlight), boardSpotlightPanel: normalizeBoardSpotlightPanel(parsed.boardSpotlightPanel), stackCaption: normalizeStackCaption(parsed.stackCaption), gameUi: normalizeGameUi(parsed.gameUi), cardPreviewScale: normalizeCardPreviewScale(parsed.cardPreviewScale), ...(playmatId ? { playmatId } : null) }
   }
   return { ...DEFAULT_APPEARANCE }
 }

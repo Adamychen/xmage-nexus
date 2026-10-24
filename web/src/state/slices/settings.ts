@@ -1,4 +1,4 @@
-import { loadAutoAnswers, loadChoiceMemory, loadFxSettings, loadAudioSettings, loadMusicSettings, loadAppearanceSettings, loadManaPayment, loadHandRequestsAllowed, loadPhaseStops, loadGameLogAutoSave, loadBrowserNotifications, loadBoardRewind, loadSmartStops, loadGameplayPreset } from '../persistence'
+import { loadAutoAnswers, loadChoiceMemory, loadFxSettings, loadAudioSettings, loadMusicSettings, loadAppearanceSettings, loadManaPayment, loadHandRequestsAllowed, loadPhaseStops, loadGameLogAutoSave, loadBrowserNotifications, loadBoardRewind, loadSmartStops, loadGameplayPreset, loadDeckStacksScale } from '../persistence'
 import type { ZoomLevel, ManaPaymentStored } from '../persistence'
 import type { PhaseStops } from '../../net/commands'
 import type { PrioritySoundMode } from '../../audio/prioritySound'
@@ -8,11 +8,13 @@ import { normalizePlaymat, type PlaymatId } from '../../appearance/playmats'
 import { normalizeCardStyle, normalizeTapStyle, type CardStyle, type TapStyle } from '../../board/compactCard'
 import { normalizeBoardSpotlight, normalizeBoardSpotlightPanel, normalizeBoardFill, normalizeStackCaption, normalizeCardRender, normalizeHandRail, normalizeHandRailWidth, normalizeHandRow, normalizePtBadgeMode, normalizeShowHandCost, normalizeShowManaSource, normalizeSicknessStyle, normalizeKeywordIconSet, normalizeKeywordAuraMode, type CardRender, type KeywordIconSet, type KeywordAuraMode, type PtBadgeMode, type SicknessStyle } from '../../board/cardOverlays'
 import { normalizeGameUi, type GameUi } from '../../game/gameUi'
+import { normalizeCardPreviewScale } from '../../board/cardPreviewScale'
 import { gameplayPreset, isGameplayPresetId, type GameplayPresetId } from '../../settings/gameplayPresets'
 
 export interface SettingsState {
   autoKeepMulligan: boolean
   smartStops: boolean
+  deckStacksScale: number
   gameplayPreset: GameplayPresetId | null
   autoSubmitSideboard?: boolean
   holdPriority: boolean
@@ -51,6 +53,7 @@ export interface SettingsState {
   boardSpotlightPanel: number
   stackCaption: boolean
   gameUi: GameUi
+  cardPreviewScale: number
   sicknessStyle: SicknessStyle
   keywordIcons: KeywordIconSet
   keywordAura: KeywordAuraMode
@@ -84,6 +87,7 @@ export function loadAppearanceSlice() {
     boardSpotlightPanel: normalizeBoardSpotlightPanel(appearance.boardSpotlightPanel),
     stackCaption: normalizeStackCaption(appearance.stackCaption),
     gameUi: normalizeGameUi(appearance.gameUi),
+    cardPreviewScale: normalizeCardPreviewScale(appearance.cardPreviewScale),
     sicknessStyle: normalizeSicknessStyle(appearance.sicknessStyle),
     keywordIcons: normalizeKeywordIconSet(appearance.keywordIcons),
     keywordAura: normalizeKeywordAuraMode(appearance.keywordAura),
@@ -97,6 +101,7 @@ export const initialSettings: SettingsSlice = {
   settings: {
     autoKeepMulligan: false,
     smartStops: loadSmartStops(),
+    deckStacksScale: loadDeckStacksScale(),
     gameplayPreset: storedPreset?.id ?? null,
     holdPriority: false,
     autoAnswers: loadAutoAnswers().map((entry, index) => ({ id: `auto-${index}`, ...entry })),

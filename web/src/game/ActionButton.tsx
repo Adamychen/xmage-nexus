@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import type { GameView } from '../net/types'
 import type { FeedbackPrompt } from './feedback'
 import { useTranslation } from '../i18n'
@@ -23,6 +23,19 @@ interface ActionButtonProps {
 }
 
 const SHORTCUT_HINT = /\s*[(（][^)）]*[)）]\s*$/
+const NAME_SLOT = '\u0000'
+
+function NamedLabel({ template, name }: { template: string; name: string }) {
+  const at = template.indexOf(NAME_SLOT)
+  if (!name || at < 0) return <>{template.replace(NAME_SLOT, name)}</>
+  return (
+    <>
+      {template.slice(0, at)}
+      <span className="action-btn-name" data-testid="action-btn-name">{name}</span>
+      {template.slice(at + NAME_SLOT.length)}
+    </>
+  )
+}
 
 function WaitingClock({ waiting }: { waiting: WaitingState | null }) {
   const { t } = useTranslation()
@@ -37,10 +50,10 @@ function WaitingClock({ waiting }: { waiting: WaitingState | null }) {
       data-elapsed={elapsed}
       title={long ? t('game', 'waiting_long_hint') : undefined}
     >
-      {t('game', 'waiting_thinking', { time: formatElapsed(elapsed) })}
+      <span className="action-waiting-thinking">{t('game', 'waiting_thinking', { time: formatElapsed(elapsed) })}</span>
       {waiting.timeLeftSecs != null && (
         <span className="action-waiting-left">
-          {' · '}
+          <span className="action-waiting-sep">{' · '}</span>
           <Icon name="timer" size={10} /> {t('game', 'waiting_time_left', { time: formatTimer(timeLeft) })}
         </span>
       )}
@@ -86,16 +99,19 @@ export default function ActionButton({
 
   const passLabel = t('game', 'pass_priority').replace(SHORTCUT_HINT, '')
   let label = passLabel
+  let labelNode: ReactNode = null
   let sublabel: string | null = null
   let modeClass = 'action-pass'
   let modeIcon: IconName = 'play'
 
   if (waiting?.preGame) {
     label = waiting.name ? t('game', 'mulligan_waiting_for', { name: waiting.name }) : t('game', 'mulligan_waiting_others')
+    if (waiting.name) labelNode = <NamedLabel template={t('game', 'mulligan_waiting_for', { name: NAME_SLOT })} name={waiting.name} />
     modeClass = 'action-waiting'
     modeIcon = 'hourglass'
   } else if (waiting) {
     label = t('game', 'waiting_for', { name: waiting.name })
+    labelNode = <NamedLabel template={t('game', 'waiting_for', { name: NAME_SLOT })} name={waiting.name} />
     modeClass = 'action-waiting'
     modeIcon = 'hourglass'
   } else if (stackItems > 0) {
@@ -143,13 +159,13 @@ export default function ActionButton({
           className={`big-action-btn ${modeClass} ${isInteractive ? 'interactive' : 'disabled'}`}
           disabled={!isInteractive}
           onClick={onPass}
-          title={waiting?.preGame ? t('game', 'mulligan_waiting_hint') : t('game', 'action_main_hint')}
+          title={waiting?.preGame ? `${label}. ${t('game', 'mulligan_waiting_hint')}` : waiting ? label : t('game', 'action_main_hint')}
         >
           <span className="action-btn-glow" aria-hidden="true" />
           <div className="action-btn-content">
             <span className="action-btn-label">
               <span className="action-btn-icon" aria-hidden="true"><Icon name={modeIcon} size={15} /></span>{' '}
-              {busy ? t('game', 'action_sending') : label}
+              {busy ? t('game', 'action_sending') : (labelNode ?? label)}
             </span>
             {sublabel && !busy && <span className="action-btn-sublabel">{sublabel}</span>}
             {waiting && !busy && <WaitingClock waiting={waiting} />}

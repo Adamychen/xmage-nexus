@@ -4,16 +4,27 @@ import IconButton from '../ui/IconButton'
 import { DIAL_PHASES, activeDialIndex, usePhaseStopToggles } from './phaseSteps'
 import './PhaseDial.css'
 
-const WIDTH = 232
-const HEIGHT = 176
-const CENTER_X = 116
-const CENTER_Y = 120
-const RADIUS = 98
+export const DIAL_CORE = 164
+const CORE_RING = 5
+const PIP = 38
+const PIP_REACH = 23
+const PIP_GAP = 18
+const RADIUS = DIAL_CORE / 2 + CORE_RING + PIP / 2 + PIP_GAP
 const ARC_START = 192
 const ARC_END = 348
 
+function pipAngle(index: number, count: number): number {
+  return ((ARC_START + ((ARC_END - ARC_START) * index) / Math.max(1, count - 1)) * Math.PI) / 180
+}
+
+const PIP_ANGLES = DIAL_PHASES.map((_, i) => pipAngle(i, DIAL_PHASES.length))
+const CENTER_X = Math.ceil(RADIUS * Math.max(...PIP_ANGLES.map((a) => Math.abs(Math.cos(a)))) + PIP_REACH)
+const CENTER_Y = Math.ceil(RADIUS * Math.max(...PIP_ANGLES.map((a) => -Math.sin(a))) + PIP_REACH)
+const WIDTH = CENTER_X * 2
+const HEIGHT = CENTER_Y + DIAL_CORE / 2 + CORE_RING
+
 export function dialPipPoint(index: number, count: number): { x: number; y: number } {
-  const angle = ((ARC_START + ((ARC_END - ARC_START) * index) / Math.max(1, count - 1)) * Math.PI) / 180
+  const angle = pipAngle(index, count)
   return { x: CENTER_X + RADIUS * Math.cos(angle), y: CENTER_Y + RADIUS * Math.sin(angle) }
 }
 
@@ -34,7 +45,7 @@ export default function PhaseDial({ step, action, mine = false }: PhaseDialProps
     <div
       className={`phase-dial${mine ? ' is-mine' : ''}`}
       data-testid="phase-dial"
-      style={{ '--dial-w': `${WIDTH}px`, '--dial-h': `${HEIGHT}px`, '--dial-cx': `${CENTER_X}px`, '--dial-cy': `${CENTER_Y}px` } as CSSProperties}
+      style={{ '--dial-w': `${WIDTH}px`, '--dial-h': `${HEIGHT}px`, '--dial-cx': `${CENTER_X}px`, '--dial-cy': `${CENTER_Y}px`, '--dial-core': `${DIAL_CORE}px` } as CSSProperties}
       role="navigation"
       aria-label={t('game', 'phase')}
     >

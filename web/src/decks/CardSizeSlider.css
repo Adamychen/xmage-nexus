@@ -1,0 +1,27 @@
+.card-size-control {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1h);
+}
+
+.card-size-label {
+  font-size: var(--fs-2xs);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--fg-3);
+}
+
+.arena-grid-size-slider {
+  width: 130px;
+  padding: var(--sp-2) 0;
+  border: 0;
+  background: transparent;
+  accent-color: var(--gold-500);
+  cursor: pointer;
+}
+
+.arena-grid-size-value {
+  min-width: 4ch;
+  font-variant-numeric: tabular-nums;
+}

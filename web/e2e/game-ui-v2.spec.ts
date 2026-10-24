@@ -38,6 +38,174 @@ test('v2 renders the top bar, phase dial and dial action button @gameui', async 
   await page.screenshot({ path: testInfo.outputPath('v2-quiet.png') })
 })
 
+const LONG_NAME = 'BlackMagicWxyz'
+
+function waitingForLongName(): Record<string, unknown> {
+  const game = richCommanderGame() as { players: Array<Record<string, unknown>>; priorityPlayerName: string }
+  const me = game.players.find((p) => p.controlled)!
+  me.hasPriority = false
+  const mira = game.players.find((p) => p.playerId === 'p-mira')!
+  mira.name = LONG_NAME
+  mira.hasPriority = true
+  mira.priorityTimeLeftSecs = 433
+  game.priorityPlayerName = LONG_NAME
+  return game
+}
+
+async function dialCentreFit(page: import('@playwright/test').Page) {
+  return page.evaluate(() => {
+    const btn = document.querySelector<HTMLElement>('.action-button-container--dial .big-action-btn')!
+    const b = btn.getBoundingClientRect()
+    const cx = b.left + b.width / 2
+    const cy = b.top + b.height / 2
+    const radius = Math.min(b.width, b.height) / 2
+    const clipped = (node: Node, rect: DOMRect): DOMRect | null => {
+      let l = rect.left
+      let t = rect.top
+      let r = rect.right
+      let bt = rect.bottom
+      for (let p = node.parentElement; p && p !== btn; p = p.parentElement) {
+        const o = getComputedStyle(p)
+        if (o.overflowX === 'visible' && o.overflowY === 'visible') continue
+        const pb = p.getBoundingClientRect()
+        l = Math.max(l, pb.left)
+        t = Math.max(t, pb.top)
+        r = Math.min(r, pb.right)
+        bt = Math.min(bt, pb.bottom)
+      }
+      return r > l && bt > t ? new DOMRect(l, t, r - l, bt - t) : null
+    }
+    const outside: string[] = []
+    const broken: string[] = []
+    const overflowing: string[] = []
+    const lines: string[] = []
+    const walker = document.createTreeWalker(btn, NodeFilter.SHOW_TEXT)
+    for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+      const text = n.textContent ?? ''
+      for (const m of text.matchAll(/\S+/g)) {
+        const range = document.createRange()
+        range.setStart(n, m.index!)
+        range.setEnd(n, m.index! + m[0].length)
+        const rects = [...range.getClientRects()].filter((r) => r.width > 0 && r.height > 0)
+        if (rects.length === 0) continue
+        const tops = rects.map((r) => r.top).filter((top, i, all) => all.findIndex((o) => Math.abs(o - top) < 2) === i)
+        if (tops.length > 1) broken.push(m[0])
+        for (const rect of rects) {
+          const vis = clipped(n, rect)
+          if (!vis) continue
+          lines.push(`${m[0]}@${Math.round(vis.top - b.top)}`)
+          const corners = [[vis.left, vis.top], [vis.right, vis.top], [vis.left, vis.bottom], [vis.right, vis.bottom]]
+          if (corners.some(([x, y]) => Math.hypot(x - cx, y - cy) > radius + 0.5)) outside.push(m[0])
+        }
+      }
+    }
+    for (const el of btn.querySelectorAll<HTMLElement>('.action-btn-content, .action-btn-content *')) {
+      const style = getComputedStyle(el)
+      if (style.display === 'none' || style.display === 'inline' || el.classList.contains('action-btn-name')) continue
+      if (el.scrollWidth > el.clientWidth + 1) overflowing.push(el.className.toString())
+    }
+    const name = btn.querySelector<HTMLElement>('.action-btn-name')
+    return {
+      outside,
+      broken,
+      overflowing,
+      lines,
+      nameTruncated: name ? name.scrollWidth > name.clientWidth + 1 : null,
+      nameFit: name ? `${name.scrollWidth}/${name.clientWidth}` : '',
+      nameText: name?.textContent ?? null,
+      title: btn.title,
+      label: btn.querySelector('.action-btn-label')?.textContent?.trim() ?? '',
+    }
+  })
+}
+
+for (const font of ['default', 'monospace'] as const) {
+  test(`BRD-14: the dial centre holds "Waiting for" a 14-character name and its clock inside the circle, wrapping only between words (${font} font) @gameui`, async ({ page }, testInfo) => {
+    if (font === 'monospace') await page.addStyleTag({ content: ':root { --font-ui: monospace !important; --font-display: monospace !important }' })
+    await showGame(page, waitingForLongName(), V2)
+    await expect(page.locator('.action-button-container--dial .big-action-btn.action-waiting')).toBeVisible({ timeout: 10_000 })
+    await expect(page.locator('.action-button-container--dial .action-waiting-left')).toBeVisible()
+    await page.waitForTimeout(400)
+    const fit = await dialCentreFit(page)
+    expect(fit.label).toContain(LONG_NAME)
+    expect(fit.nameText).toBe(LONG_NAME)
+    expect(fit.title).toContain(LONG_NAME)
+    expect(fit.broken, `no word broken across lines: ${fit.lines.join(' ')}`).toEqual([])
+    expect(fit.outside, `no text past the circle: ${fit.lines.join(' ')}`).toEqual([])
+    expect(fit.overflowing, 'no text box overflows').toEqual([])
+    if (font === 'default') expect(fit.nameTruncated, `a 14-character name fits whole (${fit.nameFit})`).toBe(false)
+    await page.getByTestId('phase-dial').screenshot({ path: testInfo.outputPath(`brd14-waiting-${font}.png`) })
+  })
+}
+
+test('BRD-14: a name too long for the centre is cut with an ellipsis and stays whole in the tooltip @gameui', async ({ page }) => {
+  const game = waitingForLongName() as { players: Array<Record<string, unknown>>; priorityPlayerName: string }
+  const huge = 'WWWWWWWWWWWWWWWWWWWWWWWW'
+  game.players.find((p) => p.playerId === 'p-mira')!.name = huge
+  game.priorityPlayerName = huge
+  await showGame(page, game, V2)
+  await expect(page.locator('.action-button-container--dial .big-action-btn.action-waiting')).toBeVisible({ timeout: 10_000 })
+  await page.waitForTimeout(300)
+  const fit = await dialCentreFit(page)
+  expect(fit.nameTruncated).toBe(true)
+  expect(await page.locator('.action-button-container--dial .action-btn-name').evaluate((el) => getComputedStyle(el).textOverflow)).toBe('ellipsis')
+  expect(fit.title).toContain(huge)
+  expect(fit.broken).toEqual([])
+  expect(fit.outside).toEqual([])
+})
+
+test.describe('BRD-14 dock corner', () => {
+  test.use({ viewport: { width: 1280, height: 720 } })
+
+  test('BRD-14: the bigger dial keeps its pips clear of the centre and fits its corner without covering the hand or the side panel @gameui', async ({ page }, testInfo) => {
+    await showGame(page, richCommanderGame(), V2)
+    await expect(page.locator('.action-button-container--dial .big-action-btn.action-priority')).toBeVisible({ timeout: 10_000 })
+    await page.waitForTimeout(400)
+    const pass = await dialCentreFit(page)
+    expect(pass.broken, pass.lines.join(' ')).toEqual([])
+    expect(pass.outside, pass.lines.join(' ')).toEqual([])
+    await page.getByTestId('phase-dial').screenshot({ path: testInfo.outputPath('brd14-pass.png') })
+    const layout = async () =>
+      page.evaluate(() => {
+        const core = document.querySelector('.action-button-container--dial .big-action-btn')!.getBoundingClientRect()
+        const cx = core.left + core.width / 2
+        const cy = core.top + core.height / 2
+        const pips = [...document.querySelectorAll('.phase-dial-pip')].map((p) => (p as HTMLElement).getBoundingClientRect())
+        const centres = pips.map((p) => ({ x: p.left + p.width / 2, y: p.top + p.height / 2, r: p.width / 2 }))
+        const intoCore = centres.filter((p) => Math.hypot(p.x - cx, p.y - cy) < core.width / 2 + p.r)
+        const crowded = centres.slice(1).filter((p, i) => Math.hypot(p.x - centres[i].x, p.y - centres[i].y) < p.r + centres[i].r)
+        const parts = [core, ...pips]
+        const hit = (a: DOMRect, b: DOMRect) => a.left < b.right - 1 && a.right > b.left + 1 && a.top < b.bottom - 1 && a.bottom > b.top + 1
+        const hand = [...document.querySelectorAll('[data-testid="hand-bar"] [data-card-id], [data-testid="hand-rail"] [data-card-id]')].map((c) => c.getBoundingClientRect()).filter((r) => r.width > 0)
+        const panel = document.querySelector('[data-testid="side-panel"]')?.getBoundingClientRect() ?? null
+        const vw = window.innerWidth
+        const vh = window.innerHeight
+        return {
+          intoCore: intoCore.length,
+          crowded: crowded.length,
+          handCards: hand.length,
+          coversHand: parts.some((p) => hand.some((h) => hit(p, h))),
+          coversPanel: !!panel && panel.width > 0 && parts.some((p) => hit(p, panel)),
+          inside: parts.every((p) => p.left >= -1 && p.top >= -1 && p.right <= vw + 1 && p.bottom <= vh + 1),
+        }
+      })
+    const closed = await layout()
+    expect(closed.intoCore, 'no pip overlaps the centre').toBe(0)
+    expect(closed.crowded, 'pips keep their spacing').toBe(0)
+    expect(closed.handCards).toBeGreaterThan(0)
+    expect(closed.coversHand, 'the dial does not cover the hand').toBe(false)
+    expect(closed.inside, 'the dial stays inside the window').toBe(true)
+    await page.getByTestId('drawer-tab-log').click()
+    await expect(page.getByTestId('side-panel')).toBeVisible()
+    await page.waitForTimeout(600)
+    const open = await layout()
+    expect(open.coversHand, 'the dial does not cover the hand with the panel open').toBe(false)
+    expect(open.coversPanel, 'the dial does not cover the side panel').toBe(false)
+    expect(open.inside).toBe(true)
+    await page.screenshot({ path: testInfo.outputPath('brd14-corner-panel.png') })
+  })
+})
+
 test('v2 stack deck: top card, tabs, expand and collapse @gameui', async ({ page }, testInfo) => {
   const stack = [
     { id: 's-fow', name: 'Force of Will', controllerId: 'p-mira', targets: ['s-pact'] },

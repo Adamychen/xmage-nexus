@@ -11,6 +11,7 @@ import { keywordDisplayName } from '../data/keywordI18n'
 import type { Rarity, StatFilter, StatOp } from './filterQuery'
 import { rawQueryHasColor } from './filterQuery'
 import type { ScryfallSortDir, ScryfallSortOrder } from './scryfallSearch'
+import { CardSizeSlider } from './CardSizeSlider'
 import './ArenaFilterBar.css'
 
 const COLORS = ['W', 'U', 'B', 'R', 'G', 'C'] as const
@@ -301,22 +302,7 @@ export function ArenaFilterBar({
         )}
 
         {onGridSizeChange && gridSize !== undefined && (
-          <div className="arena-sort-wrap">
-            <span className="arena-chip-label">{t('decks', 'grid_size')}</span>
-            <input
-              type="range"
-              className="arena-grid-size-slider"
-              min={0}
-              max={150}
-              step={5}
-              value={gridSize}
-              onChange={(e) => onGridSizeChange(Number(e.target.value))}
-              aria-label={t('decks', 'grid_size')}
-              aria-valuetext={`${gridSize}%`}
-              title={`${t('decks', 'grid_size')}: ${gridSize}%`}
-            />
-            <span className="arena-grid-size-value">{gridSize}%</span>
-          </div>
+          <CardSizeSlider className="arena-sort-wrap" min={0} max={150} step={5} value={gridSize} onChange={onGridSizeChange} />
         )}
 
         {hasActiveFilters && (

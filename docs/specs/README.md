@@ -17,9 +17,11 @@ test that names the decision.
 | `mana.md` | `MNA` | Paying costs: sources, pool, smart payment, X |
 | `lobby.md` | `LBY` | Login, table list, creating and joining tables, waiting room, invites |
 | `board.md` | `BRD` | Battlefield bands per kind, multiplayer seats, focusing one opponent's board |
+| `settings.md` | `SET` | Player settings not owned by another area: card preview size |
+| `decks.md` | `DCK` | Deck gallery, deck builder, stacks view |
 
 Areas without a file yet are written the first time someone changes them (see `ROADMAP.md` §4.12).
-Candidates: stack, game log and chat, deck builder, draft, settings, spectating.
+Candidates: stack, game log and chat, draft, spectating.
 
 ## What goes where
 

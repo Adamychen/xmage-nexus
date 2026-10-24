@@ -19,6 +19,14 @@
   </tr>
 </table>
 
+## What's new in 0.6.0
+
+- **Main board with a side panel** for Commander pods: one board fills the main area, every other seat is a live copy in a resizable panel; plus kind-sorted bands and a focus button for one opponent's board.
+- **Unified card badges**: one glyph set for keywords, counters and designations, shared by the board, the hover preview and the help wiki glossary; keyword auras and combat moments.
+- **The rest of the animation backlog**, each with a replay in the gallery.
+- **New size controls**: card preview size (Settings > Interface, up to 200%) and a card size slider in the deck stacks view (up to 200%).
+- A bigger phase dial centre, game log timestamps, a gold frame on the seat holding priority, and board peeking while searching your library.
+
 ## What's new in 0.5.0
 
 <table>

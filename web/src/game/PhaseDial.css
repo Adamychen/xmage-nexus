@@ -1,5 +1,6 @@
 .phase-dial {
   position: relative;
+  flex-shrink: 0;
   width: var(--dial-w);
   height: var(--dial-h);
   pointer-events: none;
@@ -10,9 +11,9 @@
   position: absolute;
   left: var(--dial-cx);
   top: var(--dial-cy);
-  width: 190px;
-  height: 190px;
-  margin: -95px 0 0 -95px;
+  width: calc(var(--dial-core) * 1.7);
+  height: calc(var(--dial-core) * 1.7);
+  margin: calc(var(--dial-core) * -0.85) 0 0 calc(var(--dial-core) * -0.85);
   border-radius: 50%;
   background: radial-gradient(circle, rgb(var(--gold-rgb) / 0.26), transparent 68%);
   opacity: 0;
@@ -113,9 +114,9 @@
   position: absolute;
   left: var(--dial-cx);
   top: var(--dial-cy);
-  width: 112px;
-  height: 112px;
-  margin: -56px 0 0 -56px;
+  width: var(--dial-core);
+  height: var(--dial-core);
+  margin: calc(var(--dial-core) / -2) 0 0 calc(var(--dial-core) / -2);
   pointer-events: auto;
 }
 
@@ -133,8 +134,8 @@
 }
 
 .phase-dial .action-button-container--dial .big-action-btn {
-  width: 112px;
-  height: 112px;
+  width: var(--dial-core);
+  height: var(--dial-core);
   min-height: 0;
   padding: var(--sp-2);
   flex-direction: column;
@@ -184,7 +185,9 @@
   line-height: 1.1;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  max-width: 96px;
+  max-width: calc(var(--dial-core) - 28px);
+  overflow-wrap: normal;
+  word-break: normal;
   color: inherit;
 }
 
@@ -197,7 +200,9 @@
 }
 
 .phase-dial .action-button-container--dial .action-btn-sublabel {
-  max-width: 84px;
+  max-width: calc(var(--dial-core) - 40px);
+  overflow-wrap: normal;
+  word-break: normal;
   font-size: var(--fs-2xs);
   font-weight: 600;
   line-height: 1.15;
@@ -246,14 +251,32 @@
 .phase-dial .action-button-container--dial .big-action-btn.disabled .action-btn-label {
   font-size: var(--fs-sm);
   letter-spacing: 0.02em;
-  max-width: 92px;
-  overflow-wrap: anywhere;
+  max-width: calc(var(--dial-core) - 16px);
   text-align: center;
+}
+
+.phase-dial .action-button-container--dial .action-btn-name {
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: bottom;
 }
 
 .phase-dial .action-button-container--dial .big-action-btn.action-waiting .action-btn-sublabel,
 .phase-dial .action-button-container--dial .big-action-btn.disabled .action-btn-sublabel {
-  max-width: 92px;
-  overflow-wrap: anywhere;
+  max-width: calc(var(--dial-core) - 40px);
   text-align: center;
+}
+
+.phase-dial .action-button-container--dial .big-action-btn .action-waiting-clock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+}
+
+.phase-dial .action-button-container--dial .action-waiting-sep {
+  display: none;
 }

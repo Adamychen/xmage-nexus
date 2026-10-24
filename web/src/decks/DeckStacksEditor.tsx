@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import type { DeckCard } from '../lobby/decks'
 import type { DeckV2 } from './types'
 import { deckMainCount, deckSideCount } from './types'
@@ -15,6 +15,11 @@ import Button from '../ui/Button'
 import EmptyState from '../ui/EmptyState'
 import { useEventCallback } from '../utils/useEventCallback'
 import { useTranslation } from '../i18n'
+import { useSettings } from '../state/selectors'
+import { setSetting } from '../state/actions'
+import { CardSizeSlider } from './CardSizeSlider'
+import { useStackColumnWidth } from './useStackColumnWidth'
+import { DECK_STACKS_SCALE_MAX, DECK_STACKS_SCALE_MIN, DECK_STACKS_SCALE_STEP, normalizeDeckStacksScale } from './stacksScale'
 import './DeckStacksEditor.css'
 
 const NO_FLAGGED_KEYS: Set<string> = new Set()
@@ -26,6 +31,8 @@ export function DeckStacksEditor({ deck: initialDeck, onClose, onEdit }: {
   onEdit: () => void
 }) {
   const { t } = useTranslation()
+  const { deckStacksScale } = useSettings()
+  const scale = normalizeDeckStacksScale(deckStacksScale)
   const storage = useMemo(() => getDeckStorage(), [])
   const [deck, setDeck] = useState<DeckV2>(() => ({
     ...initialDeck,
@@ -115,6 +122,9 @@ export function DeckStacksEditor({ deck: initialDeck, onClose, onEdit }: {
   const coverArt = useCardArtUrl(deck.coverCard ?? deck.cards[0] ?? null)
   const mainCount = deckMainCount(deck)
   const sideCount = deckSideCount(deck)
+  const [mainEl, setMainEl] = useState<HTMLElement | null>(null)
+  const columnWidth = useStackColumnWidth(mainEl, scale / 100, mainCount > 0)
+  const mainStyle = { '--stack-scale': scale / 100, ...(columnWidth ? { '--stack-col': `${columnWidth}px` } : null) } as CSSProperties
 
   return (
     <div className="stacks-editor" data-testid="stacks-editor">
@@ -132,6 +142,14 @@ export function DeckStacksEditor({ deck: initialDeck, onClose, onEdit }: {
             <span>{sideCount} {t('decks', 'sideboard')}</span>
           </div>
         </div>
+        <CardSizeSlider
+          className="stacks-editor-size"
+          min={DECK_STACKS_SCALE_MIN}
+          max={DECK_STACKS_SCALE_MAX}
+          step={DECK_STACKS_SCALE_STEP}
+          value={scale}
+          onChange={(value) => setSetting('deckStacksScale', normalizeDeckStacksScale(value))}
+        />
         <p className="stacks-editor-hint">{t('decks', 'stacks_editor_hint')}</p>
       </header>
 
@@ -140,7 +158,7 @@ export function DeckStacksEditor({ deck: initialDeck, onClose, onEdit }: {
           <SearchPanel onAdd={mutations.handleAddFromSearch} countMap={countMap} format={deck.format} />
         </aside>
 
-        <section className="stacks-editor-main">
+        <section ref={setMainEl} className="stacks-editor-main" data-testid="stacks-editor-main" style={mainStyle}>
           {mainCount === 0
             ? <EmptyState boxed size="lg" icon="layers" iconSize={22} title={t('decks', 'deck_no_cards')} />
             : <ArenaCardStacks columns={mainColumns} onInc={mutations.handleInc} onDec={mutations.handleDec} onSwap={mutations.handleSwap} />}

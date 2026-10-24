@@ -1,8 +1,8 @@
 import { describe, expect, it, vi, afterEach } from 'vitest'
 import { render, screen, fireEvent, cleanup } from '@testing-library/react'
 import SettingsModal from './SettingsModal'
-import { setSetting } from '../state/store'
-import { loadGameplayPreset, loadPhaseStops, saveGameplayPreset } from '../state/persistence'
+import { getState, setSetting } from '../state/store'
+import { loadAppearanceSettings, loadGameplayPreset, loadPhaseStops, saveGameplayPreset } from '../state/persistence'
 
 afterEach(() => cleanup())
 
@@ -31,6 +31,32 @@ describe('SettingsModal', () => {
     fireEvent.click(screen.getByTestId('settings-zoom-1-15'))
     expect(screen.getByTestId('settings-zoom-current').textContent).toBe('115%')
     setSetting('uiScale', 1)
+  })
+
+  it('SET-1: the interface section has a card preview size slider that sets cardPreviewScale and resets to 100%', () => {
+    setSetting('cardPreviewScale', 1)
+    render(<SettingsModal onClose={() => {}} />)
+    fireEvent.click(screen.getByTestId('settings-nav-interface'))
+    const section = screen.getByTestId('settings-section-interface')
+    const slider = screen.getByTestId('settings-card-preview-scale') as HTMLInputElement
+    expect(section.contains(slider)).toBe(true)
+    expect(slider.type).toBe('range')
+    expect(Number(slider.min)).toBe(0.75)
+    expect(Number(slider.max)).toBe(2)
+    expect(Number(slider.step)).toBe(0.05)
+    expect(screen.getByTestId('settings-card-preview-value').textContent).toBe('100%')
+    const reset = screen.getByTestId('settings-card-preview-reset') as HTMLButtonElement
+    expect(reset.disabled).toBe(true)
+
+    fireEvent.change(slider, { target: { value: '1.45' } })
+    expect(getState().settings.cardPreviewScale).toBe(1.45)
+    expect(screen.getByTestId('settings-card-preview-value').textContent).toBe('145%')
+    expect(loadAppearanceSettings().cardPreviewScale).toBe(1.45)
+    expect(reset.disabled).toBe(false)
+
+    fireEvent.click(reset)
+    expect(getState().settings.cardPreviewScale).toBe(1)
+    expect(screen.getByTestId('settings-card-preview-value').textContent).toBe('100%')
   })
 
   it('exposes sound controls and gameplay toggles', () => {

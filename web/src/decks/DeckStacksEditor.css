@@ -67,6 +67,11 @@
   text-transform: uppercase;
 }
 
+.stacks-editor-size {
+  position: relative;
+  z-index: 1;
+}
+
 .stacks-editor-hint {
   position: relative;
   z-index: 1;
@@ -97,20 +102,22 @@
 }
 
 .stacks-editor-main {
+  --stack-scale: 1;
   flex: 1;
   min-width: 0;
   min-height: 0;
-  overflow-y: auto;
+  overflow: auto;
+  scrollbar-gutter: stable;
   padding-right: var(--sp-1);
 }
 
 .stacks-editor-main .arena-stack-board {
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fill, var(--stack-col, minmax(calc(180px * var(--stack-scale)), 1fr)));
   gap: var(--sp-3);
 }
 
 .stacks-editor-main .arena-stack-col-body {
-  --stack-peek: 52px;
+  --stack-peek: calc(52px * var(--stack-scale));
 }
 
 .stacks-editor-side {

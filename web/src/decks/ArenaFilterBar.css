@@ -278,15 +278,6 @@
   font-weight: 700;
 }
 
-.arena-grid-size-slider {
-  width: 130px;
-  padding: var(--sp-2) 0;
-  border: 0;
-  background: transparent;
-  accent-color: var(--gold-500);
-  cursor: pointer;
-}
-
 .filter-advanced-panel {
   display: flex;
   flex-direction: column;

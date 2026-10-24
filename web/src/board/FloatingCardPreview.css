@@ -24,6 +24,7 @@
   width: 320px;
   height: 448px;
   flex-shrink: 0;
+  zoom: var(--card-preview-zoom, 1);
 }
 
 .floating-card-main .floating-card-inner {
@@ -97,6 +98,7 @@ html.fx-off .floating-card-foil {
 }
 
 .floating-card-keywords {
+  zoom: var(--card-preview-zoom, 1);
   width: 240px;
   max-height: 448px;
   overflow-y: auto;

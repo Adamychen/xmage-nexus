@@ -353,3 +353,26 @@
   color: var(--fg-2);
   font-size: var(--fs-xs);
 }
+
+.settings-preview-size {
+  margin-top: var(--sp-4h);
+}
+
+.settings-preview-size-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+.settings-preview-size-row .audio-slider {
+  flex: 1;
+  min-width: 0;
+}
+
+.settings-preview-size-value {
+  min-width: 4ch;
+  text-align: right;
+  color: var(--fg-1);
+  font-size: var(--fs-xs);
+  font-variant-numeric: tabular-nums;
+}
