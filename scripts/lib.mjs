@@ -17,11 +17,11 @@ export const XMAGE_VERSION = '1.4.62'
 
 /**
  * Fork XDHS (xenohedron, servidor mage.xdhs.net): segunda versión soportada por
- * el proxy. Los artefactos org.mage:1.5.8 se instalan aparte en ~/.m2 desde un
+ * el proxy. Los artefactos org.mage:1.6.1 se instalan aparte en ~/.m2 desde un
  * checkout parcheado con patches/xdhs/ (ver patches/xdhs/README.md).
  */
-export const XDHS_TAG = '1.5.8-XDHS-r1'
-export const XDHS_VERSION = '1.5.8'
+export const XDHS_TAG = '1.6.1-XDHS-r2'
+export const XDHS_VERSION = '1.6.1'
 
 /**
  * Resuelve el checkout del fork XMage (motor + servidor + plugins).

@@ -19,7 +19,7 @@
       "Thread-pool leak fix now comes from upstream (idle thread expiry) - the nexus one-file patch is retired",
       "All 119+ golden frames re-recorded against 1.4.62 and validated (contract + replay)",
       "Components are rebuilt in this release (server + proxy 1.4.62)",
-      "Dual server flavors (beta + XDHS) keep working; XDHS still uses its own 1.5.8 engine"
+      "Dual server flavors (beta + XDHS) keep working; XDHS updated to its own 1.6.1 engine"
     ],
     "downloads": [
       { "os": "Windows", "arch": "x64", "label": "Windows (x64)", "url": "https://github.com/Adamychen/xmage-nexus/releases/latest" },

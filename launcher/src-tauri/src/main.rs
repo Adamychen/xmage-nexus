@@ -868,7 +868,7 @@ mod tests {
     const CONTRACT_XDHS: &str = r#"{
         "server": {"mainClass": "mage.server.Main", "classpath": ["lib/*"], "port": 17171},
         "proxy": {"mainClass": "org.mage.proxy.Main", "jar": "mage-proxy-1.4.62.jar", "wsPort": 8787, "httpPort": 8788},
-        "proxyXdhs": {"mainClass": "org.mage.proxy.Main", "jar": "mage-proxy-1.5.8.jar", "wsPort": 8797, "httpPort": 8798}
+        "proxyXdhs": {"mainClass": "org.mage.proxy.Main", "jar": "mage-proxy-1.6.1.jar", "wsPort": 8797, "httpPort": 8798}
     }"#;
 
     #[test]
@@ -882,7 +882,7 @@ mod tests {
     fn contract_parses_proxy_xdhs() {
         let c: Contract = serde_json::from_str(CONTRACT_XDHS).unwrap();
         let xdhs = c.proxy_xdhs.unwrap();
-        assert_eq!(xdhs.jar, "mage-proxy-1.5.8.jar");
+        assert_eq!(xdhs.jar, "mage-proxy-1.6.1.jar");
         assert_eq!(xdhs.ws_port, 8797);
         assert_eq!(xdhs.http_port, 8798);
     }

@@ -21,12 +21,12 @@ on:
       xdhs_ref:
         description: 'Tag del fork XDHS (xenohedron/mage)'
         required: false
-        default: 1.5.8-XDHS-r1
+        default: 1.6.1-XDHS-r2
         type: string
       xdhs_version:
         description: 'Versión Maven del fork XDHS (sin el sufijo de tag)'
         required: false
-        default: '1.5.8'
+        default: '1.6.1'
         type: string
   workflow_call:
     inputs:
@@ -38,12 +38,12 @@ on:
       xdhs_ref:
         description: 'Tag del fork XDHS (xenohedron/mage)'
         required: false
-        default: 1.5.8-XDHS-r1
+        default: 1.6.1-XDHS-r2
         type: string
       xdhs_version:
         description: 'Versión Maven del fork XDHS (sin el sufijo de tag)'
         required: false
-        default: '1.5.8'
+        default: '1.6.1'
         type: string
 
 jobs:

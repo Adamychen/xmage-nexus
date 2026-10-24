@@ -11,7 +11,7 @@
 #
 # Env overrides:
 #   REPO=/path/to/repo            XDHS_DIR=~/Escritorio/xmage-xdhs
-#   XDHS_VERSION=1.5.8            SERVICE=xmage-proxy-xdhs
+#   XDHS_VERSION=1.6.1            SERVICE=xmage-proxy-xdhs
 #   PROXY_LINK=~/xmage-proxy-xdhs.jar
 #   WS_PORT=8797  HTTP_PORT=8798  BIND=127.0.0.1  READY_TIMEOUT=60
 #   ALLOWED_ORIGINS=https://<web-origin>  (required: exact origin of the web page)
@@ -20,7 +20,7 @@ set -euo pipefail
 
 REPO="${REPO:-$HOME/Escritorio/xmage-nexus}"
 XDHS_DIR="${XDHS_DIR:-$HOME/Escritorio/xmage-xdhs}"
-XDHS_TAG="${1:-1.5.8-XDHS-r1}"
+XDHS_TAG="${1:-1.6.1-XDHS-r2}"
 XDHS_VERSION="${XDHS_VERSION:-${XDHS_TAG%%-*}}"
 SERVICE="${SERVICE:-xmage-proxy-xdhs}"
 PROXY_LINK="${PROXY_LINK:-$HOME/xmage-proxy-xdhs.jar}"

@@ -22,11 +22,11 @@ XMage `17171` (testMode) · proxy WS `8787` · proxy HTTP page `8788/index.html`
 ## Second flavor: XDHS (`mage.xdhs.net`)
 
 The proxy is also built against the xenohedron fork (XDHS server, tag
-`1.5.8-XDHS-r1`) so both servers can be served side by side. One web build,
+`1.6.1-XDHS-r2`) so both servers can be served side by side. One web build,
 two proxy processes:
 
 - Build: `patches/xdhs/*.patch` are applied to a `xenohedron/mage` checkout,
-  then `mvn -Dmage.version=1.5.8`. `Mage.Proxy/pom.xml` takes the XMage
+  then `mvn -Dmage.version=1.6.1`. `Mage.Proxy/pom.xml` takes the XMage
   dependency version from the `mage.version` property. See
   `patches/xdhs/README.md`.
 - Launcher: the `proxy-xdhs` component (CI job `proxy-xdhs` in

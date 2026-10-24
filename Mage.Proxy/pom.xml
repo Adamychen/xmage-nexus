@@ -22,7 +22,7 @@
         <maven.compiler.source>8</maven.compiler.source>
         <maven.compiler.target>8</maven.compiler.target>
         <!-- XMage artifacts to compile against. Override to build a proxy for
-             another server release: -Dmage.version=1.5.8 -->
+             another server release: -Dmage.version=1.6.1 -->
         <mage.version>${project.version}</mage.version>
     </properties>
 
