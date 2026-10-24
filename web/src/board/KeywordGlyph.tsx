@@ -3,7 +3,10 @@ import type { KeywordIconSet } from './cardOverlays'
 import { resolveKeywordGlyph, type SolidKeyword } from './glyphs'
 import type { GlyphNode } from './glyphs/types'
 import { useSettings } from '../state/store'
+import { MTG_KEYWORDS } from '../data/mtgKeywords'
 import './KeywordCoin.css'
+
+const EMOJI = new Map(MTG_KEYWORDS.map((k) => [k.id, k.icon]))
 
 const SOLID: Record<SolidKeyword, ReactNode> = {
   haste: <path d="M13.5 1.5 4 13.5h6.5L9 22.5l10-12.5h-6.6z" />,
@@ -92,6 +95,8 @@ function renderNode([tag, attrs]: GlyphNode, index: number) {
 const STROKE_PROPS = { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2.2, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true } as const
 
 export default function KeywordGlyph({ id, category, set }: { id: string; category: string; set: KeywordIconSet }) {
+  const emoji = set === 'emoji' ? EMOJI.get(id) : undefined
+  if (emoji) return <span className="kw-coin-emoji" aria-hidden="true">{emoji}</span>
   const spec = resolveKeywordGlyph(id, category)
   if (spec.kind === 'abbr') return <span className="kw-coin-abbr" aria-hidden="true">{spec.text}</span>
   if (spec.kind === 'nodes' || spec.kind === 'fallback') return <svg {...STROKE_PROPS}>{spec.nodes.map(renderNode)}</svg>

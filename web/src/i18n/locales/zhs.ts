@@ -655,6 +655,8 @@ export const zhs: TranslationSchema = {
     keyword_icons_coins_desc: '彩色圆底上的实心符号，在小卡牌上最易辨认',
     keyword_icons_outline: '线框',
     keyword_icons_outline_desc: '细线图标，在拥挤的战场上更低调',
+    keyword_icons_emoji: '表情符号',
+    keyword_icons_emoji_desc: '经典的表情符号徽章，每个关键词一个',
     keyword_aura_title: '关键词效果',
     keyword_aura_hint: '为每个永久物显示其最重要关键词的循环效果，让战场一目了然',
     keyword_aura_off: '关闭',
