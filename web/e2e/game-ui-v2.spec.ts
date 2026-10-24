@@ -294,12 +294,29 @@ test('HND-9: v2 hand badge opens a visible hand and announces card count changes
   await page.screenshot({ path: testInfo.outputPath('v2-hand-badge.png'), clip: { x: 0, y: 40, width: 700, height: 140 } })
 })
 
-test('v2 log ticker shows the latest actions and opens the log panel @gameui', async ({ page }) => {
+test('BRD-17: v2 log ticker shows one line, expands to the latest actions, and opens the log panel @gameui', async ({ page }) => {
   await showGame(page, richCommanderGame(), V2, ['Adam plays Forest', 'Adam plays Swamp', 'Mira casts Counterspell', 'Tobias casts Lightning Bolt targeting Adam', 'Adam casts Pact of Negation'])
   const ticker = page.getByTestId('log-ticker')
   await expect(ticker).toBeVisible({ timeout: 10_000 })
-  await expect(page.getByTestId('log-ticker-line')).toHaveCount(4)
   await expect(ticker).toHaveCSS('position', 'absolute')
+  await expect(page.getByTestId('log-ticker-line')).toHaveCount(1)
+  const line = page.getByTestId('log-ticker-line').locator('.log-ticker-text')
+  const oneLine = await line.evaluate((el) => {
+    const lh = parseFloat(getComputedStyle(el).lineHeight)
+    return { h: el.getBoundingClientRect().height, lh, clipped: el.scrollWidth > el.clientWidth, ellipsis: getComputedStyle(el).textOverflow }
+  })
+  expect(oneLine.h, 'a single line of text').toBeLessThanOrEqual(oneLine.lh + 1)
+  expect(oneLine.ellipsis).toBe('ellipsis')
+  const collapsedH = (await ticker.boundingBox())!.height
+
+  await page.getByTestId('log-ticker-toggle').click()
+  await expect(page.getByTestId('log-ticker-line')).toHaveCount(4)
+  await expect(page.getByTestId('side-panel')).toHaveCount(0)
+  expect((await ticker.boundingBox())!.height).toBeGreaterThan(collapsedH * 2)
+  await page.reload()
+  await dismissSetupWizard(page)
+  await showGame(page, richCommanderGame(), V2, ['Adam plays Forest', 'Adam plays Swamp', 'Mira casts Counterspell', 'Tobias casts Lightning Bolt targeting Adam', 'Adam casts Pact of Negation'])
+  await expect(page.getByTestId('log-ticker-line'), 'the expanded state survives a reload').toHaveCount(4)
   await ticker.click()
   await expect(page.getByTestId('side-panel')).toHaveAttribute('data-tab', 'log')
 })
@@ -537,29 +554,47 @@ function commanderPlacement(at: CommanderColumn): string[] {
   return bad
 }
 
+function commanderFillsColumn(at: CommanderColumn): string[] {
+  const cmd = at.commander!
+  const column = [at.log, at.portrait].filter((r): r is NonNullable<typeof r> => r !== null)
+  const columnW = Math.max(...column.map((r) => r.right)) - Math.min(...column.map((r) => r.left))
+  const roomAbove = cmd.top - at.divider!.bottom
+  return roomAbove > 24 && columnW - (cmd.right - cmd.left) > 24 ? [`leaves ${Math.round(roomAbove)}px above and ${Math.round(columnW - (cmd.right - cmd.left))}px beside it`] : []
+}
+
 for (const vp of [{ width: 1920, height: 1080, docks: true }, { width: 1600, height: 900, docks: true }, { width: 1280, height: 720, docks: false }]) {
   test.describe(`commander column ${vp.width}x${vp.height}`, () => {
     test.use({ viewport: { width: vp.width, height: vp.height } })
 
-    test(`BRD-15: v2 docks my command zone in the left column right above the last actions, following the log as it grows or collapses @gameui`, async ({ page }, testInfo) => {
+    test(`BRD-15: v2 docks my command zone in the left column right above the last actions, as large as the room allows, following the log as it expands or collapses @gameui`, async ({ page }, testInfo) => {
       await showGame(page, richCommanderGame(), V2, LOG)
-      await expect(page.getByTestId('log-ticker')).toBeVisible({ timeout: 10_000 })
+      await expect(page.getByTestId('log-ticker')).toHaveAttribute('data-expanded', '0', { timeout: 10_000 })
       await page.mouse.move(2, 400)
-      await expect.poll(async () => (await commanderColumn(page)).dock, vp.docks ? 'room above the log' : 'no room above the log: stays in the row').toBe(vp.docks ? 'column' : null)
-      const at = await commanderColumn(page)
-      expect(at.cards.length).toBeGreaterThan(0)
-      expect(commanderPlacement(at)).toEqual([])
+      await expect.poll(async () => (await commanderColumn(page)).dock, vp.docks ? 'the one-line log leaves room above it' : 'no room above even a one-line log: stays in the row').toBe(vp.docks ? 'column' : null)
+      await expect.poll(async () => commanderPlacement(await commanderColumn(page))).toEqual([])
+      const collapsed = await commanderColumn(page)
+      expect(collapsed.cards.length).toBeGreaterThan(0)
+      if (vp.docks) expect(commanderFillsColumn(collapsed), 'the commander fills the freed space').toEqual([])
       await page.screenshot({ path: testInfo.outputPath(`v2-commander-column-${vp.width}.png`) })
 
-      const logTop = at.log!.top
-      await page.getByTestId('log-ticker').evaluate((el) => { el.style.minHeight = `${el.getBoundingClientRect().height + 40}px` })
-      await expect.poll(async () => (await commanderColumn(page)).log!.top).toBeLessThan(logTop - 30)
-      await expect.poll(async () => commanderPlacement(await commanderColumn(page)), 'the log grew').toEqual([])
+      await page.getByTestId('log-ticker-toggle').click()
+      await expect(page.getByTestId('log-ticker')).toHaveAttribute('data-expanded', '1')
+      expect(await page.getByTestId('log-ticker-line').count()).toBeGreaterThan(1)
+      await expect.poll(async () => (await commanderColumn(page)).log!.top, 'the log expanded').toBeLessThan(collapsed.log!.top - 30)
+      await expect.poll(async () => commanderPlacement(await commanderColumn(page)), 'the log expanded').toEqual([])
+      const expanded = await commanderColumn(page)
+      if (vp.docks && expanded.dock === 'column') expect(expanded.commander!.bottom - expanded.commander!.top).toBeLessThan(collapsed.commander!.bottom - collapsed.commander!.top)
+      await page.screenshot({ path: testInfo.outputPath(`v2-commander-column-expanded-${vp.width}.png`) })
+
+      await page.getByTestId('log-ticker-toggle').click()
+      await expect.poll(async () => {
+        const back = await commanderColumn(page)
+        return back.dock === 'column' ? Math.round(back.commander!.bottom - back.commander!.top) : null
+      }, 'collapsing the log gives the room back').toBe(vp.docks ? Math.round(collapsed.commander!.bottom - collapsed.commander!.top) : null)
 
       await page.getByTestId('log-ticker').evaluate((el) => { el.style.display = 'none' })
-      await expect.poll(async () => (await commanderColumn(page)).dock, 'the log collapsed: room above the portrait').toBe('column')
-      await expect.poll(async () => commanderPlacement(await commanderColumn(page)), 'the log collapsed').toEqual([])
-      await page.screenshot({ path: testInfo.outputPath(`v2-commander-column-nolog-${vp.width}.png`) })
+      await expect.poll(async () => (await commanderColumn(page)).dock, 'the log hidden: room above the portrait').toBe('column')
+      await expect.poll(async () => commanderPlacement(await commanderColumn(page)), 'the log hidden').toEqual([])
     })
   })
 }

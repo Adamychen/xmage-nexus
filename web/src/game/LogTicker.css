@@ -98,3 +98,47 @@
 .board-wrap:has(.combat-ledger) .log-ticker {
   display: none;
 }
+
+.log-ticker-body {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-1);
+  min-width: 0;
+}
+
+.log-ticker-body > .log-ticker-lines {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.log-ticker-toggle {
+  flex: none;
+  margin: calc(-1 * var(--sp-0h)) calc(-1 * var(--sp-1)) 0 0;
+}
+
+.log-ticker.is-collapsed {
+  padding-block: var(--sp-1h);
+}
+
+.log-ticker.is-collapsed .log-ticker-body {
+  align-items: center;
+}
+
+.log-ticker.is-collapsed .log-ticker-line {
+  align-items: center;
+}
+
+.log-ticker.is-collapsed .log-ticker-dot {
+  margin-top: 0;
+}
+
+.log-ticker.is-collapsed .log-ticker-text {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow-wrap: normal;
+}
+
+.log-ticker.is-collapsed .log-ticker-toggle {
+  margin-top: 0;
+}

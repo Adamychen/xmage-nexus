@@ -18,8 +18,8 @@ function overlapsVertically(a: DOMRect, b: DOMRect): boolean {
 
 /** Docks the own command zone in the left column, right above the highest of the overlays
  *  stacked there (last actions, combat ledger, portrait), so it follows them as they grow or
- *  collapse. Its cards shrink to the room left between the divider and that overlay; when not
- *  even a small card fits, the zone stays in the creatures row. */
+ *  collapse. Its cards take the whole room left between the divider and that overlay, as wide
+ *  as the column allows; when not even a small card fits, the zone stays in the creatures row. */
 function dockCommander(wrap: HTMLElement, zone: HTMLElement, zoneRect: DOMRect, zoom: number) {
   const dock = zone.querySelector<HTMLElement>(COMMANDER)
   if (!dock) return
@@ -43,7 +43,6 @@ function dockCommander(wrap: HTMLElement, zone: HTMLElement, zoneRect: DOMRect, 
   const colW = (colRight - colLeft) / zoom
   const colH = (anchorTop - ceiling) / zoom - GAP
   const cardW = Math.floor(Math.min(
-    baseW,
     (colW - COMMAND_ZONE_CHROME - COMMAND_ITEM_GAP * (items - 1)) / items,
     (colH - COMMAND_ZONE_CHROME) / ratio,
   ))
