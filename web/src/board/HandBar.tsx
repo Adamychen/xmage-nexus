@@ -8,6 +8,8 @@ import {
   computeHandHoverScale,
   computeHandSideReserve,
   computeCostPipSize,
+  handLandsGap,
+  handRestHeight,
   handRestStripWidth,
   type HandSideReserve,
   HAND_ARC_PLAYABLE_RISE_PX,
@@ -135,7 +137,25 @@ export default function HandBar({
   const [gap, setGap] = useState(0)
   const [sideReserve, setSideReserve] = useState<HandSideReserve>({ left: 0, right: 0 })
   const [hoverScale, setHoverScale] = useState(1.5)
+  const [viewportH, setViewportH] = useState<number | null>(null)
   const arcEntries = useMemo(() => computeHandArc(entries.length, cardW), [entries.length, cardW])
+  const restH = handRestHeight(cardW, arcEntries.map((arc) => ({ rot: arc.rot, rise: arc.rise + HAND_ARC_PLAYABLE_RISE_PX })), 0)
+  const reserveScopeRef = useRef<HTMLElement | null>(null)
+
+  useEffect(() => {
+    if (restH === 0) {
+      reserveScopeRef.current?.style.removeProperty('--hand-reserve')
+      return
+    }
+    const el = zoneRef.current
+    const scope = el?.closest<HTMLElement>('.board-wrap')
+    if (!el || !scope || viewportH === null) return
+    reserveScopeRef.current = scope
+    const paddingBottom = parseFloat(getComputedStyle(el).paddingBottom) || 0
+    scope.style.setProperty('--hand-reserve', `${Math.ceil(restH + paddingBottom) + handLandsGap(viewportH)}px`)
+  }, [restH, viewportH])
+
+  useEffect(() => () => { reserveScopeRef.current?.style.removeProperty('--hand-reserve') }, [])
 
   useEffect(() => {
     const el = zoneRef.current
@@ -159,6 +179,7 @@ export default function HandBar({
       setCardW(sizing.cardW)
       setGap(sizing.gap)
       setHoverScale(computeHandHoverScale(sizing.cardW, window.innerHeight))
+      setViewportH(window.innerHeight)
     }
 
     measure()

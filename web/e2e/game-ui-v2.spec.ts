@@ -491,6 +491,58 @@ for (const vp of [{ width: 1600, height: 900 }, { width: 1280, height: 720 }]) {
   })
 }
 
+async function handOverBattlefield(page: import('@playwright/test').Page) {
+  return page.evaluate(() => {
+    const rect = (el: Element) => {
+      const r = el.getBoundingClientRect()
+      return { left: r.left, right: r.right, top: r.top, bottom: r.bottom }
+    }
+    const zone = document.querySelector('.arena-board > .zone-bottom')!
+    const shell = document.querySelector('.board-shell')!.getBoundingClientRect()
+    const board = [...zone.querySelectorAll('.bz-band .card-slot')].map((el) => ({ name: el.textContent?.slice(0, 16) ?? '', ...rect(el) }))
+    const hand = [...document.querySelectorAll('.hand-bar .hand-card')].map(rect).map((r) => ({ ...r, bottom: Math.min(r.bottom, shell.bottom) })).filter((r) => r.bottom > r.top)
+    const handTop = Math.min(...hand.map((r) => r.top))
+    const boardBottom = Math.max(...board.map((r) => r.bottom))
+    const overlapping = board.filter((b) => hand.some((h) => b.left < h.right - 1 && b.right > h.left + 1 && b.top < h.bottom - 1 && b.bottom > h.top + 1)).map((b) => b.name)
+    return { board, hand: hand.length, handTop, boardBottom, overlapping, zoneBottom: zone.getBoundingClientRect().bottom }
+  })
+}
+
+for (const vp of [{ width: 1920, height: 1080 }, { width: 1600, height: 900 }, { width: 1280, height: 720 }, { width: 1024, height: 600 }]) {
+  test.describe(`hand over battlefield ${vp.width}x${vp.height}`, () => {
+    test.use({ viewport: vp })
+
+    test(`BRD-16: v2 the resting hand never covers my battlefield, and hovering a hand card lifts it without moving the board @gameui`, async ({ page }, testInfo) => {
+      await showGame(page, richCommanderGame(), V2, LOG)
+      await expect(page.getByTestId('hand-bar')).toBeVisible({ timeout: 10_000 })
+      await page.mouse.move(2, 400)
+      await page.waitForTimeout(600)
+
+      const rest = await handOverBattlefield(page)
+      expect(rest.hand).toBeGreaterThan(0)
+      expect(rest.board.length).toBeGreaterThan(0)
+      expect(rest.overlapping, 'battlefield cards under the resting hand').toEqual([])
+      expect(rest.handTop - rest.boardBottom, 'gap between the battlefield and the resting hand').toBeGreaterThanOrEqual(6)
+      for (const b of rest.board) expect(b.bottom, `${b.name} stays inside my zone`).toBeLessThanOrEqual(rest.zoneBottom + 1)
+      await page.screenshot({ path: testInfo.outputPath(`v2-hand-rest-${vp.width}.png`) })
+
+      const card = page.locator('.hand-bar .hand-card').first()
+      await card.hover({ position: { x: 10, y: 24 } })
+      await page.waitForTimeout(500)
+      const hovered = await handOverBattlefield(page)
+      expect(hovered.handTop, 'the hovered card rises').toBeLessThan(rest.handTop - 20)
+      expect(hovered.board.map((b) => [Math.round(b.left), Math.round(b.top)]), 'hover does not move the battlefield').toEqual(rest.board.map((b) => [Math.round(b.left), Math.round(b.top)]))
+      const onTop = await card.evaluate((el) => {
+        const r = el.getBoundingClientRect()
+        const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 4)
+        return !!hit && !!el.closest('.hand-card-slot')?.contains(hit)
+      })
+      expect(onTop, 'the lifted card is drawn above the battlefield').toBe(true)
+      await page.screenshot({ path: testInfo.outputPath(`v2-hand-hover-${vp.width}.png`) })
+    })
+  })
+}
+
 test('v2 mana pool keeps every mana type and its label readable @gameui', async ({ page }, testInfo) => {
   const game = richCommanderGame() as { players: Array<Record<string, unknown>> }
   const me = game.players.find((p) => p.controlled) as Record<string, unknown>
@@ -621,8 +673,8 @@ test('tapping an untapped land in v2 flies a mana particle into the pool @gameui
     const dy = parseFloat(particle.style.getPropertyValue('--particle-dy'))
     return {
       startInside: r.width > 0,
-      endX: r.left + r.width / 2 + dx,
-      endY: r.top + r.height / 2 + dy,
+      endX: parseFloat(particle.style.left) + dx,
+      endY: parseFloat(particle.style.top) + dy,
       poolLeft: p.left, poolRight: p.right, poolTop: p.top, poolBottom: p.bottom,
     }
   }, undefined, { polling: 'raf', timeout: 2000 })
