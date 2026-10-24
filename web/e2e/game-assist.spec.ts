@@ -83,7 +83,83 @@ async function playOpponentTurn(page: Page) {
   await push(page, recapView({ mine: true, turn: 3, simBf: full, myLife: 18, myBf: { [wall.id!]: wall }, myGrave: { [knight.id!]: knight } }))
 }
 
+async function enableTurnRecap(page: Page) {
+  await page.addInitScript(() => localStorage.setItem('mage-web-turn-recap', 'true'))
+}
+
+test('SET-2: the turn recap strip is off by default and never mounts, while the board marks still apply @gamefeel', async ({ page }) => {
+  await withFakeServer(recapScenario, async () => {
+    const { pageErrors } = await quickStartGame(page, { prefix: 'recapoff', skipAsks: true })
+    await expect(page.locator('.game-board')).toBeVisible({ timeout: 20_000 })
+
+    await playOpponentTurn(page)
+
+    await expect(page.locator(`.card-slot[data-card-id="${elves.id}"]`)).toHaveAttribute('data-recap', 'new')
+    await expect(page.getByTestId('turn-recap')).toHaveCount(0)
+    expect(await page.evaluate(() => localStorage.getItem('mage-web-turn-recap'))).toBeNull()
+
+    expect(pageErrors, `pageerrors: ${pageErrors.map(String).join(' | ')}`).toEqual([])
+  })
+})
+
+test('turn recap: a long summary with many departures wraps by word, not by letter @gamefeel', async ({ page }) => {
+  await enableTurnRecap(page)
+  await withFakeServer(recapScenario, async () => {
+    const { pageErrors } = await quickStartGame(page, { prefix: 'recapwrap', skipAsks: true })
+    await expect(page.locator('.game-board')).toBeVisible({ timeout: 20_000 })
+
+    const names = ['Jeeves the Unshakeable', 'Jay0707', 'Alicia Masterson', 'Bartholomew Quickfingers', 'Seraphina']
+    const departures = Array.from({ length: 16 }, (_, i) => ({
+      id: `wrap-dep-${i}`,
+      card: makeCard({ id: `wrap-dep-${i}`, name: `Goblin Token ${i}` }),
+      dest: 'graveyard',
+      mine: i % 2 === 0,
+    }))
+    await page.evaluate(({ names, departures }) => {
+      const store = (window as unknown as { __mageStore: { setState: (p: unknown) => void } }).__mageStore
+      store.setState({
+        turnRecap: {
+          key: 'wrap:28',
+          turn: 28,
+          turnsOf: names,
+          actors: names.map((name, i) => ({ playerId: `p${i}`, name, played: ['Glacial Fortress', 'Soul of Stone', 'Fellwar Stone', 'Vraska the Unseen', 'Krenko, Mob Boss'], attackedWith: ['Serra\'s Emissary'] })),
+          life: names.map((name, i) => ({ playerId: `p${i}`, name, mine: false, delta: -3 })),
+          departures,
+          marks: {},
+        },
+      })
+    }, { names, departures })
+
+    const summary = page.getByTestId('turn-recap-summary')
+    await expect(summary).toBeVisible()
+    const layout = await summary.evaluate((el) => {
+      const text = el.firstChild as Text
+      const content = text.data
+      const split: string[] = []
+      const re = /\S+/g
+      let m: RegExpExecArray | null
+      while ((m = re.exec(content))) {
+        const range = document.createRange()
+        range.setStart(text, m.index)
+        range.setEnd(text, m.index + m[0].length)
+        const lines = new Set(Array.from(range.getClientRects()).filter((r) => r.width > 0).map((r) => Math.round(r.top)))
+        if (lines.size > 1) split.push(m[0])
+      }
+      const strip = el.closest('[data-testid="turn-recap"]')!.getBoundingClientRect()
+      return { split, width: el.getBoundingClientRect().width, stripRight: strip.right, stripLeft: strip.left, viewport: window.innerWidth }
+    })
+    expect(layout.split, `words broken across lines: ${layout.split.join(', ')}`).toEqual([])
+    expect(layout.width).toBeGreaterThanOrEqual(200)
+    expect(layout.stripLeft).toBeGreaterThanOrEqual(0)
+    expect(layout.stripRight).toBeLessThanOrEqual(layout.viewport)
+    await page.getByTestId('turn-recap').screenshot({ path: 'test-results/turn-recap-wrap.png' })
+
+    expect(pageErrors, `pageerrors: ${pageErrors.map(String).join(' | ')}`).toEqual([])
+  })
+})
+
 test('turn recap: strip summarises the opponent turn and marks new permanents @gamefeel', async ({ page }) => {
+  await enableTurnRecap(page)
   await withFakeServer(recapScenario, async () => {
     const { pageErrors } = await quickStartGame(page, { prefix: 'recap', skipAsks: true })
     await expect(page.locator('.game-board')).toBeVisible({ timeout: 20_000 })

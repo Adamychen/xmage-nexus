@@ -772,6 +772,8 @@ export const it: TranslationSchema = {
     smart_stops_hint: 'Passa la priorità automaticamente a meno che tu non possa giocare qualcosa (terra, magia o abilità) o abbia una decisione di combattimento. Ha la precedenza sul passaggio automatico.',
     rewind_setting: 'Registra la cronologia del campo (rewind)',
     rewind_setting_hint: 'Conserva un\'istantanea del campo a ogni passo per tornare indietro e leggerlo com\'era. Solo in memoria, non viene inviato nulla; cancellata a fine partita o se disattivi.',
+    recap_setting: 'Mostra il riepilogo del turno',
+    recap_setting_hint: 'All\'inizio del tuo turno, mostra un breve pannello con ciò che hanno fatto gli altri giocatori dal tuo ultimo turno.',
     rewind_title: 'Cronologia del campo',
     rewind_open: 'Riavvolgi',
     rewind_open_hint: 'Rivedi i turni precedenti di questa partita',
