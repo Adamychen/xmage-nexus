@@ -19,6 +19,10 @@
   </tr>
 </table>
 
+## What's new in 0.6.1
+
+- **XDHS flavor updated to 1.6.1-XDHS-r2**: `mage.xdhs.net` moved on, so the proxy and the desktop launcher ship `mage-proxy-1.6.1.jar` (the old 1.5.8 jar was rejected by the server with `VERSION_MISMATCH`). The shared-pool thread patch is retired: the new fork carries the upstream idle-thread fix. Same one web build, two proxies (beta + XDHS).
+
 ## What's new in 0.6.0
 
 - **Main board with a side panel** for Commander pods: one board fills the main area, every other seat is a live copy in a resizable panel; plus kind-sorted bands and a focus button for one opponent's board.
