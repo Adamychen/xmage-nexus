@@ -491,6 +491,79 @@ for (const vp of [{ width: 1600, height: 900 }, { width: 1280, height: 720 }]) {
   })
 }
 
+async function commanderColumn(page: import('@playwright/test').Page) {
+  return page.evaluate(() => {
+    const box = (sel: string) => {
+      const r = document.querySelector(sel)?.getBoundingClientRect()
+      return r && r.width > 0 ? { left: r.left, right: r.right, top: r.top, bottom: r.bottom } : null
+    }
+    const zone = document.querySelector<HTMLElement>('.arena-board > .zone-bottom')!
+    return {
+      dock: zone.dataset.commanderDock ?? null,
+      boardCardW: parseFloat(zone.style.getPropertyValue('--card-w')),
+      commander: box('.arena-board > .zone-bottom .pz-commander'),
+      cards: [...document.querySelectorAll('.arena-board > .zone-bottom .pz-commander .card-slot')].map((c) => {
+        const r = c.getBoundingClientRect()
+        return { left: r.left, right: r.right, top: r.top, bottom: r.bottom }
+      }),
+      log: box('[data-testid="log-ticker"]'),
+      portrait: box('.arena-board > .zone-bottom .pz-bottom-row'),
+      divider: box('.arena-board > .board-shell-divider'),
+      battlefield: box('.arena-board > .zone-bottom .creatures-band'),
+    }
+  })
+}
+
+type CommanderColumn = Awaited<ReturnType<typeof commanderColumn>>
+
+function commanderPlacement(at: CommanderColumn): string[] {
+  const cmd = at.commander!
+  const column = [at.log, at.portrait].filter((r): r is NonNullable<typeof r> => r !== null)
+  const anchorTop = Math.min(...column.map((r) => r.top))
+  const columnRight = Math.max(...column.map((r) => r.right))
+  const bad: string[] = []
+  if (at.dock === 'column') {
+    if (Math.abs(cmd.left - Math.min(...column.map((r) => r.left))) > 2) bad.push('not left-aligned with the column')
+    if (cmd.bottom > anchorTop - 4) bad.push('not above the highest overlay of the column')
+    if (cmd.bottom < anchorTop - 32) bad.push('floats up the column instead of sitting on its overlay')
+    if (cmd.top < at.divider!.bottom) bad.push('crosses the divider')
+    if (cmd.right > columnRight + 1) bad.push('wider than the column')
+    if (cmd.right > at.battlefield!.left) bad.push('reaches the battlefield')
+    const floor = Math.min(at.boardCardW, 56) - 1
+    for (const c of at.cards) if (c.right - c.left < floor) bad.push(`card ${Math.round(c.right - c.left)}px wide, under ${floor}px`)
+  } else if (cmd.left < columnRight) {
+    bad.push('in-row commander overlaps the left column')
+  }
+  return bad
+}
+
+for (const vp of [{ width: 1920, height: 1080, docks: true }, { width: 1600, height: 900, docks: true }, { width: 1280, height: 720, docks: false }]) {
+  test.describe(`commander column ${vp.width}x${vp.height}`, () => {
+    test.use({ viewport: { width: vp.width, height: vp.height } })
+
+    test(`BRD-15: v2 docks my command zone in the left column right above the last actions, following the log as it grows or collapses @gameui`, async ({ page }, testInfo) => {
+      await showGame(page, richCommanderGame(), V2, LOG)
+      await expect(page.getByTestId('log-ticker')).toBeVisible({ timeout: 10_000 })
+      await page.mouse.move(2, 400)
+      await expect.poll(async () => (await commanderColumn(page)).dock, vp.docks ? 'room above the log' : 'no room above the log: stays in the row').toBe(vp.docks ? 'column' : null)
+      const at = await commanderColumn(page)
+      expect(at.cards.length).toBeGreaterThan(0)
+      expect(commanderPlacement(at)).toEqual([])
+      await page.screenshot({ path: testInfo.outputPath(`v2-commander-column-${vp.width}.png`) })
+
+      const logTop = at.log!.top
+      await page.getByTestId('log-ticker').evaluate((el) => { el.style.minHeight = `${el.getBoundingClientRect().height + 40}px` })
+      await expect.poll(async () => (await commanderColumn(page)).log!.top).toBeLessThan(logTop - 30)
+      await expect.poll(async () => commanderPlacement(await commanderColumn(page)), 'the log grew').toEqual([])
+
+      await page.getByTestId('log-ticker').evaluate((el) => { el.style.display = 'none' })
+      await expect.poll(async () => (await commanderColumn(page)).dock, 'the log collapsed: room above the portrait').toBe('column')
+      await expect.poll(async () => commanderPlacement(await commanderColumn(page)), 'the log collapsed').toEqual([])
+      await page.screenshot({ path: testInfo.outputPath(`v2-commander-column-nolog-${vp.width}.png`) })
+    })
+  })
+}
+
 test('v2 mana pool keeps every mana type and its label readable @gameui', async ({ page }, testInfo) => {
   const game = richCommanderGame() as { players: Array<Record<string, unknown>> }
   const me = game.players.find((p) => p.controlled) as Record<string, unknown>

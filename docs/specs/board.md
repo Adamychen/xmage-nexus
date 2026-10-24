@@ -212,3 +212,17 @@ fit is measured against the rendered text, not a fixed pixel budget, so a wider 
 - Why: a 112 px centre broke "Waiting for BlackMagic" into "BLACKMAGI / C", "Thinking" into
   "THINKIN / G" and clipped "07:13 left" at the edge (user report with screenshot, 2026-10-24).
 - Guard: `src/game/PhaseDial.test.tsx` · `e2e/game-ui-v2.spec.ts`
+
+### BRD-15 · The own command zone sits in the left column, above the last actions
+On the v2 board the own command zone (commander, companion, emblems) is not part of the
+creatures row: it docks in the bottom-left column, left-aligned with it and right above the
+highest overlay stacked there (the "Last actions" box, the combat ledger, or the portrait when
+both are hidden). Its position is measured from those overlays, so it moves up when the log grows
+and drops onto the portrait when the log collapses or closes. Its cards keep the board's card size
+when there is room, and shrink to the space left between the divider and that overlay. When not
+even a card of `min(board card, 56px)` fits there (a small window with a tall log), the zone
+falls back to the start of the creatures row, clear of the column.
+
+- Why: the column above the log was empty while the commander sat offset to the right of it,
+  taking room from the battlefield (user report with screenshot, 2026-10-24).
+- Guard: `e2e/game-ui-v2.spec.ts`
