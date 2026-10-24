@@ -1181,6 +1181,8 @@ export const en = {
     tab_log: 'Log',
     log_last_actions: 'Last actions',
     log_open: 'Open log',
+    log_expand: 'Show more actions',
+    log_collapse: 'Show only the last action',
     chip_ring: 'Ring {level}',
     chip_monarch: 'Monarch',
     chip_initiative: 'Initiative',
