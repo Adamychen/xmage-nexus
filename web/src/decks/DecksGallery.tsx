@@ -573,9 +573,10 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
               <Button variant="primary" className="decks-edit-btn" icon="pencil" disabled={!selected} onClick={() => selected && void openForEdit(selected)}>{t('common', 'edit')}</Button>
             </div>
             <input ref={restoreInputRef} type="file" accept=".json" hidden onChange={async (e) => {
+              const input = e.currentTarget
               const f = e.target.files?.[0]
               if (f) await handleRestoreBackup(f)
-              e.currentTarget.value = ''
+              input.value = ''
             }} />
           </footer>
         </>
