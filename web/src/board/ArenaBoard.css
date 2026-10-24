@@ -38,6 +38,11 @@
   overflow: hidden;
 }
 
+.arena-board > .zone-bottom.player-zone {
+  padding-bottom: var(--hand-reserve, 0px);
+  box-sizing: border-box;
+}
+
 /* La mano overlay ancla al fondo de .arena-board (position: relative) */
 
 .board-wrap[data-ui='v2'] .arena-opp-cell .bz-status-row {

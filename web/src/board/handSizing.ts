@@ -12,6 +12,12 @@ export const HAND_BAR_PADDING_Y = 12
 export const HAND_BAR_PANEL_GAP_PX = 16
 
 export const HAND_BAR_PEEK_RATIO = 0.5
+/** How far below the band a resting card is pushed, in band heights (`--hand-sink-k` in HandBar.css). */
+export const HAND_BAR_REST_SINK_K = 1.12
+/** Clear space between the resting hand and the battlefield above it, as a share of the viewport height. */
+export const HAND_LANDS_GAP_VH_RATIO = 0.015
+export const HAND_LANDS_GAP_MIN_PX = 6
+export const HAND_LANDS_GAP_MAX_PX = 16
 
 export const HAND_HOVER_TARGET_W = 260
 export const HAND_HOVER_MAX_VIEWPORT_H_RATIO = 0.55
@@ -47,6 +53,24 @@ export function computeHandArc(count: number, cardW: number): HandArcEntry[] {
     const off = (i - mid) / mid
     return { rot: (i - mid) * step, rise: maxRise * (1 - off * off) }
   })
+}
+
+/** Height the resting fan shows above the bottom of the bar: the part of each card left above
+ *  the band once it is sunk, plus its arc rise and the lift of its top corner from the fan
+ *  rotation (pivot at 50% 150% of the card). Hover lifts cards further with a transform only. */
+export function handRestHeight(cardW: number, cards: ReadonlyArray<{ rot: number; rise: number }>, paddingBottom: number): number {
+  if (cards.length === 0) return 0
+  const cardH = cardW * HAND_CARD_ASPECT
+  const above = cardH * (1 - HAND_BAR_PEEK_RATIO * HAND_BAR_REST_SINK_K)
+  const lift = Math.max(...cards.map(({ rot, rise }) => {
+    const rad = (Math.abs(rot) * Math.PI) / 180
+    return rise + Math.max(0, (cardW / 2) * Math.sin(rad) - cardH * 1.5 * (1 - Math.cos(rad)))
+  }))
+  return Math.ceil(paddingBottom + above + lift)
+}
+
+export function handLandsGap(viewportH: number): number {
+  return Math.round(Math.min(HAND_LANDS_GAP_MAX_PX, Math.max(HAND_LANDS_GAP_MIN_PX, viewportH * HAND_LANDS_GAP_VH_RATIO)))
 }
 
 export interface HandBarSizing {
