@@ -230,17 +230,6 @@
 
 .draft-hidden-link { margin: 0 var(--sp-3) var(--sp-1h); }
 
-.arena-floating-preview {
-  position: fixed;
-  z-index: 1000;
-  pointer-events: none;
-}
-
-.arena-floating-preview img {
-  max-width: 255px;
-  border-radius: var(--r-mid);
-}
-
 .draft-status {
   display: flex;
   align-items: center;

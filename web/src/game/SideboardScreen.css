@@ -263,57 +263,6 @@
   font-size: var(--fs-3xs);
 }
 
-.arena-floating-preview {
-  position: fixed;
-  z-index: 1000;
-  pointer-events: none;
-  border-radius: var(--r-mid);
-  box-shadow: 0 16px 40px var(--shade-5), 0 0 20px rgb(var(--gold-rgb) / 0.45);
-  background: transparent;
-  display: flex;
-  gap: var(--sp-3);
-  animation: arena-preview-pop 120ms cubic-bezier(0.1, 0.9, 0.2, 1);
-}
-
-.preview-face-card {
-  position: relative;
-  width: 250px;
-  aspect-ratio: 2.5 / 3.5;
-  border-radius: var(--r-mid);
-  overflow: hidden;
-  border: 2px solid rgb(var(--gold-rgb) / 0.6);
-  background: var(--ink-1);
-  box-shadow: 0 8px 24px var(--shade-4);
-}
-
-.preview-face-card img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-.preview-face-label {
-  position: absolute;
-  top: 6px;
-  left: 6px;
-  z-index: 2;
-  background: var(--shade-4);
-  border: 1px solid var(--gold-500);
-  color: var(--gold-300);
-  font-size: var(--fs-3xs);
-  font-weight: 800;
-  padding: var(--sp-0h) var(--sp-1h);
-  border-radius: var(--r-xs);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-@keyframes arena-preview-pop {
-  from { opacity: 0; transform: scale(0.92); }
-  to { opacity: 1; transform: scale(1); }
-}
-
 .strip-btn.swap {
   color: var(--brand-fg);
 }

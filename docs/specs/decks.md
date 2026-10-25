@@ -32,3 +32,17 @@ again straight after. A failed read never surfaces as an unhandled error.
   `await`, when React has already cleared it, so every pick threw `TypeError: Cannot set properties
   of null` and the picker kept its value.
 - Guard: `src/decks/DeckImportModal.test.tsx` · `src/decks/ImportDeckDialog.test.tsx` · `src/decks/DecksGallery.test.tsx`
+
+### DCK-3 · The hover preview shows the whole card, the same in every deck screen
+Hovering a card in the deck builder, the construct screen, the draft or the sideboard shows one
+enlarged preview (`DeckHoverPreview`): the whole card, never cropped, up to 420 px wide and never
+wider than half the window or taller than the window, with both faces side by side for a
+double-faced card. It opens beside the hovered card, on the side with room, and stays inside the
+window. Its styles live only in `DeckHoverPreview.css`.
+
+- Why: each screen kept its own copy of the preview markup and of the global
+  `.arena-floating-preview` rules. When the deck builder preview grew to 420 px (`a594f15186`),
+  the draft screen's `img { max-width: 255px }` still applied, so every deck builder preview showed
+  a 255 px strip of the card cropped by `object-fit: cover` inside a 420 px frame. The position also
+  assumed a 255 px preview, so the larger one could cover the hovered card or leave the window.
+- Guard: `src/decks/DeckHoverPreview.test.tsx` · `src/decks/hoverPreviewCss.test.ts`
