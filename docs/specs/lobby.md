@@ -146,7 +146,26 @@ that has never played.
   wizard with the ✕ landed on a bare login screen after every reload (`docs/lessons.md`).
 - Guard: `src/setup/bootRestore.test.ts` · `src/App.boot.test.tsx` · `e2e/reload-restore.spec.ts`
 
-### LBY-13 · The custom starting life shows the life the format starts with
+### LBY-13 · Each format is reachable from one place: a popular chip or the "more formats" list
+A format chip (Commander, Modern, Pioneer, Standard, Pauper, Limited) owns the tables whose deck
+type names it as a whole word, so "Constructed - Premodern" is not Modern. Every other deck type
+of the server catalogue that no chip owns is listed in the "more formats" dropdown, which always
+offers Premodern. No deck type sits under two chips. Brawl is owned by the Commander chip.
+
+- Why: the report of 22 Oct 2026 (app 0.5.0): Modern showed Premodern tables and Premodern had no
+  option of its own. The substring match and the dropdown exclusion both hid it, and no test
+  covered the catalogue.
+- Guard: `src/lobby/TableFilterBar.test.tsx`
+
+### LBY-14 · A table is in exactly one game-mode bucket: 1v1, multi-player or tournament
+For every game type of the catalogue, a match with its seat count and a tournament of it each match
+one of the mode filters (1v1, multi-player, tournament), never none and never two.
+
+- Why: the mode filters decide from the seat count and words of the game type; no test checked that
+  the catalogue's game types fall in a bucket, so a new game type could vanish from every filter.
+- Guard: `src/lobby/TableFilterBar.test.tsx`
+
+### LBY-15 · The custom starting life shows the life the format starts with
 With **Custom starting life** off, its field shows the life the server will apply for the chosen
 game type and deck type (40 for Commander, 30 for Commander Free For All with the Duel Commander
 deck type, 20 for Free For All…), and turning it on starts from that number. A game type the

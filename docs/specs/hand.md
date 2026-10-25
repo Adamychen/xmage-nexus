@@ -70,7 +70,7 @@ a card.
 Each card in the fan shows its printed mana cost as bubbles poking out above its top-right corner:
 one bubble per symbol, both halves for a split card, none for a land or a face-down card, and one
 bubble size for the whole hand, scaled to the cards. It is the printed cost, never a reduced one, because the server
-does not send that. The Appearance setting *Cost symbols in hand* removes them, and the rendered
+does not send that. The *Cost symbols in hand* setting (`Settings → Board`, Card overlays) removes them, and the rendered
 card style never draws them.
 
 - Why: a packed cost (`{2}{G}`) drew one broken bubble (`4090bf3d4f`); and issue #12 asked for the

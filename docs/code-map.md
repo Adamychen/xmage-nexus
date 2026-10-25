@@ -19,7 +19,7 @@ left below is a locator, not a to-do list.
 | `decks/` | 112 (21 css) | `DeckBuilder`, search/list panels, Scryfall integration, import/export, curve chart, `formatRules.ts`, `deckIssues.ts`, `starterDecks.ts`, validation issues |
 | `state/` | 50 (`events/` + `slices/`) | `state.ts` (`AppState`), `store.ts` (facade + `__mageStore`), `actions.ts`, `selectors.ts`, `persistence.ts`, `gateway.ts`, `eventHandler.ts` + `events/` (chat/game/prompts/sideboard/draft/tournament/replay/views), `gameUtils.ts`, `engineViewRegistry.ts`, and the coverage guards (see below) |
 | `ui/` | 46 (6 css) | `Modal`/`DialogShell`, `Field`, `Input`, selectors, plus the style ratchets |
-| `appearance/` | 23 | Playmat/sleeve/card-image settings + modals (`playmats.ts` catalog kept separate from `playmatIdentity.ts`, which is game-aware) |
+| `appearance/` | 21 | Playmat/sleeve/card-image settings (`playmats.ts` catalog kept separate from `playmatIdentity.ts`, which is game-aware) |
 | `system/` | 22 | `AboutModal`, diagnostics export, `desktopCsp.test.ts` |
 | `i18n/` | 19 | `types.ts` (TranslationSchema, master), `index.ts`, 9 locales (~2 284 lines each), `LanguageSelector`, `i18n.coverage.test.ts` |
 | `audio/` | 13 | `soundManager`, `soundSynthesizer`, `gameSoundDispatcher` |

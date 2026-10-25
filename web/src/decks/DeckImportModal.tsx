@@ -163,9 +163,10 @@ export function DeckImportModal({
                   accept=".dck,.txt,.dec,.cod,.o8d,.dek,.mtga,.mwdeck,.draft,.json"
                   hidden
                   onChange={async (e) => {
+                    const input = e.currentTarget
                     const f = e.target.files?.[0]
                     if (f) await handleFile(f)
-                    e.currentTarget.value = ''
+                    input.value = ''
                   }}
                 />
               </label>

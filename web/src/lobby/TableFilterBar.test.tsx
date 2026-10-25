@@ -2,10 +2,13 @@ import { cleanup, fireEvent, render } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import TableFilterBar, {
   INITIAL_TABLE_FILTERS,
+  POPULAR_FORMATS,
+  dropdownFormats,
   filterTables,
   sanitizeTableFilters,
 } from './TableFilterBar'
 import { formatDeckTypeName } from './lobbyUtils'
+import { DEFAULT_DECK_TYPES, DEFAULT_GAME_TYPES } from './CreateTable/constants'
 import type { TableView } from '../net/types'
 
 afterEach(() => {
@@ -263,6 +266,46 @@ describe('filterTables logic', () => {
     // But with myUsername='Bob', t-2 should be pinned to the top!
     const res = filterTables(MOCK_TABLES, INITIAL_TABLE_FILTERS, [], 'Bob')
     expect(res[0].tableId).toBe('t-2')
+  })
+})
+
+const tableOf = (overrides: Partial<TableView>): TableView => ({ ...MOCK_TABLES[0], tableId: 'x', ...overrides })
+
+const FORMAT_CHIPS = POPULAR_FORMATS.map((p) => p.id).filter((id) => id !== 'ALL')
+
+const seatsOf = (count: number) =>
+  Array.from({ length: count }, (_, i) => ({ playerName: `p${i}`, seatIndex: i, playerType: 'HUMAN' }))
+
+describe('format and mode catalogue', () => {
+  it('LBY-13: Modern does not catch Premodern, and Premodern gets its own format option', () => {
+    const premodern = tableOf({ tableId: 'pm', deckType: 'Constructed - Premodern' })
+    expect(filterTables([premodern], { ...INITIAL_TABLE_FILTERS, format: 'Modern' })).toEqual([])
+    expect(dropdownFormats([premodern.deckType!])).toContain('Constructed - Premodern')
+    expect(filterTables([premodern], { ...INITIAL_TABLE_FILTERS, format: 'Constructed - Premodern' })).toHaveLength(1)
+  })
+
+  it('LBY-13: every deck type of the server catalogue is reachable through one chip or the dropdown, and no table sits under two chips', () => {
+    const dropdown = dropdownFormats(DEFAULT_DECK_TYPES)
+    for (const deckType of DEFAULT_DECK_TYPES) {
+      const table = tableOf({ tableId: deckType, deckType, limited: false })
+      const chips = FORMAT_CHIPS.filter(
+        (chip) => filterTables([table], { ...INITIAL_TABLE_FILTERS, format: chip }).length === 1,
+      )
+      expect(chips.length, `${deckType} sits under ${chips.join(', ')}`).toBeLessThanOrEqual(1)
+      expect(chips.length === 1 || dropdown.includes(deckType), `${deckType} is not reachable`).toBe(true)
+    }
+  })
+
+  it('LBY-14: every game type of the catalogue lands in exactly one mode bucket, as a match and as a tournament', () => {
+    for (const gameType of DEFAULT_GAME_TYPES) {
+      for (const isTournament of [false, true]) {
+        const table = tableOf({ gameType: gameType.name, isTournament, seats: seatsOf(gameType.maxPlayers === 2 ? 2 : 4) })
+        const buckets = (['1v1', 'multi', 'tourney'] as const).filter(
+          (mode) => filterTables([table], { ...INITIAL_TABLE_FILTERS, mode }).length === 1,
+        )
+        expect(buckets, `${gameType.name} (tournament: ${isTournament})`).toHaveLength(1)
+      }
+    }
   })
 })
 

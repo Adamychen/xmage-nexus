@@ -26,24 +26,24 @@ const lifeToggle = (container: HTMLElement) => container.querySelectorAll<HTMLIn
 describe('CustomOptions', () => {
   afterEach(() => cleanup())
 
-  it('LBY-13: with the custom life off, shows the life the format starts with', () => {
+  it('LBY-15: with the custom life off, shows the life the format starts with', () => {
     const { container } = render(<CustomOptions form={stubForm()} />)
     expect(lifeInput(container).value).toBe('40')
     expect(lifeInput(container).disabled).toBe(true)
   })
 
-  it('LBY-13: follows the deck type override', () => {
+  it('LBY-15: follows the deck type override', () => {
     const { container } = render(<CustomOptions form={stubForm({ deckType: 'Variant Magic - Duel Commander' })} />)
     expect(lifeInput(container).value).toBe('30')
   })
 
-  it('LBY-13: an unknown game type shows no number, only the format-default placeholder', () => {
+  it('LBY-15: an unknown game type shows no number, only the format-default placeholder', () => {
     const { container } = render(<CustomOptions form={stubForm({ gameType: 'Some Future Variant' })} />)
     expect(lifeInput(container).value).toBe('')
     expect(lifeInput(container).placeholder).not.toBe('')
   })
 
-  it('LBY-13: turning the custom life on starts from the format life', () => {
+  it('LBY-15: turning the custom life on starts from the format life', () => {
     const form = stubForm()
     const { container } = render(<CustomOptions form={form} />)
     fireEvent.click(lifeToggle(container))
@@ -51,7 +51,7 @@ describe('CustomOptions', () => {
     expect(form.setCustomStartLifeEnabled).toHaveBeenCalledWith(true)
   })
 
-  it('LBY-13: with the custom life on, shows the chosen value', () => {
+  it('LBY-15: with the custom life on, shows the chosen value', () => {
     const { container } = render(<CustomOptions form={stubForm({ customStartLifeEnabled: true, customStartLife: 25 })} />)
     expect(lifeInput(container).value).toBe('25')
     expect(lifeInput(container).disabled).toBe(false)

@@ -16,7 +16,6 @@ import DraftScreen from '../game/DraftScreen'
 import ConstructScreen from '../game/ConstructScreen'
 import TournamentBracketModal from '../lobby/TournamentBracketModal'
 import SettingsModal from '../settings/SettingsModal'
-import AppearanceSettingsModal from '../appearance/AppearanceSettingsModal'
 import AboutModal from '../system/AboutModal'
 import SetupWizard from '../setup/SetupWizard'
 import RenderedCardsGallery from './RenderedCardsGallery'
@@ -44,7 +43,6 @@ function stageOf(entry: GalleryEntry | undefined) {
   if (entry.screen === 'wizard') return <CreateTableDialog onClose={() => {}} />
   if (entry.screen === 'staging') return <SpectatorStagingScreen table={entry.stagingTable ?? null} mode={entry.stagingMode ?? 'player'} />
   if (entry.screen === 'settings') return <SettingsModal onClose={() => {}} />
-  if (entry.screen === 'appearance') return <AppearanceSettingsModal onClose={() => {}} />
   if (entry.screen === 'about') return <AboutModal onClose={() => {}} />
   if (entry.screen === 'cards') return <RenderedCardsGallery />
   if (entry.screen === 'projectile') return <ProjectileGalleryStage />

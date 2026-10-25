@@ -145,7 +145,7 @@ describe('buildWizardSteps', () => {
 })
 
 describe('formatStartLife', () => {
-  it('LBY-13: matches the starting life each XMage match type applies', () => {
+  it('LBY-15: matches the starting life each XMage match type applies', () => {
     expect(formatStartLife('Commander Free For All', 'Variant Magic - Commander')).toBe(40)
     expect(formatStartLife('Commander Two Player Duel', 'Variant Magic - Commander')).toBe(40)
     expect(formatStartLife('Free For All', 'Constructed - Modern')).toBe(20)
@@ -155,7 +155,7 @@ describe('formatStartLife', () => {
     expect(formatStartLife('Momir Basic Free For All', 'Variant Magic - Momir Basic')).toBe(24)
   })
 
-  it('LBY-13: applies the deck-type overrides the server makes', () => {
+  it('LBY-15: applies the deck-type overrides the server makes', () => {
     expect(formatStartLife('Commander Free For All', 'Variant Magic - Duel Commander')).toBe(30)
     expect(formatStartLife('Commander Two Player Duel', 'Variant Magic - Duel Commander')).toBe(20)
     expect(formatStartLife('Commander Two Player Duel', 'Variant Magic - MTGO 1v1 Commander')).toBe(30)
@@ -163,7 +163,7 @@ describe('formatStartLife', () => {
     expect(formatStartLife('Penny Dreadful Commander Free For All', 'Variant Magic - Duel Penny Dreadful Commander')).toBe(30)
   })
 
-  it('LBY-13: knows every default game type and nothing else', () => {
+  it('LBY-15: knows every default game type and nothing else', () => {
     for (const g of DEFAULT_GAME_TYPES) expect(formatStartLife(g.name, '')).not.toBeNull()
     expect(formatStartLife('Some Future Variant', '')).toBeNull()
   })

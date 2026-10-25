@@ -5,6 +5,7 @@ const scryfallJson = vi.hoisted(() => vi.fn())
 vi.mock('../cards/scryfallClient', () => ({ scryfallJson }))
 
 import { ImportDeckDialog } from './ImportDeckDialog'
+import { captureUnhandledRejections, settle } from '../utils/unhandledRejections'
 import type { DeckV2 } from './types'
 
 const ARENA = `Deck
@@ -95,6 +96,18 @@ describe('ImportDeckDialog wizard', () => {
   // Issue #12: "it wasn't immediately clear what export format to use… Selecting
   // the deck file worked much better". The file picker was a tertiary label
   // next to the textarea; it is now the step's primary action.
+  it('DCK-2: picking a deck file imports it and clears the picker so the same file can be picked again', async () => {
+    const rejections = captureUnhandledRejections()
+    render(<ImportDeckDialog initialText="" initialName="" onImport={vi.fn()} onClose={vi.fn()} />)
+    const picker = document.querySelector<HTMLInputElement>('input[type="file"]')!
+    const file = Object.assign(new File([ARENA], 'burn.dck', { type: 'text/plain' }), { text: async () => ARENA })
+    fireEvent.change(picker, { target: { files: [file] } })
+    await waitFor(() => expect(document.querySelector('textarea')!.value).toContain('Lightning Bolt'))
+    await waitFor(() => expect(picker.value).toBe(''))
+    await settle()
+    expect(rejections).toEqual([])
+  })
+
   it('offers the file picker as the primary source action', () => {
     render(<ImportDeckDialog onImport={vi.fn()} onClose={vi.fn()} />)
     const fileBtn = screen.getByTestId('import-file-btn')
