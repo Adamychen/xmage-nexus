@@ -145,3 +145,15 @@ that has never played.
 - Why: `453f4d1966`. The wizard's "seen" flag also gated the re-login, so a player who closed the
   wizard with the ✕ landed on a bare login screen after every reload (`docs/lessons.md`).
 - Guard: `src/setup/bootRestore.test.ts` · `src/App.boot.test.tsx` · `e2e/reload-restore.spec.ts`
+
+### LBY-13 · The custom starting life shows the life the format starts with
+With **Custom starting life** off, its field shows the life the server will apply for the chosen
+game type and deck type (40 for Commander, 30 for Commander Free For All with the Duel Commander
+deck type, 20 for Free For All…), and turning it on starts from that number. A game type the
+client does not know shows no number, only "Format default". With the option off the client sends
+no life, so the server's own default always wins; the table only mirrors it
+(`*Match.startGame()` in each `Mage.Server.Plugins/Mage.Game.*` module).
+
+- Why: the field showed 20 for every format, so a Commander table looked like a 20-life game while
+  it started at 40 (issue #23 follow-up).
+- Guard: `src/lobby/CreateTable/constants.test.ts` · `src/lobby/CreateTable/CustomOptions.test.tsx`

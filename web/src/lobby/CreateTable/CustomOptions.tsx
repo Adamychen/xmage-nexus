@@ -5,12 +5,14 @@ import Field from '../../ui/Field'
 import Icon from '../../ui/Icon'
 import type { KeyboardEvent, ReactNode } from 'react'
 import Collapsible from './Collapsible'
+import { formatStartLife } from './constants'
 import { radioNavIndex } from './radioNav'
 import type { CreateTableForm } from './useCreateTableForm'
 import './CustomOptions.css'
 
 export default function CustomOptions({ form }: { form: CreateTableForm }) {
   const { t } = useTranslation()
+  const formatLife = formatStartLife(form.gameType, form.deckType)
   const customized = form.mulliganType !== 'GAME_DEFAULT' || form.customStartLifeEnabled || form.customStartHandSizeEnabled || form.planeChase
   const customSummary = [
     form.mulliganType !== 'GAME_DEFAULT' ? 'Mulligan' : null,
@@ -69,11 +71,16 @@ export default function CustomOptions({ form }: { form: CreateTableForm }) {
           <NumberOption
             label={t('lobby','create_field_custom_life')}
             enabled={form.customStartLifeEnabled}
-            onToggle={form.setCustomStartLifeEnabled}
+            onToggle={(on) => {
+              if (on && formatLife !== null) form.setCustomStartLife(formatLife)
+              form.setCustomStartLifeEnabled(on)
+            }}
             value={form.customStartLife}
+            idleValue={formatLife}
+            idlePlaceholder={t('lobby','create_mulligan_format_default')}
             min={1}
             max={100}
-            fallback={20}
+            fallback={formatLife ?? 20}
             onChange={form.setCustomStartLife}
           />
           <NumberOption
@@ -106,6 +113,8 @@ function NumberOption({
   enabled,
   onToggle,
   value,
+  idleValue,
+  idlePlaceholder,
   min,
   max,
   fallback,
@@ -115,6 +124,8 @@ function NumberOption({
   enabled: boolean
   onToggle: (on: boolean) => void
   value: number
+  idleValue?: number | null
+  idlePlaceholder?: string
   min: number
   max: number
   fallback: number
@@ -130,7 +141,8 @@ function NumberOption({
         aria-label={typeof label === 'string' ? label : undefined}
         min={min}
         max={max}
-        value={value}
+        value={enabled || idleValue === undefined ? value : (idleValue ?? '')}
+        placeholder={enabled ? undefined : idlePlaceholder}
         disabled={!enabled}
         onChange={(e) => {
           const parsed = parseInt(e.target.value, 10)
