@@ -428,6 +428,44 @@ export function recommendedFreeMulligans(gameType: string, numPlayers: number): 
   return 0
 }
 
+const FORMAT_START_LIFE: Record<string, number> = {
+  'Two Player Duel': 20,
+  'Free For All': 20,
+  'Commander Two Player Duel': 40,
+  'Commander Free For All': 40,
+  'Tiny Leaders Two Player Duel': 25,
+  'Canadian Highlander Two Player Duel': 20,
+  'Penny Dreadful Commander Free For All': 40,
+  'Freeform Commander Two Player Duel': 40,
+  'Freeform Commander Free For All': 40,
+  'Freeform Unlimited Commander': 40,
+  'Oathbreaker Two Player Duel': 20,
+  'Oathbreaker Free For All': 20,
+  'Brawl Two Player Duel': 25,
+  'Brawl Free For All': 30,
+  'Momir Basic Two Player Duel': 24,
+  'Momir Basic Free For All': 24,
+  'Custom Pillar of the Paruns Two Player Duel': 25,
+}
+
+const DECK_TYPE_START_LIFE: Record<string, Record<string, number>> = {
+  'Commander Two Player Duel': {
+    'Variant Magic - Duel Commander': 20,
+    'Variant Magic - MTGO 1v1 Commander': 30,
+    'Variant Magic - Centurion Commander': 25,
+  },
+  'Commander Free For All': {
+    'Variant Magic - Duel Commander': 30,
+  },
+  'Penny Dreadful Commander Free For All': {
+    'Variant Magic - Duel Penny Dreadful Commander': 30,
+  },
+}
+
+export function formatStartLife(gameType: string, deckType: string): number | null {
+  return DECK_TYPE_START_LIFE[gameType]?.[deckType] ?? FORMAT_START_LIFE[gameType] ?? null
+}
+
 export function getEffectiveMaxPlayers(gameType: string, gameTypes: GameTypeInfo[], isDraft: boolean): number {
   if (isDraft) return MAX_DRAFT_PLAYERS
   const info = gameTypes.find((g) => g.name === gameType)

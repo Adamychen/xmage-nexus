@@ -164,3 +164,15 @@ one of the mode filters (1v1, multi-player, tournament), never none and never tw
 - Why: the mode filters decide from the seat count and words of the game type; no test checked that
   the catalogue's game types fall in a bucket, so a new game type could vanish from every filter.
 - Guard: `src/lobby/TableFilterBar.test.tsx`
+
+### LBY-15 · The custom starting life shows the life the format starts with
+With **Custom starting life** off, its field shows the life the server will apply for the chosen
+game type and deck type (40 for Commander, 30 for Commander Free For All with the Duel Commander
+deck type, 20 for Free For All…), and turning it on starts from that number. A game type the
+client does not know shows no number, only "Format default". With the option off the client sends
+no life, so the server's own default always wins; the table only mirrors it
+(`*Match.startGame()` in each `Mage.Server.Plugins/Mage.Game.*` module).
+
+- Why: the field showed 20 for every format, so a Commander table looked like a 20-life game while
+  it started at 40 (issue #23 follow-up).
+- Guard: `src/lobby/CreateTable/constants.test.ts` · `src/lobby/CreateTable/CustomOptions.test.tsx`

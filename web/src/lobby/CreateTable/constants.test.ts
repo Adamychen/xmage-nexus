@@ -3,7 +3,9 @@ import {
   buildWizardSteps,
   aiSeatTypes,
   DEFAULT_DRAFT_TOURNAMENT_TYPE,
+  DEFAULT_GAME_TYPES,
   defaultTournamentType,
+  formatStartLife,
   getEffectiveMaxPlayers,
   isHumanSeatType,
   isNativeAiSeatType,
@@ -142,3 +144,27 @@ describe('buildWizardSteps', () => {
   })
 })
 
+describe('formatStartLife', () => {
+  it('LBY-15: matches the starting life each XMage match type applies', () => {
+    expect(formatStartLife('Commander Free For All', 'Variant Magic - Commander')).toBe(40)
+    expect(formatStartLife('Commander Two Player Duel', 'Variant Magic - Commander')).toBe(40)
+    expect(formatStartLife('Free For All', 'Constructed - Modern')).toBe(20)
+    expect(formatStartLife('Two Player Duel', 'Limited')).toBe(20)
+    expect(formatStartLife('Brawl Free For All', 'Variant Magic - Brawl')).toBe(30)
+    expect(formatStartLife('Brawl Two Player Duel', 'Variant Magic - Brawl')).toBe(25)
+    expect(formatStartLife('Momir Basic Free For All', 'Variant Magic - Momir Basic')).toBe(24)
+  })
+
+  it('LBY-15: applies the deck-type overrides the server makes', () => {
+    expect(formatStartLife('Commander Free For All', 'Variant Magic - Duel Commander')).toBe(30)
+    expect(formatStartLife('Commander Two Player Duel', 'Variant Magic - Duel Commander')).toBe(20)
+    expect(formatStartLife('Commander Two Player Duel', 'Variant Magic - MTGO 1v1 Commander')).toBe(30)
+    expect(formatStartLife('Commander Two Player Duel', 'Variant Magic - Centurion Commander')).toBe(25)
+    expect(formatStartLife('Penny Dreadful Commander Free For All', 'Variant Magic - Duel Penny Dreadful Commander')).toBe(30)
+  })
+
+  it('LBY-15: knows every default game type and nothing else', () => {
+    for (const g of DEFAULT_GAME_TYPES) expect(formatStartLife(g.name, '')).not.toBeNull()
+    expect(formatStartLife('Some Future Variant', '')).toBeNull()
+  })
+})
