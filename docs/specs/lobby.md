@@ -176,3 +176,14 @@ no life, so the server's own default always wins; the table only mirrors it
 - Why: the field showed 20 for every format, so a Commander table looked like a 20-life game while
   it started at 40 (issue #23 follow-up).
 - Guard: `src/lobby/CreateTable/constants.test.ts` · `src/lobby/CreateTable/CustomOptions.test.tsx`
+
+### LBY-16 · The contributors are credited in a box beside the login card
+The login screen names its contributors in a panel to the right of the login card, vertically
+centred on the card's right edge, under the heading "Contributors" in the player's language. The
+panel is a list of names, never a sentence, and it stays out of the card's way: below 1100 px of
+width it moves under the card instead of beside it, centred with it. It does not take focus or clicks.
+
+- Why: the first credit was one sentence pinned to the corner, which read as a footnote and was
+  hard to extend. A list in its own box grows by adding a name to `CONTRIBUTORS`
+  (`LoginScreen.tsx`) and needs no translation per name.
+- Guard: `src/lobby/LoginScreen.test.tsx`

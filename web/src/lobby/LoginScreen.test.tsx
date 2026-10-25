@@ -71,3 +71,17 @@ describe('LoginScreen ports', () => {
     expect(doConnect).toHaveBeenCalledWith(expect.any(String), 8790, expect.any(String), 17172, expect.any(String), expect.any(String), expect.anything(), expect.anything())
   })
 })
+
+describe('LoginScreen contributors', () => {
+  afterEach(() => {
+    cleanup()
+  })
+
+  it('LBY-16: lists every contributor in a box beside the card, without taking clicks', () => {
+    const { getByTestId } = render(<LoginScreen />)
+    const box = getByTestId('login-contributors')
+    expect(box.querySelector('h2')?.textContent).toBeTruthy()
+    const names = Array.from(box.querySelectorAll('li')).map((li) => li.textContent)
+    expect(names).toEqual(['NovaGlow', 'DarioBarrabinoDev'])
+  })
+})

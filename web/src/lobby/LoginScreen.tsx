@@ -76,6 +76,8 @@ function parsePort(raw: string): number | null {
 const presetOf = (host: string): ServerPreset =>
   host === 'beta.xmage.today' ? 'official' : host === XDHS_SERVER_HOST ? 'xdhs' : isLoopbackHost(host) ? 'local' : 'custom'
 
+const CONTRIBUTORS = ['NovaGlow', 'DarioBarrabinoDev']
+
 export default function LoginScreen() {
   const { t, tError, lang } = useTranslation()
   const phase = useStore((s) => s.phase)
@@ -272,172 +274,183 @@ export default function LoginScreen() {
       <div className="login-bg-glow login-bg-glow-1" />
       <div className="login-bg-glow login-bg-glow-2" />
 
-      <form className="login-card panel" onSubmit={submit}>
-        <div className="login-header">
-          <div className="login-hero" aria-hidden="true">
-            <span className="hero-card hero-card-1" />
-            <span className="hero-card hero-card-2" />
-            <span className="hero-card hero-card-3" />
-          </div>
-          <img src="/logo.jpeg" alt="XMage Nexus" className="login-logo-img" />
-          <p className="login-tagline" key={taglineIdx} data-testid="login-tagline">
-            {t('login', TAGLINE_KEYS[taglineIdx])}
-          </p>
-          <p className="subtitle">{t('login.subtitle')}</p>
-        </div>
-
-        {pendingDeepLink && (
-          <div className="login-invite-banner" data-testid="login-invite-banner">
-            <span className="invite-icon"><Icon name="send" size={14} /></span>
-            <span>{t('lobby', 'invite_login_hint')}</span>
-          </div>
-        )}
-
-        {/* Server Preset Selector */}
-        <div className="login-presets-container">
-          <span className="login-presets-title">{t('login.server_target')}</span>
-          <Tabs
-            variant="segmented"
-            className="login-presets-row"
-            value={preset}
-            onChange={handleSelectPreset}
-            items={[
-              { id: 'local', icon: 'home', label: t('login.server_local'), title: t('login.server_local') },
-              { id: 'official', icon: 'globe', label: t('login.server_official'), title: t('login.server_official') },
-              { id: 'xdhs', icon: 'users', label: t('login.server_xdhs'), title: t('login.server_xdhs') },
-              { id: 'custom', icon: 'settings', label: t('login.server_custom'), title: t('login.server_custom') },
-            ]}
-          />
-        </div>
-
-        {/* User Identity Section */}
-        <div className="login-user-section">
-          <div
-            ref={avatarRef}
-            className="user-avatar-preview"
-            onClick={() => setShowAvatarPicker(true)}
-            title={t('lobby', 'avatar_pick_title')}
-            {...clickableProps(() => setShowAvatarPicker(true))}
-          >
-            <AvatarImage avatarId={avatarId} username={username} size="large" />
-            <div className="user-avatar-flag-pill">
-              <CountryFlag flagName={flagName} />
+      <div className="login-stage">
+        <form className="login-card panel" onSubmit={submit}>
+          <div className="login-header">
+            <div className="login-hero" aria-hidden="true">
+              <span className="hero-card hero-card-1" />
+              <span className="hero-card hero-card-2" />
+              <span className="hero-card hero-card-3" />
             </div>
-            <span className="user-avatar-badge-edit"><Icon name="pencil" size={12} /></span>
+            <img src="/logo.jpeg" alt="XMage Nexus" className="login-logo-img" />
+            <p className="login-tagline" key={taglineIdx} data-testid="login-tagline">
+              {t('login', TAGLINE_KEYS[taglineIdx])}
+            </p>
+            <p className="subtitle">{t('login.subtitle')}</p>
           </div>
-          <div className="user-inputs-col">
-            <div className="user-name-and-flag-grid">
-              <Field className="login-field-username" label={t('login.username')}>
-                <input
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  maxLength={14}
-                  placeholder={t('login.username')}
-                  autoComplete="username"
-                  required
-                />
-              </Field>
-              <Field className="login-field-flag" label={t('login.flag')}>
-                <select value={flagName} onChange={(e) => setFlagName(e.target.value)}>
-                  {sortedFlags(lang).map((f) => (
-                    <option key={f.code} value={f.code}>
-                      {f.emoji} {countryName(f.code, lang)}
-                    </option>
-                  ))}
-                </select>
-              </Field>
+  
+          {pendingDeepLink && (
+            <div className="login-invite-banner" data-testid="login-invite-banner">
+              <span className="invite-icon"><Icon name="send" size={14} /></span>
+              <span>{t('lobby', 'invite_login_hint')}</span>
             </div>
-            <Field label={t('login.password')} hint={passwordDisabledOnBeta && t('login', 'password_disabled_beta')} hintTone="warn">
-              <input
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                type="password"
-                placeholder={t('login.password')}
-                autoComplete="current-password"
-                disabled={passwordDisabledOnBeta}
-                data-testid="login-password"
-              />
-            </Field>
-          </div>
-        </div>
-
-        {/* Network Connection Configuration Box */}
-        <details className="login-network-box">
-          <summary className="login-network-header">
-            <span className="network-box-title" title={t('login.network_config')}>{t('login.network_config')}</span>
-            <span className="network-box-hint">{serverHost}:{port}</span>
-          </summary>
-          <div className="login-network-fields">
-            <div className="network-field-row">
-              <Field className="network-field-proxy" label={t('login.proxy')}>
-                <input
-                  value={proxyHost}
-                  onChange={(e) => {
-                    setProxyHost(e.target.value)
-                    setPreset('custom')
-                  }}
-                />
-              </Field>
-              <Field className="network-field-port" label={t('login.proxy_port')}>
-                <input
-                  value={proxyPort}
-                  onChange={(e) => {
-                    setProxyPort(e.target.value)
-                    setPreset('custom')
-                  }}
-                  type="number"
-                />
-              </Field>
-            </div>
-            <div className="network-field-row">
-              <Field className="network-field-host" label={t('login.xmage_server')}>
-                <input
-                  value={serverHost}
-                  onChange={(e) => {
-                    setServerHost(e.target.value)
-                    setPreset('custom')
-                  }}
-                />
-              </Field>
-              <Field className="network-field-port" label={t('login.port')}>
-                <input
-                  value={port}
-                  onChange={(e) => {
-                    setPort(e.target.value)
-                    setPreset('custom')
-                  }}
-                  type="number"
-                />
-              </Field>
-            </div>
-          </div>
-        </details>
-
-        {error && (
-          <div className="error-box">
-            <span className="error-icon"><Icon name="alert" size={14} /></span>
-            <span className="error-msg">{tError(error)}</span>
-            <CloseButton variant="plain" size="sm" onClick={clearError} />
-          </div>
-        )}
-
-        <Button ref={submitRef} variant="primary" className="login-submit-btn" disabled={busy} type="submit">
-          {busy ? (
-            <span className="btn-connecting-wrap">
-              <ManaPips />
-              <span>{t('login.connecting')}</span>
-            </span>
-          ) : (
-            <span>{t('login.connect_btn')}</span>
           )}
-        </Button>
-        <Button variant="link" size="sm" onClick={openSetupWizard} data-testid="login-open-setup">
-          {t('setup', 'first_time')}
-        </Button>
-        <div className="login-attribution">
-          {t('login.attribution')}
-        </div>
-      </form>
+  
+          {/* Server Preset Selector */}
+          <div className="login-presets-container">
+            <span className="login-presets-title">{t('login.server_target')}</span>
+            <Tabs
+              variant="segmented"
+              className="login-presets-row"
+              value={preset}
+              onChange={handleSelectPreset}
+              items={[
+                { id: 'local', icon: 'home', label: t('login.server_local'), title: t('login.server_local') },
+                { id: 'official', icon: 'globe', label: t('login.server_official'), title: t('login.server_official') },
+                { id: 'xdhs', icon: 'users', label: t('login.server_xdhs'), title: t('login.server_xdhs') },
+                { id: 'custom', icon: 'settings', label: t('login.server_custom'), title: t('login.server_custom') },
+              ]}
+            />
+          </div>
+  
+          {/* User Identity Section */}
+          <div className="login-user-section">
+            <div
+              ref={avatarRef}
+              className="user-avatar-preview"
+              onClick={() => setShowAvatarPicker(true)}
+              title={t('lobby', 'avatar_pick_title')}
+              {...clickableProps(() => setShowAvatarPicker(true))}
+            >
+              <AvatarImage avatarId={avatarId} username={username} size="large" />
+              <div className="user-avatar-flag-pill">
+                <CountryFlag flagName={flagName} />
+              </div>
+              <span className="user-avatar-badge-edit"><Icon name="pencil" size={12} /></span>
+            </div>
+            <div className="user-inputs-col">
+              <div className="user-name-and-flag-grid">
+                <Field className="login-field-username" label={t('login.username')}>
+                  <input
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    maxLength={14}
+                    placeholder={t('login.username')}
+                    autoComplete="username"
+                    required
+                  />
+                </Field>
+                <Field className="login-field-flag" label={t('login.flag')}>
+                  <select value={flagName} onChange={(e) => setFlagName(e.target.value)}>
+                    {sortedFlags(lang).map((f) => (
+                      <option key={f.code} value={f.code}>
+                        {f.emoji} {countryName(f.code, lang)}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+              </div>
+              <Field label={t('login.password')} hint={passwordDisabledOnBeta && t('login', 'password_disabled_beta')} hintTone="warn">
+                <input
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  type="password"
+                  placeholder={t('login.password')}
+                  autoComplete="current-password"
+                  disabled={passwordDisabledOnBeta}
+                  data-testid="login-password"
+                />
+              </Field>
+            </div>
+          </div>
+  
+          {/* Network Connection Configuration Box */}
+          <details className="login-network-box">
+            <summary className="login-network-header">
+              <span className="network-box-title" title={t('login.network_config')}>{t('login.network_config')}</span>
+              <span className="network-box-hint">{serverHost}:{port}</span>
+            </summary>
+            <div className="login-network-fields">
+              <div className="network-field-row">
+                <Field className="network-field-proxy" label={t('login.proxy')}>
+                  <input
+                    value={proxyHost}
+                    onChange={(e) => {
+                      setProxyHost(e.target.value)
+                      setPreset('custom')
+                    }}
+                  />
+                </Field>
+                <Field className="network-field-port" label={t('login.proxy_port')}>
+                  <input
+                    value={proxyPort}
+                    onChange={(e) => {
+                      setProxyPort(e.target.value)
+                      setPreset('custom')
+                    }}
+                    type="number"
+                  />
+                </Field>
+              </div>
+              <div className="network-field-row">
+                <Field className="network-field-host" label={t('login.xmage_server')}>
+                  <input
+                    value={serverHost}
+                    onChange={(e) => {
+                      setServerHost(e.target.value)
+                      setPreset('custom')
+                    }}
+                  />
+                </Field>
+                <Field className="network-field-port" label={t('login.port')}>
+                  <input
+                    value={port}
+                    onChange={(e) => {
+                      setPort(e.target.value)
+                      setPreset('custom')
+                    }}
+                    type="number"
+                  />
+                </Field>
+              </div>
+            </div>
+          </details>
+  
+          {error && (
+            <div className="error-box">
+              <span className="error-icon"><Icon name="alert" size={14} /></span>
+              <span className="error-msg">{tError(error)}</span>
+              <CloseButton variant="plain" size="sm" onClick={clearError} />
+            </div>
+          )}
+  
+          <Button ref={submitRef} variant="primary" className="login-submit-btn" disabled={busy} type="submit">
+            {busy ? (
+              <span className="btn-connecting-wrap">
+                <ManaPips />
+                <span>{t('login.connecting')}</span>
+              </span>
+            ) : (
+              <span>{t('login.connect_btn')}</span>
+            )}
+          </Button>
+          <Button variant="link" size="sm" onClick={openSetupWizard} data-testid="login-open-setup">
+            {t('setup', 'first_time')}
+          </Button>
+          <div className="login-attribution">
+            {t('login.attribution')}
+          </div>
+        </form>
+
+        <aside className="login-contributors panel" data-testid="login-contributors">
+          <h2 className="login-contributors-title">{t('login.contributors_title')}</h2>
+          <ul className="login-contributors-list">
+            {CONTRIBUTORS.map((name) => (
+              <li key={name}>{name}</li>
+            ))}
+          </ul>
+        </aside>
+      </div>
 
       {showAvatarPicker && (
         <AvatarPickerModal
