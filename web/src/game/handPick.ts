@@ -23,8 +23,8 @@ export function handPickIds(prompt: FeedbackPrompt, myHandIds: ReadonlySet<strin
   if (prompt.method !== 'GAME_TARGET') return null
   if (!prompt.cards || prompt.cards.length === 0) return null
   if (!prompt.cards.every((card) => myHandIds.has(card.id))) return null
+  // PRM-11: no legal option means no card is pickable, so the grid stays and offers its finish.
   const optionIds = prompt.options.map((option) => option.id).filter(Boolean)
-  if (optionIds.length > 0 && !optionIds.every((id) => myHandIds.has(id))) return null
-  const ids = optionIds.length > 0 ? optionIds : prompt.cards.map((card) => card.id)
-  return ids.length > 0 ? ids : null
+  if (optionIds.length === 0 || !optionIds.every((id) => myHandIds.has(id))) return null
+  return optionIds
 }

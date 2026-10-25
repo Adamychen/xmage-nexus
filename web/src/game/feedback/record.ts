@@ -157,11 +157,9 @@ export function targetOptions(data: JsonRecord, fallbackLabel: (index: number, i
   }
   const targets = stringList(data.targets)
   const possibleTargets = stringList(asRecord(data.options).possibleTargets)
-  const candidateIds = targets.length
-    ? targets
-    : possibleTargets.length
-      ? possibleTargets
-      : cardOptions(data.cardsView1).map((option) => option.id)
+  // PRM-11: the engine omits options.possibleTargets when no card is legal, so the shown cards
+  // are not candidates: a pick there is refused and the same prompt comes back.
+  const candidateIds = targets.length ? targets : possibleTargets
   return candidateIds.map((id, index) => {
     return { id, label: labels.get(id) ?? fallbackLabel(index, id), value: id }
   })

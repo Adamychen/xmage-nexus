@@ -60,12 +60,12 @@ describe('parseFeedback', () => {
     expect(required?.required).toBe(true)
   })
 
-  it('falls back to cardsView1 when XMage omits the target UUID set', () => {
+  it('PRM-11: shows no candidate from cardsView1 when XMage omits the legal list', () => {
     const prompt = parseFeedback('GAME_TARGET', 'game-2', {
       message: 'Choose a target',
       cardsView1: { 'card-1': { id: 'card-1', name: 'Forest' } },
     })
-    expect(prompt?.options).toEqual([{ id: 'card-1', label: 'Forest', value: 'card-1' }])
+    expect(prompt?.options).toEqual([])
   })
 
   it('labels player targets from the embedded GameView', () => {
@@ -812,5 +812,33 @@ describe('parseFeedback', () => {
       expect(prompt?.isLibraryOrderPick).toBeUndefined()
       expect(prompt?.isMulliganLondon).toBe(true)
     })
+  })
+})
+
+describe('PRM-11: a target prompt with no legal card offers no card', () => {
+  const cards = [
+    { id: 'h1', name: 'Forest', displayName: 'Forest', cardTypes: ['LAND'], zone: 'HAND' },
+    { id: 'h2', name: 'Lightning Bolt', displayName: 'Lightning Bolt', cardTypes: ['INSTANT'], zone: 'HAND' },
+  ]
+
+  it('lists no candidate when the engine omitted possibleTargets', () => {
+    const fp = parseFeedback('GAME_TARGET', 'g', {
+      message: 'Choose a nonland card to discard',
+      cardsView1: { h1: cards[0], h2: cards[1] },
+      targets: null,
+      flag: false,
+    })
+    expect(fp?.options).toEqual([])
+    expect(fp?.required).toBe(false)
+  })
+
+  it('still lists the legal ids the engine sends in options.possibleTargets', () => {
+    const fp = parseFeedback('GAME_TARGET', 'g', {
+      message: 'Choose a card to discard',
+      cardsView1: { h1: cards[0], h2: cards[1] },
+      targets: null,
+      options: { possibleTargets: ['h2'] },
+    })
+    expect(fp?.options.map((o) => o.id)).toEqual(['h2'])
   })
 })

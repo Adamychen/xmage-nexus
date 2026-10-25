@@ -95,3 +95,14 @@ double-click picks.
 - Why: long choice lists (creature types, card names) are faster to answer by typing than by
   scanning (`1e5c54e840`).
 - Guard: `src/game/FeedbackDialog.test.tsx` · `e2e/grid-search.spec.ts`
+
+### PRM-11 · A target prompt with no legal card offers no card
+A `GAME_TARGET` prompt that lists cards but carries no `options.possibleTargets` has no legal pick:
+the engine omits that list only when it is empty. No shown card is selectable, the hand strip is not
+a picker, and the prompt is answered by its finish button (the server sends it optional). A card
+click there is never sent as an answer.
+
+- Why: the client treated every shown card as a candidate when the list was missing. Each click was
+  then refused, the engine asked the same discard again, and the dialog stayed open until the next
+  priority pass, so the player saw a prompt they had already answered.
+- Guard: `src/game/handPick.test.ts` · `src/game/feedback.test.ts`

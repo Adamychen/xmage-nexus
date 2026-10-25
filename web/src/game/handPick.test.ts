@@ -15,9 +15,15 @@ const prompt = (partial: Partial<FeedbackPrompt>): FeedbackPrompt => ({
 })
 
 describe('handPickIds', () => {
-  it('PRM-4: returns the card ids when every card lives in the controller hand', () => {
+  it('PRM-11: returns null when the server lists no legal card, even if every card is in the hand', () => {
     const cards = [{ id: 'h1', name: 'Forest' }, { id: 'h2', name: 'Bolt' }]
-    expect(handPickIds(prompt({ cards }), new Set(['h1', 'h2']))).toEqual(['h1', 'h2'])
+    expect(handPickIds(prompt({ cards }), new Set(['h1', 'h2']))).toBeNull()
+  })
+
+  it('PRM-4: returns the legal card ids when every legal card lives in the controller hand', () => {
+    const cards = [{ id: 'h1', name: 'Forest' }, { id: 'h2', name: 'Bolt' }]
+    const options = [{ id: 'h1', label: 'Forest', value: 'h1' }, { id: 'h2', label: 'Bolt', value: 'h2' }]
+    expect(handPickIds(prompt({ cards, options }), new Set(['h1', 'h2']))).toEqual(['h1', 'h2'])
   })
 
   it('PRM-4: prefers the legal options when present (server-driven targets)', () => {
