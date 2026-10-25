@@ -1185,6 +1185,8 @@ export const ru: TranslationSchema = {
     tab_log: 'Лог',
     log_last_actions: 'Последние действия',
     log_open: 'Открыть журнал',
+    log_expand: 'Показать больше действий',
+    log_collapse: 'Показать только последнее действие',
     chip_ring: 'Кольцо {level}',
     chip_monarch: 'Монарх',
     chip_initiative: 'Инициатива',

@@ -1185,6 +1185,8 @@ export const es: TranslationSchema = {
     tab_log: 'Log',
     log_last_actions: 'Últimas acciones',
     log_open: 'Abrir registro',
+    log_expand: 'Mostrar más acciones',
+    log_collapse: 'Mostrar solo la última acción',
     chip_ring: 'Anillo {level}',
     chip_monarch: 'Monarca',
     chip_initiative: 'Iniciativa',

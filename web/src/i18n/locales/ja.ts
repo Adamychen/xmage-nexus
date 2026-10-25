@@ -1188,6 +1188,8 @@ export const ja: TranslationSchema = {
     tab_log: 'ログ',
     log_last_actions: '直近の行動',
     log_open: 'ログを開く',
+    log_expand: 'もっと表示',
+    log_collapse: '最後のアクションだけ表示',
     chip_ring: '指輪 {level}',
     chip_monarch: '統治者',
     chip_initiative: 'イニシアチブ',

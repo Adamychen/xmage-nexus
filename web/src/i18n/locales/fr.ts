@@ -1185,6 +1185,8 @@ export const fr: TranslationSchema = {
     tab_log: 'Log',
     log_last_actions: 'Dernières actions',
     log_open: 'Ouvrir le journal',
+    log_expand: 'Afficher plus d\'actions',
+    log_collapse: 'Afficher seulement la dernière action',
     chip_ring: 'Anneau {level}',
     chip_monarch: 'Monarque',
     chip_initiative: 'Initiative',

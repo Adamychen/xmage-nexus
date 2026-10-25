@@ -1188,6 +1188,8 @@ export const zhs: TranslationSchema = {
     tab_log: '日志',
     log_last_actions: '最近动作',
     log_open: '打开日志',
+    log_expand: '显示更多操作',
+    log_collapse: '只显示最后一个操作',
     chip_ring: '至尊戒 {level}',
     chip_monarch: '君主',
     chip_initiative: '先攻权',
