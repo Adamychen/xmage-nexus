@@ -82,7 +82,6 @@ export type GalleryScreenName =
   | 'wizard'
   | 'staging'
   | 'settings'
-  | 'appearance'
   | 'about'
   | 'help'
   | 'gameend'
@@ -5224,14 +5223,6 @@ export function buildGalleryEntries(): GalleryEntry[] {
     description: 'SettingsModal (idioma, interfaz, tablero, sonido, juego).',
     phase: 'game',
     screen: 'settings',
-  })
-  entries.push({
-    id: 'screen:appearance',
-    group: 'Pantallas',
-    label: 'Apariencia',
-    description: 'Zoom, disposición de tablero y fundas.',
-    phase: 'game',
-    screen: 'appearance',
   })
   entries.push({
     id: 'screen:about',
