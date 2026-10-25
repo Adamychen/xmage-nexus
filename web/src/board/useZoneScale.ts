@@ -84,7 +84,12 @@ export function useZoneScale(cardAspect = CLASSIC_CARD_ASPECT, bandShare = 0.5, 
       // for the equal split, more when the other band is empty.)
 
       const verticalOverhead = statusH + (isCompactPod ? 6 : 12)
-      const availH = rect.height - verticalOverhead
+      let availH = rect.height - verticalOverhead
+      if (statusRow && getComputedStyle(statusRow).position === 'absolute') {
+        const style = getComputedStyle(el)
+        const padY = (parseFloat(style.paddingTop) || 0) + (parseFloat(style.paddingBottom) || 0)
+        availH = Math.min(availH, rect.height - padY - (isCompactPod ? 6 : 12))
+      }
       if (availH <= 0) {
         setCardW(MIN_CARD_W)
         return
