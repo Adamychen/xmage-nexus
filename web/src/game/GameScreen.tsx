@@ -14,7 +14,7 @@ import RewindBar from './RewindBar'
 import MobileSpectator from './MobileSpectator'
 import { useNarrowScreen } from './useNarrowScreen'
 import { useRewind, viewedSnapshot } from './rewind'
-import { isRollbackVoteBlocking, maybeAutoPass, setStoreError, useGame, useSettings, useStore } from '../state/store'
+import { clearFeedback, getState, isRollbackVoteBlocking, maybeAutoPass, setStoreError, useGame, useSettings, useStore } from '../state/store'
 import FeedbackDialog from './FeedbackDialog'
 import UserRequestDialog from './UserRequestDialog'
 import RollbackDialog from './RollbackDialog'
@@ -240,11 +240,16 @@ export default function GameScreen() {
     if (pendingTargetsRef.current.has(id)) return
     pendingTargetsRef.current.add(id)
     perfMark('click', 'target', undefined, { id })
+    const answered = getState().feedback
     const result = await cmds.sendPlayerUUID(id, gameId)
     if (!result.ok) {
       pendingTargetsRef.current.delete(id)
       setStoreError(result.error ?? t('errors', 'send_failed_target'))
+      return
     }
+    // PRM-9: the accepted pick clears the prompt it answered. A hand pick (a discard) has no
+    // other clearing event until the next priority pass, so the dialog stayed open meanwhile.
+    if (getState().feedback === answered) clearFeedback()
   }
 
   const onPlayableClick = async (id: string, e?: React.MouseEvent) => {
