@@ -356,3 +356,90 @@ describe('commander memory: one commander, one column', () => {
     expect(commanderDamageDealt(after, roster[0], (after.players ?? [])[1])).toBe(3)
   })
 })
+
+describe('commander memory: BRD-18 edge cases', () => {
+  afterEach(() => resetCommanderMemory())
+
+  const ownerIds = (gv: GameView, owner: string) =>
+    syncCommanderMemory(gv).filter((c) => c.ownerId === owner).map((c) => c.id).sort()
+
+  it('BRD-18: a partner that stays in the command zone keeps its own column when the other partner moves', () => {
+    const before = makeGameView({
+      players: [
+        makePlayer({
+          playerId: 'p1',
+          name: 'Alice',
+          commandList: [commanderCard('cz-1', 'Brallin, Skyshark Pilot', []), commanderCard('cz-2', 'Shabraz, Brutal Sorcerer', [])],
+        }),
+        makePlayer({ playerId: 'p2', name: 'Bob' }),
+      ],
+    })
+    syncCommanderMemory(before)
+    const after = makeGameView({
+      players: [
+        makePlayer({
+          playerId: 'p1',
+          name: 'Alice',
+          commandList: [commanderCard('cz-2', 'Shabraz, Brutal Sorcerer', [])],
+          battlefield: {
+            'bf-1': makePermanent({ id: 'bf-1', name: 'Brallin, Skyshark Pilot', rules: [commanderInfoRule(1), commanderDamageRule(4, 'Bob')] }),
+          },
+        }),
+        makePlayer({ playerId: 'p2', name: 'Bob' }),
+      ],
+    })
+    expect(ownerIds(after, 'p1')).toEqual(['bf-1', 'cz-2'])
+  })
+
+  it('BRD-18: a same-named commander of another player is left alone', () => {
+    const before = makeGameView({
+      players: [
+        makePlayer({ playerId: 'p1', name: 'Alice', commandList: [commanderCard('cz-1', 'Krenko, Mob Boss', [])] }),
+        makePlayer({ playerId: 'p2', name: 'Dave', commandList: [commanderCard('cz-d', 'Krenko, Mob Boss', [])] }),
+      ],
+    })
+    syncCommanderMemory(before)
+    const after = makeGameView({
+      players: [
+        makePlayer({
+          playerId: 'p1',
+          name: 'Alice',
+          commandList: [],
+          battlefield: { 'bf-1': makePermanent({ id: 'bf-1', name: 'Krenko, Mob Boss', rules: [commanderInfoRule(1)] }) },
+        }),
+        makePlayer({ playerId: 'p2', name: 'Dave', commandList: [commanderCard('cz-d', 'Krenko, Mob Boss', [])] }),
+      ],
+    })
+    expect(ownerIds(after, 'p1')).toEqual(['bf-1'])
+    expect(ownerIds(after, 'p2')).toEqual(['cz-d'])
+  })
+
+  it('BRD-18: the column reads the live total after the move and keeps following it', () => {
+    const cz = makeGameView({
+      players: [
+        makePlayer({ playerId: 'p1', name: 'Alice', commandList: [commanderCard('cz-1', 'Slicer, Hired Muscle', [])] }),
+        makePlayer({ playerId: 'p2', name: 'Bob' }),
+      ],
+    })
+    syncCommanderMemory(cz)
+    const onField = (total: number) =>
+      makeGameView({
+        players: [
+          makePlayer({
+            playerId: 'p1',
+            name: 'Alice',
+            commandList: [],
+            battlefield: {
+              'bf-1': makePermanent({ id: 'bf-1', name: 'Slicer, Hired Muscle', rules: [commanderInfoRule(1), commanderDamageRule(total, 'Bob')] }),
+            },
+          }),
+          makePlayer({ playerId: 'p2', name: 'Bob' }),
+        ],
+      })
+    expect(syncCommanderMemory(onField(3)).filter((c) => c.ownerId === 'p1')).toHaveLength(1)
+    const later = onField(5)
+    const [alice] = syncCommanderMemory(later).filter((c) => c.ownerId === 'p1')
+    expect(commanderDamageDealt(later, alice, (later.players ?? [])[1])).toBe(5)
+    expect(ownerIds(later, 'p1')).toEqual(['bf-1'])
+  })
+})

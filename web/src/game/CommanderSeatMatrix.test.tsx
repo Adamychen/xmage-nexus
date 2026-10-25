@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { cleanup, render } from '@testing-library/react'
 import CommanderSeatMatrix from './CommanderSeatMatrix'
 import { resetCommanderMemory } from '../board/commanders'
-import { commanderDamageRule, commanderInfoRule, makeCard, makeGameView, makePlayer } from '../__fixtures__/gameViews'
+import { commanderDamageRule, commanderInfoRule, makeCard, makeGameView, makePermanent, makePlayer } from '../__fixtures__/gameViews'
 
 function commander(id: string, name: string, damage: Array<[number, string]>) {
   return makeCard({ id, name, mageObjectType: 'COMMANDER', rules: [commanderInfoRule(0), ...damage.map(([n, who]) => commanderDamageRule(n, who))] })
@@ -47,5 +47,43 @@ describe('CommanderSeatMatrix', () => {
     expect(text).toContain('Tobias')
     expect(text).toContain('5')
     expect(text).toContain('Adam')
+  })
+})
+
+describe('CommanderSeatMatrix: BRD-18', () => {
+  afterEach(() => {
+    cleanup()
+    resetCommanderMemory()
+  })
+
+  it('BRD-18: a commander that changed object keeps one column and shows its live damage', () => {
+    const before = makeGameView({
+      players: [
+        makePlayer({ playerId: 'a', name: 'Adam', controlled: true, commandList: [commander('cz-1', 'Slicer, Hired Muscle', [])] }),
+        makePlayer({ playerId: 'k', name: 'Kira', commandList: [commander('k1', 'Thrasios', [])] }),
+      ],
+    })
+    const { container, getByTestId, rerender } = render(<CommanderSeatMatrix game={before} />)
+    expect(container.querySelectorAll('.sm-head')).toHaveLength(2)
+    expect(getByTestId('cdm-seat-cell-k-a').textContent).toBe('0')
+
+    const after = makeGameView({
+      players: [
+        makePlayer({
+          playerId: 'a',
+          name: 'Adam',
+          controlled: true,
+          commandList: [],
+          battlefield: {
+            'bf-1': makePermanent({ id: 'bf-1', name: 'Slicer, Hired Muscle', rules: [commanderInfoRule(1), commanderDamageRule(3, 'Kira')] }),
+          },
+        }),
+        makePlayer({ playerId: 'k', name: 'Kira', commandList: [commander('k1', 'Thrasios', [])] }),
+      ],
+    })
+    rerender(<CommanderSeatMatrix game={after} />)
+    expect(container.querySelectorAll('.sm-head')).toHaveLength(2)
+    expect(getByTestId('cdm-seat-cell-k-a').textContent).toBe('3')
+    expect(getByTestId('cdm-seat-cell-k-a').getAttribute('data-damage')).toBe('3')
   })
 })

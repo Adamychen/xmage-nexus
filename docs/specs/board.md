@@ -260,4 +260,4 @@ id is the same commander, so the roster drops it and keeps the live one with its
 
 - Why: the seat showed the damage next to a stale 0 (`3/0`), because the roster kept the command-zone
   entry for the whole game. A player has one copy of each commander, so an owner and a name identify it.
-- Guard: `src/board/commanders.test.ts`
+- Guard: `src/board/commanders.test.ts` · `src/game/CommanderSeatMatrix.test.tsx`
