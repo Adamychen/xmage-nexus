@@ -66,6 +66,7 @@ export const en = {
     port: 'Port:',
     proxy_port: 'Proxy port:',
     attribution: 'XMage Nexus · Powered by React, TypeScript & Vite',
+    contributors_title: 'Contributors',
   },
   lobby: {
     brand_title: 'XMage Nexus',

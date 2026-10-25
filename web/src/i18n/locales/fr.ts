@@ -68,6 +68,7 @@ export const fr: TranslationSchema = {
     port: 'Port :',
     proxy_port: 'Port proxy :',
     attribution: 'XMage Nexus · Développé avec React, TypeScript & Vite',
+    contributors_title: 'Contributeurs',
   },
   lobby: {
     brand_title: 'XMage Nexus',

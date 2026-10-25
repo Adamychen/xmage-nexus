@@ -68,6 +68,7 @@ export const zhs: TranslationSchema = {
     port: '端口：',
     proxy_port: '代理端口：',
     attribution: 'XMage Nexus · 基于 React、TypeScript 和 Vite 开发',
+    contributors_title: '贡献者',
   },
   lobby: {
     brand_title: 'XMage Nexus',
