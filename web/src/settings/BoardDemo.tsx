@@ -60,9 +60,10 @@ function tilesFor(spec: BoardDemoSpec): Tile[] {
       ]
     case 'keywordIcons':
       return [
-        { perm: creature('Shivan Dragon', { power: '5', toughness: '5', originalPower: '5', originalToughness: '5', rules: ['Flying, haste'] }), showPt: true },
-        { perm: creature('Sentinel Spider', { rules: ['Deathtouch, lifelink'] }), showPt: true },
-        { perm: creature('Tarmogoyf', { power: '3', toughness: '4', originalPower: '3', originalToughness: '4', rules: ['Trample, hexproof, indestructible'] }), showPt: true },
+        { perm: creature('Shivan Dragon', { rules: ['Flying, haste'] }) },
+        { perm: creature('Sentinel Spider', { rules: ['Deathtouch, lifelink'] }) },
+        { perm: creature('Tarmogoyf', { rules: ['Trample, hexproof'] }) },
+        { perm: creature('Birds of Paradise', { rules: ['Indestructible'] }) },
       ]
     case 'keywordAura':
       return [

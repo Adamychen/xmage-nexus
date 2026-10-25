@@ -652,6 +652,8 @@ export const fr: TranslationSchema = {
     keyword_icons_coins_desc: 'Symboles pleins sur un disque coloré, les plus lisibles sur les petites cartes',
     keyword_icons_outline: 'Contour',
     keyword_icons_outline_desc: 'Icônes au trait fin, plus discrètes sur un plateau chargé',
+    keyword_icons_emoji: 'Emoji',
+    keyword_icons_emoji_desc: 'Les badges emoji classiques, un par mot-clé',
     keyword_aura_title: 'Effets de capacités',
     keyword_aura_hint: 'Un effet en boucle sur chaque permanent pour sa capacité la plus importante, pour lire le plateau d\'un coup d\'œil',
     keyword_aura_off: 'Désactivés',

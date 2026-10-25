@@ -228,6 +228,20 @@ row, clear of the column.
   taking room from the battlefield (user report with screenshot, 2026-10-24).
 - Guard: `e2e/game-ui-v2.spec.ts`
 
+### BRD-16 · The resting hand never covers the own battlefield
+On the arena board (the one v2 always uses) the fanned hand still floats over the bottom edge of
+the board, but the own zone reserves room for it: its bottom padding is the height the resting
+fan shows above the board edge (the visible part of each sunk card, plus its arc rise, the
+playable lift and the lift of its rotated top corner) plus a gap of 1.5% of the viewport height,
+between 6 and 16 px. The reserve is computed by `HandBar` from the card size it actually renders
+and follows it on every resize. The lands row sits above the reserve, and when the zone has no
+room left its cards shrink instead of sliding under the hand. Hovering a hand card lifts it with
+a transform only: it is drawn above the battlefield, and the battlefield does not move.
+
+- Why: the resting fan sat on top of the lands row, and a hovered card covered it even more
+  (user report with screenshot, 2026-10-24).
+- Guard: `src/board/handSizing.test.ts` · `e2e/game-ui-v2.spec.ts`
+
 ### BRD-17 · The last actions box is one line until the player expands it
 On the v2 board the "Last actions" box shows only the newest action, on one line cut with an
 ellipsis, so the column above it is free for the command zone (BRD-15). A +/− button on the box

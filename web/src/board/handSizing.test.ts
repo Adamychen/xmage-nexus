@@ -1,3 +1,6 @@
+// @vitest-environment node
+import { readFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import {
   computeHandArc,
@@ -6,7 +9,10 @@ import {
   computeHandSideReserve,
   computeCostPipLayout,
   computeCostPipSize,
+  handLandsGap,
+  handRestHeight,
   handRestStripWidth,
+  HAND_BAR_REST_SINK_K,
   HAND_ARC_MAX_RISE_PX,
   HAND_ARC_MAX_RISE_RATIO,
   HAND_ARC_MAX_ROT_DEG,
@@ -257,5 +263,31 @@ describe('cost bubbles', () => {
 
   it('the rest strip is the distance to the next card', () => {
     expect(handRestStripWidth(100, -10)).toBe(100 * 0.5 - 10)
+  })
+})
+
+describe('hand rest reserve', () => {
+  it('BRD-16: a flat card shows what is left above the band after the rest sink, plus the bar padding', () => {
+    const cardH = 100 * HAND_CARD_ASPECT
+    expect(handRestHeight(100, [{ rot: 0, rise: 0 }], 6)).toBe(Math.ceil(6 + cardH * (1 - HAND_BAR_PEEK_RATIO * HAND_BAR_REST_SINK_K)))
+  })
+
+  it('BRD-16: the arc rise and the rotated top corner raise the reserve, an empty hand reserves nothing', () => {
+    const flat = handRestHeight(100, [{ rot: 0, rise: 0 }], 0)
+    expect(handRestHeight(100, [{ rot: 0, rise: 10 }], 0)).toBe(flat + 10)
+    expect(handRestHeight(100, [{ rot: -8, rise: 0 }], 0)).toBeGreaterThan(flat)
+    expect(handRestHeight(100, [{ rot: 8, rise: 0 }, { rot: 0, rise: 12 }], 0)).toBeGreaterThanOrEqual(flat + 12)
+    expect(handRestHeight(100, [], 6)).toBe(0)
+  })
+
+  it('BRD-16: the gap to the battlefield scales with the viewport height between 6 and 16 px', () => {
+    expect(handLandsGap(300)).toBe(6)
+    expect(handLandsGap(800)).toBe(12)
+    expect(handLandsGap(1440)).toBe(16)
+  })
+
+  it('BRD-16: HandBar.css sinks a resting card by the same factor the reserve assumes', () => {
+    const css = readFileSync(fileURLToPath(new URL('./HandBar.css', import.meta.url)), 'utf8')
+    expect(css).toContain(`var(--hand-sink-k, ${HAND_BAR_REST_SINK_K})`)
   })
 })

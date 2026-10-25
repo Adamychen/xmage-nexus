@@ -652,6 +652,8 @@ export const pt: TranslationSchema = {
     keyword_icons_coins_desc: 'Símbolos sólidos sobre um círculo colorido, os mais legíveis em cartas pequenas',
     keyword_icons_outline: 'Contorno',
     keyword_icons_outline_desc: 'Ícones de traço fino, mais discretos num campo cheio',
+    keyword_icons_emoji: 'Emoji',
+    keyword_icons_emoji_desc: 'Os emblemas emoji clássicos, um por palavra-chave',
     keyword_aura_title: 'Efeitos de habilidades',
     keyword_aura_hint: 'Um efeito contínuo em cada permanente pela sua habilidade mais importante, para ler o campo de relance',
     keyword_aura_off: 'Desligados',

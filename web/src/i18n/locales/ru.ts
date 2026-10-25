@@ -652,6 +652,8 @@ export const ru: TranslationSchema = {
     keyword_icons_coins_desc: 'Сплошные символы на цветном круге, лучше всего читаются на маленьких картах',
     keyword_icons_outline: 'Контур',
     keyword_icons_outline_desc: 'Тонкие линейные значки, спокойнее на загруженном поле',
+    keyword_icons_emoji: 'Эмодзи',
+    keyword_icons_emoji_desc: 'Классические значки-эмодзи, по одному на ключевое слово',
     keyword_aura_title: 'Эффекты ключевых слов',
     keyword_aura_hint: 'Зацикленный эффект на каждом перманенте по его главному ключевому слову, чтобы поле читалось с первого взгляда',
     keyword_aura_off: 'Выключены',

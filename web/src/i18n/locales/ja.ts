@@ -655,6 +655,8 @@ export const ja: TranslationSchema = {
     keyword_icons_coins_desc: '色付きの円に塗りつぶしの記号。小さいカードでも最も見やすい',
     keyword_icons_outline: 'アウトライン',
     keyword_icons_outline_desc: '細い線のアイコン。混雑した盤面でも目立ちすぎない',
+    keyword_icons_emoji: '絵文字',
+    keyword_icons_emoji_desc: 'おなじみの絵文字バッジ。キーワードごとに1つ',
     keyword_aura_title: 'キーワード効果',
     keyword_aura_hint: 'それぞれの永続物に、最も重要なキーワードを示す繰り返しの効果を表示し、盤面を一目で読み取れるようにします',
     keyword_aura_off: 'オフ',
