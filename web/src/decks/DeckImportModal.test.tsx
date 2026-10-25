@@ -1,6 +1,9 @@
 import { describe, expect, it, vi, afterEach } from 'vitest'
-import { render, screen, fireEvent, cleanup } from '@testing-library/react'
+import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/react'
 import { DeckImportModal } from './DeckImportModal'
+import { captureUnhandledRejections, settle } from '../utils/unhandledRejections'
+
+const DECK_TEXT = 'Deck\n4 Lightning Bolt\n20 Mountain'
 
 describe('DeckImportModal', () => {
   afterEach(() => {
@@ -32,6 +35,18 @@ describe('DeckImportModal', () => {
 
     expect(screen.getByText(/Reconocidas:/)).toBeDefined()
     expect(screen.getByText(/24/)).toBeDefined() // 4 + 20
+  })
+
+  it('DCK-2: picking a deck file imports it and clears the picker so the same file can be picked again', async () => {
+    const rejections = captureUnhandledRejections()
+    render(<DeckImportModal deckName="Burn" onImport={vi.fn()} onClose={vi.fn()} />)
+    const picker = document.querySelector<HTMLInputElement>('input[type="file"]')!
+    const file = Object.assign(new File([DECK_TEXT], 'burn.dck', { type: 'text/plain' }), { text: async () => DECK_TEXT })
+    fireEvent.change(picker, { target: { files: [file] } })
+    await waitFor(() => expect(document.querySelector('textarea')!.value).toContain('Lightning Bolt'))
+    await waitFor(() => expect(picker.value).toBe(''))
+    await settle()
+    expect(rejections).toEqual([])
   })
 
   it('supports toggling between add and replace mode', () => {    const onImport = vi.fn()

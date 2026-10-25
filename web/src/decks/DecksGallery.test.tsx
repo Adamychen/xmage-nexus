@@ -3,6 +3,8 @@ import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/re
 import DecksGallery, { mergeEnrichedColors, pruneSelectedId } from './DecksGallery'
 import { cloneDeckForEdit } from './cloneDeck'
 import type { DeckV2 } from './types'
+import { alertDialog } from '../ui/confirmDialog'
+import { captureUnhandledRejections, settle } from '../utils/unhandledRejections'
 
 const storeState = vi.hoisted(() => ({ decks: [] as DeckV2[], listGate: null as Promise<void> | null }))
 const confirmState = vi.hoisted(() => ({ calls: [] as string[], resolve: true }))
@@ -233,6 +235,18 @@ describe('DecksGallery empty state (gallery polish)', () => {
     expect(screen.getByTestId('decks-empty-create')).not.toBeNull()
     expect(screen.getByTestId('decks-empty-import')).not.toBeNull()
     expect(screen.getByTestId('decks-empty-browse')).not.toBeNull()
+  })
+
+  it('DCK-2: picking a backup file clears the restore picker without an unhandled rejection', async () => {
+    const rejections = captureUnhandledRejections()
+    storeState.decks = []
+    render(<DecksGallery onEdit={() => {}} />)
+    const picker = document.querySelector<HTMLInputElement>('input[type="file"][accept=".json"]')!
+    const backup = Object.assign(new File(['{}'], 'backup.json', { type: 'application/json' }), { text: async () => '{}' })
+    fireEvent.change(picker, { target: { files: [backup] } })
+    await waitFor(() => expect(alertDialog).toHaveBeenCalled())
+    await settle()
+    expect(rejections).toEqual([])
   })
 
   it('el chip ★ Favoritos filtra a solo favoritos y se desactiva', async () => {

@@ -78,8 +78,39 @@ export const OTHER_COMMON_FORMATS = [
   'Constructed - Canadian Highlander',
   'Constructed - Penny Dreadful',
   'Constructed - Freeform',
+  'Constructed - Premodern',
   'Constructed - Tiny Leaders',
 ]
+
+type FormatFields = { deckType?: string; gameType?: string; limited?: boolean }
+
+const FORMAT_CHIP_PATTERNS: Record<string, RegExp> = {
+  Commander: /\b(?:commander|brawl)\b/i,
+  Modern: /\bmodern\b/i,
+  Pioneer: /\b(?:pioneer|explorer)\b/i,
+  Standard: /\bstandard\b/i,
+  Pauper: /\bpauper\b/i,
+  Limited: /\b(?:limited|draft|sealed|cube)\b/i,
+}
+
+function matchesFormatChip(t: FormatFields, chip: string): boolean {
+  if (chip === 'Commander' && /\bcommander\b/i.test(t.gameType ?? '')) return true
+  if (chip === 'Limited' && t.limited === true) return true
+  return FORMAT_CHIP_PATTERNS[chip].test(t.deckType ?? '')
+}
+
+function matchesFormat(t: FormatFields, format: string): boolean {
+  if (Object.hasOwn(FORMAT_CHIP_PATTERNS, format)) return matchesFormatChip(t, format)
+  const f = format.toLowerCase()
+  return Boolean(t.deckType?.toLowerCase().includes(f) || t.gameType?.toLowerCase().includes(f))
+}
+
+export function dropdownFormats(deckTypes: string[]): string[] {
+  const names = new Set<string>([...OTHER_COMMON_FORMATS, ...deckTypes])
+  return [...names]
+    .filter((name) => !Object.keys(FORMAT_CHIP_PATTERNS).some((chip) => matchesFormatChip({ deckType: name }, chip)))
+    .sort()
+}
 
 export function filterTables(
   tables: TableView[],
@@ -106,33 +137,7 @@ export function filterTables(
     }
 
     // 2. Format
-    if (filters.format !== 'ALL') {
-      const f = filters.format.toLowerCase()
-      if (filters.format === 'Commander') {
-        const isComm =
-          t.deckType?.toLowerCase().includes('commander') ||
-          t.gameType?.toLowerCase().includes('commander') ||
-          t.deckType?.toLowerCase().includes('brawl')
-        if (!isComm) return false
-      } else if (filters.format === 'Modern') {
-        if (!t.deckType?.toLowerCase().includes('modern')) return false
-      } else if (filters.format === 'Pioneer') {
-        if (!t.deckType?.toLowerCase().includes('pioneer') && !t.deckType?.toLowerCase().includes('explorer')) return false
-      } else if (filters.format === 'Standard') {
-        if (!t.deckType?.toLowerCase().includes('standard')) return false
-      } else if (filters.format === 'Pauper') {
-        if (!t.deckType?.toLowerCase().includes('pauper')) return false
-      } else if (filters.format === 'Limited') {
-        const isLim =
-          t.limited === true ||
-          t.deckType?.toLowerCase().includes('draft') ||
-          t.deckType?.toLowerCase().includes('sealed') ||
-          t.deckType?.toLowerCase().includes('cube')
-        if (!isLim) return false
-      } else {
-        if (!t.deckType?.toLowerCase().includes(f) && !t.gameType?.toLowerCase().includes(f)) return false
-      }
-    }
+    if (filters.format !== 'ALL' && !matchesFormat(t, filters.format)) return false
 
     // 3. Availability
     if (filters.availability === 'open') {
@@ -240,28 +245,10 @@ export default function TableFilterBar({ tables, filters, onChange, onReset, cla
     return counts
   }, [tables])
 
-  // Extract all formats present in currently loaded tables
-  const extraFormats = useMemo(() => {
-    const list = new Set<string>(OTHER_COMMON_FORMATS)
-    tables.forEach((t) => {
-      if (t.deckType) list.add(t.deckType)
-    })
-    return Array.from(list)
-      .filter((f) => {
-        const lower = f.toLowerCase()
-        return (
-          !lower.includes('commander') &&
-          !lower.includes('modern') &&
-          !lower.includes('pioneer') &&
-          !lower.includes('standard') &&
-          !lower.includes('pauper') &&
-          !lower.includes('draft') &&
-          !lower.includes('sealed') &&
-          !lower.includes('cube')
-        )
-      })
-      .sort()
-  }, [tables])
+  const extraFormats = useMemo(
+    () => dropdownFormats(tables.flatMap((t) => (t.deckType ? [t.deckType] : []))),
+    [tables],
+  )
 
   // Count active filters (excluding defaults)
   const activeCount = useMemo(() => countActiveFilters(filters), [filters])
