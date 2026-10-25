@@ -1,4 +1,5 @@
 import { useTranslation } from '../i18n'
+import './DeckHoverPreview.css'
 
 export interface HoverPreview {
   url: string
@@ -8,16 +9,28 @@ export interface HoverPreview {
   name?: string
 }
 
+const PREVIEW_FACE_MAX_W = 420
+const PREVIEW_FACE_GAP = 16
+const PREVIEW_MARGIN = 10
+
+export function hoverPreviewFaceWidth(): number {
+  return Math.min(PREVIEW_FACE_MAX_W, window.innerWidth * 0.48 - 24, ((window.innerHeight - 40) * 2.5) / 3.5)
+}
+
 export function hoverPreviewPosition(rect: DOMRect | undefined, dualFace: boolean): { x: number; y: number } {
-  const previewWidth = dualFace ? 520 : 255
+  const faceWidth = hoverPreviewFaceWidth()
+  const previewWidth = dualFace ? faceWidth * 2 + PREVIEW_FACE_GAP : faceWidth
+  const previewHeight = (faceWidth * 3.5) / 2.5
+  const maxX = window.innerWidth - previewWidth - PREVIEW_MARGIN
+  const maxY = window.innerHeight - previewHeight - PREVIEW_MARGIN
   if (!rect) {
-    return { x: window.innerWidth / 2 - previewWidth / 2, y: window.innerHeight / 2 - 180 }
+    return { x: Math.max(PREVIEW_MARGIN, (window.innerWidth - previewWidth) / 2), y: Math.max(PREVIEW_MARGIN, (window.innerHeight - previewHeight) / 2) }
   }
   return {
     x: rect.left > window.innerWidth / 2
-      ? Math.max(10, rect.left - previewWidth - 15)
-      : Math.min(window.innerWidth - previewWidth - 15, rect.right + 15),
-    y: Math.max(30, Math.min(window.innerHeight - 380, rect.top - 40)),
+      ? Math.max(PREVIEW_MARGIN, rect.left - previewWidth - 15)
+      : Math.max(PREVIEW_MARGIN, Math.min(maxX, rect.right + 15)),
+    y: Math.max(PREVIEW_MARGIN, Math.min(maxY, rect.top - 40)),
   }
 }
 

@@ -14,7 +14,7 @@ import { mergeIntoList, replaceBasicLands, type SuggestedLand } from '../decks/d
 import Icon from '../ui/Icon'
 import ErrorBanner from '../ui/ErrorBanner'
 import { fetchCardJson } from '../cards/scryfallCards'
-import { hoverPreviewPosition } from '../decks/DeckHoverPreview'
+import DeckHoverPreview, { hoverPreviewPosition, type HoverPreview } from '../decks/DeckHoverPreview'
 import type { CardStripMeta } from '../decks/ArenaCardStrip'
 import { validateDeckForFormat, type DeckValidationReport } from '../decks/formatRules'
 import type { DeckFormat, DeckV2 } from '../decks/types'
@@ -125,7 +125,7 @@ export default function ConstructScreen() {
   const timeLeft = useTickingTimer(construct?.timeLeft ?? 0, !!construct)
   const [busy, setBusy] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
-  const [hoverPreview, setHoverPreview] = useState<{ url: string; backUrl?: string | null; x: number; y: number; name?: string } | null>(null)
+  const [hoverPreview, setHoverPreview] = useState<HoverPreview | null>(null)
   const [mainFilter, setMainFilter] = useState('')
   const [poolFilter, setPoolFilter] = useState('')
   const [poolSort, setPoolSort] = useState<PoolSort>('color')
@@ -601,23 +601,7 @@ export default function ConstructScreen() {
             {busy ? t('game', 'action_sending') : t('game', 'sideboard_submit')}
           </Button>
         </div>
-      {hoverPreview && (
-        <div
-          className={`arena-floating-preview ${hoverPreview.backUrl ? 'has-back-face' : ''}`}
-          style={{ left: `${hoverPreview.x}px`, top: `${hoverPreview.y}px` }}
-        >
-          <div className="preview-face-card">
-            {hoverPreview.backUrl && <span className="preview-face-label">{t('wiki', 'face_front')}</span>}
-            <img src={hoverPreview.url} alt={hoverPreview.name ?? t('wiki', 'face_front')} />
-          </div>
-          {hoverPreview.backUrl && (
-            <div className="preview-face-card">
-              <span className="preview-face-label">{t('wiki', 'face_back')}</span>
-              <img src={hoverPreview.backUrl} alt={`${hoverPreview.name ?? t('wiki', 'face_front')} (${t('wiki', 'face_back')})`} />
-            </div>
-          )}
-        </div>
-      )}
+      <DeckHoverPreview preview={hoverPreview} />
     </Modal>
   )
 }

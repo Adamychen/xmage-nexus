@@ -14,7 +14,7 @@ import type { CardStripMeta } from '../decks/ArenaCardStrip'
 import { validateDeckForFormat, type DeckValidationReport } from '../decks/formatRules'
 import type { DeckFormat, DeckV2 } from '../decks/types'
 import { fetchCardJson } from '../cards/scryfallCards'
-import { hoverPreviewPosition } from '../decks/DeckHoverPreview'
+import DeckHoverPreview, { hoverPreviewPosition, type HoverPreview } from '../decks/DeckHoverPreview'
 import { useTranslation } from '../i18n'
 import { t as tStatic } from '../i18n'
 import Modal from '../ui/Modal'
@@ -60,7 +60,7 @@ export default function SideboardScreen() {
   const [busy, setBusy] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
-  const [hoverPreview, setHoverPreview] = useState<{ url: string; backUrl?: string | null; x: number; y: number; name?: string } | null>(null)
+  const [hoverPreview, setHoverPreview] = useState<HoverPreview | null>(null)
   const [mainFilter, setMainFilter] = useState('')
   const [sideFilter, setSideFilter] = useState('')
   const [isMainDragOver, setIsMainDragOver] = useState(false)
@@ -384,23 +384,7 @@ export default function SideboardScreen() {
     ? side.filter((c) => c.cardName.toLowerCase().includes(sideFilter.toLowerCase()) || c.setCode.toLowerCase().includes(sideFilter.toLowerCase()))
     : side
 
-  const hoverPreviewNode = hoverPreview && (
-    <div
-      className={`arena-floating-preview ${hoverPreview.backUrl ? 'has-back-face' : ''}`}
-      style={{ left: `${hoverPreview.x}px`, top: `${hoverPreview.y}px` }}
-    >
-      <div className="preview-face-card">
-        {hoverPreview.backUrl && <span className="preview-face-label">{t('wiki', 'face_front')}</span>}
-        <img src={hoverPreview.url} alt={hoverPreview.name ?? t('wiki', 'face_front')} />
-      </div>
-      {hoverPreview.backUrl && (
-        <div className="preview-face-card">
-          <span className="preview-face-label">{t('wiki', 'face_back')}</span>
-          <img src={hoverPreview.backUrl} alt={`${hoverPreview.name ?? 'Carta'} (${t('wiki', 'face_back')})`} />
-        </div>
-      )}
-    </div>
-  )
+  const hoverPreviewNode = <DeckHoverPreview preview={hoverPreview} />
 
   return (
     <Modal

@@ -14,7 +14,7 @@ import { confirmDialog } from '../ui/confirmDialog'
 import { isDraftStalled, mergePickAck, persistDraft } from '../state/events/draft'
 import Modal from '../ui/Modal'
 import { fetchCardJson } from '../cards/scryfallCards'
-import { hoverPreviewPosition } from '../decks/DeckHoverPreview'
+import DeckHoverPreview, { hoverPreviewPosition, type HoverPreview } from '../decks/DeckHoverPreview'
 import { downloadBlob } from '../utils/download'
 import DraftHelper from './DraftHelper'
 import { adviseDraftPick, type AdvisorCard } from './draftAdvisor'
@@ -147,7 +147,7 @@ export default function DraftScreen() {
   const [helperOn, setHelperOn] = useState(loadDraftHelper)
   const [markedIds, setMarkedIds] = useState<Set<string>>(new Set())
   const [hiddenIds, setHiddenIds] = useState<Set<string>>(new Set())
-  const [hoverPreview, setHoverPreview] = useState<{ url: string; backUrl?: string | null; x: number; y: number; name?: string } | null>(null)
+  const [hoverPreview, setHoverPreview] = useState<HoverPreview | null>(null)
   const lastPickAt = useRef(0)
   const boosterAreaRef = useRef<HTMLDivElement>(null)
   usePointerTilt(boosterAreaRef, '.draft-card')
@@ -621,23 +621,7 @@ export default function DraftScreen() {
             </div>
           )}
         </div>
-      {hoverPreview && (
-        <div
-          className={`arena-floating-preview ${hoverPreview.backUrl ? 'has-back-face' : ''}`}
-          style={{ left: `${hoverPreview.x}px`, top: `${hoverPreview.y}px` }}
-        >
-          <div className="preview-face-card">
-            {hoverPreview.backUrl && <span className="preview-face-label">{t('wiki', 'face_front')}</span>}
-            <img src={hoverPreview.url} alt={hoverPreview.name ?? t('wiki', 'face_front')} />
-          </div>
-          {hoverPreview.backUrl && (
-            <div className="preview-face-card">
-              <span className="preview-face-label">{t('wiki', 'face_back')}</span>
-              <img src={hoverPreview.backUrl} alt={`${hoverPreview.name ?? 'Carta'} (${t('wiki', 'face_back')})`} />
-            </div>
-          )}
-        </div>
-      )}
+      <DeckHoverPreview preview={hoverPreview} />
     </Modal>
   )
 }

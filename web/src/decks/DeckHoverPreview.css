@@ -1,0 +1,66 @@
+.arena-floating-preview {
+  position: fixed;
+  z-index: 1000;
+  pointer-events: none;
+  border-radius: var(--r-xl);
+  box-shadow: 0 24px 60px var(--shade-5), 0 0 32px rgb(var(--gold-rgb) / 0.5);
+  background: transparent;
+  display: flex;
+  gap: var(--sp-4);
+  transition: opacity 100ms ease;
+  transform-origin: center center;
+  animation: arena-preview-pop 120ms cubic-bezier(0.1, 0.9, 0.2, 1);
+}
+
+.arena-floating-preview .preview-face-card {
+  position: relative;
+  width: min(420px, calc(48vw - 24px), calc((100vh - 40px) * 2.5 / 3.5));
+  aspect-ratio: 2.5 / 3.5;
+  border-radius: var(--r-xl);
+  overflow: hidden;
+  border: 2.5px solid rgb(var(--gold-rgb) / 0.85);
+  background: var(--ink-2);
+  box-shadow: 0 16px 40px var(--shade-5);
+}
+
+.arena-floating-preview .preview-face-card img {
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.arena-floating-preview .preview-face-label {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 2;
+  background: var(--shade-4);
+  border: 1px solid var(--gold-500);
+  color: var(--gold-300);
+  font-size: var(--fs-xs);
+  font-weight: 800;
+  padding: var(--sp-1) var(--sp-2h);
+  border-radius: var(--r-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  backdrop-filter: blur(4px);
+}
+
+@keyframes arena-preview-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .arena-floating-preview {
+    animation: none;
+  }
+}
