@@ -128,7 +128,7 @@
   bottom: var(--sp-1);
   display: flex;
   justify-content: space-between;
-  font-size: var(--fs-4xs);
+  font-size: var(--fs-3xs);
   letter-spacing: 0.04em;
   color: var(--fg-3);
 }

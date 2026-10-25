@@ -8,6 +8,12 @@
   backdrop-filter: blur(5px);
 }
 
+@media (prefers-reduced-transparency: reduce) {
+  .tournament-panel-backdrop {
+    backdrop-filter: none;
+  }
+}
+
 .tournament-panel {
   width: min(1600px, 96vw);
   max-height: 94vh;
@@ -111,6 +117,13 @@
   user-select: none;
   box-shadow: 0 8px 24px var(--shade-2);
   backdrop-filter: blur(8px);
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .tournament-panel-mini {
+    backdrop-filter: none;
+    background: rgb(var(--brand-rgb));
+  }
 }
 .tournament-panel-mini:hover { background: rgb(var(--brand-rgb) / 1); transform: translateX(-50%) translateY(-1px); }
 .tournament-panel-mini[style] { transform: none; }

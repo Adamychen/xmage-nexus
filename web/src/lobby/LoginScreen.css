@@ -35,7 +35,7 @@
   position: absolute;
   top: 1px;
   right: 2px;
-  font-size: 8px;
+  font-size: var(--fs-3xs);
   color: var(--gold-300);
 }
 
@@ -118,6 +118,13 @@
   z-index: 10;
   box-sizing: border-box;
   animation: cardFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .login-card {
+    backdrop-filter: none;
+    background: rgb(var(--ink-2-rgb));
+  }
 }
 
 .login-card::before {
@@ -331,6 +338,14 @@
   white-space: nowrap;
 }
 
+@media (max-width: 600px) {
+  .network-box-title {
+    overflow: visible;
+    text-overflow: clip;
+    white-space: normal;
+  }
+}
+
 .network-box-hint {
   font-size: var(--fs-2xs);
   color: var(--ok);
@@ -404,7 +419,6 @@
   border-radius: var(--r-lg);
   font-size: var(--fs-md);
   letter-spacing: 0.05em;
-  text-transform: uppercase;
   display: flex;
 }
 
@@ -505,6 +519,13 @@
   background: var(--surface-card);
   backdrop-filter: blur(20px);
   pointer-events: none;
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .login-contributors {
+    backdrop-filter: none;
+    background: rgb(var(--ink-2-rgb));
+  }
 }
 
 .login-contributors-title {

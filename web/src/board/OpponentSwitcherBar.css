@@ -92,7 +92,7 @@
 }
 
 .opp-pill-tag {
-  font-size: var(--fs-4xs);
+  font-size: var(--fs-3xs);
   font-weight: 800;
   padding: 1px var(--sp-1h);
   border-radius: var(--r-sm);

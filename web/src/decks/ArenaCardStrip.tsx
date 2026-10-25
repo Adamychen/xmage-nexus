@@ -106,7 +106,7 @@ function ArenaCardStripView({
   const customArt = useCustomCardArt(card.cardName)
   const stripArtUrl = customArt ?? meta?.artCropUrl ?? null
 
-  const handleMouseEnter = () => {
+  const handlePreview = () => {
     if (ref.current && onHover) {
       onHover(card, meta, ref.current.getBoundingClientRect())
     }
@@ -214,8 +214,10 @@ function ArenaCardStripView({
       draggable
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
-      onMouseEnter={handleMouseEnter}
+      onMouseEnter={handlePreview}
       onMouseLeave={onLeave}
+      onFocus={handlePreview}
+      onBlur={onLeave}
       onClick={handleClick}
       onContextMenu={handleContextMenu}
       role="button"

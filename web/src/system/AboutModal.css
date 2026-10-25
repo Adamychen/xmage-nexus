@@ -16,6 +16,10 @@
   gap: var(--sp-2);
 }
 
+.about-links-secondary {
+  margin-top: var(--sp-3);
+}
+
 .about-links a {
   display: inline-flex;
   align-items: center;

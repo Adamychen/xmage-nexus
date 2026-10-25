@@ -19,6 +19,13 @@
   flex-direction: column;
 }
 
+@media (prefers-reduced-transparency: reduce) {
+  .lobby-aside.floating-chat {
+    backdrop-filter: none;
+    background: rgb(var(--ink-2-rgb));
+  }
+}
+
 .floating-chat-header {
   display: flex;
   align-items: center;
@@ -95,6 +102,6 @@
   }
 
   .floating-chat-fab {
-    bottom: 68px;
+    display: none;
   }
 }

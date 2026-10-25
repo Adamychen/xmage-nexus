@@ -417,8 +417,6 @@ export default function LobbyScreen() {
         <LobbyMobileNav
           activeTab={activeTab}
           onTabChange={setActiveTab}
-          onCreate={() => setCreateKind('match')}
-          onCreateTournament={() => setCreateKind('tourney')}
           mobileChatOpen={mobileChatOpen}
           onToggleChat={() => setMobileChatOpen((v) => !v)}
           onCloseChat={() => setMobileChatOpen(false)}

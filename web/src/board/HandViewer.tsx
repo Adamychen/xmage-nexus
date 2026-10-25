@@ -57,7 +57,12 @@ export default function HandViewer({
           {known.map(([id, card], index) => {
             const clickable = (targetSet.has(id) || playableSet.has(id)) && onCardClick
             return (
-              <div key={id} className="pile-card-wrapper is-revealed">
+              <div
+                key={id}
+                className="pile-card-wrapper is-revealed"
+                onFocus={(e) => handleCardHover(card, (e.target as HTMLElement).getBoundingClientRect())}
+                onBlur={() => handleCardHover(null)}
+              >
                 <div className="pile-position-badge">#{index + 1}</div>
                 <CardSlot
                   cardId={id}

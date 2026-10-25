@@ -89,6 +89,8 @@ export default function PileOverlay({
                 key={id}
                 className={`pile-card-wrapper ${isTop ? 'is-top-card' : ''} ${isRevealed ? 'is-revealed' : ''}${flipIn ? ' is-flip-in' : ''}`}
                 style={flipIn ? ({ '--flip-i': Math.min(index, 12) } as CSSProperties) : undefined}
+                onFocus={(e) => handleCardHover(card, (e.target as HTMLElement).getBoundingClientRect())}
+                onBlur={() => handleCardHover(null)}
               >
                 {isLibrary && (
                   <div className={`pile-position-badge ${isTop ? 'top-badge' : ''} ${isRevealed ? 'revealed-badge' : ''}`}>

@@ -45,6 +45,10 @@ export function ArenaDeckHeader({
   const countRef = useRef<HTMLButtonElement>(null)
   const config = FORMAT_CONFIGS[format] ?? FORMAT_CONFIGS.Freeform
   const requiredCount = config.minMain
+  const hasFixedSize = format !== 'Freeform' && requiredCount > 1
+  const countText = hasFixedSize
+    ? `${mainCount}/${requiredCount} ${t('decks', 'total_cards')}`
+    : t('decks', 'builder_cards_open', { count: mainCount })
   const hasErrors = issues.some((i) => i.severity === 'error')
   const isValid = !hasErrors && mainCount >= requiredCount
 
@@ -117,13 +121,13 @@ export function ArenaDeckHeader({
               aria-describedby={showIssues ? 'deck-header-issues' : undefined}
               title={errorTooltip}
             >
-              {mainCount}/{requiredCount} {t('decks', 'total_cards')}{' '}
+              {countText}{' '}
               {sideCount > 0 && t('lobby', 'join_sb_suffix', { count: sideCount })}
               <span className="deck-header-count-alert"><Icon name="alert" size={12} /></span>
             </button>
           ) : (
             <span className={`deck-header-count ${isValid ? 'valid' : 'invalid'}`}>
-              {mainCount}/{requiredCount} {t('decks', 'total_cards')}{' '}
+              {countText}{' '}
               {sideCount > 0 && t('lobby', 'join_sb_suffix', { count: sideCount })}
             </span>
           )}

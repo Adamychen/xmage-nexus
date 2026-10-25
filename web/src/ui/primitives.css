@@ -266,6 +266,20 @@
   .ui-icon-btn--primary { color: var(--fg-hi); background: var(--brand); border-color: var(--brand-fg); }
   .ui-icon-btn--primary:hover:not(:disabled) { background: var(--brand-strong); }
 
+  @media (pointer: coarse) {
+    :where(.ui-icon-btn) { position: relative; }
+    .ui-icon-btn::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 28px;
+      height: 28px;
+      transform: translate(-50%, -50%);
+    }
+    .ui-icon-btn--primary::before { width: 44px; height: 44px; }
+  }
+
   .ui-menu-item {
     display: flex;
     align-items: center;

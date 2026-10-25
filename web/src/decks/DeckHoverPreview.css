@@ -48,6 +48,13 @@
   backdrop-filter: blur(4px);
 }
 
+@media (prefers-reduced-transparency: reduce) {
+  .arena-floating-preview .preview-face-label {
+    backdrop-filter: none;
+    background: rgb(var(--ink-rgb));
+  }
+}
+
 @keyframes arena-preview-pop {
   from {
     opacity: 0;

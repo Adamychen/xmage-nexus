@@ -19,7 +19,7 @@ export default function LimitedDeckDialog() {
       titleId="viewer-title"
       size="lg"
       legacyBackdropClass="feedback-backdrop"
-      legacyPanelClass="feedback-dialog card-grid-dialog"
+      legacyPanelClass="feedback-dialog card-grid-dialog chrome-surface"
       kickerIcon="layers"
       kickerLabel={t('dialogs', 'viewer_title')}
       title={<>{viewer.title} <Chip tone="brand" size="md">

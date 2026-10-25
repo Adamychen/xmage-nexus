@@ -90,7 +90,7 @@ export default function RollbackVoteDialog() {
       titleId="rollback-vote-title"
       testId="rollback-vote"
       legacyBackdropClass="feedback-backdrop"
-      legacyPanelClass="feedback-dialog rollback-vote-dialog"
+      legacyPanelClass="feedback-dialog rollback-vote-dialog chrome-surface"
       kickerIcon="undo"
       kickerLabel={t('dialogs', 'rollback_vote_kicker')}
       title={title}

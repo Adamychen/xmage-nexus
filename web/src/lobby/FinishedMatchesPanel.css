@@ -24,6 +24,13 @@
   padding: var(--sp-4) var(--sp-4h);
 }
 
+@media (prefers-reduced-transparency: reduce) {
+  .finished-matches-header {
+    backdrop-filter: none;
+    background: rgb(var(--ink-2-rgb));
+  }
+}
+
 .finished-matches-title-wrap {
   display: flex;
   flex-direction: column;

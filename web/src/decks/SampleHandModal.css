@@ -10,6 +10,12 @@
   animation: fadeIn 150ms ease;
 }
 
+@media (prefers-reduced-transparency: reduce) {
+  .sample-hand-backdrop {
+    backdrop-filter: none;
+  }
+}
+
 .sample-hand-stats-chips {
   display: flex;
   align-items: center;

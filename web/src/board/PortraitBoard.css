@@ -65,7 +65,7 @@
 @container board (max-width: 520px) {
   .game--v2 .game-dock {
     right: 8px;
-    zoom: 0.7;
+    bottom: calc(var(--own-bar-offset, 36px) + var(--sp-3));
   }
 
   .board-wrap[data-ui='v2'] .arena-board > .zone-bottom .pz-bottom-row {

@@ -80,13 +80,15 @@ const GridTile = memo(function GridTile({ card, count, notOnServer, onAdd, onHov
       }}
       onMouseEnter={(e) => onHover(card, e.currentTarget.getBoundingClientRect())}
       onMouseLeave={onLeave}
+      onFocus={(e) => onHover(card, e.currentTarget.getBoundingClientRect())}
+      onBlur={onLeave}
       title={notOnServer
         ? `${hoverTitle} — ${t('decks', 'card_not_implemented')}`
         : `${hoverTitle} — ${t('decks', 'builder_grid_add')}`}
     >
       {/* Copy diamond indicators (e.g. 1/4, 2/4) */}
       <div className="arena-card-pips">
-        {count > maxPips ? (
+        {count > 0 && (count > maxPips ? (
           <span className="card-pip-count" title={`${count}× ${displayName}`}>{count}×</span>
         ) : (
           Array.from({ length: maxPips }).map((_, i) => (
@@ -95,7 +97,7 @@ const GridTile = memo(function GridTile({ card, count, notOnServer, onAdd, onHov
               className={`card-pip-diamond ${i < count ? 'filled' : ''}`}
             />
           ))
-        )}
+        ))}
       </div>
 
       {/* Card Image */}

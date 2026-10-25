@@ -21,7 +21,7 @@
 }
 
 .phase-stop-turn-label {
-  font-size: var(--fs-4xs);
+  font-size: var(--fs-3xs);
   color: var(--text-dim);
   width: 22px;
   text-align: right;
@@ -34,7 +34,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: var(--fs-4xs);
+  font-size: var(--fs-3xs);
   font-weight: 700;
   font-family: var(--font-display);
   border: 1px solid var(--veil-2);

@@ -11,6 +11,12 @@
   box-sizing: border-box;
 }
 
+@media (prefers-reduced-transparency: reduce) {
+  .overlay {
+    backdrop-filter: none;
+  }
+}
+
 /* Wizard stepper */
 .wizard-stepper {
   display: flex;

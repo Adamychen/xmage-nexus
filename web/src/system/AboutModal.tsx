@@ -122,7 +122,7 @@ export default function AboutModal({ onClose, initialTab = 'about' }: AboutModal
                 <Icon name="bookOpen" size={13} /> {t('system', 'xmage_link')}
               </a>
             </div>
-            <div className="about-links">
+            <div className="about-links about-links-secondary">
               <Button
                 data-testid="about-export-diag"
                 title={t('system', 'diag_export_hint')}

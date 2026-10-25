@@ -89,7 +89,7 @@ export function RecordedStackEntry({
   className: string
   style?: React.CSSProperties
   onClick?: () => void
-  onMouseEnter?: (e: React.MouseEvent) => void
+  onMouseEnter?: (e: React.SyntheticEvent<HTMLDivElement>) => void
   onMouseLeave?: () => void
   children: ReactNode
 }) {
@@ -114,7 +114,7 @@ export function RecordedStackEntry({
   }, [id])
 
   return (
-    <div ref={ref} data-card-id={id} className={arriving ? `${className} stack-entry-arriving` : className} style={style} onClick={onClick} onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave} {...clickableProps(onClick)}>
+    <div ref={ref} data-card-id={id} className={arriving ? `${className} stack-entry-arriving` : className} style={style} onClick={onClick} onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave} onFocus={onMouseEnter} onBlur={onMouseLeave} {...clickableProps(onClick)}>
       {children}
     </div>
   )

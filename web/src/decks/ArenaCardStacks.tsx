@@ -39,6 +39,9 @@ function StackTile({ item, onInc, onDec, onSwap, onHover, onLeave }: Omit<ArenaC
   const name = displayName || originalName
   const ref = useRef<HTMLDivElement>(null)
   const interactive = onDec !== undefined
+  const handlePreview = () => {
+    if (ref.current) onHover?.(item.card, item.meta, ref.current.getBoundingClientRect())
+  }
 
   return (
     <div
@@ -66,10 +69,10 @@ function StackTile({ item, onInc, onDec, onSwap, onHover, onLeave }: Omit<ArenaC
         e.preventDefault()
         onInc?.(item.key)
       } : undefined}
-      onMouseEnter={() => {
-        if (ref.current) onHover?.(item.card, item.meta, ref.current.getBoundingClientRect())
-      }}
+      onMouseEnter={handlePreview}
       onMouseLeave={onLeave}
+      onFocus={handlePreview}
+      onBlur={onLeave}
     >
       <span className="arena-stack-face">
         {artUrl

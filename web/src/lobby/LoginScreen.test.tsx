@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import LoginScreen from './LoginScreen'
 import { doConnect } from '../state/gateway'
 import { setState } from '../state/state'
+import { saveConn, loadConn } from '../state/persistence'
 
 vi.mock('../state/gateway', async (importOriginal) => ({
   ...(await importOriginal<typeof import('../state/gateway')>()),
@@ -83,5 +84,31 @@ describe('LoginScreen contributors', () => {
     expect(box.querySelector('h2')?.textContent).toBeTruthy()
     const names = Array.from(box.querySelectorAll('li')).map((li) => li.textContent)
     expect(names).toEqual(['NovaGlow', 'DarioBarrabinoDev'])
+  })
+})
+
+describe('LoginScreen saved connection', () => {
+  afterEach(() => {
+    cleanup()
+    vi.unstubAllEnvs()
+  })
+
+  it('LBY-17: reopening with a saved connection leaves the password field empty', () => {
+    vi.stubEnv('DEV', false)
+    saveConn({ wsHost: 'localhost', proxyPort: 8787, serverHost: 'localhost', port: 17171, username: 'alice', password: 'secret' })
+    const { getByTestId, unmount } = render(<LoginScreen />)
+    expect((getByTestId('login-password') as HTMLInputElement).value).toBe('')
+    expect(loadConn()?.password).toBe('')
+    unmount()
+  })
+
+  it('LBY-17: a password typed before leaving is not restored on remount', () => {
+    vi.stubEnv('DEV', false)
+    saveConn({ wsHost: 'localhost', proxyPort: 8787, serverHost: 'localhost', port: 17171, username: 'alice', password: 'secret' })
+    const first = render(<LoginScreen />)
+    fireEvent.change(first.getByTestId('login-password'), { target: { value: 'typed-later' } })
+    first.unmount()
+    const { getByTestId } = render(<LoginScreen />)
+    expect((getByTestId('login-password') as HTMLInputElement).value).toBe('')
   })
 })

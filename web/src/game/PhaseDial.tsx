@@ -49,6 +49,7 @@ export default function PhaseDial({ step, action, mine = false }: PhaseDialProps
       role="navigation"
       aria-label={t('game', 'phase')}
     >
+      <span className="phase-dial-name" data-testid="phase-dial-name" aria-hidden="true">{t('game', DIAL_PHASES[activeIdx].nameKey)}</span>
       <svg className="phase-dial-arc" viewBox={`0 0 ${WIDTH} ${HEIGHT}`} aria-hidden="true">
         <path d={`M${first.x},${first.y} A${RADIUS},${RADIUS} 0 0 1 ${last.x},${last.y}`} />
       </svg>

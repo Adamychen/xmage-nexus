@@ -91,7 +91,7 @@
 .mana-badge.mana-tap,
 .mana-badge.mana-hybrid { --mana: color-mix(in srgb, var(--mana-c) 65%, black); color: var(--fg-hi); }
 .mana-badge.mana-tap { font-size: var(--fs-sm); }
-.mana-badge.mana-hybrid { font-size: var(--fs-4xs); letter-spacing: -0.5px; }
+.mana-badge.mana-hybrid { font-size: var(--fs-3xs); letter-spacing: -0.5px; }
 
 .mana-badge.mana-phyrexian {
   font-family: serif, var(--font-display, sans-serif);

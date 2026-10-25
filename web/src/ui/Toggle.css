@@ -1,11 +1,21 @@
+.ui-toggle-field {
+  margin: var(--sp-2) 0;
+}
+
 .ui-toggle-row {
   display: flex;
   align-items: center;
   gap: var(--sp-2h);
-  margin: var(--sp-2) 0;
   font-size: var(--fs-sm);
   color: var(--fg-2);
   cursor: pointer;
+}
+
+.ui-toggle-hint {
+  margin: var(--sp-1) 0 0;
+  font-size: var(--fs-xs);
+  line-height: 1.3;
+  color: var(--fg-2);
 }
 
 .ui-toggle {
@@ -13,7 +23,7 @@
   height: 22px;
   flex-shrink: 0;
   border-radius: var(--r-pill);
-  border: 1px solid var(--ink-4);
+  border: 1px solid var(--fg-3);
   background: var(--ink-3);
   cursor: pointer;
   padding: 0;
@@ -28,7 +38,7 @@
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: var(--ink-4);
+  background: var(--fg-3);
   transition: transform calc(0.15s / var(--fx-speed, 1)) ease, background 0.15s;
 }
 

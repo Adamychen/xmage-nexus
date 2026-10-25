@@ -1,6 +1,17 @@
-:root {
+/* Colour tokens. The dark set is the default and is shared with `.board-surface`
+   (the battlefield stays dark in both appearances, APR-2). The light set is
+   redefined on `:root` and `.chrome-surface` (the dialogs and panels inside the
+   game tree). It applies when `html[data-appearance="light"]` is set, and under
+   `prefers-color-scheme: light` unless `html[data-appearance="dark"]` is set
+   (APR-1, APR-2). The light set is written twice because CSS cannot combine an
+   attribute test with a media query in one selector. Increased contrast (ACC-2)
+   is one block per appearance. Text and border contrast is checked from these
+   values by src/appearance/appearanceContrast.test.ts. */
+
+:root, .board-surface {
   --ink-rgb: 6 9 16;
   --ink-2-rgb: 17 24 39;
+  --scrim-rgb: 6 9 16;
   --ink-0: #060910;
   --ink-1: #0b101b;
   --ink-2: #111827;
@@ -101,13 +112,41 @@
   --warn-surface: color-mix(in srgb, var(--warn) 22%, var(--ink-2));
   --brand-surface: color-mix(in srgb, var(--brand) 22%, var(--ink-2));
 
+  --surface-card: linear-gradient(180deg, rgba(24, 32, 51, 0.92) 0%, rgba(15, 21, 36, 0.92) 100%);
+  --surface-raised: linear-gradient(180deg, #1b2439 0%, #131b2d 100%);
+  --sheen: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.5), 0 4px 14px rgba(0, 0, 0, 0.28);
+  --shadow-2: 0 10px 30px rgba(0, 0, 0, 0.5), 0 2px 6px rgba(0, 0, 0, 0.4);
+  --shadow-3: 0 30px 80px rgba(0, 0, 0, 0.7), 0 6px 18px rgba(0, 0, 0, 0.45);
+  --focus-ring: 0 0 0 2px var(--ink-1), 0 0 0 4px var(--brand);
+
+  --seat-0: #4c8dff;
+  --seat-1: #b36bff;
+  --seat-2: #ff8a4c;
+  --seat-3: #3ddc97;
+  --ink-gap: #0a0f1a;
+  --dial-past: #8592b3;
+  --dial-pass: radial-gradient(circle at 32% 24%, #6aa3ff, #2457c9 62%, #153a8f);
+  --dial-pass-ring: rgb(125 176 255 / 0.7);
+  --dial-pass-glow: rgb(36 87 201 / 0.6);
+  --dial-resolve: radial-gradient(circle at 32% 24%, #ffd98a, #d8962a 62%, #8f5d10);
+  --dial-resolve-ring: rgb(243 212 136 / 0.8);
+  --dial-resolve-glow: rgb(216 150 42 / 0.55);
+  --dial-resolve-ink: #2a1a02;
+  --dial-combat: radial-gradient(circle at 32% 24%, #ff8a9a, #d63a52 62%, #7c1224);
+  --dial-combat-ring: rgb(255 93 115 / 0.7);
+  --dial-combat-glow: rgb(255 93 115 / 0.45);
+  --dial-wait: radial-gradient(circle at 32% 24%, #3a4561, #232c42 62%, #171d2e);
+  --ledger-line: rgb(255 93 115 / 0.5);
+}
+
+:root {
   /* The UI font is a token so the geometry guards can run it against a wider
      face than the one this machine happens to resolve. `system-ui` on Linux
      resolves to a face ~7 % wider than macOS's, and a layout that only fits
      the narrow one is a layout bug, not a test bug. */
   --font-ui: 'Segoe UI', system-ui, -apple-system, sans-serif;
 
-  --fs-4xs: 0.562rem;
   --fs-3xs: 0.625rem;
   --fs-2xs: 0.688rem;
   --fs-xs: 0.75rem;
@@ -143,34 +182,6 @@
   --r-xl: 16px;
   --r-pill: 999px;
 
-  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.5), 0 4px 14px rgba(0, 0, 0, 0.28);
-  --shadow-2: 0 10px 30px rgba(0, 0, 0, 0.5), 0 2px 6px rgba(0, 0, 0, 0.4);
-  --shadow-3: 0 30px 80px rgba(0, 0, 0, 0.7), 0 6px 18px rgba(0, 0, 0, 0.45);
-  --sheen: inset 0 1px 0 rgba(255, 255, 255, 0.06);
-
-  --surface-card: linear-gradient(180deg, rgba(24, 32, 51, 0.92) 0%, rgba(15, 21, 36, 0.92) 100%);
-  --surface-raised: linear-gradient(180deg, #1b2439 0%, #131b2d 100%);
-  --focus-ring: 0 0 0 2px var(--ink-1), 0 0 0 4px var(--brand);
-
-  --seat-0: #4c8dff;
-  --seat-1: #b36bff;
-  --seat-2: #ff8a4c;
-  --seat-3: #3ddc97;
-  --ink-gap: #0a0f1a;
-  --dial-past: #5d6a88;
-  --dial-pass: radial-gradient(circle at 32% 24%, #6aa3ff, #2457c9 62%, #153a8f);
-  --dial-pass-ring: rgb(125 176 255 / 0.7);
-  --dial-pass-glow: rgb(36 87 201 / 0.6);
-  --dial-resolve: radial-gradient(circle at 32% 24%, #ffd98a, #d8962a 62%, #8f5d10);
-  --dial-resolve-ring: rgb(243 212 136 / 0.8);
-  --dial-resolve-glow: rgb(216 150 42 / 0.55);
-  --dial-resolve-ink: #2a1a02;
-  --dial-combat: radial-gradient(circle at 32% 24%, #ff8a9a, #d63a52 62%, #7c1224);
-  --dial-combat-ring: rgb(255 93 115 / 0.7);
-  --dial-combat-glow: rgb(255 93 115 / 0.45);
-  --dial-wait: radial-gradient(circle at 32% 24%, #3a4561, #232c42 62%, #171d2e);
-  --ledger-line: rgb(255 93 115 / 0.5);
-
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
   --ease-in: cubic-bezier(0.4, 0, 1, 1);
@@ -182,4 +193,202 @@
   --dur-slow: 0.4s;
   --dur-slower: 0.6s;
   --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+@media (prefers-contrast: more) {
+  :root, .board-surface {
+    --line-1: rgba(170, 190, 230, 0.5);
+    --line-2: rgba(170, 190, 230, 0.62);
+    --line-3: rgba(170, 190, 230, 0.8);
+    --fg-2: #c9d1e6;
+    --fg-3: #a0abc8;
+  }
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-appearance="dark"]), :root:not([data-appearance="dark"]) .chrome-surface {
+    --ink-rgb: 228 233 242;
+    --ink-2-rgb: 246 248 252;
+    --scrim-rgb: 15 23 42;
+    --ink-0: #e4e9f2;
+    --ink-1: #edf1f7;
+    --ink-2: #f6f8fc;
+    --ink-3: #fbfcfe;
+    --ink-4: #ffffff;
+
+    --line-1: rgb(30 41 66 / 0.1);
+    --line-2: rgb(30 41 66 / 0.18);
+    --line-3: rgb(30 41 66 / 0.32);
+
+    --fg-1: #0f172a;
+    --fg-2: #3d4862;
+    --fg-3: #505c76;
+
+    --fg-hi: #05080f;
+
+    --purple-rgb: 124 58 237;
+    --purple: #7c3aed;
+    --purple-fg: #6d28d9;
+
+    --rarity-common: #4a5568;
+    --rarity-uncommon: #556070;
+    --rarity-rare: #8a6500;
+    --rarity-mythic: #b5480f;
+
+    --veil-1: rgb(15 23 42 / 0.04);
+    --veil-2: rgb(15 23 42 / 0.07);
+    --veil-3: rgb(15 23 42 / 0.11);
+    --veil-4: rgb(15 23 42 / 0.16);
+    --veil-5: rgb(15 23 42 / 0.22);
+    --veil-6: rgb(15 23 42 / 0.3);
+    --veil-7: rgb(15 23 42 / 0.6);
+    --veil-8: rgb(15 23 42 / 0.85);
+
+    --shade-0: rgb(255 255 255 / 0.18);
+    --shade-1: rgb(255 255 255 / 0.35);
+    --shade-2: rgb(255 255 255 / 0.5);
+    --shade-3: rgb(255 255 255 / 0.65);
+    --shade-4: rgb(255 255 255 / 0.8);
+    --shade-5: rgb(255 255 255 / 0.92);
+
+    --brand-rgb: 29 95 209;
+    --brand: #1d5fd1;
+    --brand-strong: #1748b0;
+    --brand-fg: #1d4ed8;
+
+    --gold-rgb: 138 90 0;
+    --gold-500: #8a5a00;
+    --gold-300: #7a4e00;
+    --medal-gold: #b8860b;
+    --medal-silver: #6b7280;
+    --medal-bronze: #9a5a2a;
+
+    --volt-rgb: 146 104 0;
+    --volt: #946800;
+
+    --ok-rgb: 3 112 79;
+    --ok: #03704f;
+
+    --warn-rgb: 138 80 0;
+    --warn: #8a5000;
+
+    --err-rgb: 185 28 60;
+    --err: #b91c3c;
+
+    --ok-strong: #047857;
+    --err-strong: #b91c1c;
+    --warn-strong: #b45309;
+
+    --ink-gap: #d5dce8;
+
+    --surface-card: linear-gradient(180deg, rgb(255 255 255 / 0.92) 0%, rgb(246 248 252 / 0.92) 100%);
+    --surface-raised: linear-gradient(180deg, #ffffff 0%, #f1f4f9 100%);
+    --sheen: inset 0 1px 0 rgb(255 255 255 / 0.8);
+    --shadow-1: 0 1px 2px rgb(15 23 42 / 0.12), 0 4px 14px rgb(15 23 42 / 0.08);
+    --shadow-2: 0 10px 30px rgb(15 23 42 / 0.18), 0 2px 6px rgb(15 23 42 / 0.1);
+    --shadow-3: 0 30px 80px rgb(15 23 42 / 0.25), 0 6px 18px rgb(15 23 42 / 0.15);
+  }
+}
+
+:root[data-appearance="light"], :root[data-appearance="light"] .chrome-surface {
+    --ink-rgb: 228 233 242;
+    --ink-2-rgb: 246 248 252;
+    --scrim-rgb: 15 23 42;
+    --ink-0: #e4e9f2;
+    --ink-1: #edf1f7;
+    --ink-2: #f6f8fc;
+    --ink-3: #fbfcfe;
+    --ink-4: #ffffff;
+
+    --line-1: rgb(30 41 66 / 0.1);
+    --line-2: rgb(30 41 66 / 0.18);
+    --line-3: rgb(30 41 66 / 0.32);
+
+    --fg-1: #0f172a;
+    --fg-2: #3d4862;
+    --fg-3: #505c76;
+
+    --fg-hi: #05080f;
+
+    --purple-rgb: 124 58 237;
+    --purple: #7c3aed;
+    --purple-fg: #6d28d9;
+
+    --rarity-common: #4a5568;
+    --rarity-uncommon: #556070;
+    --rarity-rare: #8a6500;
+    --rarity-mythic: #b5480f;
+
+    --veil-1: rgb(15 23 42 / 0.04);
+    --veil-2: rgb(15 23 42 / 0.07);
+    --veil-3: rgb(15 23 42 / 0.11);
+    --veil-4: rgb(15 23 42 / 0.16);
+    --veil-5: rgb(15 23 42 / 0.22);
+    --veil-6: rgb(15 23 42 / 0.3);
+    --veil-7: rgb(15 23 42 / 0.6);
+    --veil-8: rgb(15 23 42 / 0.85);
+
+    --shade-0: rgb(255 255 255 / 0.18);
+    --shade-1: rgb(255 255 255 / 0.35);
+    --shade-2: rgb(255 255 255 / 0.5);
+    --shade-3: rgb(255 255 255 / 0.65);
+    --shade-4: rgb(255 255 255 / 0.8);
+    --shade-5: rgb(255 255 255 / 0.92);
+
+    --brand-rgb: 29 95 209;
+    --brand: #1d5fd1;
+    --brand-strong: #1748b0;
+    --brand-fg: #1d4ed8;
+
+    --gold-rgb: 138 90 0;
+    --gold-500: #8a5a00;
+    --gold-300: #7a4e00;
+    --medal-gold: #b8860b;
+    --medal-silver: #6b7280;
+    --medal-bronze: #9a5a2a;
+
+    --volt-rgb: 146 104 0;
+    --volt: #946800;
+
+    --ok-rgb: 3 112 79;
+    --ok: #03704f;
+
+    --warn-rgb: 138 80 0;
+    --warn: #8a5000;
+
+    --err-rgb: 185 28 60;
+    --err: #b91c3c;
+
+    --ok-strong: #047857;
+    --err-strong: #b91c1c;
+    --warn-strong: #b45309;
+
+    --ink-gap: #d5dce8;
+
+    --surface-card: linear-gradient(180deg, rgb(255 255 255 / 0.92) 0%, rgb(246 248 252 / 0.92) 100%);
+    --surface-raised: linear-gradient(180deg, #ffffff 0%, #f1f4f9 100%);
+    --sheen: inset 0 1px 0 rgb(255 255 255 / 0.8);
+    --shadow-1: 0 1px 2px rgb(15 23 42 / 0.12), 0 4px 14px rgb(15 23 42 / 0.08);
+    --shadow-2: 0 10px 30px rgb(15 23 42 / 0.18), 0 2px 6px rgb(15 23 42 / 0.1);
+    --shadow-3: 0 30px 80px rgb(15 23 42 / 0.25), 0 6px 18px rgb(15 23 42 / 0.15);
+  }
+
+@media (prefers-color-scheme: light) and (prefers-contrast: more) {
+  :root:not([data-appearance="dark"]), :root:not([data-appearance="dark"]) .chrome-surface {
+    --line-1: rgb(30 41 66 / 0.55);
+    --line-2: rgb(30 41 66 / 0.68);
+    --line-3: rgb(30 41 66 / 0.8);
+    --fg-2: #2c3750;
+    --fg-3: #3a4560;
+  }
+}
+
+@media (prefers-contrast: more) {
+  :root[data-appearance="light"], :root[data-appearance="light"] .chrome-surface {
+    --line-1: rgb(30 41 66 / 0.55);
+    --line-2: rgb(30 41 66 / 0.68);
+    --line-3: rgb(30 41 66 / 0.8);
+    --fg-2: #2c3750;
+    --fg-3: #3a4560;
+  }
 }

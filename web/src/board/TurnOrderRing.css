@@ -4,15 +4,16 @@
   align-items: center;
   justify-content: center;
   padding: var(--sp-1) var(--sp-2);
-  background: rgb(var(--ink-rgb) / 0.94);
+  background: rgb(var(--ink-rgb));
   border: 1px solid rgb(var(--brand-rgb) / 0.28);
   border-radius: var(--r-pill);
   box-shadow: 0 2px 12px var(--shade-2);
   width: fit-content;
   max-width: 100%;
   box-sizing: border-box;
-  backdrop-filter: blur(8px);
 }
+
+
 
 .tor-track {
   display: none;
@@ -60,7 +61,7 @@
 }
 
 .tor-seat-dot {
-  font-size: var(--fs-4xs);
+  font-size: var(--fs-3xs);
   line-height: 1;
   color: var(--fg-3);
 }
@@ -160,7 +161,7 @@
 }
 
 .tor-active-badge {
-  font-size: var(--fs-4xs);
+  font-size: var(--fs-3xs);
   font-weight: 800;
   letter-spacing: 0.04em;
   text-transform: uppercase;

@@ -17,6 +17,12 @@
   pointer-events: auto;
 }
 
+@media (prefers-reduced-transparency: reduce) {
+  .dlg-backdrop {
+    backdrop-filter: none;
+  }
+}
+
 /* «Diálogos transparentes» (Apariencia): deja legible el tablero detrás del
    panel sin quitar el velo (los clics siguen sin pasar al juego). */
 :root[data-dialog-backdrop='clear'] .dlg-backdrop {
@@ -161,6 +167,16 @@
   gap: var(--sp-3);
   margin-top: var(--sp-4h);
   flex-wrap: wrap;
+}
+
+@media (max-width: 560px) {
+  .confirm-modal .dlg-actions {
+    flex-direction: column-reverse;
+  }
+
+  .confirm-modal .dlg-actions > * {
+    width: 100%;
+  }
 }
 
 .dlg-check-row {

@@ -187,3 +187,14 @@ width it moves under the card instead of beside it, centred with it. It does not
   hard to extend. A list in its own box grows by adding a name to `CONTRIBUTORS`
   (`LoginScreen.tsx`) and needs no translation per name.
 - Guard: `src/lobby/LoginScreen.test.tsx`
+
+### LBY-17 · The account password is never saved on the device
+The login screen and the saved connection keep the server, the proxy and the username, never the
+account password. Reopening the client leaves the password field empty, and the saved connection
+record has no password field at all. Table passwords (LBY-3, LBY-10) are unaffected: they are typed
+per table and never stored.
+
+- Why: the saved connection (`mage-web-connection`) was written with the password in plain text, so any
+  reader of the browser's storage could take the account. The review of 2026-10-25 flagged it as a
+  security issue alongside the design findings.
+- Guard: `src/state/persistence.test.ts` · `src/lobby/LoginScreen.test.tsx`

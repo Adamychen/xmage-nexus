@@ -1,5 +1,4 @@
 import { useTranslation } from '../i18n'
-import Button from '../ui/Button'
 import Icon from '../ui/Icon'
 import type { LobbyTab } from './lobbyUtils'
 
@@ -16,7 +15,7 @@ export default function LobbySidebar({
 }: SidebarProps) {
   const { t } = useTranslation()
   return (
-    <nav className="lobby-sidebar" aria-label="Main navigation">
+    <nav className="lobby-sidebar" aria-label={t('lobby', 'nav_aria_main')}>
       <button
         type="button"
         className="sidebar-btn hero-create-btn"
@@ -76,8 +75,6 @@ export default function LobbySidebar({
 interface MobileNavProps {
   activeTab: LobbyTab
   onTabChange: (tab: LobbyTab) => void
-  onCreate: () => void
-  onCreateTournament: () => void
   mobileChatOpen: boolean
   onToggleChat: () => void
   onCloseChat: () => void
@@ -85,28 +82,22 @@ interface MobileNavProps {
 }
 
 export function LobbyMobileNav({
-  activeTab, onTabChange, onCreate, onCreateTournament, mobileChatOpen, onToggleChat, onCloseChat, unreadChat,
+  activeTab, onTabChange, mobileChatOpen, onToggleChat, onCloseChat, unreadChat,
 }: MobileNavProps) {
   const { t } = useTranslation()
   return (
-    <nav className="lobby-mobile-bottom-nav" aria-label="Mobile navigation">
+    <nav className="lobby-mobile-bottom-nav" aria-label={t('lobby', 'nav_aria_mobile')}>
       <button type="button" className={`mobile-nav-btn ${activeTab === 'tables' ? 'active' : ''}`} onClick={() => { onTabChange('tables'); onCloseChat() }}>
         <span className="mobile-nav-icon"><Icon name="swords" size={16} /></span><span>{t('lobby.nav_tables')}</span>
       </button>
       <button type="button" className={`mobile-nav-btn ${activeTab === 'decks' ? 'active' : ''}`} onClick={() => { onTabChange('decks'); onCloseChat() }}>
         <span className="mobile-nav-icon"><Icon name="layers" size={16} /></span><span>{t('lobby.nav_decks')}</span>
       </button>
-      <button type="button" className="mobile-nav-btn" onClick={onCreate}>
-        <span className="mobile-nav-icon"><Icon name="plus" size={16} /></span><span>{t('lobby.nav_new')}</span>
-      </button>
-      <Button variant="ghost" className="mobile-nav-btn" onClick={onCreateTournament}>
-        <span className="mobile-nav-icon"><Icon name="trophy" size={16} /></span><span>{t('lobby.nav_new_tournament')}</span>
-      </Button>
       <button type="button" className={`mobile-nav-btn ${activeTab === 'matches' ? 'active' : ''}`} onClick={() => { onTabChange('matches'); onCloseChat() }}>
         <span className="mobile-nav-icon"><Icon name="scrollText" size={16} /></span><span>{t('lobby.nav_history')}</span>
       </button>
       <button type="button" className={`mobile-nav-btn ${mobileChatOpen ? 'active' : ''}`} onClick={onToggleChat}>
-        <span className="mobile-nav-icon"><Icon name="chat" size={16} /></span><span>Chat{unreadChat > 0 ? ` (${unreadChat})` : ''}</span>
+        <span className="mobile-nav-icon"><Icon name="chat" size={16} /></span><span>{t('game', 'tab_chat')}{unreadChat > 0 ? ` (${unreadChat})` : ''}</span>
       </button>
     </nav>
   )

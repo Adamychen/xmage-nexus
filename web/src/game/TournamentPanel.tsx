@@ -177,7 +177,7 @@ export default function TournamentPanel() {
   return (
     <Modal
       backdropClassName="tournament-panel-backdrop"
-      dialogClassName="tournament-panel"
+      dialogClassName="tournament-panel chrome-surface"
       label={t('game', 'tournament_in_progress')}
       testId="tournament-panel"
       onEscape={() => setExpanded(false)}

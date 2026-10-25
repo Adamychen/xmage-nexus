@@ -64,15 +64,26 @@
 
 .report-actions {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: var(--sp-2);
+  row-gap: var(--sp-2);
+  column-gap: var(--sp-2);
   width: 100%;
 }
 
 .report-actions-secondary,
 .report-actions-primary {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: var(--sp-1);
+}
+
+.report-actions-primary {
+  margin-left: auto;
+}
+
+.report-actions a.ui-btn {
+  text-decoration: none;
 }

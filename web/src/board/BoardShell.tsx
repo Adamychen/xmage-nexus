@@ -63,7 +63,7 @@ export default function BoardShell({ className, testId, presenter, handBar = nul
   const railed = handRail && !!handBar && !raised && !sidePanelOpen
   const rowed = handRow && !handRail && !!handBar && !raised
   return (
-    <div className={`board-shell ${className}${railed ? ' has-hand-rail' : ''}`} data-testid={testId} ref={presenter.boardRef} style={railed ? ({ ...style, '--hand-rail-w': `${handRailWidth}px` } as CSSProperties) : style}>
+    <div className={`board-shell board-surface ${className}${railed ? ' has-hand-rail' : ''}`} data-testid={testId} ref={presenter.boardRef} style={railed ? ({ ...style, '--hand-rail-w': `${handRailWidth}px` } as CSSProperties) : style}>
       {children}
       {railed && handBar && (
         <HandRail

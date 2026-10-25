@@ -78,7 +78,7 @@ export default function RollbackDialog() {
       labelledBy="rollback-title"
       titleId="rollback-title"
       legacyBackdropClass="feedback-backdrop"
-      legacyPanelClass="feedback-dialog rollback-dialog"
+      legacyPanelClass="feedback-dialog rollback-dialog chrome-surface"
       kickerIcon="undo"
       kickerLabel={t('dialogs', 'rollback_undo_btn')}
       title={t('dialogs', 'rollback_title')}

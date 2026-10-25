@@ -21,7 +21,7 @@ export default function SidePanel({ tab, onTabChange, onClose, hasCommanders, ha
     (item): item is typeof item & { id: SidePanelTab } => item.id !== 'stack' && !item.hidden,
   )
   return (
-    <aside className="side-panel" data-testid="side-panel" data-tab={tab}>
+    <aside className="side-panel chrome-surface" data-testid="side-panel" data-tab={tab}>
       <header className="side-panel-head">
         <Tabs
           variant="underline"

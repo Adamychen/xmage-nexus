@@ -34,7 +34,7 @@ export default function UserRequestDialog() {
       labelledBy="user-request-title"
       titleId="user-request-title"
       legacyBackdropClass="feedback-backdrop"
-      legacyPanelClass="feedback-dialog user-request-dialog"
+      legacyPanelClass="feedback-dialog user-request-dialog chrome-surface"
       kickerIcon="info"
       kickerLabel={t('dialogs', 'userrequest_title')}
       title={<FormattedText text={localizeServerMessage(request.title, dynamicT(t))} />}

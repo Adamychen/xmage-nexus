@@ -116,13 +116,11 @@ export default function LoginScreen() {
     const saved = loadConn()
     const staleLocalConn = !!saved && REMOTE_PROXY && isLoopbackHost(saved.wsHost)
     if (saved && !staleLocalConn) {
-      const sameUser = !url.username || url.username === saved.username
       setProxyHost(url.proxyHost ?? saved.wsHost)
       setProxyPort(String(url.proxyPort ?? saved.proxyPort))
       setServerHost(url.serverHost ?? saved.serverHost)
       setPort(String(url.serverPort ?? saved.port))
       setUsername(url.username ?? saved.username)
-      setPassword(sameUser ? saved.password : '')
       if (saved.flagName) setFlagName(saved.flagName)
       if (saved.avatarId) setAvatarId(saved.avatarId)
 

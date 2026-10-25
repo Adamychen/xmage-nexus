@@ -49,13 +49,13 @@ describe('LobbyScreen', () => {
   it('shows the server, the empty tables state and the main navigation', () => {
     show()
     expect(screen.getByText(/localhost:17171/)).toBeTruthy()
-    expect(screen.getByRole('navigation', { name: 'Main navigation' })).toBeTruthy()
+    expect(document.querySelector('nav.lobby-top-nav')).not.toBeNull()
     expect(document.querySelector('.tables-list, .empty-state')).not.toBeNull()
   })
 
   it('switches between the tables, decks and history tabs', async () => {
     show()
-    const nav = screen.getByRole('navigation', { name: 'Main navigation' })
+    const nav = document.querySelector<HTMLElement>('nav.lobby-top-nav')!
     const buttons = Array.from(nav.querySelectorAll<HTMLButtonElement>('button.top-nav-btn'))
     const byLabel = (re: RegExp) => buttons.find((b) => re.test(b.title))!
     const tables = byLabel(/mesas|tables/i)

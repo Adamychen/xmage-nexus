@@ -83,7 +83,35 @@ describe('persistence', () => {
         password: 'secret',
       }
       saveConn(conn)
-      expect(loadConn()).toEqual(conn)
+      expect(loadConn()).toEqual({ ...conn, password: '' })
+    })
+
+    it('LBY-17: a saved connection written with a password reads back with no password key', () => {
+      saveConn({
+        wsHost: '127.0.0.1',
+        proxyPort: 8787,
+        serverHost: 'localhost',
+        port: 17171,
+        username: 'alice',
+        password: 'secret',
+      })
+      expect(mockStorage['mage-web-conn']).not.toContain('secret')
+      expect(JSON.parse(mockStorage['mage-web-conn'])).not.toHaveProperty('password')
+      expect(loadConn()?.password).toBe('')
+    })
+
+    it('LBY-17: a legacy record that still holds a password is cleaned on load', () => {
+      mockStorage['mage-web-conn'] = JSON.stringify({
+        wsHost: 'localhost',
+        proxyPort: 8787,
+        serverHost: 'localhost',
+        port: 17171,
+        username: 'alice',
+        password: 'legacy-secret',
+      })
+      expect(loadConn()?.username).toBe('alice')
+      expect(mockStorage['mage-web-conn']).not.toContain('legacy-secret')
+      expect(JSON.parse(mockStorage['mage-web-conn'])).not.toHaveProperty('password')
     })
 
     it('removes connection info when saving null', () => {

@@ -151,7 +151,7 @@
 }
 
 .cdm-player-dot {
-  font-size: 0.5rem;
+  font-size: var(--fs-3xs);
   color: var(--fg-3);
 }
 
@@ -343,7 +343,7 @@
 
 .cdm-cmd-owner {
   display: block;
-  font-size: var(--fs-4xs);
+  font-size: var(--fs-3xs);
   font-weight: 600;
   color: var(--fg-3);
   margin-top: 1px;

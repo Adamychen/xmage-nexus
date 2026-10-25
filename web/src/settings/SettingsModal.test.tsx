@@ -131,4 +131,14 @@ describe('SettingsModal', () => {
     expect(loadGameplayPreset()).toBe('balanced')
     saveGameplayPreset(null)
   })
+
+  it("SET-3: a setting's explanation is visible text under its label", () => {
+    render(<SettingsModal onClose={() => {}} />)
+    fireEvent.click(screen.getByTestId('settings-nav-gameplay'))
+    const hint = screen.getByText(t('game', 'smart_stops_hint'))
+    expect(hint.classList.contains('ui-toggle-hint')).toBe(true)
+    const field = hint.closest('.ui-toggle-field') as HTMLElement
+    expect(field.querySelector('.ui-toggle-label')?.textContent).toBe(t('game', 'smart_stops'))
+    expect(field.querySelector('[role="switch"]')?.getAttribute('aria-describedby')).toBe(hint.id)
+  })
 })

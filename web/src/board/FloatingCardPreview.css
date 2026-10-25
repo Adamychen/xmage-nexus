@@ -126,6 +126,13 @@ html.fx-off .floating-card-foil {
   backdrop-filter: blur(10px);
 }
 
+@media (prefers-reduced-transparency: reduce) {
+  .floating-card-kw-box {
+    backdrop-filter: none;
+    background: rgb(var(--ink-2-rgb));
+  }
+}
+
 .floating-card-kw-box.cat-combat {
   border-color: rgb(var(--err-rgb) / 0.55);
 }
@@ -341,6 +348,13 @@ html.fx-off .floating-card-foil {
   backdrop-filter: blur(4px);
   z-index: 10;
   animation: pulseFlip 2s infinite ease-in-out;
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .floating-card-flip-badge {
+    backdrop-filter: none;
+    background: rgb(var(--ink-rgb));
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

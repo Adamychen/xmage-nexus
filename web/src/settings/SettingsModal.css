@@ -69,7 +69,7 @@
 
 .settings-hint {
   margin: 0 0 var(--sp-2h);
-  font-size: var(--fs-2xs);
+  font-size: var(--fs-xs);
   color: var(--fg-3);
 }
 
@@ -137,10 +137,23 @@
   font-variant-numeric: tabular-nums;
 }
 
+.settings-stop {
+  position: relative;
+}
+
 .settings-stop.selected {
   border-color: var(--brand);
   box-shadow: 0 0 12px rgb(var(--brand-rgb) / 0.35);
   color: var(--fg-hi);
+  padding-left: var(--sp-4);
+  padding-right: var(--sp-4);
+}
+
+.settings-stop .settings-card-check {
+  top: 50%;
+  left: var(--sp-1);
+  right: auto;
+  transform: translateY(-50%);
 }
 
 .settings-cards {
@@ -170,7 +183,7 @@
 .settings-card.selected { border-color: var(--brand); }
 
 .settings-card-label { font-size: var(--fs-sm); font-weight: 800; color: var(--fg-1); }
-.settings-card-desc { font-size: var(--fs-3xs); color: var(--fg-3); }
+.settings-card-desc { font-size: var(--fs-2xs); color: var(--fg-3); }
 
 .settings-card-check {
   position: absolute;
@@ -230,7 +243,7 @@
   .settings-body { flex-direction: column; }
   .settings-nav {
     flex-direction: row;
-    overflow-x: auto;
+    flex-wrap: wrap;
     min-width: 0;
   }
   .settings-nav-item { white-space: nowrap; }
@@ -292,36 +305,66 @@
   margin: var(--sp-0h) 0;
 }
 
-.settings-sound-card .audio-slider {
-  width: 90px;
-  height: 4px;
+/* The range input is a 20 px target on every pointer; only the 4 px track and
+   the 12 px thumb are drawn, so the visible slider keeps its size. */
+.settings-content .audio-slider {
+  height: 20px;
+  margin: 0;
   -webkit-appearance: none;
   appearance: none;
-  background: var(--ink-4);
-  border-radius: var(--r-2xs);
+  background: transparent;
   outline: none;
   cursor: pointer;
 }
 
-.settings-sound-card .audio-slider::-webkit-slider-thumb {
+.settings-content .audio-slider::-webkit-slider-runnable-track {
+  height: 4px;
+  background: var(--fg-3);
+  border-radius: var(--r-2xs);
+}
+
+.settings-content .audio-slider::-moz-range-track {
+  height: 4px;
+  background: var(--fg-3);
+  border-radius: var(--r-2xs);
+}
+
+.settings-content .audio-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
   width: 12px;
   height: 12px;
+  margin-top: -0.25rem;
+  border: 0;
   border-radius: 50%;
   background: var(--brand);
   cursor: pointer;
   transition: transform 0.1s, background 0.1s;
 }
 
-.settings-sound-card .audio-slider::-webkit-slider-thumb:hover {
+.settings-content .audio-slider::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--brand);
+  cursor: pointer;
+  transition: transform 0.1s, background 0.1s;
+}
+
+.settings-content .audio-slider::-webkit-slider-thumb:hover,
+.settings-content .audio-slider::-moz-range-thumb:hover {
   transform: scale(1.2);
   background: var(--purple);
 }
 
-.settings-sound-card .audio-slider:disabled {
+.settings-content .audio-slider:disabled {
   opacity: 0.4;
   cursor: not-allowed;
+}
+
+.settings-sound-card .audio-slider {
+  width: 90px;
 }
 
 /* Grid de fundas (antes solo en AppearanceSettingsModal.css). */
@@ -341,7 +384,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-.settings-sound-card .audio-slider::-webkit-slider-thumb {
+  .settings-content .audio-slider::-webkit-slider-thumb,
+  .settings-content .audio-slider::-moz-range-thumb {
     transition: none;
   }
 }

@@ -9,6 +9,12 @@
   padding: var(--sp-4h);
 }
 
+@media (prefers-reduced-transparency: reduce) {
+  .deck-inspector-backdrop {
+    backdrop-filter: none;
+  }
+}
+
 .deck-inspector-badges {
   display: flex;
   flex-wrap: wrap;

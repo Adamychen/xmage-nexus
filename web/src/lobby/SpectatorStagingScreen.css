@@ -19,6 +19,13 @@
   flex-shrink: 0;
 }
 
+@media (prefers-reduced-transparency: reduce) {
+  .staging-top-header {
+    backdrop-filter: none;
+    background: rgb(var(--ink-rgb));
+  }
+}
+
 .staging-brand {
   display: flex;
   align-items: center;

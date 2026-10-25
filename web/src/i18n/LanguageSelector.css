@@ -40,7 +40,7 @@
 }
 
 .lang-arrow {
-  font-size: var(--fs-4xs);
+  font-size: var(--fs-3xs);
   color: var(--fg-3);
   transition: transform 0.15s ease;
 }

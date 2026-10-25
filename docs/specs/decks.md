@@ -46,3 +46,12 @@ window. Its styles live only in `DeckHoverPreview.css`.
   a 255 px strip of the card cropped by `object-fit: cover` inside a 420 px frame. The position also
   assumed a 255 px preview, so the larger one could cover the hovered card or leave the window.
 - Guard: `src/decks/DeckHoverPreview.test.tsx` · `src/decks/hoverPreviewCss.test.ts`
+
+### DCK-4 · On a touch screen the deck strip actions are always shown
+Each card in the deck strip has its actions (move, add, remove, print, favourite, commander) shown without
+a hover on a screen that has no hover. On a pointer device they stay hidden until hover or keyboard focus,
+as before.
+
+- Why: the actions only appeared on hover or focus-within, so a phone player could not reach them (the
+  review of 2026-10-25). Offering an alternative to a hover gesture is the rule in ACC-9.
+- Guard: `e2e/decks-touch.spec.ts`

@@ -6,8 +6,11 @@ afterEach(() => {
 })
 
 describe('overlayRoot', () => {
-  it('falls back to document.body without a gallery host', () => {
-    expect(overlayRoot()).toBe(document.body)
+  it('falls back to a board-surface wrapper appended to document.body without a gallery host', () => {
+    const root = overlayRoot()
+    expect(root.tagName).toBe('DIV')
+    expect(root.classList.contains('board-surface')).toBe(true)
+    expect(root.parentElement).toBe(document.body)
   })
 
   it('prefers the [data-overlay-root] host when the gallery provides one', () => {

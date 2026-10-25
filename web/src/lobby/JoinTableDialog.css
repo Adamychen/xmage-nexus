@@ -10,6 +10,12 @@
   animation: modalFadeIn 0.15s ease-out;
 }
 
+@media (prefers-reduced-transparency: reduce) {
+  .modal-backdrop {
+    backdrop-filter: none;
+  }
+}
+
 @keyframes modalFadeIn {
   from {
     opacity: 0;
@@ -425,6 +431,13 @@ html.fx-off .join-deck-card:hover::after {
   border: 1px solid var(--veil-4);
   backdrop-filter: blur(4px);
   box-shadow: 0 2px 8px var(--shade-2);
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .join-fit {
+    backdrop-filter: none;
+    background: rgb(var(--ink-rgb));
+  }
 }
 .join-fit-match { background: rgb(var(--ok-rgb) / 0.88); border-color: var(--veil-5); }
 .join-fit-short { background: rgb(var(--err-rgb) / 0.88); border-color: var(--veil-5); }

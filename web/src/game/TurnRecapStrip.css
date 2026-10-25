@@ -87,7 +87,7 @@
 .turn-recap-departure-name {
   display: block;
   padding: var(--sp-0h);
-  font-size: var(--fs-4xs);
+  font-size: var(--fs-3xs);
   line-height: 1.1;
   color: var(--fg-2);
 }

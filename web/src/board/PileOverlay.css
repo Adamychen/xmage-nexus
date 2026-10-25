@@ -8,6 +8,12 @@
   backdrop-filter: blur(8px);
 }
 
+@media (prefers-reduced-transparency: reduce) {
+  .pile-overlay-backdrop {
+    backdrop-filter: none;
+  }
+}
+
 .pile-overlay {
   width: min(1200px, 95vw);
   max-height: 70vh;

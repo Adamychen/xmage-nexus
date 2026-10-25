@@ -48,13 +48,13 @@ function GameplaySection() {
         checked={settings.holdPriority}
         onChange={(v) => setSetting('holdPriority', v)}
         label={t('game', 'hold_priority')}
-        title={t('game', 'hold_priority_title')}
+        hint={t('game', 'hold_priority_title')}
       />
       <Toggle
         checked={settings.smartStops}
         onChange={(v) => setSetting('smartStops', v)}
         label={t('game', 'smart_stops')}
-        title={t('game', 'smart_stops_hint')}
+        hint={t('game', 'smart_stops_hint')}
       />
       <Toggle
         checked={settings.autoKeepMulligan}
@@ -68,7 +68,7 @@ function GameplaySection() {
           saveGameLogAutoSave(v)
         }}
         label={t('system', 'log_autosave')}
-        title={t('system', 'log_autosave_hint')}
+        hint={t('system', 'log_autosave_hint')}
       />
       <Toggle
         checked={settings.boardRewind}
@@ -78,7 +78,7 @@ function GameplaySection() {
           if (!v) clearRewind()
         }}
         label={t('game', 'rewind_setting')}
-        title={t('game', 'rewind_setting_hint')}
+        hint={t('game', 'rewind_setting_hint')}
       />
       <Toggle
         checked={settings.turnRecap}
@@ -87,7 +87,7 @@ function GameplaySection() {
           saveTurnRecap(v)
         }}
         label={t('game', 'recap_setting')}
-        title={t('game', 'recap_setting_hint')}
+        hint={t('game', 'recap_setting_hint')}
       />
       {notificationsSupported() && (
         <>
@@ -99,7 +99,7 @@ function GameplaySection() {
               if (v) void requestNotificationPermission().then((p) => setPermission(p))
             }}
             label={t('game', 'notify_setting')}
-            title={t('game', 'notify_setting_hint')}
+            hint={t('game', 'notify_setting_hint')}
           />
           {settings.browserNotifications && permission === 'denied' && (
             <p className="settings-hint" data-testid="notify-blocked">{t('game', 'notify_blocked')}</p>
@@ -113,7 +113,7 @@ function GameplaySection() {
           checked={settings.manaPayment[row.key]}
           onChange={() => setSetting('manaPayment', { ...settings.manaPayment, [row.key]: !settings.manaPayment[row.key] })}
           label={row.label}
-          title={row.tip}
+          hint={row.tip}
         />
       ))}
       <h3 className="settings-section-title">{t('game', 'phase_stops_default_title')}</h3>
@@ -172,8 +172,8 @@ export default function SettingsModal({ onClose, initialSection = 'language' }: 
       testId="settings-modal"
       legacyPanelClass="settings-modal"
       kickerIcon="settings"
-      kickerLabel={nav.find((item) => item.id === section)?.label ?? t('common', 'settings')}
-      title={t('common', 'settings')}
+      kickerLabel={t('common', 'settings')}
+      title={nav.find((item) => item.id === section)?.label ?? t('common', 'settings')}
       topRight={(
         <CloseButton variant="plain" size="md" className="settings-close" onClick={onClose} data-testid="settings-close" />
       )}

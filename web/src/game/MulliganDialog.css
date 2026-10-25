@@ -63,6 +63,13 @@ html.fx-off .mulligan-bar {
   animation: mulliganBarIn calc(0.22s / var(--fx-speed, 1)) cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+@media (prefers-reduced-transparency: reduce) {
+  .mulligan-bar {
+    backdrop-filter: none;
+    background: rgb(var(--ink-2-rgb));
+  }
+}
+
 @keyframes mulliganBarIn {
   from {
     opacity: 0;

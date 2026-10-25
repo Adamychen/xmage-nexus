@@ -24,6 +24,13 @@
   animation: promptIn 0.16s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+@media (prefers-reduced-transparency: reduce) {
+  .action-prompt-bar {
+    backdrop-filter: none;
+    background: rgb(var(--ink-2-rgb));
+  }
+}
+
 @keyframes promptIn {
   from {
     opacity: 0;

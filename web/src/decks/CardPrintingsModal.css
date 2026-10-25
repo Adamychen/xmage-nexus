@@ -10,6 +10,12 @@
   animation: fadeIn 150ms ease;
 }
 
+@media (prefers-reduced-transparency: reduce) {
+  .printings-backdrop {
+    backdrop-filter: none;
+  }
+}
+
 .printings-body {
   padding: var(--sp-4h) var(--sp-1) var(--sp-1);
   overflow-y: auto;

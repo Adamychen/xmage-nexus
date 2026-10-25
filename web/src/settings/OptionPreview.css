@@ -231,14 +231,14 @@
   padding: 0 var(--sp-1h);
   border-radius: var(--r-pill);
   border: 1px solid var(--gold-300);
-  font-size: var(--fs-4xs);
+  font-size: var(--fs-3xs);
   font-weight: 700;
   text-transform: uppercase;
   color: var(--gold-300);
 }
 
 .opt-stack-caption-rules {
-  font-size: var(--fs-4xs);
+  font-size: var(--fs-3xs);
   color: var(--fg-1);
 }
 

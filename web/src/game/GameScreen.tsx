@@ -542,7 +542,7 @@ export default function GameScreen() {
 
   if (narrowScreen && isSpectator && !fullBoardOnNarrow) {
     return (
-      <div className="game game--mobile-spectator" ref={gameRootRef} style={{ zoom: inverseZoom(settings.uiScale) }}>
+      <div className="game board-surface game--mobile-spectator" ref={gameRootRef} style={{ zoom: inverseZoom(settings.uiScale) }}>
         <MobileSpectator onFullBoard={() => setFullBoardOnNarrow(true)} />
       </div>
     )
@@ -553,7 +553,7 @@ export default function GameScreen() {
       <ChromeActionsContext.Provider value={v2 ? chromeActions : null}>
       <DividerSlotContext.Provider value={setDividerSlot}>
         <div
-          className={`game${v2 ? ' game--v2' : ''}${rewindView ? ' game--rewind' : ''}`}
+          className={`game board-surface${v2 ? ' game--v2' : ''}${rewindView ? ' game--rewind' : ''}`}
           ref={gameRootRef}
           data-rewind={rewindView ? 'true' : undefined}
           style={{ zoom: inverseZoom(settings.uiScale) }}

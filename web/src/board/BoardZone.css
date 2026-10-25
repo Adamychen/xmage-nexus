@@ -569,8 +569,7 @@
   justify-content: center;
   pointer-events: none;
   z-index: 30;
-  background: rgb(var(--ink-2-rgb) / 0.65);
-  backdrop-filter: blur(4px);
+  background: rgb(var(--ink-2-rgb));
 }
 
 .zone-defeated-card {

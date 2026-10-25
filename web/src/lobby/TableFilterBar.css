@@ -11,6 +11,13 @@
   box-shadow: 0 4px 20px var(--shade-1);
 }
 
+@media (prefers-reduced-transparency: reduce) {
+  .table-filter-bar-container {
+    backdrop-filter: none;
+    background: rgb(var(--ink-2-rgb));
+  }
+}
+
 .tfb-row {
   display: flex;
   align-items: center;

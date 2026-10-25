@@ -10,6 +10,12 @@
   backdrop-filter: blur(3px);
 }
 
+@media (prefers-reduced-transparency: reduce) {
+  .card-inspector-backdrop {
+    backdrop-filter: none;
+  }
+}
+
 .card-inspector {
   position: relative;
   display: flex;

@@ -237,6 +237,8 @@ export default function HandBar({
             style={{ '--rot': `${arc.rot}deg`, '--rise': `${rise}px` } as React.CSSProperties}
             onMouseEnter={onHover ? (e) => onHover(card, e.currentTarget.getBoundingClientRect()) : undefined}
             onMouseLeave={onHover ? () => onHover(null) : undefined}
+            onFocus={onHover ? (e) => onHover(card, e.currentTarget.getBoundingClientRect()) : undefined}
+            onBlur={onHover ? () => onHover(null) : undefined}
             onPointerDown={(e) => {
               if (e.button !== 0 || entries.length < 2) return
               dragRef.current = { id, pointerId: e.pointerId, startX: e.clientX, startY: e.clientY, active: false }

@@ -249,6 +249,7 @@ export function useTableActions(conn: ConnectionInfo | null) {
 
   const removeTable = async (t: TableView) => {
     const confirmed = await confirmDialog(tStatic('lobby', 'staging_remove_table_confirm', { name: t.tableName }), {
+      title: tStatic('lobby', 'staging_remove_table'),
       okLabel: tStatic('lobby', 'staging_remove_table'),
       danger: true,
     })

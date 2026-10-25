@@ -10,6 +10,12 @@
   animation: fadeIn 150ms ease;
 }
 
+@media (prefers-reduced-transparency: reduce) {
+  .deck-import-backdrop {
+    backdrop-filter: none;
+  }
+}
+
 .deck-import-modal.drag-over {
   border-color: var(--gold-300);
   box-shadow: 0 0 30px rgb(var(--gold-rgb) / 0.3);
@@ -67,6 +73,13 @@
   font-weight: 800;
   font-size: var(--fs-lg);
   pointer-events: none;
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .import-drop-overlay {
+    backdrop-filter: none;
+    background: rgb(var(--brand-rgb));
+  }
 }
 
 /* Status bar */

@@ -19,6 +19,13 @@
   transition: border-color 0.2s;
 }
 
+@media (prefers-reduced-transparency: reduce) {
+  .log-ticker {
+    backdrop-filter: none;
+    background: rgb(var(--ink-rgb));
+  }
+}
+
 .log-ticker:hover {
   border-color: var(--line-3);
 }

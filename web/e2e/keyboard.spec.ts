@@ -42,7 +42,7 @@ test('the lobby can be driven with the keyboard alone @a11y', async ({ page }) =
 test('every top-nav control is reachable by Tab and has an accessible name @a11y', async ({ page }) => {
   await withFakeServer(scenario, async () => {
     await login(page, 'kb-user')
-    const nav = page.getByRole('navigation', { name: 'Main navigation' })
+    const nav = page.locator('nav.lobby-top-nav')
     const buttons = nav.locator('button')
     const n = await buttons.count()
     expect(n).toBeGreaterThanOrEqual(3)

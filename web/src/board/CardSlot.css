@@ -1472,7 +1472,7 @@ html.fx-off .card-slot.fx-designation-swell {
   border-radius: 0 0 var(--r-xs) var(--r-xs);
   background: var(--brand);
   color: var(--brand-fg);
-  font-size: var(--fs-4xs);
+  font-size: var(--fs-3xs);
   font-weight: 700;
   line-height: 1.5;
   text-transform: uppercase;

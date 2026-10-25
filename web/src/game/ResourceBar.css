@@ -223,6 +223,14 @@
   backdrop-filter: blur(4px);
 }
 
+@media (prefers-reduced-transparency: reduce) {
+  .resource-stack.has-card-img .stack-count,
+  .resource-stack.has-top-revealed .stack-count {
+    backdrop-filter: none;
+    background: rgb(var(--ink-rgb));
+  }
+}
+
 /* Playable badge on piles */
 .playable-badge {
   position: absolute;

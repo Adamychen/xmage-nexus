@@ -1,4 +1,8 @@
 /* ── Tapete bizonal compartido por los tres modos ─────────────────────── */
+.board-surface {
+  color-scheme: dark;
+}
+
 .board-shell {
   display: flex;
   flex-direction: column;
@@ -78,7 +82,7 @@
 }
 
 .board-shell-divider-diamond {
-  font-size: var(--fs-4xs);
+  font-size: var(--fs-3xs);
   color: var(--gold-300);
   text-shadow: 0 0 8px rgb(var(--gold-rgb) / 0.8);
   line-height: 1;
@@ -89,7 +93,7 @@
 .board-shell-divider.with-labels::after {
   position: absolute;
   font-family: var(--font-display);
-  font-size: 0.469rem;
+  font-size: var(--fs-3xs);
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;

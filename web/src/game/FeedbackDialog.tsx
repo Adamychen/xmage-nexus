@@ -29,11 +29,11 @@ export default function FeedbackDialog() {
   const handPick = !forceGrid && myHand ? handPickIds(prompt, new Set(Object.keys(myHand))) : null
 
   return (
-    <>
+    <div className="chrome-surface">
       {/* P2: marcador para el comprobador de fidelidad (prompt pendiente pintado). */}
       <span data-prompt-method={prompt.method} data-prompt-mode={prompt.mode} hidden aria-hidden="true" />
       {renderPrompt(form, handPick !== null, () => setExpandedPrompt(prompt))}
-    </>
+    </div>
   )
 }
 

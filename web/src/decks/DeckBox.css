@@ -104,6 +104,13 @@
   backdrop-filter: blur(6px);
   box-shadow: 0 2px 10px var(--shade-3);
 }
+
+@media (prefers-reduced-transparency: reduce) {
+  .deck-box-action {
+    backdrop-filter: none;
+    background: rgb(var(--ink-rgb));
+  }
+}
 .deck-box-action svg {
   display: block;
 }
@@ -166,6 +173,13 @@
   backdrop-filter: blur(4px);
   border: 1px solid var(--veil-5);
 }
+
+@media (prefers-reduced-transparency: reduce) {
+  .format-badge-valid {
+    backdrop-filter: none;
+    background: rgb(var(--ok-rgb));
+  }
+}
 .format-badge-invalid {
   background: rgb(var(--err-rgb) / 0.88);
   color: var(--fg-hi);
@@ -174,6 +188,13 @@
   box-shadow: 0 2px 8px var(--shade-2);
   backdrop-filter: blur(4px);
   border: 1px solid var(--veil-5);
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .format-badge-invalid {
+    backdrop-filter: none;
+    background: rgb(var(--err-rgb));
+  }
 }
 .deck-box-footer {
   position: absolute;
@@ -202,6 +223,13 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   box-shadow: 0 2px 10px var(--shade-2);
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .deck-box-name {
+    backdrop-filter: none;
+    background: rgb(var(--ink-rgb));
+  }
 }
 .deck-box-colors {
   display: flex;

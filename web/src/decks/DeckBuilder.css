@@ -103,10 +103,9 @@
   }
 }
 
-@media (max-width: 850px) {
+@media (max-width: 600px) {
   .deck-builder-body {
-    grid-template-columns: 1fr;
-    overflow-y: auto;
+    padding-bottom: var(--chat-fab-clearance);
   }
 }
 
@@ -134,6 +133,13 @@
 
 .builder-left-tabs .ui-tab {
   flex: 1;
+  min-height: 28px;
+}
+
+@media (pointer: coarse) {
+  .builder-left-tabs .ui-tab {
+    min-height: 44px;
+  }
 }
 
 .builder-left-tabs + .arena-search-panel,
@@ -336,3 +342,31 @@
 }
 .builder-server-issues .bsi-repair-btn { margin-left: var(--sp-1h); }
 
+@media (max-width: 850px) {
+  .deck-builder-body {
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+  .builder-left,
+  .builder-right {
+    flex: none;
+    height: auto;
+    overflow: visible;
+  }
+  .builder-left .arena-search-panel,
+  .builder-left .sg-panel {
+    flex: none;
+    height: auto;
+  }
+  .builder-left .arena-card-grid-container,
+  .builder-left .sg-scroll {
+    flex: none;
+    height: 60dvh;
+  }
+  .builder-right .builder-deck-footer {
+    position: sticky;
+    bottom: env(safe-area-inset-bottom);
+    z-index: 5;
+  }
+}

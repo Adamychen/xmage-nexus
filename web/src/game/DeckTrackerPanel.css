@@ -60,7 +60,7 @@
 }
 
 .tracker-count-server {
-  font-size: var(--fs-4xs);
+  font-size: var(--fs-3xs);
   color: var(--fg-2);
   font-weight: 500;
 }
@@ -139,7 +139,7 @@
   gap: var(--sp-1);
   color: var(--fg-2);
   font-weight: 600;
-  font-size: var(--fs-4xs);
+  font-size: var(--fs-3xs);
   text-transform: uppercase;
   letter-spacing: 0.3px;
 }
@@ -193,7 +193,7 @@
 }
 
 .odd-count {
-  font-size: var(--fs-4xs);
+  font-size: var(--fs-3xs);
   color: var(--fg-3);
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
@@ -344,7 +344,7 @@
 }
 
 .tracker-zero-pip {
-  font-size: var(--fs-4xs);
+  font-size: var(--fs-3xs);
   font-weight: 800;
   color: var(--fg-2);
   font-family: ui-monospace, SFMono-Regular, monospace;
@@ -381,7 +381,7 @@
   display: inline-flex;
   align-items: center;
   gap: var(--sp-1);
-  font-size: var(--fs-4xs);
+  font-size: var(--fs-3xs);
   font-weight: 800;
   background: rgb(var(--warn-rgb) / 0.2);
   border: 1px solid var(--warn);

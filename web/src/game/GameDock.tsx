@@ -7,6 +7,7 @@ import './GameDock.css'
 const DOCK_GAP = 8
 const DOCK_FALLBACK = 104
 const BOTTOM_RESOURCES_SELECTOR = '.pz-bottom-row .resource-bar'
+const BOTTOM_ROW_SELECTOR = '.pz-bottom-row'
 const DOCK_SELECTOR = '[data-testid="game-dock"]'
 const SEAT_COPY_SELECTOR = '.spotlight-copy'
 
@@ -48,6 +49,10 @@ function ownResourceBar(wrap: HTMLElement): HTMLElement | null {
   return Array.from(wrap.querySelectorAll<HTMLElement>(BOTTOM_RESOURCES_SELECTOR)).find((el) => !el.closest(SEAT_COPY_SELECTOR)) ?? null
 }
 
+function ownBottomRow(wrap: HTMLElement): HTMLElement | null {
+  return Array.from(wrap.querySelectorAll<HTMLElement>(BOTTOM_ROW_SELECTOR)).find((el) => !el.closest(SEAT_COPY_SELECTOR)) ?? null
+}
+
 export function useDockOffset(wrapRef: RefObject<HTMLElement | null>, deps: readonly unknown[]) {
   useLayoutEffect(() => {
     const wrap = wrapRef.current
@@ -65,6 +70,12 @@ export function useDockOffset(wrapRef: RefObject<HTMLElement | null>, deps: read
         ? Math.round(Math.max(0, (wrapRect.bottom - dock.getBoundingClientRect().top) / zoom))
         : 0
       wrap.style.setProperty('--dock-clear', `${clear}px`)
+      const row = ownBottomRow(wrap)
+      if (row && zoom > 0) {
+        wrap.style.setProperty('--own-bar-offset', `${Math.round(Math.max(0, (wrapRect.bottom - row.getBoundingClientRect().top) / zoom))}px`)
+      } else {
+        wrap.style.removeProperty('--own-bar-offset')
+      }
     }
     measure()
     if (typeof ResizeObserver === 'undefined') return
@@ -72,6 +83,8 @@ export function useDockOffset(wrapRef: RefObject<HTMLElement | null>, deps: read
     observer.observe(wrap)
     const bar = ownResourceBar(wrap)
     if (bar) observer.observe(bar)
+    const row = ownBottomRow(wrap)
+    if (row) observer.observe(row)
     const dock = wrap.querySelector(DOCK_SELECTOR)
     if (dock) observer.observe(dock)
     return () => observer.disconnect()

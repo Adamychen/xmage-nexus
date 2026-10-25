@@ -96,3 +96,13 @@ game") paint over it. A dialog opened from there stays above the board.
 - Why: the "has left the game" overlay of an eliminated seat covered the lower half of Settings
   opened mid-game from ⋯ (Gameplay section).
 - Guard: `src/game/GameMenu.test.tsx` · `e2e/game-menu-settings-overlay.spec.ts`
+
+### DLG-12 · A destructive confirmation starts on Cancel; any other confirmation starts on its action
+When a confirmation asks for something destructive (delete, leave, concede, clear), the focus starts on
+Cancel, so Return cancels. Any other confirmation starts its action button focused, so Return
+confirms. A confirmation with no Cancel starts on its one button.
+
+- Why: a confirmation that always focused Cancel made Return cancel every confirmation, including the
+  ones that only confirm a choice the player just made. Apple's button guidance gives the primary role to
+  the action people are most likely to choose; for a destructive choice that is the safe option.
+- Guard: `src/ui/ConfirmModal.test.tsx`

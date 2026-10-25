@@ -58,7 +58,7 @@ export function useDrawerTabs(active: DrawerTab | null, stackCount: number, hasC
     { id: 'commander', icon: 'crown', label: t('game', 'tab_commander'), title: t('game', 'commander_damage'), hidden: !hasCommanders },
     {
       id: 'mechanics',
-      icon: 'gem',
+      icon: 'sparkles',
       label: t('game', 'tab_mechanics'),
       title: t('game', 'tab_mechanics'),
       badge: hasActiveMechanics && (

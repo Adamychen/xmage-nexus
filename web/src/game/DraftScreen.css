@@ -9,6 +9,12 @@
   backdrop-filter: blur(var(--dlg-backdrop-blur));
 }
 
+@media (prefers-reduced-transparency: reduce) {
+  .draft-backdrop {
+    backdrop-filter: none;
+  }
+}
+
 .draft-screen {
   width: min(1100px, 100%);
   max-height: 92vh;

@@ -12,6 +12,7 @@ import { soundManager } from './audio/soundManager'
 import { useLobbyMusic } from './audio/useLobbyMusic'
 import { installUiClickSound } from './audio/uiClickSound'
 import { loadAudioSettings, loadMusicSettings, loadAppearanceSettings, applyAppearanceToDocument } from './state/persistence'
+import { applyAppearanceChoice } from './appearance/appearanceChoice'
 import './ui/screenMotion.css'
 import LoginScreen from './lobby/LoginScreen'
 import ManaPips from './lobby/ManaPips'
@@ -117,6 +118,10 @@ export default function App() {
     applyAppearanceToDocument(loadAppearanceSettings(), lang)
   }, [lang])
 
+  useEffect(() => {
+    applyAppearanceChoice(settings.appearance)
+  }, [settings.appearance])
+
   useEffect(() => watchAppearanceStorage(), [])
 
   useEffect(() => {
@@ -212,7 +217,7 @@ export default function App() {
       <DeckIssuesDialog />
       {__DEMO__ && <DemoTour />}
       {showSetup && <SetupWizard onClose={() => setShowSetup(false)} />}
-      {phase !== 'game' && (
+      {phase !== 'game' && screenKey !== 'login' && (
         <footer className="app-attribution">
           <Attribution />
         </footer>

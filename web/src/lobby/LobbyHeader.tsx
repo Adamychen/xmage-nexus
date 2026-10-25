@@ -77,90 +77,98 @@ export default function LobbyHeader({
         </div>
       </div>
 
-      <nav className="lobby-top-nav" aria-label="Main navigation" ref={navRef}>
-        {indicator && (
-          <span
-            className="top-nav-indicator"
-            aria-hidden="true"
-            style={{ transform: `translate(${indicator.x}px, ${indicator.y}px)`, width: indicator.w, height: indicator.h }}
-            data-testid="top-nav-indicator"
-          />
-        )}
-        <button
-          type="button"
-          className="top-nav-btn top-nav-create"
-          onClick={onCreate}
-          title={t('lobby.nav_new')}
-        >
-          <Icon name="plus" size={14} />
-          <span>{t('lobby.nav_new')}</span>
-        </button>
-        <Button
-          variant="ghost"
-          className="top-nav-btn"
-          icon="trophy"
-          onClick={onCreateTournament}
-          title={t('lobby.nav_new_tournament')}
-        >
-          <span>{t('lobby.nav_new_tournament')}</span>
-        </Button>
-        {activeTableCount > 0 && (
+      <div className="lobby-top-center">
+        <div className="lobby-create-actions">
           <button
             type="button"
-            className="top-nav-btn top-nav-active-table"
-            onClick={onGoToActiveTable}
-            title={t('lobby', 'active_table_header_hint')}
+            className="top-nav-btn top-nav-create"
+            onClick={onCreate}
+            title={t('lobby.nav_new')}
           >
-            <span className="top-nav-active-pulse" />
-            <Icon name="chair" size={14} />
-            <span>{t('lobby', 'active_table_header_btn')}{activeTableCount > 1 ? ` (${activeTableCount})` : ''}</span>
+            <Icon name="plus" size={14} />
+            <span>{t('lobby.nav_new')}</span>
           </button>
-        )}
-        <button
-          type="button"
-          className={`top-nav-btn ${activeTab === 'tables' ? 'active' : ''}`}
-          onClick={() => onTabChange('tables')}
-          title={`${t('lobby.nav_tables')} (${tableCount})`}
-        >
-          <Icon name="swords" size={14} />
-          <span>{t('lobby.nav_tables')}{tableCount > 0 ? ` (${tableCount})` : ''}</span>
-        </button>
-        <button
-          type="button"
-          className={`top-nav-btn ${activeTab === 'decks' ? 'active' : ''}`}
-          onClick={() => onTabChange('decks')}
-          title={t('lobby.nav_decks')}
-        >
-          <Icon name="layers" size={14} />
-          <span>{t('lobby.nav_decks')}</span>
-        </button>
-        <button
-          type="button"
-          className={`top-nav-btn ${activeTab === 'matches' ? 'active' : ''}`}
-          onClick={() => onTabChange('matches')}
-          title={t('lobby.nav_history')}
-          data-testid="top-nav-matches"
-        >
-          <Icon name="scrollText" size={14} />
-          <span>{t('lobby.nav_history')}</span>
-        </button>
-        <button
-          type="button"
-          className={`top-nav-btn ${activeTab === 'ranking' ? 'active' : ''}`}
-          onClick={() => onTabChange('ranking')}
-          title={t('lobby.nav_ranking')}
-          data-testid="top-nav-ranking"
-        >
-          <Icon name="trophy" size={14} />
-          <span>{t('lobby.nav_ranking')}</span>
-        </button>
-      </nav>
+          <Button
+            variant="ghost"
+            className="top-nav-btn"
+            icon="trophy"
+            onClick={onCreateTournament}
+            title={t('lobby.nav_new_tournament')}
+          >
+            <span>{t('lobby.nav_new_tournament')}</span>
+          </Button>
+          {activeTableCount > 0 && (
+            <button
+              type="button"
+              className="top-nav-btn top-nav-active-table"
+              onClick={onGoToActiveTable}
+              title={t('lobby', 'active_table_header_hint')}
+            >
+              <span className="top-nav-active-pulse" />
+              <Icon name="chair" size={14} />
+              <span>{t('lobby', 'active_table_header_btn')}{activeTableCount > 1 ? ` (${activeTableCount})` : ''}</span>
+            </button>
+          )}
+        </div>
+
+        <nav className="lobby-top-nav" aria-label={t('lobby', 'nav_aria_main')} ref={navRef}>
+          {indicator && (
+            <span
+              className="top-nav-indicator"
+              aria-hidden="true"
+              style={{ transform: `translate(${indicator.x}px, ${indicator.y}px)`, width: indicator.w, height: indicator.h }}
+              data-testid="top-nav-indicator"
+            />
+          )}
+          <button
+            type="button"
+            className={`top-nav-btn ${activeTab === 'tables' ? 'active' : ''}`}
+            onClick={() => onTabChange('tables')}
+            title={`${t('lobby.nav_tables')} (${tableCount})`}
+          >
+            <Icon name="swords" size={14} />
+            <span>{t('lobby.nav_tables')}{tableCount > 0 ? ` (${tableCount})` : ''}</span>
+          </button>
+          <button
+            type="button"
+            className={`top-nav-btn ${activeTab === 'decks' ? 'active' : ''}`}
+            onClick={() => onTabChange('decks')}
+            title={t('lobby.nav_decks')}
+          >
+            <Icon name="layers" size={14} />
+            <span>{t('lobby.nav_decks')}</span>
+          </button>
+          <button
+            type="button"
+            className={`top-nav-btn ${activeTab === 'matches' ? 'active' : ''}`}
+            onClick={() => onTabChange('matches')}
+            title={t('lobby.nav_history')}
+            data-testid="top-nav-matches"
+          >
+            <Icon name="scrollText" size={14} />
+            <span>{t('lobby.nav_history')}</span>
+          </button>
+          <button
+            type="button"
+            className={`top-nav-btn ${activeTab === 'ranking' ? 'active' : ''}`}
+            onClick={() => onTabChange('ranking')}
+            title={t('lobby.nav_ranking')}
+            data-testid="top-nav-ranking"
+          >
+            <Icon name="trophy" size={14} />
+            <span>{t('lobby.nav_ranking')}</span>
+          </button>
+        </nav>
+      </div>
 
       <div className="lobby-user-actions">
-        <div
+        <button
+          type="button"
           className="lobby-user-badge"
           onClick={() => onOpenProfile(conn?.username ?? '')}
           title={`${t('lobby', 'view_profile_hint')} ${conn?.username ?? ''}`}
+          aria-label={conn?.username}
+          data-testid="open-profile"
         >
           <AvatarImage avatarId={conn?.avatarId ?? 10} username={conn?.username} size="medium" />
           <div className="lobby-user-col">
@@ -170,7 +178,7 @@ export default function LobbyHeader({
             </div>
             <RankBadge elo={myUser?.constructedRating ?? 1500} compact />
           </div>
-        </div>
+        </button>
         <IconButton label={t('common', 'settings')} icon="settings" size="lg"
           className="lobby-appearance-btn"
           onClick={onOpenSettings}
@@ -183,6 +191,9 @@ export default function LobbyHeader({
           className="lobby-more-menu"
           data-testid="lobby-more-menu"
         >
+          <MenuItem icon="trophy" className="lobby-more-ranking" onClick={() => onTabChange('ranking')} data-testid="open-ranking-menu">
+            {t('lobby.nav_ranking')}
+          </MenuItem>
           <MenuItem icon="bug" onClick={onOpenReport} data-testid="open-report">
             {t('system', 'report_title')}
           </MenuItem>

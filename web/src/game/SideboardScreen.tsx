@@ -344,7 +344,7 @@ export default function SideboardScreen() {
   // vez de dejar la pantalla en blanco hasta el próximo GAME_INIT.
   if (submitted) {
     return (
-      <Modal backdropClassName="sideboard-backdrop" dialogClassName="sideboard-screen sideboard-waiting" label={t('game', 'sideboard_title')}>
+      <Modal backdropClassName="sideboard-backdrop" dialogClassName="sideboard-screen sideboard-waiting chrome-surface" label={t('game', 'sideboard_title')}>
         <span className="sideboard-waiting-dot" aria-hidden="true" />
         <p className="sideboard-waiting-text">{t('game', 'sideboard_waiting_opponent')}</p>
       </Modal>
@@ -389,7 +389,7 @@ export default function SideboardScreen() {
   return (
     <Modal
       backdropClassName="sideboard-backdrop"
-      dialogClassName="sideboard-screen"
+      dialogClassName="sideboard-screen chrome-surface"
       label={t('game', 'sideboard_title')}
       trailing={hoverPreviewNode}
     >

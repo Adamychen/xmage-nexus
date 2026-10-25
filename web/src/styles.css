@@ -1,8 +1,9 @@
 @layer base, components;
 @import './ui/tokens.css';
 
-:root {
-  color-scheme: dark;
+/* The battlefield (.board-surface) carries the same colour aliases as :root,
+   so they resolve to its dark tokens whatever the system appearance (APR-2). */
+:root, .board-surface {
   --bg: var(--ink-0);
   --panel: var(--ink-2);
   --panel-2: var(--ink-3);
@@ -14,6 +15,28 @@
   --gold: var(--gold-500);
   --good: var(--ok);
   --bad: var(--err);
+  --dlg-backdrop: rgb(var(--scrim-rgb) / 0.78);
+  --dlg-bg: linear-gradient(180deg, var(--ink-3) 0%, var(--ink-1) 100%);
+  --dlg-border: 1px solid var(--line-2);
+  --dlg-shadow: var(--shadow-3), 0 0 0 1px var(--line-1);
+  --dlg-kicker-fg: var(--gold-300);
+  --dlg-kicker-bg: var(--gold-soft);
+  --dlg-kicker-border: var(--gold-line);
+  --dlg-title-fg: var(--fg-1);
+  --dlg-source-fg: var(--brand-fg);
+  --dlg-msg-fg: var(--fg-2);
+}
+
+:root[data-appearance="light"] {
+  color-scheme: light;
+}
+
+:root[data-appearance="dark"] {
+  color-scheme: dark;
+}
+
+:root {
+  color-scheme: light dark;
   --font-display: 'Cinzel', 'Merriweather', Georgia, serif;
 
   --sidebar-w: 64px;
@@ -27,7 +50,6 @@
   --cjk-boost: 1;
 
   /* ── Dialog system (D0: feedback-dialog wins; additive only) ── */
-  --dlg-backdrop: rgb(var(--ink-rgb) / 0.78);
   --dlg-backdrop-blur: 8px;
   --dlg-z: 90;
   /* Por encima del rango dinámico de Modal.tsx (nextModalZ, 501-1999): turno/fase
@@ -36,21 +58,12 @@
   --game-header-z: 2000;
   --dlg-radius: var(--r-xl);
   --dlg-padding: 24px 28px 28px;
-  --dlg-bg: linear-gradient(180deg, var(--ink-3) 0%, var(--ink-1) 100%);
-  --dlg-border: 1px solid var(--line-2);
-  --dlg-shadow: var(--shadow-3), 0 0 0 1px var(--line-1);
   --dlg-anim: dialogIn 0.18s cubic-bezier(0.16, 1, 0.3, 1);
   --ui-zoom: 1;
   --dlg-width-sm: min(440px, calc(94vw / var(--ui-zoom)));
   --dlg-width-md: min(600px, calc(94vw / var(--ui-zoom)));
   --dlg-width-lg: min(1100px, calc(96vw / var(--ui-zoom)));
   --dlg-max-h: 70vh;
-  --dlg-kicker-fg: var(--gold-300);
-  --dlg-kicker-bg: var(--gold-soft);
-  --dlg-kicker-border: var(--gold-line);
-  --dlg-title-fg: var(--fg-1);
-  --dlg-source-fg: var(--brand-fg);
-  --dlg-msg-fg: var(--fg-2);
   --dlg-bar-radius: var(--r-mid);
 
   font-family: var(--font-ui);
@@ -232,11 +245,11 @@ select option { background: var(--ink-2); color: var(--fg-1); }
 
 .app-attribution {
   position: fixed;
-  bottom: 4px;
+  bottom: calc(4px + env(safe-area-inset-bottom, 0px));
   left: 50%;
   transform: translateX(-50%);
   z-index: 40;
-  font-size: var(--fs-3xs);
+  font-size: var(--fs-2xs);
   color: var(--fg-3);
   background: rgb(var(--ink-rgb) / 0.65);
   border: 1px solid var(--veil-2);
@@ -254,6 +267,13 @@ select option { background: var(--ink-2); color: var(--fg-1); }
 
 .app-attribution a:hover {
   text-decoration: underline;
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .app-attribution {
+    backdrop-filter: none;
+    background: rgb(var(--ink-rgb));
+  }
 }
 
 @media (max-width: 600px) {

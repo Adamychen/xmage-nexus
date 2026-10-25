@@ -2,6 +2,7 @@ import { useSettings, setSetting } from '../state/store'
 import IconButton from '../ui/IconButton'
 import { useTranslation } from '../i18n'
 import { SLEEVES } from '../appearance/sleeves'
+import { APPEARANCE_CHOICES } from '../appearance/appearanceChoice'
 import CustomSleeveTile from '../appearance/CustomSleeveTile'
 import CustomCardArtManager from '../appearance/CustomCardArtManager'
 import BoardDemo from './BoardDemo'
@@ -71,6 +72,22 @@ export function InterfaceSection() {
   const cjkLang = lang === 'ja' || lang === 'zhs'
   return (
     <div>
+      <h3 className="settings-section-title">{t('lobby', 'scheme_title')}</h3>
+      <p className="settings-hint">{t('lobby', 'scheme_hint')}</p>
+      <div className="settings-stops" role="group" aria-label={t('lobby', 'scheme_title')}>
+        {APPEARANCE_CHOICES.map((choice) => (
+          <button
+            key={choice}
+            type="button"
+            className={`settings-stop ${settings.appearance === choice ? 'selected' : ''}`}
+            aria-pressed={settings.appearance === choice}
+            onClick={() => setSetting('appearance', choice)}
+            data-testid={`settings-appearance-${choice}`}
+          >
+            {t('lobby', `scheme_${choice}`)}
+          </button>
+        ))}
+      </div>
       <h3 className="settings-section-title">{t('lobby', 'ui_scale_title')}</h3>
       <p className="settings-hint">{t('lobby', 'ui_scale_hint')}</p>
       <div className="settings-stepper">
@@ -100,10 +117,12 @@ export function InterfaceSection() {
             key={o.value}
             type="button"
             className={`settings-stop ${isZoomPreset(settings.uiScale, o.value) ? 'selected' : ''}`}
+            aria-pressed={isZoomPreset(settings.uiScale, o.value)}
             onClick={() => setSetting('uiScale', o.value)}
             data-testid={`settings-zoom-${String(o.value).replace('.', '-')}`}
           >
             {o.label}
+            {isZoomPreset(settings.uiScale, o.value) && <span className="settings-card-check" aria-hidden="true">✓</span>}
           </button>
         ))}
       </div>
@@ -112,7 +131,7 @@ export function InterfaceSection() {
         onChange={(v) => setSetting('cjkBoost', v)}
         label={t('lobby', 'cjk_boost_label')}
         disabled={!cjkLang}
-        title={cjkLang ? undefined : t('lobby', 'cjk_boost_only')}
+        hint={cjkLang ? undefined : t('lobby', 'cjk_boost_only')}
       />
       <Toggle
         checked={settings.transparentDialogs}
@@ -174,6 +193,7 @@ export function BoardSection() {
             key={l.id}
             type="button"
             className={`settings-card ${boardLayoutChoiceOf(settings) === l.id ? 'selected' : ''}`}
+            aria-pressed={boardLayoutChoiceOf(settings) === l.id}
             onClick={() => chooseBoardLayout(l.id)}
             data-testid={`settings-layout-${l.id}`}
           >
@@ -371,7 +391,7 @@ export function GameplayQuickSection() {
         checked={settings.smartStops}
         onChange={(v) => setSetting('smartStops', v)}
         label={t('game', 'smart_stops')}
-        title={t('game', 'smart_stops_hint')}
+        hint={t('game', 'smart_stops_hint')}
       />
       <Toggle
         checked={settings.autoKeepMulligan}
@@ -382,7 +402,7 @@ export function GameplayQuickSection() {
         checked={settings.manaPayment.auto}
         onChange={() => setSetting('manaPayment', { ...settings.manaPayment, auto: !settings.manaPayment.auto })}
         label={t('game', 'mana_payment_auto')}
-        title={t('game', 'mana_payment_auto_tip')}
+        hint={t('game', 'mana_payment_auto_tip')}
       />
     </div>
   )

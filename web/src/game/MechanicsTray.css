@@ -201,7 +201,7 @@
 }
 
 .level-status {
-  font-size: 0.5rem;
+  font-size: var(--fs-3xs);
   font-weight: 800;
   letter-spacing: 0.03em;
   padding: 1px var(--sp-1h);
@@ -303,7 +303,7 @@ html.fx-off .dungeon-room-node.room-entered {
 
 .current-marker {
   margin-left: auto;
-  font-size: var(--fs-4xs);
+  font-size: var(--fs-3xs);
   font-weight: 800;
   color: var(--ok);
 }
@@ -350,7 +350,7 @@ html.fx-off .dungeon-room-node.room-entered {
 
 .dungeon-room-node .dungeon-leads {
   display: block;
-  font-size: var(--fs-4xs);
+  font-size: var(--fs-3xs);
   color: var(--fg-3);
 }
 
@@ -360,7 +360,7 @@ html.fx-off .dungeon-room-node.room-entered {
 
 .visited-marker {
   margin-left: auto;
-  font-size: var(--fs-4xs);
+  font-size: var(--fs-3xs);
   font-weight: 800;
   color: var(--ok);
 }
@@ -505,7 +505,7 @@ html.fx-off .dungeon-room-node.room-entered {
 }
 
 .badge-ascended {
-  font-size: var(--fs-4xs);
+  font-size: var(--fs-3xs);
   font-weight: 800;
   padding: var(--sp-0h) var(--sp-1h);
   border-radius: var(--r-xs);
