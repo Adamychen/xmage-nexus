@@ -5,10 +5,55 @@ const LEFT_OVERLAYS = ['.arena-board > .zone-bottom .pz-bottom-row', '[data-test
 const RIGHT_OVERLAYS = ['[data-testid="game-dock"]']
 const CAPPED_OVERLAYS = ['[data-testid="combat-ledger"]', '[data-testid="log-ticker"]']
 const DIVIDER = '.arena-board > .board-shell-divider'
+const COMMANDER = '.pz-commander'
+const COMMAND_ITEMS = '.command-zone > *'
 const GAP = 16
+const COMMAND_ZONE_CHROME = 16
+const COMMAND_ITEM_GAP = 6
+const MIN_COMMANDER_W = 56
 
 function overlapsVertically(a: DOMRect, b: DOMRect): boolean {
   return a.top < b.bottom && a.bottom > b.top
+}
+
+/** Docks the own command zone in the left column, right above the highest of the overlays
+ *  stacked there (last actions, combat ledger, portrait), so it follows them as they grow or
+ *  collapse. Its cards take the whole room left between the divider and that overlay, as wide
+ *  as the column allows; when not even a small card fits, the zone stays in the creatures row. */
+function dockCommander(wrap: HTMLElement, zone: HTMLElement, zoneRect: DOMRect, zoom: number) {
+  const dock = zone.querySelector<HTMLElement>(COMMANDER)
+  if (!dock) return
+  let anchorTop = Infinity
+  let colLeft = Infinity
+  let colRight = -Infinity
+  for (const sel of LEFT_OVERLAYS) {
+    const el = wrap.querySelector<HTMLElement>(sel)
+    if (!el) continue
+    const r = el.getBoundingClientRect()
+    if (r.width === 0) continue
+    anchorTop = Math.min(anchorTop, r.top)
+    colLeft = Math.min(colLeft, r.left)
+    colRight = Math.max(colRight, r.right)
+  }
+  const divider = wrap.querySelector<HTMLElement>(DIVIDER)
+  const ceiling = Math.max(zoneRect.top, divider ? divider.getBoundingClientRect().bottom : -Infinity)
+  const items = Math.max(1, dock.querySelectorAll(COMMAND_ITEMS).length)
+  const baseW = parseFloat(zone.style.getPropertyValue('--card-w')) || 116
+  const ratio = parseFloat(getComputedStyle(dock).getPropertyValue('--card-h-ratio')) || 1.4
+  const colW = (colRight - colLeft) / zoom
+  const colH = (anchorTop - ceiling) / zoom - GAP
+  const cardW = Math.floor(Math.min(
+    (colW - COMMAND_ZONE_CHROME - COMMAND_ITEM_GAP * (items - 1)) / items,
+    (colH - COMMAND_ZONE_CHROME) / ratio,
+  ))
+  if (!Number.isFinite(cardW) || cardW < Math.min(baseW, MIN_COMMANDER_W)) {
+    delete zone.dataset.commanderDock
+    return
+  }
+  zone.dataset.commanderDock = 'column'
+  zone.style.setProperty('--cmd-left', `${Math.round((colLeft - zoneRect.left) / zoom)}px`)
+  zone.style.setProperty('--cmd-bottom', `${Math.round((zoneRect.bottom - anchorTop) / zoom + GAP / 2)}px`)
+  zone.style.setProperty('--cmd-card-w', `${cardW}px`)
 }
 
 /** Keeps the own battlefield between the overlays the v2 chrome floats over the board: the
@@ -59,6 +104,7 @@ export function useOverlayGutters(wrapRef: RefObject<HTMLElement | null>, enable
           el.style.overflowY = 'auto'
         }
       }
+      dockCommander(wrap, zone, zoneRect, zoom)
       wrap.style.setProperty('--me-gutter-l', `${Math.round(Math.max(0, left))}px`)
       wrap.style.setProperty('--me-gutter-r', `${Math.round(Math.max(0, right))}px`)
     }

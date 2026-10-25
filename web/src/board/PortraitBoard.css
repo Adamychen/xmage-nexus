@@ -28,6 +28,15 @@
   overflow: visible;
 }
 
+.board-wrap[data-ui='v2'] .arena-board > .zone-bottom[data-commander-dock] .pz-commander {
+  position: absolute;
+  left: var(--cmd-left);
+  bottom: var(--cmd-bottom);
+  max-width: none;
+  z-index: 11;
+  --card-w: var(--cmd-card-w);
+}
+
 .board-wrap[data-ui='v2'] .arena-board > .zone-bottom .pz-bottom-row {
   position: absolute;
   left: 18px;

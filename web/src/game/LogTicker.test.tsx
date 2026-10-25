@@ -8,13 +8,17 @@ import { resetCommanderMemory } from '../board/commanders'
 import { makeCard, makeGameView, makePlayer } from '../__fixtures__/gameViews'
 import { emphasize, tickerLines } from './logTickerModel'
 import type { ActionFeedItem } from './gameEventParser'
+import { loadLogTickerExpanded, saveLogTickerExpanded } from '../state/persistence'
 
 function log(...lines: string[]) {
   return lines.map((text, i) => ({ id: i + 1, time: 1000 + i, text, from: 'game', channel: 'game' as const }))
 }
 
 describe('LogTicker', () => {
-  beforeEach(() => setState({ game: makeGameView({ players: [makePlayer({ playerId: 'a', name: 'Adam', controlled: true })] }) }))
+  beforeEach(() => {
+    saveLogTickerExpanded(false)
+    setState({ game: makeGameView({ players: [makePlayer({ playerId: 'a', name: 'Adam', controlled: true })] }) })
+  })
   afterEach(() => {
     cleanup()
     setState({ log: [], game: null })
@@ -26,7 +30,7 @@ describe('LogTicker', () => {
     expect(container.querySelector('[data-testid="log-ticker"]')).toBeNull()
   })
 
-  it('shows the last four actions, newest first, and opens the log panel on click', () => {
+  it('BRD-17: starts collapsed to the newest action only, and opens the log panel on click', () => {
     setState({ log: log('Adam plays Forest', 'Adam plays Swamp', 'Mira casts Counterspell', 'Tobias casts Lightning Bolt', 'Adam casts Pact of Negation') })
     const openPanel = vi.fn()
     const { getAllByTestId, getByTestId } = render(
@@ -34,14 +38,39 @@ describe('LogTicker', () => {
         <LogTicker />
       </ChromeActionsContext.Provider>,
     )
+    expect(getByTestId('log-ticker').getAttribute('data-expanded')).toBe('0')
+    expect(getAllByTestId('log-ticker-line')).toHaveLength(1)
+    expect(getAllByTestId('log-ticker-line')[0].textContent).toContain('Pact of Negation')
+    expect(getByTestId('log-ticker-toggle').getAttribute('aria-expanded')).toBe('false')
+    fireEvent.click(getByTestId('log-ticker'))
+    expect(openPanel).toHaveBeenCalledWith('log')
+  })
+
+  it('BRD-17: the toggle expands to the last four actions, newest first, remembers it, and does not open the log panel', () => {
+    setState({ log: log('Adam plays Forest', 'Adam plays Swamp', 'Mira casts Counterspell', 'Tobias casts Lightning Bolt', 'Adam casts Pact of Negation') })
+    const openPanel = vi.fn()
+    const { getAllByTestId, getByTestId, unmount } = render(
+      <ChromeActionsContext.Provider value={{ openPanel, sidePanelOpen: false }}>
+        <LogTicker />
+      </ChromeActionsContext.Provider>,
+    )
+    fireEvent.click(getByTestId('log-ticker-toggle'))
+    expect(openPanel).not.toHaveBeenCalled()
+    expect(loadLogTickerExpanded()).toBe(true)
+    expect(getByTestId('log-ticker-toggle').getAttribute('aria-expanded')).toBe('true')
     const lines = getAllByTestId('log-ticker-line')
     expect(lines).toHaveLength(4)
     expect(lines[0].className).toContain('age-0')
     expect(lines[0].textContent).toContain('Pact of Negation')
     expect(lines[3].textContent).toContain('Swamp')
     expect(lines[0].querySelector('b')?.textContent).toBe('Adam')
-    fireEvent.click(getByTestId('log-ticker'))
-    expect(openPanel).toHaveBeenCalledWith('log')
+    unmount()
+
+    const again = render(<LogTicker />)
+    expect(again.getAllByTestId('log-ticker-line')).toHaveLength(4)
+    fireEvent.click(again.getByTestId('log-ticker-toggle'))
+    expect(again.getAllByTestId('log-ticker-line')).toHaveLength(1)
+    expect(loadLogTickerExpanded()).toBe(false)
   })
 })
 

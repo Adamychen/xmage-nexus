@@ -294,12 +294,29 @@ test('HND-9: v2 hand badge opens a visible hand and announces card count changes
   await page.screenshot({ path: testInfo.outputPath('v2-hand-badge.png'), clip: { x: 0, y: 40, width: 700, height: 140 } })
 })
 
-test('v2 log ticker shows the latest actions and opens the log panel @gameui', async ({ page }) => {
+test('BRD-17: v2 log ticker shows one line, expands to the latest actions, and opens the log panel @gameui', async ({ page }) => {
   await showGame(page, richCommanderGame(), V2, ['Adam plays Forest', 'Adam plays Swamp', 'Mira casts Counterspell', 'Tobias casts Lightning Bolt targeting Adam', 'Adam casts Pact of Negation'])
   const ticker = page.getByTestId('log-ticker')
   await expect(ticker).toBeVisible({ timeout: 10_000 })
-  await expect(page.getByTestId('log-ticker-line')).toHaveCount(4)
   await expect(ticker).toHaveCSS('position', 'absolute')
+  await expect(page.getByTestId('log-ticker-line')).toHaveCount(1)
+  const line = page.getByTestId('log-ticker-line').locator('.log-ticker-text')
+  const oneLine = await line.evaluate((el) => {
+    const lh = parseFloat(getComputedStyle(el).lineHeight)
+    return { h: el.getBoundingClientRect().height, lh, clipped: el.scrollWidth > el.clientWidth, ellipsis: getComputedStyle(el).textOverflow }
+  })
+  expect(oneLine.h, 'a single line of text').toBeLessThanOrEqual(oneLine.lh + 1)
+  expect(oneLine.ellipsis).toBe('ellipsis')
+  const collapsedH = (await ticker.boundingBox())!.height
+
+  await page.getByTestId('log-ticker-toggle').click()
+  await expect(page.getByTestId('log-ticker-line')).toHaveCount(4)
+  await expect(page.getByTestId('side-panel')).toHaveCount(0)
+  expect((await ticker.boundingBox())!.height).toBeGreaterThan(collapsedH * 2)
+  await page.reload()
+  await dismissSetupWizard(page)
+  await showGame(page, richCommanderGame(), V2, ['Adam plays Forest', 'Adam plays Swamp', 'Mira casts Counterspell', 'Tobias casts Lightning Bolt targeting Adam', 'Adam casts Pact of Negation'])
+  await expect(page.getByTestId('log-ticker-line'), 'the expanded state survives a reload').toHaveCount(4)
   await ticker.click()
   await expect(page.getByTestId('side-panel')).toHaveAttribute('data-tab', 'log')
 })
@@ -491,6 +508,149 @@ for (const vp of [{ width: 1600, height: 900 }, { width: 1280, height: 720 }]) {
   })
 }
 
+async function commanderColumn(page: import('@playwright/test').Page) {
+  return page.evaluate(() => {
+    const box = (sel: string) => {
+      const r = document.querySelector(sel)?.getBoundingClientRect()
+      return r && r.width > 0 ? { left: r.left, right: r.right, top: r.top, bottom: r.bottom } : null
+    }
+    const zone = document.querySelector<HTMLElement>('.arena-board > .zone-bottom')!
+    return {
+      dock: zone.dataset.commanderDock ?? null,
+      boardCardW: parseFloat(zone.style.getPropertyValue('--card-w')),
+      commander: box('.arena-board > .zone-bottom .pz-commander'),
+      cards: [...document.querySelectorAll('.arena-board > .zone-bottom .pz-commander .card-slot')].map((c) => {
+        const r = c.getBoundingClientRect()
+        return { left: r.left, right: r.right, top: r.top, bottom: r.bottom }
+      }),
+      log: box('[data-testid="log-ticker"]'),
+      portrait: box('.arena-board > .zone-bottom .pz-bottom-row'),
+      divider: box('.arena-board > .board-shell-divider'),
+      battlefield: box('.arena-board > .zone-bottom .creatures-band'),
+    }
+  })
+}
+
+type CommanderColumn = Awaited<ReturnType<typeof commanderColumn>>
+
+function commanderPlacement(at: CommanderColumn): string[] {
+  const cmd = at.commander!
+  const column = [at.log, at.portrait].filter((r): r is NonNullable<typeof r> => r !== null)
+  const anchorTop = Math.min(...column.map((r) => r.top))
+  const columnRight = Math.max(...column.map((r) => r.right))
+  const bad: string[] = []
+  if (at.dock === 'column') {
+    if (Math.abs(cmd.left - Math.min(...column.map((r) => r.left))) > 2) bad.push('not left-aligned with the column')
+    if (cmd.bottom > anchorTop - 4) bad.push('not above the highest overlay of the column')
+    if (cmd.bottom < anchorTop - 32) bad.push('floats up the column instead of sitting on its overlay')
+    if (cmd.top < at.divider!.bottom) bad.push('crosses the divider')
+    if (cmd.right > columnRight + 1) bad.push('wider than the column')
+    if (cmd.right > at.battlefield!.left) bad.push('reaches the battlefield')
+    const floor = Math.min(at.boardCardW, 56) - 1
+    for (const c of at.cards) if (c.right - c.left < floor) bad.push(`card ${Math.round(c.right - c.left)}px wide, under ${floor}px`)
+  } else if (cmd.left < columnRight) {
+    bad.push('in-row commander overlaps the left column')
+  }
+  return bad
+}
+
+function commanderFillsColumn(at: CommanderColumn): string[] {
+  const cmd = at.commander!
+  const column = [at.log, at.portrait].filter((r): r is NonNullable<typeof r> => r !== null)
+  const columnW = Math.max(...column.map((r) => r.right)) - Math.min(...column.map((r) => r.left))
+  const roomAbove = cmd.top - at.divider!.bottom
+  return roomAbove > 24 && columnW - (cmd.right - cmd.left) > 24 ? [`leaves ${Math.round(roomAbove)}px above and ${Math.round(columnW - (cmd.right - cmd.left))}px beside it`] : []
+}
+
+for (const vp of [{ width: 1920, height: 1080, docks: true }, { width: 1600, height: 900, docks: true }, { width: 1280, height: 720, docks: false }]) {
+  test.describe(`commander column ${vp.width}x${vp.height}`, () => {
+    test.use({ viewport: { width: vp.width, height: vp.height } })
+
+    test(`BRD-15: v2 docks my command zone in the left column right above the last actions, as large as the room allows, following the log as it expands or collapses @gameui`, async ({ page }, testInfo) => {
+      await showGame(page, richCommanderGame(), V2, LOG)
+      await expect(page.getByTestId('log-ticker')).toHaveAttribute('data-expanded', '0', { timeout: 10_000 })
+      await page.mouse.move(2, 400)
+      await expect.poll(async () => (await commanderColumn(page)).dock, vp.docks ? 'the one-line log leaves room above it' : 'no room above even a one-line log: stays in the row').toBe(vp.docks ? 'column' : null)
+      await expect.poll(async () => commanderPlacement(await commanderColumn(page))).toEqual([])
+      const collapsed = await commanderColumn(page)
+      expect(collapsed.cards.length).toBeGreaterThan(0)
+      if (vp.docks) expect(commanderFillsColumn(collapsed), 'the commander fills the freed space').toEqual([])
+      await page.screenshot({ path: testInfo.outputPath(`v2-commander-column-${vp.width}.png`) })
+
+      await page.getByTestId('log-ticker-toggle').click()
+      await expect(page.getByTestId('log-ticker')).toHaveAttribute('data-expanded', '1')
+      expect(await page.getByTestId('log-ticker-line').count()).toBeGreaterThan(1)
+      await expect.poll(async () => (await commanderColumn(page)).log!.top, 'the log expanded').toBeLessThan(collapsed.log!.top - 30)
+      await expect.poll(async () => commanderPlacement(await commanderColumn(page)), 'the log expanded').toEqual([])
+      const expanded = await commanderColumn(page)
+      if (vp.docks && expanded.dock === 'column') expect(expanded.commander!.bottom - expanded.commander!.top).toBeLessThan(collapsed.commander!.bottom - collapsed.commander!.top)
+      await page.screenshot({ path: testInfo.outputPath(`v2-commander-column-expanded-${vp.width}.png`) })
+
+      await page.getByTestId('log-ticker-toggle').click()
+      await expect.poll(async () => {
+        const back = await commanderColumn(page)
+        return back.dock === 'column' ? Math.round(back.commander!.bottom - back.commander!.top) : null
+      }, 'collapsing the log gives the room back').toBe(vp.docks ? Math.round(collapsed.commander!.bottom - collapsed.commander!.top) : null)
+
+      await page.getByTestId('log-ticker').evaluate((el) => { el.style.display = 'none' })
+      await expect.poll(async () => (await commanderColumn(page)).dock, 'the log hidden: room above the portrait').toBe('column')
+      await expect.poll(async () => commanderPlacement(await commanderColumn(page)), 'the log hidden').toEqual([])
+    })
+  })
+}
+
+async function handOverBattlefield(page: import('@playwright/test').Page) {
+  return page.evaluate(() => {
+    const rect = (el: Element) => {
+      const r = el.getBoundingClientRect()
+      return { left: r.left, right: r.right, top: r.top, bottom: r.bottom }
+    }
+    const zone = document.querySelector('.arena-board > .zone-bottom')!
+    const shell = document.querySelector('.board-shell')!.getBoundingClientRect()
+    const board = [...zone.querySelectorAll('.bz-band .card-slot')].map((el) => ({ name: el.textContent?.slice(0, 16) ?? '', ...rect(el) }))
+    const hand = [...document.querySelectorAll('.hand-bar .hand-card')].map(rect).map((r) => ({ ...r, bottom: Math.min(r.bottom, shell.bottom) })).filter((r) => r.bottom > r.top)
+    const handTop = Math.min(...hand.map((r) => r.top))
+    const boardBottom = Math.max(...board.map((r) => r.bottom))
+    const overlapping = board.filter((b) => hand.some((h) => b.left < h.right - 1 && b.right > h.left + 1 && b.top < h.bottom - 1 && b.bottom > h.top + 1)).map((b) => b.name)
+    return { board, hand: hand.length, handTop, boardBottom, overlapping, zoneBottom: zone.getBoundingClientRect().bottom }
+  })
+}
+
+for (const vp of [{ width: 1920, height: 1080 }, { width: 1600, height: 900 }, { width: 1280, height: 720 }, { width: 1024, height: 600 }]) {
+  test.describe(`hand over battlefield ${vp.width}x${vp.height}`, () => {
+    test.use({ viewport: vp })
+
+    test(`BRD-16: v2 the resting hand never covers my battlefield, and hovering a hand card lifts it without moving the board @gameui`, async ({ page }, testInfo) => {
+      await showGame(page, richCommanderGame(), V2, LOG)
+      await expect(page.getByTestId('hand-bar')).toBeVisible({ timeout: 10_000 })
+      await page.mouse.move(2, 400)
+      await page.waitForTimeout(600)
+
+      const rest = await handOverBattlefield(page)
+      expect(rest.hand).toBeGreaterThan(0)
+      expect(rest.board.length).toBeGreaterThan(0)
+      expect(rest.overlapping, 'battlefield cards under the resting hand').toEqual([])
+      expect(rest.handTop - rest.boardBottom, 'gap between the battlefield and the resting hand').toBeGreaterThanOrEqual(6)
+      for (const b of rest.board) expect(b.bottom, `${b.name} stays inside my zone`).toBeLessThanOrEqual(rest.zoneBottom + 1)
+      await page.screenshot({ path: testInfo.outputPath(`v2-hand-rest-${vp.width}.png`) })
+
+      const card = page.locator('.hand-bar .hand-card').first()
+      await card.hover({ position: { x: 10, y: 24 } })
+      await page.waitForTimeout(500)
+      const hovered = await handOverBattlefield(page)
+      expect(hovered.handTop, 'the hovered card rises').toBeLessThan(rest.handTop - 20)
+      expect(hovered.board.map((b) => [Math.round(b.left), Math.round(b.top)]), 'hover does not move the battlefield').toEqual(rest.board.map((b) => [Math.round(b.left), Math.round(b.top)]))
+      const onTop = await card.evaluate((el) => {
+        const r = el.getBoundingClientRect()
+        const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 4)
+        return !!hit && !!el.closest('.hand-card-slot')?.contains(hit)
+      })
+      expect(onTop, 'the lifted card is drawn above the battlefield').toBe(true)
+      await page.screenshot({ path: testInfo.outputPath(`v2-hand-hover-${vp.width}.png`) })
+    })
+  })
+}
+
 test('v2 mana pool keeps every mana type and its label readable @gameui', async ({ page }, testInfo) => {
   const game = richCommanderGame() as { players: Array<Record<string, unknown>> }
   const me = game.players.find((p) => p.controlled) as Record<string, unknown>
@@ -621,8 +781,8 @@ test('tapping an untapped land in v2 flies a mana particle into the pool @gameui
     const dy = parseFloat(particle.style.getPropertyValue('--particle-dy'))
     return {
       startInside: r.width > 0,
-      endX: r.left + r.width / 2 + dx,
-      endY: r.top + r.height / 2 + dy,
+      endX: parseFloat(particle.style.left) + dx,
+      endY: parseFloat(particle.style.top) + dy,
       poolLeft: p.left, poolRight: p.right, poolTop: p.top, poolBottom: p.bottom,
     }
   }, undefined, { polling: 'raf', timeout: 2000 })

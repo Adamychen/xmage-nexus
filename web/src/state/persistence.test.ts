@@ -477,7 +477,7 @@ describe('persistence', () => {
     it('normalizes a hand-edited or corrupt value instead of leaking it into the UI', () => {
       mockStorage['mage-web-appearance'] = JSON.stringify({
         sleeveId: 'classic', boardLayout: 'standard', uiScale: 1, cjkBoost: true,
-        showHandCost: 'false', ptBadgeMode: 'sometimes', sicknessStyle: 'hourglass', keywordIcons: 'emoji', keywordAura: 'loud',
+        showHandCost: 'false', ptBadgeMode: 'sometimes', sicknessStyle: 'hourglass', keywordIcons: 'sparkles', keywordAura: 'loud',
       })
       const loaded = loadAppearanceSettings()
       expect(loaded.showHandCost).toBe(true)
