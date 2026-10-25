@@ -774,6 +774,8 @@ export const fr: TranslationSchema = {
     smart_stops_hint: 'Passe la priorité automatiquement sauf si vous pouvez jouer quelque chose (terrain, sort ou capacité) ou avez une décision de combat. Prioritaire sur le passage automatique.',
     rewind_setting: 'Enregistrer l\'historique du plateau (rewind)',
     rewind_setting_hint: 'Garde une capture du plateau à chaque étape pour revenir en arrière et le lire tel qu\'il était. En mémoire seulement, rien n\'est envoyé ; effacé à la fin de la partie ou si vous le désactivez.',
+    recap_setting: 'Afficher le récapitulatif du tour',
+    recap_setting_hint: 'Au début de votre tour, affiche un court panneau résumant ce que les autres joueurs ont fait depuis votre dernier tour.',
     rewind_title: 'Historique du plateau',
     rewind_open: 'Revenir en arrière',
     rewind_open_hint: 'Revoir les tours précédents de cette partie',

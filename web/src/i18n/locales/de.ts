@@ -774,6 +774,8 @@ export const de: TranslationSchema = {
     smart_stops_hint: 'Priorität automatisch abgeben, außer du kannst etwas spielen (Land, Zauberspruch oder Fähigkeit) oder hast eine Kampfentscheidung. Hat Vorrang vor dem automatischen Passen.',
     rewind_setting: 'Spielfeld-Verlauf aufzeichnen (Rewind)',
     rewind_setting_hint: 'Speichert in jedem Schritt eine Momentaufnahme des Spielfelds, damit du zurückblättern kannst. Nur im Speicher, nichts wird gesendet; wird am Spielende oder beim Ausschalten gelöscht.',
+    recap_setting: 'Zugzusammenfassung anzeigen',
+    recap_setting_hint: 'Zeigt zu Beginn deines Zuges kurz, was die anderen Spieler seit deinem letzten Zug getan haben.',
     rewind_title: 'Spielfeld-Verlauf',
     rewind_open: 'Zurückspulen',
     rewind_open_hint: 'Frühere Züge dieses Spiels ansehen',

@@ -2,7 +2,8 @@ import { describe, expect, it, vi, afterEach } from 'vitest'
 import { render, screen, fireEvent, cleanup } from '@testing-library/react'
 import SettingsModal from './SettingsModal'
 import { getState, setSetting } from '../state/store'
-import { loadAppearanceSettings, loadGameplayPreset, loadPhaseStops, saveGameplayPreset } from '../state/persistence'
+import { loadAppearanceSettings, loadGameplayPreset, loadPhaseStops, loadTurnRecap, saveGameplayPreset } from '../state/persistence'
+import { t } from '../i18n'
 
 afterEach(() => cleanup())
 
@@ -89,6 +90,23 @@ describe('SettingsModal', () => {
     fireEvent.click(main1)
     expect(main1.classList.contains('active')).toBe(true)
     expect(loadPhaseStops().yourTurn.main1).toBe(true)
+  })
+
+  it('SET-2: the gameplay section has a turn recap toggle, off by default, that saves its value', () => {
+    expect(getState().settings.turnRecap).toBe(false)
+    render(<SettingsModal onClose={() => {}} />)
+    fireEvent.click(screen.getByTestId('settings-nav-gameplay'))
+    const row = screen.getByText(t('game', 'recap_setting')).closest('label')!
+    const toggle = row.querySelector('[role="switch"]') as HTMLElement
+    expect(toggle.getAttribute('aria-checked')).toBe('false')
+
+    fireEvent.click(toggle)
+    expect(getState().settings.turnRecap).toBe(true)
+    expect(loadTurnRecap()).toBe(true)
+
+    fireEvent.click(toggle)
+    expect(getState().settings.turnRecap).toBe(false)
+    expect(loadTurnRecap()).toBe(false)
   })
 
   it('calls onClose from the close button', () => {

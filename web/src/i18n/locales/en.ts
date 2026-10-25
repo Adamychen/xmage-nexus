@@ -772,6 +772,8 @@ export const en = {
     smart_stops_hint: 'Pass priority automatically unless you can play something (a land, a spell or an ability) or have a combat decision. Takes precedence over auto-pass.',
     rewind_setting: 'Record board history (rewind)',
     rewind_setting_hint: 'Keep a snapshot of the board at every step so you can scrub back and read it as it was. Memory only, nothing is sent; cleared when the game ends or you turn it off.',
+    recap_setting: 'Show the turn recap',
+    recap_setting_hint: 'At the start of your turn, show a short panel summarising what the other players did since your last turn.',
     rewind_title: 'Board history',
     rewind_open: 'Rewind',
     rewind_open_hint: 'Look back at earlier turns of this game',

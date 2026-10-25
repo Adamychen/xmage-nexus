@@ -774,6 +774,8 @@ export const pt: TranslationSchema = {
     smart_stops_hint: 'Passa a prioridade automaticamente, a menos que você possa jogar algo (terreno, mágica ou habilidade) ou tenha uma decisão de combate. Tem precedência sobre o passe automático.',
     rewind_setting: 'Gravar histórico do tabuleiro (rewind)',
     rewind_setting_hint: 'Guarda uma captura do tabuleiro a cada passo para voltar e lê-lo como estava. Só em memória, nada é enviado; apagado ao fim da partida ou ao desativar.',
+    recap_setting: 'Mostrar o resumo do turno',
+    recap_setting_hint: 'No início do seu turno, mostra um painel curto com o que os outros jogadores fizeram desde o seu último turno.',
     rewind_title: 'Histórico do tabuleiro',
     rewind_open: 'Voltar atrás',
     rewind_open_hint: 'Ver turnos anteriores desta partida',

@@ -777,6 +777,8 @@ export const zhs: TranslationSchema = {
     smart_stops_hint: '除非你可以使用某物（地、咒语或异能）或需要做出战斗决定，否则自动让过优先权。优先于自动让过。',
     rewind_setting: '记录牌桌历史(回放)',
     rewind_setting_hint: '在每个步骤保存牌桌快照，以便回看当时的局面。仅保存在内存中，不会发送任何内容；对局结束或关闭时清除。',
+    recap_setting: '显示回合回顾',
+    recap_setting_hint: '在你的回合开始时，用一个小面板总结其他玩家自你上个回合以来的行动。',
     rewind_title: '牌桌历史',
     rewind_open: '回放',
     rewind_open_hint: '回看本局之前的回合',

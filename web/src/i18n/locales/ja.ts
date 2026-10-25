@@ -777,6 +777,8 @@ export const ja: TranslationSchema = {
     smart_stops_hint: '土地・呪文・能力をプレイできる時や戦闘の判断が必要な時以外は、自動で優先権をパスします。自動パスより優先されます。',
     rewind_setting: '盤面の履歴を記録(巻き戻し)',
     rewind_setting_hint: '各ステップで盤面のスナップショットを保持し、過去の盤面を読み返せます。メモリ上のみで送信されません。ゲーム終了時またはオフにすると消去されます。',
+    recap_setting: 'ターンのまとめを表示',
+    recap_setting_hint: '自分のターンの開始時に、前のターン以降に他のプレイヤーが行ったことを短く表示します。',
     rewind_title: '盤面の履歴',
     rewind_open: '巻き戻し',
     rewind_open_hint: 'このゲームの過去のターンを見る',

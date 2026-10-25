@@ -614,6 +614,7 @@ export function saveGameplayPreset(id: string | null) {
 const BROWSER_NOTIFICATIONS_KEY = 'mage-web-browser-notifications'
 const BOARD_REWIND_KEY = 'mage-web-board-rewind'
 const LOG_TICKER_EXPANDED_KEY = 'mage-web-log-ticker-expanded'
+const TURN_RECAP_KEY = 'mage-web-turn-recap'
 const DRAFT_HELPER_KEY = 'mage-web-draft-helper'
 const NOTIFICATION_ASKED_KEY = 'mage-web-notification-asked'
 
@@ -639,6 +640,14 @@ export function loadLogTickerExpanded(): boolean {
 
 export function saveLogTickerExpanded(expanded: boolean) {
   writeJson(LOG_TICKER_EXPANDED_KEY, expanded)
+}
+
+export function loadTurnRecap(): boolean {
+  return readJson<unknown>(TURN_RECAP_KEY) === true
+}
+
+export function saveTurnRecap(enabled: boolean) {
+  writeJson(TURN_RECAP_KEY, enabled)
 }
 
 export function loadBrowserNotifications(): boolean {
