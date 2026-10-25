@@ -66,6 +66,17 @@
   height: 80%;
 }
 
+.kw-coin.icons-emoji {
+  background: rgb(var(--ink-2-rgb) / 0.92);
+  border-color: rgb(var(--kw-rgb) / 0.65);
+  color: rgb(var(--kw-rgb));
+}
+
+.kw-coin-emoji {
+  font-size: calc(var(--kw-size, 16px) * 0.66);
+  line-height: 1;
+}
+
 .kw-coin.kw-gained {
   position: relative;
   animation: kwCoinGained calc(0.9s / var(--fx-speed, 1)) cubic-bezier(0.34, 1.56, 0.64, 1);
