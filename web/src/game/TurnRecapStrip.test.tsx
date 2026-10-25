@@ -40,6 +40,13 @@ describe('TurnRecapStrip', () => {
     expect(recapTitle({ ...recap, turnsOf: ['Ana', 'Bo'] }, t)).toBe(t('game', 'recap_since_last'))
   })
 
+  it('lists every departure, wrapped onto as many rows as needed', () => {
+    const many = Array.from({ length: 9 }, (_, i) => ({ id: `d${i}`, card: wall, dest: 'graveyard' as const, mine: true }))
+    setState({ turnRecap: { ...recap, departures: many } })
+    render(<TurnRecapStrip />)
+    expect(screen.getAllByTestId('turn-recap-departure')).toHaveLength(9)
+  })
+
   it('renders departures and dismisses on close or after the timeout', () => {
     vi.useFakeTimers()
     setState({ turnRecap: recap })

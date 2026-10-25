@@ -2432,6 +2432,18 @@ function opponentTurnRecapViews(base: GameView, myVictimId: string): GameView[] 
   return [oppTurn, cast, resolved, attack, afterCombat, startNextTurn(afterCombat, me)]
 }
 
+const SWEEP_COUNT = 30
+
+/** The opponent's turn again, but the sweep destroys `SWEEP_COUNT` of my permanents: more departures than the strip shows at once. */
+function sweepRecapViews(base: GameView, myVictimId: string): GameView[] {
+  const me = controlledPlayer(base)
+  if (!me) return []
+  const sweepIds = Array.from({ length: SWEEP_COUNT }, (_, i) => `gallery-sweep-${i}`)
+  const sweepers = Object.fromEntries(sweepIds.map((id) => [id, { ...recapCreature(me), id, name: 'Llanowar Elves', displayName: 'Llanowar Elves' }]))
+  const withSweepers = mapControlled(base, (p) => ({ ...p, battlefield: { ...p.battlefield, ...sweepers } }))
+  return opponentTurnRecapViews(withSweepers, myVictimId).map((view, i) => (i < 4 ? view : sweepIds.reduce(sendToGraveyard, view)))
+}
+
 /** Replays the views through the turn-recap observer from a fresh window and shows the recap it closes with. */
 function replayTurnRecap(views: GameView[], gameId: string): () => void {
   return () => {
@@ -4816,6 +4828,17 @@ export function buildGalleryEntries(): GalleryEntry[] {
         game: recapGame,
         gameId,
         action: { label: 'Replay', run: replayTurnRecap(recapViews, gameId) },
+      })
+      const sweepViews = sweepRecapViews(animBase, mystic)
+      entries.push({
+        id: 'anim:turn-recap-sweep',
+        group: 'Animaciones',
+        label: `Turn recap: a sweeper takes ${SWEEP_COUNT} permanents`,
+        description: `"Replay" feeds the same opponent turn with a sweeper that destroys ${SWEEP_COUNT} of your permanents through the real recap observer. The strip lists every departure, wrapped onto as many rows as needed. The strip is opt-in: turn on Settings > Gameplay > "Show the turn recap" first. It hides after 10 s.`,
+        phase: 'game',
+        game: sweepViews[sweepViews.length - 1] ?? animBase,
+        gameId,
+        action: { label: 'Replay', run: replayTurnRecap(sweepViews, gameId) },
       })
     }
     entries.push({

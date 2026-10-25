@@ -155,6 +155,7 @@ describe('galería de estados (P3)', () => {
       'anim:count-flash',
       'anim:timer-low',
       'anim:turn-recap',
+      'anim:turn-recap-sweep',
       'anim:commander-lethal',
       'anim:end-victory',
       'anim:end-defeat',
@@ -555,6 +556,21 @@ describe('galería de estados (P3)', () => {
       expect(recap!.actors[0]?.attackedWith.length).toBe(1)
       expect(recap!.departures.some((d) => d.mine && d.dest === 'graveyard')).toBe(true)
       expect(recap!.life.some((l) => l.mine && l.delta === -1)).toBe(true)
+    } finally {
+      setState({ turnRecap: null })
+      vi.useRealTimers()
+    }
+  })
+
+  it('anim:turn-recap-sweep lists every departure, more than the strip shows at once', () => {
+    vi.useFakeTimers()
+    try {
+      setState({ turnRecap: null })
+      entry(entries, 'anim:turn-recap-sweep').action!.run!()
+      vi.advanceTimersByTime(100)
+      const recap = getState().turnRecap
+      expect(recap).toBeTruthy()
+      expect(recap!.departures.filter((d) => d.mine && d.dest === 'graveyard').length).toBeGreaterThanOrEqual(30)
     } finally {
       setState({ turnRecap: null })
       vi.useRealTimers()
