@@ -114,6 +114,12 @@ export function InterfaceSection() {
         disabled={!cjkLang}
         title={cjkLang ? undefined : t('lobby', 'cjk_boost_only')}
       />
+      <Toggle
+        checked={settings.transparentDialogs}
+        onChange={(v) => setSetting('transparentDialogs', v)}
+        label={t('lobby', 'dialog_backdrop_label')}
+      />
+      <p className="settings-hint">{t('lobby', 'dialog_backdrop_hint')}</p>
       <CardPreviewSizeControl />
     </div>
   )

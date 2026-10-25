@@ -58,7 +58,6 @@ const VISUAL_ENTRIES_ALL = [
   'screen:gameend-game',
   'screen:gameend-match',
   'screen:settings',
-  'screen:appearance',
   'screen:about',
   'screen:help',
   'board:pod-4',
