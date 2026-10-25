@@ -326,3 +326,33 @@ describe('commanderDamageDealt', () => {
     expect(commanderDamageDealt(gv, karina, bob)).toBe(9)
   })
 })
+
+describe('commander memory: one commander, one column', () => {
+  afterEach(() => resetCommanderMemory())
+
+  it('BRD-18: a commander that moves from the command zone to the battlefield keeps one column', () => {
+    const before = makeGameView({
+      players: [
+        makePlayer({ playerId: 'p1', name: 'Alice', commandList: [commanderCard('cz-1', 'Slicer, Hired Muscle', [])] }),
+        makePlayer({ playerId: 'p2', name: 'Bob' }),
+      ],
+    })
+    syncCommanderMemory(before)
+    const after = makeGameView({
+      players: [
+        makePlayer({
+          playerId: 'p1',
+          name: 'Alice',
+          commandList: [],
+          battlefield: {
+            'bf-1': makePermanent({ id: 'bf-1', name: 'Slicer, Hired Muscle', rules: [commanderInfoRule(1), commanderDamageRule(3, 'Bob')] }),
+          },
+        }),
+        makePlayer({ playerId: 'p2', name: 'Bob' }),
+      ],
+    })
+    const roster = syncCommanderMemory(after).filter((c) => c.ownerId === 'p1')
+    expect(roster.map((c) => c.id)).toEqual(['bf-1'])
+    expect(commanderDamageDealt(after, roster[0], (after.players ?? [])[1])).toBe(3)
+  })
+})

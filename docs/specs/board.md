@@ -252,3 +252,12 @@ the box still opens the log panel; the button does not.
 - Why: the four-line box took the room the commander needed; the user asked for one line that
   the player can expand, with the freed space going to the commander (2026-10-24).
 - Guard: `src/game/LogTicker.test.tsx` · `e2e/game-ui-v2.spec.ts`
+
+### BRD-18 · A commander that changes object is one column, not two
+The commander damage matrix has one column per commander. A commander cast from the command zone
+(or converted) can change object id; the remembered entry with the same owner and name and another
+id is the same commander, so the roster drops it and keeps the live one with its damage.
+
+- Why: the seat showed the damage next to a stale 0 (`3/0`), because the roster kept the command-zone
+  entry for the whole game. A player has one copy of each commander, so an owner and a name identify it.
+- Guard: `src/board/commanders.test.ts`

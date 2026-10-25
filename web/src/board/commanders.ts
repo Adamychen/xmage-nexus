@@ -132,6 +132,12 @@ export function syncCommanderMemory(game: GameView | null | undefined): MatrixCo
   const live: MatrixCommander[] = (game?.players ?? []).flatMap((p) =>
     commandersOf(p).map((c) => ({ ...c, ownerId: p.playerId, ownerName: p.name })),
   )
+  // BRD-18: a player has one copy of each commander, so a live commander with the same owner and
+  // name but another object id is the remembered one that moved (cast from the command zone).
+  // Its old entry would stay as a second column with no damage.
+  const sameCommander = (a: MatrixCommander, b: MatrixCommander) =>
+    a.ownerId === b.ownerId && a.name.trim().toLowerCase() === b.name.trim().toLowerCase()
+  rosterMemory = rosterMemory.filter((r) => !live.some((c) => c.id !== r.id && sameCommander(c, r)))
   for (const c of live) {
     const idx = rosterMemory.findIndex((r) => r.id === c.id)
     if (idx >= 0) rosterMemory[idx] = c
