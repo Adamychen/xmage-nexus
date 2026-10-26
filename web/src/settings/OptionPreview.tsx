@@ -163,7 +163,7 @@ export default function OptionPreview({ kind, on = true }: { kind: OptionPreview
 function StackCaptionPreview({ on }: { on: boolean }) {
   return (
     <div className="opt-stack-caption">
-      <div className="opt-stack-caption-art" />
+      <div className="opt-stack-caption-art"><Art name="Lightning Bolt" /></div>
       {on && (
         <div className="opt-stack-caption-panel">
           <span className="opt-stack-caption-kind">Disparada</span>

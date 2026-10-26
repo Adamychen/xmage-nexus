@@ -1,0 +1,82 @@
+/* SET-7 live preview: same zone modifiers as the board (`card-style-compact`,
+ * `tap-tilted`) on a fixed stage; see BoardLivePreview.tsx. */
+
+.board-live-preview {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.board-live-stage.board-zone {
+  position: relative;
+  display: block;
+  height: 250px;
+  overflow: hidden;
+  border-radius: var(--r-lg);
+  border: 1px solid var(--ink-4);
+  background: var(--ink-1);
+  isolation: isolate;
+  --card-w: 64px;
+}
+
+.board-live-stage.board-zone.card-style-compact {
+  --card-w: 78px;
+  --card-h-ratio: 0.75;
+}
+
+.board-live-mat {
+  position: absolute;
+  inset: 0;
+}
+
+.board-live-row {
+  position: absolute;
+  inset: var(--sp-4) var(--sp-2) auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-3) var(--sp-2h);
+  pointer-events: none;
+}
+
+.board-live-hand {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(-1 * var(--sp-4));
+  display: flex;
+  justify-content: center;
+  gap: var(--sp-2);
+  pointer-events: none;
+}
+
+.board-live-hand-card {
+  position: relative;
+  width: 58px;
+  aspect-ratio: 5 / 7;
+  border-radius: var(--r-sm);
+  box-shadow: 0 4px 12px var(--shade-4);
+}
+
+.board-live-hand-card:first-child { rotate: -6deg; }
+.board-live-hand-card:last-child { rotate: 6deg; }
+
+.board-live-hand-card img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: var(--r-sm);
+}
+
+.board-live-cost {
+  position: absolute;
+  top: -9px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 1px;
+  z-index: 2;
+}

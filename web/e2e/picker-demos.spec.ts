@@ -46,12 +46,13 @@ test.describe('Visual preset & playmat pickers', { tag: '@site' }, () => {
       await expectAllImagesLoaded(page, '[data-testid^="preset-demo-"] .preset-tile-art', 13)
       await page.screenshot({ path: shot('picker-presets.png') })
       await page.getByTestId('settings-nav-board').click()
+      await page.getByTestId('settings-board-tab-table').click()
       await expectAllImagesLoaded(page, '.settings-content .playmat-item img.playmat-table-card', 20)
       await page.screenshot({ path: shot('picker-playmats.png') })
     })
   })
 
-  test('board option pickers show a live miniature of each option', async ({ page }, testInfo) => {
+  test('SET-7: board option pickers show a live miniature of each option, tab by tab', async ({ page }, testInfo) => {
     // Screenshots are diagnostics: keep them in Playwright's output dir (CI-safe),
     // never in a machine-specific absolute path.
     const shot = (name: string) => path.join(testInfo.outputPath(), name)
@@ -60,52 +61,64 @@ test.describe('Visual preset & playmat pickers', { tag: '@site' }, () => {
       await page.getByTestId('open-settings').click()
       await page.getByTestId('settings-nav-board').click()
       const demo = (kind: string, value: string) => page.getByTestId(`board-demo-${kind}-${value}`)
+      const tab = (id: string) => page.getByTestId(`settings-board-tab-${id}`).click()
+
       for (const [layout, zones] of [['standard', 2], ['pod', 4], ['arena', 4], ['table', 4]] as const) {
-        const miniature = page.getByTestId(`layout-demo-${layout}`)
+        const miniature = page.getByTestId(`settings-layout-${layout}`).getByTestId(`layout-demo-${layout}`)
         await expect(miniature).toBeVisible()
         await expect(miniature.getByTestId('layout-demo-zone')).toHaveCount(zones)
         await expect(miniature.locator('.layout-demo-zone.is-mine')).toHaveCount(1)
       }
-      await expectAllImagesLoaded(page, '[data-testid^="layout-demo-"] img.layout-demo-tile', 12)
-      await page.getByTestId('settings-layout-table').scrollIntoViewIfNeeded()
-      await page.screenshot({ path: testInfo.outputPath('layouts.png') })
+      await expect(page.getByTestId('board-layout-preview').locator('.layout-demo')).toBeVisible()
+      await expectAllImagesLoaded(page, '.settings-cards [data-testid^="layout-demo-"] img.layout-demo-tile', 12)
+      await page.screenshot({ path: shot('layouts.png') })
+      for (const kind of ['boardFill', 'boardSpotlight', 'handRail', 'handRow'] as const) {
+        await expect(page.getByTestId(`option-switch-${kind}`)).toBeVisible()
+      }
+      const fill = page.getByTestId('option-switch-boardFill')
+      const fillRow = page.locator('.settings-row', { has: fill })
+      const fillOn = (await fill.getAttribute('aria-checked')) === 'true'
+      await expect(fillRow.getByTestId(`option-preview-boardFill-${fillOn ? 'on' : 'off'}`)).toBeVisible()
+      await fill.click()
+      await expect(fillRow.getByTestId(`option-preview-boardFill-${fillOn ? 'off' : 'on'}`)).toBeVisible()
+      await fill.click()
+
+      await tab('cards')
       for (const [kind, values] of [
         ['cardStyle', ['classic', 'compact']],
         ['tapStyle', ['sideways', 'tilted']],
+      ] as const) {
+        for (const value of values) await expect(demo(kind, value)).toBeVisible()
+      }
+      await expect(demo('cardStyle', 'compact').locator('.card-slot.is-compact')).toHaveCount(3)
+      await expect(demo('cardStyle', 'classic').locator('.card-slot.is-compact')).toHaveCount(0)
+      const rotation = (kind: string, value: string) =>
+        demo(kind, value).locator('.card-slot.tapped').first().evaluate((el) => getComputedStyle(el).transform)
+      expect(await rotation('tapStyle', 'sideways')).toBe('matrix(0, 1, -1, 0, 0, 0)')
+      expect(await rotation('tapStyle', 'tilted')).not.toBe('matrix(0, 1, -1, 0, 0, 0)')
+      await expect(page.locator('.settings-row', { has: page.getByTestId('option-switch-rendered') }).getByTestId(/option-preview-rendered-/)).toBeVisible()
+      await expectAllImagesLoaded(page, '[data-testid^="board-demo-"] img.card-image', 6)
+      await expectAllImagesLoaded(page, '[data-testid="board-live-preview"] img', 4)
+      await page.locator('.settings-content').screenshot({ path: shot('board-cards.png') })
+
+      await tab('overlays')
+      for (const [kind, values] of [
         ['ptBadge', ['always', 'changed', 'hidden']],
         ['sickness', ['badge', 'veil']],
       ] as const) {
         for (const value of values) await expect(demo(kind, value)).toBeVisible()
       }
-      await expectAllImagesLoaded(page, '[data-testid^="board-demo-"] img.card-image', 20)
-
-      for (const kind of ['handCost', 'manaSource', 'rendered', 'boardFill', 'boardSpotlight', 'handRail', 'handRow'] as const) {
-        for (const state of ['on', 'off'] as const) {
-          await expect(page.getByTestId(`option-choice-${kind}-${state}`).getByTestId(`option-preview-${kind}-${state}`)).toBeVisible()
-        }
-      }
-      await expect(page.getByTestId('option-choice-manaSource-on').getByTestId('board-demo-manaSource-true')).toBeVisible()
-
-      await expect(demo('cardStyle', 'compact').locator('.card-slot.is-compact')).toHaveCount(3)
-      await expect(demo('cardStyle', 'classic').locator('.card-slot.is-compact')).toHaveCount(0)
-
-      const rotation = (kind: string, value: string) =>
-        demo(kind, value).locator('.card-slot.tapped').first().evaluate((el) => getComputedStyle(el).transform)
-      expect(await rotation('tapStyle', 'sideways')).toBe('matrix(0, 1, -1, 0, 0, 0)')
-      expect(await rotation('tapStyle', 'tilted')).not.toBe('matrix(0, 1, -1, 0, 0, 0)')
-
       await expect(demo('ptBadge', 'always').locator('.pt-badge')).toHaveCount(2)
       await expect(demo('ptBadge', 'changed').locator('.pt-badge')).toHaveCount(1)
       await expect(demo('ptBadge', 'hidden').locator('.pt-badge')).toHaveCount(0)
-
       await expect(demo('sickness', 'badge').locator('.sickness-badge')).toHaveCount(1)
       await expect(demo('sickness', 'badge').locator('.sickness-veil')).toHaveCount(0)
       await expect(demo('sickness', 'veil').locator('.sickness-veil')).toHaveCount(1)
       await expect(demo('sickness', 'veil').locator('.sickness-badge')).toHaveCount(0)
-
-      await page.locator('.settings-content').screenshot({ path: shot('board-demos-top.png') })
-      await demo('sickness', 'veil').scrollIntoViewIfNeeded()
-      await page.locator('.settings-content').screenshot({ path: shot('board-demos-bottom.png') })
+      const manaRow = page.locator('.settings-row', { has: page.getByTestId('option-switch-manaSource') })
+      await expect(manaRow.getByTestId(/option-preview-manaSource-/)).toBeVisible()
+      await expectAllImagesLoaded(page, '[data-testid^="board-demo-"] img.card-image', 10)
+      await page.locator('.settings-content').screenshot({ path: shot('board-overlays.png') })
     })
   })
 })

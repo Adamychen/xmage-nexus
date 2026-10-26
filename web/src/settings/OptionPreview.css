@@ -190,27 +190,20 @@
   box-shadow: 0 2px 6px var(--shade-4);
 }
 
-.option-choice-title {
-  margin: var(--sp-3) 0 var(--sp-1);
-  font-size: var(--fs-sm);
-  font-weight: 800;
-  color: var(--fg-1);
-}
-
 .opt-stack-caption {
   position: relative;
-  width: 100%;
+  height: calc(100% - var(--sp-2) * 2);
+  margin: var(--sp-2) auto;
   aspect-ratio: 5 / 7;
-  max-height: 120px;
   border-radius: var(--r-mid);
   overflow: hidden;
-  background: linear-gradient(160deg, var(--ink-4), var(--ink-0));
+  background: var(--ink-3);
+  box-shadow: 0 2px 6px var(--shade-4);
 }
 
 .opt-stack-caption-art {
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at 50% 35%, var(--brand), transparent 60%);
 }
 
 .opt-stack-caption-panel {
@@ -222,7 +215,7 @@
   flex-direction: column;
   align-items: flex-start;
   gap: var(--sp-0h);
-  padding: var(--sp-1);
+  padding: var(--sp-0h);
   border-radius: var(--r-xs);
   background: var(--shade-5);
 }

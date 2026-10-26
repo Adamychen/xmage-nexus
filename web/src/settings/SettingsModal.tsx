@@ -1,215 +1,218 @@
+import { useEffect, useRef, useState } from 'react'
 import CloseButton from '../ui/CloseButton'
-import Button from '../ui/Button'
-import { useState } from 'react'
-import { useSettings, setSetting } from '../state/store'
+import Modal from '../ui/Modal'
+import Icon, { type IconName } from '../ui/Icon'
+import { useSettings } from '../state/store'
 import { useTranslation } from '../i18n'
-import type { ManaPaymentStored } from '../state/persistence'
-import { saveBoardRewind, saveBrowserNotifications, saveGameLogAutoSave, saveTurnRecap } from '../state/persistence'
-import { clearRewind } from '../game/rewind'
-import { notificationsSupported, requestNotificationPermission } from '../game/attentionAlerts'
-import { clearAutoAnswers, removeAutoAnswer } from '../game/autoAnswers'
-import { PhaseStopGrid } from '../game/PhaseStopSelector'
-import { togglePhaseStop } from '../game/phaseStops'
-import Toggle from '../ui/Toggle'
-import DialogShell from '../ui/DialogShell'
-import { LanguageSection, InterfaceSection, BoardSection, SoundSection } from './sections'
-import PresetPicker from './PresetPicker'
-import '../game/GameMenu.css'
-import '../game/PhaseStopSelector.css'
+import { zoomPercent } from '../appearance/zoom'
+import { LanguageSection, InterfaceSection, BoardSection, SoundSection, GameplaySection, LAYOUTS } from './sections'
+import { boardLayoutChoiceOf } from './boardLayoutChoice'
+import { GAMEPLAY_PRESETS } from './gameplayPresets'
+import { SECTION_ORDER, searchSettings, sectionDescription, sectionTitle, type BoardTab, type SettingsSection } from './settingsIndex'
+import '../ui/DialogShell.css'
 import './SettingsModal.css'
-
-type SettingsSection = 'language' | 'interface' | 'board' | 'sound' | 'gameplay'
 
 interface Props {
   onClose: () => void
   initialSection?: SettingsSection
 }
 
-function GameplaySection() {
-  const { t } = useTranslation()
-  const settings = useSettings()
-  const [permission, setPermission] = useState<NotificationPermission | null>(() =>
-    notificationsSupported() ? Notification.permission : null,
-  )
-  const manaRows: Array<{ key: keyof ManaPaymentStored; label: string; tip: string }> = [
-    { key: 'auto', label: t('game', 'mana_payment_auto'), tip: t('game', 'mana_payment_auto_tip') },
-    { key: 'restricted', label: t('game', 'mana_payment_restricted'), tip: t('game', 'mana_payment_restricted_tip') },
-    { key: 'useFirstAbility', label: t('game', 'mana_payment_first'), tip: t('game', 'mana_payment_first_tip') },
-    { key: 'confirmEmptyPool', label: t('game', 'mana_payment_confirm'), tip: t('game', 'mana_payment_confirm_tip') },
-    { key: 'smart', label: t('game', 'mana_payment_smart'), tip: t('game', 'mana_payment_smart_tip') },
-  ]
-  return (
-    <div>
-      <h3 className="settings-section-title">{t('game', 'presets_title')}</h3>
-      <p className="settings-hint">{t('game', 'presets_hint')}</p>
-      <PresetPicker />
-      <h3 className="settings-section-title">{t('game', 'automation')}</h3>
-      <Toggle
-        checked={settings.holdPriority}
-        onChange={(v) => setSetting('holdPriority', v)}
-        label={t('game', 'hold_priority')}
-        hint={t('game', 'hold_priority_title')}
-      />
-      <Toggle
-        checked={settings.smartStops}
-        onChange={(v) => setSetting('smartStops', v)}
-        label={t('game', 'smart_stops')}
-        hint={t('game', 'smart_stops_hint')}
-      />
-      <Toggle
-        checked={settings.autoKeepMulligan}
-        onChange={(v) => setSetting('autoKeepMulligan', v)}
-        label={t('game', 'auto_mulligan')}
-      />
-      <Toggle
-        checked={settings.gameLogAutoSave}
-        onChange={(v) => {
-          setSetting('gameLogAutoSave', v)
-          saveGameLogAutoSave(v)
-        }}
-        label={t('system', 'log_autosave')}
-        hint={t('system', 'log_autosave_hint')}
-      />
-      <Toggle
-        checked={settings.boardRewind}
-        onChange={(v) => {
-          setSetting('boardRewind', v)
-          saveBoardRewind(v)
-          if (!v) clearRewind()
-        }}
-        label={t('game', 'rewind_setting')}
-        hint={t('game', 'rewind_setting_hint')}
-      />
-      <Toggle
-        checked={settings.turnRecap}
-        onChange={(v) => {
-          setSetting('turnRecap', v)
-          saveTurnRecap(v)
-        }}
-        label={t('game', 'recap_setting')}
-        hint={t('game', 'recap_setting_hint')}
-      />
-      {notificationsSupported() && (
-        <>
-          <Toggle
-            checked={settings.browserNotifications}
-            onChange={(v) => {
-              setSetting('browserNotifications', v)
-              saveBrowserNotifications(v)
-              if (v) void requestNotificationPermission().then((p) => setPermission(p))
-            }}
-            label={t('game', 'notify_setting')}
-            hint={t('game', 'notify_setting_hint')}
-          />
-          {settings.browserNotifications && permission === 'denied' && (
-            <p className="settings-hint" data-testid="notify-blocked">{t('game', 'notify_blocked')}</p>
-          )}
-        </>
-      )}
-      <h3 className="settings-section-title">{t('game', 'mana_payment_title')}</h3>
-      {manaRows.map((row) => (
-        <Toggle
-          key={row.key}
-          checked={settings.manaPayment[row.key]}
-          onChange={() => setSetting('manaPayment', { ...settings.manaPayment, [row.key]: !settings.manaPayment[row.key] })}
-          label={row.label}
-          hint={row.tip}
-        />
-      ))}
-      <h3 className="settings-section-title">{t('game', 'phase_stops_default_title')}</h3>
-      <p className="settings-hint">{t('game', 'phase_stops_default_hint')}</p>
-      <div className="phase-stop-selector" data-testid="settings-phase-stops">
-        <PhaseStopGrid
-          value={settings.phaseStops}
-          onToggle={(turn, key) => setSetting('phaseStops', togglePhaseStop(settings.phaseStops, turn, key))}
-          idPrefix="settings"
-        />
-      </div>
-      <h3 className="settings-section-title">{t('game', 'auto_answers_title', { count: settings.autoAnswers.length })}</h3>
-      {settings.autoAnswers.length === 0 && (
-        <p className="settings-hint">{t('game', 'auto_answers_empty')}</p>
-      )}
-      {settings.autoAnswers.map((rule) => (
-        <div key={rule.id} className="settings-auto-row">
-          <span className="settings-auto-text" title={rule.pattern}>{rule.pattern}</span>
-          <span className={`settings-auto-badge ${rule.answer ? 'is-yes' : 'is-no'}`}>
-            {rule.answer ? t('common', 'yes') : t('common', 'no')}
-          </span>
-          <CloseButton
-            variant="danger"
-            size="sm"
-            label={t('game', 'auto_answers_delete', { pattern: rule.pattern })}
-            onClick={() => setSetting('autoAnswers', removeAutoAnswer(settings.autoAnswers, rule.id))}
-          />
-        </div>
-      ))}
-      {settings.autoAnswers.length > 0 && (
-        <Button variant="link" size="sm"
-          onClick={() => setSetting('autoAnswers', clearAutoAnswers())}>
-          {t('game', 'auto_answers_clear')}
-        </Button>
-      )}
-    </div>
-  )
+const SECTION_ICON: Record<SettingsSection, IconName> = {
+  gameplay: 'swords',
+  board: 'layoutGrid',
+  interface: 'palette',
+  language: 'globe',
+  sound: 'volume',
 }
 
-export default function SettingsModal({ onClose, initialSection = 'language' }: Props) {
+const FLASH_MS = 1600
+
+function useSectionValues(): Partial<Record<SettingsSection, string>> {
+  const { t, lang, languages } = useTranslation()
+  const settings = useSettings()
+  const preset = GAMEPLAY_PRESETS.find((p) => p.id === settings.gameplayPreset)
+  const layout = LAYOUTS.find((l) => l.id === boardLayoutChoiceOf(settings))
+  return {
+    gameplay: preset ? t('game', preset.labelKey) : undefined,
+    board: layout ? t('lobby', layout.labelKey as 'board_standard') : undefined,
+    interface: `${t('lobby', `scheme_${settings.appearance}`)} · ${zoomPercent(settings.uiScale)}%`,
+    language: languages.find((l) => l.code === lang)?.name,
+  }
+}
+
+export default function SettingsModal({ onClose, initialSection }: Props) {
   const { t } = useTranslation()
-  const [section, setSection] = useState<SettingsSection>(initialSection)
-  const nav: Array<{ id: SettingsSection; label: string }> = [
-    { id: 'language', label: t('lobby', 'settings_language') },
-    { id: 'interface', label: t('lobby', 'settings_interface') },
-    { id: 'board', label: t('lobby', 'settings_board') },
-    { id: 'sound', label: t('lobby', 'settings_sound') },
-    { id: 'gameplay', label: t('lobby', 'settings_gameplay') },
-  ]
+  const [section, setSection] = useState<SettingsSection>(initialSection ?? 'gameplay')
+  const [boardTab, setBoardTab] = useState<BoardTab>('layout')
+  const [query, setQuery] = useState('')
+  const [phoneView, setPhoneView] = useState<'list' | 'section'>(initialSection ? 'section' : 'list')
+  const [flashId, setFlashId] = useState<string | null>(null)
+  const contentRef = useRef<HTMLDivElement>(null)
+  const values = useSectionValues()
+  const searching = query.trim() !== ''
+  const hits = searching ? searchSettings(query, t) : []
+
+  useEffect(() => {
+    if (!flashId) return
+    const el = contentRef.current?.querySelector<HTMLElement>(`[data-setting="${flashId}"]`)
+    if (!el) return
+    el.scrollIntoView?.({ block: 'center' })
+    el.classList.add('settings-flash')
+    const timer = window.setTimeout(() => {
+      el.classList.remove('settings-flash')
+      setFlashId(null)
+    }, FLASH_MS)
+    return () => {
+      window.clearTimeout(timer)
+      el.classList.remove('settings-flash')
+    }
+  }, [flashId, section, boardTab])
+
+  const open = (id: SettingsSection) => {
+    setSection(id)
+    setQuery('')
+    setPhoneView('section')
+    contentRef.current?.scrollTo?.({ top: 0 })
+  }
+
+  const goTo = (id: string, target: SettingsSection, tab?: BoardTab) => {
+    setSection(target)
+    if (tab) setBoardTab(tab)
+    setQuery('')
+    setPhoneView('section')
+    setFlashId(id)
+  }
+
+  const title = searching ? t('lobby', 'settings_search_title') : sectionTitle(t, section)
+  const description = searching ? t('lobby', 'settings_search_desc') : sectionDescription(t, section)
 
   return (
-    <DialogShell
+    <Modal
+      backdropClassName="dlg-backdrop settings-backdrop"
+      dialogClassName="dlg-panel dlg-md settings-modal"
       labelledBy="settings-title"
-      titleId="settings-title"
-      size="md"
       testId="settings-modal"
-      legacyPanelClass="settings-modal"
-      kickerIcon="settings"
-      kickerLabel={t('common', 'settings')}
-      title={nav.find((item) => item.id === section)?.label ?? t('common', 'settings')}
-      topRight={(
-        <CloseButton variant="plain" size="md" className="settings-close" onClick={onClose} data-testid="settings-close" />
-      )}
       onBackdropClick={onClose}
       onEscape={onClose}
     >
-        <div className="settings-body">
+      <div className="settings-layout" data-view={searching ? 'section' : phoneView}>
+        <aside className="settings-side">
+          <div className="settings-side-head">
+            <span className="settings-brand">{t('common', 'settings')}</span>
+            <CloseButton variant="plain" size="md" className="settings-close settings-close-phone" onClick={onClose} />
+          </div>
+          <label className="settings-search">
+            <Icon name="search" size={15} />
+            <input
+              type="search"
+              value={query}
+              placeholder={t('lobby', 'settings_search')}
+              aria-label={t('lobby', 'settings_search')}
+              onChange={(e) => setQuery(e.target.value)}
+              data-testid="settings-search"
+            />
+          </label>
           <nav className="settings-nav" aria-label={t('common', 'settings')}>
-            {nav.map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                className={`settings-nav-item ${section === item.id ? 'active' : ''}`}
-                aria-pressed={section === item.id}
-                onClick={() => setSection(item.id)}
-                data-testid={`settings-nav-${item.id}`}
-              >
-                {item.label}
-              </button>
+            {SECTION_ORDER.map((group) => (
+              <div key={group.group} className="settings-nav-group">
+                <span className="settings-nav-group-label">{t('lobby', `settings_group_${group.group}`)}</span>
+                {group.ids.map((id) => (
+                  <button
+                    key={id}
+                    type="button"
+                    className={`settings-nav-item ${!searching && section === id ? 'active' : ''}`}
+                    aria-current={!searching && section === id ? 'page' : undefined}
+                    onClick={() => open(id)}
+                    data-testid={`settings-nav-${id}`}
+                  >
+                    <span className="settings-nav-icon"><Icon name={SECTION_ICON[id]} size={17} /></span>
+                    <span className="settings-nav-label">{sectionTitle(t, id)}</span>
+                    {values[id] && <span className="settings-nav-value">{values[id]}</span>}
+                    <span className="settings-nav-chevron"><Icon name="chevronRight" size={16} /></span>
+                  </button>
+                ))}
+              </div>
             ))}
           </nav>
-          <div className="settings-content" data-testid={`settings-section-${section}`}>
-            {section === 'language' && <LanguageSection />}
-            {section === 'interface' && <InterfaceSection />}
-            {section === 'board' && <BoardSection />}
-            {section === 'sound' && <SoundSection />}
-            {section === 'gameplay' && <GameplaySection />}
-          </div>
-        </div>
-        <div className="settings-footer">
-          <Button variant="link" size="sm"
+          <button
+            type="button"
+            className="settings-nav-item settings-review"
             onClick={() => window.dispatchEvent(new CustomEvent('nexus:open-setup'))}
-            data-testid="settings-review-setup">
-            {t('setup', 'review')}
-          </Button>
-        </div>
-    </DialogShell>
+            data-testid="settings-review-setup"
+          >
+            <span className="settings-nav-icon"><Icon name="history" size={17} /></span>
+            <span className="settings-nav-label">{t('setup', 'review')}</span>
+          </button>
+        </aside>
+        <main className="settings-main">
+          <header className="settings-head">
+            <button
+              type="button"
+              className="settings-back"
+              onClick={() => {
+                setQuery('')
+                setPhoneView('list')
+              }}
+              aria-label={t('lobby', 'settings_back')}
+              data-testid="settings-back"
+            >
+              <Icon name="chevronLeft" size={18} />
+              <span>{t('common', 'settings')}</span>
+            </button>
+            <div className="settings-head-text">
+              <h2 id="settings-title" className="settings-title">{title}</h2>
+              <p className="settings-desc">{description}</p>
+            </div>
+            <CloseButton variant="plain" size="md" className="settings-close" onClick={onClose} data-testid="settings-close" />
+          </header>
+          <div
+            ref={contentRef}
+            className="settings-content"
+            data-testid={searching ? 'settings-search-results' : `settings-section-${section}`}
+          >
+            {searching ? (
+              hits.length > 0 ? (
+                <section className="settings-group">
+                  <h3 className="settings-group-title">{t('lobby', 'settings_search_results', { count: hits.length })}</h3>
+                  <div className="settings-group-body">
+                    {hits.map((hit) => (
+                      <div key={hit.entry.id} className="settings-item settings-row settings-hit" data-testid={`settings-hit-${hit.entry.id}`}>
+                        <div className="settings-row-text">
+                          <span className="settings-hit-where">{hit.where}</span>
+                          <span className="settings-row-label">{hit.label}</span>
+                          {hit.hint && <span className="settings-row-hint">{hit.hint}</span>}
+                        </div>
+                        <div className="settings-row-control">
+                          <button
+                            type="button"
+                            className="settings-hit-go"
+                            onClick={() => goTo(hit.entry.id, hit.entry.section, hit.entry.tab)}
+                            data-testid={`settings-go-${hit.entry.id}`}
+                          >
+                            {t('lobby', 'settings_search_go')}
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              ) : (
+                <p className="settings-search-none" data-testid="settings-search-none">
+                  {t('lobby', 'settings_search_none', { query: query.trim() })}
+                </p>
+              )
+            ) : (
+              <>
+                {section === 'gameplay' && <GameplaySection />}
+                {section === 'board' && <BoardSection tab={boardTab} onTabChange={setBoardTab} />}
+                {section === 'interface' && <InterfaceSection />}
+                {section === 'language' && <LanguageSection />}
+                {section === 'sound' && <SoundSection />}
+              </>
+            )}
+          </div>
+        </main>
+      </div>
+    </Modal>
   )
 }

@@ -1,10 +1,9 @@
 import { FX_SPEEDS } from '../board/fx'
-import Tabs from '../ui/Tabs'
 import { useSettings, setSetting } from '../state/store'
 import { useTranslation } from '../i18n'
 import { soundManager } from '../audio/soundManager'
-import { Switch } from '../ui/Toggle'
 import { PRIORITY_SOUND_MODES, type PrioritySoundMode } from '../audio/prioritySound'
+import { Segmented, SettingsGroup, SettingsRow, SwitchRow } from './settingsUi'
 
 const PRIORITY_LABEL = {
   'every-prompt': 'sound_priority_every_prompt',
@@ -12,133 +11,97 @@ const PRIORITY_LABEL = {
   off: 'sound_priority_off',
 } as const
 
+type VolumeKey = 'masterVolume' | 'sfxVolume' | 'musicVolume' | 'uiVolume'
+
+function VolumeRow({ id, label, volumeKey, disabled }: { id: string; label: string; volumeKey: VolumeKey; disabled: boolean }) {
+  const settings = useSettings()
+  const value = settings[volumeKey]
+  return (
+    <SettingsRow id={id} label={label} disabled={disabled}>
+      {({ controlId }) => (
+        <>
+          <input
+            id={controlId}
+            type="range"
+            min="0"
+            max="1"
+            step="0.05"
+            className="audio-slider"
+            value={value}
+            disabled={disabled}
+            onChange={(e) => setSetting(volumeKey, parseFloat(e.target.value))}
+          />
+          <span className="settings-row-value">{Math.round(value * 100)}%</span>
+        </>
+      )}
+    </SettingsRow>
+  )
+}
+
 export default function SoundFxControls() {
   const { t } = useTranslation()
   const settings = useSettings()
+  const muted = !settings.soundEnabled
 
   return (
     <>
-      <div className="fx-popover-row">
-        <div className="fx-popover-text">
-          <span className="fx-popover-label">{t('game', 'fx_effects')}</span>
-          <span className="fx-popover-hint">{t('game', 'fx_effects_hint')}</span>
-        </div>
-        <Switch
+      <SettingsGroup title={t('lobby', 'settings_group_animations')}>
+        <SwitchRow
+          id="fx-effects"
+          label={t('game', 'fx_effects')}
+          hint={t('game', 'fx_effects_hint')}
           checked={settings.effects}
-          title={t('game', 'fx_effects_hint')}
           onChange={(next) => setSetting('effects', next)}
         />
-      </div>
-      <div className="fx-popover-row">
-        <span className="fx-popover-label">{t('game', 'fx_speed')}</span>
-        <Tabs
-          variant="segmented"
-          size="sm"
-          value={String(settings.animationSpeed)}
-          onChange={(next) => setSetting('animationSpeed', Number(next) as typeof settings.animationSpeed)}
-          items={FX_SPEEDS.map((s) => ({ id: String(s), label: `${s}×` }))}
-        />
-      </div>
-      <div className="fx-popover-divider" />
-      <div className="fx-popover-row">
-        <div className="fx-popover-text">
-          <span className="fx-popover-label">{t('game', 'sound_enabled')}</span>
-          <span className="fx-popover-hint">{t('game', 'sound_enabled_hint')}</span>
-        </div>
-        <Switch
+        <SettingsRow id="fx-speed" label={t('game', 'fx_speed')} disabled={!settings.effects}>
+          {({ labelId }) => (
+            <Segmented
+              labelledBy={labelId}
+              value={String(settings.animationSpeed)}
+              disabled={!settings.effects}
+              onChange={(next) => setSetting('animationSpeed', Number(next) as typeof settings.animationSpeed)}
+              options={FX_SPEEDS.map((s) => ({ id: String(s), label: `${s}×` }))}
+            />
+          )}
+        </SettingsRow>
+      </SettingsGroup>
+      <SettingsGroup title={t('lobby', 'settings_group_sound')}>
+        <SwitchRow
+          id="sound-enabled"
+          label={t('game', 'sound_enabled')}
+          hint={t('game', 'sound_enabled_hint')}
           checked={settings.soundEnabled}
-          title={t('game', 'sound_enabled_hint')}
           onChange={(next) => {
             setSetting('soundEnabled', next)
             if (next) soundManager.play('ui_click', 'ui')
           }}
         />
-      </div>
-      <div className="fx-popover-row">
-        <span className="fx-popover-label">{t('game', 'sound_volume_master')}</span>
-        <input
-          type="range"
-          min="0"
-          max="1"
-          step="0.05"
-          className="audio-slider"
-          value={settings.masterVolume}
-          disabled={!settings.soundEnabled}
-          aria-label={t('game', 'sound_volume_master')}
-          onChange={(e) => setSetting('masterVolume', parseFloat(e.target.value))}
-        />
-      </div>
-      <div className="fx-popover-row">
-        <div className="fx-popover-text">
-          <span className="fx-popover-label">{t('game', 'sound_priority_mode')}</span>
-          <span className="fx-popover-hint">{t('game', 'sound_priority_mode_hint')}</span>
-        </div>
-        <Tabs
-          variant="segmented"
-          size="sm"
-          value={settings.prioritySound}
-          onChange={(next) => setSetting('prioritySound', next as PrioritySoundMode)}
-          items={PRIORITY_SOUND_MODES.map((m) => ({
-            id: m,
-            label: t('game', PRIORITY_LABEL[m]),
-            disabled: !settings.soundEnabled,
-          }))}
-        />
-      </div>
-      <div className="fx-popover-row">
-        <span className="fx-popover-label">{t('game', 'sound_volume_sfx')}</span>
-        <input
-          type="range"
-          min="0"
-          max="1"
-          step="0.05"
-          className="audio-slider"
-          value={settings.sfxVolume}
-          disabled={!settings.soundEnabled}
-          aria-label={t('game', 'sound_volume_sfx')}
-          onChange={(e) => setSetting('sfxVolume', parseFloat(e.target.value))}
-        />
-      </div>
-      <div className="fx-popover-row">
-        <div className="fx-popover-text">
-          <span className="fx-popover-label">{t('game', 'music_enabled')}</span>
-          <span className="fx-popover-hint">{t('game', 'music_enabled_hint')}</span>
-        </div>
-        <Switch
+        <VolumeRow id="volume-master" label={t('game', 'sound_volume_master')} volumeKey="masterVolume" disabled={muted} />
+        <VolumeRow id="volume-sfx" label={t('game', 'sound_volume_sfx')} volumeKey="sfxVolume" disabled={muted} />
+        <VolumeRow id="volume-ui" label={t('game', 'sound_volume_ui')} volumeKey="uiVolume" disabled={muted} />
+        <SettingsRow id="priority-sound" label={t('game', 'sound_priority_mode')} hint={t('game', 'sound_priority_mode_hint')} disabled={muted}>
+          {({ labelId }) => (
+            <Segmented
+              labelledBy={labelId}
+              value={settings.prioritySound}
+              disabled={muted}
+              onChange={(next) => setSetting('prioritySound', next as PrioritySoundMode)}
+              options={PRIORITY_SOUND_MODES.map((m) => ({ id: m, label: t('game', PRIORITY_LABEL[m]) }))}
+            />
+          )}
+        </SettingsRow>
+      </SettingsGroup>
+      <SettingsGroup title={t('lobby', 'settings_group_music')}>
+        <SwitchRow
+          id="music-enabled"
+          label={t('game', 'music_enabled')}
+          hint={t('game', 'music_enabled_hint')}
           checked={settings.musicEnabled}
-          title={t('game', 'music_enabled_hint')}
-          disabled={!settings.soundEnabled}
+          disabled={muted}
           onChange={(next) => setSetting('musicEnabled', next)}
         />
-      </div>
-      <div className="fx-popover-row">
-        <span className="fx-popover-label">{t('game', 'music_volume')}</span>
-        <input
-          type="range"
-          min="0"
-          max="1"
-          step="0.05"
-          className="audio-slider"
-          value={settings.musicVolume}
-          disabled={!settings.soundEnabled || !settings.musicEnabled}
-          aria-label={t('game', 'music_volume')}
-          onChange={(e) => setSetting('musicVolume', parseFloat(e.target.value))}
-        />
-      </div>
-      <div className="fx-popover-row">
-        <span className="fx-popover-label">{t('game', 'sound_volume_ui')}</span>
-        <input
-          type="range"
-          min="0"
-          max="1"
-          step="0.05"
-          className="audio-slider"
-          value={settings.uiVolume}
-          disabled={!settings.soundEnabled}
-          aria-label={t('game', 'sound_volume_ui')}
-          onChange={(e) => setSetting('uiVolume', parseFloat(e.target.value))}
-        />
-      </div>
+        <VolumeRow id="music-volume" label={t('game', 'music_volume')} volumeKey="musicVolume" disabled={muted || !settings.musicEnabled} />
+      </SettingsGroup>
     </>
   )
 }

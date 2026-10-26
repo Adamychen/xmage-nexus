@@ -12,9 +12,11 @@ interface GridProps {
   value: PhaseStops
   onToggle: (turn: PhaseTurn, key: string) => void
   idPrefix: string
+  /** Head the columns with each step's code and name (Settings, SET-8). */
+  showStepNames?: boolean
 }
 
-export function PhaseStopGrid({ value, onToggle, idPrefix }: GridProps) {
+export function PhaseStopGrid({ value, onToggle, idPrefix, showStepNames = false }: GridProps) {
   const { t } = useTranslation()
   const rows: Array<{ turn: PhaseTurn; turnKey: 'phase_you' | 'phase_opp'; titleKey: 'your_turn' | 'opponent_turn' }> = [
     { turn: 'yourTurn', turnKey: 'phase_you', titleKey: 'your_turn' },
@@ -22,6 +24,17 @@ export function PhaseStopGrid({ value, onToggle, idPrefix }: GridProps) {
   ]
   return (
     <>
+      {showStepNames && (
+        <div className="phase-stop-row phase-stop-head" aria-hidden="true">
+          <span className="phase-stop-turn-label" />
+          {PHASES.map((phase) => (
+            <span key={phase.key} className="phase-stop-head-cell">
+              <span className="phase-stop-head-code">{phase.short}</span>
+              <span className="phase-stop-head-name">{t('game', phase.labelKey)}</span>
+            </span>
+          ))}
+        </div>
+      )}
       {rows.map((row) => (
         <div className="phase-stop-row" key={row.turn}>
           <span className="phase-stop-turn-label">{t('game', row.turnKey)}</span>

@@ -17,7 +17,7 @@ test that names the decision.
 | `mana.md` | `MNA` | Paying costs: sources, pool, smart payment, X |
 | `lobby.md` | `LBY` | Login, table list, creating and joining tables, waiting room, invites |
 | `board.md` | `BRD` | Battlefield bands per kind, multiplayer seats, focusing one opponent's board |
-| `settings.md` | `SET` | Player settings not owned by another area: card preview size |
+| `settings.md` | `SET` | The settings dialog (menu, groups, search, board preview, phone list) and the settings no other area owns |
 | `decks.md` | `DCK` | Deck gallery, deck builder, stacks view |
 | `appearance.md` | `APR` | Light and dark appearance, which surfaces stay dark, contrast in both |
 | `cards.md` | `CRD` | Looking at a card: the card inspector's state, faces, layout and text |

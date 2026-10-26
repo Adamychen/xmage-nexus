@@ -17,13 +17,16 @@ function lobbyScenario() {
 }
 
 test.describe('Global settings modal', () => {
-  test('abre desde el header, cambia de sección y ajusta el zoom sin iconos', async ({ page }) => {
+  test('SET-4: opens from the header at gameplay, with an icon per section, and steps the zoom', async ({ page }) => {
     await withFakeServer(lobbyScenario, async () => {
       await login(page, 'e2e')
       await page.getByTestId('open-settings').click()
       await expect(page.getByTestId('settings-modal')).toBeVisible()
-      await expect(page.getByTestId('settings-section-language')).toBeVisible()
-      await expect(page.locator('.settings-nav svg')).toHaveCount(0)
+      await expect(page.getByTestId('settings-section-gameplay')).toBeVisible()
+      await expect(page.locator('.settings-nav .settings-nav-icon svg')).toHaveCount(5)
+      await expect(page.getByTestId('settings-nav-gameplay')).toHaveAttribute('aria-current', 'page')
+      await expect(page.locator('.dlg-kicker')).toHaveCount(0)
+      await expect(page.getByTestId('settings-review-setup')).toBeVisible()
       await page.getByTestId('settings-nav-interface').click()
       await expect(page.getByTestId('settings-section-interface')).toBeVisible()
       await page.getByTestId('settings-zoom-plus').click()
@@ -54,7 +57,7 @@ test.describe('Global settings modal', () => {
     })
   })
 
-  test('secciones sonido y tablero conservan su layout (grid + tarjeta fx)', async ({ page }) => {
+  test('SET-5: sound rows keep the hint under the label and the board sleeves are a grid', async ({ page }) => {
     await withFakeServer(lobbyScenario, async () => {
       await login(page, 'e2e')
       await page.getByTestId('open-settings').click()
@@ -66,12 +69,13 @@ test.describe('Global settings modal', () => {
       const toggleBox = await soundCard.locator('.ui-toggle').first().boundingBox()
       expect(toggleBox?.width).toBeGreaterThanOrEqual(30)
       const { labelY, hintY } = await soundCard.evaluate((el) => ({
-        labelY: el.querySelector('.fx-popover-label')!.getBoundingClientRect().y,
-        hintY: el.querySelector('.fx-popover-hint')!.getBoundingClientRect().y,
+        labelY: el.querySelector('.settings-row-label')!.getBoundingClientRect().y,
+        hintY: el.querySelector('.settings-row-hint')!.getBoundingClientRect().y,
       }))
       expect(hintY).toBeGreaterThan(labelY)
 
       await page.getByTestId('settings-nav-board').click()
+      await page.getByTestId('settings-board-tab-table').click()
       const sleeveGrid = page.locator('.appearance-sleeve-grid').first()
       await expect(sleeveGrid).toBeVisible()
       await expect.poll(
@@ -112,6 +116,64 @@ test.describe('Global settings modal', () => {
           })
         expect(clipped, `${width}px wide window`).toEqual([])
       }
+    })
+  })
+
+  test('SET-6: search finds a board setting by name and "Go" opens its tab with the setting in view', async ({ page }) => {
+    await withFakeServer(lobbyScenario, async () => {
+      await login(page, 'e2e')
+      await page.getByTestId('open-settings').click()
+      await page.getByTestId('settings-search').fill('ENFERMEDAD')
+      await expect(page.getByTestId('settings-search-results')).toBeVisible()
+      await expect(page.getByTestId('settings-hit-sickness-style')).toContainText('Tablero')
+      await page.getByTestId('settings-go-sickness-style').click()
+      await expect(page.getByTestId('settings-section-board')).toBeVisible()
+      await expect(page.getByTestId('settings-board-tab-overlays')).toHaveAttribute('aria-pressed', 'true')
+      await expect(page.locator('[data-setting="sickness-style"]')).toBeInViewport()
+      await page.getByTestId('settings-search').fill('zzqqxx')
+      await expect(page.getByTestId('settings-search-none')).toBeVisible()
+    })
+  })
+
+  test('SET-7: the live preview follows a board choice as soon as it is made', async ({ page }) => {
+    await withFakeServer(lobbyScenario, async () => {
+      await login(page, 'e2e')
+      await page.getByTestId('open-settings').click()
+      await page.getByTestId('settings-nav-board').click()
+      await page.getByTestId('settings-board-tab-cards').click()
+      const stage = page.getByTestId('board-live-preview').locator('.board-live-stage')
+      await expect(stage).toBeVisible()
+      await page.getByTestId('settings-card-style-compact').click()
+      await expect(stage).toHaveClass(/card-style-compact/)
+      await page.getByTestId('settings-card-style-classic').click()
+      await expect(stage).not.toHaveClass(/card-style-compact/)
+      await page.getByTestId('settings-board-tab-overlays').click()
+      await page.getByTestId('settings-sickness-style-veil').click()
+      await expect(stage.locator('.sickness-veil')).toHaveCount(1)
+      await page.getByTestId('settings-sickness-style-badge').click()
+      await expect(stage.locator('.sickness-veil')).toHaveCount(0)
+    })
+  })
+
+  test('SET-9: on a phone the dialog fills the screen, lists the sections and drills into one', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 })
+    await withFakeServer(lobbyScenario, async () => {
+      await login(page, 'e2e')
+      await page.getByTestId('open-settings').click()
+      const modal = page.getByTestId('settings-modal')
+      await expect(modal).toBeVisible()
+      // Polled: the dialog opens with a short scale-in, so the first box can be 4% small.
+      await expect.poll(async () => (await modal.boundingBox())?.width ?? 0).toBeGreaterThanOrEqual(389)
+      await expect.poll(async () => (await modal.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(843)
+      await expect(page.getByTestId('settings-nav-language').locator('.settings-nav-value')).toBeVisible()
+      await expect(page.locator('.settings-content')).toBeHidden()
+      await page.getByTestId('settings-nav-sound').click()
+      await expect(page.getByTestId('settings-section-sound')).toBeVisible()
+      await expect(page.getByTestId('settings-nav-sound')).toBeHidden()
+      await page.getByTestId('settings-back').click()
+      await expect(page.getByTestId('settings-nav-sound')).toBeVisible()
+      const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)
+      expect(overflow).toBeLessThanOrEqual(0)
     })
   })
 })

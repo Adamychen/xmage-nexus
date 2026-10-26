@@ -52,6 +52,12 @@ test('every settings section has no WCAG A/AA violations @a11y', async ({ page }
       const id = await nav.getAttribute('data-testid')
       await nav.click()
       for (const v of await violations(page, '[data-testid="settings-modal"]')) found.push(`${id}: ${v}`)
+      if (id === 'settings-nav-board') {
+        for (const tab of ['cards', 'overlays', 'table']) {
+          await page.getByTestId(`settings-board-tab-${tab}`).click()
+          for (const v of await violations(page, '[data-testid="settings-modal"]')) found.push(`${id}/${tab}: ${v}`)
+        }
+      }
     }
     expect(found).toEqual([])
   })

@@ -29,7 +29,7 @@ const ZONES: Record<LayoutDemoId, Zone[]> = {
  */
 export default function LayoutDemo({ layout }: { layout: LayoutDemoId }) {
   return (
-    <span className="layout-demo" data-layout={layout} data-testid={`layout-demo-${layout}`} aria-hidden="true">
+    <span className="layout-demo board-surface" data-layout={layout} data-testid={`layout-demo-${layout}`} aria-hidden="true">
       <span className="playmat-layer layout-demo-mat" data-playmat="abyss" />
       <span className="layout-demo-zones">
         {ZONES[layout].map((zone, i) => (

@@ -99,7 +99,7 @@ export default function BoardDemo({ spec }: { spec: BoardDemoSpec }) {
   })
   return (
     <span
-      className={`board-demo board-zone${compact ? ' card-style-compact' : ''}${tilted ? ' tap-tilted' : ''}`}
+      className={`board-demo board-surface board-zone${compact ? ' card-style-compact' : ''}${tilted ? ' tap-tilted' : ''}`}
       data-testid={`board-demo-${spec.kind}-${spec.value}`}
       aria-hidden="true"
     >

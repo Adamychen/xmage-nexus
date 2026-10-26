@@ -1,6 +1,6 @@
 import React from 'react'
 import {
-  ArrowLeftRight, Armchair, AtSign, Award, Ban, Bell, BookOpen, Bug, ChevronDown, ChevronUp, ChevronsDown, ChevronsUp,
+  ArrowLeftRight, Armchair, ChevronLeft, ChevronRight, Volume2, AtSign, Award, Ban, Bell, BookOpen, Bug, ChevronDown, ChevronUp, ChevronsDown, ChevronsUp,
   Circle, CircleAlert, Castle, Clock, Clipboard, ChartColumn, Copy, Download, Dices, Eye, EyeOff, Flame, Funnel,
   Gamepad2, Gauge, Gem, File, Folder, Globe, Hand, Hourglass, House, Inbox, Info, Key, Keyboard, Landmark, Layers, LayoutGrid, List, Lock, LockOpen, LogOut, Map, Maximize, Medal, MessageCircle,
   Ellipsis, Minus, MapPin, Mountain, Package, Palette, Pause, Pencil, Play, Plus, RefreshCw, RotateCcw, RotateCw, Save, Scale, ScrollText, Search, Send, Settings,
@@ -122,6 +122,9 @@ export type IconName =
   | 'home'
   | 'inbox'
   | 'mountain'
+  | 'chevronLeft'
+  | 'chevronRight'
+  | 'volume'
 
 const LUCIDE_ICONS: Record<string, LucideIcon> = {
   trophy: Trophy,
@@ -213,6 +216,9 @@ const LUCIDE_ICONS: Record<string, LucideIcon> = {
   home: House,
   inbox: Inbox,
   mountain: Mountain,
+  chevronLeft: ChevronLeft,
+  chevronRight: ChevronRight,
+  volume: Volume2,
 }
 
 interface IconProps extends React.SVGProps<SVGSVGElement> {
