@@ -151,6 +151,22 @@ describe('groupStackables', () => {
     expect(solos).toHaveLength(2)
   })
 
+  it('BRD-20: token piles hold at most five, a leftover single token stays solo', () => {
+    const twelve = groupStackables(entries(Array.from({ length: 12 }, () => token('Treasure'))), 'other')
+    expect(twelve.groups.map((g) => g.items.length)).toEqual([5, 5, 2])
+    expect(new Set(twelve.groups.map((g) => g.key)).size).toBe(3)
+    expect(twelve.solos).toHaveLength(0)
+
+    const six = groupStackables(entries(Array.from({ length: 6 }, () => creatureToken('Soldier'))), 'creatures')
+    expect(six.groups.map((g) => g.items.length)).toEqual([5])
+    expect(six.solos.map(([id]) => id)).toEqual(['c5'])
+  })
+
+  it('BRD-20: land piles are not split', () => {
+    const { groups } = groupStackables(entries(Array.from({ length: 8 }, () => land('Forest'))), 'lands')
+    expect(groups.map((g) => g.items.length)).toEqual([8])
+  })
+
   it('a divergent creature token stays solo while its siblings stack', () => {
     const perms = [
       creatureToken('Soldier'),

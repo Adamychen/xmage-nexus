@@ -1,10 +1,16 @@
-import { fireEvent, render } from '@testing-library/react'
+import { createEvent, fireEvent, render } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import StackPile from './StackPile'
 import { BOARD_RELAYOUT_EVENT } from './useBandFit'
 
 function relayoutEvents(spy: { mock: { calls: unknown[][] } }): number {
   return spy.mock.calls.filter(([event]) => (event as Event).type === BOARD_RELAYOUT_EVENT).length
+}
+
+function pointerEnter(el: HTMLElement, pointerType: string): void {
+  const event = createEvent.pointerOver(el)
+  Object.defineProperty(event, 'pointerType', { value: pointerType })
+  fireEvent(el, event)
 }
 
 describe('StackPile', () => {
@@ -133,5 +139,64 @@ describe('StackPile', () => {
       </div>,
     )
     expect(measure).toHaveBeenCalled()
+  })
+
+  describe('BRD-20: a token pile fans out after the mouse rests on it', () => {
+    function renderTokenPile() {
+      const { container } = render(
+        <div className="permanents-band">
+          <StackPile className="stack-group" name="Treasure" count={2} cardIds={['a', 'b']} fanDelayMs={1000}>
+            <div className="card-slot" />
+            <div className="card-slot" />
+          </StackPile>
+        </div>,
+      )
+      return container.querySelector<HTMLElement>('.stack-group')!
+    }
+
+    it('BRD-20: stays collapsed until the mouse has rested for the delay', () => {
+      const pile = renderTokenPile()
+      pointerEnter(pile, 'mouse')
+      vi.advanceTimersByTime(900)
+      expect(pile.dataset.spread).toBeUndefined()
+      vi.advanceTimersByTime(100)
+      expect(pile.dataset.spread).toBeDefined()
+    })
+
+    it('BRD-20: a mouse that leaves before the delay never fans it out', () => {
+      const pile = renderTokenPile()
+      pointerEnter(pile, 'mouse')
+      vi.advanceTimersByTime(500)
+      fireEvent.pointerLeave(pile)
+      vi.advanceTimersByTime(1000)
+      expect(pile.dataset.spread).toBeUndefined()
+    })
+
+    it('BRD-20: reports when it fans out and closes, so the board can hide the preview', () => {
+      const onFanChange = vi.fn()
+      const { container } = render(
+        <div className="permanents-band">
+          <StackPile className="stack-group" name="Treasure" count={2} cardIds={['a', 'b']} fanDelayMs={1000} onFanChange={onFanChange}>
+            <div className="card-slot" />
+            <div className="card-slot" />
+          </StackPile>
+        </div>,
+      )
+      const pile = container.querySelector<HTMLElement>('.stack-group')!
+      pointerEnter(pile, 'mouse')
+      expect(onFanChange).not.toHaveBeenCalled()
+      vi.advanceTimersByTime(1000)
+      expect(onFanChange).toHaveBeenLastCalledWith(true)
+      fireEvent.pointerLeave(pile)
+      expect(onFanChange).toHaveBeenLastCalledWith(false)
+      fireEvent.mouseLeave(pile)
+      expect(onFanChange).toHaveBeenCalledTimes(2)
+    })
+
+    it('BRD-20: a touch fans it out at once', () => {
+      const pile = renderTokenPile()
+      pointerEnter(pile, 'touch')
+      expect(pile.dataset.spread).toBeDefined()
+    })
   })
 })

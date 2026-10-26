@@ -5,8 +5,8 @@ import { quickStartGame } from './support/start-game'
 import { tokensScenario } from '../fixtures/scenarios/tokens'
 fakeOnly()
 
-test.describe('Apilado visual de tokens (×3)', () => {
-  test('tokens fungibles se apilan desde ×3 y el click atraviesa la pila @fullflow @stack-groups', async ({ page }) => {
+test.describe('Visual token piles (×3)', () => {
+  test('BRD-20: fungible tokens pile from ×3, open after a second of hover without a preview over them, and a click reaches the card under the pile @fullflow @stack-groups', async ({ page }) => {
     await withFakeServer(tokensScenario, async () => {
       const { pageErrors } = await quickStartGame(page, {
         prefix: 'sg',
@@ -15,26 +15,24 @@ test.describe('Apilado visual de tokens (×3)', () => {
       const myZone = page.locator('.player-zone:not(.mirrored)')
       await expect(myZone).toBeVisible({ timeout: 30_000 })
 
-      // 4 Treasure enderezados → una pila ×4
+      // 4 untapped Treasures -> one ×4 pile
       const treasureGroup = myZone.locator('.stack-group[data-stack-name="Treasure"]')
       await expect(treasureGroup).toHaveCount(1)
       expect(await treasureGroup.getAttribute('data-count')).toBe('4')
       await expect(treasureGroup.locator('.stack-group-badge')).toContainText('×4')
       expect(await treasureGroup.locator('.card-slot').count()).toBe(4)
 
-      // 3 Soldier 1/1 → una pila ×3
+      // 3 Soldier 1/1 -> one ×3 pile
       const soldierGroup = myZone.locator('.stack-group[data-stack-name="Soldier"]')
       await expect(soldierGroup).toHaveCount(1)
       expect(await soldierGroup.getAttribute('data-count')).toBe('3')
 
-      // Sueltos: 2 Treasure girados (bajo el umbral) + Soldier con contador + Grizzly Bears
+      // Solo: 2 tapped Treasures (below the threshold) + Soldier with a counter + Grizzly Bears
       expect(await myZone.locator('.bz-band > .card-slot').count()).toBe(4)
 
-      // Hover sobre una carta de la pila (tras expandir el grupo): preview flotante clásico
       const preview = page.locator('.floating-card-preview')
-      await expect(preview).toHaveCount(0)
-      await treasureGroup.hover()
-      await treasureGroup.locator('.card-slot').first().hover()
+      await page.mouse.move(2, 2)
+      await treasureGroup.locator('.card-slot').last().hover()
       await expect(preview).toBeVisible({ timeout: 10_000 })
       const previewImg = preview.locator('img.floating-card-img')
       if ((await previewImg.count()) > 0) {
@@ -42,12 +40,19 @@ test.describe('Apilado visual de tokens (×3)', () => {
       } else {
         await expect(preview.locator('.floating-card-name')).toContainText('Treasure')
       }
+      await expect(treasureGroup).not.toHaveAttribute('data-spread')
+      await expect(treasureGroup).toHaveAttribute('data-spread', '', { timeout: 2_000 })
 
-      // Click en una carta concreta de la pila: el uuid atraviesa el grupo
-      await treasureGroup.hover()
+      await expect(preview).toHaveCount(0)
+      await treasureGroup.locator('.card-slot').first().hover()
+      await page.waitForTimeout(300)
+      await expect(preview).toHaveCount(0)
+
+      // Clicking one card of the pile: its uuid reaches the server
+      await expect(treasureGroup).toHaveAttribute('data-spread', '')
       await treasureGroup.locator('.card-slot').nth(1).click()
       const dialog = page.locator('.feedback-dialog')
-      await expect(dialog, 'el click en treasure-2 llega al servidor').toContainText('clicked:treasure-2', { timeout: 10_000 })
+      await expect(dialog, 'the click on treasure-2 reaches the server').toContainText('clicked:treasure-2', { timeout: 10_000 })
 
       expect(pageErrors).toEqual([])
     })
@@ -67,6 +72,7 @@ test.describe('Apilado visual de tokens (×3)', () => {
       await page.waitForTimeout(400)
       const box = (await group.boundingBox())!
       await page.mouse.move(box.x + box.width - 2, box.y + 4)
+      await expect(group).toHaveAttribute('data-spread', '', { timeout: 2_000 })
 
       const samples = await page.evaluate(async (s) => {
         const g = document.querySelector(s) as HTMLElement

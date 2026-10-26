@@ -649,6 +649,30 @@
   margin-left: calc(-1 * var(--card-w) * 0.725);
 }
 
+.board-zone .stack-group.token-pile {
+  --pile-edge: var(--sp-1h);
+}
+
+.board-zone .stack-group.token-pile .card-slot + .card-slot {
+  margin-left: calc(-1 * var(--card-w) + var(--pile-edge));
+}
+
+.board-zone .stack-group.token-pile .card-slot.tapped + .card-slot.tapped {
+  margin-left: calc(-1.2 * var(--card-w) + var(--pile-edge));
+}
+
+.board-zone.card-style-compact .stack-group.token-pile .card-slot.tapped + .card-slot.tapped {
+  margin-left: calc(-0.78125 * var(--card-w) + var(--pile-edge));
+}
+
+.board-zone.card-style-compact.tap-tilted .stack-group.token-pile .card-slot.tapped + .card-slot.tapped {
+  margin-left: calc(-0.875 * var(--card-w) + var(--pile-edge));
+}
+
+.board-zone .stack-group.token-pile:not([data-spread]) > .card-slot:has(~ .card-slot) {
+  filter: brightness(0.45);
+}
+
 /* Graveyard/exile dissolve (D4): a detached clone of a card that just left the
    battlefield. It sits in the board shell (or on <body> outside one) and carries
    its own size and transform; the positioning is set inline. */
