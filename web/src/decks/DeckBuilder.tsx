@@ -54,6 +54,7 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
   const [previewStore] = useState(createHoverPreviewStore)
   const [isDragging, setIsDragging] = useState(false)
   const isDraggingRef = useRef(false)
+  const touchPinnedRef = useRef(false)
   const [isCollectionDragOver, setIsCollectionDragOver] = useState(false)
   const [showSampleHand, setShowSampleHand] = useState(false)
   const [showInspector, setShowInspector] = useState(false)
@@ -118,13 +119,21 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
       setIsDragging(false)
       previewStore.set(null)
     }
+    const handlePointerCapture = (e: PointerEvent) => {
+      touchPinnedRef.current = e.pointerType === 'touch'
+      if (touchPinnedRef.current && e.type === 'pointerdown') previewStore.set(null)
+    }
     window.addEventListener('dragstart', handleGlobalDragStart, true)
     window.addEventListener('dragend', handleGlobalDragEnd, true)
     window.addEventListener('drop', handleGlobalDragEnd, true)
+    window.addEventListener('pointerdown', handlePointerCapture, true)
+    window.addEventListener('pointermove', handlePointerCapture, true)
     return () => {
       window.removeEventListener('dragstart', handleGlobalDragStart, true)
       window.removeEventListener('dragend', handleGlobalDragEnd, true)
       window.removeEventListener('drop', handleGlobalDragEnd, true)
+      window.removeEventListener('pointerdown', handlePointerCapture, true)
+      window.removeEventListener('pointermove', handlePointerCapture, true)
     }
   }, [previewStore])
 
@@ -322,6 +331,7 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
   }
 
   const handleLeaveCard = () => {
+    if (touchPinnedRef.current) return
     previewStore.set(null)
   }
 

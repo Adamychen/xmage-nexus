@@ -93,7 +93,9 @@ Information that appears only on hover (the card previews in the deck builder, t
 hand viewer and the stack) is also reachable without a pointer. Where the element is already focusable,
 keyboard focus shows the preview and blur hides it. Every deck-builder preview is reachable by a tap on a
 touch screen: a touch press opens the preview itself through its pointer event, and does not wait for the
-browser's emulated mouse events, whose order relative to the click is not fixed. Battlefield
+browser's emulated mouse events, whose order relative to the click is not fixed. A preview opened by a touch
+stays until the next touch press: the emulated mouse-leave that follows the tap does not close it, and a real
+mouse movement releases it again. Battlefield
 permanents are reached by tap; they are not made keyboard-focusable here, because that would add a tab
 stop to every permanent and is a change to the board's focus model, not to its previews (known gap,
 see the Why).
@@ -102,7 +104,9 @@ see the Why).
   for alternatives to gestures and to pointer-only actions. Non-clickable stack entries and pile cards are
   not focusable today; giving them a tab stop is a separate decision for the board's keyboard model.
   The first version relied on the emulated mouse events alone; in CI one tap changed the count but never
-  opened the preview (the review of 2026-10-26), so the touch press now opens it directly.
+  opened the preview (the review of 2026-10-26). A press through the pointer event opened it, but the
+  emulated mouse-leave that followed the tap closed it again on the CI runner, so a touch-opened preview is
+  now pinned until the next touch press.
 - Guard: `e2e/touch-equivalents.spec.ts` · `src/decks/ArenaCardStrip.test.tsx`
 
 ### ACC-10 · Blur never sits on battlefield content

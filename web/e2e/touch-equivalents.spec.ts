@@ -111,6 +111,9 @@ test.describe('ACC-9: hover-only information has a keyboard and tap equivalent',
         await expect(preview).toHaveAttribute('src', IMG, { timeout: 15000 })
         await expect(qty).toHaveText('3x')
 
+        await strip.evaluate((el) => el.dispatchEvent(new MouseEvent('mouseout', { bubbles: true, relatedTarget: null })))
+        await expect(preview).toHaveAttribute('src', IMG)
+
         await strip.tap()
         await expect(qty).toHaveText('2x')
         await expect(preview).toHaveAttribute('src', IMG)
