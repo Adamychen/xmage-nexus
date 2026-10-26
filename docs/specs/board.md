@@ -261,3 +261,12 @@ id is the same commander, so the roster drops it and keeps the live one with its
 - Why: the seat showed the damage next to a stale 0 (`3/0`), because the roster kept the command-zone
   entry for the whole game. A player has one copy of each commander, so an owner and a name identify it.
 - Guard: `src/board/commanders.test.ts` · `src/game/CommanderSeatMatrix.test.tsx`
+
+### BRD-19 · A life total stays inside its seat at phone width
+On a phone an opponent's seat (the v2 board, the default) is about 100 px wide, so its name takes the top row and the avatar sits
+under it beside the life total. No life total is cut off by its seat or the screen edge, and the stats row
+wraps inside the seat instead of losing its counts. From 601 px up the seat keeps the full-size life total.
+
+- Why: at 390 px the opponents' 20 life was drawn as a single "2" at the seat's edge, the rest of the number
+  cut off by the screen (review of 2026-10-26). The life total is the number a player needs at a glance.
+- Guard: `e2e/phone-fit.spec.ts`

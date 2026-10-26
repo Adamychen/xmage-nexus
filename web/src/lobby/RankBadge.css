@@ -19,7 +19,7 @@
 
 .rank-badge.compact {
   padding: 1px var(--sp-1h);
-  font-size: var(--fs-3xs);
+  font-size: var(--fs-2xs);
   gap: var(--sp-1);
 }
 
@@ -44,17 +44,17 @@
 }
 
 .rank-badge.compact .rank-badge-icon {
-  font-size: var(--fs-3xs);
+  font-size: var(--fs-2xs);
 }
 
 .rank-badge-name {
   font-weight: 800;
   text-transform: uppercase;
-  font-size: var(--fs-3xs);
+  font-size: var(--fs-2xs);
 }
 
 .rank-badge-elo {
-  font-size: var(--fs-3xs);
+  font-size: var(--fs-2xs);
   opacity: 0.85;
   font-family: var(--font-mono, monospace);
   font-weight: 600;

@@ -29,7 +29,7 @@
 .avatar-size-small {
   width: 20px;
   height: 20px;
-  font-size: var(--fs-3xs);
+  font-size: var(--fs-2xs);
 }
 
 .avatar-size-medium {

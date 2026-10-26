@@ -254,7 +254,7 @@
 }
 
 .bracket-game-state {
-  font-size: var(--fs-3xs);
+  font-size: var(--fs-2xs);
   font-weight: 800;
   text-transform: uppercase;
   padding: var(--sp-0h) var(--sp-1h);
@@ -277,7 +277,7 @@
 .bracket-game-meta {
   display: flex;
   gap: var(--sp-1h);
-  font-size: var(--fs-3xs);
+  font-size: var(--fs-2xs);
   color: var(--fg-3);
   align-items: center;
 }
@@ -325,7 +325,7 @@ button.bracket-watch-btn:disabled {
 
 .tournament-standings-table th {
   text-align: left;
-  font-size: var(--fs-3xs);
+  font-size: var(--fs-2xs);
   font-weight: 800;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -363,7 +363,7 @@ button.bracket-watch-btn:disabled {
 }
 
 .standings-flag {
-  font-size: var(--fs-3xs);
+  font-size: var(--fs-2xs);
   background: var(--veil-2);
   padding: 1px var(--sp-1);
   border-radius: var(--r-xs);

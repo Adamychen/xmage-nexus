@@ -309,7 +309,7 @@ html.fx-off .leaderboard-row.is-podium {
 .me-badge {
   background: var(--gold-300);
   color: var(--ink-0);
-  font-size: var(--fs-3xs);
+  font-size: var(--fs-2xs);
   font-weight: 900;
   padding: 1px var(--sp-1h);
   border-radius: var(--r-xs);

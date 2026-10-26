@@ -768,6 +768,37 @@ html.fx-off .player-info-bar.active-glow {
   white-space: nowrap;
 }
 
+@media (max-width: 600px) {
+  .player-info-bar.is-portrait.compact {
+    grid-template-areas:
+      'who who'
+      'av life'
+      'chips chips'
+      'pool pool';
+    grid-template-columns: auto minmax(0, 1fr);
+    justify-content: start;
+    column-gap: var(--sp-2);
+  }
+
+  .player-info-bar.is-portrait.compact .player-avatar,
+  .player-info-bar.is-portrait.compact .player-avatar .avatar-image {
+    width: 40px;
+    height: 40px;
+  }
+
+  .player-info-bar.is-portrait.compact .pp-life {
+    font-size: var(--fs-2xl);
+  }
+
+  .player-info-bar.is-portrait.compact .player-details {
+    overflow: visible;
+  }
+
+  .player-info-bar.is-portrait.compact .pp-stats {
+    flex-wrap: wrap;
+  }
+}
+
 .pp-hand-badge {
   position: absolute;
   right: -8px;

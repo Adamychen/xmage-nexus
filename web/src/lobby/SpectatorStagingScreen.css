@@ -312,7 +312,7 @@
   right: var(--sp-2h);
   padding: var(--sp-0h) var(--sp-2);
   border-radius: var(--r-pill);
-  font-size: var(--fs-3xs);
+  font-size: var(--fs-2xs);
   font-weight: 900;
   letter-spacing: 0.1em;
   color: var(--ink-1);
@@ -490,7 +490,7 @@
 }
 
 .seat-deck-label {
-  font-size: var(--fs-3xs);
+  font-size: var(--fs-2xs);
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -581,7 +581,7 @@
 }
 
 .player-status-tag.mini {
-  font-size: var(--fs-3xs);
+  font-size: var(--fs-2xs);
   padding: 1px var(--sp-1h);
 }
 

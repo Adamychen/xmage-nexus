@@ -88,12 +88,12 @@
   border-radius: var(--r-md);
   background: var(--brand);
   color: var(--fg-hi);
-  font-size: var(--fs-3xs);
+  font-size: var(--fs-2xs);
   font-weight: 800;
 }
 
 .tfb-arrow-icon {
-  font-size: var(--fs-3xs);
+  font-size: var(--fs-2xs);
   opacity: 0.7;
 }
 

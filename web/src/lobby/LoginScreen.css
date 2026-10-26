@@ -35,7 +35,7 @@
   position: absolute;
   top: 1px;
   right: 2px;
-  font-size: var(--fs-3xs);
+  font-size: var(--fs-2xs);
   color: var(--gold-300);
 }
 
@@ -255,7 +255,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: var(--fs-3xs);
+  font-size: var(--fs-2xs);
   box-shadow: 0 2px 4px var(--shade-2);
 }
 

@@ -51,6 +51,7 @@
   display: flex;
   align-items: center;
   gap: var(--sp-3);
+  min-width: 0;
 }
 
 .lobby-brand-logo {
@@ -66,6 +67,7 @@
 .lobby-brand-titles {
   display: flex;
   flex-direction: column;
+  min-width: 0;
 }
 
 .lobby-main-heading {
@@ -79,14 +81,23 @@
   background-clip: text;
   color: transparent;
   line-height: 1.1;
+  white-space: nowrap;
 }
 
 .conn-info {
   display: flex;
   align-items: center;
   gap: var(--sp-1h);
+  min-width: 0;
   color: var(--fg-3);
   font-size: var(--fs-2xs);
+}
+
+.conn-info-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .conn-status-dot {
@@ -309,7 +320,7 @@
 @media (min-width: 1280px) {
   .lobby-topstrip {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) auto minmax(max-content, 1fr);
   }
   .lobby-top-nav {
     flex: none;
@@ -477,7 +488,7 @@ html:lang(zh) .hero-deck-label {
 }
 
 .sidebar-btn-label {
-  font-size: var(--fs-3xs);
+  font-size: var(--fs-2xs);
   font-weight: 700;
   letter-spacing: 0.03em;
   line-height: 1;
@@ -593,7 +604,7 @@ html:lang(zh) .hero-deck-label {
   color: var(--fg-hi);
   border-radius: var(--r-md);
   padding: 1px var(--sp-1h);
-  font-size: var(--fs-3xs);
+  font-size: var(--fs-2xs);
   font-weight: 900;
   line-height: 1.4;
 }
@@ -652,7 +663,7 @@ html:lang(zh) .hero-deck-label {
 
 .aside-users-list .lobby-idle-badge {
   flex-shrink: 0;
-  font-size: var(--fs-3xs);
+  font-size: var(--fs-2xs);
 }
 
 /* Nav tabs (kept for backward compat, hidden in new layout) */
@@ -750,10 +761,15 @@ html:lang(zh) .hero-deck-label {
   }
 }
 
+.lobby-user-actions {
+  min-width: 0;
+}
+
 .lobby-user-col {
   display: flex;
   align-items: center;
   gap: var(--sp-1h);
+  min-width: 0;
 }
 
 .view-leaderboard-btn {
@@ -774,6 +790,11 @@ html:lang(zh) .hero-deck-label {
 }
 
 .lobby-username {
+  min-width: 0;
+  max-width: 14ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font-size: var(--fs-xs);
   font-weight: 700;
   color: var(--fg-1);
@@ -796,7 +817,7 @@ html:lang(zh) .hero-deck-label {
   position: absolute;
   top: 2px;
   right: 3px;
-  font-size: var(--fs-3xs);
+  font-size: var(--fs-2xs);
   color: var(--gold-300);
 }
 
@@ -938,7 +959,7 @@ html:lang(zh) .hero-deck-label {
   color: var(--ink-0);
   border-radius: var(--r-md);
   padding: 1px var(--sp-1h);
-  font-size: var(--fs-3xs);
+  font-size: var(--fs-2xs);
   font-weight: 900;
   line-height: 1.4;
 }
@@ -1034,7 +1055,7 @@ html:lang(zh) .tables-list {
 
 @media (max-width: 780px) {
   .tables-list {
-    grid-template-columns: 1fr !important;
+    grid-template-columns: minmax(0, 1fr) !important;
   }
 }
 
@@ -1115,6 +1136,7 @@ html:lang(zh) .tables-list {
   justify-content: space-between;
   gap: var(--sp-2h);
   height: 100%;
+  min-width: 0;
   box-sizing: border-box;
   transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
   box-shadow: var(--card-rail, inset 3px 0 0 transparent), var(--shadow-1), var(--sheen);
@@ -1598,7 +1620,7 @@ html.fx-off .table-card:hover::after {
 }
 
 .lobby-idle-badge {
-  font-size: var(--fs-3xs);
+  font-size: var(--fs-2xs);
   color: var(--fg-3);
   white-space: nowrap;
 }
@@ -1674,7 +1696,7 @@ html.fx-off .table-card:hover::after {
 }
 
 .debug-count {
-  font-size: var(--fs-3xs);
+  font-size: var(--fs-2xs);
   color: var(--fg-3);
 }
 

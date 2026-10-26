@@ -198,3 +198,28 @@ per table and never stored.
   reader of the browser's storage could take the account. The review of 2026-10-25 flagged it as a
   security issue alongside the design findings.
 - Guard: `src/state/persistence.test.ts` · `src/lobby/LoginScreen.test.tsx`
+
+### LBY-18 · A table card stays inside the list at phone width
+At 390 px every table card fits its column: the list is one column whose track can shrink, so the card's
+buttons wrap or the card scrolls inside its own box, never past the list's edge.
+
+- Why: the single column used `1fr`, which grows to the card's minimum content width (the two buttons side
+  by side), so the card's right edge fell outside the list and its border was cut off. The compact list
+  already uses `minmax(0, …)` for the same reason.
+- Guard: `e2e/lobby-fit.spec.ts`
+
+### LBY-19 · The lobby header's parts never overlap at desktop width
+At 1280 px the brand, the navigation and the user actions sit side by side without overlapping. The
+username is shortened with an ellipsis, and the title and connection line stay on one line each.
+
+- Why: a 11-character username wrapped onto two lines and pushed the user chip into the navigation, so the
+  "Leaderboard" tab showed under the name (review of 2026-10-26).
+- Guard: `e2e/lobby-fit.spec.ts`
+
+### LBY-20 · A table shows a type badge only for a tournament
+A tournament table carries the TOURNAMENT badge. An ordinary match carries no type badge: the absence of
+TOURNAMENT already says it is a match, so the card does not spend a chip on the default.
+
+- Why: the swords icon on every match card repeated what the card already said, and it was the tenth chip
+  in the card's header (review of 2026-10-26).
+- Guard: `e2e/lobby-fit.spec.ts`

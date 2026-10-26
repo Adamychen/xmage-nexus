@@ -111,7 +111,7 @@
   display: inline-flex;
   align-items: center;
   gap: var(--sp-1);
-  font-size: var(--fs-3xs);
+  font-size: var(--fs-2xs);
   color: var(--fg-3);
 }
 
@@ -144,7 +144,7 @@
 }
 
 .active-table-type {
-  font-size: var(--fs-3xs);
+  font-size: var(--fs-2xs);
   color: var(--fg-3);
   white-space: nowrap;
 }

@@ -99,7 +99,7 @@
   line-height: 1;
 }
 .wizard-step-summary {
-  font-size: var(--fs-3xs);
+  font-size: var(--fs-2xs);
   max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -107,7 +107,7 @@
   opacity: 0.75;
 }
 .wizard-step-text {
-  font-size: var(--fs-3xs);
+  font-size: var(--fs-2xs);
   font-weight: 800;
   letter-spacing: 0.03em;
   text-transform: uppercase;

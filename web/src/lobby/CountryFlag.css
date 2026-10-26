@@ -10,7 +10,7 @@
 }
 
 .flag-fallback {
-  font-size: var(--fs-3xs);
+  font-size: var(--fs-2xs);
   font-weight: 700;
   color: var(--fg-2);
   background: var(--veil-3);

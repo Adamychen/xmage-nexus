@@ -72,7 +72,9 @@ export default function LobbyHeader({
           <h1 className="lobby-main-heading">XMage Nexus</h1>
           <span className="conn-info">
             <span className="conn-status-dot" />
-            {conn?.serverHost}:{conn?.port} · {onlineCount} {plural('lobby', 'online_count', onlineCount)}
+            <span className="conn-info-text">
+              {conn?.serverHost}:{conn?.port} · {onlineCount} {plural('lobby', 'online_count', onlineCount)}
+            </span>
           </span>
         </div>
       </div>

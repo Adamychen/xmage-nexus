@@ -110,10 +110,8 @@ export default function TableCard({
                 {t('lobby', 'active_table_my_badge')}
               </Chip>
             )}
-            {tTable.isTournament ? (
+            {tTable.isTournament && (
               <Chip solid tone="gold" icon="trophy" className="table-type-badge tourney" title={t('lobby.tournament_badge')}>{t('lobby.tournament_badge')}</Chip>
-            ) : (
-              <Chip solid icon="swords" className="table-type-badge match" title={t('lobby','match_badge')} role="img" aria-label={t('lobby','match_badge')} />
             )}
             {tTable.passworded && (
               <Chip solid tone="warn" icon="lock" className="table-badge-lock" title={t('lobby','tag_private')}>{t('lobby','tag_private')}</Chip>
