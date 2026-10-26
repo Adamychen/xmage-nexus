@@ -214,6 +214,7 @@ function ArenaCardStripView({
       draggable
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
+      onPointerDown={(e) => { if (e.pointerType === 'touch') handlePreview() }}
       onMouseEnter={handlePreview}
       onMouseLeave={onLeave}
       onFocus={handlePreview}

@@ -78,6 +78,7 @@ const GridTile = memo(function GridTile({ card, count, notOnServer, onAdd, onHov
           queueMicrotask(() => flyToDeckRow(source, card))
         }
       }}
+      onPointerDown={(e) => { if (e.pointerType === 'touch') onHover(card, e.currentTarget.getBoundingClientRect()) }}
       onMouseEnter={(e) => onHover(card, e.currentTarget.getBoundingClientRect())}
       onMouseLeave={onLeave}
       onFocus={(e) => onHover(card, e.currentTarget.getBoundingClientRect())}

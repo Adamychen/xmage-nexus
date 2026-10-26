@@ -31,6 +31,21 @@ describe('ArenaCardStrip UX (auditoría)', () => {
     expect(onDec).not.toHaveBeenCalled()
   })
 
+  it('ACC-9: a touch press on a strip tile opens its preview, a mouse press does not', () => {
+    const onHover = vi.fn()
+    const { container } = render(<ArenaCardStrip card={bolt} onHover={onHover} />)
+    const tile = container.querySelector<HTMLElement>('.arena-card-strip')!
+    const press = (pointerType: string) =>
+      fireEvent(tile, Object.assign(new Event('pointerdown', { bubbles: true }), { pointerType }))
+
+    press('mouse')
+    expect(onHover).not.toHaveBeenCalled()
+
+    press('touch')
+    expect(onHover).toHaveBeenCalledTimes(1)
+    expect(onHover.mock.calls[0][0]).toMatchObject({ cardName: 'Lightning Bolt' })
+  })
+
   it('el arte propio del usuario sustituye al art-crop de Scryfall en el fondo de la tira', () => {
     setCustomCardArtDataUrl('Lightning Bolt', 'data:image/jpeg;base64,CUSTOM')
     const { container, rerender } = render(

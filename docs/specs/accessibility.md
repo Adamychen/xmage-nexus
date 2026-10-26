@@ -91,8 +91,9 @@ for each appearance (`media="(prefers-color-scheme: light)"` and `dark`), and a 
 ### ACC-9 · Information shown on hover is also reachable without a pointer
 Information that appears only on hover (the card previews in the deck builder, the hand, the piles, the
 hand viewer and the stack) is also reachable without a pointer. Where the element is already focusable,
-keyboard focus shows the preview and blur hides it. Every preview is reachable by a tap on a touch
-screen, because the browser's emulated mouse events drive the same hover handlers. Battlefield
+keyboard focus shows the preview and blur hides it. Every deck-builder preview is reachable by a tap on a
+touch screen: a touch press opens the preview itself through its pointer event, and does not wait for the
+browser's emulated mouse events, whose order relative to the click is not fixed. Battlefield
 permanents are reached by tap; they are not made keyboard-focusable here, because that would add a tab
 stop to every permanent and is a change to the board's focus model, not to its previews (known gap,
 see the Why).
@@ -100,7 +101,9 @@ see the Why).
 - Why: a hover needs a pointer, and a phone user never produces one. Apple's Accessibility guidance asks
   for alternatives to gestures and to pointer-only actions. Non-clickable stack entries and pile cards are
   not focusable today; giving them a tab stop is a separate decision for the board's keyboard model.
-- Guard: `e2e/touch-equivalents.spec.ts`
+  The first version relied on the emulated mouse events alone; in CI one tap changed the count but never
+  opened the preview (the review of 2026-10-26), so the touch press now opens it directly.
+- Guard: `e2e/touch-equivalents.spec.ts` · `src/decks/ArenaCardStrip.test.tsx`
 
 ### ACC-10 · Blur never sits on battlefield content
 The battlefield's own layers (zones, cards, the stack, piles and the turn ring) use no `backdrop-filter`.

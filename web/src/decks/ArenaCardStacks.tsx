@@ -69,6 +69,7 @@ function StackTile({ item, onInc, onDec, onSwap, onHover, onLeave }: Omit<ArenaC
         e.preventDefault()
         onInc?.(item.key)
       } : undefined}
+      onPointerDown={(e) => { if (e.pointerType === 'touch') handlePreview() }}
       onMouseEnter={handlePreview}
       onMouseLeave={onLeave}
       onFocus={handlePreview}
