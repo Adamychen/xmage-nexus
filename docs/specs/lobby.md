@@ -210,7 +210,9 @@ buttons wrap or the card scrolls inside its own box, never past the list's edge.
 
 ### LBY-19 · The lobby header's parts never overlap at desktop width
 At 1280 px the brand, the navigation and the user actions sit side by side without overlapping. The
-username is shortened with an ellipsis, and the title and connection line stay on one line each.
+username is shortened with an ellipsis, the connection line is truncated, and the title stays on one line.
+When the UI zoom leaves no room for the wordmark, it is clipped and the logo stands in for it; the heading
+stays in the page for assistive technology, so the lobby is still recognised as the lobby.
 
 - Why: a 11-character username wrapped onto two lines and pushed the user chip into the navigation, so the
   "Leaderboard" tab showed under the name (review of 2026-10-26).
