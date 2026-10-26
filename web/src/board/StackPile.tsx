@@ -68,10 +68,11 @@ function collapse(pile: HTMLElement): void {
   unpush(pile)
 }
 
-function leave(pile: HTMLElement): void {
-  if (pile.dataset.spread === undefined) return
+function leave(pile: HTMLElement): boolean {
+  if (pile.dataset.spread === undefined) return false
   collapse(pile)
   announceSettledRelayout()
+  return true
 }
 
 interface StackPileProps {
@@ -80,6 +81,8 @@ interface StackPileProps {
   count: number
   cardIds: string[]
   landName?: string
+  fanDelayMs?: number
+  onFanChange?: (fanned: boolean) => void
   children: ReactNode
 }
 
@@ -92,9 +95,40 @@ interface StackPileProps {
  * the fan reaches past the pile, so a mana rock beside a land pile is never
  * covered.
  */
-export default function StackPile({ className, name, count, cardIds, landName, children }: StackPileProps) {
+export default function StackPile({ className, name, count, cardIds, landName, fanDelayMs = 0, onFanChange, children }: StackPileProps) {
   const ref = useRef<HTMLDivElement>(null)
+  const fanTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const cardKey = cardIds.join('|')
+
+  const cancelFan = useCallback(() => {
+    if (fanTimer.current !== null) clearTimeout(fanTimer.current)
+    fanTimer.current = null
+  }, [])
+
+  const onFanChangeRef = useRef(onFanChange)
+  useLayoutEffect(() => {
+    onFanChangeRef.current = onFanChange
+  })
+
+  const fan = useCallback(
+    (pile: HTMLElement) => {
+      cancelFan()
+      spread(pile)
+      announceSettledRelayout()
+      onFanChangeRef.current?.(true)
+    },
+    [cancelFan],
+  )
+
+  const close = useCallback(
+    (pile: HTMLElement) => {
+      cancelFan()
+      if (leave(pile)) onFanChangeRef.current?.(false)
+    },
+    [cancelFan],
+  )
+
+  useEffect(() => cancelFan, [cancelFan])
 
   const refresh = useCallback(() => {
     const pile = ref.current
@@ -121,11 +155,16 @@ export default function StackPile({ className, name, count, cardIds, landName, c
       data-land-name={landName}
       title={`${name} (×${count})`}
       onPointerEnter={(e) => {
-        spread(e.currentTarget)
-        announceSettledRelayout()
+        const pile = e.currentTarget
+        cancelFan()
+        if (fanDelayMs > 0 && e.pointerType === 'mouse') {
+          fanTimer.current = setTimeout(() => fan(pile), fanDelayMs)
+        } else {
+          fan(pile)
+        }
       }}
-      onPointerLeave={(e) => leave(e.currentTarget)}
-      onMouseLeave={(e) => leave(e.currentTarget)}
+      onPointerLeave={(e) => close(e.currentTarget)}
+      onMouseLeave={(e) => close(e.currentTarget)}
     >
       {children}
       <span className="stack-group-badge land-group-badge">×{count}</span>

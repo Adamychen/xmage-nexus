@@ -20,7 +20,7 @@ import { switchedHandCards, switchableHandKeys } from './handSwitch'
 import { useTranslation } from '../i18n'
 import Icon from '../ui/Icon'
 import { setState, setSwitchedHandKey, useStore } from '../state/store'
-import { groupStackables } from './stackGroups'
+import { groupStackables, TOKEN_PILE_FAN_DELAY_MS } from './stackGroups'
 import type { StackGroup } from './stackGroups'
 import StackPile from './StackPile'
 import { isMarqueePermanent } from './marquee'
@@ -207,6 +207,7 @@ export default function BoardZone({
   useBattlefieldDissolve(bandEls, gameId, player, { players: gamePlayers, gameCycle })
   const pulseTick = useBattlefieldPulse(player, statusOnly)
   const [pileCornerEl, setPileCornerEl] = useState<HTMLDivElement | null>(null)
+  const [fannedTokenPile, setFannedTokenPile] = useState<string | null>(null)
   const pileCornerW = useMeasuredWidth(pileCornerEl)
   const pileCornerReach = usePileCornerReach(pileCornerEl)
   const { t } = useTranslation()
@@ -402,7 +403,7 @@ export default function BoardZone({
   const hasMarqueeColumn = kindColumns && marqueeEntries.length > 0
   const marqueeColumnTargeted = battlefieldFallback || marqueeEntries.some(([id]) => targetIds.has(id))
 
-  const renderCardItem = (id: string, perm: PermanentView, isCreature: boolean) => {
+  const renderCardItem = (id: string, perm: PermanentView, isCreature: boolean, noPreview = false) => {
     const isSelectable = combatSelectableSet.has(id)
     const isChosen = combatChosenSet.has(id)
     const isAttacking = attackingSet.has(id)
@@ -521,7 +522,7 @@ export default function BoardZone({
         cardId={id}
         card={perm}
         onClick={onCardClick ? () => onCardClick(id) : undefined}
-        onHover={onCardHover}
+        onHover={noPreview ? undefined : onCardHover}
         isTarget={isTarget}
         isPlayable={isPlayable}
         isChosen={isChosen || promptChosenSet.has(id)}
@@ -542,18 +543,31 @@ export default function BoardZone({
   const { groups: tokenGroups, solos: otherSolos } = groupStackables(restOthers, 'other', { excludeIds: stackExcludedIds })
   const { groups: creatureTokenGroups, solos: creatureSolos } = groupStackables(creatures, 'creatures', { excludeIds: stackExcludedIds })
 
-  const renderStackGroup = (group: StackGroup, isCreature: boolean) => (
-    <StackPile
-      key={`sg-${group.key}`}
-      className={`stack-group${group.kind === 'land' ? ' land-group' : ''} stack-group--${group.kind}`}
-      name={group.name}
-      count={group.items.length}
-      cardIds={group.items.map(([id]) => id)}
-      landName={group.kind === 'land' ? group.name : undefined}
-    >
-      {group.items.map(([id, perm]) => renderCardItem(id, perm, isCreature))}
-    </StackPile>
-  )
+  const renderStackGroup = (group: StackGroup, isCreature: boolean) => {
+    const isLand = group.kind === 'land'
+    const noPreview = !isLand && fannedTokenPile === group.key
+    return (
+      <StackPile
+        key={`sg-${group.key}`}
+        className={`stack-group${isLand ? ' land-group' : ' token-pile'} stack-group--${group.kind}`}
+        name={group.name}
+        count={group.items.length}
+        cardIds={group.items.map(([id]) => id)}
+        landName={isLand ? group.name : undefined}
+        fanDelayMs={isLand ? 0 : TOKEN_PILE_FAN_DELAY_MS}
+        onFanChange={
+          isLand
+            ? undefined
+            : (fanned) => {
+                if (fanned) onCardHover?.(null)
+                setFannedTokenPile((current) => (fanned ? group.key : current === group.key ? null : current))
+              }
+        }
+      >
+        {group.items.map(([id, perm]) => renderCardItem(id, perm, isCreature, noPreview))}
+      </StackPile>
+    )
+  }
 
   const handSwitchButton = (
     <button

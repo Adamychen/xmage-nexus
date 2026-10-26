@@ -270,3 +270,16 @@ wraps inside the seat instead of losing its counts. From 601 px up the seat keep
 - Why: at 390 px the opponents' 20 life was drawn as a single "2" at the seat's edge, the rest of the number
   cut off by the screen (review of 2026-10-26). The life total is the number a player needs at a glance.
 - Guard: `e2e/phone-fit.spec.ts`
+
+### BRD-20 · Token piles hold five and open after a second of hover
+Three or more identical tokens pile up, five to a pile at most: twelve Treasures are piles of five, five
+and two, and a sixth token left alone stays a single card. A pile is drawn as its top card with each other
+copy a dim edge just behind it, and the count badge in the corner. With a mouse, the pile fans out only after
+the pointer has rested on it for one second, and only that pile; a touch fans it out at once. While a token
+pile is fanned out the large hover preview is hidden, so it never covers the fanned cards. Land piles are
+unchanged: one pile per name, fanned out as soon as the pointer enters.
+
+- Why: a board of tokens (dozens of Treasures or Soldiers) spread each pile across the row, and passing the
+  pointer over a pile fanned it out and pushed its neighbours aside. A pile that holds still and opens on a
+  deliberate hover keeps the board readable while every token stays selectable (2026-10-26).
+- Guard: `src/board/stackGroups.test.ts` · `src/board/StackPile.test.tsx` · `e2e/stack-groups.spec.ts`
