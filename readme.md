@@ -19,6 +19,16 @@
   </tr>
 </table>
 
+## What's new in 0.6.2
+
+- **XDHS flavor updated to 1.6.1-XDHS-r2** (carried over from 0.6.1, which was never published): `mage.xdhs.net` moved on, so the proxy and the desktop launcher ship `mage-proxy-1.6.1.jar`. The shared-pool thread patch is retired: the new fork carries the upstream idle-thread fix.
+- **Touch and phones**: a touch press on a deck tile opens its preview, and the preview stays until the next touch. Phone life totals, the lobby header and table cards fit their space.
+- **Table and prompts**: a card pick closes the prompt it answers, a target prompt with no legal card offers no card, and a commander that changes object keeps one column in the damage matrix.
+- **Decks**: format chips are exact and Premodern is listed, the deck picker no longer resets, the hover preview shows the whole card, and the create-table wizard shows the format's starting life.
+- **Login and settings**: dark by default, passwords are never stored, a contributors box sits beside the login, and the Appearance modal is gone (transparent dialogs moved to Settings).
+- **Board**: the resting hand keeps room above the board edge, the commander sits above the log, and keyword icons get an Emoji style and show in Settings previews.
+- **Turn recap**: the strip is opt-in and no longer wraps one letter per line; a sweeper gallery entry replays it.
+
 ## What's new in 0.6.1
 
 - **XDHS flavor updated to 1.6.1-XDHS-r2**: `mage.xdhs.net` moved on, so the proxy and the desktop launcher ship `mage-proxy-1.6.1.jar` (the old 1.5.8 jar was rejected by the server with `VERSION_MISMATCH`). The shared-pool thread patch is retired: the new fork carries the upstream idle-thread fix. Same one web build, two proxies (beta + XDHS).
