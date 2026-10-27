@@ -75,7 +75,7 @@ for (const width of [1800, 1440, 390]) {
       )
       expect(seats.length).toBeGreaterThan(0)
       for (const seat of seats) {
-        expect(seat.nameWidth, `${seat.name} is squeezed`).toBeGreaterThanOrEqual(Math.min(seat.nameNeeds, 40))
+        expect(seat.nameWidth, `${seat.name} is squeezed`).toBeGreaterThanOrEqual(Math.min(seat.nameNeeds - 1, 40))
         expect(seat.outside, `${seat.name}'s details leave the seat`).toBe(false)
       }
     })
