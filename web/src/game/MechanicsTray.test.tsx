@@ -21,7 +21,7 @@ describe('MechanicsTray', () => {
     cleanup()
   })
 
-  it('renders empty glossary state when no global mechanics are active', () => {
+  it('PNL-9: renders the glossary empty state when no global mechanics are active', () => {
     setState({
       game: {
         players: [
@@ -30,9 +30,11 @@ describe('MechanicsTray', () => {
       } as unknown as GameView,
     })
 
-    const { getByText } = render(<MechanicsTray />)
+    const { getByText, getByTestId } = render(<MechanicsTray />)
     expect(getByText('No hay mecánicas globales activas en esta partida.')).toBeDefined()
-    expect(getByText(/El Anillo te tienta/)).toBeDefined()
+    expect(getByText('Estados y Mecánicas')).toBeDefined()
+    expect(getByTestId('mechanics-glossary').querySelectorAll('dt')).toHaveLength(7)
+    expect(getByText('El Anillo te tienta', { selector: 'dt' })).toBeDefined()
   })
 
   it('renders The Ring tab with level breakdown and Ring-bearer', () => {

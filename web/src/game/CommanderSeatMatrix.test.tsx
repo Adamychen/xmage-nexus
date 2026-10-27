@@ -87,3 +87,64 @@ describe('CommanderSeatMatrix: BRD-18', () => {
     expect(getByTestId('cdm-seat-cell-k-a').getAttribute('data-damage')).toBe('3')
   })
 })
+
+describe('CommanderSeatMatrix: PNL-7', () => {
+  afterEach(() => {
+    cleanup()
+    resetCommanderMemory()
+  })
+
+  it('PNL-7: the help is one line of text, not a box of several lines', () => {
+    const { container } = render(<CommanderSeatMatrix game={pod()} />)
+    const help = container.querySelectorAll('.sm-help')
+    expect(help).toHaveLength(1)
+    expect(help[0].parentElement?.className).toBe('seat-matrix')
+    expect(help[0].textContent?.trim()).not.toBe('')
+    expect(help[0].textContent).not.toContain('\n')
+  })
+
+  it('PNL-7: each column head names its owner and that owner\'s commander under it', () => {
+    const { getByTestId } = render(<CommanderSeatMatrix game={pod()} />)
+    expect(getByTestId('cdm-seat-head-t').textContent).toContain('Tobias')
+    expect(getByTestId('cdm-seat-head-t').textContent).toContain('Edgar Markov')
+    expect(getByTestId('cdm-seat-commander-a').textContent).toBe('Korvold')
+    expect(getByTestId('cdm-seat-commander-t').textContent).toBe('Edgar Markov')
+  })
+
+  it('PNL-7: a partner column shows both commander names', () => {
+    const { getByTestId } = render(<CommanderSeatMatrix game={pod()} />)
+    expect(getByTestId('cdm-seat-commander-k').textContent).toBe('Thrasios / Tymna')
+  })
+
+  it('PNL-7: row names are drawn in their seat colour', () => {
+    const { getByTestId } = render(<CommanderSeatMatrix game={pod()} />)
+    expect(getByTestId('cdm-seat-row-a').getAttribute('style')).toContain('var(--seat-0)')
+    expect(getByTestId('cdm-seat-row-k').getAttribute('style')).toContain('var(--seat-1)')
+    expect(getByTestId('cdm-seat-row-t').getAttribute('style')).toContain('var(--seat-2)')
+  })
+
+  it('PNL-7: the threat callout fills its bar to damage out of 21 in the attacker seat colour', () => {
+    const { getByTestId } = render(<CommanderSeatMatrix game={pod()} />)
+    expect(getByTestId('cdm-threat-num').textContent).toBe('16 / 21')
+    const bar = getByTestId('cdm-threat-bar')
+    expect(bar.style.width).toBe(`${(16 / 21) * 100}%`)
+    expect(bar.getAttribute('style')).toContain('var(--seat-2)')
+  })
+
+  it('PNL-7: the threat sentence draws the names in seat colours and the commander in gold', () => {
+    const { getByTestId } = render(<CommanderSeatMatrix game={pod()} />)
+    const threat = getByTestId('cdm-threat')
+    const owner = Array.from(threat.querySelectorAll('strong')).find((s) => s.textContent === 'Tobias')
+    const victim = Array.from(threat.querySelectorAll('strong')).find((s) => s.textContent === 'Adam')
+    const commander = threat.querySelector('.sm-threat-cmd')
+    expect(owner?.getAttribute('style')).toContain('var(--seat-2)')
+    expect(victim?.getAttribute('style')).toContain('var(--seat-0)')
+    expect(commander?.textContent).toBe('Edgar Markov')
+  })
+
+  it('PNL-7: a zero cell is drawn muted', () => {
+    const { getByTestId } = render(<CommanderSeatMatrix game={pod()} />)
+    expect(getByTestId('cdm-seat-cell-k-a').className).toContain('is-zero')
+    expect(getByTestId('cdm-seat-cell-a-t').className).not.toContain('is-zero')
+  })
+})

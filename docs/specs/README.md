@@ -22,9 +22,10 @@ test that names the decision.
 | `appearance.md` | `APR` | Light and dark appearance, which surfaces stay dark, contrast in both |
 | `cards.md` | `CRD` | Looking at a card: the card inspector's state, faces, layout and text |
 | `accessibility.md` | `ACC` | Reduce Transparency, Increase Contrast, text and touch sizes, safe areas, phone login, hover |
+| `panel.md` | `PNL` | The game's side panel: header and tabs, log, chat, deck tracker, commander damage, mechanics |
 
 Areas without a file yet are written the first time someone changes them (see `ROADMAP.md` §4.12).
-Candidates: stack, game log and chat, draft, spectating.
+Candidates: stack, draft, spectating.
 
 ## What goes where
 

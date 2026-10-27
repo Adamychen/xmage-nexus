@@ -9,6 +9,7 @@ import { FEED_BURST_LINES, FEED_EMIT_PREFIX, feedLogScenario } from '../fixtures
 fakeOnly()
 
 const CLOCK = /^(\d{1,2}):(\d{2}):(\d{2})$/
+const HOURS_MINUTES = /^(\d{1,2}):(\d{2})$/
 
 function secondsOfDay(ms: number): number {
   const d = new Date(ms)
@@ -19,6 +20,12 @@ function clockSeconds(text: string): number {
   const m = CLOCK.exec(text.trim())
   if (!m) throw new Error(`not an HH:MM:SS clock: "${text}"`)
   return Number(m[1]) * 3600 + Number(m[2]) * 60 + Number(m[3])
+}
+
+function minuteOfDay(text: string): number {
+  const m = HOURS_MINUTES.exec(text.trim())
+  if (!m) throw new Error(`not an HH:MM clock: "${text}"`)
+  return Number(m[1]) * 3600 + Number(m[2]) * 60
 }
 
 function distanceFromBottom(feed: Locator): Promise<number> {
@@ -42,11 +49,16 @@ test.describe('Log de partida: horas y auto-scroll', { tag: '@feed' }, () => {
       const t1 = Date.now()
 
       const stamps = await feed.locator('.action-time').allTextContents()
+      const tooltips = await feed.locator('.action-time').evaluateAll((els) => els.map((el) => el.getAttribute('title') ?? ''))
       expect(stamps.length).toBeGreaterThanOrEqual(FEED_BURST_LINES)
-      for (const stamp of stamps) {
-        const sec = clockSeconds(stamp)
-        expect(sec, `"${stamp}" está fuera de la ventana de la prueba`).toBeGreaterThanOrEqual(secondsOfDay(t0))
-        expect(sec, `"${stamp}" está fuera de la ventana de la prueba`).toBeLessThanOrEqual(secondsOfDay(t1))
+      expect(tooltips).toHaveLength(stamps.length)
+      for (const [i, stamp] of stamps.entries()) {
+        const minute = minuteOfDay(stamp)
+        expect(minute, `"${stamp}" está fuera de la ventana de la prueba`).toBeGreaterThanOrEqual(Math.floor(secondsOfDay(t0) / 60) * 60)
+        expect(minute, `"${stamp}" está fuera de la ventana de la prueba`).toBeLessThanOrEqual(secondsOfDay(t1))
+        const sec = clockSeconds(tooltips[i])
+        expect(sec, `"${tooltips[i]}" está fuera de la ventana de la prueba`).toBeGreaterThanOrEqual(secondsOfDay(t0))
+        expect(sec, `"${tooltips[i]}" está fuera de la ventana de la prueba`).toBeLessThanOrEqual(secondsOfDay(t1))
       }
 
       expect(await feed.evaluate((el) => el.scrollHeight > el.clientHeight), 'el burst debe desbordar el feed').toBe(true)

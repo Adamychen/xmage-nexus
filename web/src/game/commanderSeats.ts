@@ -48,9 +48,12 @@ export function formatSeatDamage(dmgs: number[]): string {
 }
 
 export interface CommanderThreat {
+  ownerId: string
   owner: string
+  victimId: string
   victim: string
   commander: string
+  damage: number
   remaining: number
 }
 
@@ -64,7 +67,16 @@ export function biggestCommanderThreat(game: GameView | null | undefined): Comma
         const dmg = commanderDamageDealt(game, commander, target)
         if (dmg <= 0 || dmg >= COMMANDER_LETHAL_DAMAGE) continue
         if (!best || dmg > best.dmg) {
-          best = { dmg, owner: seat.ownerName, victim: target.name, commander: commander.name, remaining: COMMANDER_LETHAL_DAMAGE - dmg }
+          best = {
+            dmg,
+            ownerId: seat.ownerId,
+            owner: seat.ownerName,
+            victimId: target.playerId,
+            victim: target.name,
+            commander: commander.name,
+            damage: dmg,
+            remaining: COMMANDER_LETHAL_DAMAGE - dmg,
+          }
         }
       }
     }

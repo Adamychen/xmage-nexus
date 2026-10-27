@@ -253,6 +253,51 @@ test('v2 side panel opens from the top bar and pushes the board @gameui', async 
   await expect(page.getByTestId('side-panel')).toHaveCount(0)
 })
 
+test('PNL-1: the side panel close button stays inside the panel at 1440 and 1280 with every tab and badge shown @gameui', async ({ page }, testInfo) => {
+  for (const [width, height] of [[1440, 900], [1280, 720]] as const) {
+    await page.setViewportSize({ width, height })
+    await showGame(page, richCommanderGame(), V2)
+    await expect(page.getByTestId('arena-board')).toBeVisible({ timeout: 10_000 })
+    await page.getByTestId('drawer-tab-mechanics').click()
+    await page.evaluate(() => {
+      const store = (globalThis as unknown as { __mageStore: { getState: () => { log: unknown[] }; setState: (s: unknown) => void } }).__mageStore
+      const chat = ['gl hf!', 'that Rhystic Study is a problem'].map((text, i) => ({ id: 900 + i, time: Date.now(), text, from: 'Mira', channel: 'chat' }))
+      store.setState({ log: [...store.getState().log, ...chat] })
+    })
+    const panel = page.getByTestId('side-panel')
+    await expect(panel).toHaveAttribute('data-tab', 'mechanics')
+    await expect(panel.getByRole('tab')).toHaveCount(5)
+    await expect(panel.getByTestId('mechanics-count')).toBeVisible()
+    await expect(panel.getByTestId('chat-unread')).toBeVisible()
+    await page.waitForTimeout(400)
+    const close = panel.locator('.side-panel-head button:not([role="tab"])').last()
+    const panelBox = await panel.boundingBox()
+    const closeBox = await close.boundingBox()
+    expect(panelBox && closeBox, `${width}x${height}: panel and close button are laid out`).toBeTruthy()
+    const inside =
+      closeBox!.x >= panelBox!.x &&
+      closeBox!.y >= panelBox!.y &&
+      closeBox!.x + closeBox!.width <= panelBox!.x + panelBox!.width &&
+      closeBox!.y + closeBox!.height <= panelBox!.y + panelBox!.height
+    expect(inside, `${width}x${height}: the close button is inside the side panel`).toBe(true)
+    expect(Math.min(closeBox!.width, closeBox!.height), `${width}x${height}: the close button keeps a usable size (${closeBox!.width}x${closeBox!.height})`).toBeGreaterThanOrEqual(24)
+    for (const tab of await panel.getByRole('tab').all()) {
+      const t = (await tab.boundingBox())!
+      const overlaps = t.x < closeBox!.x + closeBox!.width && closeBox!.x < t.x + t.width && t.y < closeBox!.y + closeBox!.height && closeBox!.y < t.y + t.height
+      expect(overlaps, `${width}x${height}: the close button does not sit under the tab "${await tab.getAttribute('aria-label') ?? await tab.textContent()}"`).toBe(false)
+    }
+    const hit = await page.evaluate(({ x, y }) => {
+      const el = document.elementFromPoint(x, y)
+      return !!el?.closest('.side-panel-head button:not([role="tab"])')
+    }, { x: closeBox!.x + closeBox!.width / 2, y: closeBox!.y + closeBox!.height / 2 })
+    expect(hit, `${width}x${height}: the close button is the element under its centre`).toBe(true)
+    await expect(panel.getByTestId('mechanics-count'), `${width}x${height}: the badge shows the number of mechanics`).toHaveText(/^\d+$/)
+    if (width === 1440) await page.screenshot({ path: testInfo.outputPath('pnl1.png') })
+    await close.click()
+    await expect(panel).toHaveCount(0)
+  }
+})
+
 test('v2 portraits show the hand count, mechanic chips and commander damage @gameui', async ({ page }, testInfo) => {
   await showGame(page, richCommanderGame(), V2)
   await expect(page.getByTestId('arena-board')).toBeVisible({ timeout: 10_000 })
@@ -794,4 +839,47 @@ test('tapping an untapped land in v2 flies a mana particle into the pool @gameui
   expect(box.endY).toBeLessThanOrEqual(box.poolBottom)
 
   await page.waitForFunction(() => (window as unknown as { __manaLanded?: boolean }).__manaLanded === true, undefined, { polling: 'raf', timeout: 5000 })
+})
+
+test('PNL-3: the v2 log shows at least fifteen events at 1440x900 @gameui', async ({ page }, testInfo) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  const lines = [
+    'Adam plays Forest',
+    'Adam plays Swamp',
+    'Mira casts Counterspell',
+    'Tobias casts Lightning Bolt targeting Adam',
+    'Adam casts Pact of Negation',
+    'Tobias attacks Adam with Edgar Markov',
+    'Edgar Markov deals 4 damage to Adam',
+    'Adam loses 4 life',
+    'Mira gains 2 life',
+    'Adam draws a card',
+    'Mira draws a card',
+    'Tobias discards Island',
+    'Adam casts Sol Ring',
+    'Mira plays Island',
+    'Tobias activates ability of Lotus Petal',
+    'Mira casts Ninja of the Deep Hours',
+    'Adam attacks with Korvold, Fae-Cursed King',
+    'Mira blocks Korvold, Fae-Cursed King with Ninja of the Deep Hours',
+    'Adam casts Grave Pact',
+    'Tobias casts Sol Ring',
+  ]
+  await showGame(page, richCommanderGame(), V2, lines)
+  await expect(page.getByTestId('arena-board')).toBeVisible({ timeout: 10_000 })
+  await page.getByTestId('log-ticker').click()
+  await expect(page.getByTestId('side-panel')).toHaveAttribute('data-tab', 'log')
+  const list = page.locator('.action-feed-list')
+  await expect(list.locator('[data-type]')).toHaveCount(lines.length)
+  const fullyVisible = await list.evaluate((el) => {
+    const box = el.getBoundingClientRect()
+    return [...el.querySelectorAll('[data-type]')].filter((row) => {
+      const r = row.getBoundingClientRect()
+      return r.top >= box.top && r.bottom <= box.bottom && r.left >= box.left && r.right <= box.right
+    }).length
+  })
+  expect(fullyVisible, 'events fully inside the visible log at 1440x900').toBeGreaterThanOrEqual(15)
+  await page.mouse.move(0, 0)
+  await page.waitForTimeout(300)
+  await page.screenshot({ path: testInfo.outputPath('pnl3-log.png') })
 })

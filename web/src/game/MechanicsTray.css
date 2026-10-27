@@ -10,36 +10,12 @@
 
 .mechanics-tray.empty {
   display: flex;
-  align-items: center;
-  justify-content: center;
   padding: var(--sp-4);
+  overflow-y: auto;
 }
 
-.mechanics-glossary-hint {
-  margin-top: var(--sp-2);
-  text-align: left;
-  font-size: var(--fs-3xs);
-  background: var(--shade-1);
-  padding: var(--sp-2) var(--sp-2h);
-  border-radius: var(--r-sm);
-  border: 1px solid var(--veil-1);
-}
-
-.mechanics-glossary-hint span {
-  font-weight: 700;
-  color: var(--gold-300);
-  display: block;
-  margin-bottom: var(--sp-1);
-}
-
-.mechanics-glossary-hint ul {
-  margin: 0;
-  padding-left: var(--sp-3);
-  color: var(--fg-2);
-}
-
-.mechanics-glossary-hint li {
-  margin-bottom: var(--sp-1);
+.mechanics-tray.empty > .ui-empty {
+  margin: auto;
 }
 
 /* Nav bar / category pills */

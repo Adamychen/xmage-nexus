@@ -8,6 +8,7 @@ import { useTranslation } from '../i18n'
 import type { CategoryT } from '../i18n/types'
 import Icon, { type IconName } from '../ui/Icon'
 import DungeonMap from './DungeonMap'
+import MechanicsGlossary from './MechanicsGlossary'
 import { dungeonStateOf, findRingBearer, ringStateOf, type DungeonState, type RingState } from './mechanicsState'
 import { dayNightStateOf, type DayNightState } from '../board/dayNight'
 import { speedLevelKey } from './speed'
@@ -123,17 +124,7 @@ export default function MechanicsTray({ onHoverCard }: MechanicsTrayProps) {
           icon="scrollText"
           iconSize={26}
           title={t('game', 'mechanics_title')}
-          action={
-            <div className="mechanics-glossary-hint">
-              <span>{t('game', 'mechanics_title')}:</span>
-              <ul>
-                <li><Icon name="circle" size={12} /> <strong>{t('game', 'mechanics_ring_title')}:</strong> {t('game', 'mechanics_ring_level', { level: 4 })}</li>
-                <li><Icon name="map" size={12} /> <strong>{t('game', 'mechanics_dungeon_title')}:</strong> {t('game', 'mechanics_dungeon_active')}</li>
-                <li><Icon name="sun" size={12} />/<Icon name="moon" size={12} /> <strong>{t('game', 'mechanics_day')} / {t('game', 'mechanics_night')}:</strong> {t('wiki', 'phases_priority')}</li>
-                <li><Icon name="crown" size={12} /> <strong>{t('game', 'mechanics_monarch')} / {t('game', 'mechanics_initiative')}:</strong> {t('game', 'mechanics_monarch')}</li>
-              </ul>
-            </div>
-          }
+          action={<MechanicsGlossary />}
         >
           {t('game', 'mechanics_empty')}
         </EmptyState>

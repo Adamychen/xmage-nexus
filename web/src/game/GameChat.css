@@ -12,35 +12,64 @@
   flex: 1 1 0;
   min-height: 0;
   overflow-y: auto;
-  padding: var(--sp-2h) var(--sp-3);
+  padding: var(--sp-4) var(--sp-3h);
   display: flex;
   flex-direction: column;
-  gap: var(--sp-1h);
+  gap: var(--sp-3);
 }
 
 .game-chat-entry {
-  font-size: var(--fs-xs);
-  line-height: 1.4;
-  color: var(--fg-2);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
   word-break: break-word;
 }
 
-.game-chat-player {
-  color: var(--brand);
-  font-weight: 600;
-  margin-right: var(--sp-1h);
+.game-chat-entry.own-msg {
+  align-items: flex-end;
 }
 
-.game-chat-entry.own-msg .game-chat-player {
-  color: var(--ok);
+.game-chat-head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-1);
+  font-size: var(--fs-xs);
+  line-height: 1.2;
+}
+
+.game-chat-entry.own-msg .game-chat-head {
+  justify-content: flex-end;
+}
+
+.game-chat-player {
+  color: var(--seat, var(--fg-2));
+  font-weight: 700;
 }
 
 .game-chat-time {
   font-size: var(--fs-2xs);
   color: var(--fg-3);
   flex-shrink: 0;
-  margin-right: var(--sp-1h);
   font-variant-numeric: tabular-nums;
+}
+
+.game-chat-bubble {
+  max-width: 86%;
+  padding: var(--sp-2) var(--sp-3);
+  font-size: var(--fs-sm);
+  line-height: 1.4;
+  color: var(--fg-1);
+  background: var(--ink-3);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-xs) var(--r-mid) var(--r-mid) var(--r-mid);
+}
+
+.game-chat-entry.own-msg .game-chat-bubble {
+  background: color-mix(in srgb, var(--seat, var(--fg-2)) 16%, transparent);
+  border-color: color-mix(in srgb, var(--seat, var(--fg-2)) 42%, transparent);
+  border-radius: var(--r-mid) var(--r-xs) var(--r-mid) var(--r-mid);
 }
 
 .game-chat-input {
@@ -91,10 +120,33 @@
   background: var(--ink-4);
 }
 
-
 .game-chat-filter {
   flex: 0 0 auto;
   padding: var(--sp-1h) var(--sp-3);
   border-bottom: 1px solid var(--line-1);
   font-size: var(--fs-xs);
+}
+
+.game-chat-lobby {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1h);
+  font-size: var(--fs-2xs);
+  color: var(--fg-3);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.game-chat-lobby .ui-toggle {
+  width: 30px;
+  height: 16px;
+}
+
+.game-chat-lobby .ui-toggle-knob {
+  width: 12px;
+  height: 12px;
+}
+
+.game-chat-lobby .ui-toggle.on .ui-toggle-knob {
+  transform: translateX(12px);
 }

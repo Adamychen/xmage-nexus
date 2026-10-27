@@ -1,5 +1,7 @@
-import { useEffect, useLayoutEffect, useRef, useState, useCallback } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, useCallback, useContext } from 'react'
+import { createPortal } from 'react-dom'
 import Tabs from '../ui/Tabs'
+import { DrawerHeadSlotContext } from './drawerHeadSlot'
 import EmptyState from '../ui/EmptyState'
 import { useStore, isBlockingModal } from '../state/store'
 import { useFeedItems } from './useFeedItems'
@@ -18,10 +20,12 @@ interface ActionFeedProps {
 export default function ActionFeed({ onHover }: ActionFeedProps) {
   const { t, lang } = useTranslation()
   const log = useStore((s) => s.log)
+  const headSlot = useContext(DrawerHeadSlotContext)
   const [viewMode, setViewMode] = useState<'visual' | 'raw'>('visual')
   const containerRef = useRef<HTMLDivElement | null>(null)
   const pinnedToBottom = useRef(true)
   const followedHeight = useRef(0)
+  const viewportHeight = useRef(0)
   const [hoverCard, setHoverCard] = useState<CardView | null>(null)
   const [hoverRect, setHoverRect] = useState<DOMRect | null>(null)
 
@@ -51,7 +55,7 @@ export default function ActionFeed({ onHover }: ActionFeedProps) {
 
   const handleScroll = useCallback(() => {
     const box = containerRef.current
-    if (!box) return
+    if (!box || box.clientHeight !== viewportHeight.current) return
     pinnedToBottom.current = Math.min(followedHeight.current, box.scrollHeight) - box.scrollTop - box.clientHeight < 40
   }, [])
 
@@ -69,27 +73,40 @@ export default function ActionFeed({ onHover }: ActionFeedProps) {
 
   useEffect(() => {
     const box = containerRef.current
-    if (!box || typeof ResizeObserver === 'undefined') return
-    const observer = new ResizeObserver(followBottom)
+    if (!box) return
+    viewportHeight.current = box.clientHeight
+    if (typeof ResizeObserver === 'undefined') return
+    const observer = new ResizeObserver(() => {
+      viewportHeight.current = box.clientHeight
+      followBottom()
+    })
     observer.observe(box)
     return () => observer.disconnect()
   }, [followBottom])
 
+  const controls = (
+    <>
+      <Tabs
+        variant="segmented"
+        size="sm"
+        value={viewMode}
+        onChange={setViewMode}
+        items={[
+          { id: 'visual', icon: 'palette', label: t('game', 'visual_feed'), title: t('game', 'visual_feed') },
+          { id: 'raw', icon: 'scrollText', label: t('game', 'text_feed'), title: t('game', 'text_feed') },
+        ]}
+      />
+      <span className="action-count-tag">{plural('game', 'feed_events', feedItems.length)}</span>
+    </>
+  )
+
   return (
     <div className="action-feed-container">
-      <div className="action-feed-controls">
-        <Tabs
-          variant="segmented"
-          size="sm"
-          value={viewMode}
-          onChange={setViewMode}
-          items={[
-            { id: 'visual', icon: 'palette', label: t('game', 'visual_feed'), title: t('game', 'visual_feed') },
-            { id: 'raw', icon: 'scrollText', label: t('game', 'text_feed'), title: t('game', 'text_feed') },
-          ]}
-        />
-        <span className="action-count-tag">{plural('game', 'feed_events', feedItems.length)}</span>
-      </div>
+      {headSlot ? (
+        createPortal(<div className="action-feed-head">{controls}</div>, headSlot)
+      ) : (
+        <div className="action-feed-controls">{controls}</div>
+      )}
 
       <div
         className="action-feed-list game-log-entries"

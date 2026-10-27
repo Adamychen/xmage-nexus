@@ -1,5 +1,5 @@
 import { act, cleanup, fireEvent, render } from '@testing-library/react'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import ActionFeed from './ActionFeed'
 import ActionFeedCard from './ActionFeedCard'
 import { handleMessage, clearFeedback } from '../state/store'
@@ -7,9 +7,25 @@ import { setState } from '../state/state'
 import { getLanguage } from '../i18n'
 import { formatFeedTime } from './feedTime'
 import type { ActionFeedItem } from './gameEventParser'
+import { DrawerHeadSlotContext } from './drawerHeadSlot'
 
 function logEntries(...texts: string[]) {
   return texts.map((text, i) => ({ id: i + 1, time: 1_700_000_000_000 + i * 1000, text, from: 'game', channel: 'game' as const }))
+}
+
+let resizeObservers: { target: Element; notify: () => void }[] = []
+
+class FakeResizeObserver {
+  constructor(private readonly callback: ResizeObserverCallback) {}
+  observe(target: Element) {
+    resizeObservers.push({ target, notify: () => this.callback([], this as unknown as ResizeObserver) })
+  }
+  unobserve() {}
+  disconnect() {}
+}
+
+function fireResize(box: Element) {
+  for (const observer of resizeObservers) if (observer.target === box) observer.notify()
 }
 
 function fakeScrollBox(box: HTMLElement, client = 200) {
@@ -20,15 +36,22 @@ function fakeScrollBox(box: HTMLElement, client = 200) {
     scrollHeight: { get: () => height, configurable: true },
     clientHeight: { get: () => client, configurable: true },
   })
+  fireResize(box)
   return {
     grow: (h: number) => { height = h },
     resize: (h: number) => { client = h },
+    notify: () => fireResize(box),
     scrollTo: (v: number) => { top = v; fireEvent.scroll(box) },
     get top() { return top },
   }
 }
 
 describe('ActionFeed & ActionFeedCard', () => {
+  beforeEach(() => {
+    resizeObservers = []
+    vi.stubGlobal('ResizeObserver', FakeResizeObserver)
+  })
+
   afterEach(() => {
     cleanup()
     clearFeedback()
@@ -56,20 +79,16 @@ describe('ActionFeed & ActionFeedCard', () => {
     )
 
     expect(getByText('Lightning Bolt')).not.toBeNull()
-    expect(getByText('➔ Bob')).not.toBeNull()
-    expect(container.querySelector('.action-damage-badge svg')).not.toBeNull()
+    expect(container.querySelector('.action-feed-chip')?.textContent).toBe('−3')
 
-    // Hover triggers preview
-    const cardEl = container.querySelector('.action-feed-card')
-    if (cardEl) {
-      fireEvent.mouseEnter(cardEl)
-      expect(onHover).toHaveBeenCalledWith(
-        expect.objectContaining({ name: 'Lightning Bolt' }),
-        expect.any(Object)
-      )
-      fireEvent.mouseLeave(cardEl)
-      expect(onHover).toHaveBeenCalledWith(null)
-    }
+    const rowEl = container.querySelector('.action-feed-row')!
+    fireEvent.mouseEnter(rowEl)
+    expect(onHover).toHaveBeenCalledWith(
+      expect.objectContaining({ name: 'Lightning Bolt' }),
+      expect.any(Object)
+    )
+    fireEvent.mouseLeave(rowEl)
+    expect(onHover).toHaveBeenCalledWith(null)
   })
 
   it('renders turn divider when type is turn', () => {
@@ -83,8 +102,8 @@ describe('ActionFeed & ActionFeedCard', () => {
       rawText: 'Turn 2 (Alice)',
     }
 
-    const { getByText } = render(<ActionFeedCard item={turnItem} />)
-    expect(getByText(/Turno 2 · Alice/)).not.toBeNull()
+    const { container } = render(<ActionFeedCard item={turnItem} />)
+    expect(container.querySelector('.turn-badge')?.textContent).toContain('Turno 2 · Alice')
   })
 
   it('renders system and card-less events as compact cards with type tint (no banner)', () => {
@@ -99,9 +118,9 @@ describe('ActionFeed & ActionFeedCard', () => {
     }
     const { container, getByText } = render(<ActionFeedCard item={waiting} />)
     expect(container.querySelector('.action-feed-system-banner')).toBeNull()
-    const card = container.querySelector('.action-feed-card.type-phase.no-art')
-    expect(card).not.toBeNull()
-    expect(card?.querySelector('.action-card-bg--tint.tint-phase')).not.toBeNull()
+    const row = container.querySelector('.action-feed-row.type-phase')
+    expect(row).not.toBeNull()
+    expect(row?.getAttribute('data-type')).toBe('phase')
     expect(getByText('sim-00001-307')).not.toBeNull()
 
     cleanup()
@@ -113,7 +132,7 @@ describe('ActionFeed & ActionFeedCard', () => {
       rawText: 'Start Match',
     }
     const r2 = render(<ActionFeedCard item={start} />)
-    expect(r2.container.querySelector('.action-feed-card.type-system.no-art')).not.toBeNull()
+    expect(r2.container.querySelector('.action-feed-row.type-system')).not.toBeNull()
     expect(r2.container.querySelector('.action-player-tag')).toBeNull()
   })
   it('toggles between Visual Feed and Raw Text Log in ActionFeed', () => {
@@ -169,8 +188,26 @@ describe('ActionFeed & ActionFeedCard', () => {
     act(() => setState({ log: [{ id: 9, time, text: 'Alice casts Lightning Bolt', from: 'game', channel: 'game' }, { id: 10, time: time + 1000, text: 'Start Match', from: 'game', channel: 'game' }] }))
 
     const { container } = render(<ActionFeed />)
-    const stamps = [...container.querySelectorAll('.action-time')].map((el) => el.textContent)
-    expect(stamps).toEqual([formatFeedTime(time, getLanguage()), formatFeedTime(time + 1000, getLanguage())])
+    const stamps = [...container.querySelectorAll('.action-time')]
+    expect(stamps.map((el) => el.getAttribute('title'))).toEqual([formatFeedTime(time, getLanguage()), formatFeedTime(time + 1000, getLanguage())])
+    expect(stamps.map((el) => el.textContent)).toEqual([formatFeedTime(time, getLanguage()).slice(0, 5), formatFeedTime(time + 1000, getLanguage()).slice(0, 5)])
+  })
+
+  it('moves the view switch and the event count into the drawer head slot when there is one', () => {
+    act(() => setState({ log: logEntries('Start Match') }))
+    const slot = document.createElement('div')
+    document.body.appendChild(slot)
+    const { container, getByText } = render(
+      <DrawerHeadSlotContext.Provider value={slot}>
+        <ActionFeed />
+      </DrawerHeadSlotContext.Provider>,
+    )
+    expect(slot.querySelector('.action-feed-head .action-count-tag')).not.toBeNull()
+    expect(container.querySelector('.action-feed-controls')).toBeNull()
+    fireEvent.click(getByText('Texto'))
+    expect(container.querySelector('.action-feed-raw-list')).not.toBeNull()
+    cleanup()
+    slot.remove()
   })
 
   it('shows the same timestamp in the raw text view', () => {
@@ -185,11 +222,11 @@ describe('ActionFeed & ActionFeedCard', () => {
   it('keeps existing cards mounted when a new event arrives', () => {
     act(() => setState({ log: logEntries('Alice casts Lightning Bolt', 'Start Match') }))
     const { container } = render(<ActionFeed />)
-    const first = container.querySelector('.action-feed-card')
+    const first = container.querySelector('.action-feed-row')
 
     act(() => setState({ log: logEntries('Alice casts Lightning Bolt', 'Start Match', 'Bob attacks with Grizzly Bears') }))
-    expect(container.querySelectorAll('.action-feed-card')).toHaveLength(3)
-    expect(container.querySelector('.action-feed-card')).toBe(first)
+    expect(container.querySelectorAll('.action-feed-row')).toHaveLength(3)
+    expect(container.querySelector('.action-feed-row')).toBe(first)
   })
 
   it('keeps the newest entry in view while pinned to the bottom', () => {
@@ -294,5 +331,17 @@ describe('ActionFeed & ActionFeedCard', () => {
     box.grow(1600)
     act(() => setState({ log: logEntries('one', 'two', 'three', 'four') }))
     expect(box.top).toBe(1400)
+  })
+
+  it('a user scroll to the top right after mount unpins the feed', () => {
+    act(() => setState({ log: logEntries('one', 'two') }))
+    const { container } = render(<ActionFeed />)
+    const box = fakeScrollBox(container.querySelector<HTMLElement>('.action-feed-list')!)
+
+    box.scrollTo(0)
+    box.resize(240)
+    box.notify()
+    act(() => setState({ log: logEntries('one', 'two', 'three') }))
+    expect(box.top).toBe(0)
   })
 })

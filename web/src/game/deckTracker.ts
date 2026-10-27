@@ -3,6 +3,15 @@ import type { Deck } from '../lobby/decks'
 import type { DeckJson } from '../net/types'
 import { normalizeBasicLandName } from '../decks/deckUtils'
 
+export interface DeckCardMeta {
+  manaCost: string
+  manaValue: number
+  cardTypes: string[]
+  colors: string[]
+}
+
+export type DeckCardMetaMap = ReadonlyMap<string, DeckCardMeta>
+
 export interface TrackedCard {
   name: string
   cardName: string
@@ -15,6 +24,8 @@ export interface TrackedCard {
   manaCost?: string
   manaValue: number
   cardTypes: string[]
+  colors: string[]
+  hasData: boolean
   isLand: boolean
   isCreature: boolean
   isInstantOrSorcery: boolean
@@ -28,6 +39,7 @@ export interface DeckTrackerStats {
   remainingTotal: number
   libraryCountServer: number
   faceDownExileCount: number
+  unknownRemaining?: number
   oddsNextDraw: {
     land: number
     creature: number
@@ -41,6 +53,14 @@ export interface DeckTrackerStats {
     other: number
   }
   cards: TrackedCard[]
+}
+
+export interface DeckCardGroup {
+  key: string
+  canonicalName: string
+  setCode: string
+  cardNumber: string
+  initialAmount: number
 }
 
 export function normalizeCardName(name: string): string {
@@ -61,6 +81,35 @@ export function matchCardName(a: string, b: string): boolean {
   const frontA = na.split(' // ')[0].trim()
   const frontB = nb.split(' // ')[0].trim()
   return frontA === frontB
+}
+
+export function basicLandMeta(): DeckCardMeta {
+  return { manaCost: '', manaValue: 0, cardTypes: ['LAND'], colors: [] }
+}
+
+export function groupDeckCards(deck: Deck | DeckJson | null): DeckCardGroup[] {
+  if (!deck || !deck.cards) return []
+  const grouped = new Map<string, DeckCardGroup>()
+  for (const c of deck.cards) {
+    const rawName = c.cardName || (c as unknown as { name?: string }).name || ''
+    if (!rawName) continue
+    const canonicalName = normalizeBasicLandName(rawName) || rawName.trim()
+    const key = canonicalName.toLowerCase()
+    const amount = Number(c.amount) || 1
+    const existing = grouped.get(key)
+    if (existing) {
+      existing.initialAmount += amount
+    } else {
+      grouped.set(key, {
+        key,
+        canonicalName,
+        setCode: c.setCode || '',
+        cardNumber: c.cardNumber || '0',
+        initialAmount: amount,
+      })
+    }
+  }
+  return [...grouped.values()]
 }
 
 export function getVisibleCards(game: GameView | null, myPlayerId?: string | null): CardView[] {
@@ -154,10 +203,22 @@ export function getFaceDownExileCount(game: GameView | null, myPlayerId?: string
   return exiles.filter((c) => c && c.faceDown).length
 }
 
+function colorsOf(color: CardView['color']): string[] {
+  if (!color) return []
+  const out: string[] = []
+  if (color.white) out.push('W')
+  if (color.blue) out.push('U')
+  if (color.black) out.push('B')
+  if (color.red) out.push('R')
+  if (color.green) out.push('G')
+  return out
+}
+
 export function computeDeckTracker(
   deck: Deck | DeckJson | null,
   game: GameView | null,
   myPlayerId?: string | null,
+  meta?: DeckCardMetaMap,
 ): DeckTrackerStats {
   const me = game?.players?.find((p) => p.controlled || (myPlayerId && p.playerId === myPlayerId))
   const libraryCountServer = me?.libraryCount ?? 0
@@ -170,6 +231,7 @@ export function computeDeckTracker(
       remainingTotal: libraryCountServer,
       libraryCountServer,
       faceDownExileCount,
+      unknownRemaining: 0,
       oddsNextDraw: { land: 0, creature: 0, instantOrSorcery: 0, other: 0 },
       countsRemaining: { land: 0, creature: 0, instantOrSorcery: 0, other: 0 },
       cards: [],
@@ -177,44 +239,13 @@ export function computeDeckTracker(
   }
 
   const visibleCards = getVisibleCards(game, myPlayerId)
-
-  // Group deck cards by normalized canonical name
-  const grouped = new Map<
-    string,
-    {
-      canonicalName: string
-      setCode: string
-      cardNumber: string
-      initialAmount: number
-    }
-  >()
-
-  for (const c of deck.cards) {
-    const rawName = c.cardName || (c as unknown as { name?: string }).name || ''
-    if (!rawName) continue
-    const canonicalName = normalizeBasicLandName(rawName) || rawName.trim()
-    const key = canonicalName.toLowerCase()
-    const amount = Number(c.amount) || 1
-    const existing = grouped.get(key)
-    if (existing) {
-      existing.initialAmount += amount
-    } else {
-      grouped.set(key, {
-        canonicalName,
-        setCode: c.setCode || '',
-        cardNumber: c.cardNumber || '0',
-        initialAmount: amount,
-      })
-    }
-  }
-
   const cards: TrackedCard[] = []
   let initialTotal = 0
   let visibleTotal = 0
 
   const topCardName = me?.topCard?.name
 
-  for (const entry of grouped.values()) {
+  for (const entry of groupDeckCards(deck)) {
     initialTotal += entry.initialAmount
 
     const seenMatches = visibleCards.filter((v) =>
@@ -226,12 +257,17 @@ export function computeDeckTracker(
     const remainingCount = Math.max(0, entry.initialAmount - seenCount)
 
     const sample = seenMatches[0]
-    const manaValue = sample?.manaValue ?? 0
-    const manaCost =
-      sample?.manaCostLeftStr?.join('') ?? sample?.manaCostRightStr?.join('') ?? ''
-    const cardTypes = sample?.cardTypes ?? []
-
     const isBasicLand = normalizeBasicLandName(entry.canonicalName) !== null
+    const fallback = meta?.get(entry.key) ?? (isBasicLand ? basicLandMeta() : undefined)
+    const hasData = !!sample || !!fallback
+
+    const sampleCost = sample?.manaCostLeftStr?.join('') || sample?.manaCostRightStr?.join('') || ''
+    const manaCost = sampleCost || fallback?.manaCost || ''
+    const manaValue = sample?.manaValue ?? fallback?.manaValue ?? 0
+    const cardTypes = sample?.cardTypes?.length ? sample.cardTypes : fallback?.cardTypes ?? []
+    const sampleColors = colorsOf(sample?.color)
+    const colors = sampleColors.length > 0 ? sampleColors : fallback?.colors ?? []
+
     const isLand = isBasicLand || cardTypes.some((t) => t.toLowerCase() === 'land')
     const isCreature = cardTypes.some((t) => t.toLowerCase() === 'creature')
     const isInstantOrSorcery = cardTypes.some(
@@ -245,7 +281,8 @@ export function computeDeckTracker(
       expansionSetCode: entry.setCode,
       cardNumber: entry.cardNumber,
       manaValue,
-      cardTypes: isLand ? ['Land'] : isCreature ? ['Creature'] : isInstantOrSorcery ? ['Instant'] : [],
+      manaCostLeftStr: manaCost ? [manaCost] : undefined,
+      cardTypes,
     }
 
     cards.push({
@@ -260,6 +297,8 @@ export function computeDeckTracker(
       manaValue,
       manaCost: manaCost || undefined,
       cardTypes,
+      colors,
+      hasData,
       isLand,
       isCreature,
       isInstantOrSorcery,
@@ -275,10 +314,12 @@ export function computeDeckTracker(
   let remainingCreatures = 0
   let remainingInstantOrSorcery = 0
   let remainingOther = 0
+  let unknownRemaining = 0
 
   for (const c of cards) {
     if (c.remainingCount > 0) {
-      if (c.isLand) remainingLands += c.remainingCount
+      if (!c.hasData) unknownRemaining += c.remainingCount
+      else if (c.isLand) remainingLands += c.remainingCount
       else if (c.isCreature) remainingCreatures += c.remainingCount
       else if (c.isInstantOrSorcery) remainingInstantOrSorcery += c.remainingCount
       else remainingOther += c.remainingCount
@@ -291,23 +332,14 @@ export function computeDeckTracker(
     }
   }
 
+  const share = (count: number) =>
+    effectiveLibraryCount > 0 ? Number(((count / effectiveLibraryCount) * 100).toFixed(1)) : 0
+
   const oddsNextDraw = {
-    land:
-      effectiveLibraryCount > 0
-        ? Number(((remainingLands / effectiveLibraryCount) * 100).toFixed(1))
-        : 0,
-    creature:
-      effectiveLibraryCount > 0
-        ? Number(((remainingCreatures / effectiveLibraryCount) * 100).toFixed(1))
-        : 0,
-    instantOrSorcery:
-      effectiveLibraryCount > 0
-        ? Number(((remainingInstantOrSorcery / effectiveLibraryCount) * 100).toFixed(1))
-        : 0,
-    other:
-      effectiveLibraryCount > 0
-        ? Number(((remainingOther / effectiveLibraryCount) * 100).toFixed(1))
-        : 0,
+    land: share(remainingLands),
+    creature: share(remainingCreatures),
+    instantOrSorcery: share(remainingInstantOrSorcery),
+    other: share(remainingOther),
   }
 
   const countsRemaining = {
@@ -323,6 +355,7 @@ export function computeDeckTracker(
     remainingTotal: remainingCalculated,
     libraryCountServer,
     faceDownExileCount,
+    unknownRemaining,
     oddsNextDraw,
     countsRemaining,
     cards,

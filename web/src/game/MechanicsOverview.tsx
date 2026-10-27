@@ -1,12 +1,12 @@
-import { Fragment, useMemo } from 'react'
+import { Fragment, useMemo, type ReactNode } from 'react'
 import type { PlayerView } from '../net/types'
 import { useStore } from '../state/store'
 import { useTranslation } from '../i18n'
-import Icon from '../ui/Icon'
+import Icon, { type IconName } from '../ui/Icon'
 import { seatColorVar, seatIndexOf } from '../board/seatColor'
 import { dayNightStateOf } from '../board/dayNight'
 import { roomLabel } from './dungeons'
-import MechanicsTray from './MechanicsTray'
+import MechanicsGlossary from './MechanicsGlossary'
 import {
   RING_MAX_LEVEL,
   SPEED_MAX,
@@ -19,81 +19,162 @@ import {
 } from './mechanicsState'
 import './MechanicsOverview.css'
 
-const RING_RULES = ['ring_level_1_rule', 'ring_level_2_rule', 'ring_level_3_rule', 'ring_level_4_rule'] as const
+const RING_KEYS = [
+  { title: 'ring_level_1_title', rule: 'ring_level_1_rule' },
+  { title: 'ring_level_2_title', rule: 'ring_level_2_rule' },
+  { title: 'ring_level_3_title', rule: 'ring_level_3_rule' },
+  { title: 'ring_level_4_title', rule: 'ring_level_4_rule' },
+] as const
 
-function SeatName({ player, players }: { player: PlayerView; players: PlayerView[] }) {
-  return <b style={{ color: seatColorVar(seatIndexOf(players, player.playerId)) }}>{player.name}</b>
+interface Owner {
+  player: PlayerView
+  players: PlayerView[]
 }
 
-function RingSection({ ring }: { ring: RingState }) {
-  const { t } = useTranslation()
+function ownerColor({ player, players }: Owner): string {
+  return seatColorVar(seatIndexOf(players, player.playerId))
+}
+
+function OwnerChip(owner: Owner) {
+  const color = ownerColor(owner)
   return (
-    <section className="mech-sec" data-testid="mech-ring">
-      <header className="mech-head">
-        <Icon name="circle" size={16} />
-        <b>{t('game', 'mechanics_ring_title')}</b>
-        <span>{t('game', 'mech_ring_status', { player: ring.player.name, level: ring.level, max: RING_MAX_LEVEL })}</span>
-      </header>
+    <span className="mech-owner" style={{ color, background: `color-mix(in srgb, ${color} 14%, transparent)` }}>
+      <span className="mech-owner-name">{owner.player.name}</span>
+    </span>
+  )
+}
+
+function MechHead({ icon, title, owner }: { icon: IconName; title: string; owner?: Owner }) {
+  return (
+    <header className="mech-head">
+      <Icon name={icon} size={16} />
+      <b className="mech-title">{title}</b>
+      {owner && <OwnerChip {...owner} />}
+    </header>
+  )
+}
+
+function StepBar({ value, max, label, color }: { value: number; max: number; label: string; color?: string }) {
+  return (
+    <span className="mech-steps" role="img" aria-label={label}>
+      {Array.from({ length: max }, (_, i) => (
+        <i
+          key={i}
+          className={i < value ? 'mech-step on' : 'mech-step'}
+          style={i < value && color ? { background: color } : undefined}
+        />
+      ))}
+    </span>
+  )
+}
+
+function RingSection({ ring, players }: { ring: RingState; players: PlayerView[] }) {
+  const { t } = useTranslation()
+  const levelText = t('game', 'mech_ring_status', { level: ring.level, max: RING_MAX_LEVEL })
+  const owner = { player: ring.player, players }
+  return (
+    <section className="mech-card" data-testid="mech-ring">
+      <MechHead icon="circle" title={t('game', 'mechanics_ring_title')} owner={owner} />
+      <div className="mech-ring-meter">
+        <StepBar value={ring.level} max={RING_MAX_LEVEL} label={levelText} />
+        <span className="mech-ring-level-text">{levelText}</span>
+      </div>
       <div className="mech-bearer">
         {ring.bearerName ? (
           <>
-            {t('game', 'mech_ring_bearer')} <b>{ring.bearerName}</b>
+            <span>{t('game', 'mech_ring_bearer')}</span>
+            <b>{ring.bearerName}</b>
           </>
         ) : (
-          t('game', 'mech_ring_no_bearer')
+          <em>{t('game', 'mech_ring_no_bearer')}</em>
         )}
       </div>
-      {RING_RULES.map((key, i) => {
-        const level = i + 1
-        const done = level <= ring.level
-        return (
-          <div
-            key={key}
-            className={`mech-lvl${done ? ' done' : ''}${level === ring.level ? ' cur' : ''}`}
-            data-testid="mech-ring-level"
-          >
-            <span className="mech-lvl-n">{done ? <Icon name="check" size={11} /> : level}</span>
-            <span>{t('game', key)}</span>
-          </div>
-        )
-      })}
+      <ol className="mech-abilities">
+        {RING_KEYS.map((key, i) => {
+          const level = i + 1
+          const done = level <= ring.level
+          const current = level === ring.level
+          return (
+            <li
+              key={key.title}
+              className={`mech-lvl${done ? ' done' : ' locked'}${current ? ' cur' : ''}`}
+              data-testid="mech-ring-level"
+            >
+              <span className="mech-lvl-n">
+                <Icon name={done ? 'check' : 'lock'} size={11} />
+              </span>
+              <span className="mech-lvl-body">
+                <span className="mech-lvl-title">{t('game', key.title)}</span>
+                <span className="mech-lvl-rule">{t('game', key.rule)}</span>
+              </span>
+            </li>
+          )
+        })}
+      </ol>
     </section>
   )
 }
 
-function DungeonSection({ dungeon }: { dungeon: DungeonState }) {
+function DungeonSection({ dungeon, players }: { dungeon: DungeonState; players: PlayerView[] }) {
   const { t } = useTranslation()
   const tt = t as unknown as (ns: string, key: string) => string
   const visited = new Set(dungeon.visited)
   const graph = dungeon.graph
   const currentRoom = graph?.depths.flat().find((r) => r.name === dungeon.current)
   return (
-    <section className="mech-sec" data-testid="mech-dungeon">
-      <header className="mech-head">
-        <Icon name="map" size={16} />
-        <b>{dungeon.name}</b>
-        {dungeon.depth != null && dungeon.depthCount != null && (
-          <span>{t('game', 'mech_room_status', { player: dungeon.player.name, room: dungeon.depth, total: dungeon.depthCount })}</span>
-        )}
-      </header>
+    <section className="mech-card" data-testid="mech-dungeon">
+      <MechHead icon="map" title={dungeon.name} owner={{ player: dungeon.player, players }} />
       {graph && (
-        <div className="mech-dungeon">
+        <div className="mech-map">
           {graph.depths.map((rooms, i) => (
-            <div key={i} className="mech-dungeon-row">
-              {rooms.map((room) => {
-                const state = room.name === dungeon.current ? 'cur' : visited.has(room.name) ? 'seen' : ''
-                return (
-                  <span key={room.name} className={`mech-room ${state}`} data-testid="mech-room" data-state={state || 'ahead'}>
-                    {room.name}
-                  </span>
-                )
-              })}
+            <div key={i} className="mech-depth">
+              <span className="mech-depth-n">{i + 1}</span>
+              <div className="mech-depth-rooms">
+                {rooms.map((room) => {
+                  const state = room.name === dungeon.current ? 'cur' : visited.has(room.name) ? 'seen' : ''
+                  return (
+                    <span
+                      key={room.name}
+                      className={`mech-room ${state}`}
+                      data-testid="mech-room"
+                      data-state={state || 'ahead'}
+                    >
+                      {room.name}
+                    </span>
+                  )
+                })}
+              </div>
             </div>
           ))}
         </div>
       )}
-      {currentRoom && <div className="mech-hint">{roomLabel(tt('game', currentRoom.labelKey), currentRoom)}</div>}
+      {currentRoom && dungeon.depth != null && dungeon.depthCount != null && (
+        <div className="mech-hint">
+          <b className="mech-hint-room">{currentRoom.name}</b>
+          {' · '}
+          {t('game', 'mech_room_status', { room: dungeon.depth, total: dungeon.depthCount })}
+          {' · '}
+          {roomLabel(tt('game', currentRoom.labelKey), currentRoom)}
+        </div>
+      )}
     </section>
+  )
+}
+
+function PlayerValue({ player, players }: Owner) {
+  return (
+    <span className="mech-tile-value" style={{ color: ownerColor({ player, players }) }}>
+      {player.name}
+    </span>
+  )
+}
+
+function Tile({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className="mech-tile">
+      <span className="mech-tile-label">{label}</span>
+      {children}
+    </div>
   )
 }
 
@@ -113,66 +194,70 @@ export default function MechanicsOverview() {
   const monarch = players.find((p) => p.monarch)
   const initiative = players.find((p) => p.initiative)
   const blessed = players.filter(hasCityBlessing)
-  const speeds = players.map((p) => ({ player: p, speed: speedOf(p) })).filter((s): s is { player: PlayerView; speed: number } => s.speed != null)
+  const speeds = players
+    .map((p) => ({ player: p, speed: speedOf(p) }))
+    .filter((s): s is { player: PlayerView; speed: number } => s.speed != null)
 
   const hasTableState = !!dayNight || !!monarch || !!initiative || blessed.length > 0 || speeds.length > 0
-  if (rings.length === 0 && dungeons.length === 0 && !hasTableState) return <MechanicsTray />
+  if (rings.length === 0 && dungeons.length === 0 && !hasTableState) {
+    return (
+      <div className="mech-overview">
+        <MechanicsGlossary />
+      </div>
+    )
+  }
 
   return (
     <div className="mech-overview" data-testid="mechanics-overview">
       {rings.map((ring) => (
-        <RingSection key={ring.player.playerId} ring={ring} />
+        <RingSection key={ring.player.playerId} ring={ring} players={players} />
       ))}
       {dungeons.map((dungeon) => (
-        <DungeonSection key={`${dungeon.player.playerId}-${dungeon.name}`} dungeon={dungeon} />
+        <DungeonSection key={`${dungeon.player.playerId}-${dungeon.name}`} dungeon={dungeon} players={players} />
       ))}
       {hasTableState && (
-        <section className="mech-sec" data-testid="mech-table-state">
-          <header className="mech-head">
-            <Icon name="sun" size={16} />
-            <b>{t('game', 'mech_table_state')}</b>
-          </header>
-          <dl className="mech-kv">
+        <section className="mech-card" data-testid="mech-table-state">
+          <MechHead icon="layers" title={t('game', 'mech_table_state')} />
+          <div className="mech-tiles">
             {dayNight && (
-              <>
-                <dt>{t('game', 'mech_day_night')}</dt>
-                <dd>{dayNight.isNight ? t('game', 'mech_night') : t('game', 'mech_day')}</dd>
-              </>
+              <Tile label={t('game', 'mech_day_night')}>
+                <span className="mech-tile-value">{dayNight.isNight ? t('game', 'mech_night') : t('game', 'mech_day')}</span>
+              </Tile>
             )}
             {monarch && (
-              <>
-                <dt>{t('game', 'chip_monarch')}</dt>
-                <dd><SeatName player={monarch} players={players} /></dd>
-              </>
+              <Tile label={t('game', 'chip_monarch')}>
+                <PlayerValue player={monarch} players={players} />
+              </Tile>
             )}
             {initiative && (
-              <>
-                <dt>{t('game', 'chip_initiative')}</dt>
-                <dd><SeatName player={initiative} players={players} /></dd>
-              </>
+              <Tile label={t('game', 'chip_initiative')}>
+                <PlayerValue player={initiative} players={players} />
+              </Tile>
             )}
             {blessed.length > 0 && (
-              <>
-                <dt>{t('game', 'mechanics_blessing')}</dt>
-                <dd>
+              <Tile label={t('game', 'mechanics_blessing')}>
+                <span className="mech-tile-values">
                   {blessed.map((p, i) => (
-                    <span key={p.playerId}>
+                    <Fragment key={p.playerId}>
                       {i > 0 && ', '}
-                      <SeatName player={p} players={players} />
-                    </span>
+                      <PlayerValue player={p} players={players} />
+                    </Fragment>
                   ))}
-                </dd>
-              </>
+                </span>
+              </Tile>
             )}
             {speeds.map(({ player, speed }) => (
-              <Fragment key={player.playerId}>
-                <dt>{t('game', 'mechanics_speed_title')}</dt>
-                <dd style={{ color: seatColorVar(seatIndexOf(players, player.playerId)) }}>
-                  {player.name} · {speed} / {SPEED_MAX}
-                </dd>
-              </Fragment>
+              <Tile key={player.playerId} label={t('game', 'mech_speed_status', { speed, max: SPEED_MAX })}>
+                <PlayerValue player={player} players={players} />
+                <StepBar
+                  value={speed}
+                  max={SPEED_MAX}
+                  label={t('game', 'mech_speed_status', { speed, max: SPEED_MAX })}
+                  color={ownerColor({ player, players })}
+                />
+              </Tile>
             ))}
-          </dl>
+          </div>
         </section>
       )}
     </div>

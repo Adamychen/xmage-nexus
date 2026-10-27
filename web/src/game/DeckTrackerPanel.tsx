@@ -1,301 +1,341 @@
-import { useState, useMemo } from 'react'
-import ChipButton from '../ui/ChipButton'
-import Chip from '../ui/Chip'
+import { useContext, useMemo, useState } from 'react'
+import { createPortal } from 'react-dom'
 import CloseButton from '../ui/CloseButton'
 import EmptyState from '../ui/EmptyState'
+import Chip from '../ui/Chip'
+import Icon from '../ui/Icon'
 import { useStore } from '../state/store'
 import { useTranslation } from '../i18n'
-import Icon from '../ui/Icon'
+import type { TranslationSchema } from '../i18n/types'
 import { ManaCost } from '../decks/ArenaManaSymbols'
 import FloatingCardPreview from '../board/FloatingCardPreview'
 import { computeDeckTracker, type TrackedCard } from './deckTracker'
+import { DrawerHeadSlotContext } from './drawerHeadSlot'
+import { useDeckCardMeta } from './useDeckCardMeta'
 import type { CardView } from '../net/types'
 import './DeckTrackerPanel.css'
 
-function getCardColorClass(c: TrackedCard): string {
-  if (c.isLand) return 'color-land'
-  const col = c.sampleCard?.color
-  if (col) {
-    const active: string[] = []
-    if (col.white) active.push('w')
-    if (col.blue) active.push('u')
-    if (col.black) active.push('b')
-    if (col.red) active.push('r')
-    if (col.green) active.push('g')
-    if (active.length > 1) return 'color-multi'
-    if (active.length === 1) return `color-${active[0]}`
-  }
-  if (c.manaCost) {
-    const hasW = c.manaCost.includes('W')
-    const hasU = c.manaCost.includes('U')
-    const hasB = c.manaCost.includes('B')
-    const hasR = c.manaCost.includes('R')
-    const hasG = c.manaCost.includes('G')
-    const count = (hasW ? 1 : 0) + (hasU ? 1 : 0) + (hasB ? 1 : 0) + (hasR ? 1 : 0) + (hasG ? 1 : 0)
-    if (count > 1) return 'color-multi'
-    if (hasW) return 'color-w'
-    if (hasU) return 'color-u'
-    if (hasB) return 'color-b'
-    if (hasR) return 'color-r'
-    if (hasG) return 'color-g'
-  }
-  return 'color-colorless'
+type SortKey = 'cmc' | 'name' | 'count' | 'odds'
+type Kind = 'creature' | 'spell' | 'other' | 'land' | 'unknown'
+type TrackerKey = Extract<keyof TranslationSchema['game'], `tracker_${string}`>
+
+const SORT_OPTIONS: { id: SortKey; label: TrackerKey }[] = [
+  { id: 'cmc', label: 'tracker_sort_cmc' },
+  { id: 'name', label: 'tracker_sort_name' },
+  { id: 'count', label: 'tracker_sort_count' },
+  { id: 'odds', label: 'tracker_sort_odds' },
+]
+
+const GROUP_ORDER: { kind: Kind; label: TrackerKey }[] = [
+  { kind: 'creature', label: 'tracker_creatures' },
+  { kind: 'spell', label: 'tracker_spells' },
+  { kind: 'other', label: 'tracker_other' },
+  { kind: 'land', label: 'tracker_lands' },
+  { kind: 'unknown', label: 'tracker_no_data' },
+]
+
+const SEGMENTS: { key: 'land' | 'creature' | 'instantOrSorcery' | 'other'; label: TrackerKey; css: string }[] = [
+  { key: 'land', label: 'tracker_lands', css: 'seg-land' },
+  { key: 'creature', label: 'tracker_creatures', css: 'seg-creature' },
+  { key: 'instantOrSorcery', label: 'tracker_spells', css: 'seg-spell' },
+  { key: 'other', label: 'tracker_other', css: 'seg-other' },
+]
+
+function kindOf(card: TrackedCard): Kind {
+  if (!card.hasData) return 'unknown'
+  if (card.isLand) return 'land'
+  if (card.isCreature) return 'creature'
+  if (card.isInstantOrSorcery) return 'spell'
+  return 'other'
+}
+
+function byName(a: TrackedCard, b: TrackedCard): number {
+  return a.name.localeCompare(b.name)
+}
+
+function sortCards(cards: TrackedCard[], sortBy: SortKey): TrackedCard[] {
+  return [...cards].sort((a, b) => {
+    if (sortBy === 'cmc' && a.manaValue !== b.manaValue) return a.manaValue - b.manaValue
+    if (sortBy === 'count' && b.remainingCount !== a.remainingCount) return b.remainingCount - a.remainingCount
+    if (sortBy === 'odds' && b.drawProbability !== a.drawProbability) return b.drawProbability - a.drawProbability
+    return byName(a, b)
+  })
+}
+
+interface RowProps {
+  card: TrackedCard
+  dimmed?: boolean
+  onPreview: (card: CardView, rect: DOMRect) => void
+  onPreviewEnd: () => void
+}
+
+function TrackerRow({ card, dimmed = false, onPreview, onPreviewEnd }: RowProps) {
+  const { t } = useTranslation()
+  const classes = ['tracker-card-row']
+  if (card.isTopCard) classes.push('is-top-revealed')
+  if (dimmed) classes.push('is-drawn')
+  return (
+    <div
+      className={classes.join(' ')}
+      data-card-name={card.name}
+      onMouseEnter={(e) => onPreview(card.sampleCard, e.currentTarget.getBoundingClientRect())}
+      onMouseLeave={onPreviewEnd}
+    >
+      <span className="tracker-row-name" title={card.name}>
+        {card.name}
+      </span>
+      {card.isTopCard && (
+        <span className="tracker-top-badge" title={t('game', 'tracker_top_revealed')}>
+          <Icon name="eye" size={10} /> TOP
+        </span>
+      )}
+      {card.remainingCount > 1 && (
+        <span className="tracker-row-copies" title={`${card.remainingCount} / ${card.initialAmount}`}>
+          ×{card.remainingCount}
+        </span>
+      )}
+      {card.manaCost && (
+        <span className="tracker-row-cost">
+          <ManaCost manaCost={card.manaCost} size={15} />
+        </span>
+      )}
+      <span className="tracker-row-odds">{card.drawProbability}%</span>
+    </div>
+  )
+}
+
+interface PanelRowsProps {
+  cards: TrackedCard[]
+  onPreview: (card: CardView, rect: DOMRect) => void
+  onPreviewEnd: () => void
 }
 
 export default function DeckTrackerPanel() {
   const { t } = useTranslation()
   const myDeck = useStore((s) => s.myDeck)
   const game = useStore((s) => s.game)
+  const headSlot = useContext(DrawerHeadSlotContext)
+  const { meta, loading } = useDeckCardMeta(myDeck)
 
   const [searchQuery, setSearchQuery] = useState('')
-  const [sortBy, setSortBy] = useState<'cmc' | 'name' | 'count' | 'odds'>('cmc')
-  const [hideEmpty, setHideEmpty] = useState(false)
+  const [sortBy, setSortBy] = useState<SortKey>('cmc')
+  const [drawnOpen, setDrawnOpen] = useState(false)
 
   const [hoverCard, setHoverCard] = useState<CardView | null>(null)
   const [hoverRect, setHoverRect] = useState<DOMRect | null>(null)
 
-  const stats = useMemo(() => computeDeckTracker(myDeck, game), [myDeck, game])
+  const stats = useMemo(() => computeDeckTracker(myDeck, game, null, meta), [myDeck, game, meta])
 
-  const displayedCards = useMemo(() => {
-    let list = stats.cards
-    if (hideEmpty) {
-      list = list.filter((c) => c.remainingCount > 0)
+  const { inLibrary, drawn } = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase()
+    const matching = q ? stats.cards.filter((c) => c.name.toLowerCase().includes(q)) : stats.cards
+    return {
+      inLibrary: sortCards(
+        matching.filter((c) => c.remainingCount > 0),
+        sortBy,
+      ),
+      drawn: matching.filter((c) => c.remainingCount === 0).sort(byName),
     }
-    if (searchQuery.trim()) {
-      const q = searchQuery.trim().toLowerCase()
-      list = list.filter((c) => c.name.toLowerCase().includes(q))
-    }
-    return [...list].sort((a, b) => {
-      if (sortBy === 'cmc') {
-        if (a.isLand !== b.isLand) return a.isLand ? 1 : -1
-        if (a.manaValue !== b.manaValue) return a.manaValue - b.manaValue
-        return a.name.localeCompare(b.name)
-      }
-      if (sortBy === 'name') {
-        return a.name.localeCompare(b.name)
-      }
-      if (sortBy === 'count') {
-        if (b.remainingCount !== a.remainingCount) return b.remainingCount - a.remainingCount
-        return a.name.localeCompare(b.name)
-      }
-      if (sortBy === 'odds') {
-        if (b.drawProbability !== a.drawProbability) return b.drawProbability - a.drawProbability
-        return a.name.localeCompare(b.name)
-      }
-      return 0
-    })
-  }, [stats.cards, hideEmpty, searchQuery, sortBy])
+  }, [stats.cards, searchQuery, sortBy])
 
-  // Segmented distribution percentages
-  const remTotal = stats.remainingTotal
-  const landPct = remTotal > 0 ? (stats.countsRemaining.land / remTotal) * 100 : 0
-  const creaturePct = remTotal > 0 ? (stats.countsRemaining.creature / remTotal) * 100 : 0
-  const spellPct = remTotal > 0 ? (stats.countsRemaining.instantOrSorcery / remTotal) * 100 : 0
-  const otherPct = remTotal > 0 ? (stats.countsRemaining.other / remTotal) * 100 : 0
+  const groups = useMemo(
+    () =>
+      GROUP_ORDER.map((group) => ({
+        ...group,
+        cards: inLibrary.filter((c) => kindOf(c) === group.kind),
+      })).filter((group) => group.cards.length > 0),
+    [inLibrary],
+  )
+
+  const showPreview = (card: CardView, rect: DOMRect) => {
+    setHoverCard(card)
+    setHoverRect(rect)
+  }
+  const endPreview = () => setHoverCard(null)
+
+  const deckName = myDeck?.name || t('game', 'tracker_title')
+  const hasDeck = stats.initialTotal > 0
+  const hasNoResults = inLibrary.length === 0 && drawn.length === 0
+
+  const barLabel = [
+    ...SEGMENTS.map((seg) => `${t('game', seg.label)} ${stats.oddsNextDraw[seg.key]}%`),
+    ...(stats.unknownRemaining ? [t('game', 'tracker_unknown_count', { count: stats.unknownRemaining })] : []),
+  ].join(', ')
+
+  const headName = <span className="tracker-deck-name" title={deckName}>{deckName}</span>
 
   return (
     <div className="deck-tracker-panel" data-testid="deck-tracker-panel">
-      {/* Header */}
+      {headSlot ? createPortal(<span className="tracker-head-name">{headName}</span>, headSlot) : null}
+
       <div className="tracker-header">
-        <div className="tracker-title-row">
-          <div className="tracker-title">
-            <Icon name="layers" size={14} />
-            <span className="tracker-deck-name" title={myDeck?.name || t('game', 'tracker_title')}>
-              {myDeck?.name || t('game', 'tracker_title')}
-            </span>
-          </div>
-          <div className="tracker-counts-pill">
-            <span className="tracker-count-main">
-              {stats.remainingTotal} / {stats.initialTotal}
-            </span>
-            {stats.libraryCountServer > 0 && stats.libraryCountServer !== stats.remainingTotal && (
-              <span className="tracker-count-server" title={t('game', 'library')}>
-                ({stats.libraryCountServer})
-              </span>
+        {!headSlot && <div className="tracker-title-row">{headName}</div>}
+
+        {hasDeck && (
+          <div className="tracker-summary">
+            <div className="tracker-summary-top">
+              <div className="tracker-left">
+                <span className="tracker-left-number" data-testid="tracker-left-number">
+                  {stats.remainingTotal}
+                </span>
+                <div className="tracker-left-text">
+                  <span className="tracker-left-label">{t('game', 'tracker_left_to_draw')}</span>
+                  <span className="tracker-left-sub">
+                    {t('game', 'tracker_of_list', { count: stats.initialTotal })}
+                    {stats.libraryCountServer > 0 &&
+                      ` · ${t('game', 'tracker_library_count', { count: stats.libraryCountServer })}`}
+                  </span>
+                </div>
+              </div>
+              <span className="tracker-next-label">{t('game', 'tracker_next_draw')}</span>
+            </div>
+
+            {loading ? (
+              <div className="tracker-loading" role="status">
+                {t('game', 'tracker_loading')}
+              </div>
+            ) : (
+              <>
+                <div className="tracker-dist-bar" role="img" aria-label={barLabel}>
+                  {SEGMENTS.map((seg) =>
+                    stats.oddsNextDraw[seg.key] > 0 ? (
+                      <div
+                        key={seg.key}
+                        className={`dist-seg ${seg.css}`}
+                        style={{ width: `${stats.oddsNextDraw[seg.key]}%` }}
+                      />
+                    ) : null,
+                  )}
+                </div>
+                <div className="tracker-legend">
+                  {SEGMENTS.map((seg) => (
+                    <div key={seg.key} className="tracker-legend-item">
+                      <span className="tracker-legend-label">
+                        <span className={`tracker-legend-dot ${seg.css}`} aria-hidden="true" />
+                        {t('game', seg.label)}
+                      </span>
+                      <span className="tracker-legend-values">
+                        <span className="tracker-legend-pct">{stats.oddsNextDraw[seg.key]}%</span>
+                        <span className="tracker-legend-count">({stats.countsRemaining[seg.key]})</span>
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                {!!stats.unknownRemaining && (
+                  <div className="tracker-unknown">
+                    {t('game', 'tracker_unknown_count', { count: stats.unknownRemaining })}
+                  </div>
+                )}
+              </>
             )}
-          </div>
-        </div>
 
-        {/* Live Segmented Distribution Bar */}
-        {stats.initialTotal > 0 && remTotal > 0 && (
-          <div className="tracker-dist-bar" title={`${stats.remainingTotal} ${t('game', 'tracker_remaining')}`}>
-            {landPct > 0 && <div className="dist-seg seg-lands" style={{ width: `${landPct}%` }} />}
-            {creaturePct > 0 && <div className="dist-seg seg-creatures" style={{ width: `${creaturePct}%` }} />}
-            {spellPct > 0 && <div className="dist-seg seg-spells" style={{ width: `${spellPct}%` }} />}
-            {otherPct > 0 && <div className="dist-seg seg-other" style={{ width: `${otherPct}%` }} />}
-          </div>
-        )}
+            {stats.faceDownExileCount > 0 && (
+              <Chip tone="warn" size="xs" icon="alert" title={t('game', 'tracker_face_down_exile')}>
+                {stats.faceDownExileCount} {t('game', 'tracker_face_down_exile')}
+              </Chip>
+            )}
 
-        {/* 2x2 Odds Grid for Vertical Legibility */}
-        {stats.initialTotal > 0 && (
-          <div className="tracker-odds-grid">
-            <div className="tracker-odd-cell cell-lands" title={t('game', 'tracker_lands')}>
-              <div className="odd-cell-header">
-                <Icon name="mountain" size={12} className="odd-icon" />
-                <span className="odd-label">{t('game', 'tracker_lands')}</span>
-              </div>
-              <div className="odd-cell-values">
-                <span className="odd-pct">{stats.oddsNextDraw.land}%</span>
-                <span className="odd-count">({stats.countsRemaining.land})</span>
-              </div>
-            </div>
-
-            <div className="tracker-odd-cell cell-creatures" title={t('game', 'tracker_creatures')}>
-              <div className="odd-cell-header">
-                <Icon name="swords" size={12} className="odd-icon" />
-                <span className="odd-label">{t('game', 'tracker_creatures')}</span>
-              </div>
-              <div className="odd-cell-values">
-                <span className="odd-pct">{stats.oddsNextDraw.creature}%</span>
-                <span className="odd-count">({stats.countsRemaining.creature})</span>
-              </div>
-            </div>
-
-            <div className="tracker-odd-cell cell-spells" title={t('game', 'tracker_spells')}>
-              <div className="odd-cell-header">
-                <Icon name="sparkles" size={12} className="odd-icon" />
-                <span className="odd-label">{t('game', 'tracker_spells')}</span>
-              </div>
-              <div className="odd-cell-values">
-                <span className="odd-pct">{stats.oddsNextDraw.instantOrSorcery}%</span>
-                <span className="odd-count">({stats.countsRemaining.instantOrSorcery})</span>
-              </div>
-            </div>
-
-            <div className="tracker-odd-cell cell-other" title={t('game', 'tracker_other')}>
-              <div className="odd-cell-header">
-                <Icon name="gem" size={12} className="odd-icon" />
-                <span className="odd-label">{t('game', 'tracker_other')}</span>
-              </div>
-              <div className="odd-cell-values">
-                <span className="odd-pct">{stats.oddsNextDraw.other}%</span>
-                <span className="odd-count">({stats.countsRemaining.other})</span>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {stats.faceDownExileCount > 0 && (
-          <Chip tone="warn" size="xs" icon="alert" title={t('game', 'tracker_face_down_exile')}>
-            {stats.faceDownExileCount} {t('game', 'tracker_face_down_exile')}
-          </Chip>
-        )}
-
-        {/* Control toolbar */}
-        {stats.initialTotal > 0 && (
-          <div className="tracker-controls">
-            <div className="tracker-search-wrap">
-              <Icon name="search" size={12} className="tracker-search-icon" />
-              <input
-                type="text"
-                className="tracker-search-input"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={t('game', 'tracker_search_placeholder')}
-              />
-              {searchQuery && (
-                <CloseButton variant="plain" size="sm" className="tracker-search-clear" label={t('game', 'tracker_clear_search')} onClick={() => setSearchQuery('')} />
-              )}
-            </div>
-
-            <div className="tracker-actions-row">
-              <div className="tracker-sort-wrap">
-                <select
-                  className="tracker-sort-select"
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
-                  aria-label={t('game', 'tracker_sort_label')}
-                >
-                  <option value="cmc">{t('game', 'tracker_sort_cmc')}</option>
-                  <option value="name">{t('game', 'tracker_sort_name')}</option>
-                  <option value="count">{t('game', 'tracker_sort_count')}</option>
-                  <option value="odds">{t('game', 'tracker_sort_odds')}</option>
-                </select>
+            <div className="tracker-controls">
+              <div className="tracker-search-wrap">
+                <Icon name="search" size={12} className="tracker-search-icon" />
+                <input
+                  type="text"
+                  className="tracker-search-input"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder={t('game', 'tracker_search_placeholder')}
+                />
+                {searchQuery && (
+                  <CloseButton
+                    variant="plain"
+                    size="sm"
+                    className="tracker-search-clear"
+                    label={t('game', 'tracker_clear_search')}
+                    onClick={() => setSearchQuery('')}
+                  />
+                )}
               </div>
 
-              <ChipButton
-                size="sm"
-                active={hideEmpty}
-                onClick={() => setHideEmpty(!hideEmpty)}
-                title={hideEmpty ? t('game', 'tracker_show_all') : t('game', 'tracker_hide_empty')}
-              >
-                <Icon name={hideEmpty ? 'eye' : 'eyeOff'} size={12} />
-                <span>{hideEmpty ? t('game', 'tracker_show_all') : t('game', 'tracker_hide_empty')}</span>
-              </ChipButton>
+              <div className="tracker-sort" role="group" aria-label={t('game', 'tracker_sort_label')}>
+                {SORT_OPTIONS.map((option) => (
+                  <button
+                    key={option.id}
+                    type="button"
+                    className="tracker-sort-btn"
+                    aria-pressed={sortBy === option.id}
+                    onClick={() => setSortBy(option.id)}
+                  >
+                    {t('game', option.label)}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         )}
       </div>
 
-      {/* Cards Scroll Container */}
       <div className="tracker-card-list">
-        {stats.initialTotal === 0 ? (
+        {!hasDeck ? (
           <EmptyState size="lg" icon="layers">{t('game', 'tracker_no_deck')}</EmptyState>
-        ) : displayedCards.length === 0 ? (
+        ) : hasNoResults ? (
           <EmptyState size="lg">{t('game', 'tracker_no_results')}</EmptyState>
         ) : (
-          displayedCards.map((c) => {
-            const isEmpty = c.remainingCount === 0
-            const colorClass = getCardColorClass(c)
-            const fillPct = c.initialAmount > 0 ? Math.min(100, Math.max(0, (c.remainingCount / c.initialAmount) * 100)) : 0
-
-            return (
-              <div
-                key={c.name}
-                className={`tracker-card-row ${isEmpty ? 'is-empty' : ''} ${c.isTopCard ? 'is-top-revealed' : ''} ${colorClass}`}
-                data-card-name={c.name}
-                onMouseEnter={(e) => {
-                  setHoverCard(c.sampleCard)
-                  setHoverRect(e.currentTarget.getBoundingClientRect())
-                }}
-                onMouseLeave={() => setHoverCard(null)}
-              >
-                {/* Visual depletion progress fill */}
-                <div className="tracker-row-fill" style={{ width: `${fillPct}%` }} />
-
-                {/* Left color bar */}
-                <div className={`tracker-color-bar ${colorClass}`} />
-
-                {/* Fixed-width mana/land slot for uniform vertical alignment */}
-                <div className="tracker-mana-slot">
-                  {c.manaCost ? (
-                    <ManaCost manaCost={c.manaCost} size={13} className="tracker-row-mana" />
-                  ) : c.isLand ? (
-                    <Icon name="mountain" size={12} className="tracker-land-icon" aria-hidden="true" />
-                  ) : (
-                    <span className="tracker-zero-pip">0</span>
-                  )}
-                </div>
-
-                {/* Card name & top indicator */}
-                <div className="tracker-name-col">
-                  <span className="tracker-row-name" title={c.name}>
-                    {c.name}
-                  </span>
-                  {c.isTopCard && (
-                    <span className="tracker-top-badge" title={t('game', 'tracker_top_revealed')}>
-                      <Icon name="eye" size={10} /> TOP
+          <>
+            {loading ? (
+              <PanelRows cards={inLibrary} onPreview={showPreview} onPreviewEnd={endPreview} />
+            ) : (
+              groups.map((group) => (
+                <section key={group.kind} className={`tracker-group kind-${group.kind}`} data-group={group.kind}>
+                  <header className="tracker-group-head">
+                    <span className="tracker-group-dot" aria-hidden="true" />
+                    <span className="tracker-group-label">{t('game', group.label)}</span>
+                    <span className="tracker-group-count">
+                      {group.cards.reduce((sum, c) => sum + c.remainingCount, 0)}
                     </span>
-                  )}
-                </div>
+                  </header>
+                  <PanelRows cards={group.cards} onPreview={showPreview} onPreviewEnd={endPreview} />
+                </section>
+              ))
+            )}
 
-                {/* Counts and Probability */}
-                <div className="tracker-data-col">
-                  <span className={`tracker-row-count ${isEmpty ? 'count-zero' : ''}`}>
-                    {c.remainingCount} / {c.initialAmount}
-                  </span>
-                  <span className="tracker-row-prob">
-                    {c.drawProbability > 0 ? `${c.drawProbability}%` : '0%'}
-                  </span>
-                </div>
-              </div>
-            )
-          })
+            {drawn.length > 0 && (
+              <section className="tracker-drawn" data-testid="tracker-drawn">
+                <button
+                  type="button"
+                  className="tracker-drawn-toggle"
+                  aria-expanded={drawnOpen}
+                  onClick={() => setDrawnOpen((open) => !open)}
+                >
+                  <Icon name={drawnOpen ? 'chevronDown' : 'chevronRight'} size={12} />
+                  <span className="tracker-drawn-label">{`${t('game', 'tracker_drawn')} · ${drawn.length}`}</span>
+                  {!drawnOpen && (
+                    <span className="tracker-drawn-names">{drawn.map((c) => c.name).join(', ')}</span>
+                  )}
+                </button>
+                {drawnOpen && (
+                  <div className="tracker-drawn-rows">
+                    {drawn.map((card) => (
+                      <TrackerRow key={card.name} card={card} dimmed onPreview={showPreview} onPreviewEnd={endPreview} />
+                    ))}
+                  </div>
+                )}
+              </section>
+            )}
+          </>
         )}
       </div>
 
-      {/* Card Preview Portal / Hover */}
       <FloatingCardPreview card={hoverCard} anchorRect={hoverRect} fixedSide="left" />
+    </div>
+  )
+}
+
+function PanelRows({ cards, onPreview, onPreviewEnd }: PanelRowsProps) {
+  return (
+    <div className="tracker-group-rows">
+      {cards.map((card) => (
+        <TrackerRow key={card.name} card={card} onPreview={onPreview} onPreviewEnd={onPreviewEnd} />
+      ))}
     </div>
   )
 }

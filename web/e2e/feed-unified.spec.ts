@@ -51,14 +51,12 @@ test.describe('Feed unificado con diseño carta', () => {
         'ni un solo banner del diseño antiguo'
       ).toHaveCount(0)
 
-      const drawCard = feed.locator('.action-feed-card.type-draw', { hasText: 'roba 7 cartas' })
-      await expect(drawCard).toHaveCount(1)
-      await expect(drawCard.locator('.action-card-bg--tint.tint-draw')).toHaveCount(1)
-      await expect(drawCard.locator('.action-player-tag', { hasText: 'feedp1' })).toHaveCount(1)
+      const drawRow = feed.locator('.action-feed-row[data-type="draw"]', { hasText: 'roba 7 cartas' })
+      await expect(drawRow).toHaveCount(1)
+      await expect(drawRow.locator('.is-player', { hasText: 'feedp1' })).toHaveCount(1)
 
-      const waitCard = feed.locator('.action-feed-card.type-phase', { hasText: 'Esperando a feedp1' })
-      await expect(waitCard).toHaveCount(1)
-      await expect(waitCard.locator('.action-card-bg--tint.tint-phase')).toHaveCount(1)
+      const waitRow = feed.locator('.action-feed-row[data-type="phase"]', { hasText: 'Esperando a feedp1' })
+      await expect(waitRow).toHaveCount(1)
 
       const shotsDir = path.join(path.dirname(fileURLToPath(import.meta.url)), 'shots', 'feed-unified')
       fs.mkdirSync(shotsDir, { recursive: true })

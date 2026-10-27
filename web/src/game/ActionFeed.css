@@ -1,6 +1,6 @@
 .action-feed-container {
-  display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
+  display: flex;
+  flex-direction: column;
   height: 100%;
   width: 100%;
   background: rgb(var(--ink-rgb) / 0.95);
@@ -8,6 +8,7 @@
 }
 
 .action-feed-controls {
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -16,20 +17,27 @@
   border-bottom: 1px solid var(--veil-2);
 }
 
+.action-feed-head {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1h);
+  min-width: 0;
+}
+
 .action-count-tag {
   font-size: var(--fs-2xs);
   color: var(--fg-3);
+  white-space: nowrap;
 }
 
 .action-feed-list {
-  height: 100%;
+  flex: 1 1 0;
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: var(--sp-2) var(--sp-2) var(--sp-4) var(--sp-2);
+  padding: 0 0 var(--sp-4) 0;
   display: flex;
   flex-direction: column;
-  gap: var(--sp-1h);
   scrollbar-width: thin;
   scrollbar-color: var(--veil-5) transparent;
 }
@@ -55,6 +63,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--sp-1);
+  padding: var(--sp-2);
 }
 
 .game-log-time {

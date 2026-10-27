@@ -629,6 +629,7 @@ export default function GameScreen() {
                   onClose={() => setSidePanelTab(null)}
                   hasCommanders={hasCommanders}
                   hasActiveMechanics={hasActiveMechanics}
+                  mechanicsCount={mechanicsCount}
                 />
               )}
               <GameDock

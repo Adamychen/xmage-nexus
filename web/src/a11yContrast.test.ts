@@ -78,11 +78,9 @@ describe('a11y contrast minimums (C.15, inspection-backed)', () => {
     expect(fontSizeRem(block(slot, '.designation-badge'))).toBeGreaterThanOrEqual(0.687)
   })
 
-  it('feed description keeps contrast over card art', () => {
-    const decls = block(feed, '.action-desc-text')
-    expect(contrast(colorOf(decls), tokenValue('--ink-4'))).toBeGreaterThanOrEqual(4.5)
-    expect(decls).toContain('text-shadow')
-    expect(decls).toContain('background')
+  it('feed sentence text keeps 4.5:1 contrast on the ink panel', () => {
+    const decls = block(feed, '.action-feed-sentence')
+    expect(contrast(colorOf(decls), tokenValue('--ink-0'))).toBeGreaterThanOrEqual(4.5)
   })
 
   it('playable cards show the glow on keyboard focus too', () => {

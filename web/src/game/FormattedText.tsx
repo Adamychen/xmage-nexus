@@ -5,12 +5,20 @@ import { substituteCardRefs } from '../board/designations'
 import { symbolToSvgPath } from '../decks/ArenaManaSymbols'
 import './FormattedText.css'
 
+export interface FormattedName {
+  text: string
+  kind: 'player' | 'card'
+  color?: string
+}
+
 interface FormattedTextProps {
   text: string | null | undefined
   className?: string
   onHover?: (card: CardView | null, rect?: DOMRect) => void
   /** Nombre de carta para sustituir {this} y los marcadores ICON_GOOD/BAD del servidor */
   cardName?: string
+  /** Plain-text names to highlight: players in their colour, cards as hover links. */
+  names?: readonly FormattedName[]
 }
 
 /**
@@ -261,7 +269,33 @@ export function ManaBadge({ symbol }: { symbol: string }) {
   )
 }
 
-export default function FormattedText({ text, className = '', onHover, cardName }: FormattedTextProps) {
+function escapeRegExp(text: string): string {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+function splitByNames(text: string, names: readonly FormattedName[]): Array<{ text: string; name?: FormattedName }> {
+  const byText = new Map<string, FormattedName>()
+  for (const name of names) if (name.text && !byText.has(name.text)) byText.set(name.text, name)
+  if (byText.size === 0) return [{ text }]
+  const alternatives = [...byText.keys()].sort((a, b) => b.length - a.length).map(escapeRegExp).join('|')
+  const pattern = new RegExp(`(?<!\\p{L})(?:${alternatives})(?!\\p{L})`, 'gu')
+  const parts: Array<{ text: string; name?: FormattedName }> = []
+  let last = 0
+  for (const match of text.matchAll(pattern)) {
+    const at = match.index ?? 0
+    if (at > last) parts.push({ text: text.slice(last, at) })
+    parts.push({ text: match[0], name: byText.get(match[0]) })
+    last = at + match[0].length
+  }
+  if (last < text.length) parts.push({ text: text.slice(last) })
+  return parts
+}
+
+function cardStub(name: string): CardView {
+  return { name, manaValue: 0, expansionSetCode: '', cardNumber: '0' } as CardView
+}
+
+export default function FormattedText({ text, className = '', onHover, cardName, names }: FormattedTextProps) {
   if (!text) return null
 
   const source = cardName ? substituteCardRefs(text, cardName) : text
@@ -272,6 +306,32 @@ export default function FormattedText({ text, className = '', onHover, cardName 
       {tokens.map((token, idx) => {
         if (token.type === 'mana') {
           return <ManaBadge key={idx} symbol={token.content} />
+        }
+        if (token.type === 'text' && names?.length) {
+          return (
+            <React.Fragment key={idx}>
+              {splitByNames(token.content, names).map((part, j) => {
+                if (!part.name) return <React.Fragment key={j}>{part.text}</React.Fragment>
+                if (part.name.kind === 'player') {
+                  return (
+                    <span key={j} className="formatted-colored is-player" style={part.name.color ? { color: part.name.color } : undefined}>
+                      {part.text}
+                    </span>
+                  )
+                }
+                return (
+                  <span
+                    key={j}
+                    className="formatted-colored is-card"
+                    onMouseEnter={(e) => onHover?.(cardStub(part.text), e.currentTarget.getBoundingClientRect())}
+                    onMouseLeave={() => onHover?.(null)}
+                  >
+                    {part.text}
+                  </span>
+                )
+              })}
+            </React.Fragment>
+          )
         }
         if (token.type === 'colored') {
           const isCard = token.isCard !== false

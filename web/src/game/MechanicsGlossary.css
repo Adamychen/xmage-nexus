@@ -1,0 +1,43 @@
+.mech-glossary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  width: 100%;
+  text-align: left;
+}
+
+.mech-glossary-intro {
+  margin: 0;
+  font-size: var(--fs-xs);
+  line-height: 1.45;
+  color: var(--fg-2);
+}
+
+.mech-glossary-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  margin: 0;
+}
+
+.mech-glossary-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  padding-left: var(--sp-2h);
+  border-left: 2px solid var(--gold-line);
+}
+
+.mech-glossary-item dt {
+  margin: 0;
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  color: var(--fg-1);
+}
+
+.mech-glossary-item dd {
+  margin: 0;
+  font-size: var(--fs-xs);
+  line-height: 1.45;
+  color: var(--fg-2);
+}

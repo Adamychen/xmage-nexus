@@ -184,7 +184,7 @@ Shipped with the keyword auras and combat moments (`board/keywordAura.ts`, `boar
 Design: `docs/plans/2026-10-22-behavior-specs-design.md`. Phase 1 shipped 2026-10-22: `docs/specs/` with one file per area and `web/src/specCoverage.test.ts` linking each rule to the tests named after it.
 
 - Rules marked `Guard: none yet` need a test (`grep -n "none yet" docs/specs/*.md`).
-- Areas without a spec are written the first time someone changes them (stack, log and chat, deck builder, draft, spectating).
+- Areas without a spec are written the first time someone changes them (stack, deck builder, draft, spectating; the side panel with its log and chat is `docs/specs/panel.md`).
 - Findings while writing the specs (not made rules). Confirmed in code:
   - `state/events/game.ts` clears an open `GAME_PLAY_MANA` prompt on any update whose stack is non-empty, and a spell being paid for is already on the stack. Whether the real server sends an update between mana asks needs a recorded frame.
   - `board/revealedCards.ts` `opponentRevealedCards` adds every revealed group to each opponent's known hand, whatever zone or player it came from (`handRevealFx.ts` filters by the group name).
