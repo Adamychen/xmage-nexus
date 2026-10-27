@@ -26,6 +26,14 @@ export type MatrixCommander = CommanderInfo & { ownerId: string; ownerName: stri
  *  channel that identifies a commander wherever the object currently is. */
 const COMMANDER_MARKER = /^<b>Commander<\/b>(\s|$)/
 
+/** A double-faced commander is registered by the engine under the id of the whole card, while its
+ *  battlefield permanent carries the id of the face (`PermanentCard` uses the face card's id) and
+ *  the view only reports the whole card as `secondCardFace` (`CardView`: `new CardView(getMainCard())`).
+ *  Slicer and every transformed face resolve to that whole-card id, so one commander stays one column. */
+function commanderObjectId(card: CardView): string {
+  return card.secondCardFace?.id || card.id || ''
+}
+
 function isCommanderObject(card: { rules?: string[] | null } | null | undefined): boolean {
   return (card?.rules ?? []).some((r) => COMMANDER_MARKER.test(String(r)))
 }
@@ -60,7 +68,7 @@ export function commandersOf(player: PlayerView | undefined): CommanderInfo[] {
   }
 
   const push = (card: CardView, isCompanion: boolean) => {
-    const id = card.id
+    const id = commanderObjectId(card)
     if (!id || seen.has(id)) return
     if (!isCommanderObject(card)) return
     seen.add(id)
@@ -203,7 +211,7 @@ export function commanderStateCarriers(game: GameView | null | undefined, comman
   for (const player of game.players) {
     for (const perm of Object.values(player.battlefield ?? {})) {
       // Cast commander: the permanent keeps the commander's object id.
-      if (perm?.id === id) carriers.push(perm)
+      if (perm?.id === id || (perm && commanderObjectId(perm) === id)) carriers.push(perm)
       // Mutate host: the commander hides under it and is listed in its mutateView.
       const hidden = perm?.mutateView?.cards?.[id]
       if (hidden) carriers.push(perm, hidden)

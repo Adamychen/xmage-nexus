@@ -443,3 +443,36 @@ describe('commander memory: BRD-18 edge cases', () => {
     expect(ownerIds(later, 'p1')).toEqual(['bf-1'])
   })
 })
+
+describe('double-faced commander (Slicer)', () => {
+  afterEach(() => resetCommanderMemory())
+
+  const face = (name: string, rules: string[]) =>
+    makePermanent({ id: 'face-1', name, rules, secondCardFace: makeCard({ id: 'cz-1', name: 'Slicer, Hired Muscle' }) })
+
+  it('keeps one column and reads the damage on either face of the permanent', () => {
+    const before = makeGameView({
+      players: [
+        makePlayer({ playerId: 'p1', name: 'Alice', commandList: [commanderCard('cz-1', 'Slicer, Hired Muscle', [])] }),
+        makePlayer({ playerId: 'p2', name: 'Bob' }),
+      ],
+    })
+    syncCommanderMemory(before)
+    for (const name of ['Slicer, Hired Muscle', 'Slicer, High-Speed Antagonist']) {
+      const after = makeGameView({
+        players: [
+          makePlayer({
+            playerId: 'p1',
+            name: 'Alice',
+            commandList: [],
+            battlefield: { 'face-1': face(name, [commanderInfoRule(1), commanderDamageRule(4, 'Bob')]) },
+          }),
+          makePlayer({ playerId: 'p2', name: 'Bob' }),
+        ],
+      })
+      const roster = syncCommanderMemory(after).filter((c) => c.ownerId === 'p1')
+      expect(roster.map((c) => c.id)).toEqual(['cz-1'])
+      expect(commanderDamageDealt(after, roster[0], (after.players ?? [])[1])).toBe(4)
+    }
+  })
+})
