@@ -1,17 +1,14 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
-export default defineConfig(({ mode }) => {
-  const demo = mode === 'demo'
+export default defineConfig(() => {
   return {
     plugins: [react()],
-    base: process.env.TAURI_BUILD || demo ? './' : '/',
-    define: { __DEMO__: JSON.stringify(demo) },
-    build: demo ? { outDir: 'dist-demo' } : undefined,
+    base: process.env.TAURI_BUILD ? './' : '/',
     server: {
       port: 5173,
       watch: {
-        ignored: ['**/test-results*/**', '**/playwright-report/**', '**/e2e/shots/**', '**/dist/**', '**/dist-demo/**'],
+        ignored: ['**/test-results*/**', '**/playwright-report/**', '**/e2e/shots/**', '**/dist/**'],
       },
       proxy: {
         '/ranking.json': {

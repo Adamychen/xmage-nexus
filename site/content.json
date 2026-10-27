@@ -34,7 +34,7 @@
     "i18n": {
       "es": {
         "skip": "Saltar al contenido",
-        "nav": { "demo": "Cómo jugar", "features": "Features", "formats": "Formatos", "download": "Descarga", "roadmap": "Roadmap", "status": "Status", "cta": "Descargar", "try": "Demo" },
+        "nav": { "demo": "Cómo jugar", "features": "Features", "formats": "Formatos", "download": "Descarga", "roadmap": "Roadmap", "status": "Status", "cta": "Descargar" },
         "hero": {
           "eyebrow": "Cliente de MTG no oficial para el motor de reglas XMage",
           "title": "XMage en tu navegador, sin instalar Java",
@@ -43,13 +43,9 @@
           "secondaryCta": "Ver en GitHub",
           "playCta": "Probar ahora",
           "playNote": "Partidas reales · abre el cliente y elige tu servidor · sin instalar nada",
-          "demoCta": "Probar la demo",
-          "demoNote": "Demo interactiva: el cliente real con datos de ejemplo, sin instalar ni crear cuenta. Las partidas siguen un guion.",
           "trust": ["React 19 + TypeScript", "XMage 1.4.62-V1", "Proxy multi-tenant", "Web o escritorio"]
         },
         "demoTitle": "Así se juega",
-        "demoOpen": "Abrir la demo interactiva",
-        "demoOpenNote": "Recorre el lobby, el ranking ELO, el creador de mazos con EDHREC, los ajustes y 12 escenarios de partida.",
         "demoSubtitle": "Sin descargas ni cuentas: abre la web y en segundos estás en una mesa. Clips de partidas reales sobre el motor de XMage.",
         "demoSteps": [
           { "title": "Entra sin instalar nada", "desc": "Elige servidor, pon tu nombre y crea una mesa contra la IA o contra otros jugadores. Todo en el navegador.", "clip": "login-and-create-table", "alt": "Lobby de XMage Nexus creando una mesa" },
@@ -131,7 +127,7 @@
       },
       "en": {
         "skip": "Skip to content",
-        "nav": { "demo": "How to play", "features": "Features", "formats": "Formats", "download": "Download", "roadmap": "Roadmap", "status": "Status", "cta": "Download", "try": "Demo" },
+        "nav": { "demo": "How to play", "features": "Features", "formats": "Formats", "download": "Download", "roadmap": "Roadmap", "status": "Status", "cta": "Download" },
         "hero": {
           "eyebrow": "Unofficial MTG client for the XMage rules engine",
           "title": "XMage in your browser, no Java install",
@@ -140,13 +136,9 @@
           "secondaryCta": "View on GitHub",
           "playCta": "Play now",
           "playNote": "Real games · opens the client, pick your server · no install",
-          "demoCta": "Try the demo",
-          "demoNote": "Interactive demo: the real client on sample data, no install or account. Games follow a script.",
           "trust": ["React 19 + TypeScript", "XMage 1.4.62-V1", "Multi-tenant proxy", "Web or desktop"]
         },
         "demoTitle": "See it in action",
-        "demoOpen": "Open the interactive demo",
-        "demoOpenNote": "Tour the lobby, ELO ranking, deck builder with EDHREC, settings and 12 playable scenarios.",
         "demoSubtitle": "No downloads, no account: open the page and you're at a table in seconds. Real gameplay clips on the XMage engine.",
         "demoSteps": [
           { "title": "Join without installing", "desc": "Pick a server, type a name and create a table against the AI or other players. All in your browser.", "clip": "login-and-create-table", "alt": "XMage Nexus lobby creating a table" },

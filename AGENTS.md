@@ -381,12 +381,5 @@ for `mechanics.spec.ts`, so a fixture change must be checked against every spec 
   ("Proxy is still loading card data") as an integration red.
 - Published by `.github/workflows/pages.yml` (push = lightweight layers; nightly cron = also integration).
   Pages **source must be "GitHub Actions"** (Settings → Pages).
-- **Interactive demo** (`site/demo/`, built in `pages.yml`): the real web client with
-  `vite build --mode demo` (`npm --prefix web run build:demo`, `__DEMO__` true), talking to the
-  e2e `FakeServerCore` in the browser through `web/src/demo/DemoSocket.ts` — no proxy, no Java.
-  `src/demo/` holds the seed (`boot.ts`), invented roster/tables/EDHREC page (`data.ts`), the 12
-  scenarios (`scenarios.ts`, picked by `?scenario=<id>`) and the tour menu (`DemoTour.tsx`).
-  `node scripts/verify-demo.mjs web/dist-demo` tours it and boots every scenario; a failing demo is
-  not published and fails the run after the deploy. Scripted, not the XMage engine: say so in copy.
 - `site/content.json` is the dashboard's canonical roadmap/feature/guard source — keep it in sync
   with `ROADMAP.md` when phases or the feature matrix change.

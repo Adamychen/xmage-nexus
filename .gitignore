@@ -104,7 +104,6 @@ node_modules/.vite
 # local RL bot experiment (python venv, model weights, card embeddings — 1.3 GB
 # of regenerable/local binaries, and nothing in it is part of the product)
 /rl/
-site/demo/
 
 # dashboard and CI result markers (written by scripts/dashboard-ci.mjs)
 web/.typecheck.json
@@ -113,5 +112,4 @@ web/.mcp-tests.json
 web/.vitest.json
 web/.e2e.json
 web/.proxy.json
-web/.demo.json
 /web/test-results.json

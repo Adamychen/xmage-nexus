@@ -94,7 +94,6 @@ const WHITELIST = new Set<string>([
   'keywords.opus_name',
   'keywords.station_name',
   'keywords.warp_name',
-  'demo.scenario_planeswalker_title',
 ])
 
 function flatten(obj: TranslationSchema): Record<string, string> {

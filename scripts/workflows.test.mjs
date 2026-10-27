@@ -56,14 +56,3 @@ test("TST-4: the nightly integration steps run without continue-on-error", () =>
     assert.doesNotMatch(block, /continue-on-error:\s*true/, `${step} must not swallow failures`);
   }
 });
-
-test("the demo verification result is regenerated into status.json before deploy", () => {
-  const pages = fs.readFileSync(path.join(repoRoot, ".github", "workflows", "pages.yml"), "utf8");
-  const build = jobBlock(pages, "build");
-  const verifyIdx = build.indexOf("Verify the demo");
-  const regenIdx = build.indexOf("Regenerate status.json with demo results");
-  const uploadIdx = build.indexOf("Upload Pages artifact");
-  assert.ok(verifyIdx !== -1, "verify-demo step exists");
-  assert.ok(regenIdx > verifyIdx, "the status regen must follow the demo verify");
-  assert.ok(uploadIdx > regenIdx, "the status regen must run before the site is uploaded");
-});

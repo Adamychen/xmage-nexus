@@ -98,8 +98,6 @@
     var secondary = document.getElementById("hero-secondary");
     if (secondary && h.secondaryCta) secondary.textContent = h.secondaryCta;
 
-    setText("hero-demo", h.demoCta);
-    setText("hero-demo-note", h.demoNote);
     var playUrl = playHref(d);
     var play = document.getElementById("hero-play");
     if (play) {
@@ -130,8 +128,6 @@
 
   function renderDemoSection(t) {
     setText("demo-title", t.demoTitle);
-    setText("demo-open", t.demoOpen);
-    setText("demo-open-note", t.demoOpenNote);
     setText("demo-sub", t.demoSubtitle);
     var grid = document.getElementById("demo-grid");
     if (!grid) return;

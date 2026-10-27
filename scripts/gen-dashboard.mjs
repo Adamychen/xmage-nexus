@@ -132,11 +132,6 @@ export function fakeE2eLayer({ skipped, pw, marker }) {
   };
 }
 
-export function demoVerdict(marker) {
-  if (!marker) return "pending";
-  return marker.status === "pass" ? "pass" : "fail";
-}
-
 function readCoverage() {
   const d = readJson(path.join(webDir, "coverage", "coverage-summary.json"));
   if (!d || !d.total) return null;
@@ -274,7 +269,6 @@ function build() {
   const pw = e2eSkipped ? null : readPlaywright();
   const e2eRun = readJson(path.join(webDir, ".e2e.json"));
   const e2e = fakeE2eLayer({ skipped: e2eSkipped, pw, marker: e2eRun });
-  const demoMarker = readJson(path.join(webDir, ".demo.json"));
   const cov = readCoverage();
   const proxy = readProxy();
   const proxyStatus = proxyVerdict(proxy, readJson(path.join(webDir, ".proxy.json")));
@@ -292,12 +286,6 @@ function build() {
     layer("build", "Build (vite)", markerStatus(webDir, ".build.json")),
     layer("mcp", "MCP (typecheck+test)", markerStatus(webDir, ".mcp-tests.json")),
     layer("fake-e2e", "E2E (fake, no stack)", e2e.status, { ...(pw || {}), note: e2e.note }),
-    layer(
-      "demo",
-      "Interactive demo (tour)",
-      demoVerdict(demoMarker),
-      demoMarker && { checks: demoMarker.checks },
-    ),
     layer("proxy", "Proxy (java)", proxyStatus.status, { ...(proxy || {}), note: proxyStatus.note }),
     layer(
       "integration",

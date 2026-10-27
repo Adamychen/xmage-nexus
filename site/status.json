@@ -1,28 +1,28 @@
 {
-  "generatedAt": "2026-09-30T11:28:00.269Z",
+  "generatedAt": "2026-10-27T20:24:48.121Z",
   "commit": null,
   "runUrl": null,
   "project": {
     "name": "XMage Nexus",
-    "tagline": "Modern, polished web client for XMage (React 19 + TypeScript + WebSocket proxy).",
-    "version": "0.3.0",
+    "tagline": "Unofficial MTG client for the XMage rules engine (React 19 + TypeScript + WebSocket proxy).",
+    "rulesEngineUrl": "https://github.com/magefree/mage",
+    "version": "0.6.2",
     "repo": "Adamychen/xmage-nexus",
     "playUrl": "https://web.xmage-nexus.com",
-    "stack": "XMage Server 1.4.61-V1 · Mage.Proxy (Java 17) · React 19 + Vite + TS"
+    "stack": "XMage Server 1.4.62-V1 · Mage.Proxy (Java 17) · React 19 + Vite + TS"
   },
   "release": {
-    "version": "0.3.0",
-    "date": "2026-09-27",
-    "tag": "v0.3.0",
+    "version": "0.6.2",
+    "date": "2026-10-04",
+    "tag": "v0.4.3",
     "status": "published",
-    "notes": "v0.3.0: games survive dropped connections, proxy restarts and server outages; compact Arena-style battlefield cards with a configurable tap style; combat strikes land before life drops; table owners can delete tables from the lobby; blocking rollback vote dialog; Archidekt import and desktop News freeze fixed. Rebuilds the proxy component.",
+    "notes": "v0.4.3: upgrades the XMage engine to 1.4.62-V1 (beta.xmage.today) and ships rebuilt components (server + proxy) from the nexus fork. Upstream 1.4.62 fixes the oneway thread-pool leak itself, so the fork delegation patch is dropped; golden frames and all contract guards were re-recorded against 1.4.62.",
     "highlights": [
-      "Games survive every kind of disconnect: a proxy restart keeps the games, a dropped connection has a grace period, the proxy re-logs in by itself after losing the XMage server, and a resumable stream replays exactly the frames a reconnecting tab missed",
-      "Compact Arena-style battlefield cards (art-crop tiles with name, type, P/T and mana pips) and a Tilted 45° tap style, with a {T} marker and compact command-zone tiles",
-      "Combat strikes: attackers lunge one after another and life and damage drop when each strike lands",
-      "Table owners can delete their tables from the lobby; a failed table creation no longer leaves stray tables behind",
-      "Rollback vote dialog listing every player's vote; SIM seats accept rollbacks",
-      "Fixes: Archidekt URL import, desktop About → News freeze, Space passing priority after a click, board scrolling up while playing"
+      "XMage 1.4.62-V1: new sets/cards and engine fixes from upstream",
+      "Thread-pool leak fix now comes from upstream (idle thread expiry) - the nexus one-file patch is retired",
+      "All 119+ golden frames re-recorded against 1.4.62 and validated (contract + replay)",
+      "Components are rebuilt in this release (server + proxy 1.4.62)",
+      "Dual server flavors (beta + XDHS) keep working; XDHS updated to its own 1.6.1 engine"
     ],
     "downloads": [
       {
@@ -65,16 +65,16 @@
           "cta": "Descargar"
         },
         "hero": {
-          "eyebrow": "Cliente web moderno para XMage",
+          "eyebrow": "Cliente de MTG no oficial para el motor de reglas XMage",
           "title": "XMage en tu navegador, sin instalar Java",
           "subtitle": "Lobby en vivo, tablero con arte en alta resolución, targeting visual, audio y 9 idiomas sobre el motor probado de XMage.",
           "primaryCta": "Descargar para",
           "secondaryCta": "Ver en GitHub",
           "playCta": "Probar ahora",
-          "playNote": "Demo en vivo · abre el cliente y elige tu servidor · sin instalar nada",
+          "playNote": "Partidas reales · abre el cliente y elige tu servidor · sin instalar nada",
           "trust": [
             "React 19 + TypeScript",
-            "XMage 1.4.61-V1",
+            "XMage 1.4.62-V1",
             "Proxy multi-tenant",
             "Web o escritorio"
           ]
@@ -186,6 +186,8 @@
         "downloadSubtitle": "Juega al instante en el navegador o descarga el launcher de escritorio.",
         "downloadAll": "Todas las versiones →",
         "downloadAllSub": "GitHub Releases",
+        "downloadOthers": "Otros formatos para tu equipo",
+        "downloadFileHint": "El launcher descarga el resto (Java, servidor, proxy) él solo: solo necesitas el archivo de arriba.",
         "downloadPlay": "Jugar en el navegador →",
         "downloadPlaySub": "Probar sin instalar",
         "recommended": "Recomendado",
@@ -228,6 +230,7 @@
         "statusTeaserDesc": "Tests, cobertura, anti-drift y matriz de paridad actualizados automáticamente.",
         "seeStatus": "Ver dashboard técnico",
         "footerNote": "Imágenes de cartas cortesía de Scryfall. No afiliado a Wizards of the Coast. Magic: The Gathering es una marca registrada de Wizards of the Coast.",
+        "rulesEngine": "Motor de reglas por XMage",
         "health": {
           "all": "● Todos los sistemas operativos",
           "fail": "● %n capa(s) en fallo"
@@ -259,16 +262,16 @@
           "cta": "Download"
         },
         "hero": {
-          "eyebrow": "Modern web client for XMage",
+          "eyebrow": "Unofficial MTG client for the XMage rules engine",
           "title": "XMage in your browser, no Java install",
           "subtitle": "Live lobby, HD-art battlefield, visual targeting, audio and 9 languages on top of XMage's battle-tested engine.",
           "primaryCta": "Download for",
           "secondaryCta": "View on GitHub",
           "playCta": "Play now",
-          "playNote": "Live demo · opens the client, pick your server · no install",
+          "playNote": "Real games · opens the client, pick your server · no install",
           "trust": [
             "React 19 + TypeScript",
-            "XMage 1.4.61-V1",
+            "XMage 1.4.62-V1",
             "Multi-tenant proxy",
             "Web or desktop"
           ]
@@ -380,6 +383,8 @@
         "downloadSubtitle": "Play instantly in the browser or grab the desktop launcher.",
         "downloadAll": "All versions →",
         "downloadAllSub": "GitHub Releases",
+        "downloadOthers": "Other formats for your system",
+        "downloadFileHint": "The launcher fetches the rest (Java, server, proxy) by itself: you only need the file above.",
         "downloadPlay": "Play in your browser →",
         "downloadPlaySub": "Try without installing",
         "recommended": "Recommended",
@@ -422,6 +427,7 @@
         "statusTeaserDesc": "Tests, coverage, anti-drift and the parity matrix, updated automatically.",
         "seeStatus": "View technical dashboard",
         "footerNote": "Card images courtesy of Scryfall. Not affiliated with Wizards of the Coast. Magic: The Gathering is a trademark of Wizards of the Coast.",
+        "rulesEngine": "Rules engine by XMage",
         "health": {
           "all": "● All systems operational",
           "fail": "● %n layer(s) failing"
@@ -447,7 +453,7 @@
     {
       "name": "unit",
       "label": "Unit (vitest)",
-      "status": "pending"
+      "status": "fail"
     },
     {
       "name": "coverage",
@@ -457,12 +463,12 @@
     {
       "name": "typecheck",
       "label": "Typecheck (tsc)",
-      "status": "pending"
+      "status": "fail"
     },
     {
       "name": "build",
       "label": "Build (vite)",
-      "status": "pending"
+      "status": "fail"
     },
     {
       "name": "mcp",
@@ -472,29 +478,30 @@
     {
       "name": "fake-e2e",
       "label": "E2E (fake, no stack)",
-      "status": "pending"
+      "status": "fail",
+      "note": "no Playwright JSON report was written"
     },
     {
       "name": "proxy",
       "label": "Proxy (java)",
       "status": "pass",
-      "total": 189,
-      "passed": 189,
+      "total": 308,
+      "passed": 308,
       "failed": 0,
       "durationMs": null
     },
     {
       "name": "integration",
       "label": "Integration (real stack)",
-      "status": "pending",
-      "note": "nightly / on demand"
+      "status": "pass",
+      "note": "self-test:pass · human-test:pass · verify:pass · verify-restart:pass · e2e-real:pass"
     }
   ],
   "coverage": {
-    "lines": 85.98,
-    "functions": 81.44,
-    "branches": 75.78,
-    "statements": 83.67
+    "lines": 84.96,
+    "functions": 79.05,
+    "branches": 73.59,
+    "statements": 82.27
   },
   "coverageThresholds": {
     "lines": 70,
@@ -536,14 +543,14 @@
       "name": "Visual Polish, Audio & Deck Builder",
       "status": "done",
       "date": "2026-09-03",
-      "desc": "Web Audio engine (22 sfx, 4 buses incl. adaptive generative music), VFX (donut color pie, bars, shake, spell-weight slam, hit sparks, destroy/exile/token deaths, low-life vignette, foil + 3D-tilt preview, cinematic end screen with match stats), selectable playmats (7 static + 2 animated, one tinted by colour identity), in-app deck builder (Scryfall full syntax t:creature c:red cmc<=3 o:haste, help, 9-lang, curve+donut, vertical CMC sort, plain/dck/arena export+clipboard, file drag-drop, goldfish T1-3)."
+      "desc": "Web Audio engine (22 sfx, 4 buses incl. adaptive generative music), VFX (donut color pie, bars, shake, spell-weight slam, hit sparks, destroy/exile/token deaths, countered-spell shatter, transform flip, bounce swirl, life-gain motes, library riffle, flicker, monarch/initiative passing, elimination crack, dice rolls, phasing, mulligan deal, day/night sky, sacrifice, spell copies, planeswalker ultimates, revealed-card flip, mana spent flying to the stack, goad badge, library running out, blocker lunge, low-life vignette, foil + 3D-tilt preview, cinematic end screen with match stats), selectable playmats (7 static + 2 animated, one tinted by colour identity), in-app deck builder (Scryfall full syntax t:creature c:red cmc<=3 o:haste, help, 9-lang, curve+donut, vertical CMC sort, plain/dck/arena export+clipboard, file drag-drop, goldfish T1-3)."
     },
     {
       "id": 4,
       "name": "Desktop Packaging (Tauri)",
       "status": "done",
       "date": "2026-09-19",
-      "desc": "Tauri launcher (Windows/macOS/Linux) with server + proxy + jlinked JRE on first run and signed auto-updater (latest.json); published as v0.1.0 (2026-09-10), v0.2.0 (2026-09-19) and v0.3.0 (2026-09-27). Clean-machine install validation (SmartScreen/Gatekeeper) still tracked in plan5 V7."
+      "desc": "Tauri launcher (Windows/macOS/Linux) with server + proxy + jlinked JRE on first run and signed auto-updater (latest.json); published as v0.1.0 (2026-09-10), v0.2.0 (2026-09-19), v0.3.0 (2026-09-27), v0.4.0 (2026-09-30), v0.4.1 (2026-10-01, beta + XDHS flavors), v0.4.2 (2026-10-02, signed macOS bundle) and v0.4.3 (2026-10-04, XMage 1.4.62-V1 with rebuilt components). Clean-machine install validation (SmartScreen/Gatekeeper) still tracked in ROADMAP §4.1 V7."
     },
     {
       "id": 5,
@@ -570,6 +577,13 @@
     },
     {
       "category": "Connectivity & Lobby",
+      "feature": "Dual Server Flavors (beta.xmage.today + mage.xdhs.net)",
+      "official": "no",
+      "nexus": "yes",
+      "phase": "Completed"
+    },
+    {
+      "category": "Connectivity & Lobby",
       "feature": "Real-time Table & User Broadcasts",
       "official": "yes",
       "nexus": "yes",
@@ -584,7 +598,7 @@
     },
     {
       "category": "Connectivity & Lobby",
-      "feature": "1v1 Table Creation (Human/AI)",
+      "feature": "1v1 Table Creation (Human/AI) — wizard fits the viewport at 100% zoom; edit the selected deck from the Seats step",
       "official": "yes",
       "nexus": "yes",
       "phase": "Completed"
@@ -619,14 +633,14 @@
     },
     {
       "category": "Deck Management",
-      "feature": "Text / Arena / Standard Import & Export (import wizard: format detection, bulk printing resolution, legality review)",
+      "feature": "Text / Arena / Standard Import & Export (file picker first, detected format marked in the select, bulk printing resolution, legality review)",
       "official": "yes",
       "nexus": "yes",
       "phase": "Completed"
     },
     {
       "category": "In-Game Board",
-      "feature": "Hand, Battlefield (HD Art)",
+      "feature": "Hand, Battlefield (HD Art) — card overlay toggles: hand cost pips, P/T badge, summoning-sickness indicator",
       "official": "yes",
       "nexus": "yes",
       "phase": "Completed"
@@ -664,6 +678,13 @@
       "feature": "Control Opponent's Turn (Mindslaver) + Switch Hands",
       "official": "yes",
       "nexus": "partial",
+      "phase": "Completed"
+    },
+    {
+      "category": "In-Game Board",
+      "feature": "New table interface (opt-in): phase dial, stack as a card deck, player portraits, docked side panel, combat damage ledger",
+      "official": "no",
+      "nexus": "yes",
       "phase": "Completed"
     },
     {
@@ -751,8 +772,15 @@
       "phase": "Completed"
     },
     {
+      "category": "Distribution",
+      "feature": "Interactive Web Demo (GitHub Pages, no install)",
+      "official": "no",
+      "nexus": "yes",
+      "phase": "Completed"
+    },
+    {
       "category": "Advanced Formats",
-      "feature": "Commander / EDH (server FFA 3-10; board render clamp 4)",
+      "feature": "Commander / EDH (server FFA 3-10; board render clamp 4; per-kind bands, focus on one opponent's board, and an opt-in main board with a side panel of scaled board copies)",
       "official": "yes",
       "nexus": "yes",
       "phase": "Completed"
@@ -796,10 +824,16 @@
       "status": "pass",
       "desc": "CreateTable formats (gameTypes/deckTypes) are exhaustive vs Mage.Server/config/config.xml — no drift when offline/fake.",
       "note": "Guard: web/src/state/serverStateCoverage.test.ts + scripts/server-state-schema.mjs"
+    },
+    {
+      "name": "specCoverage",
+      "status": "pass",
+      "desc": "Every behaviour rule in docs/specs/ lists exactly the test files whose titles carry its id; unknown ids and stale 'none yet' markers fail.",
+      "note": "Guard: web/src/specCoverage.test.ts (format: docs/specs/README.md)"
     }
   ],
   "engineGaps": {
-    "totalMissing": 140,
+    "totalMissing": 142,
     "entries": [
       {
         "view": "PermanentView",
@@ -848,8 +882,8 @@
       {
         "key": "card",
         "label": "Card / Permanent",
-        "emitted": 93,
-        "modeled": 93,
+        "emitted": 94,
+        "modeled": 94,
         "unmodeled": []
       },
       {
@@ -867,8 +901,8 @@
         "unmodeled": []
       }
     ],
-    "totalEmitted": 156,
-    "totalModeled": 156,
+    "totalEmitted": 157,
+    "totalModeled": 157,
     "totalUnmodeled": 0,
     "status": "pass"
   }

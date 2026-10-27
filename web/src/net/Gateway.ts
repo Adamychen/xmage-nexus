@@ -1,4 +1,3 @@
-import { DemoSocket } from '../demo/DemoSocket'
 import type { EventEnvelope, LobbyEnvelope, ProxyMessage, ResultEnvelope } from './types'
 import { recordFrame } from './frameBuffer'
 import { recordError } from '../system/errorLog'
@@ -96,7 +95,7 @@ export class Gateway {
 
   private open() {
     this.cleanup()
-    const ws = __DEMO__ ? (new DemoSocket() as unknown as WebSocket) : new WebSocket(this.url)
+    const ws = new WebSocket(this.url)
     this.ws = ws
     ws.onopen = () => {
       if (this.ws !== ws) return

@@ -31,7 +31,6 @@ import DraftScreen from './game/DraftScreen'
 import ConstructScreen from './game/ConstructScreen'
 import Attribution from './system/Attribution'
 import LoginRetryHint from './system/LoginRetryHint'
-import DemoTour from './demo/DemoTour'
 
 // P3: galería de estados (solo dev). El import dinámico queda tras
 // `import.meta.env.DEV`, así el build de producción no incluye los frames.
@@ -215,7 +214,6 @@ export default function App() {
       <EliminatedDialog />
       <ConfirmHost />
       <DeckIssuesDialog />
-      {__DEMO__ && <DemoTour />}
       {showSetup && <SetupWizard onClose={() => setShowSetup(false)} />}
       {phase !== 'game' && screenKey !== 'login' && (
         <footer className="app-attribution">

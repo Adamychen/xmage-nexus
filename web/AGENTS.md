@@ -34,12 +34,6 @@ proxy over a JSON WebSocket and contains **no XMage/Java code**.
   runs it as its own job with retries and excludes it from the shards).
 - `E2E_BACKEND=real npm run test:e2e:real` — against a live stack (needs the
   proxy running; see `Mage.Proxy/AGENTS.md`). Use only as the anti-drift net.
-- `npm run build:demo` — static in-browser demo (`vite build --mode demo` → `dist-demo/`,
-  published as `site/demo/`): `src/demo/` swaps the WebSocket for the FakeServer core, so the
-  scenarios under `fixtures/` are imported by `src/` and type-checked by `tsc -b`; keep them free
-  of Node APIs. Preview with `npx vite preview --outDir dist-demo`, verify with
-  `node ../scripts/verify-demo.mjs dist-demo`. New build-time constants go in both
-  `vite.config.ts` and `vitest.config.ts`.
 - `#/gallery` — P3 gallery of states (dev only): 160+ entries (the builder
   reads `web/fixtures/recorded/manifest.json` dynamically: 119 recorded frames
   today + prompts + screens/variants), no stack needed. `npx playwright test

@@ -151,14 +151,7 @@ export default function RankingView({ users, currentUsername, onInspectUser }: R
         {source === 'history' ? (
           <RankingHistory format={format} searchQuery={searchQuery} />
         ) : (
-          <>
-            {__DEMO__ && (
-              <p className="leaderboard-demo-note" data-testid="leaderboard-demo-note">
-                {t('lobby', 'demo_sample_data')}
-              </p>
-            )}
-
-            <div className="leaderboard-table-wrap">
+          <div className="leaderboard-table-wrap">
               <table className="leaderboard-table">
                 <thead>
                   <tr>
@@ -245,8 +238,7 @@ export default function RankingView({ users, currentUsername, onInspectUser }: R
                 </tbody>
               </table>
             </div>
-          </>
-        )}
+          )}
       </section>
     </div>
   )

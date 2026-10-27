@@ -76,7 +76,7 @@ The project has successfully conquered the most difficult engineering hurdles (p
 | **Presentation & Audio** | Sound Effects (Turn bell, life loss, spell cast, combat) | ✅ Basic | ✅ Yes (Web Audio 22 sfx, 4 buses incl. adaptive music, JIT unlock) | Completed (Surpasses Swing) |
 | | VFX & Animations (Spell cast arcs, screen shake, damage) | ❌ No | ✅ Yes (donut color pie, bars, shake, floating damage, spell-weight slam, hit sparks, destroy/exile/token deaths, countered-spell shatter, transform flip, bounce swirl, life-gain motes, library riffle, flicker, monarch/initiative passing, elimination crack, dice rolls, phasing, mulligan deal, day/night sky, sacrifice, spell copies, planeswalker ultimates, revealed-card flip, keyword auras and keyword combat moments, low-life vignette, foil + tilt preview, playmats, cinematic end screen) | Completed (Surpasses Swing) |
 | **Distribution** | Desktop & Web Deployment | ❌ Heavy JRE required | ✅ Web + Tauri launcher (v0.2.3, updater firmado y componentes desacoplados) | Completed |
-| **Distribution** | Interactive Web Demo (GitHub Pages, no install) | ❌ None | ✅ `site/demo/`: the real client on scripted scenarios, ELO ranking, deck builder + EDHREC, 12 playable scenes (§4.10) | Completed |
+| **Distribution** | Interactive Web Demo (GitHub Pages, no install) | ❌ None | Retired: removed 2026-10-27 to eliminate maintenance overhead and brittle headless checks (§4.10) | Retired |
 | **Advanced Formats** | 4-Player Commander / EDH (Command zone, tax, damage) | ✅ Yes | ✅ Yes (PodBoard 2×2 clamp 4; server FFA 3-10) | Completed |
 | | Booster Draft & Sealed Tournaments (Pick timer, packs) | ✅ Yes | ✅ Yes (8P DraftScreen/ConstructScreen) | Completed |
 
@@ -229,18 +229,9 @@ Design: `docs/plans/2026-10-09-report-pipeline-design.md`. Web path shipped.
 | Desktop cannot deliver a report to the maintainers | Desktop dials its own local proxy (`launcher/src-tauri/src/main.rs`), so a desktop report is stored on the player's machine (`%LOCALAPPDATA%\today.xmage.nexus`). Since 2026-10-15 the dialog says so ("Saved on this computer. Nobody has received it yet") and offers **Report on GitHub** (prefilled issue + full report copied to the clipboard; `system/report.ts` `githubIssueUrl`). Still open: the launcher-crash case (no proxy at all) and an automatic upload from the launcher (needs a receiver and abuse limits) |
 | Reports reader needs the reports folder to show detail | Built 2026-10-15: `xmage-status` Reports tab groups the journal's `report` lines by fingerprint and lists what the proxy refused. Click-through detail needs `REPORTS_DIR` in the service environment (the proxy's `--reportsDir`), not set by the unit yet. The public proxy rate-limits to 1 report / 30 s, 5 / session and 1 / fingerprint / session; the dialog now explains each refusal in 9 languages |
 
-### 4.10 Interactive demo on GitHub Pages
+### 4.10 Interactive demo on GitHub Pages (Retired)
 
-`site/demo/`: the real client on scripted scenarios (`vite build --mode demo`), guarded by `src/demo/*.test.ts` and `scripts/verify-demo.mjs`.
-
-| What | Why |
-|---|---|
-| Tour copy internationalized to 9 locales | Built: `DemoTour.tsx`/`scenarios.ts` use typed `titleKey`/`blurbKey` into `TranslationSchema['demo']`; the 12 scenarios' 24 strings exist in all 9 locales, guarded by `scripts/i18n-coverage.mjs` and `src/i18n/i18n.coverage.test.ts` |
-| EDHREC is frozen for one commander | `demoEdhrecPage` only answers `krenko-mob-boss`; card search and EDHREC resolution still call Scryfall live |
-| Roster and tables are invented | `src/demo/data.ts`. The ranking carries a "sample data" note since 2026-10-15 (`leaderboard-demo-note`, checked by `verify-demo.mjs`); the lobby table list does not |
-| Built: a demo layer on the status dashboard | `verify-demo.mjs` writes `web/.demo.json`; `gen-dashboard.mjs` renders it as the "Interactive demo (tour)" layer via `demoVerdict`; `pages.yml` regenerates `status.json` with the demo result and fails the run on a red demo layer |
-| Not covered: replay viewer, spectate, chat bots | Needs a scenario that streams frames |
-| Mobile layout unchecked | Verified at 1440×900 only (the client itself has a phone spectator view since 2026-10-15) |
+Retired on 2026-10-27: removed to reduce complexity, eliminate brittle headless checks in CI, and focus on the live web client and native apps.
 
 ---
 

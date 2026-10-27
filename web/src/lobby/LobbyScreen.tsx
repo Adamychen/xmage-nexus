@@ -42,8 +42,6 @@ import Button from '../ui/Button'
 import IconButton from '../ui/IconButton'
 import DropdownMenu from '../ui/DropdownMenu'
 import MenuItem from '../ui/MenuItem'
-import { DEMO_GO_EVENT, type DemoTarget } from '../demo/tourBus'
-import { getDeckStorage } from '../decks/storage'
 
 const DeckBuilder = lazy(() => import('../decks/DeckBuilder'))
 
@@ -95,46 +93,6 @@ export default function LobbyScreen() {
 
   // An empty username opens the profile of the signed-in user.
   const openProfile = (username: string) => setProfileTarget(username)
-
-  useEffect(() => {
-    if (!__DEMO__) return
-    const onGo = (ev: Event) => {
-      const target = (ev as CustomEvent<DemoTarget>).detail
-      switch (target.kind) {
-        case 'tables':
-          setDeckBuilderId(null)
-          setActiveTab('tables')
-          break
-        case 'decks':
-          setDeckBuilderId(null)
-          setActiveTab('decks')
-          break
-        case 'history':
-          setActiveTab('matches')
-          break
-        case 'ranking':
-          setDeckBuilderId(null)
-          setActiveTab('ranking')
-          break
-        case 'settings':
-          setShowSettings(true)
-          break
-        case 'create':
-          setCreateKind('match')
-          break
-        case 'builder':
-          void getDeckStorage().list().then((decks) => {
-            const deck = decks.find((d) => d.commanderCard) ?? decks[0]
-            if (!deck) return
-            setActiveTab('decks')
-            setDeckBuilderId(deck.id)
-          })
-          break
-      }
-    }
-    window.addEventListener(DEMO_GO_EVENT, onGo)
-    return () => window.removeEventListener(DEMO_GO_EVENT, onGo)
-  }, [conn?.username])
 
   const tables = lobby?.tables ?? []
   const users = useMemo(() => extractLobbyUsers(lobby?.users), [lobby?.users])
