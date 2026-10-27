@@ -35,7 +35,7 @@ test.describe('Errores de unión a mesa', () => {
       async () => {
         await login(page, 'e2e')
 
-        await page.getByRole('button', { name: /Unirse \(Humano\)/ }).click()
+        await page.getByRole('button', { name: /^Unirse$/ }).click()
         await expect(page.getByTestId('join-table-dialog')).toBeVisible()
 
         await page.getByRole('button', { name: /Unirse con/ }).click()

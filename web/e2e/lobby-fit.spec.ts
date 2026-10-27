@@ -53,3 +53,31 @@ test.describe('LBY-20: the table type badge', () => {
     await expect(page.locator('.table-card', { hasText: 'Mesa de Bora #2' }).locator('.table-type-badge')).toHaveCount(0)
   })
 })
+
+for (const width of [1800, 1440, 390]) {
+  test.describe(`LBY-23: seats at ${width} px`, () => {
+    test.use({ viewport: { width, height: 900 }, locale: 'en-US' })
+
+    test(`LBY-23: every seated player's name stays readable and the seat's details stay inside it at ${width} px`, async ({ page }) => {
+      await openLobbyGallery(page)
+      const seats = await page.locator('.tables-list .seat-badge.occupied.interactive').evaluateAll((els) =>
+        els.map((seat) => {
+          const box = seat.getBoundingClientRect()
+          const name = seat.querySelector('.seat-player-name') as HTMLElement
+          const parts = Array.from(seat.querySelectorAll('.seat-main > *, .seat-rank')).map((p) => p.getBoundingClientRect())
+          return {
+            name: name.textContent,
+            nameWidth: name.getBoundingClientRect().width,
+            nameNeeds: name.scrollWidth,
+            outside: parts.some((p) => p.right > box.right + 0.5),
+          }
+        }),
+      )
+      expect(seats.length).toBeGreaterThan(0)
+      for (const seat of seats) {
+        expect(seat.nameWidth, `${seat.name} is squeezed`).toBeGreaterThanOrEqual(Math.min(seat.nameNeeds, 40))
+        expect(seat.outside, `${seat.name}'s details leave the seat`).toBe(false)
+      }
+    })
+  })
+}

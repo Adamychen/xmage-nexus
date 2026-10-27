@@ -2,7 +2,7 @@ import { test, expect } from './fixtures'
 import { fakeOnly } from './support/fake-mode'
 import { withFakeServer } from './support/fake-backend'
 import { makeTournamentScenario, tournamentScenario } from '../fixtures/scenarios/tournament'
-import { dismissSetupWizard, login } from './support/start-game'
+import { dismissSetupWizard, login, openCreateDialog } from './support/start-game'
 fakeOnly()
 
 test.describe('Tournament', { tag: '@tournament' }, () => {
@@ -148,7 +148,7 @@ test.describe('Tournament', { tag: '@tournament' }, () => {
   test('random packs selector fills the draft sets over WS (T5)', async ({ page }) => {
     await withFakeServer(() => tournamentScenario(), async () => {
       await login(page, 'e2e')
-      await page.getByRole('button', { name: /Nuevo torneo/i }).first().click()
+      await openCreateDialog(page, 'tourney')
       await expect(page.getByRole('heading', { name: /Crear torneo|Create Tournament/i })).toBeVisible()
       await page.getByRole('tab', { name: /Draft \/ Limitado/i }).click()
       await page.getByLabel(/Limitado — Draft \/ Sealed/i).selectOption('Booster Draft Elimination (Random)')

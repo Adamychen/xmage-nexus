@@ -140,8 +140,14 @@ async function selectDeckCard(carousel: Locator, deckName: string): Promise<void
   await card.click()
 }
 
+/** Opens the create-table wizard from the lobby's "Create" menu (a match or a tournament). */
+export async function openCreateDialog(page: Page, kind: 'match' | 'tourney' = 'match'): Promise<void> {
+  await page.getByTestId('create-menu').click()
+  await page.getByRole('button', { name: kind === 'match' ? /Nueva mesa|New table/i : /Nuevo torneo|New tournament/i }).click()
+}
+
 export async function createTable(page: Page, tableName: string, opts: CreateTableOptions = {}): Promise<void> {
-  await page.getByRole('button', { name: /Nueva/i }).first().click()
+  await openCreateDialog(page)
   await expect(page.getByRole('heading', { name: /Nueva mesa|Crear Mesa/i })).toBeVisible()
   await page.getByLabel(/Nombre/i).fill(tableName)
 

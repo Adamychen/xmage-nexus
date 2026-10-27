@@ -192,7 +192,7 @@ test.describe('Player staging room (JOINED_TABLE)', () => {
       })
     await withFakeServer(tournamentScenario, async () => {
       await login(page, 'e2e')
-      await page.getByRole('button', { name: /Unirse \(Humano\)|Join \(Human\)/ }).click()
+      await page.getByRole('button', { name: /^(Unirse|Join)$/ }).click()
       await expect(page.getByTestId('join-table-dialog')).toBeHidden()
       await expect(page.getByTestId('staging-player-actions')).toBeVisible({ timeout: 15_000 })
     })

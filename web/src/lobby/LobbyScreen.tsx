@@ -12,7 +12,7 @@ import DecksGallery from '../decks/DecksGallery'
 import PlayerProfileModal from './PlayerProfileModal'
 import RankingView from './RankingView'
 import UserActionModal from './UserActionModal'
-import TableFilterBar, { INITIAL_TABLE_FILTERS, countActiveFilters, filterTables, sanitizeTableFilters, type TableFilters } from './TableFilterBar'
+import TableFilterBar, { INITIAL_TABLE_FILTERS, filterTables, sanitizeTableFilters, type TableFilters } from './TableFilterBar'
 import Icon from '../ui/Icon'
 import ErrorBanner from '../ui/ErrorBanner'
 import MatchesSection from './MatchesSection'
@@ -29,7 +29,7 @@ import TournamentBracketModal from './TournamentBracketModal'
 import { useTableActions } from './useTableActions'
 import { useInviteLink } from './useInviteLink'
 import { useTournamentBracket } from './useTournamentBracket'
-import { extractLobbyUsers, getMyActiveTables, withTimeout, type LobbyTab } from './lobbyUtils'
+import { extractLobbyUsers, getMyActiveTables, tableGroup, withTimeout, type LobbyTab, type TableGroup } from './lobbyUtils'
 import { getIgnoredUsers } from './ignoreList'
 import SettingsModal from '../settings/SettingsModal'
 import AboutModal from '../system/AboutModal'
@@ -40,6 +40,8 @@ import './LobbyScreen.css'
 import './TournamentBracket.css'
 import Button from '../ui/Button'
 import IconButton from '../ui/IconButton'
+import DropdownMenu from '../ui/DropdownMenu'
+import MenuItem from '../ui/MenuItem'
 import { DEMO_GO_EVENT, type DemoTarget } from '../demo/tourBus'
 import { getDeckStorage } from '../decks/storage'
 
@@ -85,15 +87,7 @@ export default function LobbyScreen() {
   const [compactTables, setCompactTables] = useState(() => {
     try { return localStorage.getItem('tables_density') === 'compact' } catch { return false }
   })
-  const [showFilters, setShowFilters] = useState(() => {
-    try {
-      const savedOpen = localStorage.getItem('tables_filters_open')
-      if (savedOpen !== null) return savedOpen === '1'
-      const saved = localStorage.getItem('lobby_filters')
-      const parsed = saved ? { ...INITIAL_TABLE_FILTERS, ...JSON.parse(saved) } : INITIAL_TABLE_FILTERS
-      return countActiveFilters(parsed) > 0
-    } catch { return false }
-  })
+  const [showFinished, setShowFinished] = useState(false)
 
   const tableActions = useTableActions(conn)
   const { joiningTable, setJoiningTable, joinPassword, setJoinPassword, busyTable, notice, setNotice } = tableActions
@@ -182,6 +176,13 @@ export default function LobbyScreen() {
     return filterTables(tables, filters, ignored, conn?.username, stagingTableId)
   }, [tables, filters, conn?.username, stagingTableId, selectedUser])
 
+  const tableGroups = useMemo(() => {
+    const order: TableGroup[] = ['waiting', 'playing', 'finished']
+    return order
+      .map((id) => ({ id, tables: filteredTables.filter((tb) => tableGroup(tb) === id) }))
+      .filter((g) => g.tables.length > 0)
+  }, [filteredTables])
+
   // Cachear automáticamente el avatar real del usuario conectado
   useEffect(() => {
     if (conn?.username && conn?.avatarId && conn.avatarId > 0) {
@@ -220,8 +221,6 @@ export default function LobbyScreen() {
             }
           }
         }}
-        onCreate={() => setCreateKind('match')}
-        onCreateTournament={() => setCreateKind('tourney')}
         onOpenAbout={() => setShowAbout(true)}
         onOpenWiki={() => setShowWiki(true)}
         hasNews={unseenNews}
@@ -243,20 +242,61 @@ export default function LobbyScreen() {
           <div key={deckBuilderId ? 'deck-builder' : activeTab} className={`lobby-tab-view${activeTab === 'decks' ? '' : ' is-animated'}`}>
             {activeTab === 'tables' && (
               <div className="lobby-tables-view">
-                <section className="panel tables-panel">
-                  <div className="tables-panel-header">
-                    <div className="tables-header-title-row">
-                      <h2>
-                        {t('lobby.tables_heading')} ({filteredTables.length}
-                        {filteredTables.length !== tables.length ? ` / ${tables.length}` : ''})
-                      </h2>
-                      <span className="tables-deck-hint">{t('lobby.tables_deck_hint')}</span>
-                    </div>
-                    <div className="tables-header-actions">
-                      <div className="hero-deck-badge" title={`${t('lobby.active_deck')} ${myDeck?.name ?? '—'}`}>
-                        <span className="hero-deck-label">{t('lobby.active_deck')}</span>
-                        <span className="hero-deck-name"><Icon name="layers" size={13} /> {myDeck?.name ?? '—'}</span>
+                <section className="tables-panel">
+                  <h2 className="visually-hidden">
+                    {t('lobby.tables_heading')} ({filteredTables.length}
+                    {filteredTables.length !== tables.length ? ` / ${tables.length}` : ''})
+                  </h2>
+
+                  <TableFilterBar
+                    className="in-panel"
+                    tables={tables}
+                    filters={filters}
+                    onChange={(f) => { setFilters(f); try { localStorage.setItem('lobby_filters', JSON.stringify(f)) } catch {} }}
+                    onReset={() => { setFilters(INITIAL_TABLE_FILTERS); try { localStorage.removeItem('lobby_filters') } catch {} }}
+                    trailing={
+                      <div className="tables-header-actions">
+                        <button
+                          type="button"
+                          className={`hero-deck-badge${myDeck ? '' : ' is-empty'}`}
+                          onClick={() => setActiveTab('decks')}
+                          title={`${t('lobby.active_deck')} ${myDeck?.name ?? '—'}`}
+                          data-testid="active-deck-pill"
+                        >
+                          <Icon name="layers" size={14} />
+                          {myDeck ? (
+                            <>
+                              <span className="hero-deck-label">{t('lobby', 'playing_with')}</span>
+                              <span className="hero-deck-name">{myDeck.name}</span>
+                            </>
+                          ) : (
+                            <span className="hero-deck-name">{t('lobby', 'pick_deck')}</span>
+                          )}
+                        </button>
+                        <DropdownMenu
+                          variant="primary"
+                          size="md"
+                          align="end"
+                          className="tables-create-menu"
+                          data-testid="create-menu"
+                          label={<><Icon name="plus" size={14} /> {t('lobby', 'create_menu')}</>}
+                        >
+                          <MenuItem icon="swords" className="tables-create-item" onClick={() => setCreateKind('match')}>
+                            <span className="tables-create-text">
+                              <span className="tables-create-title">{t('lobby.nav_new')}</span>
+                              <span className="tables-create-desc">{t('lobby', 'create_menu_match_desc')}</span>
+                            </span>
+                          </MenuItem>
+                          <MenuItem icon="trophy" className="tables-create-item" onClick={() => setCreateKind('tourney')}>
+                            <span className="tables-create-text">
+                              <span className="tables-create-title">{t('lobby.nav_new_tournament')}</span>
+                              <span className="tables-create-desc">{t('lobby', 'create_menu_tourney_desc')}</span>
+                            </span>
+                          </MenuItem>
+                        </DropdownMenu>
                       </div>
+                    }
+                    controlsEnd={
                       <IconButton
                         label={compactTables ? t('lobby.tables_density_cards') : t('lobby.tables_density_compact')}
                         icon={compactTables ? 'layoutGrid' : 'list'}
@@ -269,38 +309,8 @@ export default function LobbyScreen() {
                           })
                         }}
                       />
-                      <button
-                        type="button"
-                        className={`tables-filter-toggle ${showFilters ? 'is-open' : ''} ${countActiveFilters(filters) > 0 ? 'has-active' : ''}`}
-                        onClick={() => {
-                          setShowFilters((v) => {
-                            try { localStorage.setItem('tables_filters_open', v ? '0' : '1') } catch {}
-                            return !v
-                          })
-                        }}
-                        aria-expanded={showFilters}
-                        title={t('lobby.filter_search_placeholder')}
-                      >
-                        <Icon name="filter" size={14} />
-                        {countActiveFilters(filters) > 0 && (
-                          <span className="tables-filter-count">{countActiveFilters(filters)}</span>
-                        )}
-                        <Icon name={showFilters ? 'chevronUp' : 'chevronDown'} size={13} />
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className={`tables-filter-collapse ${showFilters ? 'is-open' : ''}`}>
-                    <div className="tables-filter-collapse-inner">
-                      <TableFilterBar
-                        className="in-panel"
-                        tables={tables}
-                        filters={filters}
-                        onChange={(f) => { setFilters(f); try { localStorage.setItem('lobby_filters', JSON.stringify(f)) } catch {} }}
-                        onReset={() => { setFilters(INITIAL_TABLE_FILTERS); try { localStorage.removeItem('lobby_filters') } catch {} }}
-                      />
-                    </div>
-                  </div>
+                    }
+                  />
 
                   {myActiveTables.length > 0 && (
                     <ActiveTablesBar
@@ -316,25 +326,48 @@ export default function LobbyScreen() {
                   )}
 
                   <div className={`tables-list${compactTables ? ' is-compact' : ''}`}>
-                    {filteredTables.map((tTable) => (
-                      <TableCard
-                        key={tTable.tableId}
-                        tTable={tTable}
-                        users={users}
-                        username={conn?.username}
-                        avatarId={conn?.avatarId}
-                        stagingTableId={stagingTableId}
-                        busyTable={busyTable}
-                        onJoinHuman={tableActions.joinHuman}
-                        onJoinAi={tableActions.joinAi}
-                        onStart={tableActions.startTable}
-                        onWatch={tableActions.watchTable}
-                        onResume={tableActions.resumeGame}
-                        onOpenBracket={bracket.openBracket}
-                        onSelectUser={setSelectedUser}
-                        onRemove={(t) => void tableActions.removeTable(t)}
-                      />
-                    ))}
+                    {tableGroups.map((group) => {
+                      const collapsed = group.id === 'finished' && !showFinished
+                      return (
+                        <section key={group.id} className={`tables-group tables-group-${group.id}`} aria-labelledby={`tables-group-${group.id}`}>
+                          <div className="tables-group-header">
+                            <h3 id={`tables-group-${group.id}`} className="tables-group-title">
+                              {t('lobby', `section_${group.id}`)}
+                              <span className="tables-group-count">{group.tables.length}</span>
+                            </h3>
+                            <span className="tables-group-rule" aria-hidden="true" />
+                            {group.id === 'finished' && (
+                              <Button variant="link" size="sm" aria-expanded={!collapsed} onClick={() => setShowFinished((v) => !v)}>
+                                {collapsed ? t('lobby', 'finished_show', { count: group.tables.length }) : t('lobby', 'finished_hide')}
+                              </Button>
+                            )}
+                          </div>
+                          {!collapsed && (
+                            <div className={`tables-grid${group.id === 'waiting' ? '' : ' is-rows'}`}>
+                              {group.tables.map((tTable) => (
+                                <TableCard
+                                  key={tTable.tableId}
+                                  tTable={tTable}
+                                  users={users}
+                                  username={conn?.username}
+                                  avatarId={conn?.avatarId}
+                                  stagingTableId={stagingTableId}
+                                  busyTable={busyTable}
+                                  onJoinHuman={tableActions.joinHuman}
+                                  onJoinAi={tableActions.joinAi}
+                                  onStart={tableActions.startTable}
+                                  onWatch={tableActions.watchTable}
+                                  onResume={tableActions.resumeGame}
+                                  onOpenBracket={bracket.openBracket}
+                                  onSelectUser={setSelectedUser}
+                                  onRemove={(t) => void tableActions.removeTable(t)}
+                                />
+                              ))}
+                            </div>
+                          )}
+                        </section>
+                      )
+                    })}
 
                     {filteredTables.length === 0 && tables.length === 0 && (
                       <EmptyState

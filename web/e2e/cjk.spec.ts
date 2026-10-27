@@ -44,6 +44,7 @@ test.describe('CJK boost', () => {
       expect(base).toBeGreaterThan(0)
 
       await page.getByTestId('open-settings').click()
+      await page.getByTestId('settings-nav-language').click()
       await page.getByTestId('settings-ui-lang').selectOption('ja')
       await expect(async () => {
         expect(await headingFontPx(page)).toBeCloseTo(base * 1.15, 0)

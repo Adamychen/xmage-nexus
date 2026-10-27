@@ -126,6 +126,8 @@ ops), `docs/testing.md`, `web/AGENTS.md`, `Mage.Proxy/README.md`.
 
 - Size a board zone from `offsetWidth`/`offsetHeight`, never from `getBoundingClientRect()`. Inside a `transform: scale()` (the main board mode's panel copies) the bounding rect is the scaled box, so `useZoneScale` shrank the cards a second time; the layout box ignores transforms, while overlays and arrows keep the bounding rect because they must land where the scaled card is drawn (`layoutSize` in `board/useZoneScale.ts`).
 
+- A UI fixture must use the wire form of a field, not its Java `toString()`: the proxy writes enums with `name()` (`SeatView.playerType` is `HUMAN`, not `Human`). The gallery's lobby fixture used `Human`, so every human seat showed a bot chip and no table offered Join, and the 2026-10-27 lobby review first read that as a product bug.
+
 ## Testing & tooling
 
 - A "text is not clipped" e2e check needs three things to be able to fail: a wider face injected (`--font-ui: monospace`, plus letter-spacing when monospace alone still fits), a wait for the container's CSS transitions (`getAnimations()`; a `flex` transition read mid-way gave 426 px for a 220 px cell), and a check against the container's box, not only `scrollWidth <= clientWidth`, which passes when the element grows with its text. `seat-focus.spec.ts` (BRD-3) was green here and red on Linux CI with a 30-char name.

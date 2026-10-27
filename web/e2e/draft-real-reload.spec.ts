@@ -1,11 +1,11 @@
 import { test, type Browser, type Page } from '@playwright/test'
-import { login } from './support/start-game'
+import { login, openCreateDialog } from './support/start-game'
 import { FAKE_MODE } from './dual'
 
 const TABLE_NAME = (tag: string) => `drr-${tag}`
 
 async function createHumanDraft(page: Page, table: string) {
-  await page.getByRole('button', { name: /Nuevo torneo/i }).first().click()
+  await openCreateDialog(page, 'tourney')
   const dialog = page.locator('.create-table-dialog')
   await page.getByPlaceholder(/Ej\. Modern Casual Bo3/).fill(table)
   await page.getByRole('tab', { name: /Draft \/ Limitado/i }).click()

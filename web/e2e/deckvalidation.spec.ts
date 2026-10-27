@@ -26,7 +26,7 @@ async function openJoinDialogWithBadDeck(page: import('@playwright/test').Page):
 
   const row = page.locator('.table-row', { hasText: TABLE.deckIssues }).first()
   await expect(row).toBeVisible({ timeout: 10_000 })
-  await row.getByRole('button', { name: /Unirse \(Humano\)|Join \(Human\)/i }).click()
+  await row.getByRole('button', { name: /^(Unirse|Join)$/ }).click()
   await expect(page.getByTestId('join-table-dialog')).toBeVisible()
 
   // importar un mazo con la carta problemática (set "CY" inexistente en XMage)

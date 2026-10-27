@@ -3,6 +3,15 @@ import { t as tStatic } from '../i18n'
 
 export type LobbyTab = 'tables' | 'decks' | 'community' | 'matches' | 'ranking'
 
+export type TableGroup = 'waiting' | 'playing' | 'finished'
+
+/** The lobby section a table is listed under (LBY-22). */
+export function tableGroup(t: Pick<TableView, 'tableState'>): TableGroup {
+  if (t.tableState === 'WAITING' || t.tableState === 'READY_TO_START') return 'waiting'
+  if (t.tableState === 'FINISHED') return 'finished'
+  return 'playing'
+}
+
 /**
  * Paridad con TablesPanel.openTableAction (desktop): un torneo limitado
  * no-construido sin password se une directo, sin diálogo de mazo.

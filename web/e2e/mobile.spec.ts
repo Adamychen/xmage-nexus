@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test'
 import { fakeOnly } from './support/fake-mode'
 import { withFakeServer } from './support/fake-backend'
-import { login } from './support/start-game'
+import { login, openCreateDialog } from './support/start-game'
 import { makeBaseScenario } from '../fixtures/fake'
 import { playerGameView } from '../src/__fixtures__/gameViews'
 
@@ -18,7 +18,7 @@ test.describe('narrow screens @lobby', () => {
       const lobby = await page.evaluate(() => ({ sw: document.documentElement.scrollWidth, cw: document.documentElement.clientWidth }))
       expect(lobby.sw).toBeLessThanOrEqual(lobby.cw)
 
-      await page.getByTestId('create-table-open').or(page.getByRole('button', { name: /nueva mesa|new table|create table/i }).first()).click()
+      await openCreateDialog(page)
       const dialog = page.locator('.create-table-dialog')
       await expect(dialog).toBeVisible()
       const box = await dialog.evaluate((el) => {

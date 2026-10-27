@@ -336,11 +336,11 @@ describe('TableFilterBar component', () => {
     )
   })
 
-  it('opens advanced drawer and displays mode, skill and switch filters', () => {
+  it('shows the status and mode segments, and opens the drawer with skill and switch filters', () => {
     const onChange = vi.fn()
     const onReset = vi.fn()
 
-    const { getByText } = render(
+    const { getByText, getByRole } = render(
       <TableFilterBar
         tables={MOCK_TABLES}
         filters={INITIAL_TABLE_FILTERS}
@@ -349,16 +349,26 @@ describe('TableFilterBar component', () => {
       />
     )
 
-    const trigger = getByText(/Filtros|Ajustes/)
+    expect(getByRole('group', { name: 'Modo de juego' })).not.toBeNull()
+    expect(getByRole('group', { name: 'Estado de la mesa' })).not.toBeNull()
+
+    const trigger = getByText('Filtros')
     fireEvent.click(trigger)
 
-    expect(getByText(/Modo de juego|Combate/i)).not.toBeNull()
     expect(getByText(/Nivel de habilidad/i)).not.toBeNull()
     expect(getByText('Privada')).not.toBeNull()
     expect(getByText('Solo privadas')).not.toBeNull()
     expect(getByText(/Solo no puntuadas/i)).not.toBeNull()
     expect(getByText(/Ocultar ignorados/i)).not.toBeNull()
     expect(getByText(/Orden/i)).not.toBeNull()
+  })
+
+  it('LBY-21: each popular format chip carries the colour dot of its family', () => {
+    const { container } = render(
+      <TableFilterBar tables={MOCK_TABLES} filters={INITIAL_TABLE_FILTERS} onChange={vi.fn()} onReset={vi.fn()} />,
+    )
+    const dots = Array.from(container.querySelectorAll('.tfb-format-dot')).map((d) => d.className.replace('tfb-format-dot ', ''))
+    expect(dots).toEqual(['fmt-commander', 'fmt-modern', 'fmt-pioneer', 'fmt-standard', 'fmt-pauper', 'fmt-limited'])
   })
 
   it('formats massive Chaos Draft booster strings cleanly', () => {

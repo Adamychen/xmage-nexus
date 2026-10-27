@@ -17,11 +17,14 @@ const scenario = () => makeBaseScenario({
 test('the lobby can be driven with the keyboard alone @a11y', async ({ page }) => {
   await withFakeServer(scenario, async () => {
     await login(page, 'kb-user')
-    const create = page.locator('.top-nav-create')
+    const create = page.getByTestId('create-menu')
     await expect(create).toBeVisible()
 
     await create.focus()
     await expect(create).toBeFocused()
+    await page.keyboard.press('Enter')
+    await page.keyboard.press('Tab')
+    await expect(page.getByRole('button', { name: /Nueva mesa/i })).toBeFocused()
     await page.keyboard.press('Enter')
     const heading = page.getByRole('heading', { name: /Nueva mesa|Crear Mesa/i })
     await expect(heading).toBeVisible()

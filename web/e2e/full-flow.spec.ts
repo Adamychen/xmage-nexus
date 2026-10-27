@@ -4,7 +4,7 @@ import * as path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { test, expect } from './fixtures'
 import { cleanupUser } from './cleanup'
-import { login } from './support/start-game'
+import { login, openCreateDialog } from './support/start-game'
 import { openDrawerTab } from './support/game-screen'
 
 const SHOTS_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), 'shots')
@@ -59,7 +59,7 @@ test('flujo completo: login -> lobby -> demo IA vs IA (espectador) -> tablero av
 
   // (e) crear mesa IA vs IA y entrar como espectador desde el modal de creación
   // (rediseño 2026-09: la sidebar desktop ya no existe; se entra por el topstrip)
-  await page.getByRole('button', { name: /Nueva Mesa/i }).click()
+  await openCreateDialog(page)
   await page.getByRole('button', { name: /Dev/i }).click()
   await page.getByRole('button', { name: /Espectar \(Bot IA vs Bot IA\)/i }).click()
 

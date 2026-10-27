@@ -27,8 +27,6 @@ interface Props {
   tableCount: number
   activeTableCount?: number
   onGoToActiveTable?: () => void
-  onCreate: () => void
-  onCreateTournament: () => void
   onOpenAbout: () => void
   onOpenWiki: () => void
   hasNews: boolean
@@ -37,7 +35,7 @@ interface Props {
 export default function LobbyHeader({
   conn, myUser, onlineCount, confirmDisconnect, onConfirmDisconnect,
   onOpenSettings, onOpenReport, onOpenProfile, activeTab, onTabChange,
-  tableCount, activeTableCount = 0, onGoToActiveTable, onCreate, onCreateTournament, onOpenAbout, onOpenWiki, hasNews,
+  tableCount, activeTableCount = 0, onGoToActiveTable, onOpenAbout, onOpenWiki, hasNews,
 }: Props) {
   const { t, lang } = useTranslation()
   const navRef = useRef<HTMLElement>(null)
@@ -80,39 +78,6 @@ export default function LobbyHeader({
       </div>
 
       <div className="lobby-top-center">
-        <div className="lobby-create-actions">
-          <button
-            type="button"
-            className="top-nav-btn top-nav-create"
-            onClick={onCreate}
-            title={t('lobby.nav_new')}
-          >
-            <Icon name="plus" size={14} />
-            <span>{t('lobby.nav_new')}</span>
-          </button>
-          <Button
-            variant="ghost"
-            className="top-nav-btn"
-            icon="trophy"
-            onClick={onCreateTournament}
-            title={t('lobby.nav_new_tournament')}
-          >
-            <span>{t('lobby.nav_new_tournament')}</span>
-          </Button>
-          {activeTableCount > 0 && (
-            <button
-              type="button"
-              className="top-nav-btn top-nav-active-table"
-              onClick={onGoToActiveTable}
-              title={t('lobby', 'active_table_header_hint')}
-            >
-              <span className="top-nav-active-pulse" />
-              <Icon name="chair" size={14} />
-              <span>{t('lobby', 'active_table_header_btn')}{activeTableCount > 1 ? ` (${activeTableCount})` : ''}</span>
-            </button>
-          )}
-        </div>
-
         <nav className="lobby-top-nav" aria-label={t('lobby', 'nav_aria_main')} ref={navRef}>
           {indicator && (
             <span
@@ -129,7 +94,8 @@ export default function LobbyHeader({
             title={`${t('lobby.nav_tables')} (${tableCount})`}
           >
             <Icon name="swords" size={14} />
-            <span>{t('lobby.nav_tables')}{tableCount > 0 ? ` (${tableCount})` : ''}</span>
+            <span>{t('lobby.nav_tables')}</span>
+            {tableCount > 0 && <span className="top-nav-count">{tableCount}</span>}
           </button>
           <button
             type="button"
@@ -164,6 +130,18 @@ export default function LobbyHeader({
       </div>
 
       <div className="lobby-user-actions">
+        {activeTableCount > 0 && (
+          <button
+            type="button"
+            className="top-nav-btn top-nav-active-table"
+            onClick={onGoToActiveTable}
+            title={t('lobby', 'active_table_header_hint')}
+          >
+            <span className="top-nav-active-pulse" />
+            <Icon name="chair" size={14} />
+            <span className="top-nav-active-label">{t('lobby', 'active_table_header_btn')}{activeTableCount > 1 ? ` (${activeTableCount})` : ''}</span>
+          </button>
+        )}
         <button
           type="button"
           className="lobby-user-badge"

@@ -124,6 +124,25 @@ describe('appearance: contrast from the token values', () => {
     expect(contrast(colour(tokens, '--dial-past'), colour(tokens, '--ink-1'))).toBeGreaterThanOrEqual(4.5)
   })
 
+  it('LBY-21: each format colour, and the card text over it, reaches 4.5:1 on its tinted banner in both appearances', () => {
+    const families = ['commander', 'standard', 'pioneer', 'modern', 'eternal', 'pauper', 'limited', 'casual']
+    const failures: string[] = []
+    for (const appearance of APPEARANCES) {
+      const tokens = effective(appearance, false)
+      const share = parseFloat(resolve(tokens, '--fmt-tint')) / 100
+      const base = colour(tokens, '--ink-2')
+      for (const family of families) {
+        const accent = colour(tokens, `--fmt-${family}`)
+        const banner = opaque({ ...accent, a: share }, base)
+        for (const text of [`--fmt-${family}`, '--fg-1', '--fg-2']) {
+          const ratio = contrast(colour(tokens, text), banner)
+          if (ratio < 4.5) failures.push(`${appearance}: ${text} on the ${family} banner: ${ratio.toFixed(2)}`)
+        }
+      }
+    }
+    expect(failures).toEqual([])
+  })
+
   for (const appearance of APPEARANCES) {
     it(`APR-3: ${appearance} text tokens reach 4.5:1 on every surface token`, () => {
       const tokens = effective(appearance, false)

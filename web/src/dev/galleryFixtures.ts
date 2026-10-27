@@ -225,37 +225,56 @@ const GALLERY_CONN: ConnectionInfo = {
   password: '',
 }
 
-function makeSeat(playerName: string, seatIndex: number, playerType = 'Human'): SeatView {
+function makeSeat(playerName: string, seatIndex: number, playerType = 'HUMAN'): SeatView {
   return { playerName, seatIndex, playerType }
 }
 
-const LOBBY_GAME_TYPES = ['Standard', 'Modern', 'Commander', 'Pauper', 'Draft (BLB)', 'Sealed (DSK)', 'Two-Headed Giant']
+// Real `mage.view.TableView` shapes: the game type and the deck type are the
+// server's catalogue names, and `additionalInfoShort` packs the match options.
+const LOBBY_FORMATS: Array<{ gameType: string; deckType: string; seats: number; info: string; limited?: boolean }> = [
+  { gameType: 'Two Player Duel', deckType: 'Constructed - Standard', seats: 2, info: 'Wins: 2, Time: 20m(+10s), SP' },
+  { gameType: 'Two Player Duel', deckType: 'Constructed - Modern', seats: 2, info: 'Wins: 2, Time: 25m, SP' },
+  { gameType: 'Commander Free For All', deckType: 'Variant Magic - Commander', seats: 4, info: 'Wins: 1, Time: None, Custom options (1), SP, Rng: ALL' },
+  { gameType: 'Two Player Duel', deckType: 'Constructed - Pauper', seats: 2, info: 'Wins: 2, Time: 20m, RB, SP' },
+  { gameType: 'Booster Draft Swiss', deckType: 'Limited', seats: 8, info: 'Wins: 2, Time: 30m, Constr.: 15m, Pick time: x1.5, SP', limited: true },
+  { gameType: 'Two Player Duel', deckType: 'Constructed - Pioneer', seats: 2, info: 'Wins: 2, Time: 20m, SP' },
+  { gameType: 'Two Player Duel', deckType: 'Constructed - Legacy', seats: 2, info: 'Wins: 2, Time: 25m(+5s), SP' },
+  { gameType: 'Freeform Commander Free For All', deckType: 'Variant Magic - Freeform Commander', seats: 3, info: 'Wins: 1, Time: None, SP' },
+]
 const LOBBY_NAMES = ['Alice', 'Bora', 'Chen', 'Dara', 'Enzo', 'Fran', 'Gus', 'Heidi']
 
 function makeLobbyTable(i: number, overrides: Partial<TableView> = {}): TableView {
   const state = ['WAITING', 'DUELING', 'SIDEBOARDING', 'FINISHED'][i % 4]
+  const format = LOBBY_FORMATS[i % LOBBY_FORMATS.length]
+  const host = LOBBY_NAMES[i % LOBBY_NAMES.length]
+  const guest = LOBBY_NAMES[(i + 3) % LOBBY_NAMES.length]
+  const running = state !== 'WAITING'
+  const seats = Array.from({ length: format.seats }, (_, s) =>
+    s === 0
+      ? { ...makeSeat(host, 0), flagName: 'es', constructedRating: 1617, history: 'Matches: 8390 (Q:12) (12%)' }
+      : running ? { ...makeSeat(`${guest}${s}`, s), flagName: 'gb', constructedRating: 800, history: '419 (Q:3)' } : makeSeat('', s))
   return {
     tableId: `gallery-table-${i}`,
-    gameType: LOBBY_GAME_TYPES[i % LOBBY_GAME_TYPES.length],
-    deckType: 'Constructed',
-    tableName: `Mesa de ${LOBBY_NAMES[i % LOBBY_NAMES.length]} #${i + 1}`,
-    controllerName: LOBBY_NAMES[i % LOBBY_NAMES.length],
-    additionalInfoShort: '',
+    gameType: format.gameType,
+    deckType: format.deckType,
+    tableName: `Mesa de ${host} #${i + 1}`,
+    controllerName: running ? [host, ...seats.slice(1).map((s) => s.playerName)].join(', ') : host,
+    additionalInfoShort: running ? `Wins: 2 Score: ${i % 3}-${(i + 1) % 2}, SP` : format.info,
     additionalInfoFull: '',
     createTime: GALLERY_EPOCH - i * 60_000,
     tableState: state,
-    skillLevel: 'CASUAL',
+    skillLevel: ['BEGINNER', 'CASUAL', 'SERIOUS'][i % 3],
     tableStateText: state,
-    seatsInfo: '1/4',
+    seatsInfo: `${running ? format.seats : 1}/${format.seats}`,
     isTournament: i % 7 === 0,
-    seats: [makeSeat(LOBBY_NAMES[i % LOBBY_NAMES.length], 0), makeSeat('', 1, 'Open')],
+    seats,
     games: [],
-    quitRatio: '0',
-    minimumRating: '0',
-    limited: i % 5 === 0,
+    quitRatio: i % 5 === 0 ? '25' : '100',
+    minimumRating: i % 6 === 0 ? '1600' : '0',
+    limited: !!format.limited,
     rated: i % 3 === 0,
     passworded: i % 9 === 0,
-    spectatorsAllowed: true,
+    spectatorsAllowed: i % 11 !== 5,
     ...overrides,
   }
 }

@@ -138,6 +138,16 @@
   --dial-combat-glow: rgb(255 93 115 / 0.45);
   --dial-wait: radial-gradient(circle at 32% 24%, #3a4561, #232c42 62%, #171d2e);
   --ledger-line: rgb(255 93 115 / 0.5);
+
+  --fmt-commander: #b49cff;
+  --fmt-standard: #5aa9ff;
+  --fmt-pioneer: #38d0c0;
+  --fmt-modern: #ff7a66;
+  --fmt-eternal: #ec86d0;
+  --fmt-pauper: #5fd38e;
+  --fmt-limited: #f5ab55;
+  --fmt-casual: #a8b3c9;
+  --fmt-tint: 16%;
 }
 
 :root {
@@ -287,6 +297,16 @@
     --shadow-1: 0 1px 2px rgb(15 23 42 / 0.12), 0 4px 14px rgb(15 23 42 / 0.08);
     --shadow-2: 0 10px 30px rgb(15 23 42 / 0.18), 0 2px 6px rgb(15 23 42 / 0.1);
     --shadow-3: 0 30px 80px rgb(15 23 42 / 0.25), 0 6px 18px rgb(15 23 42 / 0.15);
+
+    --fmt-commander: #6440c9;
+    --fmt-standard: #1d5fae;
+    --fmt-pioneer: #0b6e66;
+    --fmt-modern: #b23a26;
+    --fmt-eternal: #9b2f80;
+    --fmt-pauper: #1a6c3c;
+    --fmt-limited: #94530d;
+    --fmt-casual: #4a5568;
+    --fmt-tint: 10%;
   }
 }
 
@@ -371,6 +391,16 @@
     --shadow-1: 0 1px 2px rgb(15 23 42 / 0.12), 0 4px 14px rgb(15 23 42 / 0.08);
     --shadow-2: 0 10px 30px rgb(15 23 42 / 0.18), 0 2px 6px rgb(15 23 42 / 0.1);
     --shadow-3: 0 30px 80px rgb(15 23 42 / 0.25), 0 6px 18px rgb(15 23 42 / 0.15);
+
+    --fmt-commander: #6440c9;
+    --fmt-standard: #1d5fae;
+    --fmt-pioneer: #0b6e66;
+    --fmt-modern: #b23a26;
+    --fmt-eternal: #9b2f80;
+    --fmt-pauper: #1a6c3c;
+    --fmt-limited: #94530d;
+    --fmt-casual: #4a5568;
+    --fmt-tint: 10%;
   }
 
 @media (prefers-color-scheme: light) and (prefers-contrast: more) {

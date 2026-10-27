@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test'
 import { fakeOnly } from './support/fake-mode'
 import { withFakeServer } from './support/fake-backend'
-import { installCapture, login, pickFormatOption, type CaptureBuffers } from './support/start-game'
+import { installCapture, login, openCreateDialog, pickFormatOption, type CaptureBuffers } from './support/start-game'
 import { makeBaseScenario } from '../fixtures/fake'
 import { playerGameView } from '../src/__fixtures__/gameViews'
 
@@ -17,12 +17,12 @@ function wizardScenario() {
 }
 
 async function openWizard(page: import('@playwright/test').Page) {
-  await page.getByRole('button', { name: /Nueva/i }).first().click()
+  await openCreateDialog(page)
   await expect(page.getByRole('heading', { name: /Nueva mesa|Crear Mesa/i })).toBeVisible()
 }
 
 async function openTournamentWizard(page: import('@playwright/test').Page) {
-  await page.getByRole('button', { name: /Nuevo torneo/i }).first().click()
+  await openCreateDialog(page, 'tourney')
   await expect(page.getByRole('heading', { name: /Crear torneo|Create Tournament/i })).toBeVisible()
 }
 

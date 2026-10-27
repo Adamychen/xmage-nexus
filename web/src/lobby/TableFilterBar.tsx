@@ -1,13 +1,14 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, type ReactNode } from 'react'
 import CloseButton from '../ui/CloseButton'
 import Button from '../ui/Button'
 import ChipButton from '../ui/ChipButton'
 import Chip from '../ui/Chip'
 import Checkbox from '../ui/Checkbox'
 import type { TableView } from '../net/types'
-import Icon, { type IconName } from '../ui/Icon'
+import Icon from '../ui/Icon'
 import { useTranslation } from '../i18n'
 import { isMyTable, tableOwnerName } from './lobbyUtils'
+import type { FormatFamily } from './formatFamily'
 import './TableFilterBar.css'
 
 export interface TableFilters {
@@ -60,15 +61,24 @@ function hasFreeSeat(t: TableView): boolean {
   return t.seats?.some((s) => !s.playerName) ?? false
 }
 
-export const POPULAR_FORMATS: Array<{ id: string; label: string; icon: IconName; labelKey?: 'filter_format_limited' }> = [
-  { id: 'ALL', label: 'Todos', icon: 'globe' },
-  { id: 'Commander', label: 'Commander', icon: 'crown' },
-  { id: 'Modern', label: 'Modern', icon: 'zap' },
-  { id: 'Pioneer', label: 'Pioneer', icon: 'shield' },
-  { id: 'Standard', label: 'Standard', icon: 'scrollText' },
-  { id: 'Pauper', label: 'Pauper', icon: 'gem' },
-  { id: 'Limited', label: 'Limitado', icon: 'package', labelKey: 'filter_format_limited' },
+export const POPULAR_FORMATS: Array<{ id: string; label: string; family?: FormatFamily; labelKey?: 'filter_format_limited' }> = [
+  { id: 'ALL', label: 'Todos' },
+  { id: 'Commander', label: 'Commander', family: 'commander' },
+  { id: 'Modern', label: 'Modern', family: 'modern' },
+  { id: 'Pioneer', label: 'Pioneer', family: 'pioneer' },
+  { id: 'Standard', label: 'Standard', family: 'standard' },
+  { id: 'Pauper', label: 'Pauper', family: 'pauper' },
+  { id: 'Limited', label: 'Limitado', family: 'limited', labelKey: 'filter_format_limited' },
 ]
+
+export type TableMode = '1v1' | 'multi' | 'tourney'
+
+/** The mode bucket of a table (LBY-14): the filter and the card's mode icon read it. */
+export function tableMode(t: Pick<TableView, 'isTournament' | 'gameType' | 'seats'>): TableMode {
+  if (t.isTournament) return 'tourney'
+  if (t.gameType?.toLowerCase().includes('duel') || t.seats?.length === 2) return '1v1'
+  return 'multi'
+}
 
 export const OTHER_COMMON_FORMATS = [
   'Constructed - Legacy',
@@ -150,18 +160,8 @@ export function filterTables(
     }
 
     // 4. Mode
-    if (filters.mode === '1v1') {
-      const is1v1 = !t.isTournament && (t.gameType?.toLowerCase().includes('duel') || (t.seats && t.seats.length === 2))
-      if (!is1v1) return false
-    } else if (filters.mode === 'multi') {
-      const isMulti =
-        !t.isTournament &&
-        ((t.seats && t.seats.length > 2) ||
-          t.gameType?.toLowerCase().includes('free for all') ||
-          t.gameType?.toLowerCase().includes('giant'))
-      if (!isMulti) return false
-    } else if (filters.mode === 'tourney') {
-      if (!t.isTournament) return false
+    if (filters.mode !== 'all' && tableMode(t) !== filters.mode) return false
+    if (filters.mode === 'tourney') {
       const gt = t.gameType?.toLowerCase() ?? ''
       if (filters.tourneyKind === 'constructed' && !gt.includes('constructed')) return false
       if (filters.tourneyKind === 'limited' && !/booster|sealed|jumpstart/.test(gt)) return false
@@ -230,9 +230,19 @@ interface TableFilterBarProps {
   onChange: (newFilters: TableFilters) => void
   onReset: () => void
   className?: string
+  /** Controls at the end of the search row (the active deck, the create menu). */
+  trailing?: ReactNode
+  /** Controls at the end of the filter row (the density toggle). */
+  controlsEnd?: ReactNode
 }
 
-export default function TableFilterBar({ tables, filters, onChange, onReset, className }: TableFilterBarProps) {
+/** Filters that live behind the "Filters" button, so its badge counts only what is hidden. */
+function countAdvancedFilters(filters: TableFilters): number {
+  return countActiveFilters({ ...filters, searchQuery: '', format: 'ALL', availability: 'all', mode: 'all' })
+    + (filters.mode === 'tourney' && filters.tourneyKind !== 'all' ? 1 : 0)
+}
+
+export default function TableFilterBar({ tables, filters, onChange, onReset, className, trailing, controlsEnd }: TableFilterBarProps) {
   const [showAdvanced, setShowAdvanced] = useState(false)
 
   // Count active tables per popular format
@@ -252,13 +262,13 @@ export default function TableFilterBar({ tables, filters, onChange, onReset, cla
 
   // Count active filters (excluding defaults)
   const activeCount = useMemo(() => countActiveFilters(filters), [filters])
+  const advancedCount = useMemo(() => countAdvancedFilters(filters), [filters])
 
   const { t } = useTranslation()
   const isOtherFormatSelected = !POPULAR_FORMATS.some((p) => p.id === filters.format)
 
   return (
     <div className={`table-filter-bar-container${className ? ` ${className}` : ''}`}>
-      {/* Row 1: Search & Quick Status Toggles */}
       <div className="tfb-row tfb-top-row">
         <div className="tfb-search-box">
           <span className="tfb-search-icon"><Icon name="search" size={14} /></span>
@@ -282,61 +292,39 @@ export default function TableFilterBar({ tables, filters, onChange, onReset, cla
             />
           )}
         </div>
-
-        <div className="tfb-quick-toggles">
-          <ChipButton
-            activeTone="ok"
-            active={filters.availability === 'open'}
-            onClick={() =>
-              onChange({
-                ...filters,
-                availability: filters.availability === 'open' ? 'all' : 'open',
-              })
-            }
-            title={t('lobby.filter_only_open')}
-          >
-            <span className="tfb-pill-dot open-dot" />
-            <span>{t('lobby.filter_only_open')}</span>
-          </ChipButton>
-
-          <ChipButton
-            activeTone="ok"
-            active={filters.availability === 'dueling'}
-            onClick={() =>
-              onChange({
-                ...filters,
-                availability: filters.availability === 'dueling' ? 'all' : 'dueling',
-              })
-            }
-            title={t('lobby.in_game')}
-          >
-            <span><Icon name="eye" size={13} /> {t('lobby.in_game')}</span>
-          </ChipButton>
-
-          <ChipButton
-            active={showAdvanced || activeCount > 0}
-            className="tfb-advanced-trigger"
-            onClick={() => setShowAdvanced((v) => !v)}
-            title={t('common', 'settings')}
-          >
-            <span><Icon name="settings" size={13} /> {t('common', 'settings')}</span>
-            {activeCount > 0 && <span className="tfb-active-badge">{activeCount}</span>}
-            <span className="tfb-arrow-icon">{showAdvanced ? '▴' : '▾'}</span>
-          </ChipButton>
-
-          {activeCount > 0 && (
-            <Button variant="soft-danger" size="sm"
-              onClick={onReset}
-              title={t('lobby.filter_reset')}>
-              <span>{t('lobby.filter_reset')}</span>
-            </Button>
-          )}
-        </div>
+        {trailing}
       </div>
 
-      {/* Row 2: Format Pills Strip */}
-      <div className="tfb-row tfb-formats-row">
-        <div className="tfb-format-chips">
+      <div className="tfb-row tfb-controls-row">
+        <div className="tfb-segment" role="group" aria-label={t('lobby', 'filter_status_label')}>
+          <ChipButton active={filters.availability === 'all'} onClick={() => onChange({ ...filters, availability: 'all' })}>
+            {t('common', 'all')}
+          </ChipButton>
+          <ChipButton activeTone="ok" active={filters.availability === 'open'} onClick={() => onChange({ ...filters, availability: 'open' })}>
+            <span className="tfb-pill-dot open-dot" />
+            {t('lobby', 'filter_status_open')}
+          </ChipButton>
+          <ChipButton active={filters.availability === 'dueling'} onClick={() => onChange({ ...filters, availability: 'dueling' })}>
+            <Icon name="eye" size={13} /> {t('lobby.in_game')}
+          </ChipButton>
+        </div>
+
+        <div className="tfb-segment" role="group" aria-label={t('lobby', 'filter_mode_label')}>
+          <ChipButton active={filters.mode === 'all'} onClick={() => onChange({ ...filters, mode: 'all' })}>
+            {t('lobby', 'filter_mode_all')}
+          </ChipButton>
+          <ChipButton active={filters.mode === '1v1'} onClick={() => onChange({ ...filters, mode: '1v1' })}>
+            <Icon name="swords" size={13} /> {t('lobby', 'mode_1v1')}
+          </ChipButton>
+          <ChipButton active={filters.mode === 'multi'} onClick={() => onChange({ ...filters, mode: 'multi' })}>
+            <Icon name="users" size={13} /> {t('lobby', 'create_tab_multi')}
+          </ChipButton>
+          <ChipButton active={filters.mode === 'tourney'} onClick={() => onChange({ ...filters, mode: 'tourney' })}>
+            <Icon name="trophy" size={13} /> {t('lobby', 'tournament_badge')}
+          </ChipButton>
+        </div>
+
+        <div className="tfb-format-chips" role="group" aria-label={t('lobby', 'filter_format_label')}>
           {POPULAR_FORMATS.map((pf) => {
             const count = formatCounts[pf.id] ?? 0
             const isActive = filters.format === pf.id
@@ -347,14 +335,13 @@ export default function TableFilterBar({ tables, filters, onChange, onReset, cla
                 key={pf.id}
                 onClick={() => onChange({ ...filters, format: pf.id })}
               >
-                <span className="tfb-chip-icon"><Icon name={pf.icon} size={13} /></span>
+                {pf.family && <span className={`tfb-format-dot fmt-${pf.family}`} aria-hidden="true" />}
                 <span className="tfb-chip-label">{pf.id === 'ALL' ? t('common.all') : pf.labelKey ? t('lobby', pf.labelKey) : pf.label}</span>
                 <Chip size="xs">{count}</Chip>
               </ChipButton>
             )
           })}
 
-          {/* More Formats Dropdown */}
           <div className="tfb-more-formats-wrap">
             <select
               className={`tfb-more-select ${isOtherFormatSelected ? 'active' : ''}`}
@@ -377,6 +364,24 @@ export default function TableFilterBar({ tables, filters, onChange, onReset, cla
             </select>
           </div>
         </div>
+        <div className="tfb-segment-tail">
+          <ChipButton
+            active={showAdvanced}
+            className="tfb-advanced-trigger"
+            onClick={() => setShowAdvanced((v) => !v)}
+            aria-expanded={showAdvanced}
+          >
+            <Icon name="filter" size={13} /> {t('lobby', 'filters_more')}
+            {advancedCount > 0 && <span className="tfb-active-badge">{advancedCount}</span>}
+            <Icon name={showAdvanced ? 'chevronUp' : 'chevronDown'} size={12} />
+          </ChipButton>
+          {activeCount > 0 && (
+            <Button variant="soft-danger" size="sm" onClick={onReset} title={t('lobby.filter_reset')}>
+              {t('lobby.filter_reset')}
+            </Button>
+          )}
+          {controlsEnd}
+        </div>
       </div>
 
       {/* Row 3: Advanced Collapsible Drawer */}
@@ -398,24 +403,9 @@ export default function TableFilterBar({ tables, filters, onChange, onReset, cla
             </div>
           </div>
 
-          {/* Mode group */}
-          <div className="tfb-drawer-section">
-            <span className="tfb-section-label">{t('game', 'combat')}:</span>
-            <div className="tfb-button-group">
-              <ChipButton active={filters.mode === 'all'} onClick={() => onChange({ ...filters, mode: 'all' })}>
-                {t('common', 'all')}
-              </ChipButton>
-              <ChipButton active={filters.mode === '1v1'} onClick={() => onChange({ ...filters, mode: '1v1' })}>
-                <Icon name="swords" size={13} /> 1v1
-              </ChipButton>
-              <ChipButton active={filters.mode === 'multi'} onClick={() => onChange({ ...filters, mode: 'multi' })}>
-                <Icon name="users" size={13} /> {t('lobby', 'create_tab_multi')}
-              </ChipButton>
-              <ChipButton active={filters.mode === 'tourney'} onClick={() => onChange({ ...filters, mode: 'tourney' })}>
-                <Icon name="trophy" size={13} /> {t('lobby', 'tournament_badge')}
-              </ChipButton>
-            </div>
-            {filters.mode === 'tourney' && (
+          {filters.mode === 'tourney' && (
+            <div className="tfb-drawer-section">
+              <span className="tfb-section-label">{t('lobby', 'tournament_badge')}:</span>
               <div className="tfb-button-group">
                 <ChipButton active={filters.tourneyKind === 'all'} onClick={() => onChange({ ...filters, tourneyKind: 'all' })}>
                   {t('common', 'all')}
@@ -427,8 +417,8 @@ export default function TableFilterBar({ tables, filters, onChange, onReset, cla
                   {t('lobby', 'filter_tourney_limited')}
                 </ChipButton>
               </div>
-            )}
-          </div>
+            </div>
+          )}
 
           {/* Skill group */}
           <div className="tfb-drawer-section">

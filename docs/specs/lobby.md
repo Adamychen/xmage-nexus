@@ -53,7 +53,8 @@ ignored players) plus a text search the desktop lacks, matching table name, host
 format, notes and seated players. Tables of ignored players stay listed until that toggle is on.
 Saved filters come back on the next visit; a saved contradictory pair ("hide passworded" with
 "passworded only") resolves to the "only" filter, and unreadable saved filters do not break the
-lobby.
+lobby. The search, the status (all, open seats, in game), the mode and the popular formats are always
+on screen; the rest of the filters sit behind "Filters", whose badge counts only what it hides.
 
 - Why: desktop parity (`c1cd78ee27`, `web/COMPONENT_PARITY.md` U2), which also added the warning
   shown when joining an ignored player's table. The contradictory pair, saved by earlier versions,
@@ -225,3 +226,56 @@ TOURNAMENT already says it is a match, so the card does not spend a chip on the 
 - Why: the swords icon on every match card repeated what the card already said, and it was the tenth chip
   in the card's header (review of 2026-10-26).
 - Guard: `e2e/lobby-fit.spec.ts`
+
+### LBY-21 · A table's format family has one colour, everywhere it appears
+Every deck type belongs to exactly one of eight families: Commander (and its variants: Duel
+Commander, Brawl, Oathbreaker, Tiny Leaders…), Standard (rotating and block constructed), Pioneer,
+Modern, Eternal (Legacy, Vintage, Premodern, Old School), Pauper, Limited (draft, sealed,
+Jumpstart) and Free (Freeform, Momir, Highlander, and any deck type that fits none of the others).
+The family colours the card's banner and stripe, its format name and the dot of the matching format
+chip. The game mode is an icon (1v1, multiplayer, tournament), never a second colour, and the
+format name is always written: the colour helps recognise a format, it never carries it alone. Each
+family colour, and the card text over its banner, reaches 4.5:1 in the dark and the light appearance.
+
+- Why: the user asked for a colour code for formats like the one ranks have (2026-10-27). Colouring
+  the mode too would put two colour codes on one card; with 52 deck types a colour per type could not
+  be told apart, so the colour is per family and a new deck type falls into Free instead of having none.
+- Guard: `src/lobby/formatFamily.test.ts` · `src/lobby/TableCard.test.tsx` · `src/lobby/TableFilterBar.test.tsx` · `src/appearance/appearanceContrast.test.ts`
+
+### LBY-22 · The table list is split by state, and finished tables start folded
+Tables waiting for players (waiting or ready to start) come first, as cards; tables in progress come
+next and finished tables last, both as one line per table. The finished section starts folded and
+opens with a button that says how many it holds. The compact density shows every section as lines.
+Inside each section the order of LBY-4 holds.
+
+- Why: the lobby review of 2026-10-27: finished tables were mixed with open ones at full size under
+  "Available tables", and only six tables fitted a 1440×900 screen.
+- Guard: `src/lobby/LobbyScreen.render.test.tsx`
+
+### LBY-23 · A table card shows what the server says about the table, and nothing it does not know
+The card shows the format, the game mode with its best-of, the free seats, every seat with its
+player (flag, rank emblem, host crown) or its AI type, and the match options the server packs in
+`additionalInfoShort`: clock and buffer, range of influence, construction and pick time, custom rules,
+rollbacks and, once a match is running, the score with the players in the server's order. An option the
+client does not recognise is shown as the server wrote it, and the full server text is the facts' tooltip.
+A seat has no "ready" mark (readiness lives in the waiting room, LBY-9) and a human seat no "Human" tag.
+A table closed to spectators says so, and its watch button is disabled unless the player sits at it.
+Each player has a row of their own: the avatar, the name (with the host crown), the flag and the rank
+emblem at full size; the rating number and the history are in the row's tooltip, so the name stays
+readable and nothing spills out of the card. Two or more open seats share one row that counts them.
+
+- Why: the lobby review of 2026-10-27. A first redesign merged the format and the mode and lost the
+  mode; the user caught it, so the card keeps every field it showed before. The green "ready" dot was
+  lit on every occupied seat whatever the player had done, and the options reached the player only as
+  raw text ("Wins: 2, Time: 20m(+10s), SP").
+- Guard: `src/lobby/tableInfo.test.ts` · `src/lobby/TableCard.test.tsx` · `e2e/lobby-fit.spec.ts`
+
+### LBY-24 · The header navigates; creating starts from the "Create" menu beside the search
+The lobby header holds the brand, the tabs (Tables with its count, Decks, History, Ranking, underlined
+when active), the active-table shortcut and the player's controls. Creating a match or a tournament is a
+"Create" menu at the end of the search row, next to the active deck. The header is one row from 901 px up
+(the user chip keeps only its avatar below 1180 px) and on a phone, where the tabs live in the bottom bar.
+
+- Why: the lobby review of 2026-10-27: "New table" and "New tournament" sat among the tabs, the active
+  tab looked like another button, and on a phone the header took three rows before the first table.
+- Guard: `src/lobby/LobbyScreen.render.test.tsx`

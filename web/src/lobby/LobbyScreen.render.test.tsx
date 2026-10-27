@@ -67,9 +67,11 @@ describe('LobbyScreen', () => {
     expect(byLabel(/historial|history/i).className).toContain('active')
   })
 
-  it('opens the create-table dialog from the header', async () => {
+  it('LBY-24: opens the create-table dialog from the Create menu, not from the header', async () => {
     show()
-    await act(async () => { fireEvent.click(document.querySelector('.top-nav-create')!) })
+    expect(document.querySelector('.lobby-topstrip [data-testid="create-menu"]')).toBeNull()
+    await act(async () => { fireEvent.click(screen.getByTestId('create-menu')) })
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: /Nueva mesa/i })) })
     expect(screen.getByRole('heading', { name: /Nueva mesa|Crear Mesa/i })).toBeTruthy()
   })
 
@@ -90,7 +92,7 @@ describe('LobbyScreen', () => {
     show(withTables([tableOf('t1', 'Alpha night'), tableOf('t2', 'Beta night')]))
     expect(screen.getByText('Alpha night')).toBeTruthy()
     expect(screen.getByText('Beta night')).toBeTruthy()
-    expect(document.querySelectorAll('.tables-list > *').length).toBeGreaterThanOrEqual(2)
+    expect(document.querySelectorAll('.tables-list .table-card').length).toBe(2)
     expect(screen.getByRole('heading', { level: 2, name: /\(2\)/ })).toBeTruthy()
   })
 
@@ -109,12 +111,20 @@ describe('LobbyScreen', () => {
     expect(localStorage.getItem('tables_density')).toBe('compact')
   })
 
-  it('persists the filter panel state', async () => {
-    show(withTables([tableOf('t1', 'Alpha night')]))
-    const toggle = document.querySelector<HTMLButtonElement>('.tables-filter-toggle')!
-    const before = toggle.getAttribute('aria-expanded')
+  it('LBY-22: lists waiting tables first, then the ones in progress, and keeps the finished ones folded', async () => {
+    show(withTables([
+      tableOf('t1', 'Finished night', { tableState: 'FINISHED' }),
+      tableOf('t2', 'Dueling night', { tableState: 'DUELING' }),
+      tableOf('t3', 'Waiting night'),
+    ]))
+    const sections = Array.from(document.querySelectorAll('.tables-group')).map((s) => s.className.match(/tables-group-(\w+)/)![1])
+    expect(sections).toEqual(['waiting', 'playing', 'finished'])
+    expect(screen.queryByText('Finished night')).toBeNull()
+    const toggle = document.querySelector<HTMLButtonElement>('.tables-group-finished button')!
+    expect(toggle.getAttribute('aria-expanded')).toBe('false')
     await act(async () => { fireEvent.click(toggle) })
-    expect(toggle.getAttribute('aria-expanded')).not.toBe(before)
-    expect(localStorage.getItem('tables_filters_open')).toBe(before === 'true' ? '0' : '1')
+    expect(screen.getByText('Finished night')).toBeTruthy()
+    expect(document.querySelector('.tables-group-playing .tables-grid')?.className).toContain('is-rows')
+    expect(document.querySelector('.tables-group-waiting .tables-grid')?.className).not.toContain('is-rows')
   })
 })
