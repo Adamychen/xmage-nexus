@@ -167,10 +167,14 @@ Until a card's Scryfall data arrives it is drawn as a card-shaped placeholder wi
 (or "Unsorted") and waits there as a placeholder; it never goes to "Other", which holds only cards whose type
 line is known and fits no other pile. A card counts as loaded once its type line is known. Deck
 cards are fetched ahead of catalogue images, in the order they are listed. A failed fetch is retried
-for about a minute (after 1, 10, 20 and 30 s), which covers a Scryfall rate-limit window; a rejected
-Scryfall request pauses the shared queue, because the browser reports a throttled answer as a network
-error. A card whose data still cannot be fetched stays in the Loading pile and is tried again the next
-time the deck changes. The numbers of DCK-10 count only loaded cards and say how many are still loading.
+for about a minute (after 1, 10, 20 and 30 s), which covers a Scryfall rate-limit window. A rejected
+Scryfall request (a TypeError: the browser reports a throttled answer as a network error) opens a pause
+that holds background requests only: one window at a time, 2 s, doubling to 30 s while requests keep
+failing, and reset by any response. Urgent requests are not held by it. The lookups of an import or a
+resolve are urgent too, because the user is waiting for them, and a background request that an urgent
+caller asks for is promoted to urgent. A card whose data still cannot be fetched stays in the Loading
+pile and is tried again the next time the deck changes. The numbers of DCK-10 count only loaded cards
+and say how many are still loading.
 
 - Why: the review of 2026-10-28: while the Scryfall queue loaded, 36 of 60 cards sat in "Other"
   without images and the curve and colour share were wrong, which read as a classification bug.
@@ -178,8 +182,11 @@ time the deck changes. The numbers of DCK-10 count only loaded cards and say how
   a failed fetch was dropped without a retry. Urgent requests were also queued last-in first-out, so
   the first cards of a deck were sent last and fell into a Scryfall 429 window; Scryfall's 429 has no
   CORS header, so the browser reports it as a TypeError and the queue never paused, and three quick
-  retries (about 7 s) ended before the window (25 to 60 s) closed.
-- Guard: `src/decks/stackColumns.test.ts` · `src/decks/DeckNumbersPanel.test.tsx` · `src/decks/ArenaCardStacks.test.tsx` · `src/decks/DeckBuilder.test.tsx` · `src/decks/useDeckMetadata.test.ts` · `src/cards/scryfallClient.test.ts` · `src/decks/useDeckMutations.edits.test.ts`
+  retries (about 7 s) ended before the window (25 to 60 s) closed. The first pause that fixed this
+  re-armed on every failure, so an unreachable Scryfall serialised the whole queue at one request per
+  2 s and held the import's own lookups: the CI run of 2026-10-28 failed the import wizard's
+  5 s budget after three unrouted printing lookups (see `docs/lessons.md`).
+- Guard: `src/decks/stackColumns.test.ts` · `src/decks/DeckNumbersPanel.test.tsx` · `src/decks/ArenaCardStacks.test.tsx` · `src/decks/DeckBuilder.test.tsx` · `src/decks/useDeckMetadata.test.ts` · `src/decks/importResolve.test.ts` · `src/cards/scryfallClient.test.ts` · `src/decks/useDeckMutations.edits.test.ts`
 
 ### DCK-12 · The catalogue is a drawer the deck can take over
 The catalogue (Search and Suggestions tabs, unchanged inside) is a drawer on the left that the

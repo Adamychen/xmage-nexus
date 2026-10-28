@@ -50,6 +50,17 @@ describe('resolveDeckPrintings', () => {
     expect(scryfallJson.mock.calls.every(([url]) => !String(url).includes('/cards/search'))).toBe(true)
   })
 
+  it('DCK-11: a resolve asks Scryfall as urgent, the user is waiting for it', async () => {
+    xmagePrintingsFor.mockResolvedValue(null)
+    scryfallJson.mockImplementation(async (url: string) =>
+      url.includes('Lightning%20Bolt') ? scry('Lightning Bolt', 'clu', '141', { modern: 'legal' }) : null)
+    await resolveDeckPrintings({ cards: [card('Lightning Bolt', 4), card('Mountain', 20)], sideboard: [] }, { strategy: 'default' })
+    expect(scryfallJson.mock.calls.length).toBeGreaterThan(0)
+    for (const [, opts] of scryfallJson.mock.calls) {
+      expect(opts).toMatchObject({ urgent: true })
+    }
+  })
+
   it('falls back to Scryfall for a card XMage does not implement', async () => {
     xmagePrintingsFor.mockResolvedValue(new Map())
     scryfallJson.mockImplementation(async (url: string) =>

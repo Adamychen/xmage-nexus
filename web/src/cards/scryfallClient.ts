@@ -34,15 +34,18 @@ let pacing: ScryfallPacing = { ...DEFAULT_PACING }
 let active = 0
 let nextSlotAt = 0
 let blockedUntil = 0
+let networkBlockedUntil = 0
+let networkWindowMs = 0
 let timer: ReturnType<typeof setTimeout> | null = null
 const urgentQueue: Task[] = []
 const queue: Task[] = []
 
 const memory = new Map<string, unknown>()
 const inflight = new Map<string, Promise<unknown>>()
+const urgentUrls = new Set<string>()
 
 const BUS_NAME = 'xmage-scryfall-budget'
-type BusMessage = { slotAt: number } | { blockedUntil: number }
+type BusMessage = { slotAt: number } | { blockedUntil: number } | { networkBlockedUntil: number }
 let bus: BroadcastChannel | null | undefined
 
 /**
@@ -68,6 +71,9 @@ function getBus(): BroadcastChannel | null {
       if ('blockedUntil' in msg && Number.isFinite(msg.blockedUntil) && msg.blockedUntil > blockedUntil) {
         blockedUntil = msg.blockedUntil
         notifyThrottle()
+      }
+      if ('networkBlockedUntil' in msg && Number.isFinite(msg.networkBlockedUntil)) {
+        networkBlockedUntil = Math.max(networkBlockedUntil, msg.networkBlockedUntil)
       }
       pump()
     }
@@ -114,6 +120,14 @@ function throttle(forMs: number) {
   notifyThrottle()
 }
 
+function networkFailure() {
+  const now = Date.now()
+  if (now < networkBlockedUntil) return
+  networkWindowMs = Math.min(networkWindowMs > 0 ? networkWindowMs * 2 : DEFAULT_BACKOFF_MS, MAX_BACKOFF_MS)
+  networkBlockedUntil = now + networkWindowMs
+  announce({ networkBlockedUntil })
+}
+
 /** Milisegundos que falta esperar por un 429 de Scryfall (0 si no hay pausa). */
 export function scryfallThrottleMs(): number {
   return Math.max(0, blockedUntil - Date.now())
@@ -126,18 +140,29 @@ export function onScryfallThrottle(listener: (untilMs: number) => void): () => v
 }
 
 function pump() {
-  if (timer) return
-  while (active < pacing.maxConcurrent && (urgentQueue.length > 0 || queue.length > 0)) {
+  if (timer) {
+    clearTimeout(timer)
+    timer = null
+  }
+  while (active < pacing.maxConcurrent) {
     const now = Date.now()
-    const readyAt = Math.max(nextSlotAt, blockedUntil)
-    if (readyAt > now) {
-      timer = setTimeout(() => {
+    const slotAt = Math.max(nextSlotAt, blockedUntil)
+    const urgentReady = urgentQueue.length > 0 && slotAt <= now
+    const backgroundAt = Math.max(slotAt, networkBlockedUntil)
+    const backgroundReady = queue.length > 0 && backgroundAt <= now
+    if (!urgentReady && !backgroundReady) {
+      const wakeAt = Math.min(
+        urgentQueue.length > 0 ? slotAt : Infinity,
+        queue.length > 0 ? backgroundAt : Infinity,
+      )
+      if (timer) clearTimeout(timer)
+      timer = wakeAt === Infinity ? null : setTimeout(() => {
         timer = null
         pump()
-      }, readyAt - now)
+      }, wakeAt - now)
       return
     }
-    const task = (urgentQueue.length > 0 ? urgentQueue : queue).shift()!
+    const task = (urgentReady ? urgentQueue : queue).shift()!
     if (task.init.signal?.aborted) {
       task.reject(abortError())
       continue
@@ -162,6 +187,7 @@ async function run(task: Task) {
       headers: { Accept: 'application/json', ...headers },
       signal: controller.signal,
     })
+    networkWindowMs = 0
     if (res.status === 429) {
       throttle(retryAfterMs(res))
       if (task.attempts < pacing.maxAttempts) {
@@ -171,7 +197,7 @@ async function run(task: Task) {
     }
     task.resolve(res)
   } catch (err) {
-    if (err instanceof TypeError) throttle(DEFAULT_BACKOFF_MS)
+    if (err instanceof TypeError) networkFailure()
     task.reject(err)
   } finally {
     clearTimeout(timeout)
@@ -211,9 +237,22 @@ export function resetScryfallClient() {
   active = 0
   nextSlotAt = 0
   blockedUntil = 0
+  networkBlockedUntil = 0
+  networkWindowMs = 0
   memory.clear()
   inflight.clear()
+  urgentUrls.clear()
   pacing = { ...DEFAULT_PACING }
+}
+
+function promoteQueued(url: string) {
+  urgentUrls.add(url)
+  const at = queue.findIndex((task) => task.url === url)
+  if (at === -1) return
+  const [task] = queue.splice(at, 1)
+  task.init = { ...task.init, urgent: true }
+  urgentQueue.push(task)
+  pump()
 }
 
 function remember(url: string, value: unknown) {
@@ -319,7 +358,7 @@ async function loadJson<T>(url: string, opts: ScryfallJsonOptions): Promise<T | 
     }
   }
   try {
-    const res = await scryfallFetch(url, { urgent: opts.urgent, timeoutMs: opts.timeoutMs })
+    const res = await scryfallFetch(url, { urgent: opts.urgent || urgentUrls.has(url), timeoutMs: opts.timeoutMs })
     if (res.status === 404) {
       remember(url, null)
       return null
@@ -342,8 +381,15 @@ async function loadJson<T>(url: string, opts: ScryfallJsonOptions): Promise<T | 
 export function scryfallJson<T = unknown>(url: string, opts: ScryfallJsonOptions = {}): Promise<T | null> {
   if (memory.has(url)) return Promise.resolve(memory.get(url) as T | null)
   const pending = inflight.get(url)
-  if (pending) return pending as Promise<T | null>
-  const p = loadJson<T>(url, opts).finally(() => inflight.delete(url))
+  if (pending) {
+    if (opts.urgent) promoteQueued(url)
+    return pending as Promise<T | null>
+  }
+  if (opts.urgent) urgentUrls.add(url)
+  const p = loadJson<T>(url, opts).finally(() => {
+    inflight.delete(url)
+    urgentUrls.delete(url)
+  })
   inflight.set(url, p)
   return p
 }

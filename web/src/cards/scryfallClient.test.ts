@@ -318,3 +318,116 @@ describe('estado de limitación (429)', () => {
     expect(scryfallThrottleMs()).toBe(0)
   })
 })
+
+describe('DCK-11 network errors pause only background requests', () => {
+  beforeEach(() => {
+    resetScryfallClient()
+  })
+  afterEach(() => {
+    vi.useRealTimers()
+    vi.unstubAllGlobals()
+  })
+
+  it('DCK-11: ten network errors in one burst open a single pause window, late failures do not extend it', async () => {
+    vi.useFakeTimers()
+    setScryfallPacing({ spacingMs: 0, maxConcurrent: 10 })
+    const t0 = Date.now()
+    const started: Record<string, number> = {}
+    vi.stubGlobal('fetch', vi.fn((url: string) => {
+      const name = url.split('/').pop()!
+      started[name] = Date.now()
+      if (name === 'after') return Promise.resolve(ok({}))
+      const failAfter = Number(name.replace('fail', '')) * 100
+      return new Promise<Response>((_, reject) => setTimeout(() => reject(new TypeError('Failed to fetch')), failAfter))
+    }))
+
+    const burst = Array.from({ length: 10 }, (_, i) => scryfallFetch(`https://api.scryfall.com/cards/a/fail${i}`).catch((e: unknown) => e))
+    const after = scryfallFetch('https://api.scryfall.com/cards/a/after')
+    await vi.advanceTimersByTimeAsync(5000)
+
+    expect(await Promise.all(burst)).toHaveLength(10)
+    expect(await after).toMatchObject({ ok: true })
+    expect(started.after - t0).toBe(2000)
+  })
+
+  it('DCK-11: repeated network errors back the background queue off, 2 s doubling up to 30 s', async () => {
+    vi.useFakeTimers()
+    setScryfallPacing({ spacingMs: 0, maxConcurrent: 1 })
+    const starts: number[] = []
+    vi.stubGlobal('fetch', vi.fn(async () => {
+      starts.push(Date.now())
+      throw new TypeError('Failed to fetch')
+    }))
+
+    const requests = Array.from({ length: 6 }, (_, i) => scryfallFetch(`https://api.scryfall.com/cards/a/${i}`).catch((e: unknown) => e))
+    await vi.advanceTimersByTimeAsync(60_000)
+
+    expect(await Promise.all(requests)).toHaveLength(6)
+    expect(starts.slice(1).map((at, i) => at - starts[i])).toEqual([2000, 4000, 8000, 16000, 30000])
+  })
+
+  it('DCK-11: a successful response ends the back-off, the next network error opens a 2 s window again', async () => {
+    vi.useFakeTimers()
+    setScryfallPacing({ spacingMs: 0, maxConcurrent: 1 })
+    const starts: number[] = []
+    let calls = 0
+    vi.stubGlobal('fetch', vi.fn(async () => {
+      starts.push(Date.now())
+      calls++
+      if (calls % 2 === 1) throw new TypeError('Failed to fetch')
+      return ok({})
+    }))
+
+    const requests = Array.from({ length: 4 }, (_, i) => scryfallFetch(`https://api.scryfall.com/cards/a/${i}`).catch((e: unknown) => e))
+    await vi.advanceTimersByTimeAsync(10_000)
+
+    expect(await Promise.all(requests)).toHaveLength(4)
+    expect(starts[2] - starts[1]).toBe(0)
+    expect(starts[3] - starts[2]).toBe(2000)
+  })
+
+  it('DCK-11: an urgent request is sent during a network pause while a background one waits it out', async () => {
+    vi.useFakeTimers()
+    setScryfallPacing({ spacingMs: 0, maxConcurrent: 1 })
+    const t0 = Date.now()
+    const started: Record<string, number> = {}
+    vi.stubGlobal('fetch', vi.fn(async (url: string) => {
+      const name = url.split('/').pop()!
+      started[name] = Date.now()
+      if (name === 'first') throw new TypeError('Failed to fetch')
+      return ok({})
+    }))
+
+    await scryfallFetch('https://api.scryfall.com/cards/a/first').catch(() => {})
+    const second = scryfallFetch('https://api.scryfall.com/cards/a/second')
+    const urgent = scryfallFetch('https://api.scryfall.com/cards/a/urgent', { urgent: true })
+    await vi.advanceTimersByTimeAsync(3000)
+
+    expect(await urgent).toMatchObject({ ok: true })
+    expect(await second).toMatchObject({ ok: true })
+    expect(started.urgent - t0).toBe(0)
+    expect(started.second - t0).toBe(2000)
+  })
+
+  it('DCK-11: an urgent caller that joins a queued background lookup of the same card is not held by the pause', async () => {
+    vi.useFakeTimers()
+    setScryfallPacing({ spacingMs: 0, maxConcurrent: 1 })
+    const t0 = Date.now()
+    const url = 'https://api.scryfall.com/cards/a/shared?format=json'
+    const starts: number[] = []
+    vi.stubGlobal('fetch', vi.fn(async (u: string) => {
+      if (u.endsWith('/first?format=json')) throw new TypeError('Failed to fetch')
+      starts.push(Date.now())
+      return ok({ name: 'Shared' })
+    }))
+
+    await scryfallFetch('https://api.scryfall.com/cards/a/first?format=json').catch(() => {})
+    const background = scryfallJson(url)
+    const urgent = scryfallJson(url, { urgent: true })
+    await vi.advanceTimersByTimeAsync(3000)
+
+    expect(await urgent).toEqual({ name: 'Shared' })
+    expect(await background).toEqual({ name: 'Shared' })
+    expect(starts).toEqual([t0])
+  })
+})

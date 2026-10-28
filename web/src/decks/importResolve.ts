@@ -75,11 +75,12 @@ async function lookupPrinting(
   strategy: PrintingStrategy,
   setCode: string | undefined,
 ): Promise<{ json: ScryfallCardJson | null; fellBack: boolean }> {
-  const opts = { persist: true }
+  const opts = { persist: true, urgent: true }
   if (strategy === 'oldest') {
     const q = encodeURIComponent(`!"${name}" game:paper`)
     const res = await scryfallJson<{ data?: ScryfallCardJson[] }>(
       `https://api.scryfall.com/cards/search?q=${q}&unique=prints&order=released&dir=asc`,
+      { urgent: true },
     )
     const first = res?.data?.[0]
     if (first) return { json: first, fellBack: false }
@@ -89,10 +90,10 @@ async function lookupPrinting(
       opts,
     )
     if (json) return { json, fellBack: false }
-    const dflt = await fetchCardJson({ cardName: name })
+    const dflt = await fetchCardJson({ cardName: name }, { urgent: true })
     return { json: dflt, fellBack: !!dflt }
   }
-  const exact = await fetchCardJson({ cardName: name })
+  const exact = await fetchCardJson({ cardName: name }, { urgent: true })
   if (exact) return { json: exact, fellBack: strategy !== 'default' }
   const fuzzy = await scryfallJson<ScryfallCardJson>(`${NAMED}?fuzzy=${encodeURIComponent(name)}`, opts)
   return { json: fuzzy, fellBack: !!fuzzy }
@@ -164,14 +165,14 @@ export async function resolveDeckPrintings(deck: DeckLike, opts: ResolveOptions)
       try {
         if (opts.signal?.aborted) return
         if (!needsPrinting(rep) || opts.strategy === 'keep') {
-          const json = await fetchCardJson(rep, { fallbackToName: true })
+          const json = await fetchCardJson(rep, { fallbackToName: true, urgent: true })
           if (json) metaByName.set(key, stripMetaFromJson(json))
           return
         }
         const xm = fromXmage?.get(key)
         if (xm) {
           printings.set(key, { setCode: xm.setCode, cardNumber: xm.cardNumber })
-          const json = await fetchCardJson({ cardName: name, setCode: xm.setCode, cardNumber: xm.cardNumber }, { fallbackToName: true })
+          const json = await fetchCardJson({ cardName: name, setCode: xm.setCode, cardNumber: xm.cardNumber }, { fallbackToName: true, urgent: true })
           if (json) metaByName.set(key, stripMetaFromJson(json))
           if (opts.strategy === 'set' && opts.setCode && xm.setCode.toUpperCase() !== opts.setCode.toUpperCase()) fellBack.push(name)
           return
