@@ -165,3 +165,168 @@ describe('useDeckMutations import (AUDIT bloqueante)', () => {
     expect(sp2.mock.calls[0][0]).toMatchObject({ commanderCard: sidar })
   })
 })
+
+describe('useDeckMutations stack piles on import (DCK-7)', () => {
+  const piles = { piles: [{ id: 'p1', label: 'Burn' }], assign: { 'M10:146:Lightning Bolt': { p1: 4 } } }
+  const ownPiles = { piles: [{ id: 'p7', label: 'Own' }], assign: { 'LEA:292:Mountain': { p7: 1 } } }
+
+  it('DCK-7: replace adopts the piles of the imported file', () => {
+    const { result, schedulePersist } = renderMutations(makeDeck({ cards: [sidar], stackPiles: ownPiles }))
+    act(() => {
+      result.current.handleApplyImport({ cards: [bolt], sideboard: [], stackPiles: piles, mode: 'replace' })
+    })
+    expect(schedulePersist.mock.calls[0][0]).toMatchObject({ stackPiles: piles })
+  })
+
+  it('DCK-7: add keeps the deck own piles and takes the imported ones only when it has none', () => {
+    const { result, schedulePersist } = renderMutations(makeDeck({ cards: [sidar], stackPiles: ownPiles }))
+    act(() => {
+      result.current.handleApplyImport({ cards: [bolt], sideboard: [], stackPiles: piles, mode: 'add' })
+    })
+    expect(schedulePersist.mock.calls[0][0]).toMatchObject({ stackPiles: ownPiles })
+
+    const { result: r2, schedulePersist: sp2 } = renderMutations(makeDeck({ cards: [sidar] }))
+    act(() => {
+      r2.current.handleApplyImport({ cards: [bolt], sideboard: [], stackPiles: piles, mode: 'add' })
+    })
+    expect(sp2.mock.calls[0][0]).toMatchObject({ stackPiles: piles })
+  })
+
+  it('DCK-7: dropping a .dck file on the deck keeps its piles when the deck has none', async () => {
+    const { result, schedulePersist } = renderMutations(makeDeck({ cards: [sidar] }))
+    const file = { text: async () => '4 [M10:146] Lightning Bolt\nLAYOUT MAIN:(1,1)(NONE,false,50)|([M10:146],[M10:146],[M10:146],[M10:146])\n' } as File
+    await act(async () => { await result.current.handleDropFile(file) })
+    expect(schedulePersist.mock.calls[0][0].stackPiles).toMatchObject({ assign: { 'M10:146:Lightning Bolt': { p1: 4 } } })
+  })
+})
+
+describe('useDeckMutations Free piles (DCK-7)', () => {
+  const boltRef = { cardName: 'Lightning Bolt', setCode: 'M10', cardNumber: '146', source: 'search' }
+
+  it('DCK-7: a catalogue card dropped on a pile adds one copy to that pile and leaves the others where they were', () => {
+    const { result, schedulePersist } = renderMutations(makeDeck({
+      cards: [bolt],
+      stackPiles: { piles: [{ id: 'p1', label: 'Spells' }], assign: {} },
+    }))
+    act(() => { result.current.handleStacksDrop('main', boltRef, { kind: 'pile', pileId: 'p1' }) })
+    const next = schedulePersist.mock.calls.at(-1)![0] as DeckV2
+    expect(next.cards.find((c) => c.cardName === 'Lightning Bolt')?.amount).toBe(2)
+    expect(next.stackPiles?.assign['M10:146:Lightning Bolt']).toEqual({ p1: 1, unsorted: 1 })
+  })
+
+  it('DCK-7: a sideboard card moved onto a new pile joins it in the main deck', () => {
+    const { result, schedulePersist } = renderMutations(makeDeck({
+      sideboard: [bolt],
+      stackPiles: { piles: [], assign: {} },
+    }))
+    act(() => { result.current.handleStacksDrop('main', { source: 'sideboard', key: 'sb:M10:146:Lightning Bolt' }, { kind: 'new', label: 'Pile 1' }) })
+    const next = schedulePersist.mock.calls.at(-1)![0] as DeckV2
+    expect(next.cards).toEqual([expect.objectContaining({ cardName: 'Lightning Bolt', amount: 1 })])
+    expect(next.sideboard).toHaveLength(0)
+    const [pile] = next.stackPiles?.piles ?? []
+    expect(pile).toMatchObject({ label: 'Pile 1' })
+    expect(next.stackPiles?.assign['M10:146:Lightning Bolt']).toEqual({ [pile.id]: 1 })
+  })
+
+  it('DCK-7: the panel moving a card to Unsorted moves every copy there', () => {
+    const { result, schedulePersist } = renderMutations(makeDeck({
+      cards: [bolt],
+      stackPiles: { piles: [{ id: 'p1', label: 'Spells' }], assign: { 'M10:146:Lightning Bolt': { p1: 1 } } },
+    }))
+    act(() => { result.current.handleAssignPile('M10:146:Lightning Bolt', { kind: 'pile', pileId: 'unsorted' }) })
+    const next = schedulePersist.mock.calls.at(-1)![0] as DeckV2
+    expect(next.stackPiles?.assign).toEqual({ 'M10:146:Lightning Bolt': { unsorted: 1 } })
+  })
+
+  const boltKey = 'M10:146:Lightning Bolt'
+  const four = makeDeck({
+    cards: [{ ...bolt, amount: 4 }],
+    stackPiles: {
+      piles: [{ id: 'p1', label: 'Burn' }, { id: 'p2', label: 'Finish' }],
+      assign: { [boltKey]: { p1: 4 } },
+    },
+  })
+  const lastPersisted = (schedulePersist: ReturnType<typeof vi.fn>) => schedulePersist.mock.calls.at(-1)![0] as DeckV2
+
+  it('DCK-7: dragging one copy of a 4-copy card to another pile leaves 3 and 1, and the card keeps 4 copies', () => {
+    const { result, schedulePersist } = renderMutations(four)
+    act(() => { result.current.handleStacksDrop('main', { source: 'main', key: boltKey, pileId: 'p1' }, { kind: 'pile', pileId: 'p2' }) })
+    const next = lastPersisted(schedulePersist)
+    expect(next.stackPiles?.assign[boltKey]).toEqual({ p1: 3, p2: 1 })
+    expect(next.cards).toEqual([expect.objectContaining({ cardName: 'Lightning Bolt', amount: 4 })])
+  })
+
+  it('DCK-7: dropping one copy of a card on the new pile column creates the pile with that copy', () => {
+    const { result, schedulePersist } = renderMutations(four)
+    act(() => { result.current.handleStacksDrop('main', { source: 'main', key: boltKey, pileId: 'p1' }, { kind: 'new', label: 'Pile 3' }) })
+    const next = lastPersisted(schedulePersist)
+    expect(next.stackPiles?.piles).toEqual([
+      { id: 'p1', label: 'Burn' }, { id: 'p2', label: 'Finish' }, { id: 'p3', label: 'Pile 3' },
+    ])
+    expect(next.stackPiles?.assign[boltKey]).toEqual({ p1: 3, p3: 1 })
+  })
+
+  it('DCK-7: the panel Move to pile moves every copy of the card at once', () => {
+    const { result, schedulePersist } = renderMutations({
+      ...four,
+      stackPiles: { ...four.stackPiles!, assign: { [boltKey]: { p1: 3, p2: 1 } } },
+    })
+    act(() => { result.current.handleAssignPile(boltKey, { kind: 'pile', pileId: 'p2' }) })
+    expect(lastPersisted(schedulePersist).stackPiles?.assign[boltKey]).toEqual({ p2: 4 })
+  })
+
+  it('DCK-7: the panel New pile moves every copy into the new pile', () => {
+    const { result, schedulePersist } = renderMutations({
+      ...four,
+      stackPiles: { ...four.stackPiles!, assign: { [boltKey]: { p1: 3, p2: 1 } } },
+    })
+    act(() => { result.current.handleAssignPile(boltKey, { kind: 'new', label: 'Pile 3' }) })
+    const next = lastPersisted(schedulePersist)
+    expect(next.stackPiles?.assign[boltKey]).toEqual({ p3: 4 })
+  })
+
+  it('DCK-7: moving a copy to the sideboard takes it out of the pile it was dragged from', () => {
+    const { result, schedulePersist } = renderMutations({
+      ...four,
+      stackPiles: { ...four.stackPiles!, assign: { [boltKey]: { p1: 3, p2: 1 } } },
+    })
+    act(() => { result.current.handleStacksDrop('side', { source: 'main', key: boltKey, pileId: 'p2' }) })
+    const next = lastPersisted(schedulePersist)
+    expect(next.cards).toEqual([expect.objectContaining({ amount: 3 })])
+    expect(next.sideboard).toEqual([expect.objectContaining({ cardName: 'Lightning Bolt', amount: 1 })])
+    expect(next.stackPiles?.assign[boltKey]).toEqual({ p1: 3 })
+  })
+
+  it('DCK-7: a copy moved to the sideboard from the card panel leaves the pile holding most copies', () => {
+    const { result, schedulePersist } = renderMutations({
+      ...four,
+      stackPiles: { ...four.stackPiles!, assign: { [boltKey]: { p1: 1, p2: 3 } } },
+    })
+    act(() => { result.current.handleSwap(boltKey) })
+    expect(lastPersisted(schedulePersist).stackPiles?.assign[boltKey]).toEqual({ p1: 1, p2: 2 })
+  })
+
+  it('DCK-7: + and - in a pile add and remove a copy of that pile', () => {
+    const split = { ...four, stackPiles: { ...four.stackPiles!, assign: { [boltKey]: { p1: 3, p2: 1 } } } }
+    let r = renderMutations(split)
+    act(() => { r.result.current.handleInc(boltKey, 'p2') })
+    expect(lastPersisted(r.schedulePersist).stackPiles?.assign[boltKey]).toEqual({ p1: 3, p2: 2 })
+    expect(lastPersisted(r.schedulePersist).cards[0].amount).toBe(5)
+
+    r = renderMutations(split)
+    act(() => { r.result.current.handleDec(boltKey, 'p1') })
+    expect(lastPersisted(r.schedulePersist).stackPiles?.assign[boltKey]).toEqual({ p1: 2, p2: 1 })
+  })
+
+  it('DCK-7: a sideboard copy dropped on a pile joins the main deck in that pile', () => {
+    const { result, schedulePersist } = renderMutations(makeDeck({
+      cards: [{ ...bolt, amount: 2 }],
+      sideboard: [bolt],
+      stackPiles: { piles: [{ id: 'p1', label: 'Burn' }, { id: 'p2', label: 'Finish' }], assign: { [boltKey]: { p1: 2 } } },
+    }))
+    act(() => { result.current.handleStacksDrop('main', { source: 'sideboard', key: `sb:${boltKey}` }, { kind: 'pile', pileId: 'p2' }) })
+    const next = lastPersisted(schedulePersist)
+    expect(next.cards[0].amount).toBe(3)
+    expect(next.stackPiles?.assign[boltKey]).toEqual({ p1: 2, p2: 1 })
+  })
+})

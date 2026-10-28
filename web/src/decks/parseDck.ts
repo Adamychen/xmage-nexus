@@ -2,11 +2,16 @@ import type { Deck, DeckCard } from '../lobby/decks'
 import { t } from '../i18n'
 import { normalizeBasicLandName } from './deckUtils'
 import { normalizeDeckCard } from './deckNormalize'
+import { deckCardKey } from './deckCardOps'
+import { normalizeStackPiles, reconcileCopies, type DeckPile, type DeckStackPiles, type PileCopies, type StoredStackPiles } from './stackPiles'
 
 const DCK_LINE = /^(SB:\s*)?(\d+)\s*\[([^:\]]+):([^\]]+)\]\s*(.+?)\s*$/
 const NAME_RE = /^NAME:\s*(.*)\s*$/
 const AUTHOR_RE = /^AUTHOR:\s*(.*)\s*$/
 const LAYOUT_RE = /^LAYOUT\s+(MAIN|SIDEBOARD):/
+const LAYOUT_LINE_RE = /^LAYOUT\s+(\w+):\((\d+),(\d+)\)([^|]+)\|(.*)$/
+const LAYOUT_STACK_RE = /\(([^)]*)\)/g
+const LAYOUT_ENTRY_RE = /\[(\w+[^:]*\w*):(\w+[\w*+]*)]/g
 const MAX_COPIES = 100
 
 /** Copies on a line: unreadable is 1, 0 or less drops the line (0), above MAX_COPIES is capped. */
@@ -22,12 +27,18 @@ export function parseDck(text: string, fallbackName = t('decks', 'import_placeho
   const sideboard: DeckCard[] = []
   const commanders: DeckCard[] = []
   let inCommander = false
+  let mainStacks: string | null = null
 
   for (const raw of lines) {
     const line = raw.trim()
     if (!line) continue
     if (line.startsWith('#')) continue
-    if (LAYOUT_RE.test(line)) { inCommander = false; continue }
+    if (LAYOUT_RE.test(line)) {
+      inCommander = false
+      const layout = line.match(LAYOUT_LINE_RE)
+      if (layout && layout[1] === 'MAIN' && layout[4].trim().startsWith('(NONE') && mainStacks === null) mainStacks = layout[5]
+      continue
+    }
     const nameMatch = line.match(NAME_RE)
     if (nameMatch) {
       name = nameMatch[1].trim() || null
@@ -65,7 +76,29 @@ export function parseDck(text: string, fallbackName = t('decks', 'import_placeho
     sideboard,
   }
   if (commanders.length > 0) deck.commanders = commanders
+  const piles = mainStacks === null ? null : pilesFromLayout(mainStacks, cards)
+  if (piles) deck.stackPiles = piles
   return deck
+}
+
+function pilesFromLayout(stacks: string, cards: DeckCard[]): DeckStackPiles | null {
+  const piles: DeckPile[] = []
+  const assign: Record<string, PileCopies> = {}
+  for (const stack of stacks.matchAll(LAYOUT_STACK_RE)) {
+    const id = `p${piles.length + 1}`
+    let holdsCard = false
+    for (const entry of stack[1].matchAll(LAYOUT_ENTRY_RE)) {
+      const setCode = entry[1].toUpperCase()
+      const cardNumber = entry[2].toUpperCase()
+      const match = cards.find((c) => c.setCode.toUpperCase() === setCode && c.cardNumber.toUpperCase() === cardNumber)
+      if (!match) continue
+      const key = deckCardKey(match)
+      assign[key] = { ...assign[key], [id]: (assign[key]?.[id] ?? 0) + 1 }
+      holdsCard = true
+    }
+    if (holdsCard) piles.push({ id, label: t('decks', 'pile_default_name', { n: String(piles.length + 1) }) })
+  }
+  return piles.length > 0 ? { piles, assign } : null
 }
 
 export function parseAnyDeck(text: string, fallbackName = t('decks', 'import_placeholder')): Deck | null {
@@ -395,6 +428,10 @@ function parseArenaLike(text: string, fallbackName: string): Deck | null {
   return deck
 }
 
+function hasPrinting(c: DeckCard): boolean {
+  return !!c.setCode && !!c.cardNumber && c.cardNumber !== '0'
+}
+
 export function exportDck(deck: ExportDeck): string {
   const out: string[] = []
   out.push(`NAME:${deck.name}`)
@@ -410,7 +447,8 @@ export function exportDck(deck: ExportDeck): string {
     if (prev) prev.amount += c.amount
     else grouped.set(k, { ...c })
   }
-  for (const c of grouped.values()) {
+  const groupedMain = [...grouped.values()]
+  for (const c of groupedMain) {
     printEntry('', c)
   }
   const groupedSb = new Map<string, DeckCard>()
@@ -427,10 +465,38 @@ export function exportDck(deck: ExportDeck): string {
     out.push('[COMMANDER]')
     for (const c of commanders) printEntry('', c)
   }
+  const groupedSideboard = [...groupedSb.values()]
+  const everyPrinted = [...groupedMain, ...groupedSideboard].every(hasPrinting)
+  const piles = normalizeStackPiles(deck.stackPiles, deck.cards)
+  if (piles && piles.piles.length > 0 && everyPrinted) {
+    out.push(...layoutLines(groupedMain, groupedSideboard, piles))
+  }
   return out.join('\n') + '\n'
 }
 
-export interface ExportDeck extends Deck {
+function copiesText(cards: DeckCard[]): string {
+  return `(${cards.map((c) => `[${c.setCode}:${c.cardNumber}]`).join(',')})`
+}
+
+function repeated(c: DeckCard, copies: number): DeckCard[] {
+  return Array.from({ length: copies }, () => c)
+}
+
+function layoutLines(main: DeckCard[], sideboard: DeckCard[], piles: DeckStackPiles): string[] {
+  const order = piles.piles.map((p) => p.id)
+  const split = main.map((card) => ({ card, ...reconcileCopies(piles.assign[deckCardKey(card)] ?? {}, card.amount, order) }))
+  const stacks = order.map((id) => split.flatMap(({ card, piles: counts }) => repeated(card, counts[id] ?? 0)))
+  const loose = split.flatMap(({ card, unsorted }) => repeated(card, unsorted))
+  if (loose.length > 0) stacks.push(loose)
+  const side = sideboard.flatMap((c) => repeated(c, c.amount))
+  return [
+    `LAYOUT MAIN:(1,${stacks.length})(NONE,false,50)|${stacks.map(copiesText).join('')}`,
+    `LAYOUT SIDEBOARD:(1,1)(NONE,false,50)|${copiesText(side)}`,
+  ]
+}
+
+export interface ExportDeck extends Omit<Deck, 'stackPiles'> {
+  stackPiles?: StoredStackPiles
   commanderCard?: DeckCard
   partnerCard?: DeckCard
 }

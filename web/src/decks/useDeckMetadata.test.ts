@@ -1,8 +1,11 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { renderHook, act, waitFor } from '@testing-library/react'
 import { useDeckMetadata } from './useDeckMetadata'
+import { isMetaLoaded } from './metaLoaded'
 import { resetCardArtPreferences, setCardArtPreference } from '../cards/artPreferences'
 import { getCachedCardName } from '../cards/cardLocalization'
+import { fetchCardJson } from '../cards/scryfallCards'
+import { resetScryfallClient, setScryfallPacing } from '../cards/scryfallClient'
 import type { DeckCard } from '../lobby/decks'
 
 function scryfallCard(imageUrl: string) {
@@ -157,6 +160,135 @@ describe('useDeckMetadata printing changes', () => {
     // pisaría la búsqueda por nombre y todas las cartas sin impresión mostrarían
     // la imagen de la última resuelta.
     expect(result.current.metaMap.has('/')).toBe(false)
+  })
+})
+
+function jsonResponse(body: unknown, code = 200) {
+  return { ok: code < 400, status: code, json: () => Promise.resolve(body), headers: { get: () => null } }
+}
+
+const swiftspear: DeckCard = { cardName: 'Monastery Swiftspear', setCode: '', cardNumber: '', amount: 4 }
+
+describe('DCK-11 deck metadata when Scryfall is busy or unavailable', () => {
+  beforeEach(() => {
+    vi.unstubAllGlobals()
+    resetCardArtPreferences()
+    resetScryfallClient()
+    setScryfallPacing({ spacingMs: 0, maxConcurrent: 3 })
+  })
+  afterEach(() => {
+    vi.useRealTimers()
+    vi.unstubAllGlobals()
+  })
+
+  it('DCK-11: a deck card is requested ahead of catalogue thumbnails queued before it', async () => {
+    setScryfallPacing({ maxConcurrent: 1 })
+    const requested: string[] = []
+    vi.stubGlobal('fetch', vi.fn((url: string) => {
+      requested.push(url)
+      return Promise.resolve(jsonResponse(scryfallCard('https://img.test/swiftspear.jpg')))
+    }))
+    for (let i = 0; i < 20; i++) {
+      void fetchCardJson({ cardName: `Catalogue ${i}`, setCode: 'M10', cardNumber: String(i + 1) }, { fallbackToName: true })
+    }
+
+    const { result } = renderHook(() => useDeckMetadata())
+    act(() => {
+      result.current.updateMetaForDeck([swiftspear])
+    })
+
+    await waitFor(() => expect(result.current.metaMap.get('monastery swiftspear')?.imageUrl).toBe('https://img.test/swiftspear.jpg'), { timeout: 3000 })
+    expect(requested.findIndex((url) => url.includes('Monastery'))).toBeLessThanOrEqual(2)
+  })
+
+  it('DCK-11: a card whose request fails is requested again and loads', async () => {
+    const fetchMock = vi.fn()
+      .mockRejectedValueOnce(new TypeError('Failed to fetch'))
+      .mockImplementation(() => Promise.resolve(jsonResponse(scryfallCard('https://img.test/retry.jpg'))))
+    vi.stubGlobal('fetch', fetchMock)
+
+    const { result } = renderHook(() => useDeckMetadata())
+    act(() => {
+      result.current.updateMetaForDeck([swiftspear])
+    })
+
+    await waitFor(() => expect(result.current.metaMap.get('monastery swiftspear')?.imageUrl).toBe('https://img.test/retry.jpg'), { timeout: 3000 })
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+  })
+
+  it('DCK-11: a card that never loads stays in the Loading pile with its name once the retries are spent', async () => {
+    vi.useFakeTimers()
+    const fetchMock = vi.fn(() => Promise.reject(new TypeError('Failed to fetch')))
+    vi.stubGlobal('fetch', fetchMock)
+
+    const { result } = renderHook(() => useDeckMetadata())
+    act(() => {
+      result.current.updateMetaForDeck([swiftspear])
+    })
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(120_000)
+    })
+
+    const meta = result.current.metaMap.get('monastery swiftspear')
+    expect(meta).toBeDefined()
+    expect(meta?.name).toBe('Monastery Swiftspear')
+    expect(isMetaLoaded(meta)).toBe(false)
+    expect(meta?.imageUrl ?? null).toBeNull()
+    expect(meta?.cmc).toBeUndefined()
+    expect(fetchMock.mock.calls.length).toBe(5)
+  })
+
+  it('DCK-11: a card whose Scryfall rate-limit window is still closed loads when the window reopens', async () => {
+    vi.useFakeTimers()
+    const opensAt = Date.now() + 40_000
+    const fetchMock = vi.fn(() => Date.now() < opensAt
+      ? Promise.reject(new TypeError('Failed to fetch'))
+      : Promise.resolve(jsonResponse(scryfallCard('https://img.test/window.jpg'))))
+    vi.stubGlobal('fetch', fetchMock)
+
+    const { result } = renderHook(() => useDeckMetadata())
+    act(() => {
+      result.current.updateMetaForDeck([swiftspear])
+    })
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(90_000)
+    })
+
+    expect(result.current.metaMap.get('monastery swiftspear')?.imageUrl).toBe('https://img.test/window.jpg')
+  })
+
+  it('DCK-11: a printing Scryfall does not know falls back to the card by name', async () => {
+    vi.stubGlobal('fetch', vi.fn((url: string) =>
+      Promise.resolve(url.includes('/cards/xyz/1')
+        ? jsonResponse({}, 404)
+        : jsonResponse(scryfallCard('https://img.test/named.jpg'))),
+    ))
+
+    const { result } = renderHook(() => useDeckMetadata())
+    act(() => {
+      result.current.updateMetaForDeck([{ cardName: 'Adeline, Resplendent Cathar', setCode: 'XYZ', cardNumber: '1', amount: 1 }])
+    })
+
+    await waitFor(() => expect(result.current.metaMap.get('XYZ/1')?.imageUrl).toBe('https://img.test/named.jpg'))
+  })
+
+  it('DCK-11: a card dropped from the metadata map is looked up again', async () => {
+    vi.stubGlobal('fetch', vi.fn(() => Promise.resolve(jsonResponse(scryfallCard('https://img.test/swiftspear.jpg')))))
+
+    const { result } = renderHook(() => useDeckMetadata())
+    act(() => {
+      result.current.updateMetaForDeck([swiftspear])
+    })
+    await waitFor(() => expect(result.current.metaMap.has('monastery swiftspear')).toBe(true))
+
+    act(() => {
+      result.current.setMetaMap(new Map())
+    })
+    act(() => {
+      result.current.updateMetaForDeck([swiftspear])
+    })
+
+    await waitFor(() => expect(result.current.metaMap.get('monastery swiftspear')?.imageUrl).toBe('https://img.test/swiftspear.jpg'))
   })
 })
 

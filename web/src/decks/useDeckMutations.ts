@@ -8,7 +8,7 @@ import type { ImportResult } from './DeckImportModal'
 import { parseAnyDeck } from './parseDck'
 import { getEffectiveCardLang, setCachedCardName } from '../cards/cardLocalization'
 import {
-  deckCardKey, moveOneBetween, incrementInList, decrementInList, removeFromList,
+  deckCardKey, copiesOf, moveOneBetween, incrementInList, decrementInList, removeFromList,
   mergeIntoList, insertOrIncrement, addSearchResult, replaceBasicLands,
   dropOnCommander, stripMetaFromSearch, type SuggestedLand,
 } from './deckCardOps'
@@ -19,6 +19,10 @@ import { canPairCommanders, isCommanderEligible } from './deckUtils'
 import { commanderEligibilityKey } from './useCommanderEligibility'
 import { setStoreError } from '../state/store'
 import { t as tStatic } from '../i18n'
+import {
+  addCopies, addPile, assignAllCopies, largestPile, moveCopies, reconcileStackPiles, removePile, renamePile,
+  takeCopies, UNSORTED, type DeckStackPiles,
+} from './stackPiles'
 
 interface Deps {
   deck: DeckV2 | null
@@ -30,6 +34,31 @@ interface Deps {
   printingTargetCard: DeckCard | null
   setPrintingTargetCard: (c: DeckCard | null) => void
   commanderEligibilityMap?: Map<string, boolean> | null
+}
+
+export type PileTarget = { kind: 'pile'; pileId: string } | { kind: 'new'; label: string }
+
+export type StackDropPayload = DroppedCardData & { key?: string; pileId?: string }
+
+const NO_PILES: DeckStackPiles = { piles: [], assign: {} }
+
+function resolvePileTarget(sp: DeckStackPiles, target: PileTarget): { sp: DeckStackPiles; pileId: string } {
+  if (target.kind === 'new') {
+    const added = addPile(sp, target.label)
+    return { sp: added.next, pileId: added.id }
+  }
+  return { sp, pileId: target.pileId }
+}
+
+function placeCopy(sp: DeckStackPiles, cardKey: string, target: PileTarget): DeckStackPiles {
+  const placed = resolvePileTarget(sp, target)
+  return addCopies(placed.sp, cardKey, placed.pileId, 1)
+}
+
+function editPiles(before: DeckV2, after: DeckV2, edit: (sp: DeckStackPiles) => DeckStackPiles): DeckV2 {
+  const edited = edit(reconcileStackPiles(before.stackPiles ?? NO_PILES, before.cards))
+  if (!before.stackPiles && edited.piles.length === 0) return after
+  return { ...after, stackPiles: reconcileStackPiles(edited, after.cards) }
 }
 
 function adoptedCommandersOf(commanders?: DeckCard[]) {
@@ -73,11 +102,13 @@ export function useDeckMutations(deps: Deps) {
       setCachedCardName(card.name, card.printed_name, card.lang || getEffectiveCardLang())
     }
     const { cards: nextCards, card: added } = addSearchResult(deck.cards, card)
-    const m = new Map(metaMap)
     const meta = stripMetaFromSearch(card)
-    m.set(`${added.setCode}/${added.cardNumber}`, meta)
-    m.set(card.name.toLowerCase(), meta)
-    setMetaMap(m)
+    setMetaMap((prev) => {
+      const m = new Map(prev)
+      m.set(`${added.setCode}/${added.cardNumber}`, meta)
+      m.set(card.name.toLowerCase(), meta)
+      return m
+    })
     schedulePersist({
       ...deck,
       cards: nextCards,
@@ -85,14 +116,19 @@ export function useDeckMutations(deps: Deps) {
     })
   }
 
-  const handleSwap = (k: string) => {
+  const handleSwap = (k: string, from?: string, to?: PileTarget) => {
     if (!deck) return
     if (k.startsWith('sb:')) {
-      const [nextSide, nextCards] = moveOneBetween(deck.sideboard, deck.cards, k.slice(3))
-      schedulePersist({ ...deck, cards: nextCards, sideboard: nextSide })
+      const cardKey = k.slice(3)
+      const [nextSide, nextCards] = moveOneBetween(deck.sideboard, deck.cards, cardKey)
+      if (nextCards === deck.cards) return
+      const after = { ...deck, cards: nextCards, sideboard: nextSide }
+      schedulePersist(to ? editPiles(deck, after, (sp) => placeCopy(sp, cardKey, to)) : after)
     } else {
       const [nextCards, nextSide] = moveOneBetween(deck.cards, deck.sideboard, k)
-      schedulePersist({ ...deck, cards: nextCards, sideboard: nextSide })
+      if (nextCards === deck.cards) return
+      const after = { ...deck, cards: nextCards, sideboard: nextSide }
+      schedulePersist(editPiles(deck, after, (sp) => takeCopies(sp, k, from ?? largestPile(sp, k) ?? UNSORTED, 1)))
     }
   }
 
@@ -144,7 +180,11 @@ export function useDeckMutations(deps: Deps) {
     && a.setCode.toUpperCase() === setCode.toUpperCase()
     && a.cardNumber === cardNumber
 
-  const handleDropCardOnDeck = (cardData: DroppedCardData, target: 'main' | 'sideboard' | 'commander'): boolean | void => {
+  const handleDropCardOnDeck = (
+    cardData: DroppedCardData,
+    target: 'main' | 'sideboard' | 'commander',
+    pile?: PileTarget,
+  ): boolean | void => {
     if (!deck || !cardData?.cardName) return
     const setCode = (cardData.setCode || '').toUpperCase()
     const cardNumber = cardData.cardNumber || '0'
@@ -201,13 +241,11 @@ export function useDeckMutations(deps: Deps) {
     }
 
     if (source === 'sideboard' && target === 'main') {
-      const [nextSide, nextCards] = moveOneBetween(deck.sideboard, deck.cards, key)
-      schedulePersist({ ...deck, cards: nextCards, sideboard: nextSide })
+      handleSwap(`sb:${key}`, undefined, pile)
       return
     }
     if (source === 'main' && target === 'sideboard') {
-      const [nextCards, nextSide] = moveOneBetween(deck.cards, deck.sideboard, key)
-      schedulePersist({ ...deck, cards: nextCards, sideboard: nextSide })
+      handleSwap(key)
       return
     }
 
@@ -218,7 +256,8 @@ export function useDeckMutations(deps: Deps) {
       if (replacedOldKey && nextCover && deckCardKey(nextCover) === replacedOldKey) {
         nextCover = { ...nextCover, cardName, setCode, cardNumber }
       }
-      schedulePersist({ ...deck, cards: nextCards, coverCard: nextCover ?? nextCards[0] })
+      const after = { ...deck, cards: nextCards, coverCard: nextCover ?? nextCards[0] }
+      schedulePersist(pile ? editPiles(deck, after, (sp) => placeCopy(sp, key, pile)) : after)
     } else {
       const { list: nextSide } = insertOrIncrement(deck.sideboard, dropped, serverFlaggedKeys)
       schedulePersist({ ...deck, sideboard: nextSide })
@@ -232,24 +271,30 @@ export function useDeckMutations(deps: Deps) {
     return { isSide, key: isSide ? k.slice(3) : k }
   }
 
-  const handleInc = (k: string) => {
+  const handleInc = (k: string, pileId?: string) => {
     if (!deck) return
     const { isSide, key } = splitKey(k)
     if (isSide) {
       schedulePersist({ ...deck, sideboard: incrementInList(deck.sideboard, key) })
-    } else {
-      schedulePersist({ ...deck, cards: incrementInList(deck.cards, key) })
+      return
     }
+    const cards = incrementInList(deck.cards, key)
+    if (cards === deck.cards) return
+    const after = { ...deck, cards }
+    schedulePersist(pileId ? editPiles(deck, after, (sp) => addCopies(sp, key, pileId, 1)) : after)
   }
 
-  const handleDec = (k: string) => {
+  const handleDec = (k: string, pileId?: string) => {
     if (!deck) return
     const { isSide, key } = splitKey(k)
     if (isSide) {
       schedulePersist({ ...deck, sideboard: decrementInList(deck.sideboard, key) })
-    } else {
-      schedulePersist({ ...deck, cards: decrementInList(deck.cards, key) })
+      return
     }
+    const cards = decrementInList(deck.cards, key)
+    if (cards === deck.cards) return
+    const after = { ...deck, cards }
+    schedulePersist(pileId ? editPiles(deck, after, (sp) => takeCopies(sp, key, pileId, 1)) : after)
   }
 
   const handleRemove = (k: string) => {
@@ -265,6 +310,49 @@ export function useDeckMutations(deps: Deps) {
   const handleSetCover = (c: DeckCard) => {
     if (!deck) return
     schedulePersist({ ...deck, coverCard: c })
+  }
+
+  const handleAssignPile = (cardKey: string, target: PileTarget) => {
+    if (!deck) return
+    const amount = copiesOf(deck.cards, cardKey)
+    schedulePersist(editPiles(deck, deck, (sp) => {
+      const placed = resolvePileTarget(sp, target)
+      return assignAllCopies(placed.sp, cardKey, placed.pileId, amount)
+    }))
+  }
+
+  const handleRenamePile = (id: string, label: string) => {
+    if (!deck?.stackPiles) return
+    schedulePersist({ ...deck, stackPiles: renamePile(deck.stackPiles, id, label) })
+  }
+
+  const handleRemovePile = (id: string) => {
+    if (!deck?.stackPiles) return
+    schedulePersist({ ...deck, stackPiles: removePile(deck.stackPiles, id) })
+  }
+
+  const moveWithin = (cardKey: string, fromPile: string | undefined, target: PileTarget) => {
+    if (!deck) return
+    schedulePersist(editPiles(deck, deck, (sp) => {
+      const placed = resolvePileTarget(sp, target)
+      return moveCopies(placed.sp, cardKey, fromPile ?? largestPile(sp, cardKey) ?? UNSORTED, placed.pileId, 1)
+    }))
+  }
+
+  const handleStacksDrop = (zone: 'main' | 'side', payload: StackDropPayload, pile?: PileTarget) => {
+    if (!deck) return
+    if (payload.source === 'main' || payload.source === 'sideboard') {
+      const cardKey = (payload.key ?? '').replace(/^sb:/, '')
+      if (!cardKey) return
+      const from = payload.source === 'sideboard' ? 'side' : 'main'
+      if (from !== zone) {
+        handleSwap(zone === 'main' ? `sb:${cardKey}` : cardKey, payload.pileId, pile)
+      } else if (zone === 'main' && pile) {
+        moveWithin(cardKey, payload.pileId, pile)
+      }
+      return
+    }
+    handleDropCardOnDeck(payload, zone === 'main' ? 'main' : 'sideboard', zone === 'main' ? pile : undefined)
   }
 
   /** Designa/quita el primer comandante (corona). Al quitarlo, el segundo asciende. */
@@ -360,6 +448,7 @@ export function useDeckMutations(deps: Deps) {
         ...deck,
         cards: nextCards,
         sideboard: nextSide,
+        stackPiles: result.stackPiles,
         coverCard: nextCards[0] ?? null,
         commanderCard: adopted.commander ?? stillPresent(deck.commanderCard),
         partnerCard: adopted.partner ?? stillPresent(deck.partnerCard),
@@ -372,6 +461,7 @@ export function useDeckMutations(deps: Deps) {
         ...deck,
         cards: mergedCards,
         sideboard: mergedSide,
+        stackPiles: deck.stackPiles ?? result.stackPiles,
         coverCard: deck.coverCard ?? mergedCards[0] ?? null,
         commanderCard: deck.commanderCard ?? adopted.commander,
         partnerCard: deck.partnerCard ?? adopted.partner,
@@ -395,6 +485,7 @@ export function useDeckMutations(deps: Deps) {
       ...deck,
       cards: mergeIntoList(deck.cards, parsed.cards),
       sideboard: mergeIntoList(deck.sideboard, parsed.sideboard),
+      stackPiles: deck.stackPiles ?? parsed.stackPiles,
       commanderCard: deck.commanderCard ?? adopted.commander,
       partnerCard: deck.partnerCard ?? adopted.partner,
     }
@@ -406,6 +497,7 @@ export function useDeckMutations(deps: Deps) {
   return {
     handleAddFromSearch, handleSwap, handleDropCardOnDeck,
     handleInc, handleDec, handleRemove, handleSetCover, handleSetCommander, handleSetPartner,
+    handleAssignPile, handleRenamePile, handleRemovePile, handleStacksDrop,
     handleAddBasicLand, handleRemoveBasicLand, handleApplySuggestedLands,
     handleChangePrinting, handleApplyPrinting, handleApplyImport, handleDropFile, handleResolvePrintings,
   }

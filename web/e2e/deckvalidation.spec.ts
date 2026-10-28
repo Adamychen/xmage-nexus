@@ -5,6 +5,7 @@ import { proxyPort, FAKE_MODE } from './dual'
 import { deckIssuesScenario } from '../fixtures/scenarios/deckIssues'
 import { TABLE } from '../fixtures/table-names'
 import { dismissSetupWizard, installCapture, type CaptureBuffers } from './support/start-game'
+import { showDeckListView } from './support/deck-editor'
 
 /**
  * @deckvalidation — Pre-validación de mazos contra la BD de cartas del proxy.
@@ -120,6 +121,7 @@ test.describe('Deck validation pre-join @deckvalidation @real', () => {
       await page.getByRole('button', { name: /Mis Mazos|Mazos/i }).click()
       await page.locator('.deck-box-create').click()
       await expect(page.locator('.deck-builder')).toBeVisible({ timeout: 8000 })
+      await showDeckListView(page)
 
       // importar una carta problemática (set "CY" inexistente en XMage)
       await page.getByRole('button', { name: /Importar Mazo/i }).click()
@@ -181,6 +183,7 @@ test.describe('Deck validation pre-join @deckvalidation @real', () => {
       await page.getByRole('button', { name: /Mis Mazos|Mazos/i }).click()
       await page.locator('.deck-box-create').click()
       await expect(page.locator('.deck-builder')).toBeVisible({ timeout: 8000 })
+      await showDeckListView(page)
 
       await page.getByRole('button', { name: /Importar Mazo/i }).click()
       await page.locator('.deck-import-textarea').fill(`1 [CY:77] Rhystic Tutor\n1 [C20:77] Banisher Priest\n20 [LEA:288] Island`)
@@ -214,6 +217,7 @@ test.describe('Deck validation pre-join @deckvalidation @real', () => {
       await page.getByRole('button', { name: /Mis Mazos|Mazos/i }).click()
       await page.locator('.deck-box-create').click()
       await expect(page.locator('.deck-builder')).toBeVisible({ timeout: 8000 })
+      await showDeckListView(page)
 
       await page.getByRole('button', { name: /Importar Mazo/i }).click()
       await page.locator('.deck-import-textarea').fill(`1 [PWOE:242s] Agatha's Soul Cauldron\n20 [LEA:288] Island`)

@@ -323,8 +323,7 @@
   z-index: 6;
 }
 
-.lobby-columns-single:has(> .floating-chat-fab) > .lobby-main .decks-footer,
-.lobby-columns-single:has(> .floating-chat-fab) > .lobby-main .builder-deck-footer {
+.lobby-columns-single:has(> .floating-chat-fab) > .lobby-main .decks-footer {
   padding-right: calc(var(--sp-4) + var(--chat-fab-clearance));
 }
 

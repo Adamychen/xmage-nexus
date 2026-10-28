@@ -4,6 +4,7 @@ import { withFakeServer } from './support/fake-backend'
 import { proxyPort } from './dual'
 import { decksGalleryScenario } from '../fixtures/scenarios/decksGallery'
 import { dismissSetupWizard } from './support/start-game'
+import { showDeckListView } from './support/deck-editor'
 
 test.describe('Decks Gallery', () => {
   test('renders Arena-like gallery with box art and can open builder @decks', async ({ page }) => {
@@ -24,11 +25,12 @@ test.describe('Decks Gallery', () => {
       // create new deck navigates to builder
       await page.locator('.deck-box-create').click()
       await expect(page.locator('.deck-builder')).toBeVisible({ timeout: 8000 })
-      await expect(page.locator('.deck-header-name-input')).toBeVisible({ timeout: 8000 })
+      await expect(page.locator('.deck-editor-name')).toBeVisible({ timeout: 8000 })
       await expect(page.locator('.arena-search-panel')).toBeVisible({ timeout: 5000 })
       // deck list may need a tick for meta load
       await page.waitForTimeout(800)
       await expect(page.locator('.deck-builder-body')).toBeVisible()
+      await showDeckListView(page)
       await expect(page.locator('[data-testid="builder-done"]')).toBeVisible()
       // sideboard section always visible, with drop hint when empty
       await expect(page.locator('.deck-sideboard-section')).toBeVisible()
@@ -79,10 +81,10 @@ test.describe('Decks Gallery', () => {
       await expect(page.locator('.deck-sideboard-section .deck-category-count')).toHaveText('2')
 
       // Layout toggle between vertical and horizontal (sideboard visible in both)
-      await page.locator('.deck-header-layout-btn').click()
+      await page.locator('.deck-editor-layout').click()
       await expect(page.locator('.arena-deck-cols-layout')).toBeVisible({ timeout: 2000 })
       await expect(page.locator('.deck-sideboard-section')).toBeVisible()
-      await page.locator('.deck-header-layout-btn').click()
+      await page.locator('.deck-editor-layout').click()
       await expect(page.locator('.arena-deck-list-scroll')).toBeVisible({ timeout: 2000 })
 
       // Mana filter orbs in search bar
@@ -95,7 +97,7 @@ test.describe('Decks Gallery', () => {
       await expect(page.locator('.decks-gallery')).toBeVisible({ timeout: 8000 })
     })
   })
-  test('precon: Editar clona el mazo y abre el builder (regresión "Cargando...") @decks', async ({ page }) => {
+  test('precon: Abrir clona el mazo y abre el editor (regresión "Cargando...") @decks', async ({ page }) => {
     await withFakeServer(decksGalleryScenario, async () => {
       await page.goto(`/?proxyPort=${proxyPort()}`)
       await dismissSetupWizard(page)
@@ -113,7 +115,7 @@ test.describe('Decks Gallery', () => {
       await expect(page.locator('.deck-builder-body')).toBeVisible({ timeout: 8000 })
       await expect(page.locator('[data-testid="builder-done"]')).toBeVisible()
       await expect(page.locator('.deck-builder.loading')).toHaveCount(0)
-      await expect(page.locator('.arena-deck-list-container .arena-card-strip').first()).toBeVisible({ timeout: 8000 })
+      await expect(page.locator('[data-testid="deck-editor-piles"] .arena-stack-card').first()).toBeVisible({ timeout: 8000 })
     })
   })
 
@@ -128,9 +130,10 @@ test.describe('Decks Gallery', () => {
       await page.getByRole('button', { name: /Mis Mazos|Mazos/i }).click()
       await page.locator('.deck-box-create').click()
       await expect(page.locator('.deck-builder-body')).toBeVisible({ timeout: 8000 })
+      await showDeckListView(page)
 
       // Formato Commander sin comandante: slot vacío, no la primera carta
-      await page.locator('.arena-deck-header select').selectOption('Commander')
+      await page.locator('.deck-editor-format').selectOption('Commander')
       await expect(page.getByText(/Designa una carta legendaria como comandante/)).toBeVisible()
 
       // Importar un mazo con una carta en main: NO debe aparecer como comandante
@@ -201,7 +204,8 @@ test.describe('Decks Gallery', () => {
       await page.getByRole('button', { name: /Mis Mazos|Mazos/i }).click()
       await page.locator('.deck-box-create').click()
       await expect(page.locator('.deck-builder-body')).toBeVisible({ timeout: 8000 })
-      await page.locator('.arena-deck-header select').selectOption('Commander')
+      await showDeckListView(page)
+      await page.locator('.deck-editor-format').selectOption('Commander')
 
       await page.getByRole('button', { name: /Importar Mazo/i }).click()
       await page.locator('.deck-import-textarea').fill("1 [PC2:1] Sidar Kondo of Jamuraa\n1 [C16:56] Tana, the Bloodsower\n20 [M10:234] Mountain")
@@ -307,6 +311,7 @@ test.describe('Decks Gallery', () => {
       await page.locator('.deck-box-create').click()
       await expect(page.locator('.deck-builder')).toBeVisible({ timeout: 8000 })
       await expect(page.locator('.arena-search-panel')).toBeVisible({ timeout: 5000 })
+      await showDeckListView(page)
 
       // U6-1: sort select with 6 orders + direction toggle
       const sortSelect = page.locator('.arena-sort-select')
@@ -318,7 +323,7 @@ test.describe('Decks Gallery', () => {
       await expect(page.getByTestId('arena-sort-dir-btn')).toHaveText('↓')
 
       // U6 minor: card-size slider changes the grid min column width (max 150%)
-      const slider = page.locator('.arena-grid-size-slider')
+      const slider = page.locator('.builder-left .arena-grid-size-slider')
       await expect(slider).toBeVisible()
       await expect(slider).toHaveAttribute('max', '150')
       await slider.fill('150')
@@ -334,7 +339,7 @@ test.describe('Decks Gallery', () => {
       await expect(page.locator('.deck-sideboard-section .strip-name', { hasText: /Pyroblast/ })).toBeVisible({ timeout: 3000 })
 
       // U6-5: .dek export entry present in the footer's export menu
-      await page.getByTestId('builder-export-menu').click()
+      await page.getByTestId('deck-editor-export').click()
       await expect(page.getByRole('menuitem', { name: /\.dek/i })).toBeVisible()
     })
   })
@@ -353,6 +358,7 @@ test.describe('Decks Gallery', () => {
       await expect(page.locator('.decks-gallery')).toBeVisible({ timeout: 8000 })
       await page.locator('.deck-box-create').click()
       await expect(page.locator('.deck-builder')).toBeVisible({ timeout: 8000 })
+      await showDeckListView(page)
 
       // U7-5: paste button present in the import modal
       await page.getByRole('button', { name: /Importar Mazo/i }).click()
@@ -463,7 +469,7 @@ test.describe('Decks Gallery', () => {
         'Commander\n1 Test Commander\nDeck\n1 Sol Ring\n1 Arcane Signet\n1 Llanowar Elves\n',
       )
       await page.locator('[data-testid="import-submit-btn"]').click()
-      await page.locator('.deck-header-format-select').selectOption('Commander')
+      await page.locator('.deck-editor-format').selectOption('Commander')
 
       // El fake sirve la página de EDHREC y el stub resuelve las cartas por nombre
       await page.getByRole('tab', { name: /Sugerencias|Suggestions/ }).click()
@@ -490,7 +496,7 @@ test.describe('Decks Gallery', () => {
       await page.locator('.sg-panel .arena-grid-size-slider').fill('150')
       expect(await page.locator('.sg-panel').evaluate((el) => getComputedStyle(el).getPropertyValue('--sg-card-min').trim())).toBe('240px')
       await page.getByRole('tab', { name: /Buscar|Search/ }).click()
-      await expect(page.locator('.arena-grid-size-value')).toHaveText('150%')
+      await expect(page.locator('.builder-left .arena-grid-size-value')).toHaveText('150%')
     })
   })
 })

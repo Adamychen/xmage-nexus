@@ -3,6 +3,7 @@ import Tabs from '../ui/Tabs'
 import { useState, useMemo } from 'react'
 import { parseAnyDeck } from './parseDck'
 import type { DeckCard } from '../lobby/decks'
+import type { DeckStackPiles } from './stackPiles'
 import Icon from '../ui/Icon'
 import DialogShell from '../ui/DialogShell'
 import { useTranslation } from '../i18n'
@@ -13,6 +14,7 @@ export interface ImportResult {
   cards: DeckCard[]
   sideboard: DeckCard[]
   commanders?: DeckCard[]
+  stackPiles?: DeckStackPiles
   mode: 'add' | 'replace'
 }
 
@@ -83,6 +85,7 @@ export function DeckImportModal({
       cards: parsed.cards,
       sideboard: parsed.sideboard,
       commanders: parsed.commanders,
+      stackPiles: parsed.stackPiles,
       mode,
     })
     onClose()

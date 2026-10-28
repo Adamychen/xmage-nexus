@@ -51,6 +51,8 @@ function setup(deck: DeckV2 | null, opts: { metaMap?: Map<string, CardStripMeta>
 
 const key = (c: DeckCard) => `${c.setCode}:${c.cardNumber}:${c.cardName}`
 
+type MetaUpdater = (prev: Map<string, CardStripMeta>) => Map<string, CardStripMeta>
+
 const initialError = getState().error
 beforeEach(() => setState({ error: null }))
 afterEach(() => {
@@ -191,10 +193,19 @@ describe('useDeckMutations: search and drag', () => {
 
     expect(s.persisted().cards).toEqual([{ cardName: 'Lightning Bolt', setCode: 'M10', cardNumber: '146', amount: 1 }])
     expect(s.persisted().coverCard).toEqual(s.persisted().cards[0])
-    const meta: Map<string, CardStripMeta> = s.setMetaMap.mock.lastCall![0]
+    const meta = (s.setMetaMap.mock.lastCall![0] as MetaUpdater)(new Map())
     expect(meta.get('M10/146')).toMatchObject({ manaCost: '{R}', typeLine: 'Instant' })
     expect(meta.get('lightning bolt')).toBe(meta.get('M10/146'))
     expect(getCachedCardName('Lightning Bolt', 'es')).toBe('Rayo')
+  })
+
+  it('DCK-11: adding from search keeps the metadata that arrived before the update is applied', () => {
+    const s = setup(makeDeck())
+    act(() => s.m.handleAddFromSearch(searchBolt))
+    const arrived: CardStripMeta = { typeLine: 'Creature — Bear', cmc: 2 }
+    const meta = (s.setMetaMap.mock.lastCall![0] as MetaUpdater)(new Map([['grizzly bears', arrived]]))
+    expect(meta.get('grizzly bears')).toBe(arrived)
+    expect(meta.get('M10/146')).toMatchObject({ typeLine: 'Instant' })
   })
 
   it('dropping from main to sideboard (and back) moves one copy', () => {

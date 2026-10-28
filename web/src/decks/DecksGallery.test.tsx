@@ -5,8 +5,9 @@ import { cloneDeckForEdit } from './cloneDeck'
 import type { DeckV2 } from './types'
 import { alertDialog } from '../ui/confirmDialog'
 import { captureUnhandledRejections, settle } from '../utils/unhandledRejections'
+import { t } from '../i18n'
 
-const storeState = vi.hoisted(() => ({ decks: [] as DeckV2[], listGate: null as Promise<void> | null }))
+const storeState = vi.hoisted(() => ({ decks: [] as DeckV2[] }))
 const confirmState = vi.hoisted(() => ({ calls: [] as string[], resolve: true }))
 
 vi.mock('./storage', async (importOriginal) => {
@@ -14,10 +15,7 @@ vi.mock('./storage', async (importOriginal) => {
   return {
     ...actual,
     getDeckStorage: () => ({
-      list: async () => {
-        if (storeState.listGate) await storeState.listGate
-        return [...storeState.decks]
-      },
+      list: async () => [...storeState.decks],
       get: async (id: string) => storeState.decks.find((d) => d.id === id) ?? null,
       put: async (d: DeckV2) => {
         const i = storeState.decks.findIndex((x) => x.id === d.id)
@@ -55,7 +53,6 @@ const customDeck = (over: Partial<DeckV2> = {}): DeckV2 => ({
 
 beforeEach(() => {
   storeState.decks = []
-  storeState.listGate = null
   confirmState.calls = []
   confirmState.resolve = true
   vi.stubGlobal('fetch', vi.fn(async () => ({ ok: false }) as never))
@@ -284,27 +281,39 @@ describe('DecksGallery empty state (gallery polish)', () => {
     if (safeGet() !== null) expect(safeGet()).toBe('comfortable')
   })
 
-  it('reopening a deck right after Done in the stacks editor shows the saved edit, not the stale list', async () => {
+  it('DCK-5: a deck saved in the editor is listed with its saved contents when the gallery is shown again', async () => {
     storeState.decks = [customDeck()]
-    render(<DecksGallery onEdit={() => {}} />)
+    const first = render(<DecksGallery onEdit={() => {}} />)
     await screen.findAllByText('Mi Burn')
-    fireEvent.click(document.querySelector('.decks-stacks-btn') as HTMLElement)
-    const bolt = await waitFor(() => {
-      const el = document.querySelector('.stacks-editor-main .arena-stack-card')
-      if (!el) throw new Error('stacks editor not open')
-      return el as HTMLElement
-    })
-    fireEvent.click(bolt)
-    let release!: () => void
-    storeState.listGate = new Promise<void>((resolve) => { release = resolve })
-    fireEvent.click(screen.getByTestId('stacks-editor-done'))
-    setTimeout(() => release(), 50)
-    const reopen = await waitFor(() => {
-      const el = document.querySelector('.decks-stacks-btn')
-      if (!el) throw new Error('gallery not back')
-      return el as HTMLElement
-    })
-    fireEvent.click(reopen)
-    await waitFor(() => expect(document.querySelector('.stacks-editor-main .arena-stack-qty')?.textContent).toBe('3x'))
+    first.unmount()
+    storeState.decks = [customDeck({ name: 'Mi Burn Editado' })]
+    render(<DecksGallery onEdit={() => {}} />)
+    await screen.findAllByText('Mi Burn Editado')
+    expect(screen.queryAllByText('Mi Burn')).toHaveLength(0)
+  })
+
+  it('DCK-5: the gallery opens a deck with one Open button', async () => {
+    const onEdit = vi.fn()
+    storeState.decks = [customDeck()]
+    render(<DecksGallery onEdit={onEdit} />)
+    await screen.findAllByText('Mi Burn')
+    expect(document.querySelector('.decks-stacks-btn')).toBeNull()
+    const open = screen.getAllByRole('button', { name: t('decks', 'editor_open') })
+    expect(open).toHaveLength(1)
+    expect(open[0].classList.contains('decks-edit-btn')).toBe(true)
+    fireEvent.click(open[0])
+    await waitFor(() => expect(onEdit).toHaveBeenCalledWith('c1'))
+    expect(onEdit).toHaveBeenCalledTimes(1)
+  })
+
+  it('DCK-5: Open on a precon clones it first and opens the clone', async () => {
+    const onEdit = vi.fn()
+    render(<DecksGallery onEdit={onEdit} />)
+    fireEvent.click(await screen.findByText('Mage Web bolt'))
+    fireEvent.click(screen.getByRole('button', { name: t('decks', 'editor_open') }))
+    await waitFor(() => expect(onEdit).toHaveBeenCalledTimes(1))
+    const openedId = onEdit.mock.calls[0][0] as string
+    expect(openedId.startsWith('precon-')).toBe(false)
+    expect(storeState.decks.find((d) => d.id === openedId)?.source).toBe('custom')
   })
 })

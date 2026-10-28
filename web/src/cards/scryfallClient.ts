@@ -15,6 +15,7 @@ export interface ScryfallPacing {
 const DEFAULT_PACING: ScryfallPacing = { spacingMs: 150, maxConcurrent: 3, maxAttempts: 3 }
 const DEFAULT_BACKOFF_MS = 2000
 const MAX_BACKOFF_MS = 30_000
+const DEFAULT_TIMEOUT_MS = 15_000
 const MAX_MEMORY_ENTRIES = 4000
 const CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000
 const DB_NAME = 'xmage-scryfall-cache'
@@ -34,6 +35,7 @@ let active = 0
 let nextSlotAt = 0
 let blockedUntil = 0
 let timer: ReturnType<typeof setTimeout> | null = null
+const urgentQueue: Task[] = []
 const queue: Task[] = []
 
 const memory = new Map<string, unknown>()
@@ -125,7 +127,7 @@ export function onScryfallThrottle(listener: (untilMs: number) => void): () => v
 
 function pump() {
   if (timer) return
-  while (active < pacing.maxConcurrent && queue.length > 0) {
+  while (active < pacing.maxConcurrent && (urgentQueue.length > 0 || queue.length > 0)) {
     const now = Date.now()
     const readyAt = Math.max(nextSlotAt, blockedUntil)
     if (readyAt > now) {
@@ -135,7 +137,7 @@ function pump() {
       }, readyAt - now)
       return
     }
-    const task = queue.shift()!
+    const task = (urgentQueue.length > 0 ? urgentQueue : queue).shift()!
     if (task.init.signal?.aborted) {
       task.reject(abortError())
       continue
@@ -153,7 +155,7 @@ async function run(task: Task) {
   const controller = new AbortController()
   const onAbort = () => controller.abort()
   signal?.addEventListener('abort', onAbort)
-  const timeout = timeoutMs ? setTimeout(() => controller.abort(), timeoutMs) : null
+  const timeout = setTimeout(() => controller.abort(), timeoutMs ?? DEFAULT_TIMEOUT_MS)
   try {
     const res = await fetch(task.url, {
       ...rest,
@@ -163,15 +165,16 @@ async function run(task: Task) {
     if (res.status === 429) {
       throttle(retryAfterMs(res))
       if (task.attempts < pacing.maxAttempts) {
-        queue.unshift(task)
+        ;(task.init.urgent ? urgentQueue : queue).unshift(task)
         return
       }
     }
     task.resolve(res)
   } catch (err) {
+    if (err instanceof TypeError) throttle(DEFAULT_BACKOFF_MS)
     task.reject(err)
   } finally {
-    if (timeout) clearTimeout(timeout)
+    clearTimeout(timeout)
     signal?.removeEventListener('abort', onAbort)
     active = Math.max(0, active - 1)
     pump()
@@ -190,7 +193,7 @@ export function scryfallFetch(url: string, init: ScryfallFetchOptions = {}): Pro
       return
     }
     const task: Task = { url, init, attempts: 0, resolve, reject }
-    if (init.urgent) queue.unshift(task)
+    if (init.urgent) urgentQueue.push(task)
     else queue.push(task)
     pump()
   })
@@ -203,6 +206,7 @@ export function setScryfallPacing(next: Partial<ScryfallPacing>) {
 export function resetScryfallClient() {
   if (timer) clearTimeout(timer)
   timer = null
+  urgentQueue.length = 0
   queue.length = 0
   active = 0
   nextSlotAt = 0

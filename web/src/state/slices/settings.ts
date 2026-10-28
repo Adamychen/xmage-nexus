@@ -1,5 +1,5 @@
-import { loadAutoAnswers, loadChoiceMemory, loadFxSettings, loadAudioSettings, loadMusicSettings, loadAppearanceSettings, loadManaPayment, loadHandRequestsAllowed, loadPhaseStops, loadGameLogAutoSave, loadBrowserNotifications, loadBoardRewind, loadTurnRecap, loadSmartStops, loadGameplayPreset, loadDeckStacksScale } from '../persistence'
-import type { ZoomLevel, ManaPaymentStored } from '../persistence'
+import { loadAutoAnswers, loadChoiceMemory, loadFxSettings, loadAudioSettings, loadMusicSettings, loadAppearanceSettings, loadManaPayment, loadHandRequestsAllowed, loadPhaseStops, loadGameLogAutoSave, loadBrowserNotifications, loadBoardRewind, loadTurnRecap, loadSmartStops, loadGameplayPreset, loadDeckStacksScale, loadDeckEditorView, loadDeckStacksGroup, loadDeckStacksSort, loadDeckStacksCopies, loadDeckEditorDrawer, loadDeckStacksSeparateCreatures } from '../persistence'
+import type { ZoomLevel, ManaPaymentStored, DeckEditorView, DeckStacksGroup, DeckStacksSort, DeckStacksCopies } from '../persistence'
 import type { PhaseStops } from '../../net/commands'
 import type { PrioritySoundMode } from '../../audio/prioritySound'
 import type { AutoAnswerRule } from '../../game/autoAnswers'
@@ -17,6 +17,12 @@ export interface SettingsState {
   appearance: AppearanceChoice
   smartStops: boolean
   deckStacksScale: number
+  deckEditorView: DeckEditorView
+  deckStacksGroup: DeckStacksGroup
+  deckStacksSort: DeckStacksSort
+  deckStacksCopies: DeckStacksCopies
+  deckEditorDrawer: boolean
+  deckStacksSeparateCreatures: boolean
   gameplayPreset: GameplayPresetId | null
   autoSubmitSideboard?: boolean
   holdPriority: boolean
@@ -106,6 +112,12 @@ export const initialSettings: SettingsSlice = {
     autoKeepMulligan: false,
     smartStops: loadSmartStops(),
     deckStacksScale: loadDeckStacksScale(),
+    deckEditorView: loadDeckEditorView(),
+    deckStacksGroup: loadDeckStacksGroup(),
+    deckStacksSort: loadDeckStacksSort(),
+    deckStacksCopies: loadDeckStacksCopies(),
+    deckEditorDrawer: loadDeckEditorDrawer(),
+    deckStacksSeparateCreatures: loadDeckStacksSeparateCreatures(),
     gameplayPreset: storedPreset?.id ?? null,
     holdPriority: false,
     autoAnswers: loadAutoAnswers().map((entry, index) => ({ id: `auto-${index}`, ...entry })),

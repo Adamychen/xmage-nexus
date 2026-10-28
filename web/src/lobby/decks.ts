@@ -1,3 +1,5 @@
+import type { DeckStackPiles } from '../decks/stackPiles'
+
 export interface DeckCard {
   cardName: string
   setCode: string
@@ -13,6 +15,7 @@ export interface Deck {
   sideboard: DeckCard[]
   /** Comandantes designados por el importador (sección Commander). */
   commanders?: DeckCard[]
+  stackPiles?: DeckStackPiles
 }
 
 export const STABLE_DECK: Deck = {

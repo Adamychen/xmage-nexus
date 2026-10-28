@@ -84,6 +84,21 @@ describe('DeckImportModal', () => {
     expect(onClose).toHaveBeenCalled()
   })
 
+  it('DCK-7: the piles of an imported .dck reach the import result', () => {
+    const onImport = vi.fn()
+    render(<DeckImportModal deckName="Burn" onImport={onImport} onClose={vi.fn()} />)
+    fireEvent.click(screen.getByText(/Reemplazar mazo completo/))
+    fireEvent.change(screen.getByPlaceholderText(/Importar mazo|Import deck/i), {
+      target: {
+        value: '4 [M10:146] Lightning Bolt\nLAYOUT MAIN:(1,1)(NONE,false,50)|([M10:146],[M10:146],[M10:146],[M10:146])\n',
+      },
+    })
+    fireEvent.click(screen.getByRole('button', { name: /Reemplazar mazo completo \(\d+ Total Cartas\)/i }))
+    expect(onImport).toHaveBeenCalledWith(expect.objectContaining({
+      stackPiles: expect.objectContaining({ assign: { 'M10:146:Lightning Bolt': { p1: 4 } } }),
+    }))
+  })
+
   it('pastes deck text from the clipboard (U7-5)', async () => {
     const onImport = vi.fn()
     const onClose = vi.fn()

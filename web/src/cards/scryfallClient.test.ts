@@ -107,6 +107,77 @@ describe('scryfallFetch', () => {
   })
 })
 
+describe('DCK-11 request slots', () => {
+  beforeEach(() => {
+    resetScryfallClient()
+  })
+  afterEach(() => {
+    vi.useRealTimers()
+    vi.unstubAllGlobals()
+  })
+
+  it('DCK-11: a request that never answers gives its slot back after the default timeout', async () => {
+    vi.useFakeTimers()
+    setScryfallPacing({ spacingMs: 0, maxConcurrent: 1 })
+    vi.stubGlobal('fetch', vi.fn((url: string, init: RequestInit) => url.endsWith('/hang')
+      ? new Promise((_, reject) => init.signal?.addEventListener('abort', () => reject(new DOMException('Aborted', 'AbortError'))))
+      : Promise.resolve(ok({}))))
+
+    const hung = scryfallFetch('https://api.scryfall.com/cards/a/hang')
+    const next = scryfallFetch('https://api.scryfall.com/cards/a/next')
+    hung.catch(() => {})
+    let nextAnswered = false
+    void next.then(() => { nextAnswered = true })
+
+    await vi.advanceTimersByTimeAsync(30_000)
+
+    expect(nextAnswered).toBe(true)
+  })
+})
+
+describe('DCK-11 rate limit and urgent order', () => {
+  beforeEach(() => {
+    resetScryfallClient()
+  })
+  afterEach(() => {
+    vi.useRealTimers()
+    vi.unstubAllGlobals()
+  })
+
+  it('DCK-11: urgent requests are sent in the order they were asked for', async () => {
+    setScryfallPacing({ spacingMs: 0, maxConcurrent: 1 })
+    const order: string[] = []
+    vi.stubGlobal('fetch', vi.fn(async (url: string) => {
+      order.push(url.split('/').pop()!)
+      return ok({})
+    }))
+
+    await Promise.all(['first', 'second', 'third'].map((name) =>
+      scryfallFetch(`https://api.scryfall.com/cards/a/${name}`, { urgent: true })))
+
+    expect(order).toEqual(['first', 'second', 'third'])
+  })
+
+  it('DCK-11: a 429 the browser reports as a network error pauses the shared queue', async () => {
+    vi.useFakeTimers()
+    setScryfallPacing({ spacingMs: 0, maxConcurrent: 1 })
+    const starts: number[] = []
+    vi.stubGlobal('fetch', vi.fn(async () => {
+      starts.push(Date.now())
+      if (starts.length === 1) throw new TypeError('Failed to fetch')
+      return ok({})
+    }))
+
+    const first = scryfallFetch('https://api.scryfall.com/cards/a/1').catch((err: unknown) => err)
+    const second = scryfallFetch('https://api.scryfall.com/cards/a/2')
+    await vi.advanceTimersByTimeAsync(5000)
+
+    expect(await first).toBeInstanceOf(TypeError)
+    expect(await second).toMatchObject({ ok: true })
+    expect(starts[1] - starts[0]).toBeGreaterThanOrEqual(1900)
+  })
+})
+
 describe('scryfallJson', () => {
   beforeEach(() => {
     resetScryfallClient()

@@ -1,0 +1,120 @@
+.card-focus-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--sp-2);
+  min-width: 0;
+  padding: var(--sp-3);
+  background: var(--shade-2);
+  border: 1px solid var(--veil-2);
+  border-radius: var(--r-base);
+  color: var(--fg-1);
+}
+
+.card-focus-stage {
+  display: flex;
+  justify-content: center;
+}
+
+.card-focus-image,
+.card-focus-placeholder {
+  width: min(100%, 240px);
+  aspect-ratio: 488 / 680;
+  border-radius: var(--r-sm);
+  box-sizing: border-box;
+}
+
+.card-focus-image {
+  height: auto;
+  object-fit: contain;
+  box-shadow: 0 6px 18px var(--shade-3);
+}
+
+.card-focus-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sp-2);
+  text-align: center;
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  color: var(--fg-2);
+  background: var(--veil-1);
+  border: 1px dashed var(--line-2);
+}
+
+.card-focus-flip {
+  align-self: center;
+}
+
+.card-focus-name {
+  margin: 0;
+  font-size: var(--fs-base);
+  font-weight: 800;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.card-focus-type,
+.card-focus-counts {
+  margin: 0;
+  font-size: var(--fs-xs);
+  color: var(--fg-2);
+}
+
+.card-focus-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-1h);
+  font-size: var(--fs-xs);
+  color: var(--fg-2);
+}
+
+.card-focus-issue {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-1h);
+  margin: 0;
+  padding: var(--sp-1h) var(--sp-2);
+  font-size: var(--fs-xs);
+  color: var(--warn);
+  background: var(--warn-soft);
+  border: 1px solid var(--warn-line);
+  border-radius: var(--r-sm);
+}
+
+.card-focus-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-1h);
+}
+
+.card-focus-btn.is-on {
+  color: var(--gold-300);
+  border-color: var(--gold-line);
+  background: var(--gold-soft);
+}
+
+.card-focus-piles {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1h);
+  padding-top: var(--sp-2);
+  border-top: 1px solid var(--line-1);
+}
+
+.card-focus-caption {
+  font-size: var(--fs-xs);
+  font-weight: 800;
+  color: var(--fg-2);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+@media (pointer: coarse) {
+  .card-focus-panel .card-focus-btn,
+  .card-focus-panel .card-focus-flip {
+    min-height: 44px;
+  }
+}

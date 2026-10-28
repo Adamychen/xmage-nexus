@@ -32,7 +32,7 @@ export function moveOneBetween(from: DeckCard[], to: DeckCard[], key: string): [
   return [nextFrom, nextTo]
 }
 
-function copiesOf(list: DeckCard[], key: string): number {
+export function copiesOf(list: DeckCard[], key: string): number {
   return list.reduce((sum, c) => (deckCardKey(c) === key ? sum + c.amount : sum), 0)
 }
 

@@ -426,3 +426,183 @@ Sideboard (2)
   })
 })
 
+
+describe('parseDck stack piles (DCK-7)', () => {
+  const bolt: DeckCard = { cardName: 'Lightning Bolt', setCode: 'M10', cardNumber: '146', amount: 4 }
+  const giant: DeckCard = { cardName: 'Giant Growth', setCode: 'LEA', cardNumber: '161', amount: 2 }
+  const mountain: DeckCard = { cardName: 'Mountain', setCode: 'LEA', cardNumber: '292', amount: 2 }
+  const blast: DeckCard = { cardName: 'Red Elemental Blast', setCode: '4ED', cardNumber: '218', amount: 2 }
+
+  it('DCK-7: import builds one pile per non-empty NONE stack, in file order, with assignments by card key', () => {
+    const text = `NAME:Piles
+4 [M10:146] Lightning Bolt
+2 [LEA:161] Giant Growth
+2 [LEA:292] Mountain
+LAYOUT MAIN:(1,4)(NONE,false,50)|([M10:146],[M10:146],[M10:146],[M10:146])()([LEA:161],[LEA:161])([LEA:292],[LEA:292])
+LAYOUT SIDEBOARD:(1,1)(NONE,false,50)|()
+`
+    const d = parseDck(text)!
+    expect(d.stackPiles!.piles.map((p) => p.id)).toEqual(['p1', 'p2', 'p3'])
+    expect(d.stackPiles!.assign).toEqual({
+      'M10:146:Lightning Bolt': { p1: 4 },
+      'LEA:161:Giant Growth': { p2: 2 },
+      'LEA:292:Mountain': { p3: 2 },
+    })
+  })
+
+  it('DCK-7: a layout whose sort is not NONE, or a SIDEBOARD layout, builds no piles', () => {
+    const sorted = parseDck(`4 [M10:146] Lightning Bolt
+LAYOUT MAIN:(1,1)(CARD_TYPE,false,68)|([M10:146],[M10:146],[M10:146],[M10:146])`)!
+    expect(sorted.stackPiles).toBeUndefined()
+    const side = parseDck(`4 [M10:146] Lightning Bolt
+LAYOUT SIDEBOARD:(1,1)(NONE,false,50)|([M10:146],[M10:146],[M10:146],[M10:146])`)!
+    expect(side.stackPiles).toBeUndefined()
+  })
+
+  it('DCK-7: each copy counts in the stack that holds it, unknown entries are ignored, and a stack with no known card makes no pile', () => {
+    const d = parseDck(`4 [M10:146] Lightning Bolt
+LAYOUT MAIN:(1,3)(NONE,false,50)|([ZNR:177])([m10:146],[M10:146],[X:9])([M10:146])`)!
+    expect(d.stackPiles!.piles.map((p) => p.id)).toEqual(['p1', 'p2'])
+    expect(d.stackPiles!.assign).toEqual({ 'M10:146:Lightning Bolt': { p1: 2, p2: 1 } })
+  })
+
+  it('DCK-7: a file without a NONE MAIN layout keeps no piles', () => {
+    const d = parseDck(`4 [M10:146] Lightning Bolt
+LAYOUT MAIN:(1,2)(NONE,false,50)|([ZNR:177])()`)!
+    expect(d.stackPiles).toBeUndefined()
+  })
+
+  it('DCK-7: export writes the exact LAYOUT lines, with a loose stack for cards no pile holds', () => {
+    const deck = {
+      name: 'Piles',
+      cards: [bolt, giant, mountain],
+      sideboard: [blast],
+      stackPiles: {
+        piles: [{ id: 'p1', label: 'Burn' }, { id: 'p2', label: 'Empty' }],
+        assign: { 'M10:146:Lightning Bolt': { p1: 4 } },
+      },
+    }
+    expect(exportDck(deck)).toBe(`NAME:Piles
+4 [M10:146] Lightning Bolt
+2 [LEA:161] Giant Growth
+2 [LEA:292] Mountain
+SB: 2 [4ED:218] Red Elemental Blast
+LAYOUT MAIN:(1,3)(NONE,false,50)|([M10:146],[M10:146],[M10:146],[M10:146])()([LEA:161],[LEA:161],[LEA:292],[LEA:292])
+LAYOUT SIDEBOARD:(1,1)(NONE,false,50)|([4ED:218],[4ED:218])
+`)
+  })
+
+  it('DCK-7: export and import keep the same card-to-pile assignment', () => {
+    const deck = {
+      name: 'Round trip',
+      cards: [bolt, giant, mountain],
+      sideboard: [],
+      stackPiles: {
+        piles: [{ id: 'p1', label: 'Burn' }, { id: 'p2', label: 'Green' }],
+        assign: { 'M10:146:Lightning Bolt': { p1: 4 }, 'LEA:161:Giant Growth': { p2: 2 }, 'LEA:292:Mountain': { p2: 2 } },
+      },
+    }
+    const back = parseDck(exportDck(deck))!
+    expect(back.stackPiles!.piles.map((p) => p.id)).toEqual(['p1', 'p2'])
+    expect(back.stackPiles!.assign).toEqual(deck.stackPiles.assign)
+    expect(back.cards.map((c) => c.amount)).toEqual([4, 2, 2])
+  })
+
+  it('DCK-7: copies of one card split across piles export one entry per copy, and import back to the same split', () => {
+    const deck = {
+      name: 'Split',
+      cards: [bolt],
+      sideboard: [],
+      stackPiles: {
+        piles: [{ id: 'p1', label: 'Burn' }, { id: 'p2', label: 'Finish' }],
+        assign: { 'M10:146:Lightning Bolt': { p1: 3, p2: 1 } },
+      },
+    }
+    const out = exportDck(deck)
+    expect(out).toBe(`NAME:Split
+4 [M10:146] Lightning Bolt
+LAYOUT MAIN:(1,2)(NONE,false,50)|([M10:146],[M10:146],[M10:146])([M10:146])
+LAYOUT SIDEBOARD:(1,1)(NONE,false,50)|()
+`)
+    const back = parseDck(out)!
+    expect(back.stackPiles!.assign).toEqual(deck.stackPiles.assign)
+  })
+
+  it('DCK-7: a deck saved with one pile id per card still exports all its copies to that pile', () => {
+    const out = exportDck({
+      name: 'Old',
+      cards: [bolt, giant],
+      sideboard: [],
+      stackPiles: { piles: [{ id: 'p1', label: 'Burn' }], assign: { 'M10:146:Lightning Bolt': { p1: 4 } } },
+    })
+    expect(out).toBe(`NAME:Old
+4 [M10:146] Lightning Bolt
+2 [LEA:161] Giant Growth
+LAYOUT MAIN:(1,2)(NONE,false,50)|([M10:146],[M10:146],[M10:146],[M10:146])([LEA:161],[LEA:161])
+LAYOUT SIDEBOARD:(1,1)(NONE,false,50)|()
+`)
+  })
+
+  it('DCK-7: export writes no LAYOUT lines when the deck has no pile', () => {
+    expect(exportDck({ name: 'Plain', cards: [bolt], sideboard: [] })).not.toContain('LAYOUT')
+    expect(exportDck({ name: 'Empty piles', cards: [bolt], sideboard: [], stackPiles: { piles: [], assign: {} } })).not.toContain('LAYOUT')
+  })
+
+  it('DCK-7: export writes no LAYOUT lines, neither MAIN nor SIDEBOARD, when a main deck card has no printing', () => {
+    const piles = {
+      piles: [{ id: 'p1', label: 'Burn' }],
+      assign: { 'M10:146:Lightning Bolt': { p1: 4 } },
+    }
+    const unprinted: DeckCard[] = [
+      { cardName: 'Pyroblast', setCode: '', cardNumber: '', amount: 2 },
+      { cardName: 'Pyroblast', setCode: 'M10', cardNumber: '', amount: 2 },
+      { cardName: 'Pyroblast', setCode: '', cardNumber: '146', amount: 2 },
+      { cardName: 'Pyroblast', setCode: 'M10', cardNumber: '0', amount: 2 },
+    ]
+    for (const card of unprinted) {
+      const out = exportDck({ name: 'Mixed', cards: [bolt, card], sideboard: [blast], stackPiles: piles })
+      expect(out).not.toContain('LAYOUT')
+      expect(out).toContain('4 [M10:146] Lightning Bolt')
+    }
+  })
+
+  it('DCK-7: export writes no LAYOUT lines, neither MAIN nor SIDEBOARD, when a sideboard card has no printing', () => {
+    const piles = {
+      piles: [{ id: 'p1', label: 'Burn' }],
+      assign: { 'M10:146:Lightning Bolt': { p1: 4 } },
+    }
+    const unprinted: DeckCard[] = [
+      { cardName: 'Pyroblast', setCode: '', cardNumber: '', amount: 2 },
+      { cardName: 'Pyroblast', setCode: 'M10', cardNumber: '', amount: 2 },
+      { cardName: 'Pyroblast', setCode: '', cardNumber: '146', amount: 2 },
+      { cardName: 'Pyroblast', setCode: 'M10', cardNumber: '0', amount: 2 },
+    ]
+    for (const card of unprinted) {
+      const out = exportDck({ name: 'Side', cards: [bolt, giant], sideboard: [card], stackPiles: piles })
+      expect(out).not.toContain('LAYOUT')
+      expect(out).toContain(' Pyroblast\n')
+    }
+  })
+
+  it('DCK-7: a card whose number is 0 is still written with its [SET:0] printing, and it blocks the LAYOUT lines', () => {
+    const out = exportDck({
+      name: 'Zero',
+      cards: [bolt, { cardName: 'Pyroblast', setCode: 'M10', cardNumber: '0', amount: 2 }],
+      sideboard: [blast],
+      stackPiles: { piles: [{ id: 'p1', label: 'Burn' }], assign: { 'M10:146:Lightning Bolt': { p1: 4 } } },
+    })
+    expect(out).toContain('2 [M10:0] Pyroblast\n')
+    expect(out).not.toContain('LAYOUT')
+  })
+
+  it('DCK-7: export keeps the LAYOUT lines when every main deck card has a printing', () => {
+    const out = exportDck({
+      name: 'Printed',
+      cards: [bolt, giant],
+      sideboard: [blast],
+      stackPiles: { piles: [{ id: 'p1', label: 'Burn' }], assign: { 'M10:146:Lightning Bolt': { p1: 4 } } },
+    })
+    expect(out).toContain('LAYOUT MAIN:(1,2)(NONE,false,50)|([M10:146],[M10:146],[M10:146],[M10:146])([LEA:161],[LEA:161])\n')
+    expect(out).toContain('LAYOUT SIDEBOARD:(1,1)(NONE,false,50)|([4ED:218],[4ED:218])\n')
+  })
+})

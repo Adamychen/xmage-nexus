@@ -15,10 +15,17 @@
   padding: var(--sp-1h);
 }
 
+.arena-stack-col.is-drop-target {
+  border-color: var(--gold-500);
+  box-shadow: 0 0 0 1px var(--gold-500), 0 0 12px rgb(var(--warn-rgb) / 0.25);
+}
+
 .arena-stack-col-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: var(--sp-1);
+  min-width: 0;
   padding: var(--sp-1) var(--sp-1h);
   margin-bottom: var(--sp-1h);
   border-bottom: 1px solid var(--veil-2);
@@ -29,50 +36,105 @@
   color: var(--fg-2);
 }
 
+.arena-stack-col-head > span:first-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .arena-stack-col-count {
+  flex: none;
   color: var(--gold-300);
 }
 
+.arena-stack-col-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-align: left;
+  text-transform: inherit;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: text;
+}
+
+.arena-stack-col-name:focus-visible {
+  outline: 2px solid var(--gold-500);
+  outline-offset: 2px;
+}
+
+.arena-stack-col-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: var(--sp-0h) var(--sp-1);
+  border: 1px solid var(--gold-500);
+  border-radius: var(--r-xs);
+  background: var(--shade-2);
+  color: var(--fg-hi);
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: none;
+}
+
 .arena-stack-col-body {
-  --stack-peek: 34px;
+  position: relative;
+  min-width: 0;
+}
+
+.arena-stack-col-empty {
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-1);
+  padding: var(--sp-2) 0;
+  font-size: var(--fs-xs);
+  color: var(--fg-3);
+}
+
+.arena-stack-col-new {
+  border-style: dashed;
+  background: transparent;
+}
+
+.arena-stack-col-hint {
+  margin: 0;
+  padding: var(--sp-2) var(--sp-1);
+  font-size: var(--fs-xs);
+  color: var(--fg-3);
 }
 
 .arena-stack-card {
-  position: relative;
-  display: block;
+  position: absolute;
+  left: 0;
   width: 100%;
-  height: var(--stack-peek);
   padding: 0;
   border: 0;
   background: none;
   color: inherit;
   font: inherit;
   text-align: left;
-  cursor: pointer;
 }
 
-.arena-stack-card:last-child {
-  height: auto;
+.arena-stack-card.is-interactive {
+  cursor: pointer;
 }
 
 .arena-stack-face {
   display: block;
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  aspect-ratio: 488 / 680;
+  inset: 0;
   border-radius: var(--r-xs);
   overflow: hidden;
   background: var(--ink-3);
   box-shadow: 0 2px 6px var(--shade-2);
   transition: transform 120ms ease, box-shadow 150ms ease;
-}
-
-.arena-stack-card:last-child .arena-stack-face {
-  position: relative;
 }
 
 .arena-stack-img {
@@ -85,9 +147,17 @@
 .arena-stack-fallback {
   display: block;
   padding: var(--sp-1h);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font-size: var(--fs-xs);
   font-weight: 700;
   color: var(--fg-1);
+}
+
+.arena-stack-card.is-loading .arena-stack-face {
+  box-shadow: inset 0 0 0 1px var(--line-2), 0 2px 6px var(--shade-2);
+  animation: arena-stack-pulse 1.6s ease-in-out infinite;
 }
 
 .arena-stack-qty {
@@ -114,13 +184,12 @@
   outline: 1px solid var(--err);
 }
 
-.arena-stack-card:hover,
-.arena-stack-card:focus-visible {
-  z-index: 3;
+.arena-stack-card.is-selected .arena-stack-face {
+  box-shadow: 0 0 0 2px var(--gold-500), 0 2px 6px var(--shade-2);
 }
 
-.arena-stack-card:hover .arena-stack-face,
-.arena-stack-card:focus-visible .arena-stack-face {
+.arena-stack-card.is-interactive:hover .arena-stack-face,
+.arena-stack-card.is-interactive:focus-visible .arena-stack-face {
   transform: translateY(-4px);
   box-shadow: 0 6px 16px var(--shade-3), 0 0 10px rgb(var(--warn-rgb) / 0.35);
 }
@@ -134,8 +203,22 @@
   outline-offset: 2px;
 }
 
+@keyframes arena-stack-pulse {
+  0%,
+  100% {
+    filter: brightness(1);
+  }
+  50% {
+    filter: brightness(0.8);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .arena-stack-face {
     transition: none;
+  }
+
+  .arena-stack-card.is-loading .arena-stack-face {
+    animation: none;
   }
 }

@@ -1,0 +1,184 @@
+.deck-numbers-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  min-width: 0;
+  padding: var(--sp-3);
+  background: var(--shade-2);
+  border: 1px solid var(--veil-2);
+  border-radius: var(--r-base);
+  color: var(--fg-1);
+}
+
+.numbers-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-2);
+}
+
+.numbers-title {
+  margin: 0;
+  font-size: var(--fs-xs);
+  font-weight: 800;
+  color: var(--fg-2);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.numbers-avg {
+  font-size: var(--fs-xs);
+  color: var(--fg-2);
+}
+
+.numbers-avg strong {
+  color: var(--fg-1);
+  font-variant-numeric: tabular-nums;
+}
+
+.numbers-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--sp-1);
+  height: 96px;
+}
+
+.numbers-bar-col {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  height: 100%;
+  min-width: 0;
+  gap: var(--sp-0h);
+}
+
+.numbers-bar-count {
+  min-height: 1em;
+  font-size: var(--fs-2xs);
+  font-weight: 700;
+  color: var(--fg-1);
+  font-variant-numeric: tabular-nums;
+}
+
+.numbers-bar-track {
+  display: flex;
+  flex: 1;
+  align-items: flex-end;
+  width: 100%;
+  min-height: 0;
+}
+
+.numbers-bar-fill {
+  width: 100%;
+  min-height: 0;
+  border-radius: var(--r-2xs) var(--r-2xs) 0 0;
+  background: linear-gradient(180deg, var(--brand), var(--brand-strong));
+}
+
+.numbers-bar-label {
+  font-size: var(--fs-2xs);
+  color: var(--fg-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.numbers-tiles {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--sp-1h);
+}
+
+.numbers-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--sp-1h) var(--sp-1);
+  background: var(--veil-1);
+  border: 1px solid var(--line-1);
+  border-radius: var(--r-sm);
+}
+
+.numbers-tile strong {
+  font-size: var(--fs-lg);
+  font-variant-numeric: tabular-nums;
+}
+
+.numbers-tile span {
+  font-size: var(--fs-2xs);
+  color: var(--fg-2);
+}
+
+.numbers-symbols {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1h);
+}
+
+.numbers-subtitle {
+  margin: 0;
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  color: var(--fg-2);
+}
+
+.numbers-share-bar {
+  display: flex;
+  height: 10px;
+  overflow: hidden;
+  border-radius: var(--r-pill);
+  background: var(--veil-2);
+}
+
+.numbers-share-seg {
+  height: 100%;
+}
+
+.numbers-share-w { background: var(--mana-w); }
+.numbers-share-u { background: var(--mana-u); }
+.numbers-share-b { background: var(--mana-b); }
+.numbers-share-r { background: var(--mana-r); }
+.numbers-share-g { background: var(--mana-g); }
+
+.numbers-legend {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--sp-0h) var(--sp-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.numbers-legend-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+  font-size: var(--fs-xs);
+  color: var(--fg-2);
+}
+
+.numbers-legend-name {
+  flex: 1;
+  min-width: 0;
+}
+
+.numbers-legend-pct {
+  font-variant-numeric: tabular-nums;
+  color: var(--fg-1);
+}
+
+.numbers-loading {
+  margin: 0;
+  font-size: var(--fs-xs);
+  color: var(--warn);
+}
+
+.numbers-full {
+  justify-content: center;
+}
+
+@media (pointer: coarse) {
+  .deck-numbers-panel .numbers-full {
+    min-height: 44px;
+  }
+}

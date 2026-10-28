@@ -30,6 +30,28 @@ import {
   loadDeckStacksScale,
   saveDeckStacksScale,
   DECK_STACKS_SCALE_KEY,
+  loadDeckEditorView,
+  saveDeckEditorView,
+  DECK_EDITOR_VIEW_KEY,
+  loadDeckStacksGroup,
+  saveDeckStacksGroup,
+  DECK_STACKS_GROUP_KEY,
+  loadDeckStacksSort,
+  saveDeckStacksSort,
+  DECK_STACKS_SORT_KEY,
+  loadDeckStacksCopies,
+  saveDeckStacksCopies,
+  DECK_STACKS_COPIES_KEY,
+  loadDeckEditorDrawer,
+  saveDeckEditorDrawer,
+  DECK_EDITOR_DRAWER_KEY,
+  loadDeckStacksSeparateCreatures,
+  saveDeckStacksSeparateCreatures,
+  DECK_STACKS_SEPARATE_CREATURES_KEY,
+  type DeckEditorView,
+  type DeckStacksGroup,
+  type DeckStacksSort,
+  type DeckStacksCopies,
   saveResumeToken,
   loadResumeToken,
   clearResumeToken,
@@ -704,6 +726,189 @@ describe('persistence', () => {
     it('DCK-1: clamps an out-of-range value before writing it', () => {
       saveDeckStacksScale(900)
       expect(mockStorage[DECK_STACKS_SCALE_KEY]).toBe('200')
+    })
+  })
+
+  describe('deck editor view persistence', () => {
+    it('DCK-5: defaults to the Piles view when nothing is stored', () => {
+      expect(loadDeckEditorView()).toBe('piles')
+    })
+
+    it('DCK-5: keeps the chosen view across a save and load', () => {
+      saveDeckEditorView('list')
+      expect(mockStorage[DECK_EDITOR_VIEW_KEY]).toBe('"list"')
+      expect(loadDeckEditorView()).toBe('list')
+    })
+
+    it.each([
+      ['"grid"'],
+      ['"PILES"'],
+      ['null'],
+      ['42'],
+      ['{"view":"list"}'],
+      ['not json'],
+    ])('DCK-5: normalises a stored editor view of %s to the default', (raw) => {
+      mockStorage[DECK_EDITOR_VIEW_KEY] = raw
+      expect(loadDeckEditorView()).toBe('piles')
+    })
+
+    it('DCK-5: writes an unknown view as the default', () => {
+      saveDeckEditorView('grid' as DeckEditorView)
+      expect(mockStorage[DECK_EDITOR_VIEW_KEY]).toBe('"piles"')
+    })
+  })
+
+  describe('deck stacks group persistence', () => {
+    it('DCK-6: defaults to grouping by type when nothing is stored', () => {
+      expect(loadDeckStacksGroup()).toBe('type')
+    })
+
+    it('DCK-6: keeps the chosen grouping across a save and load', () => {
+      saveDeckStacksGroup('rarity')
+      expect(mockStorage[DECK_STACKS_GROUP_KEY]).toBe('"rarity"')
+      expect(loadDeckStacksGroup()).toBe('rarity')
+    })
+
+    it.each([
+      ['"deck"'],
+      ['"Type"'],
+      ['null'],
+      ['7'],
+      ['not json'],
+    ])('DCK-6: normalises a stored group of %s to the default', (raw) => {
+      mockStorage[DECK_STACKS_GROUP_KEY] = raw
+      expect(loadDeckStacksGroup()).toBe('type')
+    })
+
+    it('DCK-6: writes an unknown group as the default', () => {
+      saveDeckStacksGroup('colour' as DeckStacksGroup)
+      expect(mockStorage[DECK_STACKS_GROUP_KEY]).toBe('"type"')
+    })
+
+    it.each<DeckStacksGroup>(['identity', 'edh'])('DCK-15: keeps %s as a chosen grouping across a save and load', (group) => {
+      saveDeckStacksGroup(group)
+      expect(mockStorage[DECK_STACKS_GROUP_KEY]).toBe(`"${group}"`)
+      expect(loadDeckStacksGroup()).toBe(group)
+    })
+
+    it.each(['"identity"', '"edh"'])('DCK-15: reads the stored grouping %s', (raw) => {
+      mockStorage[DECK_STACKS_GROUP_KEY] = raw
+      expect(loadDeckStacksGroup()).toBe(JSON.parse(raw))
+    })
+
+    it.each(['"Identity"', '"EDH"', '"edh-power"'])('DCK-15: normalises a stored grouping %s to the default', (raw) => {
+      mockStorage[DECK_STACKS_GROUP_KEY] = raw
+      expect(loadDeckStacksGroup()).toBe('type')
+    })
+
+    it('DCK-6: defaults to sorting by mana value and keeps a chosen sort', () => {
+      expect(loadDeckStacksSort()).toBe('cmc')
+      saveDeckStacksSort('name')
+      expect(mockStorage[DECK_STACKS_SORT_KEY]).toBe('"name"')
+      expect(loadDeckStacksSort()).toBe('name')
+    })
+
+    it.each([
+      ['"color"'],
+      ['"CMC"'],
+      ['null'],
+      ['true'],
+      ['not json'],
+    ])('DCK-6: normalises a stored sort of %s to the default', (raw) => {
+      mockStorage[DECK_STACKS_SORT_KEY] = raw
+      expect(loadDeckStacksSort()).toBe('cmc')
+    })
+
+    it('DCK-6: writes an unknown sort as the default', () => {
+      saveDeckStacksSort('rarity' as DeckStacksSort)
+      expect(mockStorage[DECK_STACKS_SORT_KEY]).toBe('"cmc"')
+    })
+  })
+
+  describe('deck stacks copies persistence', () => {
+    it('DCK-8: defaults to drawing the copies separately when nothing is stored', () => {
+      expect(loadDeckStacksCopies()).toBe('separate')
+    })
+
+    it('DCK-8: keeps the chosen copies mode across a save and load', () => {
+      saveDeckStacksCopies('together')
+      expect(mockStorage[DECK_STACKS_COPIES_KEY]).toBe('"together"')
+      expect(loadDeckStacksCopies()).toBe('together')
+    })
+
+    it.each([
+      ['"all"'],
+      ['"Together"'],
+      ['null'],
+      ['1'],
+      ['not json'],
+    ])('DCK-8: normalises a stored copies mode of %s to the default', (raw) => {
+      mockStorage[DECK_STACKS_COPIES_KEY] = raw
+      expect(loadDeckStacksCopies()).toBe('separate')
+    })
+
+    it('DCK-8: writes an unknown copies mode as the default', () => {
+      saveDeckStacksCopies('stacked' as DeckStacksCopies)
+      expect(mockStorage[DECK_STACKS_COPIES_KEY]).toBe('"separate"')
+    })
+  })
+
+  describe('deck editor drawer persistence', () => {
+    it('DCK-12: defaults to an open catalogue drawer when nothing is stored', () => {
+      expect(loadDeckEditorDrawer()).toBe(true)
+    })
+
+    it('DCK-12: keeps a closed drawer across a save and load', () => {
+      saveDeckEditorDrawer(false)
+      expect(mockStorage[DECK_EDITOR_DRAWER_KEY]).toBe('false')
+      expect(loadDeckEditorDrawer()).toBe(false)
+    })
+
+    it.each([
+      ['"no"'],
+      ['0'],
+      ['null'],
+      ['"false"'],
+      ['not json'],
+    ])('DCK-12: normalises a stored drawer flag of %s to open', (raw) => {
+      mockStorage[DECK_EDITOR_DRAWER_KEY] = raw
+      expect(loadDeckEditorDrawer()).toBe(true)
+    })
+
+    it('DCK-12: writes a non-boolean flag as open', () => {
+      saveDeckEditorDrawer(undefined as unknown as boolean)
+      expect(mockStorage[DECK_EDITOR_DRAWER_KEY]).toBe('true')
+    })
+  })
+
+  describe('deck stacks separate creatures persistence', () => {
+    it('DCK-16: defaults to one row of piles when nothing is stored', () => {
+      expect(loadDeckStacksSeparateCreatures()).toBe(false)
+    })
+
+    it('DCK-16: keeps the toggle across a save and load', () => {
+      saveDeckStacksSeparateCreatures(true)
+      expect(mockStorage[DECK_STACKS_SEPARATE_CREATURES_KEY]).toBe('true')
+      expect(loadDeckStacksSeparateCreatures()).toBe(true)
+      saveDeckStacksSeparateCreatures(false)
+      expect(mockStorage[DECK_STACKS_SEPARATE_CREATURES_KEY]).toBe('false')
+      expect(loadDeckStacksSeparateCreatures()).toBe(false)
+    })
+
+    it.each([
+      ['"yes"'],
+      ['1'],
+      ['null'],
+      ['"true"'],
+      ['not json'],
+    ])('DCK-16: normalises a stored flag of %s to off', (raw) => {
+      mockStorage[DECK_STACKS_SEPARATE_CREATURES_KEY] = raw
+      expect(loadDeckStacksSeparateCreatures()).toBe(false)
+    })
+
+    it('DCK-16: writes a non-boolean flag as off', () => {
+      saveDeckStacksSeparateCreatures(undefined as unknown as boolean)
+      expect(mockStorage[DECK_STACKS_SEPARATE_CREATURES_KEY]).toBe('false')
     })
   })
 })

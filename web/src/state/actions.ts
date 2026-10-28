@@ -10,7 +10,7 @@ import { decideStop } from '../game/stopPolicy'
 import { manaPaymentActions } from '../game/manaPayment'
 import { serverAutoAnswerActions } from '../game/autoAnswers'
 import { gameplayPreset, PRESET_OWNED_KEYS, type GameplayPresetId } from '../settings/gameplayPresets'
-import { clearActiveGame, saveSmartStops, saveDeckStacksScale, loadDeckStacksScale, DECK_STACKS_SCALE_KEY, saveActiveDeck, saveFxSettings, saveAudioSettings, saveMusicSettings, saveAppearanceSettings, saveAutoAnswers, saveChoiceMemory, saveManaPayment, savePhaseStops, saveGameplayPreset, applyAppearanceToDocument, rememberEquippedDeckId, APPEARANCE_KEY, FX_SETTINGS_KEY, AUDIO_SETTINGS_KEY, MUSIC_SETTINGS_KEY, AUTO_ANSWERS_KEY, CHOICE_MEMORY_KEY, MANA_PAYMENT_KEY, PHASE_STOPS_KEY, SMART_STOPS_KEY, loadFxSettings, loadAudioSettings, loadMusicSettings, loadAutoAnswers, loadChoiceMemory, loadManaPayment, loadPhaseStops, loadSmartStops } from './persistence'
+import { clearActiveGame, saveSmartStops, saveDeckStacksScale, loadDeckStacksScale, DECK_STACKS_SCALE_KEY, saveDeckEditorView, loadDeckEditorView, DECK_EDITOR_VIEW_KEY, saveDeckStacksGroup, loadDeckStacksGroup, DECK_STACKS_GROUP_KEY, saveDeckStacksSort, loadDeckStacksSort, DECK_STACKS_SORT_KEY, saveDeckStacksCopies, loadDeckStacksCopies, DECK_STACKS_COPIES_KEY, saveDeckEditorDrawer, loadDeckEditorDrawer, DECK_EDITOR_DRAWER_KEY, saveDeckStacksSeparateCreatures, loadDeckStacksSeparateCreatures, DECK_STACKS_SEPARATE_CREATURES_KEY, saveActiveDeck, saveFxSettings, saveAudioSettings, saveMusicSettings, saveAppearanceSettings, saveAutoAnswers, saveChoiceMemory, saveManaPayment, savePhaseStops, saveGameplayPreset, applyAppearanceToDocument, rememberEquippedDeckId, APPEARANCE_KEY, FX_SETTINGS_KEY, AUDIO_SETTINGS_KEY, MUSIC_SETTINGS_KEY, AUTO_ANSWERS_KEY, CHOICE_MEMORY_KEY, MANA_PAYMENT_KEY, PHASE_STOPS_KEY, SMART_STOPS_KEY, loadFxSettings, loadAudioSettings, loadMusicSettings, loadAutoAnswers, loadChoiceMemory, loadManaPayment, loadPhaseStops, loadSmartStops } from './persistence'
 import { loadAppearanceSlice } from './slices/settings'
 import { getLanguage } from '../i18n'
 import { translateError } from '../i18n'
@@ -423,6 +423,12 @@ function persistClientSettings(next: AppState['settings'], prev: AppState['setti
   if (changed(['phaseStops'])) savePhaseStops({ ...phaseStops })
   if (changed(['smartStops'])) saveSmartStops(smartStops)
   if (changed(['deckStacksScale'])) saveDeckStacksScale(next.deckStacksScale)
+  if (changed(['deckEditorView'])) saveDeckEditorView(next.deckEditorView)
+  if (changed(['deckStacksGroup'])) saveDeckStacksGroup(next.deckStacksGroup)
+  if (changed(['deckStacksSort'])) saveDeckStacksSort(next.deckStacksSort)
+  if (changed(['deckStacksCopies'])) saveDeckStacksCopies(next.deckStacksCopies)
+  if (changed(['deckEditorDrawer'])) saveDeckEditorDrawer(next.deckEditorDrawer)
+  if (changed(['deckStacksSeparateCreatures'])) saveDeckStacksSeparateCreatures(next.deckStacksSeparateCreatures)
   applyRuntimeSettings(next)
 }
 
@@ -444,6 +450,12 @@ const SETTINGS_STORAGE_LOADERS: Record<string, () => Partial<AppState['settings'
   [PHASE_STOPS_KEY]: () => ({ phaseStops: loadPhaseStops() }),
   [SMART_STOPS_KEY]: () => ({ smartStops: loadSmartStops() }),
   [DECK_STACKS_SCALE_KEY]: () => ({ deckStacksScale: loadDeckStacksScale() }),
+  [DECK_EDITOR_VIEW_KEY]: () => ({ deckEditorView: loadDeckEditorView() }),
+  [DECK_STACKS_GROUP_KEY]: () => ({ deckStacksGroup: loadDeckStacksGroup() }),
+  [DECK_STACKS_SORT_KEY]: () => ({ deckStacksSort: loadDeckStacksSort() }),
+  [DECK_STACKS_COPIES_KEY]: () => ({ deckStacksCopies: loadDeckStacksCopies() }),
+  [DECK_EDITOR_DRAWER_KEY]: () => ({ deckEditorDrawer: loadDeckEditorDrawer() }),
+  [DECK_STACKS_SEPARATE_CREATURES_KEY]: () => ({ deckStacksSeparateCreatures: loadDeckStacksSeparateCreatures() }),
 }
 
 export function syncSettingsFromStorage(key: string | null) {

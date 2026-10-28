@@ -608,6 +608,80 @@ export function saveDeckStacksScale(scale: number) {
   writeJson(DECK_STACKS_SCALE_KEY, normalizeDeckStacksScale(scale))
 }
 
+export type DeckEditorView = 'piles' | 'list'
+export type DeckStacksGroup = 'type' | 'cmc' | 'color' | 'identity' | 'edh' | 'rarity' | 'free'
+export type DeckStacksSort = 'cmc' | 'name'
+export type DeckStacksCopies = 'separate' | 'together'
+
+const DECK_EDITOR_VIEWS: readonly DeckEditorView[] = ['piles', 'list']
+const DECK_STACKS_GROUPS: readonly DeckStacksGroup[] = ['type', 'cmc', 'color', 'identity', 'edh', 'rarity', 'free']
+const DECK_STACKS_SORTS: readonly DeckStacksSort[] = ['cmc', 'name']
+const DECK_STACKS_COPIES: readonly DeckStacksCopies[] = ['separate', 'together']
+
+function normalizeChoice<T extends string>(value: unknown, choices: readonly T[], fallback: T): T {
+  return choices.find((choice) => choice === value) ?? fallback
+}
+
+export const DECK_EDITOR_VIEW_KEY = 'mage-web-deck-editor-view'
+
+export function loadDeckEditorView(): DeckEditorView {
+  return normalizeChoice(readJson<unknown>(DECK_EDITOR_VIEW_KEY), DECK_EDITOR_VIEWS, 'piles')
+}
+
+export function saveDeckEditorView(view: DeckEditorView) {
+  writeJson(DECK_EDITOR_VIEW_KEY, normalizeChoice(view, DECK_EDITOR_VIEWS, 'piles'))
+}
+
+export const DECK_STACKS_GROUP_KEY = 'mage-web-deck-stacks-group'
+
+export function loadDeckStacksGroup(): DeckStacksGroup {
+  return normalizeChoice(readJson<unknown>(DECK_STACKS_GROUP_KEY), DECK_STACKS_GROUPS, 'type')
+}
+
+export function saveDeckStacksGroup(group: DeckStacksGroup) {
+  writeJson(DECK_STACKS_GROUP_KEY, normalizeChoice(group, DECK_STACKS_GROUPS, 'type'))
+}
+
+export const DECK_STACKS_SORT_KEY = 'mage-web-deck-stacks-sort'
+
+export function loadDeckStacksSort(): DeckStacksSort {
+  return normalizeChoice(readJson<unknown>(DECK_STACKS_SORT_KEY), DECK_STACKS_SORTS, 'cmc')
+}
+
+export function saveDeckStacksSort(sort: DeckStacksSort) {
+  writeJson(DECK_STACKS_SORT_KEY, normalizeChoice(sort, DECK_STACKS_SORTS, 'cmc'))
+}
+
+export const DECK_STACKS_COPIES_KEY = 'mage-web-deck-stacks-copies'
+
+export function loadDeckStacksCopies(): DeckStacksCopies {
+  return normalizeChoice(readJson<unknown>(DECK_STACKS_COPIES_KEY), DECK_STACKS_COPIES, 'separate')
+}
+
+export function saveDeckStacksCopies(copies: DeckStacksCopies) {
+  writeJson(DECK_STACKS_COPIES_KEY, normalizeChoice(copies, DECK_STACKS_COPIES, 'separate'))
+}
+
+export const DECK_EDITOR_DRAWER_KEY = 'mage-web-deck-editor-drawer'
+
+export function loadDeckEditorDrawer(): boolean {
+  return readJson<unknown>(DECK_EDITOR_DRAWER_KEY) !== false
+}
+
+export function saveDeckEditorDrawer(open: boolean) {
+  writeJson(DECK_EDITOR_DRAWER_KEY, open !== false)
+}
+
+export const DECK_STACKS_SEPARATE_CREATURES_KEY = 'mage-web-deck-stacks-separate-creatures'
+
+export function loadDeckStacksSeparateCreatures(): boolean {
+  return readJson<unknown>(DECK_STACKS_SEPARATE_CREATURES_KEY) === true
+}
+
+export function saveDeckStacksSeparateCreatures(separate: boolean) {
+  writeJson(DECK_STACKS_SEPARATE_CREATURES_KEY, separate === true)
+}
+
 const GAMEPLAY_PRESET_KEY = 'mage-web-gameplay-preset'
 
 export function loadGameplayPreset(): string | null {

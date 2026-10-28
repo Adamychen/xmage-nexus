@@ -4,6 +4,7 @@ import { withFakeServer } from './support/fake-backend'
 import { proxyPort } from './dual'
 import { dismissSetupWizard } from './support/start-game'
 import { decksGalleryScenario } from '../fixtures/scenarios/decksGallery'
+import { showDeckListView } from './support/deck-editor'
 
 const IMG = 'https://img.test/m10-bolt.jpg'
 
@@ -50,6 +51,7 @@ async function openBuilderWithBolt(page: Page, username: string): Promise<Locato
   await expect(page.locator('.decks-gallery')).toBeVisible({ timeout: 8000 })
   await page.locator('.deck-box-create').click()
   await expect(page.locator('.deck-builder')).toBeVisible({ timeout: 8000 })
+  await showDeckListView(page)
 
   await page.getByRole('button', { name: /Importar Mazo/i }).click()
   await page.locator('.deck-import-textarea').fill('4 [M10:146] Lightning Bolt')

@@ -1,6 +1,7 @@
 import { test, expect } from './fixtures'
 import { FAKE_MODE } from './dual'
 import { login } from './support/start-game'
+import { showDeckListView } from './support/deck-editor'
 
 test.skip(FAKE_MODE, 'Real only: the "not in XMage" marks come from the proxy card DB (cardPrintings) of the real release.')
 
@@ -33,6 +34,7 @@ test('deck builder marks cards and printings the server XMage does not have (rea
   await expect(page.locator('.decks-gallery')).toBeVisible({ timeout: 8000 })
   await page.locator('.deck-box-create').click()
   await expect(page.locator('.deck-builder')).toBeVisible({ timeout: 8000 })
+  await showDeckListView(page)
 
   await page.locator('.arena-search-input').fill('bolt')
   const fake = page.locator('.arena-grid-card[data-unimplemented]')

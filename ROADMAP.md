@@ -56,7 +56,7 @@ The project has successfully conquered the most difficult engineering hurdles (p
 | | Invite links (`#join=` / `#watch=`) | ❌ No | ✅ Yes | Completed (Surpasses Swing) |
 | | Match Clocks / Visible Timers | ✅ Yes | ✅ Yes | Completed |
 | **Deck Management** | Predefined / JSON Deck Loading | ✅ Yes | ✅ Yes | Completed |
-| | Full-featured In-App Deck Builder with Scryfall Filters | ✅ Yes (Local DB) | ✅ Yes (Scryfall full syntax + help, 9-lang, curve/donut, CMC sort, drag-drop) | Completed |
+| | Full-featured In-App Deck Builder with Scryfall Filters | ✅ Yes (Local DB) | ✅ Yes (Scryfall full syntax + help, 9-lang, curve/donut, CMC sort, drag-drop; one editor with Piles and List views; every XMage `DragCardGrid` mode is covered: type, mana value, colour, colour identity, EDH power, rarity, free piles with one copy per drag, separate creatures row; piles saved in the `.dck` LAYOUT, Separate/Together copies, sideboard band, phone layout) | Completed |
 | | Text / Arena / Standard Deck Import & Export | ✅ Yes | ✅ Yes (Arena/DCK/Plain + clipboard, file drop, 9-lang normalization; 3-step import wizard: format detection, bulk printing resolution, legality review) | Completed |
 | **1v1 In-Game Board** | Hand, Battlefield (Lands / Creatures / Non-creatures) | ✅ Yes | ✅ Yes (HD Art) | Completed (Surpasses Swing) |
 | | Stack, Library, Graveyard, Exile | ✅ Yes | ✅ Yes | Completed |
@@ -184,7 +184,7 @@ Shipped with the keyword auras and combat moments (`board/keywordAura.ts`, `boar
 Design: `docs/plans/2026-10-22-behavior-specs-design.md`. Phase 1 shipped 2026-10-22: `docs/specs/` with one file per area and `web/src/specCoverage.test.ts` linking each rule to the tests named after it.
 
 - Rules marked `Guard: none yet` need a test (`grep -n "none yet" docs/specs/*.md`).
-- Areas without a spec are written the first time someone changes them (stack, deck builder, draft, spectating; the side panel with its log and chat is `docs/specs/panel.md`).
+- Areas without a spec are written the first time someone changes them (stack, draft, spectating; the side panel with its log and chat is `docs/specs/panel.md`; the deck editor is `docs/specs/decks.md`).
 - Findings while writing the specs (not made rules). Confirmed in code:
   - `state/events/game.ts` clears an open `GAME_PLAY_MANA` prompt on any update whose stack is non-empty, and a spell being paid for is already on the stack. Whether the real server sends an update between mana asks needs a recorded frame.
   - `board/revealedCards.ts` `opponentRevealedCards` adds every revealed group to each opponent's known hand, whatever zone or player it came from (`handRevealFx.ts` filters by the group name).

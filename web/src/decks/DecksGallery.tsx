@@ -19,7 +19,6 @@ import { DeckBrowser } from './DeckBrowser'
 import { cloneDeckForEdit } from './cloneDeck'
 import { DeckInspectorModal } from './DeckInspectorModal'
 import { ImportDeckDialog } from './ImportDeckDialog'
-import { DeckStacksEditor } from './DeckStacksEditor'
 import type { MetaDeckItem } from './metaDeckCatalog'
 import { ManaPip } from './ArenaManaSymbols'
 import { useTranslation } from '../i18n'
@@ -111,7 +110,6 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
   })
   // Enriquecimiento de colores vía Scryfall en curso (C.13 nit: sin indicador).
   const [enriching, setEnriching] = useState(false)
-  const [viewingId, setViewingId] = useState<string | null>(null)
 
   const storage = useMemo(() => getDeckStorage(), [])
   const precon = useMemo(() => preconToV2(), [])
@@ -241,16 +239,6 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
   // Los precons viven solo en memoria (bundled) y los MetaDeckItem no están en
   // storage: al editar hay que clonarlos primero, o el builder queda en
   // "Cargando..." porque no existen en storage.
-  const openStacksEditor = async (d: DeckV2 | MetaDeckItem) => {
-    if ('source' in d && d.source !== 'precon') {
-      setViewingId(d.id)
-      return
-    }
-    const cloned = await handleCloneFromBrowser(d)
-    await load()
-    setViewingId(cloned.id)
-  }
-
   const openForEdit = async (d: DeckV2 | MetaDeckItem) => {
     if ('source' in d && d.source !== 'precon') {
       onEdit(d.id)
@@ -380,23 +368,6 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
     }
     setImportPrefill({ text, name })
     setShowImportDialog(true)
-  }
-
-  const viewingDeck = viewingId ? decks.find((d) => d.id === viewingId) ?? null : null
-  if (viewingDeck) {
-    return (
-      <DeckStacksEditor
-        key={viewingDeck.id}
-        deck={viewingDeck}
-        onClose={() => {
-          void load().finally(() => setViewingId(null))
-        }}
-        onEdit={() => {
-          setViewingId(null)
-          void load().then(() => openForEdit(viewingDeck))
-        }}
-      />
-    )
   }
 
   return (
@@ -569,8 +540,7 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
                 <MenuItem role="menuitem" icon="file" onClick={() => handleExport('dek')}>.dek</MenuItem>
               </DropdownMenu>
               <Button variant="soft-danger" size="sm" className="decks-footer-btn" icon="trash" disabled={!selected || selected?.source === 'precon'} title={selected?.source === 'precon' ? t('decks', 'browser_filter_precon') : undefined} onClick={handleDelete}>{t('common', 'delete')}</Button>
-              <Button variant="subtle" className="decks-footer-btn decks-stacks-btn" icon="layers" disabled={!selected} onClick={() => selected && void openStacksEditor(selected)}>{t('decks', 'stacks_editor')}</Button>
-              <Button variant="primary" className="decks-edit-btn" icon="pencil" disabled={!selected} onClick={() => selected && void openForEdit(selected)}>{t('common', 'edit')}</Button>
+              <Button variant="primary" className="decks-edit-btn" icon="pencil" disabled={!selected} onClick={() => selected && void openForEdit(selected)}>{t('decks', 'editor_open')}</Button>
             </div>
             <input ref={restoreInputRef} type="file" accept=".json" hidden onChange={async (e) => {
               const input = e.currentTarget

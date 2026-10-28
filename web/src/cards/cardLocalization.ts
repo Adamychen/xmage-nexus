@@ -184,31 +184,24 @@ export async function fetchLocalizedCardName(
 export function useLocalizedCardName(card: LocalizableCard): { displayName: string; originalName: string } {
   const originalName = extractCardName(card)
   const lang = getEffectiveCardLang()
-  const [displayName, setDisplayName] = useState<string>(() => {
-    if (lang === 'en') return originalName
-    return getCachedCardName(originalName, lang) ?? originalName
-  })
+  const [fetched, setFetched] = useState<{ key: string; name: string } | null>(null)
+  const key = `${lang}:${originalName}`
+  const displayName = lang === 'en'
+    ? originalName
+    : getCachedCardName(originalName, lang) ?? (fetched?.key === key ? fetched.name : originalName)
 
   useEffect(() => {
-    if (lang === 'en') {
-      setDisplayName(originalName)
-      return
-    }
-    const cached = getCachedCardName(originalName, lang)
-    if (cached) {
-      setDisplayName(cached)
-      return
-    }
+    if (lang === 'en' || getCachedCardName(originalName, lang)) return
     let cancelled = false
     fetchLocalizedCardName(card, lang).then((result) => {
       if (!cancelled && result) {
-        setDisplayName(result)
+        setFetched({ key, name: result })
       }
     })
     return () => {
       cancelled = true
     }
-  }, [card, originalName, lang])
+  }, [card, originalName, lang, key])
 
   return { displayName, originalName }
 }

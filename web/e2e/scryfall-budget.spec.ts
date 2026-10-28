@@ -76,7 +76,7 @@ test.describe('Scryfall request budget', () => {
       await page.getByRole('button', { name: /Importar Mazo/i }).click()
       await page.locator('.deck-import-textarea').fill(list)
       await page.locator('[data-testid="import-submit-btn"]').click()
-      await expect(page.locator('.arena-card-strip').first()).toBeVisible({ timeout: 5000 })
+      await expect(page.locator('[data-testid="deck-editor-piles"] .arena-stack-card').first()).toBeVisible({ timeout: 5000 })
 
       await expect.poll(async () => {
         const n = await page.evaluate(() => (window as unknown as { __scryfallLog: ScryfallLog }).__scryfallLog.starts.length)
