@@ -238,6 +238,7 @@ export const de: TranslationSchema = {
     time_ago_h: 'vor {count} Std.',
     time_ago_d: 'vor {count} Tg.',
     deck_unknown: 'Unbekannt',
+    format_unknown: 'Unbekanntes Format',
     deck_chaos: 'Limitiert — Chaos-Draft',
     history_quits: 'Abbrüche',
     history_inactives: 'Inaktive',

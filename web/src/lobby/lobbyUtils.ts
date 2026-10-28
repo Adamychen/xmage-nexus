@@ -1,5 +1,6 @@
 import type { TableView, UsersView } from '../net/types'
 import { t as tStatic } from '../i18n'
+import { knownDeckType } from './formatFamily'
 
 export type LobbyTab = 'tables' | 'decks' | 'community' | 'matches' | 'ranking'
 
@@ -62,8 +63,9 @@ export function getSkillBadge(skill?: string): { label: string; stars: number; c
   }
 }
 
-export function formatDeckTypeName(deckType?: string): { short: string; full: string } {
-  if (!deckType) return { short: tStatic('lobby','deck_unknown'), full: '' }
+export function formatDeckTypeName(rawDeckType?: string): { short: string; full: string } {
+  const deckType = knownDeckType(rawDeckType)
+  if (!deckType) return { short: tStatic('lobby','format_unknown'), full: '' }
   const boosterMatches = deckType.match(/(\d+x[A-Z0-9]+)/g)
   if (boosterMatches && boosterMatches.length > 3) {
     const totalBoosters = boosterMatches.reduce((acc, str) => {

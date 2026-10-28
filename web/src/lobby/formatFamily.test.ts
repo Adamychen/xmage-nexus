@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { FORMAT_FAMILIES, formatDisplayName, formatFamily } from './formatFamily'
+import { FORMAT_FAMILIES, formatDisplayName, formatFamily, knownDeckType } from './formatFamily'
 import { DEFAULT_DECK_TYPES, DEFAULT_GAME_TYPES } from './CreateTable/constants'
 
 describe('formatFamily', () => {
@@ -47,5 +47,15 @@ describe('formatFamily', () => {
     expect(formatDisplayName('Variant Magic - Commander')).toBe('Commander')
     expect(formatDisplayName('Block Constructed Custom - Star Wars')).toBe('Star Wars')
     expect(formatDisplayName('Limited')).toBe('Limited')
+  })
+})
+
+describe('knownDeckType', () => {
+  it('LBY-25: drops the placeholder the server sends when it has no validator for the table', () => {
+    expect(knownDeckType('<deck type missing>')).toBeUndefined()
+    expect(knownDeckType('  <Deck Type Missing> ')).toBeUndefined()
+    expect(knownDeckType('')).toBeUndefined()
+    expect(knownDeckType(undefined)).toBeUndefined()
+    expect(knownDeckType('Variant Magic - Commander')).toBe('Variant Magic - Commander')
   })
 })

@@ -3,6 +3,7 @@ import { deckRef } from './decks'
 import type { DeckFormat, DeckV2 } from '../decks/types'
 import { FORMAT_CONFIGS, isBasicOrUnlimited, isLimitedDeckType } from '../decks/formatRules'
 import type { IconName } from '../ui/Icon'
+import { knownDeckType } from './formatFamily'
 
 export type TableFamily = 'commander' | 'constructed' | 'limited' | 'special' | 'unknown'
 
@@ -47,7 +48,7 @@ function shortLabel(deckType: string): string {
 }
 
 export function tableFormatProfile(deckType?: string, gameType?: string): TableFormatProfile {
-  const raw = (deckType ?? '').trim()
+  const raw = (knownDeckType(deckType) ?? '').trim()
   const dt = raw.toLowerCase()
   const gt = (gameType ?? '').toLowerCase()
   const label = shortLabel(raw)

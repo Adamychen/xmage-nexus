@@ -238,6 +238,7 @@ export const fr: TranslationSchema = {
     time_ago_h: 'il y a {count} h',
     time_ago_d: 'il y a {count} j',
     deck_unknown: 'Inconnu',
+    format_unknown: 'Format inconnu',
     deck_chaos: 'Limité — Chaos Draft',
     history_quits: 'abandons',
     history_inactives: 'inactifs',

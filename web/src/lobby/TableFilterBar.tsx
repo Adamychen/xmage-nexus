@@ -8,7 +8,7 @@ import type { TableView } from '../net/types'
 import Icon from '../ui/Icon'
 import { useTranslation } from '../i18n'
 import { isMyTable, tableOwnerName } from './lobbyUtils'
-import type { FormatFamily } from './formatFamily'
+import { knownDeckType, type FormatFamily } from './formatFamily'
 import './TableFilterBar.css'
 
 export interface TableFilters {
@@ -256,7 +256,7 @@ export default function TableFilterBar({ tables, filters, onChange, onReset, cla
   }, [tables])
 
   const extraFormats = useMemo(
-    () => dropdownFormats(tables.flatMap((t) => (t.deckType ? [t.deckType] : []))),
+    () => dropdownFormats(tables.flatMap((t) => { const known = knownDeckType(t.deckType); return known ? [known] : [] })),
     [tables],
   )
 

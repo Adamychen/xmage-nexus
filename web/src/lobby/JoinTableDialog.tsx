@@ -34,6 +34,7 @@ import {
   type JoinDeck,
   type TableFormatProfile,
 } from './joinDeckFit'
+import { knownDeckType } from './formatFamily'
 import './JoinTableDialog.css'
 import StarterDecksOffer from '../decks/StarterDecksOffer'
 import { starterDeckItems } from '../decks/starterDecks'
@@ -273,7 +274,7 @@ export default function JoinTableDialog({
         <div className="join-hero-format">
           <span className="join-hero-format-name">{profile.label || t('common', 'all')}</span>
           <span className="join-hero-format-raw">
-            {[table.deckType, table.gameType].filter(Boolean).join(' · ') || '—'}
+            {[knownDeckType(table.deckType) ?? t('lobby', 'format_unknown'), table.gameType].filter(Boolean).join(' · ')}
           </span>
         </div>
         <div className="join-hero-side">

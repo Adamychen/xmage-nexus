@@ -236,6 +236,7 @@ export const en = {
     time_ago_h: '{count}h ago',
     time_ago_d: '{count}d ago',
     deck_unknown: 'Unknown',
+    format_unknown: 'Unknown format',
     deck_chaos: 'Limited — Chaos Draft',
     history_quits: 'quits',
     history_inactives: 'inactives',

@@ -238,6 +238,7 @@ export const ja: TranslationSchema = {
     time_ago_h: '{count}時間前',
     time_ago_d: '{count}日前',
     deck_unknown: '不明',
+    format_unknown: '不明なフォーマット',
     deck_chaos: 'リミテッド — カオス・ドラフト',
     history_quits: '途中退出',
     history_inactives: '放置',
