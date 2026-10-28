@@ -117,3 +117,14 @@ button to the list; the caller's requested section, when there is one, opens dir
 - Why: on a 390 × 844 phone the wrapped two-row menu, the header and the footer left 397 px for the
   settings (2026-10-26).
 - Guard: `src/settings/SettingsModal.test.tsx` · `e2e/settings.spec.ts`
+
+### SET-10 · The example cards in the settings are silent and never fly
+The example cards that the Board section draws with the real board card (`CardSlot` with `demo`:
+the option miniatures of `BoardDemo` and the live preview) are decoration. They never start the
+enter or move flight a game card gets, never play its sound and never record a position for the
+next card with the same id. Switching between Board tabs plays only the button click.
+
+- Why: the Cards and Overlays tabs draw miniatures with the same ids (`demo-<name>`); switching
+  between them, or coming back to them, made `CardSlot` treat each miniature as a card that moved,
+  so a flight started and `play_card` sounded on top of the click (report of 2026-10-28).
+- Guard: `src/board/CardSlot.flight.test.tsx`

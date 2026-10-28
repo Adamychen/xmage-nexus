@@ -2,8 +2,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { StrictMode } from 'react'
 import { act, cleanup, render } from '@testing-library/react'
 import CardSlot from './CardSlot'
-import { clearFlights } from './flightManager'
-import { getPreviousCardPosition } from './cardPositionRegistry'
+import { clearFlights, getActiveFlights } from './flightManager'
+import { getPreviousCardPosition, recordCardPosition } from './cardPositionRegistry'
+import { soundManager } from '../audio/soundManager'
 import type { PermanentView } from '../net/types'
 import { combatHoldRemaining } from './combatStrikes'
 
@@ -173,5 +174,23 @@ describe('CardSlot enter flight', () => {
     act(() => vi.advanceTimersByTime(300))
     expect(slot.classList.contains('flight-hidden')).toBe(false)
     expect(slot.classList.contains('flight-land')).toBe(false)
+  })
+
+  it('SET-10: a decorative settings card never flies in, plays a sound or leaves a position behind', () => {
+    const play = vi.spyOn(soundManager, 'play')
+    vi.mocked(recordCardPosition).mockClear()
+    const { container, unmount } = render(
+      <div className="player-zone">
+        <div className="permanents-band">
+          <CardSlot card={perm({ id: 'demo-Grizzly Bears' })} demo={{ artUrl: null }} />
+        </div>
+      </div>,
+    )
+    expect(getActiveFlights()).toHaveLength(0)
+    expect(container.querySelector('.card-slot')!.classList.contains('flight-hidden')).toBe(false)
+    expect(play).not.toHaveBeenCalled()
+    unmount()
+    expect(recordCardPosition).not.toHaveBeenCalled()
+    play.mockRestore()
   })
 })
