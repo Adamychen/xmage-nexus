@@ -110,6 +110,7 @@ export default function CardSlot({
   const sleeve = useSleeveFor(card.controllerId)
   const resolvedImgUrl = useCardImageUrl(card, !faceDown && !demo)
   const imgUrl = demo ? demo.artUrl : resolvedImgUrl
+  const isDemo = demo !== undefined
   const isFaceDownCard = faceDown || card.faceDown === true
   const showBack = faceDown || (card.faceDown === true && !imgUrl)
   const renderedFace = settings.cardRender === 'rendered' && !compact && !demo && !showBack
@@ -221,7 +222,7 @@ export default function CardSlot({
 
   useLayoutEffect(() => {
     const el = slotRef.current
-    if (!el || !effectiveId) return
+    if (!el || !effectiveId || isDemo) return
 
     if (isFirstMountRef.current) {
       isFirstMountRef.current = false
@@ -283,7 +284,7 @@ export default function CardSlot({
         )
       }
     }
-  }, [effectiveId, card])
+  }, [effectiveId, card, isDemo])
 
   useLayoutEffect(() => {
     const el = slotRef.current
