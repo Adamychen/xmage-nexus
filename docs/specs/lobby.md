@@ -279,3 +279,13 @@ when active), the active-table shortcut and the player's controls. Creating a ma
 - Why: the lobby review of 2026-10-27: "New table" and "New tournament" sat among the tabs, the active
   tab looked like another button, and on a phone the header took three rows before the first table.
 - Guard: `src/lobby/LobbyScreen.render.test.tsx`
+
+### LBY-25 · A table whose format the server does not know says "Unknown format"
+When the server cannot build a deck validator for a table (the creator sent a deck type it does
+not have), it reports the deck type as `<deck type missing>`. The table card, the active tables
+bar and the join dialog show "Unknown format" instead, the game type stays as it is, and the
+placeholder never appears as a format in the table filters. Joining such a table is unchanged.
+
+- Why: a Commander Free For All table on beta.xmage.today showed `<DECK TYPE MISSING>` as its
+  title (report of 2026-10-28); the text comes from `Table.getDeckType()` in the XMage server.
+- Guard: `src/lobby/TableCard.test.tsx` · `src/lobby/formatFamily.test.ts`

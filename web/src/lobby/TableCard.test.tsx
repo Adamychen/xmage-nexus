@@ -149,3 +149,14 @@ describe('TableCard estado de mesa (i18n)', () => {
     expect(container.querySelector('.table-state-badge')?.textContent).toBe('Custom state')
   })
 })
+
+describe('TableCard with a deck type the server does not know', () => {
+  it('LBY-25: shows "Unknown format" instead of the server placeholder, and keeps the game type', () => {
+    setLanguage('en')
+    const { container } = render1({ deckType: '<deck type missing>', gameType: 'Commander Free For All' })
+    const text = container.textContent ?? ''
+    expect(text).not.toMatch(/deck type missing/i)
+    expect(text).toContain('Unknown format')
+    expect(text).toContain('Commander Free For All')
+  })
+})

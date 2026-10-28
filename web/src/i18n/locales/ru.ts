@@ -238,6 +238,7 @@ export const ru: TranslationSchema = {
     time_ago_h: '{count}ч назад',
     time_ago_d: '{count}д назад',
     deck_unknown: 'Неизвестно',
+    format_unknown: 'Неизвестный формат',
     deck_chaos: 'Лимитед — Хаос-драфт',
     history_quits: 'выходов',
     history_inactives: 'неактивов',

@@ -26,6 +26,15 @@ export function formatFamily(t: FamilyFields): FormatFamily {
   return 'casual'
 }
 
+const SERVER_MISSING_DECK_TYPE = '<deck type missing>'
+
+/** The table's deck type, or undefined when the server could not build its validator and sent its placeholder instead. */
+export function knownDeckType(deckType?: string | null): string | undefined {
+  const trimmed = deckType?.trim()
+  if (!trimmed || trimmed.toLowerCase() === SERVER_MISSING_DECK_TYPE) return undefined
+  return deckType ?? undefined
+}
+
 /** The deck type without the server's category prefix: "Constructed - Modern" → "Modern". */
 export function formatDisplayName(deckType?: string): string {
   if (!deckType) return ''

@@ -238,6 +238,7 @@ export const zhs: TranslationSchema = {
     time_ago_h: '{count}小时前',
     time_ago_d: '{count}天前',
     deck_unknown: '未知',
+    format_unknown: '未知赛制',
     deck_chaos: '限制赛 — 混沌轮抽',
     history_quits: '中途退出',
     history_inactives: '挂机',
