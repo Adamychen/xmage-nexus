@@ -9,17 +9,18 @@
     "stack": "XMage Server 1.4.62-V1 · Mage.Proxy (Java 17) · React 19 + Vite + TS"
   },
   "release": {
-    "version": "0.4.3",
-    "date": "2026-10-04",
-    "tag": "v0.4.3",
+    "version": "0.7.0",
+    "date": "2026-10-28",
+    "tag": "v0.7.0",
     "status": "published",
-    "notes": "v0.4.3: upgrades the XMage engine to 1.4.62-V1 (beta.xmage.today) and ships rebuilt components (server + proxy) from the nexus fork. Upstream 1.4.62 fixes the oneway thread-pool leak itself, so the fork delegation patch is dropped; golden frames and all contract guards were re-recorded against 1.4.62.",
+    "notes": "v0.7.0: the interface is rebuilt for simplicity and for phones. The lobby groups tables by state, one deck editor replaces the stacks screen, the card inspector shows the battlefield state, settings become a searchable side menu and the game side panel v2 lands. Components are reused from v0.6.2 (no Java changes since then).",
     "highlights": [
-      "XMage 1.4.62-V1: new sets/cards and engine fixes from upstream",
-      "Thread-pool leak fix now comes from upstream (idle thread expiry) - the nexus one-file patch is retired",
-      "All 119+ golden frames re-recorded against 1.4.62 and validated (contract + replay)",
-      "Components are rebuilt in this release (server + proxy 1.4.62)",
-      "Dual server flavors (beta + XDHS) keep working; XDHS updated to its own 1.6.1 engine"
+      "Lobby: tables grouped by state, one aligned line per table, coloured format chips, filters folded away on phones",
+      "One deck editor: piles grouped by type, mana value, colour, identity, rarity, EDH power or freely, with sheets on phones",
+      "Card inspector: battlefield state, Front/Back for double-faced cards, bottom sheet below 760 px",
+      "Settings: searchable side menu with a live board preview, drill-down on phones",
+      "Game side panel v2: tab icons with log, chat, deck tracker, commander and mechanics views",
+      "In-browser demo retired"
     ],
     "downloads": [
       { "os": "Windows", "arch": "x64", "label": "Windows (x64)", "url": "https://github.com/Adamychen/xmage-nexus/releases/latest" },

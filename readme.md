@@ -19,6 +19,18 @@
   </tr>
 </table>
 
+## What's new in 0.7.0
+
+The interface was rebuilt for simplicity and for phones: the lobby, the deck editor and the card inspector now read the same at a desktop window and at 390 px wide.
+
+- **Lobby**: tables are grouped by state (waiting for players, in progress, finished and folded by default), one aligned line per table, and each deck type has its own format colour. Search, status, mode and the popular formats stay visible; the rest is behind Filters. On a phone the header is one row, and each seat is one player per row.
+- **One deck editor**: the separate stacks screen is gone. Open a deck once and group its cards by type, mana value, colour, colour identity, rarity, EDH power or freely, drag copies between named piles, and keep the sideboard in view. The phone layout uses sheets instead of side columns. Metadata no longer waits behind card-image requests, and a burst of Scryfall network errors pauses background lookups once instead of once per failure.
+- **Card inspector**: the panel hugs its content, with the card on one side and a readable text column on the other. It shows the battlefield state (changed power and toughness, damage, counters, tapped or summoning sick, attachments, controller), a Front/Back switch for double-faced cards, and loyalty costs. Below 760 px it becomes a bottom sheet with its action pinned in reach.
+- **Settings**: a searchable side menu with a live board preview. On a phone, at 560 px or less, it is full screen and drills from a section list into one section and back.
+- **Game side panel v2**: a row of tab icons, with the log, chat, deck tracker, commander and mechanics views reworked.
+- **Commanders**: a double-faced commander keeps one column in the damage matrix on either face.
+- **Removed**: the in-browser demo and its CI verification.
+
 ## What's new in 0.6.2
 
 - **XDHS flavor updated to 1.6.1-XDHS-r2** (carried over from 0.6.1, which was never published): `mage.xdhs.net` moved on, so the proxy and the desktop launcher ship `mage-proxy-1.6.1.jar`. The shared-pool thread patch is retired: the new fork carries the upstream idle-thread fix.
