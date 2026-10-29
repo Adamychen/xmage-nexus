@@ -55,6 +55,8 @@ const WHITELIST = new Set([
   'lobby.create_option_sealed',
   'lobby.create_skill_casual',
   'lobby.create_tab_general',
+  'lobby.trn_modality_jumpstart',
+  'lobby.trn_pack_richman',
   'lobby.history_timeouts',
   'lobby.leaderboard_col_pos',
   'lobby.leaderboard_col_winrate',

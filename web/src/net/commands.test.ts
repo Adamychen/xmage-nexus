@@ -120,7 +120,7 @@ describe('commands', () => {
     expect(await commands.getGameTypes()).toEqual([])
     expect(await commands.getPlayerTypes()).toEqual([])
     expect(await commands.getDeckTypes()).toEqual([])
-    expect(await commands.getTournamentTypes()).toEqual([])
+    expect(await commands.getTournamentCatalogue()).toEqual({ names: [], limits: {} })
     expect(await commands.getDraftCubes()).toEqual([])
     expect(await commands.getExpansionsWithBoosters()).toEqual([])
     expect(await commands.getFinishedMatches()).toEqual([])
@@ -137,10 +137,43 @@ describe('commands', () => {
     expect(await commands.getFinishedMatches()).toEqual([{ matchId: 'm1' }])
   })
 
-  it('getTournamentTypes accepts plain names or objects and drops empty ones', async () => {
-    send.mockResolvedValue({ ok: true, data: ['Booster Draft Elimination', { name: 'Sealed Elimination' }, { name: '' }, {}, null] })
-    expect(await commands.getTournamentTypes()).toEqual(['Booster Draft Elimination', 'Sealed Elimination'])
+  it('the catalogue names accept plain names or objects and drop empty ones', () => {
+    expect(commands.tournamentTypeNamesOf(['Booster Draft Elimination', { name: 'Sealed Elimination' }, { name: '' }, {}, null]))
+      .toEqual(['Booster Draft Elimination', 'Sealed Elimination'])
   })
+
+  it('TRN-4: one catalogue request gives the names and the limits together', async () => {
+    send.mockResolvedValue({ ok: true, data: [{ name: 'Sealed Swiss', minPlayers: 2, maxPlayers: 16 }, 'Constructed Swiss'] })
+    expect(await commands.getTournamentCatalogue()).toEqual({
+      names: ['Sealed Swiss', 'Constructed Swiss'],
+      limits: { 'Sealed Swiss': { minPlayers: 2, maxPlayers: 16 } },
+    })
+    expect(send).toHaveBeenCalledWith('getTournamentTypes')
+    expect(send).toHaveBeenCalledTimes(1)
+  })
+
+  it('TRN-4: the seat limits of each type are read from the catalogue objects', () => {
+    expect(commands.tournamentTypeLimitsOf([
+      { name: 'Booster Draft Elimination', minPlayers: 4, maxPlayers: 16, numBoosters: 3, draft: true },
+      { name: 'Rich Man Draft Swiss', minPlayers: 2, maxPlayers: 16 },
+      'Constructed Swiss',
+    ])).toEqual({
+      'Booster Draft Elimination': { minPlayers: 4, maxPlayers: 16 },
+      'Rich Man Draft Swiss': { minPlayers: 2, maxPlayers: 16 },
+    })
+  })
+
+  it('TRN-4: an entry whose limits are missing, fractional, zero or inverted is left out', () => {
+    expect(commands.tournamentTypeLimitsOf([
+      { name: 'No limits' },
+      { name: 'Fraction', minPlayers: 2.5, maxPlayers: 8 },
+      { name: 'Zero', minPlayers: 0, maxPlayers: 8 },
+      { name: 'Inverted', minPlayers: 8, maxPlayers: 4 },
+      { name: '', minPlayers: 2, maxPlayers: 8 },
+      null,
+    ])).toEqual({})
+  })
+
 
   it('without a gateway it fails with an explicit error', async () => {
     commands.setGateway(null)

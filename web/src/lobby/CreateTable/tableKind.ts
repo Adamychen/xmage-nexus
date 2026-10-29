@@ -1,11 +1,18 @@
 import type { CreateTableArgs } from '../../net/commands'
 import type { DeckJson } from '../../net/types'
 import {
+  SWISS_ROUNDS_MAX,
+  SWISS_ROUNDS_MIN,
+  clampSwissRounds,
+  decomposeTournamentType,
+} from '../tournament/tournamentType'
+import {
   DEFAULT_DRAFT_TOURNAMENT_TYPE,
   DEFAULT_TOURNAMENT_TYPES,
-  MAX_DRAFT_PLAYERS,
-  MAX_TOURNAMENT_PLAYERS,
+  FALLBACK_TOURNAMENT_SEAT_LIMITS,
+  TOURNAMENT_SEAT_QUICK_PICKS,
   HUMAN_SEAT,
+  type SeatLimits,
   isConstructedTournamentType,
   isDraftTournamentType,
   isHumanSeatType,
@@ -81,17 +88,18 @@ export function resolveTableKind(inputs: TableKindInputs): TableKindResolution {
   }
 }
 
-export function clampNumPlayers(
-  numPlayers: number,
-  opts: { draft: boolean; tourney: boolean },
-  gameTypeMin: number,
-  gameTypeMax: number,
-): number {
-  const min = gameTypeMin
-  const max = opts.draft ? MAX_DRAFT_PLAYERS : opts.tourney ? MAX_TOURNAMENT_PLAYERS : gameTypeMax
-  if (numPlayers < min) return min
-  if (numPlayers > max) return max
-  return numPlayers
+/** The seats a tournament type takes; a type the server gave no limits for takes 2 to 16. */
+export function seatLimitsFor(tournamentType: string, limits: Record<string, SeatLimits>): SeatLimits {
+  return limits[tournamentType] ?? FALLBACK_TOURNAMENT_SEAT_LIMITS
+}
+
+export function clampSeats(numPlayers: number, limits: SeatLimits): number {
+  if (!Number.isFinite(numPlayers)) return limits.minPlayers
+  return Math.min(limits.maxPlayers, Math.max(limits.minPlayers, Math.trunc(numPlayers)))
+}
+
+export function seatQuickPicks(limits: SeatLimits): number[] {
+  return TOURNAMENT_SEAT_QUICK_PICKS.filter((n) => n >= limits.minPlayers && n <= limits.maxPlayers)
 }
 
 export function defaultSeatTypeFor(_draft: boolean): string {
@@ -236,7 +244,7 @@ export function buildCreateTournamentArgs(a: TournamentArgsInput): Record<string
     watchingAllowed: a.spectatorsAllowed,
     spectatorsAllowed: a.spectatorsAllowed,
     winsNeeded: a.wins,
-    ...(a.numberRounds > 0 ? { numberRounds: a.numberRounds } : {}),
+    ...(isSwissTournamentType(a.tournamentType) ? { numberRounds: clampSwissRounds(a.numberRounds) } : {}),
     skillLevel: a.skillLevel,
     rated: a.rated,
     rollbackTurnsAllowed: a.rollbackTurnsAllowed,
@@ -320,6 +328,14 @@ export function buildCreateMatchArgs(a: MatchArgsInput): CreateTableArgs {
     planeChase: a.planeChase || undefined,
     simDecks: (a.simDecks?.length ?? 0) > 0 ? a.simDecks : undefined,
   }
+}
+
+export function isSwissTournamentType(name: string): boolean {
+  return decomposeTournamentType(name)?.pairing === 'swiss'
+}
+
+export function swissRoundsValid(rounds: number): boolean {
+  return Number.isInteger(rounds) && rounds >= SWISS_ROUNDS_MIN && rounds <= SWISS_ROUNDS_MAX
 }
 
 export function tournamentJoinNeedsDeck(gameType: string | undefined): boolean {

@@ -1,41 +1,156 @@
 import CloseButton from '../ui/CloseButton'
 import Button from '../ui/Button'
-import { useRef, useState, useEffect } from 'react'
+import IconButton from '../ui/IconButton'
+import Icon from '../ui/Icon'
+import Tabs, { tabPanelProps } from '../ui/Tabs'
+import { useCallback, useEffect, useId, useRef, useState } from 'react'
 import { useStore } from '../state/store'
 import { getState, setState } from '../state/state'
 import type { TournamentView } from '../net/types'
 import { isConstructStalled } from '../state/events/draft'
 import { enterTournamentChat, exitTournamentChat } from '../state/actions'
-import TournamentBracket from '../lobby/TournamentBracket'
 import { stateLabel } from '../lobby/lobbyUtils'
 import ChatBox from '../lobby/ChatBox'
+import TournamentRounds from '../lobby/TournamentRounds'
+import TournamentStandings from '../lobby/TournamentStandings'
+import TournamentYourMatch from '../lobby/TournamentYourMatch'
+import { UpdatedAgo } from '../lobby/TournamentBracket'
 import { watchTournamentMatch } from '../lobby/useTournamentBracket'
+import { currentRoundIndex, findMyMatch, isParticipant, myStanding } from '../lobby/tournament/matches'
+import { tournamentPhase } from '../lobby/tournament/parse'
+import { ordinalLabel } from '../lobby/tournamentPresentation'
 import * as cmds from '../net/commands'
-import Icon from '../ui/Icon'
-import Modal from '../ui/Modal'
-import { useTranslation, plural } from '../i18n'
+import { plural, useTranslation } from '../i18n'
 import { confirmDialog } from '../ui/confirmDialog'
+import { useEscape } from '../ui/useEscape'
 import { clampDragPos, useDraggablePos } from '../ui/useDraggablePos'
 import './TournamentPanel.css'
 
 const MINI_POS_KEY = 'tournament_mini_pos'
 const DRAG_THRESHOLD = 6
 
+type PanelTab = 'standings' | 'rounds' | 'chat'
+
+interface DragState {
+  startX: number
+  startY: number
+  origLeft: number
+  origTop: number
+  moved: boolean
+}
+
+function MiniPill({ view, viewer, pillRef, pos, dragging, onPointerDown, onPointerMove, onEnd, onClick }: {
+  view: TournamentView
+  viewer: string | undefined
+  pillRef: React.RefObject<HTMLButtonElement | null>
+  pos: { left: number; top: number } | null
+  dragging: boolean
+  onPointerDown: (e: React.PointerEvent) => void
+  onPointerMove: (e: React.PointerEvent) => void
+  onEnd: () => void
+  onClick: () => void
+}) {
+  const { t, lang } = useTranslation()
+  const current = currentRoundIndex(view)
+  const mine = viewer ? findMyMatch(view, viewer) : null
+  const myMatch = mine && mine.roundIndex === current ? mine : null
+  const standing = viewer ? myStanding(view, viewer) : null
+  let content: React.ReactNode
+  if (myMatch && viewer && standing && myMatch.match.players) {
+    const side = myMatch.side
+    const opponent = myMatch.match.players[side === 0 ? 1 : 0]
+    content = (
+      <>
+        <span className="tournament-mini-round" data-testid="tournament-mini-round">{t('game', 'trn_f_pill_round', { number: current + 1 })}</span>
+        <span className="tournament-mini-score" data-testid="tournament-mini-score">
+          {`${viewer} ${myMatch.match.wins[side]}–${myMatch.match.wins[side === 0 ? 1 : 0]} ${opponent}`}
+        </span>
+        <span className="tournament-mini-standing" data-testid="tournament-mini-standing">
+          {t('lobby', 'trn_b_standing', {
+            rank: ordinalLabel(standing.rank, lang, t),
+            points: plural('lobby', 'trn_b_points', standing.points),
+          })}
+        </span>
+      </>
+    )
+  } else {
+    content = (
+      <span className="tournament-mini-name" data-testid="tournament-mini-name">
+        {view.tournamentName} — {stateLabel(t, view.tournamentState)}
+      </span>
+    )
+  }
+  return (
+    <button
+      type="button"
+      ref={pillRef}
+      className={`tournament-panel-mini${dragging ? ' is-dragging' : ''}`}
+      style={pos ? { left: pos.left, top: pos.top, transform: 'none' } : undefined}
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={onEnd}
+      onPointerCancel={onEnd}
+      onClick={onClick}
+      data-testid="tournament-panel-mini"
+      title={t('game', 'tournament_view_bracket_tooltip')}
+    >
+      <Icon name="trophy" size={13} />
+      {content}
+      <span className="tournament-mini-expand">{t('game', 'tournament_view_bracket')}</span>
+    </button>
+  )
+}
+
 export default function TournamentPanel() {
   const { t } = useTranslation()
+  const idBase = useId().replace(/:/g, '')
   const tournament = useStore((s) => s.tournament)
   const tournamentChatId = useStore((s) => s.tournamentChatId)
   const draftOverAt = useStore((s) => s.draftOverAt)
   const hasConstruct = useStore((s) => s.construct != null)
+  const viewer = useStore((s) => s.conn?.username)
   const [expanded, setExpanded] = useState(true)
+  const [tab, setTab] = useState<PanelTab>('rounds')
   const [quitting, setQuitting] = useState(false)
   const [watchingMatchId, setWatchingMatchId] = useState<string | null>(null)
   const [now, setNow] = useState(() => Date.now())
+  const [updatedAt, setUpdatedAt] = useState<number | null>(null)
   const miniRef = useRef<HTMLButtonElement | null>(null)
-  const dragRef = useRef<{ startX: number; startY: number; origLeft: number; origTop: number; moved: boolean } | null>(null)
+  const panelRef = useRef<HTMLElement | null>(null)
+  const focusPanelOnOpen = useRef(false)
+  const focusPillOnCollapse = useRef(false)
+  const dragRef = useRef<DragState | null>(null)
   const suppressClickRef = useRef(false)
   const [miniPos, setMiniPos] = useDraggablePos(MINI_POS_KEY, () => miniRef.current, 320, 36)
   const [dragging, setDragging] = useState(false)
+  const view = tournament?.view ?? null
+  const tid = tournament?.tournamentId ?? null
+  const idPrefix = `trn-panel-${idBase}`
+  const titleId = `${idPrefix}-title`
+
+  const collapse = useCallback(() => {
+    focusPillOnCollapse.current = true
+    setExpanded(false)
+  }, [])
+
+  const expand = () => {
+    focusPanelOnOpen.current = true
+    setExpanded(true)
+  }
+
+  useEscape(collapse, expanded && tournament != null)
+
+  useEffect(() => {
+    if (expanded) {
+      if (focusPanelOnOpen.current) {
+        focusPanelOnOpen.current = false
+        panelRef.current?.focus()
+      }
+    } else if (focusPillOnCollapse.current) {
+      focusPillOnCollapse.current = false
+      miniRef.current?.focus()
+    }
+  }, [expanded])
 
   useEffect(() => {
     if (expanded || !miniPos) return
@@ -46,6 +161,7 @@ export default function TournamentPanel() {
     const next = clampDragPos(miniPos.left, miniPos.top, w, h, window.innerWidth, window.innerHeight)
     if (next.left !== miniPos.left || next.top !== miniPos.top) setMiniPos(next)
   }, [expanded, miniPos, setMiniPos])
+
   const watchStall = draftOverAt != null && !hasConstruct
   useEffect(() => {
     if (!watchStall) return
@@ -58,39 +174,47 @@ export default function TournamentPanel() {
   }, [tournament?.tournamentId])
 
   useEffect(() => {
-    const tid = tournament?.tournamentId
-    if (!tid) return
-    void enterTournamentChat(tid)
+    if (view) setUpdatedAt(Date.now())
+  }, [view])
+
+  useEffect(() => {
+    const id = tournament?.tournamentId
+    if (!id) return
+    void enterTournamentChat(id)
     return () => exitTournamentChat()
   }, [tournament?.tournamentId])
 
   useEffect(() => {
-    const tid = tournament?.tournamentId
-    if (!tid) return
+    const id = tournament?.tournamentId
+    if (!id) return
     let cancelled = false
     const refresh = async () => {
       try {
-        const data = await cmds.getTournament(tid)
+        const data = await cmds.getTournament(id)
         if (!cancelled && data && typeof data === 'object' && 'tournamentName' in (data as Record<string, unknown>)) {
-          if (getState().tournament?.tournamentId === tid) {
-            setState({ tournament: { tournamentId: tid, view: data as TournamentView } })
+          if (getState().tournament?.tournamentId === id) {
+            setState({ tournament: { tournamentId: id, view: data as TournamentView } })
           }
         }
       } catch {}
     }
-    const id = window.setInterval(() => {
+    const interval = window.setInterval(() => {
       void refresh()
     }, 8000)
     return () => {
       cancelled = true
-      window.clearInterval(id)
+      window.clearInterval(interval)
     }
   }, [tournament?.tournamentId])
 
-  if (!tournament) return null
+  if (!tournament || !view || !tid) return null
 
-  const view = tournament.view
-  const tid = tournament.tournamentId
+  const participant = !!viewer && isParticipant(view, viewer)
+  const current = currentRoundIndex(view)
+  const phase = tournamentPhase(view.tournamentState)
+  const kicker = phase === 'dueling' && current >= 0
+    ? t('game', 'trn_f_kicker', { number: current + 1 })
+    : t('game', 'tournament_in_progress')
 
   if (!expanded) {
     const onMiniPointerDown = (e: React.PointerEvent) => {
@@ -128,28 +252,23 @@ export default function TournamentPanel() {
       setDragging(false)
     }
     return (
-      <button
-        type="button"
-        ref={miniRef}
-        className={`tournament-panel-mini${dragging ? ' is-dragging' : ''}`}
-        style={miniPos ? { left: miniPos.left, top: miniPos.top, transform: 'none' } : undefined}
+      <MiniPill
+        view={view}
+        viewer={viewer}
+        pillRef={miniRef}
+        pos={miniPos}
+        dragging={dragging}
         onPointerDown={onMiniPointerDown}
         onPointerMove={onMiniPointerMove}
-        onPointerUp={endMiniDrag}
-        onPointerCancel={endMiniDrag}
+        onEnd={endMiniDrag}
         onClick={() => {
           if (suppressClickRef.current) {
             suppressClickRef.current = false
             return
           }
-          setExpanded(true)
+          expand()
         }}
-        data-testid="tournament-panel-mini"
-        title={t('game', 'tournament_view_bracket_tooltip')}
-      >
-        <Icon name="trophy" size={13} /> {view.tournamentName} — {stateLabel(t, view.tournamentState)} · {view.players.length} {plural('lobby', 'tournament_player', view.players.length)}
-        <span className="tournament-mini-expand">{t('game', 'tournament_view_bracket')}</span>
-      </button>
+      />
     )
   }
 
@@ -174,54 +293,99 @@ export default function TournamentPanel() {
     }
   }
 
+  const tabs = [
+    { id: 'standings' as const, label: t('lobby', 'standings_title'), testId: 'tournament-panel-tab-standings' },
+    { id: 'rounds' as const, label: t('lobby', 'trn_b_rounds_label'), testId: 'tournament-panel-tab-rounds' },
+    { id: 'chat' as const, label: t('game', 'trn_f_tab_chat'), testId: 'tournament-panel-tab-chat' },
+  ]
+
   return (
-    <Modal
-      backdropClassName="tournament-panel-backdrop"
-      dialogClassName="tournament-panel chrome-surface"
-      label={t('game', 'tournament_in_progress')}
-      testId="tournament-panel"
-      onEscape={() => setExpanded(false)}
+    <aside
+      ref={panelRef}
+      tabIndex={-1}
+      className="tournament-panel is-docked chrome-surface"
+      role="complementary"
+      aria-labelledby={titleId}
+      data-testid="tournament-panel"
     >
-        <header className="tournament-panel-header">
-          <div className="tournament-panel-title">
-            <span className="tournament-panel-icon"><Icon name="trophy" size={15} /></span>
-            <span>{t('game', 'tournament_in_progress')}</span>
-            <span className="tournament-panel-name" data-testid="tournament-panel-name">{view.tournamentName}</span>
-          </div>
-          <div className="tournament-panel-actions">
-            <Button variant="subtle" size="sm" data-testid="tournament-panel-collapse"
-              onClick={() => setExpanded(false)}
-              title={t('game', 'tournament_minimize')}>
-              {t('game', 'tournament_minimize')}
-            </Button>
-            <Button variant="soft-danger" size="sm"
-              onClick={() => void handleQuit()}
-              disabled={quitting}
-              data-testid="tournament-panel-quit">
-              {quitting ? t('game', 'tournament_leaving') : t('game', 'tournament_quit_short')}
-            </Button>
-            <CloseButton variant="solid" size="md" label={t('game', 'tournament_close')} className="tournament-panel-close" onClick={() => setExpanded(false)} />
-          </div>
-        </header>
-        {isConstructStalled(draftOverAt, hasConstruct, now) && (
-          <div className="tournament-stalled-banner" data-testid="tournament-stalled-banner" role="alert">
-            {t('game', 'tournament_construct_stalled')}
-          </div>
-        )}
-        <div className="tournament-panel-scroll">
-          <TournamentBracket
+      <header className="tournament-panel-header">
+        <div className="tournament-panel-heading">
+          <span className="tournament-panel-kicker" data-testid="tournament-panel-kicker">
+            <Icon name="trophy" size={13} />
+            <span>{kicker}</span>
+          </span>
+          <h2 id={titleId} className="tournament-panel-name" data-testid="tournament-panel-name">{view.tournamentName}</h2>
+        </div>
+        <div className="tournament-panel-actions">
+          <IconButton
+            icon="minus"
+            label={t('game', 'trn_f_collapse')}
+            size="xl"
+            variant="subtle"
+            data-testid="tournament-panel-collapse"
+            onClick={collapse}
+          />
+          <CloseButton
+            variant="solid"
+            size="lg"
+            label={t('game', 'tournament_close')}
+            className="tournament-panel-close"
+            data-testid="tournament-panel-close"
+            onClick={collapse}
+          />
+        </div>
+      </header>
+      {isConstructStalled(draftOverAt, hasConstruct, now) && (
+        <div className="tournament-stalled-banner" data-testid="tournament-stalled-banner" role="alert">
+          {t('game', 'tournament_construct_stalled')}
+        </div>
+      )}
+      {participant && viewer && (
+        <div className="tournament-panel-match">
+          <TournamentYourMatch view={view} username={viewer} title={t('game', 'trn_f_this_match')} />
+        </div>
+      )}
+      <Tabs<PanelTab>
+        className="tournament-panel-tabs"
+        variant="underline"
+        items={tabs}
+        value={tab}
+        onChange={setTab}
+        idPrefix={idPrefix}
+        label={t('game', 'trn_f_tabs_label')}
+      />
+      <div className={`tournament-panel-body is-${tab}`} {...tabPanelProps(idPrefix, tab)}>
+        {tab === 'standings' && <TournamentStandings view={view} viewer={viewer} />}
+        {tab === 'rounds' && (
+          <TournamentRounds
             view={view}
             tournamentId={tid}
-            compact
+            canWatch={view.watchingAllowed}
             onWatchMatch={(id) => void handleWatchMatch(id)}
             watchingMatchId={watchingMatchId}
           />
-          {tournamentChatId && (
-            <div className="tournament-panel-chat" data-testid="tournament-panel-chat">
-              <ChatBox chatIdOverride={tournamentChatId} />
-            </div>
-          )}
-        </div>
-    </Modal>
+        )}
+        {tab === 'chat' && tournamentChatId && (
+          <div className="tournament-panel-chat" data-testid="tournament-panel-chat">
+            <ChatBox chatIdOverride={tournamentChatId} />
+          </div>
+        )}
+      </div>
+      <footer className="tournament-panel-footer">
+        {updatedAt != null && <UpdatedAgo at={updatedAt} />}
+        {participant && (
+          <Button
+            variant="soft-danger"
+            size="md"
+            className="tournament-panel-leave"
+            onClick={() => void handleQuit()}
+            disabled={quitting}
+            data-testid="tournament-panel-quit"
+          >
+            {quitting ? t('game', 'tournament_leaving') : t('lobby', 'trn_b_leave')}
+          </Button>
+        )}
+      </footer>
+    </aside>
   )
 }

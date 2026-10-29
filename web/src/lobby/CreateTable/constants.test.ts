@@ -6,7 +6,6 @@ import {
   DEFAULT_GAME_TYPES,
   defaultTournamentType,
   formatStartLife,
-  getEffectiveMaxPlayers,
   isHumanSeatType,
   isNativeAiSeatType,
   isSimSeatType,
@@ -91,12 +90,6 @@ describe('tournament types (draft NPE)', () => {
     expect(defaultTournamentType(['Constructed Elimination', 'Constructed Swiss'])).toBe('Constructed Elimination')
     expect(defaultTournamentType([])).toBe(DEFAULT_DRAFT_TOURNAMENT_TYPE)
   })
-
-  it('getEffectiveMaxPlayers caps drafts at 8 regardless of gameType', () => {
-    const gameTypes = [{ name: 'Two Player Duel', minPlayers: 2, maxPlayers: 2 }]
-    expect(getEffectiveMaxPlayers('Two Player Duel', gameTypes, true)).toBe(8)
-    expect(getEffectiveMaxPlayers('Two Player Duel', gameTypes, false)).toBe(2)
-  })
 })
 
 describe('recommendedFreeMulligans (CR 103.5c)', () => {
@@ -131,16 +124,18 @@ describe('buildWizardSteps', () => {
   const ids = (steps: ReturnType<typeof buildWizardSteps>) => steps.map((s) => s.id)
 
   it('match: general, timing, security, seats, review', () => {
-    expect(ids(buildWizardSteps({ draft: false, dev: false }))).toEqual(['general', 'timing', 'security', 'seats', 'review'])
-  })
-
-  it('adds the draft step after general only for a limited draft', () => {
-    expect(ids(buildWizardSteps({ draft: true, dev: false }))).toEqual(['general', 'draft', 'timing', 'security', 'seats', 'review'])
+    expect(ids(buildWizardSteps({ dev: false }))).toEqual(['general', 'timing', 'security', 'seats', 'review'])
+    expect(ids(buildWizardSteps({ kind: 'match', dev: false }))).toEqual(['general', 'timing', 'security', 'seats', 'review'])
   })
 
   it('dev sits before review; review always closes the flow', () => {
-    const steps = ids(buildWizardSteps({ draft: true, dev: true }))
+    const steps = ids(buildWizardSteps({ dev: true }))
     expect(steps.slice(-2)).toEqual(['dev', 'review'])
+  })
+
+  it('TRN-1: a tournament has exactly three steps: format, rules and seats, with no review and no dev step', () => {
+    expect(ids(buildWizardSteps({ kind: 'tourney', dev: false }))).toEqual(['format', 'rules', 'seats'])
+    expect(ids(buildWizardSteps({ kind: 'tourney', dev: true }))).toEqual(['format', 'rules', 'seats'])
   })
 })
 

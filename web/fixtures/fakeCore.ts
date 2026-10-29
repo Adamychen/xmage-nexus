@@ -10,6 +10,7 @@
  */
 
 import type { GameView, RoomUsersView, SeatView, TableView, UsersView } from '../src/net/types'
+import { DEFAULT_TOURNAMENT_TYPES } from '../src/lobby/CreateTable/constants'
 
 let nextConnId = 1
 
@@ -83,14 +84,14 @@ export const DEFAULT_RESULTS: Record<string, unknown> = {
   ],
   getPlayerTypes: ['HUMAN', 'SIM', 'COMPUTER_MAD', 'COMPUTER_DRAFT_BOT'],
   getDeckTypes: ['Constructed - Modern', 'Limited'],
-  getTournamentTypes: [
-    'Constructed Elimination',
-    'Constructed Swiss',
-    'Booster Draft Elimination',
-    'Booster Draft Swiss',
-    'Sealed Elimination',
-    'Sealed Swiss',
-  ],
+  getTournamentTypes: DEFAULT_TOURNAMENT_TYPES.map(tournamentTypeView),
+}
+
+/** The seats the engine gives a tournament type (`TournamentTypeView`): constructed and booster draft take 4 to 16,
+ *  the rich man draft, sealed and jumpstart take 2 to 16. */
+function tournamentTypeView(name: string): { name: string; minPlayers: number; maxPlayers: number } {
+  const fourAtLeast = name.startsWith('Constructed') || (name.startsWith('Booster Draft') && !name.includes('Rich Man'))
+  return { name, minPlayers: fourAtLeast ? 4 : 2, maxPlayers: 16 }
 }
 
 /**
@@ -357,6 +358,9 @@ export function makeBaseScenario(opts: BaseScenarioOptions): Scenario {
           conn.ok(requestId, action, { stored: true, id: `fake-report-${receivedReports.length}` })
           return
         }
+        case 'getTournamentTypes':
+          conn.ok(requestId, action, DEFAULT_RESULTS.getTournamentTypes)
+          return
         default:
           if (opts.onExtra?.(conn, action, args, requestId)) return
           conn.ok(requestId, action, {})

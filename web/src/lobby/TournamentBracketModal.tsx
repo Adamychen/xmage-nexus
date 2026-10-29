@@ -1,9 +1,6 @@
-import CloseButton from '../ui/CloseButton'
-import Button from '../ui/Button'
 import type { TableView, TournamentView } from '../net/types'
 import TournamentBracket from './TournamentBracket'
 import DialogShell from '../ui/DialogShell'
-import Icon from '../ui/Icon'
 import { useTranslation } from '../i18n'
 
 interface Props {
@@ -17,11 +14,13 @@ interface Props {
   watchingMatchId?: string | null
   /** id REAL del torneo (no el de la mesa): necesario para quitTournament */
   tournamentId?: string | null
-  /** false = torneo ajeno/espectador: oculta "Abandonar torneo" */
+  /** false = torneo ajeno/espectador: no ofrece "Abandonar torneo" */
   canQuit?: boolean
+  /** ms epoch of the last successful refresh of the bracket */
+  updatedAt?: number | null
 }
 
-export default function TournamentBracketModal({ table, view, loading, error, onClose, onRefresh, onWatchMatch, watchingMatchId, tournamentId, canQuit }: Props) {
+export default function TournamentBracketModal({ table, view, loading, error, onClose, onRefresh, onWatchMatch, watchingMatchId, tournamentId, canQuit, updatedAt }: Props) {
   const { t } = useTranslation()
   return (
     <DialogShell
@@ -31,38 +30,32 @@ export default function TournamentBracketModal({ table, view, loading, error, on
       testId="tournament-modal"
       legacyBackdropClass="tournament-modal-backdrop"
       legacyPanelClass="tournament-modal"
-      kickerIcon="trophy"
-      kickerLabel={t('lobby', 'view_bracket')}
-      title={table.tableName}
-      topRight={(
-        <div className="tournament-modal-actions">
-          <Button variant="soft" size="sm" onClick={onRefresh} disabled={loading}>
-            {loading ? t('lobby', 'matches_loading') : (<><Icon name="refresh" size={12} /> {t('lobby', 'matches_refresh')}</>)}
-          </Button>
-          <CloseButton variant="solid" size="md" className="tournament-close-btn" onClick={onClose} />
-        </div>
-      )}
+      title={view?.tournamentName ?? table.tableName}
       onBackdropClick={onClose}
-      onEscape={onClose}
+      onClose={onClose}
     >
-        <div className="tournament-modal-scroll">
-          {loading && !view && <div className="tournament-modal-loading">{t('lobby','matches_loading')}</div>}
-          {error && <div className="tournament-modal-error" data-testid="tournament-modal-error">{error}</div>}
-          {view && (
-            <TournamentBracket
-              view={view}
-              tournamentId={tournamentId ?? undefined}
-              onWatchMatch={onWatchMatch}
-              watchingMatchId={watchingMatchId}
-              canQuit={canQuit}
-            />
-          )}
-          {!view && !loading && !error && (
-            <div className="tournament-modal-loading" data-testid="tournament-empty">
-              {t('lobby','matches_empty')}
-            </div>
-          )}
-        </div>
+      <div className="tournament-modal-scroll">
+        {loading && !view && <div className="tournament-modal-loading">{t('lobby', 'matches_loading')}</div>}
+        {error && <div className="tournament-modal-error" data-testid="tournament-modal-error">{error}</div>}
+        {view && (
+          <TournamentBracket
+            view={view}
+            tournamentId={tournamentId ?? undefined}
+            onWatchMatch={onWatchMatch}
+            watchingMatchId={watchingMatchId}
+            canQuit={canQuit}
+            showName={false}
+            updatedAt={updatedAt}
+            refreshing={loading}
+            onRefresh={onRefresh}
+          />
+        )}
+        {!view && !loading && !error && (
+          <div className="tournament-modal-loading" data-testid="tournament-empty">
+            {t('lobby', 'matches_empty')}
+          </div>
+        )}
+      </div>
     </DialogShell>
   )
 }

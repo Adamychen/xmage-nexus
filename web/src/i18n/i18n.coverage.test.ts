@@ -16,6 +16,8 @@ const WHITELIST = new Set<string>([
   'lobby.create_seat_sim',
   'lobby.create_draft_timing_regular',
   'lobby.create_tab_draft',
+  'lobby.trn_modality_jumpstart',
+  'lobby.trn_pack_richman',
   'lobby.dev_title',
   'lobby.join_sb_suffix',
   'lobby.create_time_min_short',

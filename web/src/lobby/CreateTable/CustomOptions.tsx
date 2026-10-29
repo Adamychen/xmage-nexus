@@ -12,14 +12,33 @@ import './CustomOptions.css'
 
 export default function CustomOptions({ form }: { form: CreateTableForm }) {
   const { t } = useTranslation()
-  const formatLife = formatStartLife(form.gameType, form.deckType)
-  const customized = form.mulliganType !== 'GAME_DEFAULT' || form.customStartLifeEnabled || form.customStartHandSizeEnabled || form.planeChase
+  const customized = isCustomized(form)
   const customSummary = [
     form.mulliganType !== 'GAME_DEFAULT' ? 'Mulligan' : null,
     form.customStartLifeEnabled ? t('lobby','create_custom_life_tag',{life:form.customStartLife}) : null,
     form.customStartHandSizeEnabled ? t('lobby','create_custom_hand_tag',{hand:form.customStartHandSize}) : null,
     form.planeChase ? 'Planechase' : null,
   ].filter(Boolean).join(', ')
+
+  return (
+    <Collapsible
+      title={<><Icon name="dice" size={13} /> {t('lobby','create_custom_options')}</>}
+      summary={customized ? customSummary : undefined}
+      defaultOpen={customized}
+    >
+      <CustomOptionsFields form={form} />
+    </Collapsible>
+  )
+}
+
+/** Whether a value moved away from the game's default: the mulligan rule, a custom life or hand, Planechase. */
+export function isCustomized(form: CreateTableForm): boolean {
+  return form.mulliganType !== 'GAME_DEFAULT' || form.customStartLifeEnabled || form.customStartHandSizeEnabled || form.planeChase
+}
+
+export function CustomOptionsFields({ form }: { form: CreateTableForm }) {
+  const { t } = useTranslation()
+  const formatLife = formatStartLife(form.gameType, form.deckType)
 
   const mulliganOptions = [
     { value: 'GAME_DEFAULT', label: t('lobby','create_mulligan_format_default') },
@@ -40,71 +59,65 @@ export default function CustomOptions({ form }: { form: CreateTableForm }) {
   }
 
   return (
-    <Collapsible
-      title={<><Icon name="dice" size={13} /> {t('lobby','create_custom_options')}</>}
-      summary={customized ? customSummary : undefined}
-      defaultOpen={customized}
-    >
-      <div className="custom-options">
-        <Field group label={t('lobby','create_field_mulligan_type')}>
-          <div className="mulligan-options" role="radiogroup" aria-label={t('lobby','create_field_mulligan_type')} onKeyDown={onMulliganKeyDown}>
-            {mulliganOptions.map((opt) => {
-              const selected = form.mulliganType === opt.value
-              return (
-                <ChipButton
-                  key={opt.value}
-                  pill
-                  role="radio"
-                  aria-checked={selected}
-                  active={selected}
-                  tabIndex={selected ? 0 : -1}
-                  onClick={() => form.setMulliganType(opt.value)}
-                >
-                  {opt.label}
-                </ChipButton>
-              )
-            })}
-          </div>
-        </Field>
-
-        <div className="custom-options-grid">
-          <NumberOption
-            label={t('lobby','create_field_custom_life')}
-            enabled={form.customStartLifeEnabled}
-            onToggle={(on) => {
-              if (on && formatLife !== null) form.setCustomStartLife(formatLife)
-              form.setCustomStartLifeEnabled(on)
-            }}
-            value={form.customStartLife}
-            idleValue={formatLife}
-            idlePlaceholder={t('lobby','create_mulligan_format_default')}
-            min={1}
-            max={100}
-            fallback={formatLife ?? 20}
-            onChange={form.setCustomStartLife}
-          />
-          <NumberOption
-            label={t('lobby','create_field_custom_hand')}
-            enabled={form.customStartHandSizeEnabled}
-            onToggle={form.setCustomStartHandSizeEnabled}
-            value={form.customStartHandSize}
-            min={0}
-            max={20}
-            fallback={7}
-            onChange={form.setCustomStartHandSize}
-          />
+    <div className="custom-options">
+      <Field group label={t('lobby','create_field_mulligan_type')}>
+        <div className="mulligan-options" role="radiogroup" aria-label={t('lobby','create_field_mulligan_type')} onKeyDown={onMulliganKeyDown}>
+          {mulliganOptions.map((opt) => {
+            const selected = form.mulliganType === opt.value
+            return (
+              <ChipButton
+                key={opt.value}
+                pill
+                role="radio"
+                aria-checked={selected}
+                active={selected}
+                tabIndex={selected ? 0 : -1}
+                onClick={() => form.setMulliganType(opt.value)}
+              >
+                {opt.label}
+              </ChipButton>
+            )
+          })}
         </div>
+      </Field>
 
-        <Checkbox
-          card
-          checked={form.planeChase}
-          onChange={form.setPlaneChase}
-          icon="map"
-          label="Planechase"
-          description={t('lobby','create_planechase_desc')}
+      <div className="custom-options-grid">
+        <NumberOption
+          label={t('lobby','create_field_custom_life')}
+          enabled={form.customStartLifeEnabled}
+          onToggle={(on) => {
+            if (on && formatLife !== null) form.setCustomStartLife(formatLife)
+            form.setCustomStartLifeEnabled(on)
+          }}
+          value={form.customStartLife}
+          idleValue={formatLife}
+          idlePlaceholder={t('lobby','create_mulligan_format_default')}
+          min={1}
+          max={100}
+          fallback={formatLife ?? 20}
+          onChange={form.setCustomStartLife}
+        />
+        <NumberOption
+          label={t('lobby','create_field_custom_hand')}
+          enabled={form.customStartHandSizeEnabled}
+          onToggle={form.setCustomStartHandSizeEnabled}
+          value={form.customStartHandSize}
+          min={0}
+          max={20}
+          fallback={7}
+          onChange={form.setCustomStartHandSize}
         />
       </div>
-    </Collapsible>
+
+      <Checkbox
+        card
+        checked={form.planeChase}
+        onChange={form.setPlaneChase}
+        icon="map"
+        label="Planechase"
+        description={t('lobby','create_planechase_desc')}
+      />
+    </div>
   )
 }
 

@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import * as cmds from '../../net/commands'
 import { setMyDeck } from '../../state/store'
 import type { Deck } from '../decks'
+import { requestDeckValidation } from '../DeckIssuesDialog'
 import { submitCreateTable, type SubmitTableForm } from './submitTable'
 
 vi.mock('../../net/commands', async (importOriginal) => ({
@@ -106,6 +107,61 @@ function io() {
   }
   return handlers
 }
+
+describe('TRN-3: a Swiss tournament is refused without a valid round count', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('TRN-3: a Swiss tournament with a round count below 2 shows the error and creates nothing', async () => {
+    const handlers = io()
+    await submitCreateTable(
+      form({ isTournament: true, numberRounds: 0, tableResolution: { ...TOURNAMENT_RESOLUTION, normalizedTournamentType: 'Constructed Swiss' } as never }),
+      handlers,
+    )
+    expect(cmds.createTournamentTable).not.toHaveBeenCalled()
+    expect(handlers.setError).toHaveBeenLastCalledWith('trn_err_rounds')
+    expect(handlers.setBusy).toHaveBeenLastCalledWith(false)
+  })
+
+  it('TRN-3: an elimination tournament ignores the round count and creates the table', async () => {
+    vi.mocked(cmds.createTournamentTable).mockResolvedValueOnce({ ok: true, data: { tableId: 't1' } } as never)
+    vi.mocked(cmds.joinTournamentTable).mockResolvedValueOnce({ ok: true } as never)
+    await submitCreateTable(form({ isTournament: true, numberRounds: 0, tableResolution: TOURNAMENT_RESOLUTION as never }), io())
+    expect(cmds.createTournamentTable).toHaveBeenCalledOnce()
+    expect(vi.mocked(cmds.createTournamentTable).mock.calls[0][0]).not.toHaveProperty('numberRounds')
+  })
+})
+
+const DRAFT_RESOLUTION = {
+  kind: 'draft-tourney',
+  isDraftLimited: true,
+  isConstructedTournament: false,
+  isTournament: true,
+  normalizedTournamentType: 'Booster Draft Elimination',
+  errorKey: null,
+  errorParam: '',
+}
+
+describe('TRN-5: a limited tournament joins its host without a deck', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('TRN-5: the host join of a draft carries neither a deck nor a deck type', async () => {
+    vi.mocked(cmds.createTournamentTable).mockResolvedValueOnce({ ok: true, data: { tableId: 't1' } } as never)
+    vi.mocked(cmds.joinTournamentTable).mockResolvedValueOnce({ ok: true } as never)
+    await submitCreateTable(
+      form({ isTournament: true, isDraftLimited: true, deckType: 'Limited', draftSetsRaw: 'M21, M21, M21', draftBoosters: 3, tableResolution: DRAFT_RESOLUTION as never }),
+      io(),
+    )
+    const join = vi.mocked(cmds.joinTournamentTable).mock.calls[0][0]
+    expect(join).toMatchObject({ tableId: 't1', playerType: 'HUMAN' })
+    expect(join).not.toHaveProperty('deck')
+    expect(join).not.toHaveProperty('deckType')
+    expect(requestDeckValidation).not.toHaveBeenCalled()
+  })
+})
 
 describe('submitCreateTable — saving the deck used to join', () => {
   beforeEach(() => {

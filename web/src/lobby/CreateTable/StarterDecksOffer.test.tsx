@@ -26,7 +26,7 @@ vi.mock('../../net/commands', () => ({
   ]),
   getDeckTypes: vi.fn().mockResolvedValue(['Constructed - Modern', 'Variant Magic - Commander']),
   getPlayerTypes: vi.fn().mockResolvedValue(['COMPUTER_MAD']),
-  getTournamentTypes: vi.fn().mockResolvedValue([]),
+  getTournamentCatalogue: vi.fn().mockResolvedValue({ names: [], limits: {} }),
   getDraftCubes: vi.fn().mockResolvedValue([]),
   getExpansionsWithBoosters: vi.fn().mockResolvedValue([]),
 }))

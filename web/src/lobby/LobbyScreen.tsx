@@ -510,6 +510,7 @@ export default function LobbyScreen() {
           watchingMatchId={bracket.watchingMatchId}
           tournamentId={bracket.bracketTournamentId}
           canQuit={bracket.canQuit}
+          updatedAt={bracket.bracketUpdatedAt}
         />
       )}
       {showSettings && (

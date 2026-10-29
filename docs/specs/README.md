@@ -23,6 +23,7 @@ test that names the decision.
 | `cards.md` | `CRD` | Looking at a card: the card inspector's state, faces, layout and text |
 | `accessibility.md` | `ACC` | Reduce Transparency, Increase Contrast, text and touch sizes, safe areas, phone login, hover |
 | `panel.md` | `PNL` | The game's side panel: header and tabs, log, chat, deck tracker, commander damage, mechanics |
+| `tournaments.md` | `TRN` | Creating a tournament, its bracket and standings, following it during a game |
 
 Areas without a file yet are written the first time someone changes them (see `ROADMAP.md` §4.12).
 Candidates: stack, draft, spectating.

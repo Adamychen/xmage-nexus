@@ -36,31 +36,64 @@ function localMakeTable(opts: { tableId: string; tableName: string; gameId: stri
   } as TableView
 }
 
+const SAMPLE_HISTORY = 'Matches: 41 (2%), Tourneys: 6 (0%), Constructed Rating: 1540, Limited Rating: 1490'
+
+function sampleMatch(
+  roundNum: number,
+  matchId: string,
+  [first, second]: readonly [string, string],
+  finishedGames: readonly (readonly [string, string])[],
+  runningDuration?: string,
+): TournamentGameView[] {
+  const players = `${first} - ${second}`
+  const entries: TournamentGameView[] = finishedGames.map(([winner, duration], index) => ({
+    roundNum,
+    matchId: `match-${matchId}`,
+    gameId: `game-${matchId}-${index + 1}`,
+    tableId: `table-${matchId}`,
+    state: `Finished (${duration})`,
+    result: `Player ${winner} is the winner`,
+    players,
+  }))
+  if (runningDuration) {
+    entries.push({
+      roundNum,
+      matchId: `match-${matchId}`,
+      gameId: `game-${matchId}-${finishedGames.length + 1}`,
+      tableId: `table-${matchId}`,
+      state: `Dueling (${runningDuration})`,
+      result: '',
+      players,
+    })
+  }
+  return entries
+}
+
 export function sampleTournamentView(overrides: Partial<TournamentView> = {}): TournamentView {
   const now = Date.now()
   const players: TournamentPlayerView[] = [
-    { name: 'alice', state: 'Dueling', points: 6, results: '2-0', history: 'W-W', flagName: 'es', quit: false },
-    { name: 'bob', state: 'Dueling', points: 3, results: '1-1', history: 'W-L', flagName: 'us', quit: false },
-    { name: 'charlie', state: 'Eliminated', points: 0, results: '0-2', history: 'L-L', flagName: 'de', quit: true },
-    { name: 'diana', state: 'Dueling', points: 3, results: '1-1', history: 'L-W', flagName: 'fr', quit: false },
+    { name: 'alice', flagName: 'es', state: 'Dueling', points: 3, results: 'R1 bob [2-0] ', history: SAMPLE_HISTORY, quit: false },
+    { name: 'bob', flagName: 'us', state: 'Waiting for next round', points: 3, results: 'R1 alice [0-2] R2 charlie [2-0Q] ', history: '', quit: false },
+    { name: 'charlie', flagName: 'de', state: 'Eliminated', points: 0, results: 'R1 diana [1-2] R2 bob [0Q-2] ', history: '', quit: true },
+    { name: 'diana', flagName: 'fr', state: 'Dueling', points: 3, results: 'R1 charlie [2-1] ', history: '', quit: false },
   ]
   const rounds: RoundView[] = [
     {
       games: [
-        { roundNum: 1, state: 'Finished', players: 'alice vs bob', result: '2-0', tableId: 'table-g1', matchId: 'match-1', gameId: 'game-1' },
-        { roundNum: 1, state: 'Finished', players: 'charlie vs diana', result: '0-2', tableId: 'table-g2', matchId: 'match-2', gameId: 'game-2' },
-      ] as TournamentGameView[],
+        ...sampleMatch(1, 'r1-a', ['alice', 'bob'], [['alice', '12:30'], ['alice', '10:02']]),
+        ...sampleMatch(1, 'r1-b', ['charlie', 'diana'], [['diana', '9:20'], ['charlie', '11:44'], ['diana', '13:05']]),
+      ],
     },
     {
       games: [
-        { roundNum: 2, state: 'Dueling', players: 'alice vs diana', result: '', tableId: 'table-g3', matchId: 'match-3', gameId: 'game-3' },
-        { roundNum: 2, state: 'Ready', players: 'bob vs charlie', result: '', tableId: 'table-g4', matchId: 'match-4', gameId: 'game-4' },
-      ] as TournamentGameView[],
+        ...sampleMatch(2, 'r2-a', ['alice', 'diana'], [['alice', '8:50']], '8:14'),
+        ...sampleMatch(2, 'r2-b', ['bob', 'charlie'], [['bob', '7:30'], ['bob', '6:12']]),
+      ],
     },
   ]
   return {
-    tournamentName: 'Commander Clash',
-    tournamentType: 'Swiss',
+    tournamentName: 'Modern Swiss #7',
+    tournamentType: 'Constructed Swiss / Constructed - Modern 3 rounds',
     tournamentState: 'Dueling',
     startTime: now - 3600_000,
     endTime: null,
@@ -70,7 +103,7 @@ export function sampleTournamentView(overrides: Partial<TournamentView> = {}): T
     watchingAllowed: true,
     rounds,
     players,
-    runningInfo: 'Ronda 2 en curso — 2 mesas activas',
+    runningInfo: '',
     ...overrides,
   }
 }
@@ -99,8 +132,8 @@ export function makeTournamentScenario(opts: TournamentScenarioOptions = {}): Sc
     tableId: TABLE_ID,
     tableName: view.tournamentName,
     gameId: GAME_ID,
-    gameType: view.tournamentType,
-    deckType: 'Variant Magic - Commander',
+    gameType: 'Two Player Duel',
+    deckType: 'Constructed - Modern',
   })
 
   function broadcastTournament(method: string, v: TournamentView) {

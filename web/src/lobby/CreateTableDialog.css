@@ -435,6 +435,9 @@
   gap: var(--sp-2);
   align-items: center;
 }
+.wizard-actions-left {
+  flex-wrap: wrap;
+}
 .dialog-actions.wizard-actions {
   flex-wrap: wrap;
 }
@@ -524,3 +527,740 @@
     text-align: center;
   }
 }
+
+/* Tournament format step: name and presets on one row, option cards and chips
+   that wrap on a phone, set slots that stack, every target at least 44 px. */
+.trn-format .chip-row .ui-chip {
+  min-height: 44px;
+}
+
+.trn-name-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--sp-2) var(--sp-3);
+}
+
+.trn-name-field {
+  flex: 1 1 220px;
+  min-width: 0;
+}
+
+.trn-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-1h);
+}
+
+.trn-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: var(--sp-2);
+}
+
+.trn-options--chip {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.trn-option {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-2);
+  min-height: 44px;
+  padding: var(--sp-2) var(--sp-3);
+  background: rgb(var(--ink-2-rgb) / 0.5);
+  border: 1px solid var(--veil-3);
+  border-radius: var(--r-md);
+  color: var(--fg-2);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.trn-option:hover {
+  border-color: rgb(var(--gold-rgb) / 0.5);
+  color: var(--fg-1);
+}
+
+.trn-option.active {
+  border-color: var(--gold-300);
+  background: rgb(var(--brand-rgb) / 0.25);
+  color: var(--fg-hi);
+}
+
+.trn-option.is-unlisted {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.trn-option:focus-visible {
+  outline: 2px solid var(--gold-300);
+  outline-offset: 2px;
+}
+
+.trn-options--chip .trn-option {
+  align-items: center;
+  padding: var(--sp-1h) var(--sp-3);
+  border-radius: var(--r-pill);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+}
+
+.trn-option-icon {
+  display: inline-flex;
+  flex: 0 0 auto;
+  color: var(--gold-300);
+}
+
+.trn-option-text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-0h);
+  min-width: 0;
+}
+
+.trn-option-title {
+  font-size: var(--fs-xs);
+  font-weight: 700;
+}
+
+.trn-option-desc {
+  font-size: var(--fs-2xs);
+  color: var(--fg-3);
+  line-height: 1.35;
+}
+
+.trn-server-type {
+  margin: 0;
+  font-size: var(--fs-2xs);
+  color: var(--fg-3);
+}
+
+.trn-server-name {
+  color: var(--fg-2);
+  font-weight: 700;
+}
+
+.trn-slots {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: var(--sp-2);
+}
+
+.trn-elim-rounds {
+  align-self: flex-start;
+}
+
+@media (max-width: 600px) {
+  .wizard-stepper--tourney .wizard-step-label {
+    min-width: 0;
+    max-width: 100%;
+  }
+  .wizard-stepper--tourney .wizard-step-summary {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+/* Tournament seat count: a stepper with its quick picks, every target at least 44 px. */
+.trn-seat-count {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.trn-seat-stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1h);
+  align-self: flex-start;
+}
+
+.trn-seat-step {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  justify-content: center;
+}
+
+.trn-seat-input {
+  width: 5.5rem;
+  min-height: 44px;
+  text-align: center;
+  font-weight: 700;
+}
+
+/* Tournament Seats step: a summary, the shortcuts, the deck pickers and one row per seat. */
+.trn-seats {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.trn-seats-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2) var(--sp-3);
+}
+
+.trn-seats-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--sp-1) var(--sp-3);
+}
+
+.trn-seats-total {
+  font-size: var(--fs-sm);
+  font-weight: 800;
+  color: var(--fg-hi);
+}
+
+.trn-seats-counter {
+  font-size: var(--fs-xs);
+  color: var(--fg-3);
+}
+
+.trn-seats-play {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-height: 44px;
+}
+
+.trn-seats-play-label {
+  font-size: var(--fs-xs);
+  font-weight: 700;
+}
+
+.trn-seats-shortcuts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.trn-seats-shortcuts .ui-btn {
+  min-height: 44px;
+}
+
+.trn-seats-reason {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1h);
+  flex: 1 1 16rem;
+  margin: 0;
+  font-size: var(--fs-xs);
+  color: var(--warn);
+}
+
+.trn-seats-decks {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2h);
+}
+
+.trn-seats-note {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.trn-seat-list {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: var(--sp-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (min-width: 880px) {
+  .trn-seat-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--sp-2) var(--sp-3);
+  }
+}
+
+.trn-seat {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--r-md);
+  border: 1px solid var(--veil-2);
+  background: rgb(var(--ink-2-rgb) / 0.5);
+}
+
+.trn-seat--you {
+  border-color: var(--brand-line);
+}
+
+.trn-seat--bot {
+  border-color: var(--gold-line);
+}
+
+.trn-seat-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.trn-seat-number {
+  min-width: 4.5rem;
+  font-size: var(--fs-2xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--fg-3);
+}
+
+.trn-seat-icon {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--veil-2);
+  color: var(--veil-8);
+}
+
+.trn-seat--you .trn-seat-icon {
+  background: var(--brand-soft);
+  color: var(--brand-fg);
+}
+
+.trn-seat--bot .trn-seat-icon {
+  background: var(--gold-soft);
+  color: var(--gold-300);
+}
+
+.trn-seat-text {
+  display: flex;
+  flex: 1 1 8rem;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.trn-seat-name {
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.trn-seat-sub {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.trn-seat-sub {
+  font-size: var(--fs-2xs);
+  color: var(--fg-3);
+}
+
+.trn-seat-kind {
+  display: inline-flex;
+  flex-shrink: 0;
+  gap: var(--sp-1);
+}
+
+.trn-seat-kind-option {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+.trn-seat-kind-option:focus-visible {
+  outline: 2px solid var(--gold-300);
+  outline-offset: 2px;
+}
+
+.trn-seat-controls {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: var(--sp-2);
+}
+
+.trn-seat-controls select,
+.trn-seats-decks select {
+  min-height: 44px;
+}
+
+.trn-seats-dev summary {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* Tournament dialog: the steps on the left, "Your tournament" on the right
+   (a bar above the footer on a phone). The summary is sticky inside the
+   scrolling body, so it stays in view while the step scrolls. */
+.trn-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: var(--sp-4);
+  align-items: start;
+}
+
+.trn-layout-main {
+  min-width: 0;
+}
+
+.trn-summary {
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  padding: var(--sp-3);
+  background: rgb(var(--ink-2-rgb) / 0.6);
+  border: 1px solid var(--veil-2);
+  border-radius: var(--r-md);
+  min-width: 0;
+}
+
+.trn-summary .trn-summary-toggle {
+  display: none;
+}
+
+.trn-summary-title {
+  margin: 0;
+  font-size: var(--fs-2xs);
+  font-weight: 700;
+  color: var(--brand-fg);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.trn-summary-name {
+  margin: 0;
+  font-size: var(--fs-md);
+  font-weight: 800;
+  color: var(--fg-hi);
+  overflow-wrap: anywhere;
+}
+
+.trn-summary-format {
+  margin: 0;
+  font-size: var(--fs-xs);
+  color: var(--fg-2);
+  overflow-wrap: anywhere;
+}
+
+.trn-summary-sub {
+  margin: var(--sp-1) 0 0;
+  font-size: var(--fs-2xs);
+  font-weight: 700;
+  color: var(--fg-3);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.trn-summary-phases {
+  margin: 0;
+  padding-inline-start: var(--sp-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1h);
+  font-size: var(--fs-xs);
+  color: var(--fg-1);
+}
+
+.trn-summary-phases li::marker {
+  color: var(--gold-300);
+  font-weight: 700;
+}
+
+.trn-summary-facts {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.trn-summary-fact {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--sp-2);
+  padding: var(--sp-1) 0;
+  border-bottom: 1px dashed var(--veil-2);
+  font-size: var(--fs-xs);
+}
+
+.trn-summary-fact dt {
+  flex: 0 0 auto;
+  color: var(--fg-3);
+}
+
+.trn-summary-fact dd {
+  margin: 0;
+  min-width: 0;
+  color: var(--fg-1);
+  font-weight: 600;
+  text-align: end;
+  overflow-wrap: anywhere;
+}
+
+.trn-summary-status {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1h);
+  margin: 0;
+  padding: var(--sp-2);
+  border-radius: var(--r-base);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  border: 1px solid transparent;
+}
+
+.trn-summary-status.is-ready {
+  color: var(--ok);
+  background: var(--ok-soft);
+  border-color: var(--ok-line);
+}
+
+.trn-summary-status.is-blocked {
+  color: var(--warn);
+  background: var(--warn-soft);
+  border-color: var(--warn-line);
+}
+
+/* Rules step: panels in two columns when the step is wide enough, one below. */
+.trn-rules {
+  container-type: inline-size;
+}
+
+.trn-rules-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--sp-3);
+  align-items: start;
+}
+
+.trn-rules-col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  min-width: 0;
+}
+
+@container (min-width: 560px) {
+  .trn-rules-grid:not(.trn-rules-grid--stacked) {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: var(--sp-4);
+  }
+}
+
+.trn-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2h);
+  padding: var(--sp-3);
+  background: rgb(var(--ink-2-rgb) / 0.5);
+  border: 1px solid var(--veil-2);
+  border-radius: var(--r-md);
+  min-width: 0;
+}
+
+.trn-panel-title {
+  margin: 0;
+  font-size: var(--fs-2xs);
+  font-weight: 700;
+  color: var(--brand-fg);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.trn-advanced {
+  background: rgb(var(--ink-2-rgb) / 0.4);
+  border: 1px solid var(--veil-2);
+  border-radius: var(--r-md);
+}
+
+.trn-advanced-summary {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-height: 44px;
+  padding: var(--sp-2) var(--sp-3);
+  cursor: pointer;
+  list-style: none;
+  font-size: var(--fs-2xs);
+  font-weight: 700;
+  color: var(--brand-fg);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.trn-advanced-summary::-webkit-details-marker {
+  display: none;
+}
+
+.trn-advanced-summary:hover {
+  color: var(--fg-hi);
+}
+
+.trn-advanced-summary:focus-visible {
+  outline: 2px solid var(--gold-300);
+  outline-offset: 2px;
+}
+
+.trn-advanced-title {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1h);
+}
+
+.trn-advanced-changed {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: var(--fs-2xs);
+  font-weight: 500;
+  color: var(--fg-3);
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.trn-advanced-chevron {
+  display: inline-flex;
+  margin-inline-start: auto;
+  transition: transform var(--dur-fast) ease;
+}
+
+.trn-advanced[open] .trn-advanced-chevron {
+  transform: rotate(180deg);
+}
+
+.trn-advanced-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding: 0 var(--sp-3) var(--sp-3);
+}
+
+/* Set slots: the draft sets label with the booster count beside it. */
+.trn-sets-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2) var(--sp-3);
+}
+
+.trn-booster-count {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.trn-booster-count-label {
+  font-size: var(--fs-2xs);
+  font-weight: 700;
+  color: var(--fg-3);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.trn-booster-count .ui-tabs.trn-booster-control {
+  width: auto;
+}
+
+.trn-booster-count .ui-tabs.trn-booster-control .ui-tab {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+@media (max-width: 600px) {
+  .trn-layout {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    min-height: 100%;
+  }
+
+  .trn-layout-main {
+    flex: 1 0 auto;
+  }
+
+  .trn-summary {
+    position: sticky;
+    top: auto;
+    bottom: 0;
+    z-index: 1;
+    gap: 0;
+    padding: 0;
+    background: rgb(var(--ink-2-rgb));
+    border-radius: var(--r-md) var(--r-md) 0 0;
+  }
+
+  .trn-summary .trn-summary-toggle {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+    width: 100%;
+    min-height: 44px;
+    padding: var(--sp-2) var(--sp-3);
+    background: none;
+    border: none;
+    color: var(--fg-1);
+    font: inherit;
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    text-align: start;
+    cursor: pointer;
+  }
+
+  .trn-summary .trn-summary-toggle:focus-visible {
+    outline: 2px solid var(--gold-300);
+    outline-offset: -2px;
+  }
+
+  .trn-summary-line {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .trn-summary:not(.is-open) .trn-summary-body {
+    display: none;
+  }
+
+  .trn-summary.is-open .trn-summary-body {
+    max-height: 50vh;
+    overflow-y: auto;
+    padding: 0 var(--sp-3) var(--sp-3);
+  }
+
+  .trn-summary-title {
+    display: none;
+  }
+
+  .create-table-dialog--tourney .wizard-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .create-table-dialog--tourney .wizard-actions-right {
+    order: -1;
+  }
+
+  .create-table-dialog--tourney .wizard-actions-right > * {
+    flex: 1 1 auto;
+  }
+
+  .create-table-dialog--tourney .wizard-actions-left {
+    justify-content: space-between;
+  }
+}
+

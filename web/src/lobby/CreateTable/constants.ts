@@ -5,7 +5,7 @@ type LobbyT = CategoryT<'lobby'>
 
 export const STORAGE_KEY = 'mage_createTable_v1'
 
-export type CreateTab = 'general' | 'draft' | 'timing' | 'security' | 'seats' | 'review' | 'dev'
+export type CreateTab = 'general' | 'timing' | 'security' | 'seats' | 'review' | 'dev' | 'format' | 'rules'
 
 /** Which entry point opened the wizard: a match ("New Table") or a tournament ("New Tournament"). */
 export type CreateKind = 'match' | 'tourney'
@@ -239,6 +239,19 @@ export const CONSTRUCTED_TOURNAMENT_TYPES = [
 
 export const DEFAULT_DRAFT_TOURNAMENT_TYPE = 'Booster Draft Elimination'
 
+/** Seat counts offered as one-tap picks; each is shown only when the type allows it. */
+export const TOURNAMENT_SEAT_QUICK_PICKS: number[] = [4, 8, 16]
+
+export const DEFAULT_TOURNAMENT_SEATS = 8
+
+export interface SeatLimits {
+  minPlayers: number
+  maxPlayers: number
+}
+
+/** Used when the server's catalogue gives a type no limits. */
+export const FALLBACK_TOURNAMENT_SEAT_LIMITS: SeatLimits = { minPlayers: 2, maxPlayers: 16 }
+
 export const DEFAULT_ATTACK_OPTION = 'MULTIPLE'
 export const DEFAULT_RANGE = 'ALL'
 
@@ -415,10 +428,6 @@ export function isDraftTournamentType(tournamentType: unknown): boolean {
   return false
 }
 
-export const MAX_COMMANDER_PLAYERS = 4
-export const MAX_DRAFT_PLAYERS = 8
-export const MAX_TOURNAMENT_PLAYERS = 32
-
 export function recommendedFreeMulligans(gameType: string, numPlayers: number): number {
   const n = (gameType || '').toLowerCase()
   if (n.includes('brawl')) return 1
@@ -466,14 +475,6 @@ export function formatStartLife(gameType: string, deckType: string): number | nu
   return DECK_TYPE_START_LIFE[gameType]?.[deckType] ?? FORMAT_START_LIFE[gameType] ?? null
 }
 
-export function getEffectiveMaxPlayers(gameType: string, gameTypes: GameTypeInfo[], isDraft: boolean): number {
-  if (isDraft) return MAX_DRAFT_PLAYERS
-  const info = gameTypes.find((g) => g.name === gameType)
-  if (info) return info.maxPlayers
-  if (gameType.toLowerCase().includes('commander')) return MAX_COMMANDER_PLAYERS
-  return 2
-}
-
 export interface SeatConfig {
   type: string
   deckName: string
@@ -484,7 +485,8 @@ export type WizardStep = { id: CreateTab; icon: import('../../ui/Icon').IconName
 
 const WIZARD_STEP_DEFS: Record<CreateTab, WizardStep> = {
   general: { id: 'general', icon: 'settings', labelKey: 'create_tab_general', titleFallback: 'General' },
-  draft: { id: 'draft', icon: 'layers', labelKey: 'create_tab_draft', titleFallback: 'Draft' },
+  format: { id: 'format', icon: 'layers', labelKey: 'trn_step_format', titleFallback: 'Format' },
+  rules: { id: 'rules', icon: 'clock', labelKey: 'trn_step_rules', titleFallback: 'Rules' },
   timing: { id: 'timing', icon: 'clock', labelKey: 'create_tab_timing', titleFallback: 'Tiempos & Reglas' },
   security: { id: 'security', icon: 'shield', labelKey: 'create_tab_restrictions', titleFallback: 'Restricciones' },
   seats: { id: 'seats', icon: 'bot', labelKey: 'create_tab_multi', titleFallback: 'Jugadores' },
@@ -492,18 +494,17 @@ const WIZARD_STEP_DEFS: Record<CreateTab, WizardStep> = {
   review: { id: 'review', icon: 'check', labelKey: 'create_tab_review', titleFallback: 'Review' },
 }
 
-/** The wizard's steps for the current table: the draft step only exists for
- *  a limited tournament, the dev step only in dev builds, and review always
- *  closes the flow. */
-export function buildWizardSteps({ draft, dev }: { draft: boolean; dev: boolean }): WizardStep[] {
-  const ids: CreateTab[] = [
-    'general',
-    ...(draft ? (['draft'] as const) : []),
-    'timing',
-    'security',
-    'seats',
-    ...(dev ? (['dev'] as const) : []),
-    'review',
-  ]
+/** The wizard's steps for the current table. A match: the general step, the
+ *  timers and restrictions, seats, the dev step in dev builds and review last.
+ *  A tournament: format, rules and seats (no dev step, no review). */
+export function buildWizardSteps({ kind = 'match', dev }: { kind?: CreateKind; dev: boolean }): WizardStep[] {
+  if (kind === 'tourney') {
+    return [
+      WIZARD_STEP_DEFS.format,
+      WIZARD_STEP_DEFS.rules,
+      { ...WIZARD_STEP_DEFS.seats, labelKey: 'trn_step_seats', titleFallback: 'Seats' },
+    ]
+  }
+  const ids: CreateTab[] = ['general', 'timing', 'security', 'seats', ...(dev ? (['dev'] as const) : []), 'review']
   return ids.map((id) => WIZARD_STEP_DEFS[id])
 }

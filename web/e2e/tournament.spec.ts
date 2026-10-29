@@ -2,11 +2,11 @@ import { test, expect } from './fixtures'
 import { fakeOnly } from './support/fake-mode'
 import { withFakeServer } from './support/fake-backend'
 import { makeTournamentScenario, tournamentScenario } from '../fixtures/scenarios/tournament'
-import { dismissSetupWizard, login, openCreateDialog } from './support/start-game'
+import { dismissSetupWizard, installCapture, login, openCreateDialog, type CaptureBuffers } from './support/start-game'
 fakeOnly()
 
 test.describe('Tournament', { tag: '@tournament' }, () => {
-  test('tournament bracket renders via injected state', async ({ page }) => {
+  test('TRN-10, TRN-14, TRN-15, TRN-17: the in-game panel is docked beside the board and renders the live match and the quit mark', async ({ page }) => {
     await page.goto('/')
     await dismissSetupWizard(page)
     await expect(page.locator('body')).toBeVisible({ timeout: 10_000 })
@@ -28,15 +28,15 @@ test.describe('Tournament', { tag: '@tournament' }, () => {
             constructionTime: 600,
             watchingAllowed: true,
             rounds: [
-              { games: [{ roundNum: 1, state: 'Finished', players: 'alice vs bob', result: '2-0', tableId: 'table-g1' }] },
-              { games: [{ roundNum: 2, state: 'Dueling', players: 'alice vs diana', result: '', tableId: 'table-g2', gameId: 'game-g2' }] },
+              { games: [{ roundNum: 1, state: 'Finished (12:30)', players: 'alice - bob', result: 'Player alice is the winner', tableId: 'table-g1', matchId: 'match-1' }] },
+              { games: [{ roundNum: 2, state: 'Dueling (8:14)', players: 'alice - diana', result: '', tableId: 'table-g2', matchId: 'match-2', gameId: 'game-g2' }] },
             ],
             players: [
-              { name: 'alice', state: 'Dueling', points: 6, results: '2-0', history: 'W-W', quit: false },
-              { name: 'bob', state: 'Dueling', points: 3, results: '1-1', history: 'W-L', quit: false },
-              { name: 'charlie', state: 'Eliminated', points: 0, results: '0-2', history: 'L-L', quit: true },
+              { name: 'alice', state: 'Dueling', points: 3, results: 'R1 bob [2-0] ', history: 'Matches: 41 (2%), Tourneys: 6 (0%), Constructed Rating: 1540, Limited Rating: 1490', quit: false },
+              { name: 'bob', state: 'Eliminated', points: 0, results: 'R1 alice [0-2] ', history: '', quit: false },
+              { name: 'charlie', state: 'Eliminated', points: 0, results: '', history: '', quit: true },
             ],
-            runningInfo: 'Ronda 2 en curso',
+            runningInfo: '',
           },
         },
         phase: 'lobby',
@@ -55,19 +55,22 @@ test.describe('Tournament', { tag: '@tournament' }, () => {
     await page.waitForTimeout(300)
     const panel = page.locator('[data-testid="tournament-panel"]').first()
     await expect(panel).toBeVisible({ timeout: 10_000 })
-    await expect(panel.locator('[data-testid="tournament-name"]').first()).toContainText('Commander Clash')
-    await expect(panel.locator('[data-testid="tournament-state"]').first()).toContainText(/Dueling|En partida/)
+    await expect(panel).toHaveClass(/is-docked/)
+    await expect(panel.locator('[data-testid="tournament-panel-name"]').first()).toContainText('Commander Clash')
+    await expect(panel.locator('[data-testid="tournament-panel-kicker"]').first()).toContainText(/Round 2|Ronda 2/)
     await expect(panel.locator('[data-testid="bracket-round"]').first()).toBeVisible()
+    await panel.getByRole('tab', { name: /Standings|Clasificación/ }).click()
     await expect(panel.locator('[data-testid="standings-row"]').first()).toBeVisible()
     await expect(panel.locator('[data-testid="standings-quit"]').first()).toBeVisible()
-    // T1: eye per live match watches it (FakeServer acks watchTournamentTable)
+    await panel.getByRole('tab', { name: /Rounds|Rondas/ }).click()
+    // T1: a Watch button only for the live match (FakeServer acks watchTournamentTable)
     const eye = panel.locator('[data-testid="bracket-watch"]').first()
     await expect(eye).toBeVisible()
     await eye.click()
     await expect(panel.locator('[data-testid="tournament-modal-error"]')).toHaveCount(0)
   })
 
-  test('bracket modal eye watches a live match over WS (T1)', async ({ page }) => {
+  test('TRN-10: the bracket modal watches the live match over WS (T1)', async ({ page }) => {
     await withFakeServer(() => tournamentScenario(), async () => {
       await login(page, 'e2e')
       const bracketBtn = page.getByTestId('open-bracket').first()
@@ -75,15 +78,15 @@ test.describe('Tournament', { tag: '@tournament' }, () => {
       await bracketBtn.click()
       const modal = page.locator('[data-testid="tournament-bracket"]').first()
       await expect(modal).toBeVisible({ timeout: 10_000 })
-      // server view has 4 games with gameIds → 4 watch buttons
+      // one live match in the latest round → one Watch button; finished matches have none
       const eyes = modal.locator('[data-testid="bracket-watch"]')
-      await expect(eyes).toHaveCount(4, { timeout: 10_000 })
+      await expect(eyes).toHaveCount(1, { timeout: 10_000 })
       await eyes.first().click()
       await expect(modal.locator('[data-testid="tournament-modal-error"]')).toHaveCount(0)
     })
   })
 
-  test('Espectar de una mesa de torneo abre el cuadro con el id de SHOW_TOURNAMENT (T6)', async ({ page }) => {
+  test('TRN-10, TRN-16: Espectar opens the bracket with the id of SHOW_TOURNAMENT and offers no leave (T6)', async ({ page }) => {
     await withFakeServer(
       () => makeTournamentScenario({ includeStartTournament: false, includeInit: false, emitUpdates: 0, emitShowTournamentOnWatch: true }),
       async () => {
@@ -93,7 +96,7 @@ test.describe('Tournament', { tag: '@tournament' }, () => {
         await watchBtn.click()
         const modal = page.locator('[data-testid="tournament-bracket"]').first()
         await expect(modal).toBeVisible({ timeout: 10_000 })
-        await expect(modal.locator('[data-testid="bracket-watch"]')).toHaveCount(4)
+        await expect(modal.locator('[data-testid="bracket-watch"]')).toHaveCount(1)
         // torneo ajeno: sin "Abandonar torneo" y sin staging clavado
         await expect(page.getByTestId('tournament-quit')).toHaveCount(0)
         await expect(page.getByTestId('staging-back')).toHaveCount(0)
@@ -122,9 +125,9 @@ test.describe('Tournament', { tag: '@tournament' }, () => {
               constructionTime: 600,
               watchingAllowed: true,
               rounds: [
-                { games: [{ roundNum: 1, state: 'Finished', players: 'alice vs bob', result: '2-0', tableId: 'table-g1' }] },
+                { games: [{ roundNum: 1, state: 'Finished (12:30)', players: 'alice - bob', result: 'Player alice is the winner', tableId: 'table-g1' }] },
               ],
-              players: [{ name: 'alice', state: 'Dueling', points: 6, results: '2-0', history: 'W-W', quit: false }],
+              players: [{ name: 'alice', state: 'Dueling', points: 3, results: 'R1 bob [2-0] ', history: '', quit: false }],
               runningInfo: '',
             },
           },
@@ -137,6 +140,7 @@ test.describe('Tournament', { tag: '@tournament' }, () => {
         await inject()
         await expect(panel).toBeVisible({ timeout: 2_000 })
       }).toPass({ timeout: 10_000 })
+      await panel.getByRole('tab', { name: /Chat|Charla/ }).click()
       const chat = panel.locator('[data-testid="tournament-panel-chat"]').first()
       await expect(chat).toBeVisible({ timeout: 10_000 })
       await chat.locator('.chat-input input').fill('gl en el torneo')
@@ -147,19 +151,28 @@ test.describe('Tournament', { tag: '@tournament' }, () => {
 
   test('random packs selector fills the draft sets over WS (T5)', async ({ page }) => {
     await withFakeServer(() => tournamentScenario(), async () => {
+      const buffers: CaptureBuffers = { frames: [], sent: [], pageErrors: [] }
+      installCapture(page, buffers)
       await login(page, 'e2e')
       await openCreateDialog(page, 'tourney')
       await expect(page.getByRole('heading', { name: /Crear torneo|Create Tournament/i })).toBeVisible()
-      await page.getByRole('tab', { name: /Draft \/ Limitado/i }).click()
-      await page.getByLabel(/Limitado — Draft \/ Sealed/i).selectOption('Booster Draft Elimination (Random)')
-      await page.locator('button.wizard-step[title="Draft"]').click()
+      await page.getByRole('radio', { name: /Draft de sobres|Booster Draft/i }).click()
+      await page.getByRole('radio', { name: /^(Aleatorio|Random)$/ }).click()
       await page.getByTestId('random-packs-open').click()
       const dialog = page.locator('[data-testid="random-packs-selector"]')
       await expect(dialog).toBeVisible({ timeout: 10_000 })
       await expect(dialog).toContainText('M21')
       await dialog.getByTestId('random-packs-apply').click()
-      const setsInput = page.getByPlaceholder(/M21, MH3, BLB/)
-      await expect(setsInput).not.toHaveValue('', { timeout: 10_000 })
+      await expect(dialog).toBeHidden()
+      await page.getByRole('button', { name: /Siguiente/ }).click()
+      await page.getByRole('button', { name: /Siguiente/ }).click()
+      await page.getByRole('button', { name: /Crear torneo/ }).click()
+      await expect(page.getByRole('heading', { name: /Crear torneo|Create Tournament/i })).toBeHidden({ timeout: 15_000 })
+      const sent = buffers.sent as Array<{ action?: string; args?: Record<string, unknown> }>
+      const createFrame = sent.find((f) => f?.action === 'createTournamentTable')
+      expect(createFrame?.args?.tournamentType).toBe('Booster Draft Elimination (Random)')
+      const setCodes = (createFrame?.args?.limitedOptions as { setCodes?: string[] } | undefined)?.setCodes ?? []
+      expect(setCodes.length).toBeGreaterThan(0)
     })
   })
 })

@@ -5,14 +5,10 @@ import Button from '../../ui/Button'
 import { deckRef } from '../decks'
 import {
   BUFFER_TIME_OPTIONS,
-  CONSTRUCTION_TIME_OPTIONS,
-  DRAFT_TIMING_OPTIONS,
   TIME_LIMIT_OPTIONS,
   getBufferTimeLabel,
-  getConstructionTimeLabel,
   getTimeLimitLabel,
   isHumanSeatType,
-  parseLimitedSetCodes,
   seatTypeLabel,
 } from './constants'
 import type { CreateTab } from './constants'
@@ -27,16 +23,9 @@ export default function ReviewTab({ form }: { form: CreateTableForm }) {
   const yesNo = (on: boolean) => (on ? t('common', 'yes') : t('common', 'no'))
   const none = '—'
 
-  const tournamentTypeName = typeof form.tournamentType === 'string'
-    ? form.tournamentType
-    : (form.tournamentType as { name?: string })?.name ?? ''
   const skillLabel = form.skillLevel === 'BEGINNER' ? t('lobby','create_skill_beginner') : form.skillLevel === 'CASUAL' ? t('lobby','create_skill_casual') : t('lobby','create_skill_competitive')
   const timeLimit = TIME_LIMIT_OPTIONS.find((o) => o.value === form.timeLimit)
   const buffer = BUFFER_TIME_OPTIONS.find((o) => o.value === form.bufferTime)
-  const construction = CONSTRUCTION_TIME_OPTIONS.find((o) => o.value === form.draftConstructionTime)
-  const draftTiming = DRAFT_TIMING_OPTIONS.find((o) => o.value === form.draftTiming)
-  const draftTimingLabel = form.draftTiming === 'BEGINNER' ? t('lobby','create_draft_timing_beginner') : form.draftTiming === 'REGULAR' ? t('lobby','create_draft_timing_regular') : t('lobby','create_draft_timing_professional')
-  const setCodes = parseLimitedSetCodes(form.draftSetsRaw)
 
   const sections: { title: string; tab: CreateTab; rows: Row[] }[] = []
   const stepIds = new Set(form.wizardSteps.map((step) => step.id))
@@ -51,30 +40,8 @@ export default function ReviewTab({ form }: { form: CreateTableForm }) {
       { label: t('lobby', 'create_field_wins_needed'), value: `Bo${form.wins * 2 - 1}` },
       { label: t('lobby', 'create_field_skill'), value: skillLabel },
       { label: t('lobby', 'create_field_rated'), value: yesNo(form.rated) },
-      ...(form.isTournament ? [
-        { label: t('lobby', 'create_field_draft_type'), value: tournamentTypeName || none },
-        { label: t('lobby', 'create_tourney_players'), value: t('lobby', 'staging_seats_count', { count: form.numPlayers }) },
-      ] : []),
-      ...(form.isTournament && tournamentTypeName.includes('Swiss') ? [
-        { label: t('lobby', 'create_field_number_rounds'), value: String(form.numberRounds) },
-      ] : []),
     ],
   })
-
-  if (form.isDraftLimited) {
-    sections.push({
-      title: t('lobby', 'create_tab_draft'),
-      tab: 'draft',
-      rows: [
-        { label: t('lobby', 'create_field_boosters'), value: String(form.draftBoosters) },
-        { label: t('lobby', 'create_field_construction_time'), value: construction ? getConstructionTimeLabel(construction, t) : none },
-        ...(tournamentTypeName.includes('Cube') ? [{ label: t('lobby', 'create_field_cube'), value: form.draftCubeName || t('lobby', 'create_cube_random', { all: t('common', 'all') }) }] : []),
-        { label: t('lobby', 'create_field_draft_sets'), value: setCodes.join(', ') || none },
-        ...(tournamentTypeName.includes('Draft') ? [{ label: t('lobby', 'create_field_draft_timing'), value: draftTiming ? draftTimingLabel : none }] : []),
-        { label: t('lobby', 'create_field_single_game'), value: yesNo(form.singleGame) },
-      ],
-    })
-  }
 
   sections.push({
     title: t('lobby', 'create_tab_timing'),

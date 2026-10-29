@@ -191,3 +191,62 @@ describe('useTournamentBracket — tournament id resolution', () => {
     expect(result.current.bracketView).toEqual(fresh)
   })
 })
+
+describe('useTournamentBracket — refresh time', () => {
+  beforeEach(() => {
+    reset()
+    vi.clearAllMocks()
+  })
+
+  it('TRN-15: records the time of the last successful refresh and keeps it when a refresh fails', async () => {
+    vi.mocked(getTournament).mockResolvedValue({ tournamentName: 'My Tourney', rounds: [] } as never)
+    setState({ tournament: ownTournament() } as never)
+    const { result } = renderHook(() => useTournamentBracket())
+    expect(result.current.bracketUpdatedAt).toBeNull()
+    await act(async () => {
+      await result.current.openBracket(table)
+    })
+    const first = result.current.bracketUpdatedAt
+    expect(first).not.toBeNull()
+    vi.mocked(getTournament).mockRejectedValue(new Error('offline'))
+    await act(async () => {
+      await result.current.refreshBracket()
+    })
+    expect(result.current.bracketUpdatedAt).toBe(first)
+  })
+
+  it('TRN-15: a successful manual refresh moves the refresh time forward', async () => {
+    vi.useFakeTimers()
+    try {
+      vi.mocked(getTournament).mockResolvedValue({ tournamentName: 'My Tourney', rounds: [] } as never)
+      setState({ tournament: ownTournament() } as never)
+      const { result } = renderHook(() => useTournamentBracket())
+      await act(async () => {
+        await result.current.openBracket(table)
+      })
+      const first = result.current.bracketUpdatedAt as number
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(5000)
+      })
+      await act(async () => {
+        await result.current.refreshBracket()
+      })
+      expect(result.current.bracketUpdatedAt).toBeGreaterThan(first)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('TRN-15: closing the bracket forgets its refresh time', async () => {
+    vi.mocked(getTournament).mockResolvedValue({ tournamentName: 'My Tourney', rounds: [] } as never)
+    setState({ tournament: ownTournament() } as never)
+    const { result } = renderHook(() => useTournamentBracket())
+    await act(async () => {
+      await result.current.openBracket(table)
+    })
+    act(() => {
+      result.current.closeBracket()
+    })
+    expect(result.current.bracketUpdatedAt).toBeNull()
+  })
+})

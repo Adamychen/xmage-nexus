@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor, cleanup, within } from '@testing-library/react'
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
 import CreateTableDialog, { type CreateKind } from './CreateTableDialog'
 import { STORAGE_KEY } from './CreateTable/constants'
@@ -13,14 +13,24 @@ vi.mock('../net/commands', () => ({
   ]),
   getDeckTypes: vi.fn().mockResolvedValue(['Constructed - Modern', 'Constructed - Standard', 'Variant Magic - Commander', 'Limited']),
   getPlayerTypes: vi.fn().mockResolvedValue(['COMPUTER_MAD', 'COMPUTER_DRAFT']),
-  getTournamentTypes: vi.fn().mockResolvedValue([
-    'Constructed Elimination',
-    'Constructed Swiss',
-    'Booster Draft Elimination',
-    'Booster Draft Swiss',
-    'Sealed Elimination',
-    'Sealed Swiss',
-  ]),
+  getTournamentCatalogue: vi.fn().mockResolvedValue({
+    names: [
+      'Constructed Elimination',
+      'Constructed Swiss',
+      'Booster Draft Elimination',
+      'Booster Draft Swiss',
+      'Sealed Elimination',
+      'Sealed Swiss',
+    ],
+    limits: {
+      'Constructed Elimination': { minPlayers: 4, maxPlayers: 16 },
+      'Constructed Swiss': { minPlayers: 4, maxPlayers: 16 },
+      'Booster Draft Elimination': { minPlayers: 4, maxPlayers: 16 },
+      'Booster Draft Swiss': { minPlayers: 4, maxPlayers: 16 },
+      'Sealed Elimination': { minPlayers: 2, maxPlayers: 16 },
+      'Sealed Swiss': { minPlayers: 2, maxPlayers: 16 },
+    },
+  }),
   getDraftCubes: vi.fn().mockResolvedValue([]),
   getExpansionsWithBoosters: vi.fn().mockResolvedValue([
     { code: 'MH3', name: 'Modern Horizons 3', releaseDate: 1718064000000 },
@@ -39,6 +49,11 @@ vi.mock('../net/commands', () => ({
 async function pickSeatType(node: number, name: RegExp) {
   fireEvent.click(await screen.findByTestId(`seat-node-${node}`))
   fireEvent.click(await screen.findByRole('radio', { name }))
+}
+
+/** Tournament Seats step: the Human or Bot radio of one seat row (row 0 is the host, which plays by default). */
+function pickRowKind(row: number, name: RegExp) {
+  fireEvent.click(within(screen.getAllByRole('listitem')[row]).getByRole('radio', { name }))
 }
 
 describe('CreateTableDialog', () => {
@@ -67,7 +82,8 @@ describe('CreateTableDialog', () => {
   async function renderDialog(kind: CreateKind = 'match') {
     const utils = render(<CreateTableDialog onClose={onClose} kind={kind} />)
     await waitFor(() => {
-      expect(screen.getByTestId('format-game-type')).toBeDefined()
+      if (kind === 'tourney') expect(screen.getByRole('radio', { name: /Draft de sobres/ })).toBeDefined()
+      else expect(screen.getByTestId('format-game-type')).toBeDefined()
     }, { timeout: 5000, interval: 20 })
     return utils
   }
@@ -315,53 +331,36 @@ describe('CreateTableDialog', () => {
     })
   })
 
-  it('U8: draft tournament exposes number of rounds', async () => {
-    render(<CreateTableDialog onClose={onClose} kind="tourney" />)
-
-    const typeSelect = screen.getAllByRole('combobox')[0] as HTMLSelectElement
-    fireEvent.change(typeSelect, { target: { value: 'Booster Draft Swiss' } })
-    const rounds = screen.getByLabelText(/rondas|rounds/i) as HTMLInputElement
-    fireEvent.change(rounds, { target: { value: '5' } })
-    expect(rounds.value).toBe('5')
+  it('TRN-1: a tournament opens on the Format step with three steps and no review', async () => {
+    await renderDialog('tourney')
+    expect(document.querySelectorAll('button.wizard-step')).toHaveLength(3)
+    expect(screen.getByRole('radio', { name: /Draft de sobres/ }).getAttribute('aria-checked')).toBe('true')
+    expect(screen.queryByRole('button', { name: /Revisar|Review/ })).toBeNull()
   })
 
-  it('T3: number of rounds only shows for Swiss tournament types', async () => {
+  it('TRN-1: each tournament step has one primary action, Next until the last step, which creates the tournament', async () => {
     await renderDialog('tourney')
-
-    // default is now a valid server draft type → rounds hidden
-    const typeSelect = screen.getAllByRole('combobox')[0] as HTMLSelectElement
-    expect(typeSelect.value).toBe('Booster Draft Elimination')
-    expect(screen.queryByLabelText(/rondas|rounds/i)).toBeNull()
-    fireEvent.change(typeSelect, { target: { value: 'Booster Draft Swiss' } })
-    expect(screen.getByLabelText(/rondas|rounds/i)).toBeDefined()
-    fireEvent.change(typeSelect, { target: { value: 'Sealed Elimination' } })
-    expect(screen.queryByLabelText(/rondas|rounds/i)).toBeNull()
-    // draft pick time is a Draft-step setting: only for a Draft type
-    fireEvent.change(typeSelect, { target: { value: 'Booster Draft Elimination' } })
-    goToStep('Draft')
-    expect(await screen.findByLabelText(/Draft pick time|Tiempo por pick/i)).toBeDefined()
+    expect(screen.getByRole('button', { name: /Siguiente/ })).toBeDefined()
+    expect(screen.queryByRole('button', { name: /Crear torneo/ })).toBeNull()
+    goToStep('Reglas')
+    expect(screen.getByRole('button', { name: /Siguiente/ })).toBeDefined()
+    expect(screen.queryByRole('button', { name: /Crear torneo/ })).toBeNull()
+    goToStep('Plazas')
+    expect(screen.queryByRole('button', { name: /Siguiente/ })).toBeNull()
+    expect(screen.getByRole('button', { name: /Crear torneo/ })).toBeDefined()
   })
 
   it('T2: draft tournament sends lobby flags (skill/rated/rollback/clocks/single)', async () => {
     render(<CreateTableDialog onClose={onClose} kind="tourney" />)
 
     fireEvent.change(screen.getByPlaceholderText(/Ej. Modern Casual Bo3/), { target: { value: 'Draft Night' } })
-    goToStep('Draft')
-    fireEvent.click(screen.getByText(/Jugar como partida única|Play as single game/i))
+    fireEvent.click(screen.getByRole('button', { name: '4 plazas' }))
+    goToStep('Reglas')
+    fireEvent.click(screen.getByText(/Partida única en lugar de un match|Single game instead of a match/i))
+    goToStep('Plazas')
     // Sin bots: todos los asientos en HUMANO (los bots no entregan el mazo construido)
-    fireEvent.click(
-      screen
-        .getAllByRole('button', { name: /Multijugador/ })
-        .find((b) => (b as HTMLElement).classList.contains('wizard-step'))!,
-    )
-    await pickSeatType(1, /Humano/)
-
-    for (let i = 0; i < 6; i++) {
-      const nextBtn = screen.queryByRole('button', { name: /Siguiente/ })
-      if (!nextBtn) break
-      fireEvent.click(nextBtn)
-    }
-    fireEvent.click(screen.getByRole('button', { name: /Crear torneo|Create Draft/i }))
+    pickRowKind(1, /Humano/)
+    fireEvent.click(screen.getByRole('button', { name: /Crear torneo/i }))
 
     await waitFor(() => {
       expect(cmds.createTournamentTable).toHaveBeenCalledWith(
@@ -373,7 +372,7 @@ describe('CreateTableDialog', () => {
           rollbackTurnsAllowed: true,
           timeLimit: 'MIN__25',
           isSingleMultiplayerGame: true,
-          playerTypes: ['HUMAN', 'HUMAN'],
+          playerTypes: ['HUMAN', 'HUMAN', 'HUMAN', 'HUMAN'],
         }),
       )
       const sent = (cmds.createTournamentTable as unknown as { mock: { calls: Array<[Record<string, unknown>]> } }).mock.calls[0][0]
@@ -389,29 +388,20 @@ describe('CreateTableDialog', () => {
     await renderDialog('tourney')
 
     fireEvent.change(screen.getByPlaceholderText(/Ej. Modern Casual Bo3/), { target: { value: 'Timed Draft' } })
-    const typeSelect = screen.getAllByRole('combobox')[0] as HTMLSelectElement
-    fireEvent.change(typeSelect, { target: { value: 'Sealed Swiss' } })
+    fireEvent.click(screen.getByRole('radio', { name: /Sellado/ }))
     // timing selector hidden for non-draft types
+    goToStep('Reglas')
     expect(screen.queryByText(/Draft pick time|Tiempo por pick/i)).toBeNull()
-    fireEvent.change(typeSelect, { target: { value: 'Booster Draft Elimination' } })
-    goToStep('Draft')
+    goToStep('Formato')
+    fireEvent.click(screen.getByRole('radio', { name: /Draft de sobres/ }))
+    goToStep('Reglas')
     const timingSelect = await screen.findByLabelText(/Draft pick time|Tiempo por pick/i) as HTMLSelectElement
     expect(timingSelect.value).toBe('REGULAR')
     fireEvent.change(timingSelect, { target: { value: 'PROFESSIONAL' } })
     // Sin bots: todos los asientos en HUMANO (los bots no entregan el mazo construido)
-    fireEvent.click(
-      screen
-        .getAllByRole('button', { name: /Multijugador/ })
-        .find((b) => (b as HTMLElement).classList.contains('wizard-step'))!,
-    )
-    await pickSeatType(1, /Humano/)
-
-    for (let i = 0; i < 6; i++) {
-      const nextBtn = screen.queryByRole('button', { name: /Siguiente/ })
-      if (!nextBtn) break
-      fireEvent.click(nextBtn)
-    }
-    fireEvent.click(screen.getByRole('button', { name: /Crear torneo|Create Draft/i }))
+    goToStep('Plazas')
+    pickRowKind(1, /Humano/)
+    fireEvent.click(screen.getByRole('button', { name: /Crear torneo/i }))
 
     await waitFor(() => {
       const sent = (cmds.createTournamentTable as unknown as { mock: { calls: Array<[Record<string, unknown>]> } }).mock.calls[0][0]
@@ -435,7 +425,7 @@ describe('CreateTableDialog', () => {
   it('T7b: el preset Modern Swiss vive en el torneo y configura un torneo construido', () => {
     render(<CreateTableDialog onClose={onClose} kind="tourney" />)
     fireEvent.click(screen.getByRole('button', { name: /Modern (Suizo|Swiss) \((8J|8P)\)/i }))
-    expect(screen.getByRole('tab', { name: /^Construido/i }).getAttribute('aria-selected')).toBe('true')
+    expect(screen.getByRole('radio', { name: /^Construido/i }).getAttribute('aria-checked')).toBe('true')
   })
 
   it('T8: constructed tournament creates tournament table with constructed format and joins with deck', async () => {
@@ -445,11 +435,8 @@ describe('CreateTableDialog', () => {
     // Click Modern Swiss (8P) preset
     fireEvent.click(screen.getByRole('button', { name: /Modern (Suizo|Swiss) \((8J|8P)\)/i }))
 
-    for (let i = 0; i < 6; i++) {
-      const nextBtn = screen.queryByRole('button', { name: /Siguiente/ })
-      if (!nextBtn) break
-      fireEvent.click(nextBtn)
-    }
+    fireEvent.click(screen.getByRole('button', { name: /Siguiente/ }))
+    fireEvent.click(screen.getByRole('button', { name: /Siguiente/ }))
 
     fireEvent.click(screen.getByRole('button', { name: /Crear torneo/i }))
 
@@ -461,6 +448,7 @@ describe('CreateTableDialog', () => {
           deckType: 'Constructed - Modern',
           limited: false,
           winsNeeded: 2,
+          numberRounds: 3,
         }),
       )
       expect(cmds.joinTournamentTable).toHaveBeenCalledWith(
@@ -475,23 +463,26 @@ describe('CreateTableDialog', () => {
   })
 
   it('T9: handles server returning TournamentTypeView objects without throwing t.startsWith is not a function', async () => {
-    // Simulate real server returning TournamentTypeView objects instead of plain strings
-    vi.mocked(cmds.getTournamentTypes).mockResolvedValueOnce([
-      { name: 'Constructed Elimination', minPlayers: 2, maxPlayers: 16 } as unknown as string,
-      { name: 'Constructed Swiss', minPlayers: 2, maxPlayers: 16 } as unknown as string,
-      { name: 'Booster Draft', minPlayers: 4, maxPlayers: 8 } as unknown as string,
-    ])
+    // The catalogue carries the names of TournamentTypeView objects, not plain strings
+    vi.mocked(cmds.getTournamentCatalogue).mockResolvedValueOnce({
+      names: ['Constructed Elimination', 'Constructed Swiss', 'Booster Draft'],
+      limits: {
+        'Constructed Elimination': { minPlayers: 2, maxPlayers: 16 },
+        'Constructed Swiss': { minPlayers: 2, maxPlayers: 16 },
+        'Booster Draft': { minPlayers: 4, maxPlayers: 8 },
+      },
+    })
 
     render(<CreateTableDialog onClose={onClose} kind="tourney" />)
 
-    // Wait for the async effect to resolve getTournamentTypes
+    // Wait for the async effect to resolve the tournament catalogue
     await waitFor(() => {
-      expect(cmds.getTournamentTypes).toHaveBeenCalled()
+      expect(cmds.getTournamentCatalogue).toHaveBeenCalled()
     })
 
-    // The tournament entry point renders the tournament tabs directly
-    expect(screen.getByRole('tab', { name: /^Draft \/ Limit/i })).toBeDefined()
-    expect(screen.getByRole('tab', { name: /^Construido/i })).toBeDefined()
+    // The tournament entry point renders the modality and pairing cards directly
+    expect(screen.getByRole('radio', { name: /Draft de sobres/ })).toBeDefined()
+    expect(screen.getByRole('radio', { name: /^Construido/ })).toBeDefined()
   })
 
   it('T10: links gameType and deckType to prevent incompatible combinations', async () => {
@@ -537,25 +528,23 @@ describe('CreateTableDialog', () => {
     expect(container.querySelectorAll('.format-card').length).toBe(0)
   })
 
-  it('T12: DraftSetsSelector allows picking popular chips and configuring boosters with full visibility', async () => {
+  it('T12: the set slots fill from a popular chip and each booster can still be changed on its own', async () => {
     render(<CreateTableDialog onClose={onClose} kind="tourney" />)
 
-    goToStep('Draft')
-
     // Popular chips should be visible
-    expect(screen.getByText('MH3')).toBeDefined()
-    expect(screen.getByText('BLB')).toBeDefined()
+    expect(screen.getByRole('button', { name: 'MH3' })).toBeDefined()
+    expect(screen.getByRole('button', { name: 'BLB' })).toBeDefined()
 
     // Clicking MH3 chip sets all boosters
-    fireEvent.click(screen.getByText('MH3'))
+    fireEvent.click(screen.getByRole('button', { name: 'MH3' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Escribir códigos…' }))
     const setsInput = screen.getByPlaceholderText(/Ej. M21, MH3, BLB/) as HTMLInputElement
-    expect(setsInput.value).toContain('MH3')
+    expect(setsInput.value).toBe('MH3, MH3, MH3')
 
-    // Switch to custom per-booster mode
-    fireEvent.click(screen.getByRole('tab', { name: /Personalizar cada sobre/i }))
-    expect(screen.getByText(/Sobre 1/i)).toBeDefined()
-    expect(screen.getByText(/Sobre 2/i)).toBeDefined()
-    expect(screen.getByText(/Sobre 3/i)).toBeDefined()
+    // Each booster has its own slot
+    expect(screen.getByLabelText(/^Sobre 1/)).toBeDefined()
+    expect(screen.getByLabelText(/^Sobre 2/)).toBeDefined()
+    expect(screen.getByLabelText(/^Sobre 3/)).toBeDefined()
   })
 
   // Issue #12: "I selected a default starter deck and then could not change my
@@ -664,46 +653,61 @@ describe('CreateTableDialog', () => {
 
   it('T14: el wizard abre con el set repetido por sobre y lo sincroniza al cambiar de sobres', async () => {
     await renderDialog('tourney')
-    goToStep('Draft')
+    fireEvent.click(screen.getByRole('button', { name: 'Escribir códigos…' }))
     const setsInput = await screen.findByPlaceholderText(/Ej\. M21, MH3, BLB/) as HTMLInputElement
     expect(setsInput.value).toBe('M21, M21, M21')
-    const boosterSelect = screen
-      .getAllByRole('combobox')
-      .find((s) => (s as HTMLSelectElement).value === '3') as HTMLSelectElement
-    expect(boosterSelect).toBeDefined()
-    fireEvent.change(boosterSelect, { target: { value: '6' } })
+    fireEvent.click(screen.getByRole('tab', { name: '6' }))
     expect(setsInput.value).toBe('M21, M21, M21, M21, M21, M21')
     fireEvent.change(setsInput, { target: { value: 'M21, MH3, DSK' } })
-    fireEvent.change(boosterSelect, { target: { value: '3' } })
+    fireEvent.click(screen.getByRole('tab', { name: '3' }))
     expect(setsInput.value).toBe('M21, MH3, DSK')
   })
 
-  it('T15: draft con bots elegidos a mano se bloquea con aviso (no llegan a rondas)', async () => {
+  it('TRN-6: a limited tournament cannot seat a bot: the Bot choice is disabled with the reason, so every seat is human', async () => {
     render(<CreateTableDialog onClose={onClose} kind="tourney" />)
     fireEvent.change(screen.getByPlaceholderText(/Ej. Modern Casual Bo3/), { target: { value: 'Draft con bots' } })
 
-    // walk to the seats step (the wizard is linear and draft adds timing options)
-    for (let i = 0; i < 6; i++) {
-      if (screen.queryByTestId('seat-node-0')) break
-      const nextBtn = screen.queryByRole('button', { name: /Siguiente/ })
-      if (!nextBtn) break
-      fireEvent.click(nextBtn)
-    }
-    // default draft seats wait for humans (valid); pick the draftbot by hand to hit the guard
-    await pickSeatType(1, /IA Draftbot/)
-    for (let i = 0; i < 3; i++) {
-      if (screen.queryByRole('button', { name: /Crear torneo|Create Draft/i })) break
-      const nextBtn = screen.queryByRole('button', { name: /Siguiente/ })
-      if (!nextBtn) break
-      fireEvent.click(nextBtn)
-    }
+    goToStep('Plazas')
+    expect((within(screen.getAllByRole('listitem')[1]).getByRole('radio', { name: /^IA$/ }) as HTMLButtonElement).disabled).toBe(true)
+    expect(screen.getByText(/nunca llegaría a sus rondas/)).toBeDefined()
     fireEvent.click(screen.getByRole('button', { name: /Crear torneo|Create Draft/i }))
 
     await waitFor(() => {
-      expect(screen.getByText(/no llegan a rondas/)).toBeDefined()
+      const sent = (cmds.createTournamentTable as unknown as { mock: { calls: Array<[Record<string, unknown>]> } }).mock.calls[0][0]
+      expect(sent.playerTypes).toEqual(Array(8).fill('HUMAN'))
     })
-    expect(cmds.createTournamentTable).not.toHaveBeenCalled()
-    expect(onClose).not.toHaveBeenCalled()
+  })
+
+  it('TRN-5: a limited tournament joins its host without a deck', async () => {
+    render(<CreateTableDialog onClose={onClose} kind="tourney" />)
+    fireEvent.change(screen.getByPlaceholderText(/Ej. Modern Casual Bo3/), { target: { value: 'Sealed Night' } })
+    fireEvent.click(screen.getByRole('radio', { name: /Sellado/ }))
+    fireEvent.click(screen.getByRole('button', { name: '4 plazas' }))
+    goToStep('Plazas')
+    expect(screen.getByText(/En limitado nadie trae mazo/)).toBeDefined()
+    expect(screen.queryByTestId('create-edit-deck')).toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: /Crear torneo/i }))
+
+    await waitFor(() => {
+      expect(cmds.joinTournamentTable).toHaveBeenCalledWith(expect.objectContaining({ tableId: 'table-t1', playerType: 'HUMAN' }))
+    })
+    const hostJoin = vi.mocked(cmds.joinTournamentTable).mock.calls.find(([a]) => a.playerType === 'HUMAN')?.[0] as Record<string, unknown>
+    expect(hostJoin).not.toHaveProperty('deck')
+    expect(hostJoin).not.toHaveProperty('deckType')
+  })
+
+  it('TRN-6: a constructed tournament with bots turns them into open human seats when it becomes limited', async () => {
+    render(<CreateTableDialog onClose={onClose} kind="tourney" />)
+    fireEvent.click(screen.getByRole('radio', { name: /^Construido/ }))
+    goToStep('Plazas')
+    pickRowKind(1, /^IA$/)
+    expect(screen.getByTestId('seat-type-0')).toBeDefined()
+
+    goToStep('Formato')
+    fireEvent.click(screen.getByRole('radio', { name: /Draft de sobres/ }))
+    goToStep('Plazas')
+    expect(within(screen.getAllByRole('listitem')[1]).getByRole('radio', { name: /^Humano$/ }).getAttribute('aria-checked')).toBe('true')
+    expect(screen.queryByTestId('seat-type-0')).toBeNull()
   })
 
   it('el stepper no salta al último paso con el nombre vacío (AUDIT)', async () => {
@@ -751,5 +755,213 @@ describe('CreateTableDialog', () => {
     await waitFor(() => expect((screen.getByPlaceholderText(/Ej. Modern Casual Bo3/) as HTMLInputElement).value).toBe('Game'))
     expect(JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '{}').name).toBe('Game')
     vi.unstubAllGlobals()
+  })
+})
+
+describe('CreateTableDialog: tournament summary and rules', () => {
+  const onClose = vi.fn()
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  afterEach(() => {
+    cleanup()
+    localStorage?.removeItem(STORAGE_KEY)
+    setState({ conn: null } as never)
+  })
+
+  async function openTourney() {
+    render(<CreateTableDialog onClose={onClose} kind="tourney" />)
+    await waitFor(() => expect(screen.getByRole('radio', { name: /Draft de sobres/ })).toBeDefined(), { timeout: 5000, interval: 20 })
+  }
+
+  function goToStep(label: string) {
+    const button = document.querySelector<HTMLButtonElement>(`button.wizard-step[title="${label}"]`)
+    expect(button, `stepper button "${label}"`).not.toBeNull()
+    fireEvent.click(button!)
+  }
+
+  const summary = () => screen.getByTestId('trn-summary')
+  const summaryPhases = () => Array.from(summary().querySelectorAll('.trn-summary-phases li')).map((li) => li.textContent ?? '')
+  const summaryFact = (label: string) => {
+    const term = Array.from(summary().querySelectorAll('.trn-summary-fact dt')).find((dt) => dt.textContent === label)
+    return term?.nextElementSibling?.textContent ?? null
+  }
+  const panelTitles = () => Array.from(document.querySelectorAll('.trn-panel-title')).map((h) => h.textContent)
+  const advanced = () => document.querySelector<HTMLDetailsElement>('details.trn-advanced')!
+  const sentArgs = () => vi.mocked(cmds.createTournamentTable).mock.calls[0][0] as Record<string, unknown>
+
+  it('TRN-1: the summary sits beside the steps on every step, with the name, the format and the phases of a draft', async () => {
+    await openTourney()
+    fireEvent.change(screen.getByPlaceholderText(/Ej. Modern Casual Bo3/), { target: { value: 'Draft Night' } })
+    for (const step of ['Formato', 'Reglas', 'Plazas']) {
+      goToStep(step)
+      expect(summary().querySelector('.trn-summary-name')?.textContent).toBe('Draft Night')
+    }
+    goToStep('Formato')
+    expect(summary().querySelector('.trn-summary-format')?.textContent).toBe('Draft de sobres · Eliminación')
+    expect(summaryPhases()).toEqual([
+      'Draft: 3 sobres · M21 ×3 · Picks normales',
+      'Construcción · 10 minutos',
+      'Cuartos de final → Semifinales → Gran final · Bo3',
+      'Campeón',
+    ])
+    expect(summaryFact('Plazas')).toBe('8 · tú + 7 libres')
+    expect(summaryFact('Reloj por jugador')).toBe('25 minutos')
+    expect(summaryFact('Acceso')).toBe('Abierto · con espectadores')
+    expect(summaryFact('Puntuable')).toBe('No')
+  })
+
+  it('TRN-1: changing the modality, pairing, seats and Bo changes the phases and the facts live', async () => {
+    await openTourney()
+    fireEvent.click(screen.getByRole('radio', { name: /^Construido/ }))
+    expect(summaryPhases()[0]).toBe('Inscripción · cada jugador se une con su mazo Constructed - Modern')
+    expect(summaryPhases().some((p) => p.startsWith('Construcción'))).toBe(false)
+
+    fireEvent.click(screen.getByRole('radio', { name: /^Suizo/ }))
+    fireEvent.click(screen.getByRole('button', { name: '4 plazas' }))
+    expect(summaryFact('Plazas')).toBe('4 · tú + 3 libres')
+    expect(summaryPhases()).toContain('2 rondas suizas · Bo3')
+    expect(summaryPhases()).toContain('Clasificación final por puntos (3/1/0)')
+
+    goToStep('Reglas')
+    fireEvent.click(screen.getByRole('tab', { name: 'Bo5' }))
+    expect(summaryPhases()).toContain('2 rondas suizas · Bo5')
+    expect(summary().querySelector('.trn-summary-line')?.textContent).toContain('Bo5')
+  })
+
+  it('TRN-1: the status line says the tournament is ready, or names the first blocking step', async () => {
+    await openTourney()
+    expect(summary().querySelector('.trn-summary-status.is-ready')?.textContent).toMatch(/Listo para crear/)
+    fireEvent.change(screen.getByPlaceholderText(/Ej. Modern Casual Bo3/), { target: { value: '   ' } })
+    const blocked = summary().querySelector('.trn-summary-status.is-blocked')
+    expect(blocked?.textContent).toMatch(/necesita un nombre|needs a name/i)
+    expect(summary().querySelector('.trn-summary-status.is-ready')).toBeNull()
+  })
+
+  it('TRN-1: on a phone the summary is one line that expands to the full summary', async () => {
+    await openTourney()
+    const toggle = summary().querySelector<HTMLButtonElement>('.trn-summary-toggle')!
+    const body = document.getElementById(toggle.getAttribute('aria-controls') ?? '')
+    expect(toggle.getAttribute('aria-expanded')).toBe('false')
+    expect(toggle.textContent).toContain('Bo3')
+    expect(toggle.textContent).toContain('8 plazas')
+    expect(body).not.toBeNull()
+    fireEvent.click(toggle)
+    expect(toggle.getAttribute('aria-expanded')).toBe('true')
+    expect(summary().classList.contains('is-open')).toBe(true)
+  })
+
+  it('TRN-8: the rules step groups its fields in Matches, Draft and construction, and Access, with Advanced folded', async () => {
+    await openTourney()
+    goToStep('Reglas')
+    expect(panelTitles()).toEqual(['Partidas', 'Draft y construcción', 'Acceso'])
+    expect(advanced().open).toBe(false)
+    expect(advanced().querySelector('summary')?.textContent).toContain('Avanzado')
+  })
+
+  it('TRN-8: the draft and construction group is limited only: a constructed tournament has none', async () => {
+    await openTourney()
+    fireEvent.click(screen.getByRole('radio', { name: /^Construido/ }))
+    goToStep('Reglas')
+    expect(panelTitles()).toEqual(['Partidas', 'Acceso'])
+    expect(screen.queryByLabelText(/Tiempo de construcción/)).toBeNull()
+  })
+
+  it('TRN-8: the game type sits in Advanced for a constructed tournament, and is not offered for a limited one', async () => {
+    await openTourney()
+    goToStep('Reglas')
+    expect(screen.queryByTestId('format-game-type')).toBeNull()
+    goToStep('Formato')
+    fireEvent.click(screen.getByRole('radio', { name: /^Construido/ }))
+    goToStep('Reglas')
+    expect(advanced().querySelector('[data-testid="format-game-type"]')).not.toBeNull()
+  })
+
+  it('TRN-8: every field of the rules step is sent to createTournamentTable with the value the player chose', async () => {
+    await openTourney()
+    fireEvent.change(screen.getByPlaceholderText(/Ej. Modern Casual Bo3/), { target: { value: 'Every Rule' } })
+    goToStep('Reglas')
+
+    fireEvent.click(screen.getByRole('tab', { name: 'Bo5' }))
+    fireEvent.change(screen.getByLabelText(/Reloj de Prioridad por Jugador/), { target: { value: 'MIN__30' } })
+    fireEvent.change(screen.getByLabelText(/Buffer de tiempo/), { target: { value: 'SEC__10' } })
+    fireEvent.change(screen.getByLabelText(/Tiempo de construcción/), { target: { value: '1500' } })
+    fireEvent.change(screen.getByLabelText(/Tiempo por pick del draft/), { target: { value: 'PROFESSIONAL' } })
+    fireEvent.click(screen.getByText(/Partida única en lugar de un match/))
+
+    fireEvent.change(screen.getByLabelText(/Contraseña de la Mesa/), { target: { value: 'secreto' } })
+    fireEvent.change(screen.getByLabelText(/Rating mínimo/), { target: { value: '1200' } })
+    fireEvent.change(screen.getByLabelText(/Abandonos máximos permitidos/), { target: { value: '50' } })
+    fireEvent.click(screen.getByRole('button', { name: /Competitivo/ }))
+    fireEvent.click(screen.getByText(/Partida Puntuada/))
+    fireEvent.click(screen.getByText(/Permitir Espectadores/))
+    fireEvent.change(screen.getByLabelText(/Usuarios vetados/), { target: { value: 'bob, ana' } })
+
+    advanced().open = true
+    fireEvent.click(screen.getByText(/Permitir Rebobinar/))
+
+    goToStep('Plazas')
+    fireEvent.click(screen.getByRole('button', { name: /Crear torneo/i }))
+
+    await waitFor(() => expect(cmds.createTournamentTable).toHaveBeenCalled())
+    expect(sentArgs()).toMatchObject({
+      name: 'Every Rule',
+      winsNeeded: 3,
+      timeLimit: 'MIN__30',
+      bufferTime: 'SEC__10',
+      limited: true,
+      limitedOptions: expect.objectContaining({ constructionTime: 1500, timing: 'PROFESSIONAL' }),
+      isSingleMultiplayerGame: true,
+      password: 'secreto',
+      minimumRating: 1200,
+      quitRatio: 50,
+      skillLevel: 'SERIOUS',
+      rated: true,
+      spectatorsAllowed: false,
+      watchingAllowed: false,
+      bannedUsers: ['bob', 'ana'],
+      rollbackTurnsAllowed: false,
+    })
+    expect(cmds.joinTournamentTable).toHaveBeenCalledWith(expect.objectContaining({ tableId: 'table-t1', password: 'secreto' }))
+  })
+
+  it('TRN-8: the options only a match applies (free mulligans, mulligan type, starting life and hand, Planechase, attack and range, EDH power) are not offered for a tournament', async () => {
+    await openTourney()
+    goToStep('Reglas')
+    for (const label of [/Mulligans Gratuitos/, /Tipo de Mulligan/, /Vida inicial personalizada/, /Mano inicial personalizada/, /Planechase/, /Opción de Ataque/, /Rango de Influencia/, /Potencia EDH/]) {
+      expect(screen.queryAllByText(label), String(label)).toHaveLength(0)
+    }
+    expect(document.querySelector('.custom-options')).toBeNull()
+  })
+
+  it('TRN-8: the same options are offered for a match, which still applies them', async () => {
+    render(<CreateTableDialog onClose={onClose} />)
+    await pickFormat('format-game-type', 'Commander Free For All')
+    goToStep('Tiempos & Reglas')
+    expect(screen.queryAllByText(/Mulligans Gratuitos/).length).toBeGreaterThan(0)
+    expect(screen.queryAllByText(/Tipo de Mulligan/).length).toBeGreaterThan(0)
+    expect(screen.queryAllByText(/Rango de Influencia/).length).toBeGreaterThan(0)
+    goToStep('Restricciones')
+    expect(screen.queryAllByText(/Potencia EDH/).length).toBeGreaterThan(0)
+  })
+
+  it('TRN-8: a constructed tournament sends the game type shown in Advanced and its rounds', async () => {
+    await openTourney()
+    fireEvent.change(screen.getByPlaceholderText(/Ej. Modern Casual Bo3/), { target: { value: 'Modern Advanced' } })
+    fireEvent.click(screen.getByRole('button', { name: /Modern (Suizo|Swiss) \((8J|8P)\)/i }))
+    goToStep('Reglas')
+    advanced().open = true
+    await pickFormat('format-game-type', 'Commander Free For All')
+    goToStep('Plazas')
+    fireEvent.click(screen.getByRole('button', { name: /Crear torneo/i }))
+
+    await waitFor(() => expect(cmds.createTournamentTable).toHaveBeenCalled())
+    expect(sentArgs()).toMatchObject({
+      tournamentType: 'Constructed Swiss',
+      gameType: 'Commander Free For All',
+      numberRounds: 3,
+    })
   })
 })

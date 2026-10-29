@@ -23,6 +23,12 @@ export function useTournamentBracket() {
   const [bracketError, setBracketError] = useState<string | null>(null)
   const [watchingMatchId, setWatchingMatchId] = useState<string | null>(null)
   const [bracketTournamentId, setBracketTournamentId] = useState<string | null>(null)
+  const [bracketUpdatedAt, setBracketUpdatedAt] = useState<number | null>(null)
+
+  const acceptView = (view: TournamentView) => {
+    setBracketView(view)
+    setBracketUpdatedAt(Date.now())
+  }
 
   /** A table is ours if it is a match of our tournament (its tableId is in the
    *  rounds) or the tournament table we are seated at. Never by name: two
@@ -48,6 +54,7 @@ export function useTournamentBracket() {
     const tid = tournamentId ?? (own ? (tournamentState?.tournamentId ?? t.tableId) : null)
     setBracketTournamentId(tid)
     setBracketView(own ? (tournamentState?.view ?? null) : null)
+    setBracketUpdatedAt(null)
     if (!tid) {
       setBracketLoading(false)
       void cmds.watchTournamentTable(t.tableId)
@@ -58,7 +65,7 @@ export function useTournamentBracket() {
       void cmds.watchTournamentTable(t.tableId)
       const data = await withTimeout(cmds.getTournament(tid) as Promise<unknown>, 8000, 'getTournament')
       if (data && typeof data === 'object' && 'tournamentName' in (data as Record<string, unknown>)) {
-        setBracketView(data as TournamentView)
+        acceptView(data as TournamentView)
       } else if (own && tournamentState?.view) {
         setBracketView(tournamentState.view)
       } else {
@@ -80,6 +87,7 @@ export function useTournamentBracket() {
     setBracketView(null)
     setBracketError(null)
     setBracketTournamentId(null)
+    setBracketUpdatedAt(null)
   }
 
   const watchMatch = async (tableId: string) => {
@@ -106,7 +114,7 @@ export function useTournamentBracket() {
     try {
       const data = await withTimeout(cmds.getTournament(bracketTournamentId) as Promise<unknown>, 8000, 'getTournament')
       if (data && typeof data === 'object' && 'tournamentName' in (data as Record<string, unknown>)) {
-        setBracketView(data as TournamentView)
+        acceptView(data as TournamentView)
       } else {
         const cached = cachedOwnView(bracketTournamentId)
         if (cached) setBracketView(cached)
@@ -127,7 +135,7 @@ export function useTournamentBracket() {
     if (!bracketTable) return
     // Only our cached tournament belongs to this table; someone else's does not.
     if (tournamentState?.view && bracketTournamentId === tournamentState.tournamentId) {
-      setBracketView(tournamentState.view)
+      acceptView(tournamentState.view)
     }
   }, [tournamentState, bracketTable, bracketTournamentId])
 
@@ -140,7 +148,7 @@ export function useTournamentBracket() {
   }, [bracketTable?.tableId, bracketTournamentId])
 
   return {
-    bracketTable, bracketView, bracketLoading, bracketError, bracketTournamentId,
+    bracketTable, bracketView, bracketLoading, bracketError, bracketTournamentId, bracketUpdatedAt,
     canQuit: !!bracketTable && !!bracketTournamentId && bracketTournamentId === tournamentState?.tournamentId,
     openBracket, closeBracket, refreshBracket, watchMatch, watchingMatchId,
   }

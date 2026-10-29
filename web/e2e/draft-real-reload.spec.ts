@@ -1,4 +1,4 @@
-import { test, type Browser, type Page } from '@playwright/test'
+import { expect, test, type Browser, type Page } from '@playwright/test'
 import { login, openCreateDialog } from './support/start-game'
 import { FAKE_MODE } from './dual'
 
@@ -8,9 +8,13 @@ async function createHumanDraft(page: Page, table: string) {
   await openCreateDialog(page, 'tourney')
   const dialog = page.locator('.create-table-dialog')
   await page.getByPlaceholder(/Ej\. Modern Casual Bo3/).fill(table)
-  await page.getByRole('tab', { name: /Draft \/ Limitado/i }).click()
-  await dialog.getByRole('button', { name: '2 plazas' }).first().click()
-  await dialog.getByRole('button', { name: /Crear Torneo Draft/ }).click()
+  await dialog.getByRole('radio', { name: /Draft de sobres/ }).click()
+  await dialog.getByRole('radio', { name: 'Rich Man', exact: true }).click()
+  for (let i = 0; i < 6; i++) await dialog.getByRole('button', { name: 'Menos plazas' }).click()
+  await expect(dialog.getByRole('spinbutton', { name: 'Número de plazas' })).toHaveValue('2')
+  await dialog.getByRole('button', { name: /Siguiente/ }).click()
+  await dialog.getByRole('button', { name: /Siguiente/ }).click()
+  await dialog.getByRole('button', { name: /Crear torneo/ }).click()
 }
 
 

@@ -648,6 +648,7 @@ export default function GameScreen() {
               combatChosen={combat?.chosen ?? []}
               combatMode={combat?.mode ?? null}
             />
+            <TournamentPanel />
           </div>
           <PriorityOrbLayer orbs={priorityOrbs} onDone={doneOrb} />
           <FeedbackDialog />
@@ -664,7 +665,6 @@ export default function GameScreen() {
             onTargetClick={onTargetClick}
           />
           <SideboardScreen />
-          <TournamentPanel />
         </div>
       </DividerSlotContext.Provider>
       </ChromeActionsContext.Provider>

@@ -60,16 +60,6 @@ describe('ReviewTab', () => {
     expect(container.querySelectorAll('.create-review-section')).toHaveLength(4)
   })
 
-  it('adds the draft section for a limited draft', () => {
-    const { container } = render(<ReviewTab form={stubForm({
-      isTournament: true,
-      isDraftLimited: true,
-      tournamentType: 'Booster Draft Elimination',
-    })} />)
-    expect(container.querySelectorAll('.create-review-section')).toHaveLength(5)
-    expect(container.querySelector('.create-review')?.textContent).toContain('MH3')
-  })
-
   it('jumps to the step that owns a section when its edit control is clicked', () => {
     const goToStep = vi.fn()
     const { container } = render(<ReviewTab form={stubForm({ goToStep })} />)

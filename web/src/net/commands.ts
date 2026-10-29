@@ -49,12 +49,46 @@ export async function getDeckTypes(): Promise<string[]> {
   return res.ok ? (res.data ?? []) : []
 }
 
-export async function getTournamentTypes(): Promise<string[]> {
-  const res = await getGateway().send<unknown[]>('getTournamentTypes')
-  if (!res.ok || !Array.isArray(res.data)) return []
-  return res.data
+/** The seats a tournament type takes, from the server's catalogue (`TournamentTypeView`). */
+export interface TournamentSeatLimits {
+  minPlayers: number
+  maxPlayers: number
+}
+
+/** The tournament types the server lists, by name, from the same catalogue request as the limits. */
+export function tournamentTypeNamesOf(items: unknown[]): string[] {
+  return items
     .map((item) => (typeof item === 'string' ? item : (item as { name?: string })?.name ?? ''))
     .filter((s): s is string => typeof s === 'string' && s.length > 0)
+}
+
+/** Seat limits per type name; an entry is kept only when both limits are positive integers, min <= max. */
+export function tournamentTypeLimitsOf(items: unknown[]): Record<string, TournamentSeatLimits> {
+  const limits: Record<string, TournamentSeatLimits> = {}
+  for (const item of items) {
+    if (!item || typeof item !== 'object') continue
+    const { name, minPlayers, maxPlayers } = item as { name?: unknown; minPlayers?: unknown; maxPlayers?: unknown }
+    if (typeof name !== 'string' || name.length === 0) continue
+    if (!isPositiveInteger(minPlayers) || !isPositiveInteger(maxPlayers) || minPlayers > maxPlayers) continue
+    limits[name] = { minPlayers, maxPlayers }
+  }
+  return limits
+}
+
+export interface TournamentCatalogue {
+  names: string[]
+  limits: Record<string, TournamentSeatLimits>
+}
+
+/** The server's tournament type catalogue in one request: the names and the seat limits of each type. */
+export async function getTournamentCatalogue(): Promise<TournamentCatalogue> {
+  const res = await getGateway().send<unknown[]>('getTournamentTypes')
+  if (!res.ok || !Array.isArray(res.data)) return { names: [], limits: {} }
+  return { names: tournamentTypeNamesOf(res.data), limits: tournamentTypeLimitsOf(res.data) }
+}
+
+function isPositiveInteger(value: unknown): value is number {
+  return typeof value === 'number' && Number.isInteger(value) && value > 0
 }
 
 export async function getDraftCubes(): Promise<string[]> {

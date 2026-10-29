@@ -386,54 +386,195 @@ const CONSTRUCT_STATE_BIG: ConstructState = {
   timeLeft: 60,
 }
 
-function makeTournamentPlayer(name: string, points: number, state = 'ACTIVE'): TournamentPlayerView {
-  return { name, state, points, results: '', history: '' }
+type TournamentGameOutcome = readonly [winner: string, duration: string]
+
+function makeTournamentPlayer(
+  name: string,
+  flagName: string,
+  points: number,
+  state: string,
+  results: string,
+  history = '',
+  quit = false,
+): TournamentPlayerView {
+  return { name, flagName, points, state, results, history, quit }
 }
 
-function makeTournamentGame(roundNum: number, players: string, state: string, result = ''): TournamentGameView {
-  return { roundNum, state, players, result }
+function makeTournamentMatch(
+  roundNum: number,
+  matchId: string,
+  [first, second]: readonly [string, string],
+  finishedGames: readonly TournamentGameOutcome[],
+  runningDuration?: string,
+): TournamentGameView[] {
+  const players = `${first} - ${second}`
+  const entries: TournamentGameView[] = finishedGames.map(([winner, duration], index) => ({
+    roundNum,
+    matchId: `match-${matchId}`,
+    gameId: `game-${matchId}-${index + 1}`,
+    tableId: `table-${matchId}`,
+    state: `Finished (${duration})`,
+    result: `Player ${winner} is the winner`,
+    players,
+  }))
+  if (runningDuration) {
+    entries.push({
+      roundNum,
+      matchId: `match-${matchId}`,
+      gameId: `game-${matchId}-${finishedGames.length + 1}`,
+      tableId: `table-${matchId}`,
+      state: `Dueling (${runningDuration})`,
+      result: '',
+      players,
+    })
+  }
+  return entries
 }
 
-const TOURNAMENT_TABLE = makeLobbyTable(0, { tableId: 'gallery-tournament-table', tableName: 'Standard Swiss #12', isTournament: true })
+function makeTournamentRound(matches: TournamentGameView[][]): RoundView {
+  return { games: matches.flat() }
+}
+
+const TOURNAMENT_SWISS_TYPE = 'Constructed Swiss / Constructed - Modern 3 rounds'
+const TOURNAMENT_ELIMINATION_TYPE = 'Booster Draft Elimination'
+const TOURNAMENT_HISTORY = 'Matches: 41 (2%), Tourneys: 6 (0%), Constructed Rating: 1540, Limited Rating: 1490'
+
+const TOURNAMENT_TABLE = makeLobbyTable(0, { tableId: 'gallery-tournament-table', tableName: 'Modern Swiss #12', isTournament: true })
+const TOURNAMENT_ELIMINATION_TABLE = makeLobbyTable(1, { tableId: 'gallery-tournament-elimination-table', tableName: 'Draft Elimination #3', isTournament: true })
+
+const SWISS_ROUND_1_MATCHES = [
+  makeTournamentMatch(1, 'swiss-r1-a', ['alice', 'chen'], [['alice', '12:30'], ['alice', '10:02']]),
+  makeTournamentMatch(1, 'swiss-r1-b', ['bora', 'dara'], [['bora', '14:08'], ['dara', '11:47'], ['bora', '13:21']]),
+  makeTournamentMatch(1, 'swiss-r1-c', ['enzo', 'fran'], [['enzo', '9:55'], ['enzo', '10:40']]),
+  makeTournamentMatch(1, 'swiss-r1-d', ['gino', 'hana'], [['gino', '12:12'], ['hana', '15:03'], ['hana', '11:36']]),
+]
 
 const TOURNAMENT_INPROGRESS: TournamentView = {
-  tournamentName: 'Standard Swiss — Ronda 2 de 3',
-  tournamentType: 'Swiss',
-  tournamentState: 'DUELING',
+  tournamentName: 'Modern Swiss #12',
+  tournamentType: TOURNAMENT_SWISS_TYPE,
+  tournamentState: 'Dueling',
   startTime: GALLERY_EPOCH - 30 * 60_000,
-  constructionTime: 0,
+  stepStartTime: GALLERY_EPOCH - 4 * 60_000,
+  serverTime: GALLERY_EPOCH,
+  constructionTime: 600,
   watchingAllowed: true,
   players: [
-    makeTournamentPlayer('alice', 3),
-    makeTournamentPlayer('bora', 3),
-    makeTournamentPlayer('chen', 1.5),
-    makeTournamentPlayer('dara', 1.5),
-    makeTournamentPlayer('enzo', 0),
-    makeTournamentPlayer('fran', 0),
+    makeTournamentPlayer('alice', 'es', 6, 'Waiting for next round', 'R1 chen [2-0] R2 enzo [2-1] ', TOURNAMENT_HISTORY),
+    makeTournamentPlayer('bora', 'br', 3, 'Dueling', 'R1 dara [2-1] '),
+    makeTournamentPlayer('chen', 'cn', 0, 'Dueling', 'R1 alice [0-2] '),
+    makeTournamentPlayer('dara', 'kr', 0, 'Dueling', 'R1 bora [1-2] '),
+    makeTournamentPlayer('enzo', 'it', 3, 'Waiting for next round', 'R1 fran [2-0] R2 alice [1-2] '),
+    makeTournamentPlayer('fran', 'fr', 0, 'Dueling', 'R1 enzo [0-2] '),
+    makeTournamentPlayer('gino', 'mx', 0, 'Dueling', 'R1 hana [1-2] '),
+    makeTournamentPlayer('hana', 'jp', 3, 'Dueling', 'R1 gino [2-1] '),
   ],
   rounds: [
-    { games: [makeTournamentGame(1, 'alice vs chen', 'COMPLETED', '2-0'), makeTournamentGame(1, 'bora vs dara', 'COMPLETED', '2-1'), makeTournamentGame(1, 'enzo vs fran', 'COMPLETED', '1-2')] },
-    { games: [makeTournamentGame(2, 'alice vs bora', 'DUELING', ''), makeTournamentGame(2, 'dara vs fran', 'DUELING', ''), makeTournamentGame(2, 'chen vs enzo', 'DUELING', '')] },
-  ] satisfies RoundView[],
+    makeTournamentRound(SWISS_ROUND_1_MATCHES),
+    makeTournamentRound([
+      makeTournamentMatch(2, 'swiss-r2-a', ['alice', 'enzo'], [['alice', '13:02'], ['enzo', '11:20'], ['alice', '12:48']]),
+      makeTournamentMatch(2, 'swiss-r2-b', ['bora', 'hana'], [['bora', '9:44']], '8:14'),
+      makeTournamentMatch(2, 'swiss-r2-c', ['chen', 'fran'], [['chen', '10:31'], ['fran', '8:02']], '4:50'),
+      makeTournamentMatch(2, 'swiss-r2-d', ['dara', 'gino'], [], '2:03'),
+    ]),
+  ],
 }
 
 const TOURNAMENT_FINISHED: TournamentView = {
-  ...TOURNAMENT_INPROGRESS,
-  tournamentName: 'Standard Swiss — Terminado',
-  tournamentState: 'END',
+  tournamentName: 'Modern Swiss #12',
+  tournamentType: TOURNAMENT_SWISS_TYPE,
+  tournamentState: 'Finished',
+  startTime: GALLERY_EPOCH - 90 * 60_000,
   endTime: GALLERY_EPOCH,
+  serverTime: GALLERY_EPOCH,
+  constructionTime: 600,
+  watchingAllowed: true,
   players: [
-    makeTournamentPlayer('alice', 6, 'FINISHED'),
-    makeTournamentPlayer('bora', 4.5, 'FINISHED'),
-    makeTournamentPlayer('dara', 3, 'FINISHED'),
-    makeTournamentPlayer('chen', 1.5, 'FINISHED'),
-    makeTournamentPlayer('fran', 1.5, 'FINISHED'),
-    makeTournamentPlayer('enzo', 0, 'FINISHED'),
+    makeTournamentPlayer('alice', 'es', 9, 'Finished', 'R1 chen [2-0] R2 enzo [2-1] R3 bora [2-0] ', TOURNAMENT_HISTORY),
+    makeTournamentPlayer('bora', 'br', 6, 'Finished', 'R1 dara [2-1] R2 hana [2-0] R3 alice [0-2] '),
+    makeTournamentPlayer('chen', 'cn', 3, 'Finished', 'R1 alice [0-2] R2 gino [2-0] R3 enzo [1-2] '),
+    makeTournamentPlayer('dara', 'kr', 3, 'Finished', 'R1 bora [1-2] R2 fran [2-1] R3 hana [0-2] ', '', true),
+    makeTournamentPlayer('enzo', 'it', 6, 'Finished', 'R1 fran [2-0] R2 alice [1-2] R3 chen [2-1] '),
+    makeTournamentPlayer('fran', 'fr', 3, 'Finished', 'R1 enzo [0-2] R2 dara [1-2] R3 gino [2-1] '),
+    makeTournamentPlayer('gino', 'mx', 0, 'Finished', 'R1 hana [1-2] R2 chen [0-2] R3 fran [1-2] '),
+    makeTournamentPlayer('hana', 'jp', 6, 'Finished', 'R1 gino [2-1] R2 bora [0-2] R3 dara [2-0Q] '),
   ],
   rounds: [
-    TOURNAMENT_INPROGRESS.rounds[0],
-    { games: [makeTournamentGame(2, 'alice vs bora', 'COMPLETED', '2-0'), makeTournamentGame(2, 'dara vs fran', 'COMPLETED', '2-1'), makeTournamentGame(2, 'chen vs enzo', 'COMPLETED', '2-0')] },
-    { games: [makeTournamentGame(3, 'alice vs dara', 'COMPLETED', '2-0'), makeTournamentGame(3, 'bora vs fran', 'COMPLETED', '2-1'), makeTournamentGame(3, 'chen vs enzo', 'COMPLETED', '2-0')] },
+    makeTournamentRound(SWISS_ROUND_1_MATCHES),
+    makeTournamentRound([
+      makeTournamentMatch(2, 'swiss-r2-a', ['alice', 'enzo'], [['alice', '13:02'], ['enzo', '11:20'], ['alice', '12:48']]),
+      makeTournamentMatch(2, 'swiss-r2-b', ['bora', 'hana'], [['bora', '9:44'], ['bora', '10:17']]),
+      makeTournamentMatch(2, 'swiss-r2-c', ['chen', 'gino'], [['chen', '8:40'], ['chen', '9:11']]),
+      makeTournamentMatch(2, 'swiss-r2-d', ['dara', 'fran'], [['fran', '10:05'], ['dara', '11:33'], ['dara', '9:02']]),
+    ]),
+    makeTournamentRound([
+      makeTournamentMatch(3, 'swiss-r3-a', ['alice', 'bora'], [['alice', '12:10'], ['alice', '9:58']]),
+      makeTournamentMatch(3, 'swiss-r3-b', ['enzo', 'chen'], [['enzo', '10:22'], ['chen', '11:05'], ['enzo', '12:31']]),
+      makeTournamentMatch(3, 'swiss-r3-c', ['hana', 'dara'], [['hana', '7:40'], ['hana', '8:15']]),
+      makeTournamentMatch(3, 'swiss-r3-d', ['fran', 'gino'], [['fran', '13:50'], ['gino', '12:03'], ['fran', '11:19']]),
+    ]),
+  ],
+}
+
+const ELIMINATION_QUARTERFINALS = [
+  makeTournamentMatch(1, 'elim-qf-a', ['alice', 'chen'], [['alice', '11:02'], ['alice', '9:48']]),
+  makeTournamentMatch(1, 'elim-qf-b', ['bora', 'dara'], [['bora', '13:15'], ['dara', '12:40'], ['bora', '14:22']]),
+  makeTournamentMatch(1, 'elim-qf-c', ['enzo', 'fran'], [['enzo', '10:30'], ['enzo', '8:57']]),
+  makeTournamentMatch(1, 'elim-qf-d', ['gino', 'hana'], [['gino', '12:05'], ['hana', '11:18'], ['gino', '9:33']]),
+]
+const ELIMINATION_SEMI_ALICE_BORA = makeTournamentMatch(2, 'elim-sf-a', ['alice', 'bora'], [['alice', '12:01'], ['bora', '10:44'], ['alice', '13:37']])
+const ELIMINATION_SEMI_ENZO_GINO_LIVE = makeTournamentMatch(2, 'elim-sf-b', ['enzo', 'gino'], [['enzo', '11:40']], '3:41')
+const ELIMINATION_SEMI_ENZO_GINO_DONE = makeTournamentMatch(2, 'elim-sf-b', ['enzo', 'gino'], [['enzo', '11:40'], ['gino', '12:55'], ['enzo', '10:12']])
+
+const TOURNAMENT_ELIMINATION: TournamentView = {
+  tournamentName: 'Draft Elimination #3',
+  tournamentType: TOURNAMENT_ELIMINATION_TYPE,
+  tournamentState: 'Dueling',
+  startTime: GALLERY_EPOCH - 75 * 60_000,
+  stepStartTime: GALLERY_EPOCH - 5 * 60_000,
+  serverTime: GALLERY_EPOCH,
+  constructionTime: 600,
+  watchingAllowed: true,
+  players: [
+    makeTournamentPlayer('alice', 'es', 6, 'Waiting for next round', 'R1 chen [2-0] R2 bora [2-1] '),
+    makeTournamentPlayer('bora', 'br', 3, 'Eliminated', 'R1 dara [2-1] R2 alice [1-2] '),
+    makeTournamentPlayer('chen', 'cn', 0, 'Eliminated', 'R1 alice [0-2] '),
+    makeTournamentPlayer('dara', 'kr', 0, 'Eliminated', 'R1 bora [1-2] '),
+    makeTournamentPlayer('enzo', 'it', 3, 'Dueling', 'R1 fran [2-0] '),
+    makeTournamentPlayer('fran', 'fr', 0, 'Eliminated', 'R1 enzo [0-2] '),
+    makeTournamentPlayer('gino', 'mx', 3, 'Dueling', 'R1 hana [2-1] '),
+    makeTournamentPlayer('hana', 'jp', 0, 'Eliminated', 'R1 gino [1-2] '),
+  ],
+  rounds: [
+    makeTournamentRound(ELIMINATION_QUARTERFINALS),
+    makeTournamentRound([ELIMINATION_SEMI_ENZO_GINO_LIVE, ELIMINATION_SEMI_ALICE_BORA]),
+  ],
+}
+
+const TOURNAMENT_ELIMINATION_FINISHED: TournamentView = {
+  tournamentName: 'Draft Elimination #3',
+  tournamentType: TOURNAMENT_ELIMINATION_TYPE,
+  tournamentState: 'Finished',
+  startTime: GALLERY_EPOCH - 75 * 60_000,
+  endTime: GALLERY_EPOCH,
+  serverTime: GALLERY_EPOCH,
+  constructionTime: 600,
+  watchingAllowed: true,
+  players: [
+    makeTournamentPlayer('alice', 'es', 9, 'Finished', 'R1 chen [2-0] R2 bora [2-1] R3 enzo [2-0] '),
+    makeTournamentPlayer('bora', 'br', 3, 'Eliminated', 'R1 dara [2-1] R2 alice [1-2] '),
+    makeTournamentPlayer('chen', 'cn', 0, 'Eliminated', 'R1 alice [0-2] '),
+    makeTournamentPlayer('dara', 'kr', 0, 'Eliminated', 'R1 bora [1-2] '),
+    makeTournamentPlayer('enzo', 'it', 6, 'Finished', 'R1 fran [2-0] R2 gino [2-1] R3 alice [0-2] '),
+    makeTournamentPlayer('fran', 'fr', 0, 'Eliminated', 'R1 enzo [0-2] '),
+    makeTournamentPlayer('gino', 'mx', 3, 'Eliminated', 'R1 hana [2-1] R2 enzo [1-2] '),
+    makeTournamentPlayer('hana', 'jp', 0, 'Eliminated', 'R1 gino [1-2] '),
+  ],
+  rounds: [
+    makeTournamentRound(ELIMINATION_QUARTERFINALS),
+    makeTournamentRound([ELIMINATION_SEMI_ENZO_GINO_DONE, ELIMINATION_SEMI_ALICE_BORA]),
+    makeTournamentRound([
+      makeTournamentMatch(3, 'elim-final', ['alice', 'enzo'], [['alice', '14:02'], ['alice', '11:31']]),
+    ]),
   ],
 }
 
@@ -2616,12 +2757,25 @@ const GAME_END_MATCH: GameEndInfo = {
 // Estado real del wire: `TournamentView.tournamentState` es el texto del
 // `TableState` del fork ("Constructing"/"Dueling"/"Finished"), no el enum.
 const TOURNAMENT_WAITING: TournamentView = {
-  ...TOURNAMENT_INPROGRESS,
-  tournamentName: 'Standard Swiss — En construcción',
+  tournamentName: 'Modern Swiss #12',
+  tournamentType: TOURNAMENT_SWISS_TYPE,
   tournamentState: 'Constructing',
-  startTime: GALLERY_EPOCH - 2 * 60_000,
+  startTime: GALLERY_EPOCH - 3 * 60_000,
+  stepStartTime: GALLERY_EPOCH - 2 * 60_000,
+  serverTime: GALLERY_EPOCH,
   constructionTime: 600,
+  watchingAllowed: true,
   rounds: [],
+  players: [
+    makeTournamentPlayer('alice', 'es', 0, 'Waiting for next round', ''),
+    makeTournamentPlayer('bora', 'br', 0, 'Constructing', ''),
+    makeTournamentPlayer('chen', 'cn', 0, 'Constructing', ''),
+    makeTournamentPlayer('dara', 'kr', 0, 'Waiting for next round', ''),
+    makeTournamentPlayer('enzo', 'it', 0, 'Constructing', ''),
+    makeTournamentPlayer('fran', 'fr', 0, 'Constructing', ''),
+    makeTournamentPlayer('gino', 'mx', 0, 'Waiting for next round', ''),
+    makeTournamentPlayer('hana', 'jp', 0, 'Constructing', ''),
+  ],
 }
 
 // Formulario persistido «Draft MH3 (8P)»: el wizard lo relee al montar (la
@@ -5132,9 +5286,25 @@ export function buildGalleryEntries(): GalleryEntry[] {
     id: 'screen:tournament-waiting',
     group: 'Pantallas',
     label: 'Torneo (en construcción)',
-    description: 'Constructing con 6 jugadores y 0 rondas: espera antes del primer emparejamiento.',
+    description: 'Constructing with 8 players and 0 rounds, 2 minutes into a 10-minute construction.',
     screen: 'tournament',
     tournamentModal: { table: TOURNAMENT_TABLE, view: TOURNAMENT_WAITING },
+  })
+  entries.push({
+    id: 'screen:tournament-elimination',
+    group: 'Pantallas',
+    label: 'Tournament (elimination, in progress)',
+    description: 'Booster Draft Elimination: quarterfinals finished, one semifinal finished and one live; round 2 is listed in the reverse order of its feeders.',
+    screen: 'tournament',
+    tournamentModal: { table: TOURNAMENT_ELIMINATION_TABLE, view: TOURNAMENT_ELIMINATION },
+  })
+  entries.push({
+    id: 'screen:tournament-elimination-finished',
+    group: 'Pantallas',
+    label: 'Tournament (elimination, finished)',
+    description: 'The same elimination tournament finished: the final decides the champion.',
+    screen: 'tournament',
+    tournamentModal: { table: TOURNAMENT_ELIMINATION_TABLE, view: TOURNAMENT_ELIMINATION_FINISHED },
   })
   entries.push({
     id: 'screen:draft-stalled',
@@ -5231,11 +5401,12 @@ export function buildGalleryEntries(): GalleryEntry[] {
   entries.push({
     id: 'screen:tournament-panel',
     group: 'Pantallas',
-    label: 'Torneo (panel en partida)',
-    description: 'TournamentPanel durante una partida de torneo (cuadro + chat).',
+    label: 'Tournament (panel in game)',
+    description: 'TournamentPanel during a tournament game: the docked panel with the match, the rounds and the chat.',
     phase: 'game',
     game: GANG_BLOCK_FRAME?.gameView ?? null,
     gameId: GANG_BLOCK_FRAME?.gameId ?? null,
+    conn: { ...GALLERY_CONN, username: 'bora' },
     tournament: { tournamentId: 'gallery-tournament-1', view: TOURNAMENT_INPROGRESS },
   })
   entries.push({

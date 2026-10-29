@@ -6,6 +6,12 @@ import { deckRef, type Deck } from '../decks'
 import { deckFitForTable, isGoodFit, tableFormatProfile } from '../joinDeckFit'
 import { useTranslation } from '../../i18n'
 import {
+  clampSwissRounds,
+  composeTournamentType,
+  recommendedSwissRounds,
+  type TournamentChoice,
+} from '../tournament/tournamentType'
+import {
   isLimitedDeckType,
   validateDeckGameCompatibility,
   isGameAndDeckCompatible,
@@ -20,8 +26,10 @@ import {
   DEFAULT_TOURNAMENT_TYPES,
   DEFAULT_DRAFT_CUBES,
   DEFAULT_DRAFT_TOURNAMENT_TYPE,
+  DEFAULT_TOURNAMENT_SEATS,
   HUMAN_SEAT,
   SIM_SEAT,
+  type SeatLimits,
   aiSeatTypes,
   defaultTournamentType,
   isDraftTournamentType,
@@ -41,8 +49,11 @@ import {
   DEFAULT_RANGE,
 } from './constants'
 import {
+  isSwissTournamentType,
   resolveTableKind,
-  clampNumPlayers,
+  clampSeats,
+  seatLimitsFor,
+  limitedTourneyHasAiSeats,
   defaultSeatTypeFor,
   healTournamentBranch,
   tournamentTypeForCategory,
@@ -89,6 +100,7 @@ export function useCreateTableForm(onClose: () => void, kind: CreateKind = 'matc
   const [deckTypes, setDeckTypes] = useState<string[]>(DEFAULT_DECK_TYPES)
   const [playerTypes, setPlayerTypes] = useState<string[]>(DEFAULT_PLAYER_TYPES)
   const [tournamentTypes, setTournamentTypes] = useState<string[]>(DEFAULT_TOURNAMENT_TYPES)
+  const [tournamentTypeLimits, setTournamentTypeLimits] = useState<Record<string, SeatLimits>>({})
   const [draftCubes, setDraftCubes] = useState<string[]>(DEFAULT_DRAFT_CUBES)
 
   // General tab
@@ -141,7 +153,12 @@ export function useCreateTableForm(onClose: () => void, kind: CreateKind = 'matc
     const s = typeof v === 'string' ? v : (v as { name?: string })?.name ?? DEFAULT_DRAFT_TOURNAMENT_TYPE
     setTournamentTypeState(s || DEFAULT_DRAFT_TOURNAMENT_TYPE)
   }
-  const [numberRounds, setNumberRounds] = useState(0)
+  const [numberRounds, setNumberRoundsState] = useState(0)
+  const [roundsPicked, setRoundsPicked] = useState(false)
+  const setNumberRounds = (v: number) => {
+    setRoundsPicked(true)
+    setNumberRoundsState(clampSwissRounds(v))
+  }
   const [draftCubeName, setDraftCubeName] = useState('')
   const [draftTiming, setDraftTiming] = useState<DraftTiming>('REGULAR')
   const [singleGame, setSingleGame] = useState(false)
@@ -195,12 +212,25 @@ export function useCreateTableForm(onClose: () => void, kind: CreateKind = 'matc
     }
   }
 
+  const setTournamentChoice = (choice: TournamentChoice) => {
+    const constructed = choice.modality === 'constructed'
+    setTournamentType(composeTournamentType(choice))
+    setTournamentCategoryState(constructed ? 'constructed' : 'limited')
+    setUseDraftTournament(!constructed)
+    setDeckTypeState((curr) => {
+      if (!constructed) return 'Limited'
+      return isLimitedDeckType(curr) ? 'Constructed - Modern' : curr
+    })
+  }
+
   const setUseDraftTournamentChecked = (v: boolean) => {
     setUseDraftTournament(v)
     if (tableCategory === 'tourney') setTournamentCategory(v ? 'limited' : 'constructed')
   }
 
   const applyPreset = (key: string) => {
+    setRoundsPicked(false)
+    setNumberRoundsState(recommendedSwissRounds(8))
     if (key === 'draft_8p') {
       setTableCategoryState('tourney')
       setTournamentCategoryState('limited')
@@ -247,7 +277,13 @@ export function useCreateTableForm(onClose: () => void, kind: CreateKind = 'matc
   const [quitRatio, setQuitRatio] = useState(100)
   const [edhPowerLevel, setEdhPowerLevel] = useState(0)
 
-  const [numPlayers, setNumPlayers] = useState<number>(() => typeof saved.numPlayers === 'number' && saved.numPlayers >= 2 && saved.numPlayers <= 10 ? saved.numPlayers : 2)
+  const [numPlayers, setNumPlayers] = useState<number>(() => {
+    if (isTourneyKind) {
+      const restorable = saved.tableCategory === 'tourney' && typeof saved.numPlayers === 'number' && Number.isFinite(saved.numPlayers)
+      return restorable ? saved.numPlayers as number : DEFAULT_TOURNAMENT_SEATS
+    }
+    return typeof saved.numPlayers === 'number' && saved.numPlayers >= 2 && saved.numPlayers <= 10 ? saved.numPlayers : 2
+  })
   // the proxy-side SIM bot is dev-only: a form persisted by an older client loses its SIM seats,
   // which become open human seats (bots are now opt-in native AI)
   const [seatConfigs, setSeatConfigs] = useState<SeatConfig[]>(() => Array.isArray(saved.seatConfigs) ? (saved.seatConfigs as SeatConfig[]).map((s) => {
@@ -290,13 +326,15 @@ export function useCreateTableForm(onClose: () => void, kind: CreateKind = 'matc
     let active = true
     void (async () => {
       try {
-        const [g, d, p, tt, dc] = await Promise.all([
+        const [g, d, p, catalogue, dc] = await Promise.all([
           cmds.getGameTypes().catch(() => [] as GameTypeInfo[]),
           cmds.getDeckTypes().catch(() => [] as string[]),
           cmds.getPlayerTypes().catch(() => [] as string[]),
-          cmds.getTournamentTypes().catch(() => [] as string[]),
+          cmds.getTournamentCatalogue().catch(() => ({ names: [] as string[], limits: {} as Record<string, SeatLimits> })),
           cmds.getDraftCubes().catch(() => [] as string[]),
         ])
+        const tt = catalogue.names
+        const ttl = catalogue.limits
         if (!active) return
         if (g && g.length > 0) {
           setGameTypes(g)
@@ -309,15 +347,11 @@ export function useCreateTableForm(onClose: () => void, kind: CreateKind = 'matc
         if (p && p.length > 0) {
           setPlayerTypes(aiSeatTypes(p))
         }
-        if (tt && tt.length > 0) {
-          const names = tt
-            .map((item: unknown) => (typeof item === 'string' ? item : (item as { name?: string })?.name ?? ''))
-            .filter((s): s is string => typeof s === 'string' && s.length > 0)
-          if (names.length > 0) {
-            setTournamentTypes(names)
-            if (!names.includes(tournamentType)) setTournamentType(defaultTournamentType(names))
-          }
+        if (tt.length > 0) {
+          setTournamentTypes(tt)
+          if (!tt.includes(tournamentType)) setTournamentType(defaultTournamentType(tt))
         }
+        setTournamentTypeLimits(ttl)
         if (dc && dc.length > 0) {
           setDraftCubes(dc)
           if (draftCubeName && !dc.includes(draftCubeName)) setDraftCubeName('')
@@ -382,20 +416,24 @@ export function useCreateTableForm(onClose: () => void, kind: CreateKind = 'matc
     knownTournamentTypes: tournamentTypes,
   })
   const { isDraftLimited, isConstructedTournament, isTournament } = tableResolution
+  const seatLimits = useMemo<SeatLimits>(() => (isTournament
+    ? seatLimitsFor(tableResolution.normalizedTournamentType, tournamentTypeLimits)
+    : { minPlayers: selectedGameTypeInfo?.minPlayers ?? 2, maxPlayers: selectedGameTypeInfo?.maxPlayers ?? 2 }),
+  [isTournament, tableResolution.normalizedTournamentType, tournamentTypeLimits, selectedGameTypeInfo])
 
   const wizardSteps: WizardStep[] = useMemo(
-    () => buildWizardSteps({ draft: isDraftLimited, dev: import.meta.env.DEV }),
-    [isDraftLimited],
+    () => buildWizardSteps({ kind, dev: import.meta.env.DEV }),
+    [kind],
   )
 
-  const [activeTab, setActiveTab] = useState<CreateTab>('general')
+  const [activeTab, setActiveTab] = useState<CreateTab>(isTourneyKind ? 'format' : 'general')
   const activeIndex = useMemo(() => {
     const idx = wizardSteps.findIndex((s) => s.id === activeTab)
     return idx >= 0 ? idx : 0
   }, [wizardSteps, activeTab])
 
   useEffect(() => {
-    if (!wizardSteps.some((s) => s.id === activeTab)) setActiveTab('general')
+    if (!wizardSteps.some((s) => s.id === activeTab)) setActiveTab(wizardSteps[0].id)
   }, [wizardSteps, activeTab])
 
   const goToIndex = (idx: number) => {
@@ -441,7 +479,7 @@ export function useCreateTableForm(onClose: () => void, kind: CreateKind = 'matc
   }, [deckType, gameType, isDraftLimited])
 
   const validateStep = (tab: CreateTab): string | null => {
-    if (tab === 'general') {
+    if (tab === 'general' || tab === 'format') {
       if (!name.trim()) return t('lobby', 'create_err_name_required')
       if (compatibilityError && !isDraftLimited) return compatibilityError
       return null
@@ -456,11 +494,14 @@ export function useCreateTableForm(onClose: () => void, kind: CreateKind = 'matc
   }
 
   useEffect(() => {
-    const min = selectedGameTypeInfo?.minPlayers ?? 2
-    const max = selectedGameTypeInfo?.maxPlayers ?? 2
-    const clamped = clampNumPlayers(numPlayers, { draft: isDraftLimited, tourney: isTournament }, min, max)
+    const clamped = clampSeats(numPlayers, seatLimits)
     if (clamped !== numPlayers) setNumPlayers(clamped)
-  }, [selectedGameTypeInfo, numPlayers, isDraftLimited, isTournament])
+  }, [seatLimits, numPlayers])
+
+  useEffect(() => {
+    if (!isDraftLimited || !limitedTourneyHasAiSeats(seatConfigs.map((s) => s.type))) return
+    setSeatConfigs((prev) => prev.map((s) => (isHumanSeatType(s.type) ? s : { ...s, type: HUMAN_SEAT })))
+  }, [isDraftLimited, seatConfigs])
 
   useEffect(() => {
     const target = Math.max(0, numPlayers - (humanSeat ? 1 : 0))
@@ -500,13 +541,20 @@ export function useCreateTableForm(onClose: () => void, kind: CreateKind = 'matc
     }
   })
 
+  const swissPairing = isSwissTournamentType(tournamentType)
+  useEffect(() => {
+    if (tableCategory !== 'tourney' || !swissPairing || roundsPicked) return
+    setNumberRoundsState(recommendedSwissRounds(numPlayers))
+  }, [tableCategory, swissPairing, roundsPicked, numPlayers])
+
   const toggleAi = (pt: string) => {
     const n = normalizeSeatType(pt)
     setPlayerTypesSel((cur) => (cur.includes(n) ? cur.filter((x) => x !== n) : [...cur, n]))
   }
   const applySeatTypeToAll = (pt: string) => {
     const n = normalizeSeatType(pt)
-    setSeatConfigs((prev) => prev.map((s) => ({ ...s, type: n })))
+    const botDeck = simDeck ? deckRef(simDeck) : ''
+    setSeatConfigs((prev) => prev.map((s) => ({ ...s, type: n, deckName: isHumanSeatType(n) ? s.deckName : s.deckName || botDeck })))
   }
   const setSeatType = (idx: number, type: string) => {
     const n = normalizeSeatType(type)
@@ -577,6 +625,8 @@ export function useCreateTableForm(onClose: () => void, kind: CreateKind = 'matc
     deckTypes,
     playerTypes,
     tournamentTypes,
+    tournamentTypeLimits,
+    seatLimits,
     draftCubes,
     name,
     setName,
@@ -600,6 +650,7 @@ export function useCreateTableForm(onClose: () => void, kind: CreateKind = 'matc
     setDraftConstructionTime,
     tournamentType,
     setTournamentType,
+    setTournamentChoice,
     numberRounds,
     setNumberRounds,
     draftCubeName,

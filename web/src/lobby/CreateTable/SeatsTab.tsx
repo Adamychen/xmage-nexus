@@ -28,7 +28,7 @@ export default function SeatsTab({ form, onEditDeck }: { form: CreateTableForm; 
 
   const seats: TableSeat[] = [
     ...(form.humanSeat
-      ? [{ key: 'you', label: t('lobby', 'seat_node_you'), sub: form.myDeck?.name ?? '', kind: 'you' as const, warn: !form.myDeck && !form.isDraftLimited }]
+      ? [{ key: 'you', label: t('lobby', 'seat_node_you'), sub: form.myDeck?.name ?? '', kind: 'you' as const, warn: !form.myDeck }]
       : []),
     ...form.seatConfigs.map((cfg, idx): TableSeat => {
       const human = isHumanSeatType(cfg.type)
@@ -39,7 +39,7 @@ export default function SeatsTab({ form, onEditDeck }: { form: CreateTableForm; 
         label: t('lobby', 'create_seat_number', { num: idx + 1 + offset }),
         sub: human ? t('lobby', 'create_seat_human_short') : `${seatTypeLabel(cfg.type, t)} · ${cfg.skill ?? 2}`,
         kind: human ? 'human' : 'bot',
-        warn: !human && !form.isDraftLimited && deckEmpty,
+        warn: !human && deckEmpty,
       }
     }),
   ]
@@ -73,7 +73,7 @@ export default function SeatsTab({ form, onEditDeck }: { form: CreateTableForm; 
 
         {form.numPlayers > 2 && (
           <div className="wizard-hint-box wizard-hint-box--spaced">
-            {form.isTournament ? t('lobby','create_seats_hint_tourney') : form.isMultiplayerGame ? t('lobby','create_seats_hint_multi') : t('lobby','create_seats_hint_duel')}
+            {form.isMultiplayerGame ? t('lobby','create_seats_hint_multi') : t('lobby','create_seats_hint_duel')}
           </div>
         )}
 
@@ -161,38 +161,30 @@ function YouEditor({ form, onEditDeck }: { form: CreateTableForm; onEditDeck?: (
       <div className="seat-editor-head">
         <span className="seat-title"><Icon name="user" size={13} /> {t('common','player')}</span>
       </div>
-      {form.isDraftLimited ? (
-        <div className="wizard-hint-box wizard-hint-box--info">
-          <Icon name="layers" size={13} /> {t('lobby', 'create_tourney_draft_timing_desc')}
-        </div>
-      ) : (
-        <>
-          <Field group label={t('lobby','active_deck')}>
-            <DeckCarousel
-              decks={form.availableDecks}
-              selected={form.myDeck ? deckRef(form.myDeck) : ''}
-              onSelect={form.selectMyDeck}
-              label={t('lobby', 'active_deck')}
-            />
-          </Field>
-          <div className="seat-editor-row">
-            {!form.myDeck && <Chip tone="warn" size="xs" pill icon="alert">{t('lobby','create_err_no_deck')}</Chip>}
-            <Button
-              variant="ghost"
-              size="sm"
-              icon="package"
-              data-testid="create-edit-deck"
-              disabled={!form.myDeck || !onEditDeck}
-              title={t('lobby','create_edit_deck')}
-              onClick={() => { if (form.myDeck) onEditDeck?.(deckRef(form.myDeck)) }}
-            >
-              {t('lobby','create_edit_deck')}
-            </Button>
-          </div>
-          {form.decksLoaded && form.availableDecks.length === 0 && (
-            <StarterDecksOffer onAdded={form.adoptStarterDecks} />
-          )}
-        </>
+      <Field group label={t('lobby','active_deck')}>
+        <DeckCarousel
+          decks={form.availableDecks}
+          selected={form.myDeck ? deckRef(form.myDeck) : ''}
+          onSelect={form.selectMyDeck}
+          label={t('lobby', 'active_deck')}
+        />
+      </Field>
+      <div className="seat-editor-row">
+        {!form.myDeck && <Chip tone="warn" size="xs" pill icon="alert">{t('lobby','create_err_no_deck')}</Chip>}
+        <Button
+          variant="ghost"
+          size="sm"
+          icon="package"
+          data-testid="create-edit-deck"
+          disabled={!form.myDeck || !onEditDeck}
+          title={t('lobby','create_edit_deck')}
+          onClick={() => { if (form.myDeck) onEditDeck?.(deckRef(form.myDeck)) }}
+        >
+          {t('lobby','create_edit_deck')}
+        </Button>
+      </div>
+      {form.decksLoaded && form.availableDecks.length === 0 && (
+        <StarterDecksOffer onAdded={form.adoptStarterDecks} />
       )}
       <Field label={t('lobby','create_field_my_skill')}>
         <select data-testid="my-skill" value={form.mySkill} onChange={(e) => form.setMySkill(Number(e.target.value))}>
@@ -263,22 +255,20 @@ function SeatEditor({ form, idx, seatNumber, findSeatDeck }: { form: CreateTable
               ))}
             </select>
           </Field>
-          {!form.isDraftLimited && (
-            <Field
-              group
+          <Field
+            group
+            label={t('lobby','create_seat_deck_label',{num: seatNumber})}
+            hint={deckEmpty ? t('lobby','create_warn_seat_deck_empty') : `${total} ${t('decks','total_cards')}`}
+            hintTone={deckEmpty ? 'warn' : 'muted'}
+          >
+            <DeckCarousel
+              decks={form.availableDecks}
+              selected={cfg.deckName}
+              onSelect={(ref) => form.setSeatDeck(idx, ref)}
               label={t('lobby','create_seat_deck_label',{num: seatNumber})}
-              hint={deckEmpty ? t('lobby','create_warn_seat_deck_empty') : `${total} ${t('decks','total_cards')}`}
-              hintTone={deckEmpty ? 'warn' : 'muted'}
-            >
-              <DeckCarousel
-                decks={form.availableDecks}
-                selected={cfg.deckName}
-                onSelect={(ref) => form.setSeatDeck(idx, ref)}
-                label={t('lobby','create_seat_deck_label',{num: seatNumber})}
-                disabled={form.availableDecks.length === 0}
-              />
-            </Field>
-          )}
+              disabled={form.availableDecks.length === 0}
+            />
+          </Field>
         </>
       )}
     </div>

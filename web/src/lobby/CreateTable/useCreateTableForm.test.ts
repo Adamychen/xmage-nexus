@@ -9,7 +9,7 @@ vi.mock('../../net/commands', () => ({
   getGameTypes: vi.fn(),
   getDeckTypes: vi.fn(),
   getPlayerTypes: vi.fn(),
-  getTournamentTypes: vi.fn(),
+  getTournamentCatalogue: vi.fn(),
   getDraftCubes: vi.fn(),
   getExpansionsWithBoosters: vi.fn(),
   createTable: vi.fn(),
@@ -40,7 +40,7 @@ beforeEach(() => {
   ])
   vi.mocked(cmds.getDeckTypes).mockReset().mockResolvedValue(['Constructed - Modern', 'Variant Magic - Commander', 'Limited'])
   vi.mocked(cmds.getPlayerTypes).mockReset().mockResolvedValue(['COMPUTER_MAD', 'COMPUTER_DRAFT_BOT'])
-  vi.mocked(cmds.getTournamentTypes).mockReset().mockResolvedValue(['Constructed Swiss', 'Constructed Elimination', 'Booster Draft Elimination'])
+  vi.mocked(cmds.getTournamentCatalogue).mockReset().mockResolvedValue(catalogueWith({}))
   vi.mocked(cmds.getDraftCubes).mockReset().mockResolvedValue([])
   vi.mocked(cmds.getExpansionsWithBoosters).mockReset().mockResolvedValue([])
   vi.mocked(cmds.createTable).mockReset().mockResolvedValue({ ok: true, data: { tableId: 'tbl' } } as any)
@@ -61,7 +61,7 @@ afterEach(() => {
 async function mount() {
   const onClose = vi.fn()
   const hook = renderHook(() => useCreateTableForm(onClose))
-  await waitFor(() => expect(cmds.getTournamentTypes).toHaveBeenCalled())
+  await waitFor(() => expect(cmds.getTournamentCatalogue).toHaveBeenCalled())
   await act(async () => {})
   return { ...hook, onClose, form: () => hook.result.current }
 }
@@ -294,11 +294,155 @@ describe('runDemoTable', () => {
   })
 })
 
+async function mountTourney() {
+  const onClose = vi.fn()
+  const hook = renderHook(() => useCreateTableForm(onClose, 'tourney'))
+  await waitFor(() => expect(cmds.getTournamentCatalogue).toHaveBeenCalled())
+  await act(async () => {})
+  return { ...hook, onClose, form: () => hook.result.current }
+}
+
+const CONSTRUCTED_SWISS = { modality: 'constructed', pairing: 'swiss', variant: 'standard' } as const
+
+const ENGINE_LIMITS = {
+  'Booster Draft Elimination': { minPlayers: 4, maxPlayers: 16 },
+  'Constructed Swiss': { minPlayers: 4, maxPlayers: 16 },
+  'Sealed Swiss': { minPlayers: 2, maxPlayers: 16 },
+}
+
+/** The server's catalogue: the same four type names every case starts from, with the given seat limits. */
+function catalogueWith(limits: Record<string, { minPlayers: number; maxPlayers: number }>) {
+  return { names: ['Constructed Swiss', 'Constructed Elimination', 'Booster Draft Elimination', 'Sealed Swiss'], limits }
+}
+
+describe('TRN-4: a tournament starts with 8 seats and restores its own seat count', () => {
+  it('TRN-4: a new tournament starts with 8 seats', async () => {
+    const m = await mountTourney()
+    expect(m.form().numPlayers).toBe(8)
+  })
+
+  it('TRN-4: a saved constructed tournament restores 16 seats', async () => {
+    ls.set(STORAGE_KEY, JSON.stringify({ tableCategory: 'tourney', tournamentCategory: 'constructed', numPlayers: 16 }))
+    const m = await mountTourney()
+    expect(m.form().numPlayers).toBe(16)
+    expect(m.form().tournamentType).toBe('Constructed Swiss')
+  })
+
+  it('TRN-4: a saved seat count above the maximum of the type is clamped to it', async () => {
+    vi.mocked(cmds.getTournamentCatalogue).mockResolvedValueOnce(catalogueWith(ENGINE_LIMITS))
+    ls.set(STORAGE_KEY, JSON.stringify({ tableCategory: 'tourney', tournamentCategory: 'constructed', numPlayers: 32 }))
+    const m = await mountTourney()
+    await waitFor(() => expect(m.form().numPlayers).toBe(16))
+  })
+
+  it('TRN-4: a saved seat count below the minimum of the type is raised to it', async () => {
+    vi.mocked(cmds.getTournamentCatalogue).mockResolvedValueOnce(catalogueWith(ENGINE_LIMITS))
+    ls.set(STORAGE_KEY, JSON.stringify({ tableCategory: 'tourney', tournamentCategory: 'constructed', numPlayers: 2 }))
+    const m = await mountTourney()
+    await waitFor(() => expect(m.form().numPlayers).toBe(4))
+  })
+
+  it('TRN-4: a tournament does not inherit the seat count of a saved match', async () => {
+    ls.set(STORAGE_KEY, JSON.stringify({ tableCategory: 'multi', numPlayers: 4 }))
+    const m = await mountTourney()
+    expect(m.form().numPlayers).toBe(8)
+  })
+})
+
+describe('TRN-4: the seat limits are the ones the server gives the selected type', () => {
+  it('TRN-4: the form takes the limits of the selected type from the catalogue', async () => {
+    vi.mocked(cmds.getTournamentCatalogue).mockResolvedValueOnce(catalogueWith(ENGINE_LIMITS))
+    const m = await mountTourney()
+    await waitFor(() => expect(m.form().seatLimits).toEqual({ minPlayers: 4, maxPlayers: 16 }))
+    expect(m.form().tournamentTypeLimits).toEqual(ENGINE_LIMITS)
+  })
+
+  it('TRN-4: a new tournament starts at 8 and is clamped to a type that allows at most 6', async () => {
+    vi.mocked(cmds.getTournamentCatalogue).mockResolvedValueOnce(catalogueWith({ 'Booster Draft Elimination': { minPlayers: 2, maxPlayers: 6 } }))
+    const m = await mountTourney()
+    await waitFor(() => expect(m.form().numPlayers).toBe(6))
+  })
+
+  it('TRN-4: changing the type clamps the seats into the limits of the new type', async () => {
+    vi.mocked(cmds.getTournamentCatalogue).mockResolvedValueOnce(catalogueWith({
+      'Booster Draft Elimination': { minPlayers: 4, maxPlayers: 16 },
+      'Constructed Swiss': { minPlayers: 2, maxPlayers: 6 },
+    }))
+    const m = await mountTourney()
+    await waitFor(() => expect(m.form().numPlayers).toBe(8))
+    act(() => m.form().setTournamentChoice(CONSTRUCTED_SWISS))
+    expect(m.form().numPlayers).toBe(6)
+  })
+
+  it('TRN-4: a type the server gave no limits for takes 2 to 16 seats', async () => {
+    const m = await mountTourney()
+    expect(m.form().seatLimits).toEqual({ minPlayers: 2, maxPlayers: 16 })
+    act(() => m.form().setNumPlayers(40))
+    expect(m.form().numPlayers).toBe(16)
+    act(() => m.form().setNumPlayers(1))
+    expect(m.form().numPlayers).toBe(2)
+  })
+})
+
+describe('TRN-3: a Swiss tournament has a round count derived from its seats', () => {
+  it('TRN-3: a Swiss tournament defaults to the recommended rounds, never 0', async () => {
+    const m = await mountTourney()
+    act(() => m.form().setTournamentChoice(CONSTRUCTED_SWISS))
+    expect(m.form().numberRounds).toBe(3)
+  })
+
+  it('TRN-3: changing the seats moves the rounds to the new recommendation', async () => {
+    const m = await mountTourney()
+    act(() => m.form().setTournamentChoice(CONSTRUCTED_SWISS))
+    act(() => m.form().setNumPlayers(16))
+    expect(m.form().numberRounds).toBe(4)
+    act(() => m.form().setNumPlayers(6))
+    expect(m.form().numberRounds).toBe(3)
+    act(() => m.form().setNumPlayers(2))
+    expect(m.form().numberRounds).toBe(2)
+  })
+
+  it('TRN-3: a round count picked by hand survives a change of seats', async () => {
+    const m = await mountTourney()
+    act(() => m.form().setTournamentChoice(CONSTRUCTED_SWISS))
+    act(() => m.form().setNumberRounds(6))
+    act(() => m.form().setNumPlayers(16))
+    expect(m.form().numberRounds).toBe(6)
+  })
+
+  it('TRN-3: a preset sets the recommended rounds again, so the count is automatic once more', async () => {
+    const m = await mountTourney()
+    act(() => m.form().setTournamentChoice(CONSTRUCTED_SWISS))
+    act(() => m.form().setNumberRounds(6))
+    act(() => m.form().applyPreset('modern_swiss_8p'))
+    expect(m.form().numberRounds).toBe(3)
+    act(() => m.form().setNumPlayers(16))
+    expect(m.form().numberRounds).toBe(4)
+  })
+
+  it('TRN-3: a Swiss tournament submits the round count it shows', async () => {
+    const m = await mountTourney()
+    act(() => m.form().setTournamentChoice(CONSTRUCTED_SWISS))
+    act(() => m.form().setNumberRounds(5))
+    await act(() => m.form().submit())
+    expect(cmds.createTournamentTable).toHaveBeenCalledWith(expect.objectContaining({ tournamentType: 'Constructed Swiss', numberRounds: 5 }))
+  })
+
+  it('TRN-3: an elimination tournament submits no round count', async () => {
+    const m = await mountTourney()
+    act(() => m.form().setTournamentChoice({ modality: 'draft', pairing: 'elimination', variant: 'standard' }))
+    await act(() => m.form().submit())
+    const args = vi.mocked(cmds.createTournamentTable).mock.calls[0][0]
+    expect(args).toMatchObject({ tournamentType: 'Booster Draft Elimination', limited: true })
+    expect(args).not.toHaveProperty('numberRounds')
+  })
+})
+
 describe('reset and submit guard', () => {
   it('resetToDefaults clears the saved form and asks the host to remount', async () => {
     const onReset = vi.fn()
     const hook = renderHook(() => useCreateTableForm(vi.fn(), 'match', onReset))
-    await waitFor(() => expect(cmds.getTournamentTypes).toHaveBeenCalled())
+    await waitFor(() => expect(cmds.getTournamentCatalogue).toHaveBeenCalled())
     await act(async () => {})
     act(() => hook.result.current.setName('Mesa'))
     expect(ls.has(STORAGE_KEY)).toBe(true)
@@ -319,5 +463,23 @@ describe('reset and submit guard', () => {
     expect(cmds.createTournamentTable).not.toHaveBeenCalled()
     expect(m.form().activeTab).toBe('general')
     expect(m.form().error).toBeTruthy()
+  })
+})
+
+describe('TRN-6: a limited tournament has no bot seats', () => {
+  it('TRN-6: switching a constructed tournament with bots to limited turns its bots into open human seats', async () => {
+    const m = await constructedTourneyWithBots(3)
+    act(() => m.form().setTournamentChoice({ modality: 'draft', pairing: 'elimination', variant: 'standard' }))
+    expect(m.form().isDraftLimited).toBe(true)
+    expect(m.form().seatConfigs.map((s) => s.type)).toEqual(['HUMAN', 'HUMAN', 'HUMAN'])
+  })
+
+  it('TRN-6: a limited tournament submits no bot, so the form never reaches the draft-bot refusal', async () => {
+    const m = await constructedTourneyWithBots(2)
+    act(() => m.form().setTournamentChoice({ modality: 'draft', pairing: 'elimination', variant: 'standard' }))
+    act(() => m.form().setTournamentCategory('limited'))
+    await act(() => m.form().submit())
+    expect(cmds.createTournamentTable).toHaveBeenCalledOnce()
+    expect(vi.mocked(cmds.createTournamentTable).mock.calls[0][0]).toMatchObject({ playerTypes: ['HUMAN', 'HUMAN', 'HUMAN'] })
   })
 })

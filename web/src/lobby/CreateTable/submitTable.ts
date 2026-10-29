@@ -17,10 +17,13 @@ import {
   buildTournamentLimitedOptions,
   buildCreateTournamentArgs,
   buildCreateMatchArgs,
+  isSwissTournamentType,
+  swissRoundsValid,
   validateDraftSets,
   limitedTourneyHasAiSeats,
   type TableKindResolution,
 } from './tableKind'
+import { SWISS_ROUNDS_MAX, SWISS_ROUNDS_MIN } from '../tournament/tournamentType'
 import { isRandomPacksType } from './RandomPacksSelector'
 import type { CreateTableForm } from './types'
 
@@ -101,6 +104,11 @@ async function submitTournament(f: SubmitTableForm, io: SubmitTableIO): Promise<
   const normalizedTournamentType = tableResolution.normalizedTournamentType
   if (tableResolution.kind === 'invalid') {
     setError(t('lobby', 'create_err_bad_tournament_type', { type: tableResolution.errorParam }))
+    setBusy(false)
+    return
+  }
+  if (isSwissTournamentType(normalizedTournamentType) && !swissRoundsValid(f.numberRounds)) {
+    setError(t('lobby', 'trn_err_rounds', { min: SWISS_ROUNDS_MIN, max: SWISS_ROUNDS_MAX }))
     setBusy(false)
     return
   }

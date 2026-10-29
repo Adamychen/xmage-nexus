@@ -1,254 +1,225 @@
-import CloseButton from '../ui/CloseButton'
-import IconButton from '../ui/IconButton'
+import { useId, useState } from 'react'
 import Button from '../ui/Button'
-import Chip from '../ui/Chip'
-import EmptyState from '../ui/EmptyState'
-import { useCallback, useEffect, useRef, useState, useMemo } from 'react'
-import type { TournamentView, RoundView, TournamentGameView } from '../net/types'
-import * as cmds from '../net/commands'
+import Chip, { type ChipTone } from '../ui/Chip'
+import IconButton from '../ui/IconButton'
 import Icon from '../ui/Icon'
-import './TournamentBracket.css'
-import TournamentStandings from './TournamentStandings'
-import { stateLabel } from './lobbyUtils'
-import { useTranslation, toBcp47Locale, plural } from '../i18n'
+import Tabs from '../ui/Tabs'
 import { confirmDialog } from '../ui/confirmDialog'
+import { formatTimer } from '../utils/timer'
+import * as cmds from '../net/commands'
+import { useStore } from '../state/store'
+import type { TournamentView } from '../net/types'
+import { plural, useTranslation } from '../i18n'
+import { useNarrowScreen } from '../game/useNarrowScreen'
+import './TournamentBracket.css'
+import { stateLabel } from './lobbyUtils'
+import { constructionRemainingSeconds, currentRoundIndex, isParticipant, podium } from './tournament/matches'
+import { tournamentPhase, type TournamentPhase } from './tournament/parse'
+import TournamentPodium from './TournamentPodium'
+import TournamentRounds from './TournamentRounds'
+import TournamentStandings from './TournamentStandings'
+import TournamentYourMatch from './TournamentYourMatch'
+import { ELIMINATION_ROUND_KEYS, eliminationRoundOf, isElimination, startLabel, tournamentKicker, useNow, useSinceArrival } from './tournamentPresentation'
 
 export interface TournamentBracketProps {
   view: TournamentView
   tournamentId?: string
-  onClose?: () => void
   onQuit?: (tournamentId: string) => void
   onWatchMatch?: (tableId: string) => void
   watchingMatchId?: string | null
   compact?: boolean
-  /** false = torneo ajeno/espectador: no se puede abandonar (el desktop tampoco lo ofrece) */
+  /** false = the viewer does not play this tournament (spectator): no leave action */
   canQuit?: boolean
+  showName?: boolean
+  /** ms epoch of the last successful refresh; shows "Updated N s ago" */
+  updatedAt?: number | null
+  refreshing?: boolean
+  onRefresh?: () => void
 }
 
-function formatTimer(serverTime?: number, stepStartTime?: number | null): string {
-  if (serverTime == null || stepStartTime == null) return ''
-  const elapsedMs = serverTime - stepStartTime
-  if (elapsedMs < 0) return '0:00'
-  const totalSec = Math.floor(elapsedMs / 1000)
-  const m = Math.floor(totalSec / 60)
-  const s = totalSec % 60
-  return `${m}:${s.toString().padStart(2, '0')}`
+type Pane = 'rounds' | 'standings'
+
+function phaseTone(phase: TournamentPhase): ChipTone {
+  if (phase === 'dueling' || phase === 'sideboarding') return 'ok'
+  if (phase === 'constructing' || phase === 'drafting') return 'warn'
+  if (phase === 'finished') return 'gold'
+  return 'neutral'
 }
 
-export function TournamentBracketHeader({ view, tournamentId, onClose, onQuit, canQuit }: TournamentBracketProps) {
+export function UpdatedAgo({ at }: { at: number }) {
+  const { t } = useTranslation()
+  const now = useNow(1000)
+  const seconds = Math.max(0, Math.floor((now - at) / 1000))
+  return <span className="trn-updated" data-testid="tournament-updated">{t('lobby', 'trn_b_updated_ago', { seconds })}</span>
+}
+
+function BracketHeader({ view, showName, updatedAt, refreshing, onRefresh, sinceArrival }: {
+  view: TournamentView
+  showName: boolean
+  updatedAt: number | null | undefined
+  refreshing: boolean
+  onRefresh?: () => void
+  sinceArrival: number
+}) {
   const { t, lang } = useTranslation()
-  const [tick, setTick] = useState(0)
-  useEffect(() => {
-    if (view.serverTime == null || view.stepStartTime == null) return
-    const id = setInterval(() => setTick((t) => t + 1), 1000)
-    return () => clearInterval(id)
-  }, [view.serverTime, view.stepStartTime])
-  const liveElapsed = (() => {
-    if (view.serverTime == null || view.stepStartTime == null) return ''
-    const liveServer = (view.serverTime ?? 0) + tick * 1000
-    return formatTimer(liveServer, view.stepStartTime)
-  })()
+  const phase = tournamentPhase(view.tournamentState)
+  const current = currentRoundIndex(view)
+  const elapsedMs = view.serverTime != null && view.stepStartTime != null ? view.serverTime + sinceArrival - view.stepStartTime : null
+  const remaining = phase === 'constructing' ? constructionRemainingSeconds(view, sinceArrival) : null
+  const eliminationRound = phase === 'dueling' && current >= 0 && isElimination(view) ? eliminationRoundOf(view, current) : null
+  const phaseLabel = eliminationRound
+    ? t('lobby', 'trn_f_phase_in_progress', { name: t('lobby', ELIMINATION_ROUND_KEYS[eliminationRound]) })
+    : phase === 'dueling' && current >= 0
+      ? t('lobby', 'trn_b_phase_round', { number: current + 1 })
+      : stateLabel(t, view.tournamentState)
+  const players = view.players.length
+  const span = phase === 'finished' && view.startTime && view.endTime
+    ? t('lobby', 'trn_c_span', { from: startLabel(view.startTime, lang), to: startLabel(view.endTime, lang) })
+    : null
+  return (
+    <header className="trn-header" data-testid="tournament-header">
+      <div className="trn-header-top">
+        <div className="trn-kicker" data-testid="tournament-kicker">
+          <Icon name="trophy" size={13} />
+          <span>{tournamentKicker(view, t)}</span>
+        </div>
+        <div className="trn-header-tools">
+          {updatedAt != null && <UpdatedAgo at={updatedAt} />}
+          {onRefresh && (
+            <IconButton
+              icon="refresh"
+              label={t('lobby', 'matches_refresh')}
+              size="md"
+              round
+              data-testid="tournament-refresh"
+              disabled={refreshing}
+              onClick={onRefresh}
+            />
+          )}
+        </div>
+      </div>
+      {showName && <h2 className="tournament-name" data-testid="tournament-name">{view.tournamentName}</h2>}
+      <div className="trn-chips">
+        <Chip solid tone={phaseTone(phase)} data-testid="tournament-state">{phaseLabel}</Chip>
+        {phase === 'dueling' && elapsedMs != null && (
+          <Chip icon="clock" data-testid="tournament-timer">{t('lobby', 'trn_b_started_ago', { time: formatTimer(Math.max(0, Math.floor(elapsedMs / 1000))) })}</Chip>
+        )}
+        {remaining != null && (
+          <Chip icon="hourglass" tone="warn" data-testid="tournament-construction">{t('lobby', 'trn_b_construction_left', { time: formatTimer(remaining) })}</Chip>
+        )}
+        <Chip icon="users" data-testid="tournament-players">{players} {plural('lobby', 'tournament_player', players)}</Chip>
+        <Chip icon={view.watchingAllowed ? 'eye' : 'lock'} tone={view.watchingAllowed ? 'ok' : 'neutral'} data-testid="tournament-watching">
+          {t('lobby', view.watchingAllowed ? 'tag_spectators' : 'tag_private')}
+        </Chip>
+        {span ? (
+          <Chip icon="history" data-testid="tournament-dates">{span}</Chip>
+        ) : (
+          view.startTime != null && view.startTime > 0 && (
+            <Chip icon="history" data-testid="tournament-dates">{t('lobby', 'trn_b_started', { time: startLabel(view.startTime, lang) })}</Chip>
+          )
+        )}
+      </div>
+      {view.runningInfo && phase !== 'drafting' && (
+        <div className="tournament-running-info" data-testid="tournament-running-info">{view.runningInfo}</div>
+      )}
+    </header>
+  )
+}
 
-  const timerLabel = view.stepStartTime != null && view.serverTime != null ? liveElapsed || formatTimer(view.serverTime, view.stepStartTime) : ''
+export default function TournamentBracket({
+  view,
+  tournamentId,
+  onQuit,
+  onWatchMatch,
+  watchingMatchId,
+  compact,
+  canQuit,
+  showName = true,
+  updatedAt,
+  refreshing = false,
+  onRefresh,
+}: TournamentBracketProps) {
+  const { t } = useTranslation()
+  const viewer = useStore((s) => s.conn?.username)
+  const idBase = useId().replace(/:/g, '')
+  const sinceArrival = useSinceArrival(view)
+  const phone = useNarrowScreen()
+  const [pane, setPane] = useState<Pane>('rounds')
 
-  const constructing = view.tournamentState.toLowerCase().includes('construct')
-  const constructionRemaining = (() => {
-    if (!constructing || view.constructionTime <= 0 || view.serverTime == null || view.stepStartTime == null) return null
-    const elapsedSec = Math.floor(((view.serverTime ?? 0) + tick * 1000 - (view.stepStartTime ?? 0)) / 1000)
-    return Math.max(0, view.constructionTime - elapsedSec)
-  })()
-  const constructionLabel = constructionRemaining != null
-    ? `${Math.floor(constructionRemaining / 60)}:${(constructionRemaining % 60).toString().padStart(2, '0')}`
-    : `${Math.floor(view.constructionTime / 60)}m ${t('game', 'construct_title').toLowerCase()}`
+  const phase = tournamentPhase(view.tournamentState)
+  const elimination = isElimination(view)
+  const participant = !!viewer && isParticipant(view, viewer)
+  const champions = podium(view)
 
   const handleQuit = async () => {
-    const tid = tournamentId ?? view.tournamentName
-    if (!tid) return
+    if (!tournamentId) return
     if (!(await confirmDialog(t('lobby', 'tournament_quit_confirm'), { danger: true }))) return
     if (onQuit) {
-      onQuit(tid)
+      onQuit(tournamentId)
       return
     }
     try {
-      await cmds.quitTournament(tid)
+      await cmds.quitTournament(tournamentId)
     } catch {}
   }
 
+  const idPrefix = `trn-rounds-${idBase}`
+
   return (
-    <div className="tournament-bracket-header" data-testid="tournament-header">
-      <div className="tournament-bracket-title-row">
-        <div className="tournament-bracket-title">
-          <h2 className="tournament-name" data-testid="tournament-name">{view.tournamentName}</h2>
-          <span className="tournament-type" data-testid="tournament-type">{view.tournamentType}</span>
-          <Chip solid tone="ok" data-testid="tournament-state">{stateLabel(t, view.tournamentState)}</Chip>
-          {view.watchingAllowed ? (
-            <Chip tone="ok" icon="eye" data-testid="tournament-watching">{t('lobby', 'tag_spectators')}</Chip>
-          ) : (
-            <Chip icon="lock">{t('lobby', 'tag_private')}</Chip>
-          )}
+    <div className={`tournament-bracket ${compact ? 'compact' : ''} ${phone ? 'is-phone' : ''} ${elimination ? 'is-elimination' : ''}`} data-testid="tournament-bracket">
+      <BracketHeader
+        view={view}
+        showName={showName}
+        updatedAt={updatedAt}
+        refreshing={refreshing}
+        onRefresh={onRefresh}
+        sinceArrival={sinceArrival}
+      />
+      {viewer && participant && <TournamentYourMatch view={view} username={viewer} />}
+      {phone && (
+        <div className="trn-switch-wrap" data-testid="bracket-switch">
+          <Tabs<Pane>
+            className="trn-switch"
+            variant="segmented"
+            items={[
+              { id: 'rounds', label: t('lobby', 'trn_b_rounds_label'), testId: 'switch-rounds' },
+              { id: 'standings', label: t('lobby', 'standings_title'), testId: 'switch-standings' },
+            ]}
+            value={pane}
+            onChange={setPane}
+            idPrefix={`${idPrefix}-switch`}
+            label={t('lobby', 'trn_c_switch_label')}
+          />
         </div>
-        <div className="tournament-header-actions">
-          {timerLabel && (
-            <span className="tournament-timer" data-testid="tournament-timer" title={`serverTime ${view.serverTime} stepStart ${view.stepStartTime}`}>
-              <Icon name="clock" size={12} /> {timerLabel}
-            </span>
-          )}
-          {view.constructionTime > 0 && (
-            <span className="tournament-construction" data-testid="tournament-construction"><Icon name="hourglass" size={12} /> {constructionLabel}</span>
-          )}
-          {onClose && (
-            <CloseButton variant="solid" size="md" className="tournament-close-btn" onClick={onClose} />
-          )}
-        </div>
-      </div>
-      {view.runningInfo && (
-        <div className="tournament-running-info" data-testid="tournament-running-info">{view.runningInfo}</div>
       )}
-      {(view.tournamentState.toLowerCase().includes('draft') || view.tournamentState.toLowerCase().includes('construct')) && (
-        <div className="tournament-state-hint">{t('lobby', 'tournament_construction_hint')}</div>
-      )}
-      <div className="tournament-header-footer">
-        <span className="tournament-meta" data-testid="tournament-meta">
-          {view.rounds.length} {plural('lobby', 'tournament_round', view.rounds.length)} · {view.players.length} {plural('lobby', 'tournament_player', view.players.length)}
-        </span>
-        {view.startTime != null && view.startTime > 0 && (
-          <span className="tournament-dates" data-testid="tournament-dates">
-            {new Date(view.startTime).toLocaleString(toBcp47Locale(lang))}{view.endTime ? ` – ${new Date(view.endTime).toLocaleString(toBcp47Locale(lang))}` : ''}
-          </span>
-        )}
-        {tournamentId && (canQuit ?? true) && (
-          <Button variant="soft-danger" size="sm" onClick={() => void handleQuit()} data-testid="tournament-quit">
-            {t('lobby', 'tournament_quit')}
-          </Button>
-        )}
-      </div>
-    </div>
-  )
-}
-
-function BracketRound({ round, index, watchingAllowed, onWatchMatch, watchingMatchId }: {
-  round: RoundView
-  index: number
-  watchingAllowed: boolean
-  onWatchMatch?: (tableId: string) => void
-  watchingMatchId?: string | null
-}) {
-  const { t } = useTranslation()
-  return (
-    <div className="bracket-round" data-testid="bracket-round" data-round={index}>
-      <h4 className="bracket-round-title">{t('lobby', 'tournament_round_label', { number: index + 1 })}</h4>
-      <div className="bracket-games">
-        {round.games.length === 0 && <EmptyState size="sm">{t('lobby', 'bracket_empty')}</EmptyState>}
-        {round.games.map((g: TournamentGameView, gi: number) => (
-          <div key={`${g.tableId ?? g.matchId ?? gi}-${gi}`} className="bracket-game" data-testid="bracket-game">
-            <div className="bracket-game-top">
-              <span className="bracket-game-players" data-testid="bracket-game-players" title={g.players}>{g.players || '—'}</span>
-              <span className={`bracket-game-state state-${String(g.state).toLowerCase()}`} data-testid="bracket-game-state">{stateLabel(t, g.state)}</span>
-            </div>
-            {g.result && <div className="bracket-game-result" data-testid="bracket-game-result">{g.result}</div>}
-            <div className="bracket-game-meta">
-              {g.roundNum != null && <span className="bracket-round-num">#R{g.roundNum}</span>}
-              {g.tableId && <span className="bracket-table-id" title={g.tableId}>{t('lobby', 'create_table_btn')} {g.tableId.slice(0, 6)}</span>}
-              {watchingAllowed && g.gameId && g.tableId && (onWatchMatch ? (
-                <button
-                  type="button"
-                  className="bracket-watchable bracket-watch-btn"
-                  data-testid="bracket-watch"
-                  data-table={g.tableId}
-                  title={t('lobby', 'watch_btn')}
-                  aria-label={`${t('lobby', 'watch_btn')}: ${g.players}`}
-                  disabled={watchingMatchId === g.tableId}
-                  onClick={() => onWatchMatch(g.tableId as string)}
-                >
-                  <Icon name="eye" size={12} />
-                </button>
-              ) : (
-                <span className="bracket-watchable"><Icon name="eye" size={12} /></span>
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-export default function TournamentBracket({ view, tournamentId, onClose, onQuit, onWatchMatch, watchingMatchId, compact, canQuit }: TournamentBracketProps) {
-  const { t } = useTranslation()
-  const columnsRef = useRef<HTMLDivElement>(null)
-  const [hasOverflowRight, setHasOverflowRight] = useState(false)
-
-  const updateOverflow = useCallback(() => {
-    const el = columnsRef.current
-    if (!el) return
-    setHasOverflowRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 1)
-  }, [])
-
-  useEffect(() => {
-    updateOverflow()
-    const el = columnsRef.current
-    if (!el) return
-    el.addEventListener('scroll', updateOverflow, { passive: true })
-    let ro: ResizeObserver | null = null
-    if (typeof ResizeObserver !== 'undefined') {
-      ro = new ResizeObserver(updateOverflow)
-      ro.observe(el)
-    }
-    window.addEventListener('resize', updateOverflow)
-    return () => {
-      el.removeEventListener('scroll', updateOverflow)
-      ro?.disconnect()
-      window.removeEventListener('resize', updateOverflow)
-    }
-  }, [updateOverflow, view.rounds.length])
-
-  const scrollBracketRight = () => {
-    const el = columnsRef.current
-    if (!el) return
-    if (typeof el.scrollBy === 'function') el.scrollBy({ left: 240, behavior: 'smooth' })
-    else el.scrollLeft += 240
-  }
-
-  const sortedPlayers = useMemo(() => {
-    return [...view.players].sort((a, b) => (b.points ?? 0) - (a.points ?? 0))
-  }, [view.players])
-
-  return (
-    <div className={`tournament-bracket ${compact ? 'compact' : ''}`} data-testid="tournament-bracket">
-      <TournamentBracketHeader view={view} tournamentId={tournamentId} onClose={onClose} onQuit={onQuit} canQuit={canQuit} />
       <div className="tournament-bracket-body">
-        <section className="tournament-rounds-section" aria-label={t('lobby', 'bracket_title')}>
-          <h3 className="tournament-section-title">{t('lobby', 'bracket_title')}</h3>
-          {view.rounds.length === 0 ? (
-            <EmptyState data-testid="tournament-no-rounds">{t('lobby', 'bracket_no_rounds')}</EmptyState>
-          ) : (
-            <div className="bracket-columns-wrap">
-              <div className="bracket-columns" data-testid="bracket-columns" ref={columnsRef}>
-                {view.rounds.map((r, idx) => (
-                  <BracketRound key={idx} round={r} index={idx} watchingAllowed={view.watchingAllowed} onWatchMatch={onWatchMatch} watchingMatchId={watchingMatchId} />
-                ))}
-              </div>
-              {hasOverflowRight && (
-                <>
-                  <div className="bracket-fade-right" aria-hidden="true" />
-                  <IconButton label={t('lobby', 'bracket_scroll_right')} round
-                    className="bracket-scroll-right"
-                    data-testid="bracket-scroll-right"
-                    onClick={scrollBracketRight}>
-                    <span aria-hidden="true">›</span>
-                  </IconButton>
-                </>
-              )}
-            </div>
-          )}
-        </section>
-        <section className="tournament-standings-section" aria-label={t('lobby', 'standings_title')}>
-          <h3 className="tournament-section-title">{t('lobby', 'standings_title')}</h3>
-          <TournamentStandings players={view.players} sortedPlayers={sortedPlayers} />
-        </section>
+        {(!phone || pane === 'rounds') && (
+          <section className="tournament-rounds-section" aria-labelledby={`${idPrefix}-title`} data-testid="bracket-rounds-section">
+            <h3 className="tournament-section-title" id={`${idPrefix}-title`}>{t('lobby', 'bracket_title')}</h3>
+            <TournamentRounds
+              view={view}
+              tournamentId={tournamentId}
+              canWatch={view.watchingAllowed}
+              onWatchMatch={onWatchMatch}
+              watchingMatchId={watchingMatchId}
+            />
+          </section>
+        )}
+        {(!phone || pane === 'standings') && (
+          <section className="tournament-standings-section" aria-labelledby={`${idPrefix}-standings`} data-testid="bracket-standings-section">
+            <h3 className="tournament-section-title" id={`${idPrefix}-standings`}>{t('lobby', 'standings_title')}</h3>
+            {phase === 'finished' && <TournamentPodium entries={champions} champion={elimination} />}
+            <TournamentStandings view={view} viewer={viewer} />
+          </section>
+        )}
       </div>
+      {tournamentId && (canQuit ?? true) && (
+        <footer className="trn-footer">
+          <Button variant="soft-danger" size="md" className="trn-leave" data-testid="tournament-quit" onClick={() => void handleQuit()}>
+            {t('lobby', 'trn_b_leave')}
+          </Button>
+        </footer>
+      )}
     </div>
   )
 }
-
-export { formatTimer }

@@ -118,7 +118,7 @@ test.describe('Wizard crear mesa (U3)', () => {
     })
   })
 
-  test('DRAFT: preset MH3 con draftbots se bloquea (no llegan a rondas)', async ({ page }) => {
+  test('TRN-6: DRAFT: preset MH3 seats no bot: the Bot choice is disabled with its reason, and the tournament has human seats', async ({ page }) => {
     await withFakeServer(wizardScenario, async () => {
       const buffers: CaptureBuffers = { frames: [], sent: [], pageErrors: [] }
       installCapture(page, buffers)
@@ -126,21 +126,30 @@ test.describe('Wizard crear mesa (U3)', () => {
       await openTournamentWizard(page)
       await page.getByPlaceholder(/Ej\. Modern Casual Bo3/).fill('draft-e2e')
       await page.getByRole('button', { name: /Draft MH3/ }).click()
-      // General → Draft (limited only) → Tiempos → Restricciones → Jugadores
-      for (let i = 0; i < 4; i++) {
-        await page.getByRole('button', { name: /Siguiente/ }).click()
-      }
-      await page.getByRole('button', { name: /IA Draftbot/ }).click()
-      for (let i = 0; i < 8; i++) {
-        const submit = page.getByRole('button', { name: /Crear torneo|Create Draft/i })
-        if ((await submit.count()) > 0 && (await submit.first().isVisible())) break
-        await page.getByRole('button', { name: /Siguiente/ }).click()
-      }
-      await page.getByRole('button', { name: /Crear torneo|Create Draft/i }).click()
-      await expect(page.getByText(/no llegan a rondas/)).toBeVisible({ timeout: 15_000 })
-      await expect(page.getByRole('heading', { name: /Crear torneo|Create Tournament/i })).toBeVisible()
+      // Formato → Reglas → Plazas
+      await page.getByRole('button', { name: /Siguiente/ }).click()
+      await page.getByRole('button', { name: /Siguiente/ }).click()
+      await expect(page.locator('.trn-seat').nth(1).getByRole('radio', { name: /^IA$/ })).toBeDisabled()
+      await expect(page.getByText(/nunca llegaría a sus rondas/)).toBeVisible()
+      await page.getByRole('button', { name: /Crear torneo/ }).click()
+      await expect(page.getByRole('heading', { name: /Crear torneo|Create Tournament/i })).toBeHidden({ timeout: 15_000 })
       const sent = buffers.sent as Array<{ action?: string; args?: Record<string, unknown> }>
-      expect(sent.find((f) => f?.action === 'createTournamentTable')).toBeUndefined()
+      const createFrame = sent.find((f) => f?.action === 'createTournamentTable')
+      expect(createFrame?.args?.playerTypes).toEqual(Array(8).fill('HUMAN'))
+      expect(pageErrorsOf(buffers)).toEqual([])
+    })
+  })
+
+  test('TRN-4: the FakeServer catalogue gives the draft its minimum of 4 seats, so the stepper stops there', async ({ page }) => {
+    await withFakeServer(wizardScenario, async () => {
+      const buffers: CaptureBuffers = { frames: [], sent: [], pageErrors: [] }
+      installCapture(page, buffers)
+      await login(page, 'wiz')
+      await openTournamentWizard(page)
+      await expect(page.getByRole('spinbutton', { name: 'Número de plazas' })).toHaveValue('8')
+      for (let i = 0; i < 4; i++) await page.getByRole('button', { name: 'Menos plazas' }).click()
+      await expect(page.getByRole('spinbutton', { name: 'Número de plazas' })).toHaveValue('4')
+      await expect(page.getByRole('button', { name: 'Menos plazas' })).toBeDisabled()
       expect(pageErrorsOf(buffers)).toEqual([])
     })
   })
@@ -152,20 +161,15 @@ test.describe('Wizard crear mesa (U3)', () => {
       await openTournamentWizard(page)
       await page.getByPlaceholder(/Ej\. Modern Casual Bo3/).fill('swiss-e2e')
       await page.getByRole('button', { name: /Modern (Swiss|Suizo)/ }).click()
-      for (let i = 0; i < 3; i++) {
-        await page.getByRole('button', { name: /Siguiente/ }).click()
-      }
-      await page.getByRole('button', { name: /IA Mad/ }).click()
-      for (let i = 0; i < 8; i++) {
-        const submit = page.getByRole('button', { name: /Crear torneo|Create Draft/i })
-        if ((await submit.count()) > 0 && (await submit.first().isVisible())) break
-        await page.getByRole('button', { name: /Siguiente/ }).click()
-      }
-      await page.getByRole('button', { name: /Crear torneo|Create Draft/i }).click()
+      await page.getByRole('button', { name: /Siguiente/ }).click()
+      await page.getByRole('button', { name: /Siguiente/ }).click()
+      await page.getByRole('button', { name: 'Llenar con bots' }).click()
+      await page.getByRole('button', { name: /Crear torneo/ }).click()
       await expect(page.getByRole('heading', { name: /Crear torneo|Create Tournament/i })).toBeHidden({ timeout: 15_000 })
       const sent = buffers.sent as Array<{ action?: string; args?: Record<string, unknown> }>
       const createFrame = sent.find((f) => f?.action === 'createTournamentTable')
       expect(createFrame?.args?.tournamentType).toBe('Constructed Swiss')
+      expect(createFrame?.args?.numberRounds).toBe(3)
       expect(createFrame?.args?.deckType).toBe('Constructed - Modern')
       expect(createFrame?.args?.limited).toBe(false)
       const joins = sent.filter((f) => f?.action === 'joinTournamentTable')

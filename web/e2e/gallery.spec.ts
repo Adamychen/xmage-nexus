@@ -45,6 +45,8 @@ const VISUAL_ENTRIES_ALL = [
   'screen:tournament-error',
   'screen:tournament-empty',
   'screen:tournament-waiting',
+  'screen:tournament-elimination',
+  'screen:tournament-elimination-finished',
   'screen:tournament-panel',
   'screen:draft-stalled',
   'screen:setup',
