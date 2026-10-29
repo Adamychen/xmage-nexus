@@ -9,10 +9,10 @@ export interface NewsRelease {
 
 export const NEXUS_REPO = 'Adamychen/xmage-nexus'
 export const XMAGE_REPO = 'magefree/mage'
-const NEWS_CACHE_KEY = 'mage-web-news-cache'
+const NEWS_CACHE_KEY = 'mage-web-news-cache-v2'
 const NEWS_SEEN_KEY = 'mage-web-news-seen'
 export const NEWS_TTL_MS = 24 * 60 * 60 * 1000
-const MAX_BODY_CHARS = 2000
+const MAX_BODY_CHARS = 4000
 const PER_REPO = 5
 
 interface NewsCache {
@@ -60,6 +60,45 @@ interface GithubRelease {
   published_at?: string | null
 }
 
+const DEV_GROUPS = /^\*\*(?:Under the hood|For developers|Internals)\*\*\s*$/i
+
+function dropBlock(lines: string[], start: (line: string) => boolean, end: (line: string) => boolean): string[] {
+  const out: string[] = []
+  let skipping = false
+  for (const line of lines) {
+    if (skipping && end(line)) skipping = false
+    if (!skipping && start(line)) {
+      skipping = true
+      continue
+    }
+    if (!skipping) out.push(line)
+  }
+  return out
+}
+
+/**
+ * The part of a release body written for players. A Nexus body opens with the download table and
+ * keeps what changed in a "What changed" <details>; that block is taken alone, without its
+ * "What's new in x.y" heading (the version is the panel header) and without the groups written for
+ * developers. Raw HTML (images, details tags) never reaches the panel.
+ */
+export function playerNotes(body: string, repo: NewsRelease['repo']): string {
+  let notes = body.replace(/\r\n/g, '\n').replace(/<!--[\s\S]*?-->/g, '')
+  if (repo === 'nexus') {
+    const changed = notes.match(/<details>\s*<summary>[^<]*what changed[^<]*<\/summary>([\s\S]*?)<\/details>/i)
+    let lines = (changed ? changed[1] : notes).split('\n')
+    const isHeading = (line: string) => /^#{1,4}\s/.test(line)
+    lines = dropBlock(lines, (line) => /^#{1,4}\s+download\b/i.test(line), isHeading)
+    lines = lines.filter((line) => !/^#{1,4}\s+what'?s new in\b/i.test(line))
+    lines = dropBlock(lines, (line) => DEV_GROUPS.test(line.trim()), (line) => isHeading(line) || /^\*\*[^*]+\*\*\s*$/.test(line.trim()))
+    notes = lines.join('\n')
+  }
+  return notes
+    .replace(/<[^>]+>/g, '')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
+}
+
 async function fetchRepoReleases(repo: string, repoKey: NewsRelease['repo']): Promise<NewsRelease[]> {
   const res = await fetch(`https://api.github.com/repos/${repo}/releases?per_page=${PER_REPO}`, {
     headers: { Accept: 'application/vnd.github+json' },
@@ -71,7 +110,7 @@ async function fetchRepoReleases(repo: string, repoKey: NewsRelease['repo']): Pr
     repo: repoKey,
     tag: r.tag_name ?? '',
     name: r.name || r.tag_name || '',
-    body: (r.body ?? '').slice(0, MAX_BODY_CHARS),
+    body: playerNotes(r.body ?? '', repoKey).slice(0, MAX_BODY_CHARS),
     url: r.html_url ?? `https://github.com/${repo}/releases`,
     publishedAt: r.published_at ?? null,
   }))
@@ -158,6 +197,12 @@ export function renderNewsMarkdown(src: string): string {
       closeList()
       const level = Math.min(4, heading[1].length + 1)
       html.push(`<h${level}>${inline(heading[2])}</h${level}>`)
+      continue
+    }
+    const group = line.match(/^\s*\*\*([^*]+)\*\*\s*$/)
+    if (group) {
+      closeList()
+      html.push(`<h4 class="news-group">${inline(group[1])}</h4>`)
       continue
     }
     const item = line.match(/^\s*[-*]\s+(.*)$/)

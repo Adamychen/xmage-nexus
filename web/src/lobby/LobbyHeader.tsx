@@ -12,6 +12,7 @@ import RankBadge from './RankBadge'
 import Icon from '../ui/Icon'
 import { useTranslation, plural } from '../i18n'
 import type { LobbyTab } from './lobbyUtils'
+import WhatsNewButton from '../system/WhatsNew'
 
 interface Props {
   conn: ConnectionInfo | null
@@ -30,12 +31,13 @@ interface Props {
   onOpenAbout: () => void
   onOpenWiki: () => void
   hasNews: boolean
+  onNewsSeen: () => void
 }
 
 export default function LobbyHeader({
   conn, myUser, onlineCount, confirmDisconnect, onConfirmDisconnect,
   onOpenSettings, onOpenReport, onOpenProfile, activeTab, onTabChange,
-  tableCount, activeTableCount = 0, onGoToActiveTable, onOpenAbout, onOpenWiki, hasNews,
+  tableCount, activeTableCount = 0, onGoToActiveTable, onOpenAbout, onOpenWiki, hasNews, onNewsSeen,
 }: Props) {
   const { t, lang } = useTranslation()
   const navRef = useRef<HTMLElement>(null)
@@ -159,6 +161,7 @@ export default function LobbyHeader({
             <RankBadge elo={myUser?.constructedRating ?? 1500} compact />
           </div>
         </button>
+        <WhatsNewButton unseen={hasNews} onSeen={onNewsSeen} className="lobby-appearance-btn" />
         <IconButton label={t('common', 'settings')} icon="settings" size="lg"
           className="lobby-appearance-btn"
           onClick={onOpenSettings}
@@ -182,9 +185,6 @@ export default function LobbyHeader({
           </MenuItem>
           <MenuItem icon="info" onClick={onOpenAbout} data-testid="open-about">
             {t('system', 'about_title')}
-            {hasNews && (
-              <span className="lobby-news-dot" data-testid="lobby-news-dot" aria-hidden="true">●</span>
-            )}
           </MenuItem>
           <MenuItem icon="logout" danger onClick={() => onConfirmDisconnect(true)}>
             {t('lobby', 'disconnect')}

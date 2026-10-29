@@ -2068,6 +2068,7 @@ export const ja: TranslationSchema = {
     news_empty: 'まだ新着情報がありません',
     news_offline: 'オフライン — 保存された情報を表示しています',
     news_open: 'GitHub で開く',
+    news_previous: '以前のリリース',
     log_autosave: '対戦ログを保存',
     log_autosave_hint: '終了した対戦のログをこのデバイスに自動保存します',
     log_download: 'ログをダウンロード',

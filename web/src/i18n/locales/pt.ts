@@ -2063,6 +2063,7 @@ export const pt: TranslationSchema = {
     news_empty: 'Ainda sem novidades',
     news_offline: 'Offline — mostrando novidades guardadas',
     news_open: 'Abrir no GitHub',
+    news_previous: 'Versões anteriores',
     log_autosave: 'Guardar logs de partida',
     log_autosave_hint: 'Guarda automaticamente o log das partidas terminadas neste dispositivo',
     log_download: 'Descarregar log',

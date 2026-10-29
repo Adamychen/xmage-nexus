@@ -182,6 +182,7 @@ export default function LobbyScreen() {
         onOpenAbout={() => setShowAbout(true)}
         onOpenWiki={() => setShowWiki(true)}
         hasNews={unseenNews}
+        onNewsSeen={refreshNews}
       />
 
       <ErrorBanner

@@ -8,6 +8,7 @@ import {
   loadSeenNews,
   getNews,
   refreshNews,
+  playerNotes,
   NEWS_TTL_MS,
   type NewsRelease,
 } from './news'
@@ -68,7 +69,7 @@ describe('news cache and seen markers', () => {
 
   it('fresh cache is served without network', async () => {
     const releases = [mk('nexus', 'v1')]
-    mockStorage['mage-web-news-cache'] = JSON.stringify({ fetchedAt: Date.now(), releases })
+    mockStorage['mage-web-news-cache-v2'] = JSON.stringify({ fetchedAt: Date.now(), releases })
     const fetchMock = vi.fn()
     vi.stubGlobal('fetch', fetchMock)
     const { releases: out, offline } = await getNews()
@@ -79,7 +80,7 @@ describe('news cache and seen markers', () => {
 
   it('stale cache triggers refresh and falls back offline', async () => {
     const releases = [mk('nexus', 'v1')]
-    mockStorage['mage-web-news-cache'] = JSON.stringify({
+    mockStorage['mage-web-news-cache-v2'] = JSON.stringify({
       fetchedAt: Date.now() - NEWS_TTL_MS - 1,
       releases,
     })
@@ -105,7 +106,7 @@ describe('news cache and seen markers', () => {
     )
     const out = await refreshNews()
     expect(out).toHaveLength(2)
-    expect(out[0].body).toHaveLength(2000)
+    expect(out[0].body).toHaveLength(4000)
     expect(loadNewsCache()?.releases).toHaveLength(2)
   })
 
@@ -122,5 +123,57 @@ describe('news cache and seen markers', () => {
     expect(isNewsCacheFresh(null)).toBe(false)
     expect(isNewsCacheFresh({ fetchedAt: Date.now(), releases: [] })).toBe(true)
     expect(isNewsCacheFresh({ fetchedAt: Date.now() - NEWS_TTL_MS, releases: [] })).toBe(false)
+  })
+})
+
+describe('playerNotes', () => {
+  const nexusBody = [
+    '## Download: pick ONE file, the one for your system',
+    '',
+    '| Your system | File |',
+    '| --- | --- |',
+    '| Windows 10/11 | `XMage Nexus_0.7.0_x64-setup.exe` |',
+    '',
+    '**The other 9 files (13 MB) are not for you.**',
+    '',
+    '<details><summary>What changed in v0.6.0</summary>',
+    '',
+    "## What's new in 0.6.0",
+    '',
+    '**New board view for Commander pods**',
+    '- Main board with a side panel.',
+    '',
+    '**Under the hood**',
+    '- Proxy: hardened session lifecycle.',
+    '',
+    '**Interface**',
+    '- Bigger phase dial.',
+    '',
+    '</details>',
+  ].join('\n')
+
+  it('LBY-26: keeps only the "What changed" block of a Nexus release, without its heading or developer groups', () => {
+    const notes = playerNotes(nexusBody, 'nexus')
+    expect(notes).toContain('**New board view for Commander pods**')
+    expect(notes).toContain('- Main board with a side panel.')
+    expect(notes).toContain('- Bigger phase dial.')
+    expect(notes).not.toMatch(/setup\.exe|Download|not for you/)
+    expect(notes).not.toMatch(/What's new in|What changed/)
+    expect(notes).not.toMatch(/Under the hood|hardened session/)
+    expect(notes).not.toMatch(/<\/?details|<summary/)
+  })
+
+  it('LBY-26: a Nexus body without the block loses its download section only', () => {
+    const notes = playerNotes('## Download: pick ONE file\n| a | b |\n\n## Highlights\n- New lobby', 'nexus')
+    expect(notes).toBe('## Highlights\n- New lobby')
+  })
+
+  it('LBY-26: strips raw HTML such as images from official XMage releases', () => {
+    const notes = playerNotes('Async world\n\n<img width="640" src="https://x/y.png" />\n\nhttps://xmage.today/', 'xmage')
+    expect(notes).toBe('Async world\n\nhttps://xmage.today/')
+  })
+
+  it('LBY-26: a bold line on its own becomes a group heading', () => {
+    expect(renderNewsMarkdown('**Interface**\n- Bigger dial')).toBe('<h4 class="news-group">Interface</h4><ul><li>Bigger dial</li></ul>')
   })
 })
