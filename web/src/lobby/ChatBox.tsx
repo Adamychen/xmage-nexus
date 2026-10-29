@@ -6,36 +6,12 @@ import FormattedText from '../game/FormattedText'
 import FloatingCardPreview from '../board/FloatingCardPreview'
 import { handleIgnoreCommand, isUserIgnored } from './ignoreList'
 import Icon, { type IconName } from '../ui/Icon'
-import type { CardView, ChatMessageEvent } from '../net/types'
+import type { CardView } from '../net/types'
 import { useTranslation, getLanguage, toBcp47Locale, type SupportedLanguage } from '../i18n'
 import type { CategoryT } from '../i18n/types'
 import './ChatBox.css'
 import Button from '../ui/Button'
-
-export interface ReadyMarker {
-  ready: boolean
-  user?: string
-}
-
-/**
- * El marcador de listo SOLO cuenta anclado al inicio del mensaje (variantes de
- * mayúsculas y espacios dentro de los corchetes incluidas). Un texto cualquiera
- * que contenga el tag a mitad NO es una señal — mismo criterio en
- * `SpectatorStagingScreen` y en `ChatBox`.
- */
-export function parseReadyMarker(text: string): ReadyMarker | null {
-  const match = /^\s*\[\s*NEXUS_(NOT_)?READY\s*\]\s*(.*)$/i.exec(text)
-  if (!match) return null
-  const user = match[2].trim()
-  return { ready: !match[1], user: user || undefined }
-}
-
-function readyMarkerOf(m: ChatMessageEvent): ReadyMarker | null {
-  const marker = parseReadyMarker(m.message ?? '')
-  if (!marker) return null
-  if (marker.user && m.username && marker.user.toLowerCase() !== m.username.toLowerCase()) return null
-  return marker
-}
+import { isSystemMessage, parseReadyMarker } from './chatMessageKind'
 
 function parseSystemEvent(text: string, t: CategoryT<'lobby'>): { icon: IconName; text: string } {
   const marker = parseReadyMarker(text)
@@ -62,11 +38,6 @@ function parseSystemEvent(text: string, t: CategoryT<'lobby'>): { icon: IconName
     return { icon: 'logout', text: `${user} ${t('lobby', 'user_left')}` }
   }
   return { icon: 'info', text }
-}
-
-function isSystemMessage(m: ChatMessageEvent): boolean {
-  if (!m.username || m.username === 'server' || m.messageType === 'SYSTEM' || m.messageType === 'STATUS') return true
-  return !!readyMarkerOf(m)
 }
 
 function isConnectionEvent(text: string): boolean {

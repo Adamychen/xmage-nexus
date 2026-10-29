@@ -1539,6 +1539,7 @@ export const es: TranslationSchema = {
     trn_f_collapse: 'Minimizar',
     trn_f_this_match: 'Esta partida',
     trn_f_tab_chat: 'Charla',
+    trn_g_chat_unread: 'Mensajes sin leer: {count}',
     trn_f_tabs_label: 'Secciones del torneo',
     trn_f_pill_round: 'Ronda {number}',
     ring_level_1_title: 'Portador Legendario y Evasión',

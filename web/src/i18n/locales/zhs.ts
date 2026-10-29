@@ -1542,6 +1542,7 @@ export const zhs: TranslationSchema = {
     trn_f_collapse: '最小化',
     trn_f_this_match: '本场对局',
     trn_f_tab_chat: '聊天',
+    trn_g_chat_unread: '未读消息：{count}',
     trn_f_tabs_label: '锦标赛分区',
     trn_f_pill_round: 'R{number}',
     ring_level_1_title: '传奇持有者与闪避',

@@ -1542,6 +1542,7 @@ export const ja: TranslationSchema = {
     trn_f_collapse: '最小化',
     trn_f_this_match: 'この対戦',
     trn_f_tab_chat: 'チャット',
+    trn_g_chat_unread: '未読メッセージ: {count}',
     trn_f_tabs_label: 'トーナメントの項目',
     trn_f_pill_round: 'R{number}',
     ring_level_1_title: '伝説の所持者と回避',

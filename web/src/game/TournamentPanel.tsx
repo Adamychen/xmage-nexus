@@ -24,12 +24,23 @@ import { plural, useTranslation } from '../i18n'
 import { confirmDialog } from '../ui/confirmDialog'
 import { useEscape } from '../ui/useEscape'
 import { clampDragPos, useDraggablePos } from '../ui/useDraggablePos'
+import { useTournamentChatUnread } from './tournamentChatUnread'
 import './TournamentPanel.css'
 
 const MINI_POS_KEY = 'tournament_mini_pos'
 const DRAG_THRESHOLD = 6
 
 type PanelTab = 'standings' | 'rounds' | 'chat'
+
+function UnreadBadge({ count, className, testId }: { count: number; className: string; testId: string }) {
+  const { t } = useTranslation()
+  if (count <= 0) return null
+  return (
+    <span className={className} role="img" aria-label={t('game', 'trn_g_chat_unread', { count })} data-testid={testId}>
+      {count > 9 ? '9+' : count}
+    </span>
+  )
+}
 
 interface DragState {
   startX: number
@@ -39,9 +50,10 @@ interface DragState {
   moved: boolean
 }
 
-function MiniPill({ view, viewer, pillRef, pos, dragging, onPointerDown, onPointerMove, onEnd, onClick }: {
+function MiniPill({ view, viewer, unread, pillRef, pos, dragging, onPointerDown, onPointerMove, onEnd, onClick }: {
   view: TournamentView
   viewer: string | undefined
+  unread: number
   pillRef: React.RefObject<HTMLButtonElement | null>
   pos: { left: number; top: number } | null
   dragging: boolean
@@ -96,6 +108,7 @@ function MiniPill({ view, viewer, pillRef, pos, dragging, onPointerDown, onPoint
     >
       <Icon name="trophy" size={13} />
       {content}
+      <UnreadBadge count={unread} className="tournament-unread-badge" testId="tournament-mini-unread" />
       <span className="tournament-mini-expand">{t('game', 'tournament_view_bracket')}</span>
     </button>
   )
@@ -123,6 +136,7 @@ export default function TournamentPanel() {
   const suppressClickRef = useRef(false)
   const [miniPos, setMiniPos] = useDraggablePos(MINI_POS_KEY, () => miniRef.current, 320, 36)
   const [dragging, setDragging] = useState(false)
+  const unread = useTournamentChatUnread(tournamentChatId, viewer, expanded && tab === 'chat')
   const view = tournament?.view ?? null
   const tid = tournament?.tournamentId ?? null
   const idPrefix = `trn-panel-${idBase}`
@@ -255,6 +269,7 @@ export default function TournamentPanel() {
       <MiniPill
         view={view}
         viewer={viewer}
+        unread={unread}
         pillRef={miniRef}
         pos={miniPos}
         dragging={dragging}
@@ -296,7 +311,12 @@ export default function TournamentPanel() {
   const tabs = [
     { id: 'standings' as const, label: t('lobby', 'standings_title'), testId: 'tournament-panel-tab-standings' },
     { id: 'rounds' as const, label: t('lobby', 'trn_b_rounds_label'), testId: 'tournament-panel-tab-rounds' },
-    { id: 'chat' as const, label: t('game', 'trn_f_tab_chat'), testId: 'tournament-panel-tab-chat' },
+    {
+      id: 'chat' as const,
+      label: t('game', 'trn_f_tab_chat'),
+      testId: 'tournament-panel-tab-chat',
+      badge: <UnreadBadge count={unread} className="tournament-unread-badge" testId="tournament-panel-tab-chat-unread" />,
+    },
   ]
 
   return (

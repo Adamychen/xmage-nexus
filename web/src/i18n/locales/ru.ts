@@ -1539,6 +1539,7 @@ export const ru: TranslationSchema = {
     trn_f_collapse: 'Свернуть',
     trn_f_this_match: 'Этот матч',
     trn_f_tab_chat: 'Чат',
+    trn_g_chat_unread: 'Непрочитанных сообщений: {count}',
     trn_f_tabs_label: 'Разделы турнира',
     trn_f_pill_round: 'R{number}',
     ring_level_1_title: 'Легендарный носитель и уклонение',

@@ -251,3 +251,20 @@
   font-size: var(--fs-2xs);
   white-space: nowrap;
 }
+
+.tournament-unread-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 var(--sp-1);
+  border-radius: var(--r-base);
+  background: var(--gold-500);
+  color: var(--ink-1);
+  font-size: var(--fs-3xs);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}

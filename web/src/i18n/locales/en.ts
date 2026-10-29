@@ -1537,6 +1537,7 @@ export const en = {
     trn_f_collapse: 'Minimize',
     trn_f_this_match: 'This match',
     trn_f_tab_chat: 'Chat',
+    trn_g_chat_unread: 'Unread messages: {count}',
     trn_f_tabs_label: 'Tournament sections',
     trn_f_pill_round: 'R{number}',
     ring_level_1_title: 'Legendary Bearer & Evasion',

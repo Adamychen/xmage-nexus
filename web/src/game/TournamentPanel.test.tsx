@@ -5,7 +5,7 @@ import ConfirmHost from '../ui/ConfirmHost'
 import { setState } from '../state/store'
 import { getState } from '../state/state'
 import { switchLanguage } from '../i18n'
-import type { TournamentPlayerView, TournamentView } from '../net/types'
+import type { ChatMessageEvent, TournamentPlayerView, TournamentView } from '../net/types'
 import { getTournament, quitTournament } from '../net/commands'
 
 vi.mock('../net/commands', async (importOriginal) => ({
@@ -323,5 +323,96 @@ describe('TournamentPanel — live refresh (TRN-15)', () => {
     } finally {
       vi.useRealTimers()
     }
+  })
+})
+
+describe('TournamentPanel — unread tournament chat (TRN-20)', () => {
+  const CHAT_ID = 'chat-1'
+
+  function talk(username: string, message = 'hello'): ChatMessageEvent {
+    return { chatId: CHAT_ID, username, message, messageType: 'TALK' }
+  }
+
+  function receive(...messages: ChatMessageEvent[]) {
+    act(() => setState({ chatMessages: [...getState().chatMessages, ...messages] } as never))
+  }
+
+  function openWithChat(extra: Record<string, unknown> = {}) {
+    setViewer('zoe')
+    const utils = openPanel(duelView(), { chatMessages: [], ...extra })
+    act(() => setState({ tournamentChatId: CHAT_ID } as never))
+    return utils
+  }
+
+  afterEach(() => {
+    setState({ chatMessages: [] } as never)
+  })
+
+  it('TRN-20: a message that arrives while another tab is showing badges the Chat tab', () => {
+    openWithChat()
+    expect(screen.getByRole('tab', { name: 'Rounds' }).getAttribute('aria-selected')).toBe('true')
+    receive(talk('bob', 'anyone up for a rematch?'))
+    const badge = within(screen.getByTestId('tournament-panel-tab-chat')).getByTestId('tournament-panel-tab-chat-unread')
+    expect(badge.textContent).toBe('1')
+    expect(badge.getAttribute('aria-label')).toBe('Unread messages: 1')
+  })
+
+  it('TRN-20: the collapsed pill shows the same count', () => {
+    openWithChat()
+    fireEvent.click(screen.getByTestId('tournament-panel-collapse'))
+    receive(talk('bob'), talk('carol'))
+    expect(screen.getByTestId('tournament-mini-unread').textContent).toBe('2')
+  })
+
+  it('TRN-20: above nine the badge says 9+ while the label keeps the exact count', () => {
+    openWithChat()
+    receive(...Array.from({ length: 9 }, (_, i) => talk('bob', `m${i}`)))
+    expect(screen.getByTestId('tournament-panel-tab-chat-unread').textContent).toBe('9')
+    receive(talk('bob', 'tenth'))
+    const badge = screen.getByTestId('tournament-panel-tab-chat-unread')
+    expect(badge.textContent).toBe('9+')
+    expect(badge.getAttribute('aria-label')).toBe('Unread messages: 10')
+  })
+
+  it('TRN-20: opening the Chat tab clears the count, and messages seen there are not counted after switching away', () => {
+    openWithChat()
+    receive(talk('bob'), talk('carol'))
+    expect(screen.getByTestId('tournament-panel-tab-chat-unread').textContent).toBe('2')
+    fireEvent.click(screen.getByTestId('tournament-panel-tab-chat'))
+    expect(screen.queryByTestId('tournament-panel-tab-chat-unread')).toBeNull()
+    receive(talk('dave'))
+    expect(screen.queryByTestId('tournament-panel-tab-chat-unread')).toBeNull()
+    fireEvent.click(screen.getByRole('tab', { name: 'Standings' }))
+    receive(talk('erin'))
+    expect(screen.getByTestId('tournament-panel-tab-chat-unread').textContent).toBe('1')
+  })
+
+  it('TRN-20: opening the panel from the pill with the Chat tab selected clears the pill count', () => {
+    openWithChat()
+    fireEvent.click(screen.getByTestId('tournament-panel-tab-chat'))
+    fireEvent.click(screen.getByTestId('tournament-panel-collapse'))
+    receive(talk('bob'))
+    expect(screen.getByTestId('tournament-mini-unread').textContent).toBe('1')
+    fireEvent.click(screen.getByTestId('tournament-panel-mini'))
+    expect(screen.queryByTestId('tournament-mini-unread')).toBeNull()
+    expect(screen.queryByTestId('tournament-panel-tab-chat-unread')).toBeNull()
+  })
+
+  it('TRN-20: your own messages and system lines do not show a badge', () => {
+    openWithChat()
+    receive(
+      talk('zoe', 'my own line'),
+      { chatId: CHAT_ID, username: '', message: 'carol has joined', messageType: 'SYSTEM' },
+      { chatId: CHAT_ID, username: 'server', message: 'Round 2 starts', messageType: 'TALK' },
+      { chatId: 'room-chat', username: 'bob', message: 'in another chat', messageType: 'TALK' },
+    )
+    expect(screen.queryByTestId('tournament-panel-tab-chat-unread')).toBeNull()
+  })
+
+  it('TRN-20: history received before the panel opened is not counted as unread', () => {
+    openWithChat({ chatMessages: [talk('bob', 'old'), talk('carol', 'older')] })
+    expect(screen.queryByTestId('tournament-panel-tab-chat-unread')).toBeNull()
+    receive(talk('dave'))
+    expect(screen.getByTestId('tournament-panel-tab-chat-unread').textContent).toBe('1')
   })
 })

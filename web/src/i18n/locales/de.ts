@@ -1539,6 +1539,7 @@ export const de: TranslationSchema = {
     trn_f_collapse: 'Minimieren',
     trn_f_this_match: 'Diese Partie',
     trn_f_tab_chat: 'Chat',
+    trn_g_chat_unread: 'Ungelesene Nachrichten: {count}',
     trn_f_tabs_label: 'Turnierbereiche',
     trn_f_pill_round: 'R{number}',
     ring_level_1_title: 'Legendärer Träger & Entziehen',

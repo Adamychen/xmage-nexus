@@ -224,3 +224,14 @@ clipped.
 - Why: at 390 px the header chips stacked, the date and the leave button were clipped, and the round
   columns scrolled sideways inside a vertically scrolling modal.
 - Guard: `e2e/tournament-bracket.spec.ts` · `src/lobby/TournamentBracket.test.tsx`
+
+### TRN-20 · The tournament chat counts unread messages until you open it
+While the Chat tab of the in-game tournament panel is not showing, messages that arrive in the tournament
+chat are counted, and the count is shown on the Chat tab and on the collapsed pill ("9+" above nine).
+Opening the Chat tab clears it. Your own messages and system lines (joins, leaves, server notices) do not
+count. The count is the number of messages after the last one you saw, not a difference of list lengths.
+
+- Why: the tab gave no sign that someone had written, so a question from an opponent went unseen for a
+  whole game. The client keeps only the last 300 chat messages of all chats together, so a count built on
+  the list's length freezes once the list is full.
+- Guard: `e2e/tournament.spec.ts` · `src/game/TournamentPanel.test.tsx` · `src/game/tournamentChatUnread.test.ts`
