@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import type { CardView, CardsView, PermanentView, PlayerView } from '../net/types'
 import CardSlot from './CardSlot'
@@ -149,9 +149,9 @@ export default function BoardZone({
   const boardFill = useStore((s) => s.settings.boardFill) && !compactPod
   const shares = useMemo(
     () => bandShares(boardFill
-      ? bandFill(player?.battlefield, hasCommandObjects(player, effectiveControlled ? helperEmblems : undefined, statusSide), kindColumns)
+      ? bandFill(player?.battlefield, hasCommandObjects(player, effectiveControlled ? helperEmblems : undefined, statusSide))
       : { creatures: true, permanents: true }),
-    [boardFill, player, effectiveControlled, helperEmblems, statusSide, kindColumns],
+    [boardFill, player, effectiveControlled, helperEmblems, statusSide],
   )
   const { cardW, ref: zoneRef } = useZoneScale(cardAspect, shares.tallest, seatFocus?.focused ? seatFocus.maxCardW : undefined)
   const [creaturesBandEl, setCreaturesBandEl] = useState<HTMLDivElement | null>(null)
@@ -167,34 +167,15 @@ export default function BoardZone({
   useDragScroll(permanentsBandEl)
   useDragScroll(landsBandEl)
   useDragScroll(othersBandEl)
-  useDragScroll(kindColumns ? null : marqueeEl)
+  useDragScroll(marqueeEl)
   useBandFit(creaturesBandEl, cardW, compactPod, cardAspect)
   useBandFit(permanentsBandEl, cardW, compactPod, cardAspect)
   useBandFit(landsBandEl, cardW, compactPod, cardAspect)
   useBandFit(othersBandEl, cardW, compactPod, cardAspect)
+  useBandFit(kindColumns ? marqueeEl : null, cardW, compactPod, cardAspect)
   useTapFlip(permanentsBandEl)
   useTapFlip(landsBandEl)
   useTapFlip(othersBandEl)
-  useLayoutEffect(() => {
-    if (!kindColumns || !marqueeEl) return
-    const sources = [creaturesBandEl, permanentsBandEl, landsBandEl, othersBandEl].filter((el): el is HTMLDivElement => el !== null)
-    const sync = () => {
-      let w = cardW
-      for (const el of sources) {
-        const applied = parseFloat(el.style.getPropertyValue('--card-w'))
-        if (Number.isFinite(applied) && applied < w) w = applied
-      }
-      if (w < cardW) marqueeEl.style.setProperty('--card-w', `${w}px`)
-      else marqueeEl.style.removeProperty('--card-w')
-    }
-    sync()
-    const observer = new MutationObserver(sync)
-    for (const el of sources) observer.observe(el, { attributes: true, attributeFilter: ['style'] })
-    return () => {
-      observer.disconnect()
-      marqueeEl.style.removeProperty('--card-w')
-    }
-  }, [kindColumns, marqueeEl, cardW, creaturesBandEl, permanentsBandEl, landsBandEl, othersBandEl])
   const gameId = useStore((s) => s.gameId)
   const gamePlayers = useStore((s) => s.game?.players)
   const gameCycle = useStore((s) => s.game?.gameCycle)
@@ -399,9 +380,7 @@ export default function BoardZone({
   const creaturesRowTargeted =
     battlefieldFallback ||
     creatures.some(([id]) => targetIds.has(id)) ||
-    (!kindColumns && marqueeEntries.some(([id]) => targetIds.has(id)))
-  const hasMarqueeColumn = kindColumns && marqueeEntries.length > 0
-  const marqueeColumnTargeted = battlefieldFallback || marqueeEntries.some(([id]) => targetIds.has(id))
+    marqueeEntries.some(([id]) => targetIds.has(id))
 
   const renderCardItem = (id: string, perm: PermanentView, isCreature: boolean, noPreview = false) => {
     const isSelectable = combatSelectableSet.has(id)
@@ -542,6 +521,7 @@ export default function BoardZone({
   const { groups: landGroups, solos: landSolos } = groupStackables(lands, 'lands', { excludeIds: stackExcludedIds })
   const { groups: tokenGroups, solos: otherSolos } = groupStackables(restOthers, 'other', { excludeIds: stackExcludedIds })
   const { groups: creatureTokenGroups, solos: creatureSolos } = groupStackables(creatures, 'creatures', { excludeIds: stackExcludedIds })
+  const creatureSlots = creatureTokenGroups.length + creatureSolos.length
 
   const renderStackGroup = (group: StackGroup, isCreature: boolean) => {
     const isLand = group.kind === 'land'
@@ -803,10 +783,24 @@ export default function BoardZone({
           />
         </div>
       )}
-      <div ref={setCreaturesBand} className={`bz-band oz-band pz-band creatures-band ${!hasCommander && !(marqueeEntries.length > 0 && !kindColumns) ? 'full-width' : ''}`}>
+      <div
+        ref={setCreaturesBand}
+        className={`bz-band oz-band pz-band creatures-band${kindColumns && marqueeEntries.length > 0 ? ' bz-split-band' : ''}${!hasCommander && marqueeEntries.length === 0 ? ' full-width' : ''}`}
+        style={kindColumns && marqueeEntries.length > 0 ? { flexGrow: creatureSlots } : undefined}
+      >
         {creatureTokenGroups.map((group) => renderStackGroup(group, true))}
         {creatureSolos.map(([id, perm]) => renderCardItem(id, perm, true))}
       </div>
+      {marqueeEntries.length > 0 && kindColumns && (
+        <div
+          ref={setMarqueeEl}
+          className="bz-band oz-band pz-band bz-marquee-band"
+          data-testid="marquee-band"
+          style={{ flexGrow: marqueeEntries.length, '--marquee-slots': marqueeEntries.length } as React.CSSProperties}
+        >
+          {marqueeEntries.map(([id, perm]) => renderCardItem(id, perm, false))}
+        </div>
+      )}
       {marqueeEntries.length > 0 && !kindColumns && (
         <div ref={setMarqueeEl} className="bz-marquee oz-marquee pz-marquee">
           {marqueeEntries.map(([id, perm]) => renderCardItem(id, perm, false))}
@@ -815,18 +809,8 @@ export default function BoardZone({
     </div>
   )
 
-  const marqueeColumn = hasMarqueeColumn ? (
-    <div
-      key="marquee-column"
-      ref={setMarqueeEl}
-      className={`bz-marquee oz-marquee pz-marquee bz-marquee--column${marqueeColumnTargeted ? ' target-zone' : ''}`}
-    >
-      {marqueeEntries.map(([id, perm]) => renderCardItem(id, perm, false))}
-    </div>
-  ) : null
-
   const hasAnyBoardCards = creatures.length > 0 || hasCommander || lands.length > 0 || others.length > 0
-  const noCreatures = hasAnyBoardCards && creatures.length === 0 && !hasCommander
+  const noCreatures = hasAnyBoardCards && creatures.length === 0 && marqueeEntries.length === 0 && !hasCommander
   const noPermanents = hasAnyBoardCards && lands.length === 0 && others.length === 0
 
   const zoneClasses = [
@@ -836,7 +820,6 @@ export default function BoardZone({
     mirrored ? 'mirrored' : '',
     compactPod ? 'compact-pod' : '',
     compactCards ? 'card-style-compact' : '',
-    hasMarqueeColumn ? 'has-marquee-column' : '',
     pileCards ? 'has-pile-corner' : '',
     tiltedTaps ? 'tap-tilted' : '',
     noCreatures ? 'no-creatures' : '',
@@ -857,6 +840,7 @@ export default function BoardZone({
       data-priority={(player.hasPriority && !isDefeated) || undefined}
       style={{
         '--card-w': `${cardW}px`,
+        '--zone-card-w': `${cardW}px`,
         '--seat': seatColor,
         ...(pileCards ? { '--pile-corner-w': `${pileCornerW}px` } : null),
         ...(shares.uneven
@@ -880,7 +864,6 @@ export default function BoardZone({
 
       {isTop ? [statusRow, permanentsRow, creaturesRow] : [creaturesRow, permanentsRow, statusRow]}
       {pileCorner}
-      {marqueeColumn}
       {handViewerOpen && (
         <HandViewer
           playerName={player?.name ?? ''}

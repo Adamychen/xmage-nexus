@@ -18,7 +18,6 @@ export interface BandFill {
 export function bandFill(
   battlefield: Record<string, PermanentView> | null | undefined,
   commander: boolean,
-  marqueeColumn = false,
 ): BandFill {
   const perms = Object.entries(battlefield ?? {}).filter(([, p]) => p.phasedIn !== false)
   const attached = new Set<string>()
@@ -30,9 +29,7 @@ export function bandFill(
     const kind = permanentKind(p)
     if (kind === 'creatures') creatures = true
     else if (kind === 'lands') permanents = true
-    else if (isMarqueePermanent(p)) {
-      if (!marqueeColumn) creatures = true
-    }
+    else if (isMarqueePermanent(p)) creatures = true
     else permanents = true
   }
   return { creatures, permanents }

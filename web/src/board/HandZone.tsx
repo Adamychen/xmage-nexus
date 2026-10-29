@@ -57,7 +57,9 @@ export default function HandZone({
     if (!el) return
 
     const measure = () => {
-      const { width: availW, height: availH } = layoutSize(el)
+      const { width: availW, height: ownH } = layoutSize(el)
+      const rowH = el.parentElement?.offsetHeight ?? 0
+      const availH = compact && rowH > 0 ? rowH : ownH
       const count = entries.length
       if (count === 0 || availW <= 0) return
 
@@ -89,6 +91,7 @@ export default function HandZone({
     if (typeof ResizeObserver === 'undefined') return
     const ro = new ResizeObserver(measure)
     ro.observe(el)
+    if (compact && el.parentElement) ro.observe(el.parentElement)
     return () => ro.disconnect()
   }, [entries.length, compact])
 

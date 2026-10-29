@@ -1,5 +1,5 @@
-import { render, fireEvent } from '@testing-library/react'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { act, render, fireEvent } from '@testing-library/react'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import HandZone from './HandZone'
 import { setLanguage } from '../i18n'
 import type { CardView } from '../net/types'
@@ -127,5 +127,58 @@ describe('HandZone back stacking (pod/arena)', () => {
 
     rerender(<HandZone cards={Object.fromEntries([back('a'), back('b')])} stackBacks />)
     expect(container.querySelector('.hand-zone')?.classList.contains('target-zone')).toBe(false)
+  })
+})
+
+describe('HandZone compact sizing (BRD-21)', () => {
+  let remeasure: Array<() => void> = []
+
+  beforeEach(() => {
+    setLanguage('es')
+    remeasure = []
+    class FakeResizeObserver {
+      constructor(callback: () => void) {
+        remeasure.push(callback)
+      }
+      observe() {}
+      disconnect() {}
+    }
+    vi.stubGlobal('ResizeObserver', FakeResizeObserver)
+    vi.spyOn(HTMLElement.prototype, 'offsetWidth', 'get').mockImplementation(function (this: HTMLElement) {
+      return this.classList.contains('hand-zone') ? 900 : 0
+    })
+    vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockImplementation(function (this: HTMLElement) {
+      if (this.classList.contains('bz-status-row')) return 96
+      return this.classList.contains('hand-zone') ? 500 : 0
+    })
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+    vi.unstubAllGlobals()
+  })
+
+  function renderInRow() {
+    const { container } = render(
+      <div className="bz-status-row">
+        <HandZone cards={Object.fromEntries([back('a'), back('b'), back('c')])} compact />
+      </div>
+    )
+    const hand = container.querySelector<HTMLElement>('.hand-zone')!
+    return { hand, cardW: () => parseFloat(hand.style.getPropertyValue('--card-w')) }
+  }
+
+  it('BRD-21: a compact hand sizes its cards from its status row in one measure, ignoring its own height', () => {
+    const { cardW } = renderInRow()
+    expect(cardW()).toBeCloseTo((96 - 4) / 1.4, 2)
+  })
+
+  it('BRD-21: a second measure at the same size leaves the card width unchanged', () => {
+    const { cardW } = renderInRow()
+    const first = cardW()
+    act(() => {
+      for (let i = 0; i < 5; i++) remeasure.forEach((measure) => measure())
+    })
+    expect(cardW()).toBe(first)
   })
 })

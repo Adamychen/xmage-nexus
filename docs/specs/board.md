@@ -31,13 +31,23 @@ with the creatures, as before.
   arrangement so each kind sits in the same place on every board.
 - Guard: `src/board/BoardZone.kindColumns.test.tsx` · `e2e/kind-bands.spec.ts`
 
-### BRD-2 · Planeswalkers, sagas and battles get their own column at the right edge
-Non-creature planeswalkers, sagas and battles leave the creature row and form a column at the right
-edge of their seat, spanning both rows. They never stack with each other, each shows its own
-loyalty, lore or defense, and a seat without any has no column, so the rows keep the full width.
+### BRD-2 · Planeswalkers, sagas and battles get their own zone in the creatures row
+Non-creature planeswalkers, sagas and battles sit in their own band at the right end of the
+creatures row, beside the creatures band, drawn with the gold marquee frame. The row is split the
+way BRD-1 splits the other row: each band's width follows how many cards it holds (one slot per
+pile or card), measured at run time, and each band shrinks or wraps its own cards to fit. The
+marquee band is never narrower than one card at the board's size and never wider than its cards
+need at that size (the rest of the row goes to the creatures), and neither bound nor its card size
+depends on the size the creatures or the other bands chose. They never stack with each other, each shows
+its own loyalty, lore or defense, and a seat without any has no marquee band, so the creatures
+band keeps the whole row. A seat with only marquee permanents (no creatures, no commander) still
+has a creatures row: it is the row that holds them.
 
-- Why: at the end of the creature row the dock took width from the creatures, the row a player
-  reads most; a column spanning both rows uses height the rows leave free (issue #23, part 3).
+- Why: the column at the right edge (issue #23, part 3) copied the smallest card size of the
+  bands beside it, and the bands measured their room after the column: each one resized the
+  other every frame, so a board with one planeswalker kept resizing forever (user report,
+  2026-10-29; reproduced at 1366×900 with 6 creatures and 7 lands: about 180 style changes per
+  second). A band of its own in the creatures row has no such dependency, and the user chose it.
 - Guard: `src/board/BoardZone.kindColumns.test.tsx` · `src/board/bandWeights.test.ts` · `e2e/kind-bands.spec.ts`
 
 ### BRD-3 · One opponent's board can take the whole opponents' row
@@ -283,3 +293,45 @@ unchanged: one pile per name, fanned out as soon as the pointer enters.
   pointer over a pile fanned it out and pushed its neighbours aside. A pile that holds still and opens on a
   deliberate hover keeps the board readable while every token stays selectable (2026-10-26).
 - Guard: `src/board/stackGroups.test.ts` · `src/board/StackPile.test.tsx` · `e2e/stack-groups.spec.ts`
+
+### BRD-21 · A board settles: no card size keeps changing for ever
+Once a board has been drawn and nothing changes (no new game view, no window resize, no hover),
+no band, marquee or zone keeps changing its card size or its number of lines: every size reaches
+a final value and stays there. How fast it gets there is not part of the rule: on the first draw
+of a large board in a small window the lands and other permanents bands may still adjust each
+other for a second or so, and that is accepted; changing for ever is not. A band only grows its cards when the gain is at least two pixels, while it
+shrinks them as soon as they do not fit, so a one-pixel difference in the room it measures can
+never flip it back and forth. A compact hand in a status row (an opponent's hand) takes no height
+of its own: the row's height comes from the rest of the row, the hand stretches to it and sizes
+its cards from it in one step, instead of shrinking a few pixels per frame from a height its own
+cards set. The guard sweeps every board layout (Standard, Pod, Arena, Table)
+with 2 and 4 seats, boards of several sizes with planeswalkers, sagas, commanders, tokens and
+attachments, both card styles, and several window sizes, and counts the size changes after the
+board has settled.
+
+- Why: the planeswalker column of BRD-2 made a board resize every frame without end (user
+  report, 2026-10-29; the user then set the bar: a slow transition does not matter, a loop does), and no test watched a board after it was drawn; the size of a card was
+  checked once, so an oscillation passed every spec. The first run of the guard found the
+  opponent's hand in the Standard layout shrinking from 160 px to 65 px in 3 px steps for about a
+  second, relaying out the whole board at every step.
+- Guard: `src/board/bandFit.test.ts` · `src/board/HandZone.test.tsx` · `e2e/board-settle.spec.ts`
+
+### BRD-22 · The phase dial shows the steps of combat
+On the phase dial (v2 chrome) the combat pip keeps its place on the arc, and five small circles
+sit outside it on a short arc of their own, in order: beginning of combat, declare attackers,
+declare blockers, combat damage (first strike and regular damage are one circle) and end of
+combat. They are always shown. During combat the circle of the current step is lit like the
+active pip, the ones already passed this turn are dimmed like past pips, and the combat pip stays
+lit for the whole combat. Each circle is 26 px and carries a two-letter mark, the same marks the phase bar
+uses (BC, AT, BL, DM, EC), in text no smaller than 10 px (ACC-3), and has the step's full name as its tooltip and accessible
+name. While the game is in combat, the phase name shown with the dial names the step too
+("Combat · Blockers"), so the current step can be read without decoding the marks. No
+circle is clipped by the dial's box or by any element around it. The beginning and end of combat circles toggle the stop of that step (click for the own
+turn, right-click or Shift+click for the opponent's, with the same stop dots as the pips); the
+other three have no stop in XMage and are not buttons. The circles never overlap each other, a
+pip or the centre, and the whole dial still fits its dock corner (BRD-14).
+
+- Why: the dial showed combat as one pip, so a player could not tell whether the game was
+  waiting on attackers, blockers or damage (user request, 2026-10-29); the user chose small
+  circles beside the combat pip over ten pips on the arc, which would not fit the corner.
+- Guard: `src/game/PhaseDial.test.tsx` · `e2e/game-ui-v2.spec.ts`

@@ -80,34 +80,61 @@ describe('BoardZone kind columns', () => {
     expect(ids(band)).toEqual(['plains', 'solring', 'treasure'])
   })
 
-  it('BRD-2: the marquee becomes a column outside the creatures row with kindColumns', () => {
+  it('BRD-2: with kindColumns the marquee band sits in the creatures row after the creatures band', () => {
     const { container } = renderZone(playerWith(bf(bears, walker)), true)
-    const column = container.querySelector('.bz-marquee--column')!
-    expect(column).not.toBeNull()
-    expect(column.closest('.bz-creatures-row')).toBeNull()
-    expect(column.parentElement?.classList.contains('board-zone')).toBe(true)
-    expect(container.querySelector('.board-zone')?.classList.contains('has-marquee-column')).toBe(true)
-    expect(ids(column)).toEqual(['walker'])
+    const row = container.querySelector('.bz-creatures-row')!
+    const creatures = row.querySelector('.creatures-band')!
+    const band = container.querySelector('[data-testid="marquee-band"]')!
+    expect(band).not.toBeNull()
+    expect(band.closest('.bz-creatures-row')).toBe(row)
+    expect(creatures.compareDocumentPosition(band) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(ids(band)).toEqual(['walker'])
+    expect(container.querySelector('.board-zone')?.classList.contains('has-marquee-column')).toBe(false)
+    expect(container.querySelector('.bz-marquee--column')).toBeNull()
   })
 
-  it('BRD-2: two marquee permanents share the one column', () => {
+  it('BRD-2: two marquee permanents share the one band', () => {
     const second = makePermanent({ name: 'Liliana', id: 'liliana', cardTypes: ['Planeswalker'] })
     const { container } = renderZone(playerWith(bf(bears, walker, second)), true)
-    expect(ids(container.querySelector('.bz-marquee--column'))).toEqual(['walker', 'liliana'])
-    expect(container.querySelectorAll('.bz-marquee').length).toBe(1)
+    expect(container.querySelectorAll('[data-testid="marquee-band"]').length).toBe(1)
+    expect(ids(container.querySelector('[data-testid="marquee-band"]'))).toEqual(['walker', 'liliana'])
   })
 
-  it('BRD-2: a seat without marquee permanents has no column and keeps full-width rows', () => {
+  it('BRD-2: the marquee band carries one slot per permanent it holds', () => {
+    const second = makePermanent({ name: 'Liliana', id: 'liliana', cardTypes: ['Planeswalker'] })
+    const { container } = renderZone(playerWith(bf(bears, walker, second)), true)
+    const band = container.querySelector<HTMLElement>('[data-testid="marquee-band"]')!
+    expect(band.style.getPropertyValue('--marquee-slots')).toBe('2')
+  })
+
+  it('BRD-2: a seat without marquee permanents has no marquee band and keeps the creatures band full-width', () => {
     const { container } = renderZone(playerWith(bf(bears, plains)), true)
-    expect(container.querySelector('.bz-marquee')).toBeNull()
-    expect(container.querySelector('.board-zone')?.classList.contains('has-marquee-column')).toBe(false)
+    expect(container.querySelector('[data-testid="marquee-band"]')).toBeNull()
+    expect(container.querySelector('.creatures-band')?.classList.contains('full-width')).toBe(true)
+  })
+
+  it('BRD-2: the creatures band and the marquee band share the row by slot count', () => {
+    const bears2 = makePermanent({ name: 'Grizzly Bears', id: 'bears2' })
+    const bears3 = makePermanent({ name: 'Grizzly Bears', id: 'bears3' })
+    const { container } = renderZone(playerWith(bf(bears, bears2, bears3, walker)), true)
+    const creatures = container.querySelector<HTMLElement>('.creatures-band')!
+    const marquee = container.querySelector<HTMLElement>('[data-testid="marquee-band"]')!
+    expect(creatures.style.flexGrow).toBe('3')
+    expect(marquee.style.flexGrow).toBe('1')
+    expect(creatures.classList.contains('full-width')).toBe(false)
+  })
+
+  it('BRD-2: a seat with only a walker and a land has no no-creatures class', () => {
+    const { container } = renderZone(playerWith(bf(plains, walker)), true)
+    expect(container.querySelector('.board-zone')?.classList.contains('no-creatures')).toBe(false)
+    expect(ids(container.querySelector('[data-testid="marquee-band"]'))).toEqual(['walker'])
   })
 
   it('BRD-2: without kindColumns the marquee stays at the end of the creatures row', () => {
     const { container } = renderZone(playerWith(bf(bears, walker)))
     const marquee = container.querySelector('.bz-creatures-row .bz-marquee')
     expect(marquee).not.toBeNull()
+    expect(container.querySelector('[data-testid="marquee-band"]')).toBeNull()
     expect(container.querySelector('.bz-marquee--column')).toBeNull()
-    expect(container.querySelector('.board-zone')?.classList.contains('has-marquee-column')).toBe(false)
   })
 })

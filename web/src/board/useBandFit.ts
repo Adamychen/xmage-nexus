@@ -1,5 +1,5 @@
 import { useLayoutEffect } from 'react'
-import { fitBand } from './bandFit'
+import { fitBand, settleBandCardW } from './bandFit'
 
 /** Aviso global de que una banda cambió el tamaño de sus cartas (las flechas de combate recolocan sus extremos). */
 export const BOARD_RELAYOUT_EVENT = 'board-relayout'
@@ -93,7 +93,8 @@ export function useBandFit(el: HTMLElement | null, baseW: number, compact: boole
       if (!el.hasAttribute('data-band-lines') && el.scrollWidth > el.clientWidth) ceiling = Math.min(ceiling, measuredW)
       const floor = Math.min(minW, baseW)
       const cardW = fit.lines === 1 && fit.cardW >= ceiling ? Math.max(floor, ceiling - 1) : fit.cardW
-      apply(cardW, fit.lines)
+      const currentLines = Number(el.getAttribute('data-band-lines')) || 1
+      apply(settleBandCardW(measuredW, cardW, fit.lines !== currentLines), fit.lines)
     }
 
     const schedule = () => {

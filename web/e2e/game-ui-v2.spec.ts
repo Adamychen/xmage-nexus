@@ -154,6 +154,32 @@ test('BRD-14: a name too long for the centre is cut with an ellipsis and stays w
   expect(fit.outside).toEqual([])
 })
 
+async function dockLayout(page: import('@playwright/test').Page) {
+  return page.evaluate(() => {
+    const core = document.querySelector('.action-button-container--dial .big-action-btn')!.getBoundingClientRect()
+    const cx = core.left + core.width / 2
+    const cy = core.top + core.height / 2
+    const pips = [...document.querySelectorAll('.phase-dial-pip')].map((p) => (p as HTMLElement).getBoundingClientRect())
+    const centres = pips.map((p) => ({ x: p.left + p.width / 2, y: p.top + p.height / 2, r: p.width / 2 }))
+    const intoCore = centres.filter((p) => Math.hypot(p.x - cx, p.y - cy) < core.width / 2 + p.r)
+    const crowded = centres.slice(1).filter((p, i) => Math.hypot(p.x - centres[i].x, p.y - centres[i].y) < p.r + centres[i].r)
+    const parts = [core, ...pips]
+    const hit = (a: DOMRect, b: DOMRect) => a.left < b.right - 1 && a.right > b.left + 1 && a.top < b.bottom - 1 && a.bottom > b.top + 1
+    const hand = [...document.querySelectorAll('[data-testid="hand-bar"] [data-card-id], [data-testid="hand-rail"] [data-card-id]')].map((c) => c.getBoundingClientRect()).filter((r) => r.width > 0)
+    const panel = document.querySelector('[data-testid="side-panel"]')?.getBoundingClientRect() ?? null
+    const vw = window.innerWidth
+    const vh = window.innerHeight
+    return {
+      intoCore: intoCore.length,
+      crowded: crowded.length,
+      handCards: hand.length,
+      coversHand: parts.some((p) => hand.some((h) => hit(p, h))),
+      coversPanel: !!panel && panel.width > 0 && parts.some((p) => hit(p, panel)),
+      inside: parts.every((p) => p.left >= -1 && p.top >= -1 && p.right <= vw + 1 && p.bottom <= vh + 1),
+    }
+  })
+}
+
 test.describe('BRD-14 dock corner', () => {
   test.use({ viewport: { width: 1280, height: 720 } })
 
@@ -165,31 +191,7 @@ test.describe('BRD-14 dock corner', () => {
     expect(pass.broken, pass.lines.join(' ')).toEqual([])
     expect(pass.outside, pass.lines.join(' ')).toEqual([])
     await page.getByTestId('phase-dial').screenshot({ path: testInfo.outputPath('brd14-pass.png') })
-    const layout = async () =>
-      page.evaluate(() => {
-        const core = document.querySelector('.action-button-container--dial .big-action-btn')!.getBoundingClientRect()
-        const cx = core.left + core.width / 2
-        const cy = core.top + core.height / 2
-        const pips = [...document.querySelectorAll('.phase-dial-pip')].map((p) => (p as HTMLElement).getBoundingClientRect())
-        const centres = pips.map((p) => ({ x: p.left + p.width / 2, y: p.top + p.height / 2, r: p.width / 2 }))
-        const intoCore = centres.filter((p) => Math.hypot(p.x - cx, p.y - cy) < core.width / 2 + p.r)
-        const crowded = centres.slice(1).filter((p, i) => Math.hypot(p.x - centres[i].x, p.y - centres[i].y) < p.r + centres[i].r)
-        const parts = [core, ...pips]
-        const hit = (a: DOMRect, b: DOMRect) => a.left < b.right - 1 && a.right > b.left + 1 && a.top < b.bottom - 1 && a.bottom > b.top + 1
-        const hand = [...document.querySelectorAll('[data-testid="hand-bar"] [data-card-id], [data-testid="hand-rail"] [data-card-id]')].map((c) => c.getBoundingClientRect()).filter((r) => r.width > 0)
-        const panel = document.querySelector('[data-testid="side-panel"]')?.getBoundingClientRect() ?? null
-        const vw = window.innerWidth
-        const vh = window.innerHeight
-        return {
-          intoCore: intoCore.length,
-          crowded: crowded.length,
-          handCards: hand.length,
-          coversHand: parts.some((p) => hand.some((h) => hit(p, h))),
-          coversPanel: !!panel && panel.width > 0 && parts.some((p) => hit(p, panel)),
-          inside: parts.every((p) => p.left >= -1 && p.top >= -1 && p.right <= vw + 1 && p.bottom <= vh + 1),
-        }
-      })
-    const closed = await layout()
+    const closed = await dockLayout(page)
     expect(closed.intoCore, 'no pip overlaps the centre').toBe(0)
     expect(closed.crowded, 'pips keep their spacing').toBe(0)
     expect(closed.handCards).toBeGreaterThan(0)
@@ -198,11 +200,85 @@ test.describe('BRD-14 dock corner', () => {
     await page.getByTestId('drawer-tab-log').click()
     await expect(page.getByTestId('side-panel')).toBeVisible()
     await page.waitForTimeout(600)
-    const open = await layout()
+    const open = await dockLayout(page)
     expect(open.coversHand, 'the dial does not cover the hand with the panel open').toBe(false)
     expect(open.coversPanel, 'the dial does not cover the side panel').toBe(false)
     expect(open.inside).toBe(true)
     await page.screenshot({ path: testInfo.outputPath('brd14-corner-panel.png') })
+  })
+})
+
+test.describe('BRD-22 combat steps on the dial', () => {
+  test.use({ viewport: { width: 1280, height: 720 } })
+
+  test('BRD-22: the combat steps sit beside the combat pip, light the current step and keep the dial inside its corner @gameui', async ({ page }, testInfo) => {
+    await showGame(page, richCommanderGame({ step: 'DECLARE_BLOCKERS' }), V2)
+    await expect(page.locator('.action-button-container--dial .big-action-btn')).toBeVisible({ timeout: 10_000 })
+    await expect(page.locator('.phase-dial-sat')).toHaveCount(5)
+    for (const key of ['BEGIN_COMBAT', 'DECLARE_ATTACKERS', 'DECLARE_BLOCKERS', 'COMBAT_DAMAGE', 'END_COMBAT']) {
+      await expect(page.getByTestId(`phase-dial-sat-${key}`)).toBeVisible()
+    }
+    await expect(page.getByTestId('phase-dial-sat-DECLARE_BLOCKERS')).toHaveClass(/active/)
+    await expect(page.getByTestId('phase-bar-step-COMBAT')).toHaveAttribute('data-active', 'true')
+    const blockers = await page.getByTestId('phase-dial-sat-DECLARE_BLOCKERS').getAttribute('aria-label')
+    expect((await page.getByTestId('phase-dial-name').textContent())!.endsWith(` · ${blockers}`)).toBe(true)
+    await page.waitForTimeout(400)
+    const geometry = await page.evaluate(() => {
+      const circles = (sel: string) =>
+        [...document.querySelectorAll<HTMLElement>(sel)].map((el) => {
+          const r = el.getBoundingClientRect()
+          return { el, x: r.left + r.width / 2, y: r.top + r.height / 2, r: r.width / 2, box: r }
+        })
+      const sats = circles('.phase-dial-sat')
+      const pips = circles('.phase-dial-pip')
+      const core = document.querySelector('.action-button-container--dial .big-action-btn')!.getBoundingClientRect()
+      const cx = core.left + core.width / 2
+      const cy = core.top + core.height / 2
+      const gap = (a: { x: number; y: number; r: number }, b: { x: number; y: number; r: number }) => Math.hypot(a.x - b.x, a.y - b.y) - a.r - b.r
+      const satSat = sats.flatMap((a, i) => sats.slice(i + 1).map((b) => gap(a, b)))
+      const satPip = sats.flatMap((a) => pips.map((p) => gap(a, p)))
+      const satCore = sats.map((a) => Math.hypot(a.x - cx, a.y - cy) - a.r - core.width / 2)
+      const vw = window.innerWidth
+      const vh = window.innerHeight
+      return {
+        count: sats.length,
+        minSatSat: Math.min(...satSat),
+        minSatPip: Math.min(...satPip),
+        minSatCore: Math.min(...satCore),
+        inViewport: sats.every((a) => a.box.left >= 0 && a.box.top >= 0 && a.box.right <= vw && a.box.bottom <= vh),
+        clearOfOthers: sats.map((a) => {
+          const top = document.elementFromPoint(a.x, a.y)
+          return !!top && (top === a.el || a.el.contains(top))
+        }),
+        marks: sats.map((a) => {
+          const label = a.el.querySelector<HTMLElement>('.phase-dial-sat-label')!
+          const box = label.getBoundingClientRect()
+          return {
+            text: label.textContent,
+            fits: label.scrollWidth <= label.clientWidth && box.left >= a.box.left && box.right <= a.box.right,
+          }
+        }),
+      }
+    })
+    expect(geometry.count).toBe(5)
+    expect(geometry.marks.map((m) => m.text)).toEqual(['BC', 'AT', 'BL', 'DM', 'EC'])
+    expect(geometry.marks.every((m) => m.fits), 'every mark fits inside its circle').toBe(true)
+    expect(geometry.inViewport, 'every circle is inside the viewport').toBe(true)
+    expect(geometry.clearOfOthers, 'no element covers or clips a circle').toEqual([true, true, true, true, true])
+    expect(geometry.minSatSat, 'circles keep 4 px between each other').toBeGreaterThanOrEqual(4)
+    expect(geometry.minSatPip, 'circles keep 4 px from the pips').toBeGreaterThanOrEqual(4)
+    expect(geometry.minSatCore, 'circles keep 4 px from the centre').toBeGreaterThanOrEqual(4)
+    const closed = await dockLayout(page)
+    expect(closed.intoCore, 'no pip overlaps the centre').toBe(0)
+    expect(closed.coversHand, 'the dial does not cover the hand').toBe(false)
+    expect(closed.inside, 'the dial stays inside the window').toBe(true)
+    await page.getByTestId('drawer-tab-log').click()
+    await expect(page.getByTestId('side-panel')).toBeVisible()
+    await page.waitForTimeout(600)
+    const open = await dockLayout(page)
+    expect(open.coversPanel, 'the dial does not cover the side panel').toBe(false)
+    expect(open.inside).toBe(true)
+    await page.getByTestId('phase-dial').screenshot({ path: testInfo.outputPath('brd22-combat.png') })
   })
 })
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { fitBand, type BandFitInput } from './bandFit'
+import { fitBand, settleBandCardW, type BandFitInput } from './bandFit'
 
 function input(over: Partial<BandFitInput> = {}): BandFitInput {
   return {
@@ -57,5 +57,35 @@ describe('fitBand', () => {
 
   it('ignores empty bands', () => {
     expect(fitBand(input({ itemCount: 0, contentW: 0 }))).toEqual({ cardW: 100, lines: 1 })
+  })
+})
+
+describe('settleBandCardW', () => {
+  it('BRD-21: a band that has to shrink by one pixel shrinks at once', () => {
+    expect(settleBandCardW(65, 64, false)).toBe(64)
+  })
+
+  it('BRD-21: a band that gains only one pixel keeps its size', () => {
+    expect(settleBandCardW(65, 66, false)).toBe(65)
+  })
+
+  it('BRD-21: a band that gains two pixels or more grows', () => {
+    expect(settleBandCardW(65, 67, false)).toBe(67)
+    expect(settleBandCardW(65, 80, false)).toBe(80)
+  })
+
+  it('BRD-21: a change of line count is always applied', () => {
+    expect(settleBandCardW(65, 66, true)).toBe(66)
+    expect(settleBandCardW(65, 64, true)).toBe(64)
+  })
+
+  it('BRD-21: a one-pixel A/B oscillation stays at the size it started from', () => {
+    let applied = 65
+    const seen: number[] = []
+    for (const next of [65, 66, 65, 66]) {
+      applied = settleBandCardW(applied, next, false)
+      seen.push(applied)
+    }
+    expect(seen).toEqual([65, 65, 65, 65])
   })
 })

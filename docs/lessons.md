@@ -130,6 +130,7 @@ ops), `docs/testing.md`, `web/AGENTS.md`, `Mage.Proxy/README.md`.
 - Size a board zone from `offsetWidth`/`offsetHeight`, never from `getBoundingClientRect()`. Inside a `transform: scale()` (the main board mode's panel copies) the bounding rect is the scaled box, so `useZoneScale` shrank the cards a second time; the layout box ignores transforms, while overlays and arrows keep the bounding rect because they must land where the scaled card is drawn (`layoutSize` in `board/useZoneScale.ts`).
 
 - A UI fixture must use the wire form of a field, not its Java `toString()`: the proxy writes enums with `name()` (`SeatView.playerType` is `HUMAN`, not `Human`). The gallery's lobby fixture used `Human`, so every human seat showed a bot chip and no table offered Join, and the 2026-10-27 lobby review first read that as a product bug.
+- A box sized from a sibling's *fitted* size loops: the BRD-2 planeswalker column copied the bands' shrunk `--card-w`, the bands measured their room after the column, and they flipped 65↔66 px every frame forever; a compact hand sized from a height its own cards set shrank 3 px per frame. Size from an input nobody downstream writes (`--zone-card-w` from `useZoneScale`, the status row's height) and grow only past a hysteresis (`settleBandCardW`, 2 px). Size checks taken once never see it: `e2e/board-settle.spec.ts` counts style mutations after the board settled.
 
 ## Testing & tooling
 

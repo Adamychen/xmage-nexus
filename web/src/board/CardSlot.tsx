@@ -237,7 +237,7 @@ export default function CardSlot({
           const curZone = el.closest('.opponent-zone, .player-zone, .stack-zone, .hand-zone')
           const curZoneClass = curZone ? curZone.className.split(' ')[0] : ''
           const controlTint = controlChangeTint(String(effectiveId))
-          const shift = el.closest('.creatures-band, .permanents-band, .bz-marquee') ? creatureShiftOf(String(effectiveId)) : null
+          const shift = el.closest('.creatures-band, .permanents-band, .bz-marquee, .bz-marquee-band') ? creatureShiftOf(String(effectiveId)) : null
           if (commandFrom || !prevZone || !curZoneClass || prevZone !== curZoneClass || controlTint || shift) {
             const sourceSize = commandFrom ? commandFrom.size : getPreviousCardSize(effectiveId)
             const flyIn = (toRect: DOMRect) => {
