@@ -22,10 +22,10 @@ Leyenda: ✅ = sí · ❌ = no · ⚠️ = parcial/log-only · — = no aplica /
 | `SHOW_USERMESSAGE` | ✅ | — | — | — | 2026-08-24 |
 | `SERVER_MESSAGE` | ✅ | — | — | — | 2026-08-24 |
 | `JOINED_TABLE` | ✅ | ✅ | ✅ | eventHandler.test.ts / staging.spec.ts · multi-user.spec.ts (real) | 2026-09-06 |
-| `START_TOURNAMENT` | ✅ | — | ✅ | tournament.spec.ts / TournamentBracket | 2026-08-26 |
-| `TOURNAMENT_INIT` | ✅ | ✅ | ✅ | TournamentBracket.test.tsx / tournament.spec.ts | 2026-08-26 |
-| `TOURNAMENT_UPDATE` | ✅ | ✅ | ✅ | TournamentBracket.test.tsx / tournament.spec.ts | 2026-08-26 |
-| `TOURNAMENT_OVER` | ✅ | — | ✅ | tournament.spec.ts | 2026-08-26 |
+| `START_TOURNAMENT` | ✅ | — | ✅ | tournament.spec.ts / tournament-bracket.spec.ts / TournamentBracket | 2026-10-29 |
+| `TOURNAMENT_INIT` | ✅ | ✅ | ✅ | TournamentBracket.test.tsx / tournament.spec.ts / tournament-bracket.spec.ts | 2026-10-29 |
+| `TOURNAMENT_UPDATE` | ✅ | ✅ | ✅ | TournamentBracket.test.tsx / tournament.spec.ts / tournament-bracket.spec.ts | 2026-10-29 |
+| `TOURNAMENT_OVER` | ✅ | — | ✅ | tournament.spec.ts / tournament-bracket.spec.ts (podium) | 2026-10-29 |
 | `START_DRAFT` | ✅ | — | ✅ | draft.spec.ts | 2026-08-26 |
 | `SIDEBOARD` | ✅ | — | ✅ | best-of.spec.ts | 2026-08-24 |
 | `CONSTRUCT` | ✅ | — | ✅ | ConstructScreen / draft.spec.ts | 2026-08-26 |
@@ -268,7 +268,7 @@ Lista actual (de `engine-view-gap.baseline.json`):
 |---|---|---|---|---|
 | Commander (zona / tax / eminence / pod 4-max en tablero) | ✅ | ✅ | `PodBoard.tsx` (2x2 clamp 4 SOLO de pintado — el servidor soporta FFA 3-10, `CommanderFreeForAllType.java`) + `TurnOrderRing` + `CommanderDamageMatrix` (`PodBoard.test.tsx` 9 matrix tests) + `CommandZone` ×4. **Frame real 2026-09-16** `recorded/commander-zone.json` (mesa variant "Commander Two Player Duel" + deck con `commanders`): Krenko, Mob Boss vive en `players[].commandList` como `{mageObjectType:"COMMANDER"}` y **el impuesto viaja en su `rules`** — `"<b>Commander</b> 2 times played from the command zone."` (el `castCount` no existe en el wire; desde 2026-10-06 `commanderPlaysCount` lo lee de ahí — antes la UI leía `castCount` y el impuesto salía siempre +0 en partida real —, `commanders.test.ts` sobre este frame y `commander-4.json`); el 2º lanzamiento pide `GAME_PLAY_MANA "Pay {2}{R}{R}{2}"` (+{2} literal); el retorno al morir es un **`GAME_ASK`** "Move … to the command zone or leave it in current zone (GRAVEYARD)?" (botones `UI.left/right.btn.text`, `true`=comando); invariante `hasCommanderZone`. **Commander damage source (re-audited 2026-10-08)**: there is no structured field on the wire — neither `PlayerView` nor `GameView` nor `CommanderView` carries commander damage; the only channel is the engine's tooltip line `"<b>Commander</b> did N combat damage to player <font color='#20B2AA'>NAME</font>."` written by `CommanderInfoWatcher.addCardInfoToCommander` into the cardState of the commander's own object (verified against `recorded/commander-4.json`: Krenko of `ucomma1v7uk8l` → `sim-137363`: 3). The desktop client has no damage table either, it only shows that text in a tooltip. Parsing therefore moved out of the component into `commanders.ts` and is **per object id, never by card name** (two players may run the same commander, and max-over-name used to print one commander's total in every matching column), it scans every carrier of the same object (command-zone card, cast permanent, mutate host, graveyard/exile) and the table lists every seat and every commander (the 2x2 paint clamp of 4 is not a data clamp). Guards: `PodBoard.test.tsx` (9 matrix tests) + `commanders.test.ts` (5 damage tests, one on the real frame). Open gap: `GameImpl.checkCommanderDamage` is `false` in Commander Duel/Brawl/Oathbreaker and does not travel, so the 21 label may not apply — see `ENGINE_VIEW_TRIAGE.md` §Casos notables | 2026-10-08 |
 | Draft / Sealed (8-player) | ✅ | ✅ | `DraftScreen.tsx` + `ConstructScreen.tsx` + `DraftScreen.test.tsx` + `draft.spec.ts` (`@draft` 8→4; +acuse de pick/espera) + vivo 2026-09-14 (draft real 2×HUMAN, M21) | 2026-09-14 |
-| Torneo Swiss / Bracket | ✅ | ✅ | `TournamentBracket.tsx` + `TournamentPanel.tsx` + `TournamentBracket.test.tsx` + `tournament.spec.ts` | 2026-08-26 |
+| Torneo Swiss / Bracket | ✅ | ✅ | `TournamentBracket.tsx` + `TournamentPanel.tsx` (docked panel, TRN-17; unread chat, TRN-20) + `TournamentBracket.test.tsx` + `TournamentPanel.test.tsx` + `tournamentChatUnread.test.ts` + `tournament.spec.ts` + `tournament-bracket.spec.ts` + create wizard `TourneySeatsStep.test.tsx` (TRN-9) | 2026-10-29 |
 | Two-Headed Giant / multijugador | ✅ | ✅ | `TwoHeadedBoard` (`PodBoard`) 2×2 pod — clamp 4 solo de pintado web (el servidor XMage soporta FFA 3-10) | 2026-08-26 |
 
 ### M. Miscelánea

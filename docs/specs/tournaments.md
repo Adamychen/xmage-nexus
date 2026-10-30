@@ -121,6 +121,15 @@ dialog does not offer them either), and any other field is shown only if
   tournament table, so they stay.
 - Guard: `src/lobby/CreateTableDialog.test.tsx`
 
+### TRN-9 · A limited tournament seats only humans, and the Seats step says why
+In a draft, sealed or jumpstart tournament the Seats step disables "Fill with bots" and the bot type of
+each seat, and shows the reason next to them. Every other seat is filled by a person who joins from
+their own window (another window or incognito).
+
+- Why: a bot never submits a built deck in limited, so a tournament with bots never reaches its rounds.
+  The reason is stated where the player makes the choice, not after the tournament stalls.
+- Guard: `src/lobby/CreateTable/TourneySeatsStep.test.tsx`
+
 ## The bracket
 
 ### TRN-10 · The bracket shows one card per match, built from the games the server sends

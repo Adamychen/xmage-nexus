@@ -100,7 +100,7 @@ describe('TourneySeatsStep: the seats as a list (TRN-6)', () => {
     expect(form.setSeatDeck).toHaveBeenCalledWith(0, 'deck-red')
   })
 
-  it('TRN-6: the bot and Fill with bots are disabled in a limited tournament, with the reason next to them', () => {
+  it('TRN-9: the bot and Fill with bots are disabled in a limited tournament, with the reason next to them', () => {
     renderSeats({ isDraftLimited: true })
     expect((screen.getByRole('button', { name: 'Llenar con bots' }) as HTMLButtonElement).disabled).toBe(true)
     for (let i = 0; i < 7; i++) expect(kindRadio(i + 1, /^IA$/).disabled).toBe(true)
