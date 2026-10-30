@@ -45,6 +45,15 @@
 
 .card-grid-clear-btn { position: absolute; right: 6px; }
 
+.card-grid-dialog {
+  display: flex;
+  flex-direction: column;
+}
+
+.card-grid-dialog .card-grid-actions {
+  flex-shrink: 0;
+}
+
 .card-grid-scroll-area {
   flex: 1 1 auto;
   min-height: 140px;

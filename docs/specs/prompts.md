@@ -106,3 +106,13 @@ click there is never sent as an answer.
   then refused, the engine asked the same discard again, and the dialog stayed open until the next
   priority pass, so the player saw a prompt they had already answered.
 - Guard: `src/game/handPick.test.ts` · `src/game/feedback.test.ts`
+
+### PRM-12 · The finish and confirm buttons of a card grid stay inside the dialog, whatever the list length
+A card grid lists its cards in a scrolling area, and its footer (the confirm and finish buttons) sits
+under that area. The dialog is a column whose list takes the space left over, so the footer is always
+inside the dialog box: a long list of lands (30 cards) scrolls the list, never the buttons out of reach.
+
+- Why: the list had its own height cap but the dialog did not shrink it, so the footer fell below the
+  panel and the player had to scroll the dialog to find "Finish selection", which read as a forced
+  pick of two lands (reported 2026-10-30, on the "up to two" land prompt).
+- Guard: `e2e/card-grid-footer.spec.ts`
