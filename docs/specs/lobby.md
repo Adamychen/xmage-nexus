@@ -289,3 +289,19 @@ placeholder never appears as a format in the table filters. Joining such a table
 - Why: a Commander Free For All table on beta.xmage.today showed `<DECK TYPE MISSING>` as its
   title (report of 2026-10-28); the text comes from `Table.getDeckType()` in the XMage server.
 - Guard: `src/lobby/TableCard.test.tsx` · `src/lobby/formatFamily.test.ts`
+
+### LBY-26 · What's new is a bell in the top bar with notes written for players
+The login screen and the lobby header have a bell button next to Settings. While a Nexus or XMage
+release has not been seen it carries a gold dot; opening the panel marks every listed release
+seen and clears the dot (the About dialog's News tab still does too). The panel shows the latest
+Nexus release open, with its version and date in the header, older Nexus releases folded under
+"Previous releases" with their count, and official XMage releases folded in their own section. It
+closes with Escape or a click outside. The notes are the player part of each release: for Nexus
+only the "What changed" block, without its "What's new in x.y" heading and without developer
+groups (Under the hood); never the download table, raw HTML or images. A bold line on its own is a
+group title.
+
+- Why: the only sign of a new release was a dot inside the ⋯ menu, and the News tab showed the
+  GitHub body as is, download table first, cut at 2 000 characters before the changes (report of
+  2026-10-29, inspired by EDHPlay's bell).
+- Guard: `src/system/WhatsNew.test.tsx` · `src/system/news.test.ts` · `e2e/about.spec.ts`

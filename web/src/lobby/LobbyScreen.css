@@ -831,14 +831,6 @@ html:lang(zh) .hero-deck-label {
   position: relative;
 }
 
-.lobby-news-dot {
-  position: absolute;
-  top: 2px;
-  right: 3px;
-  font-size: var(--fs-2xs);
-  color: var(--gold-300);
-}
-
 .lobby-disconnect-btn {
   background: var(--err-surface);
   border-color: var(--err-line);

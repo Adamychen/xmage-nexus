@@ -31,14 +31,6 @@
 
 .login-settings-btn { position: relative; width: auto; padding: 0 var(--sp-2); }
 
-.login-news-dot {
-  position: absolute;
-  top: 1px;
-  right: 2px;
-  font-size: var(--fs-2xs);
-  color: var(--gold-300);
-}
-
 .login-settings-btn:hover {
   background: rgb(var(--brand-rgb) / 0.15);
   border-color: var(--brand-fg);

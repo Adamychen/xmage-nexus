@@ -52,6 +52,7 @@ function urlProxyPort(): number | null {
 import { sortedFlags, countryName, type ServerPreset } from './flags'
 import Button from '../ui/Button'
 import Field from '../ui/Field'
+import WhatsNewButton from '../system/WhatsNew'
 
 // Deployment defaults baked at build time. When a public/hosted build bakes a
 // remote proxy host, a stale "local" connection saved in localStorage must not
@@ -258,15 +259,11 @@ export default function LoginScreen() {
           className="login-settings-btn"
           onClick={() => setShowSettings(true)}
           data-testid="open-settings" />
-        <IconButton label={t('system', 'about_title')} size="lg"
+        <WhatsNewButton unseen={unseenNews} onSeen={refreshNews} className="login-settings-btn" />
+        <IconButton label={t('system', 'about_title')} icon="info" size="lg"
           className="login-settings-btn"
           onClick={() => setShowAbout(true)}
-          data-testid="open-about">
-          <Icon name="info" size={16} />
-          {unseenNews && (
-            <span className="login-news-dot" data-testid="login-news-dot" aria-hidden="true">●</span>
-          )}
-        </IconButton>
+          data-testid="open-about" />
       </div>
 
       <div className="login-bg-glow login-bg-glow-1" />

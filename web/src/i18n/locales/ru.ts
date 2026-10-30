@@ -2232,6 +2232,7 @@ export const ru: TranslationSchema = {
     news_empty: 'Новостей пока нет',
     news_offline: 'Офлайн — показаны сохранённые новости',
     news_open: 'Открыть на GitHub',
+    news_previous: 'Предыдущие версии',
     log_autosave: 'Сохранять логи игр',
     log_autosave_hint: 'Автоматически сохраняет лог завершённых игр на этом устройстве',
     log_download: 'Скачать лог',

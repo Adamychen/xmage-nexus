@@ -2237,6 +2237,7 @@ export const zhs: TranslationSchema = {
     news_empty: '暂无新闻',
     news_offline: '离线 — 显示已缓存的新闻',
     news_open: '在 GitHub 上打开',
+    news_previous: '以往版本',
     log_autosave: '保存对战日志',
     log_autosave_hint: '在此设备上自动保存已结束对战的日志',
     log_download: '下载日志',

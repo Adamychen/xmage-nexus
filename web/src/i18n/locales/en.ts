@@ -2230,6 +2230,7 @@ export const en = {
     news_empty: 'No news yet',
     news_offline: 'Offline — showing cached news',
     news_open: 'Open on GitHub',
+    news_previous: 'Previous releases',
     log_autosave: 'Save game logs',
     log_autosave_hint: 'Automatically keep a log of finished games on this device',
     log_download: 'Download log',

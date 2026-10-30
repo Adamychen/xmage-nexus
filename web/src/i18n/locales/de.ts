@@ -2232,6 +2232,7 @@ export const de: TranslationSchema = {
     news_empty: 'Noch keine Neuigkeiten',
     news_offline: 'Offline — gespeicherte Neuigkeiten werden angezeigt',
     news_open: 'Auf GitHub öffnen',
+    news_previous: 'Frühere Versionen',
     log_autosave: 'Spiellogs speichern',
     log_autosave_hint: 'Speichert automatisch das Log beendeter Spiele auf diesem Gerät',
     log_download: 'Log herunterladen',
