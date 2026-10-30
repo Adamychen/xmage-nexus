@@ -148,7 +148,7 @@ that has never played.
 
 - Why: `453f4d1966`. The wizard's "seen" flag also gated the re-login, so a player who closed the
   wizard with the ✕ landed on a bare login screen after every reload (`docs/lessons.md`).
-- Guard: `src/setup/bootRestore.test.ts` · `src/App.boot.test.tsx` · `e2e/reload-restore.spec.ts`
+- Guard: `src/setup/bootRestore.test.ts` · `src/App.boot.test.tsx` · `e2e/reload-restore.spec.ts` · `e2e/reconnect-real.spec.ts`
 
 ### LBY-13 · Each format is reachable from one place: a popular chip or the "more formats" list
 A format chip (Commander, Modern, Pioneer, Standard, Pauper, Limited) owns the tables whose deck
@@ -195,12 +195,17 @@ width it moves under the card instead of beside it, centred with it. It does not
 ### LBY-17 · The account password is never saved on the device
 The login screen and the saved connection keep the server, the proxy and the username, never the
 account password. Reopening the client leaves the password field empty, and the saved connection
-record has no password field at all. Table passwords (LBY-3, LBY-10) are unaffected: they are typed
-per table and never stored.
+record has no password field at all. A reload comes back without it: the reconnect names the stream
+id the proxy gave that login, and the proxy accepts that id as proof of the login while it still holds
+the session (`ProxyClient.resumesStream`, `ProxyClientStreamTest`). Once the session has ended, the
+login asks for the password again. Table passwords (LBY-3, LBY-10) are unaffected: they are typed per
+table and never stored.
 
 - Why: the saved connection (`mage-web-connection`) was written with the password in plain text, so any
   reader of the browser's storage could take the account. The review of 2026-10-25 flagged it as a
-  security issue alongside the design findings.
+  security issue alongside the design findings. Its side effect, a reload that could not log back in
+  while the proxy still held the old session (the reconnect was refused as "wrong password"), was
+  fixed on 2026-10-30 by accepting the stream id.
 - Guard: `src/state/persistence.test.ts` · `src/lobby/LoginScreen.test.tsx`
 
 ### LBY-18 · A table card stays inside the list at phone width

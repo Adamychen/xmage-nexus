@@ -133,6 +133,14 @@ final class AuthorizedConnections {
         }
     }
 
+    /**
+     * True when {@code resumeStreamId} is the stream this session issued. The id only reaches a
+     * client that logged in, so naming it proves that login (a reload then needs no password).
+     */
+    boolean resumesStream(String resumeStreamId) {
+        return resumeStreamId != null && streamId.equals(resumeStreamId);
+    }
+
     /** {@code connect} result data shared by every successful login or attach. */
     JsonObject connectData(boolean attached, Boolean resumed) {
         JsonObject data = new JsonObject();

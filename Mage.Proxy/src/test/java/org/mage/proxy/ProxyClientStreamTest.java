@@ -147,6 +147,16 @@ class ProxyClientStreamTest {
     }
 
     @Test
+    void aReconnectNamingTheIssuedStreamIsRecognisedWithoutAPassword() throws Exception {
+        WebSocket first = conn();
+        client.attach(first, "1", null, -1);
+        String streamId = result(gateway.to(first)).get("streamId").getAsString();
+        assertTrue(client.resumesStream(streamId));
+        assertFalse(client.resumesStream("another-stream"));
+        assertFalse(client.resumesStream(null));
+    }
+
+    @Test
     void anotherStreamGetsNoReplay() throws Exception {
         client.markGameActive(GAME);
         client.attach(conn(), "1", null, -1);

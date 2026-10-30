@@ -437,7 +437,7 @@ public class Gateway extends WebSocketServer {
             return;
         }
         if ((existing.isConnected() || existing.isRelinking()) && existing.isSameSession(host, port, username)) {
-            if (!existing.sameAccountPassword(password)) {
+            if (!existing.sameAccountPassword(password) && !existing.resumesStream(resumeStream)) {
                 logger.info("connect: refused a second window of key=" + key + " with another password");
                 Activity.login(username, ipOf(conn), host, port, false, "wrong password", false);
                 send(conn, ProxyProtocol.resultJson("connect", requestId, false, ProxyProtocol.ERR_PASSWORD, "wrong password"));

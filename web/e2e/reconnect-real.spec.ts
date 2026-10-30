@@ -111,7 +111,7 @@ test('a half-open socket is detected by the heartbeat and the game recovers with
   expect(pageErrors, `pageerrors: ${pageErrors.map(String).join(' | ')}`).toEqual([])
 })
 
-test('a reload mid-game resumes the proxy stream and rejoins the board @real', { tag: '@reconnect' }, async ({ page }) => {
+test('LBY-12: a reload mid-game resumes the proxy stream and rejoins the board @real', { tag: '@reconnect' }, async ({ page }) => {
   const { pageErrors } = await startGame(page, { prefix: 'rcr', deck: DECK.lands, simDeck: DECK.aiLands })
   await inGame(page)
 

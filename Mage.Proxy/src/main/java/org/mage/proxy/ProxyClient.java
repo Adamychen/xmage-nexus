@@ -1214,7 +1214,7 @@ public class ProxyClient implements MageClient, CommandContext {
         // server session and start a reconnect loop (test mode kicks duplicate users on the
         // same host), leaving the WebSocket registry empty and broadcasts at 0 connections.
         if ((connected || relinking) && isSameSession(host, port, username)) {
-            if (!sameAccountPassword(password)) {
+            if (!sameAccountPassword(password) && !resumesStream(resumeStreamId)) {
                 logger.info("connect: refused a second window of " + username + " at " + host + ":" + port + " with another password");
                 Activity.login(username, gateway.ipOf(conn), host, port, false, "wrong password", false);
                 gateway.send(conn, ProxyProtocol.resultJson("connect", requestId, false, ProxyProtocol.ERR_PASSWORD, "wrong password"));
@@ -1396,6 +1396,14 @@ public class ProxyClient implements MageClient, CommandContext {
     boolean sameAccountPassword(String password) {
         byte[] expected = passwordHash;
         return expected != null && MessageDigest.isEqual(expected, passwordDigest(password));
+    }
+
+    /**
+     * A reconnect that names this session's stream may skip the password: the web client keeps
+     * no password (LBY-17), only the stream id its login was given (LBY-12).
+     */
+    boolean resumesStream(String resumeStreamId) {
+        return connections.resumesStream(resumeStreamId);
     }
 
     private byte[] passwordDigest(String password) {
