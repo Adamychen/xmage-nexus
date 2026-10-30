@@ -345,3 +345,12 @@ compresses instead.
   tapped lands in front of it (reported 2026-10-30). The rule already written in `StackPile` ("a mana rock
   beside a land pile is never covered") was not enforced.
 - Guard: `src/board/stackSpread.test.ts` · `e2e/land-fan.spec.ts`
+
+### BRD-24 · The playable-from-other-zones overlay wraps its cards and scrolls down, never sideways
+The list of cards playable from the graveyard, exile or another zone lays its cards out in rows that
+wrap to the width of the overlay, and the list scrolls vertically. A long list (ten cards in the
+graveyard) never needs a sideways scroll on a desktop or a phone screen.
+
+- Why: the list was one row at a fixed 760 px, so ten cards spread over 2 300 px and the player had to
+  slide sideways to see them all (reported 2026-10-30).
+- Guard: `e2e/cross-zone-layout.spec.ts`

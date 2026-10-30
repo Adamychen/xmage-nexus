@@ -131,7 +131,21 @@
 }
 
 .cross-zone-overlay {
-  width: min(760px, 86vw);
+  width: min(1100px, 95vw);
+}
+
+/* The cards wrap into rows and the list scrolls down, never sideways (BRD-24). */
+.cross-zone-overlay .pile-overlay-scroll {
+  flex-wrap: wrap;
+  justify-content: center;
+  row-gap: var(--sp-4);
+  overflow-x: hidden;
+}
+
+@media (max-width: 600px) {
+  .cross-zone-overlay .pile-card {
+    --card-w: 150px;
+  }
 }
 
 .cross-zone-entry {

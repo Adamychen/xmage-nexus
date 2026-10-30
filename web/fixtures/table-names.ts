@@ -30,6 +30,7 @@ export const TABLE = {
   fullFlowDemo: 'Demo IA vs IA',
   crossZone: 'cz-test',
   crossZoneExile: 'cz-exile-test',
+  crossZoneMany: 'cz-many-test',
   mutate: 'Mutate Showcase',
   mutateRecorded: 'Mutate Recorded (real frame)',
   bestOf3: 'best-of-3-test',
