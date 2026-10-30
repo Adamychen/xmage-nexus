@@ -29,7 +29,7 @@ function spread(pile: HTMLElement): void {
     pileRect.right,
   )
   const room = Math.max(0, bandRect.right - edge - restRight)
-  const layout = spreadLayout(collapsed, SPREAD_GAP * scale, bandRect.left + edge, pileRect.right + room)
+  const layout = spreadLayout(collapsed, SPREAD_GAP * scale, pileRect.right + room)
   items.forEach((el, i) => el.style.setProperty('--spread-x', `${layout.dx[i] / scale}px`))
   pile.style.setProperty('--spread-l', `${(layout.stripLeft - pileRect.left) / scale}px`)
   pile.style.setProperty('--spread-w', `${layout.stripWidth / scale}px`)

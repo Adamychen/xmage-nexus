@@ -281,13 +281,13 @@ wraps inside the seat instead of losing its counts. From 601 px up the seat keep
   cut off by the screen (review of 2026-10-26). The life total is the number a player needs at a glance.
 - Guard: `e2e/phone-fit.spec.ts`
 
-### BRD-20 · Token piles hold five and open after a second of hover
-Three or more identical tokens pile up, five to a pile at most: twelve Treasures are piles of five, five
-and two, and a sixth token left alone stays a single card. A pile is drawn as its top card with each other
-copy a dim edge just behind it, and the count badge in the corner. With a mouse, the pile fans out only after
-the pointer has rested on it for one second, and only that pile; a touch fans it out at once. While a token
-pile is fanned out the large hover preview is hidden, so it never covers the fanned cards. Land piles are
-unchanged: one pile per name, fanned out as soon as the pointer enters.
+### BRD-20 · Piles hold five; token piles open after a second of hover
+Three or more identical permanents pile up, five to a pile at most: twelve Treasures are piles of five, five
+and two, and a sixth token left alone stays a single card. Lands follow the same five-card limit. A pile is
+drawn as its top card with each other copy a dim edge just behind it, and the count badge in the corner.
+With a mouse, a token pile fans out only after the pointer has rested on it for one second, and only that
+pile; a touch fans it out at once. While a token pile is fanned out the large hover preview is hidden, so
+it never covers the fanned cards. A land pile fans out as soon as the pointer enters.
 
 - Why: a board of tokens (dozens of Treasures or Soldiers) spread each pile across the row, and passing the
   pointer over a pile fanned it out and pushed its neighbours aside. A pile that holds still and opens on a
@@ -335,3 +335,13 @@ pip or the centre, and the whole dial still fits its dock corner (BRD-14).
   waiting on attackers, blockers or damage (user request, 2026-10-29); the user chose small
   circles beside the combat pip over ten pips on the arc, which would not fit the corner.
 - Guard: `src/game/PhaseDial.test.tsx` · `e2e/game-ui-v2.spec.ts`
+
+### BRD-23 · A fanned pile never covers the permanents beside it
+A pile fanned out on hover spreads to the right of its own first card and pushes the permanents after it
+aside. It never moves left over the permanents before it: when the band leaves no room on the right, the fan
+compresses instead.
+
+- Why: the fan slid left to stay inside the band when the pile sat near the right edge, so it covered the
+  tapped lands in front of it (reported 2026-10-30). The rule already written in `StackPile` ("a mana rock
+  beside a land pile is never covered") was not enforced.
+- Guard: `src/board/stackSpread.test.ts`

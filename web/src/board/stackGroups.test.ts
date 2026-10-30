@@ -162,9 +162,10 @@ describe('groupStackables', () => {
     expect(six.solos.map(([id]) => id)).toEqual(['c5'])
   })
 
-  it('BRD-20: land piles are not split', () => {
-    const { groups } = groupStackables(entries(Array.from({ length: 8 }, () => land('Forest'))), 'lands')
-    expect(groups.map((g) => g.items.length)).toEqual([8])
+  it('BRD-20: land piles hold at most five too, a leftover single land stays solo', () => {
+    const { groups, solos } = groupStackables(entries(Array.from({ length: 6 }, () => land('Forest'))), 'lands')
+    expect(groups.map((g) => g.items.length)).toEqual([5])
+    expect(solos.map(([id]) => id)).toEqual(['c5'])
   })
 
   it('a divergent creature token stays solo while its siblings stack', () => {
