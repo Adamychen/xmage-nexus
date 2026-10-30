@@ -50,6 +50,26 @@ export const DIAL_PHASES: DialPhase[] = [
   { key: 'END_TURN',        label: 'END', nameKey: 'step_end_step', steps: ['END_TURN', 'CLEANUP'], stopKeys: ['endStep'] },
 ]
 
+export interface DialCombatStep {
+  key: string
+  label: string
+  nameKey: keyof TranslationSchema['game']
+  steps: string[]
+  stopKey?: string
+}
+
+export const DIAL_COMBAT_STEPS: DialCombatStep[] = [
+  { key: 'BEGIN_COMBAT',      label: 'BC',  nameKey: 'step_begin_combat',  steps: ['BEGIN_COMBAT'],                             stopKey: 'beginCombat' },
+  { key: 'DECLARE_ATTACKERS', label: 'AT',  nameKey: 'step_attackers',     steps: ['DECLARE_ATTACKERS'] },
+  { key: 'DECLARE_BLOCKERS',  label: 'BL',  nameKey: 'step_blockers',      steps: ['DECLARE_BLOCKERS'] },
+  { key: 'COMBAT_DAMAGE',     label: 'DM',  nameKey: 'step_combat_damage', steps: ['FIRST_COMBAT_DAMAGE', 'COMBAT_DAMAGE'] },
+  { key: 'END_COMBAT',        label: 'EC',  nameKey: 'step_end_combat',    steps: ['END_COMBAT'],                               stopKey: 'endCombat' },
+]
+
+export function activeCombatIndex(step: string): number {
+  return DIAL_COMBAT_STEPS.findIndex((s) => s.steps.includes(step))
+}
+
 export function activeDialIndex(step: string): number {
   const idx = DIAL_PHASES.findIndex((p) => p.steps.includes(step))
   return idx >= 0 ? idx : 0

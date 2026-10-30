@@ -5590,8 +5590,8 @@ export function buildGalleryEntries(): GalleryEntry[] {
   entries.push({
     id: 'board:arena-kind-columns',
     group: 'Tablero',
-    label: 'Arena: lands left, rocks and Treasures right, planeswalkers in a column',
-    description: 'Four-seat Commander with lands, mana rocks, Treasures, a planeswalker and a saga on several seats. Lands sit left of the other permanents on every board; planeswalkers and sagas form a column at the right edge spanning the creature and permanent rows.',
+    label: 'Arena: lands left, rocks and Treasures right, planeswalkers in their own zone',
+    description: 'Four-seat Commander with lands, mana rocks, Treasures, a planeswalker and a saga on several seats. Lands sit left of the other permanents on every board; planeswalkers and sagas get their own zone at the right of the creatures row.',
     phase: 'game',
     game: KIND_COLUMNS_GAME,
     gameId: GANG_BLOCK_FRAME?.gameId ?? null,

@@ -1280,6 +1280,7 @@ export const de: TranslationSchema = {
     step_attackers: 'Angreifer',
     step_blockers: 'Blocker',
     step_end_combat: 'Kampfende',
+    step_combat_damage: 'Kampfschaden',
     step_main2: 'Hauptphase 2',
     step_end_step: 'Endsegment',
     step_cleanup: 'Aufräumsegment',

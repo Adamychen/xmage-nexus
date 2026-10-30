@@ -323,54 +323,28 @@
   min-width: var(--card-w, 100px);
 }
 
-.board-zone.has-marquee-column {
-  grid-template-columns: minmax(0, 1fr) max-content;
-  column-gap: var(--sp-2);
+.bz-band.bz-split-band {
+  flex: 1 1 0;
+  width: auto;
 }
 
-.board-zone.has-marquee-column > .bz-row {
-  grid-column: 1;
-}
-
-.board-zone.has-marquee-column.zone-top > .bz-status-row {
-  grid-row: 1;
-  grid-column: 1 / -1;
-}
-
-.board-zone.has-marquee-column.zone-bottom > .bz-status-row {
-  grid-row: 3;
-  grid-column: 1 / -1;
-}
-
-.board-wrap[data-ui='v2'] .board-zone.has-marquee-column.zone-bottom > .bz-status-row {
-  grid-row: auto;
-  grid-column: auto;
-}
-
-.board-zone.has-marquee-column.zone-top > .bz-marquee--column {
-  grid-column: 2;
-  grid-row: 2 / span 2;
-}
-
-.board-zone.has-marquee-column.zone-bottom > .bz-marquee--column {
-  grid-column: 2;
-  grid-row: 1 / span 2;
-}
-
-.board-zone .bz-marquee.bz-marquee--column {
-  margin: 0;
-  max-width: none;
-  height: auto;
+.bz-band.bz-split-band:empty {
   min-width: 0;
-  min-height: 0;
-  align-self: stretch;
-  flex-direction: column;
-  flex-wrap: nowrap;
-  justify-content: flex-start;
-  align-items: center;
-  gap: var(--sp-1);
-  overflow-x: hidden;
-  overflow-y: auto;
+  padding: 0;
+}
+
+.bz-band.bz-marquee-band {
+  flex: 1 1 0;
+  width: auto;
+  --marquee-gap: var(--sp-2h);
+  --marquee-pad: var(--sp-2);
+  min-width: calc(var(--zone-card-w, 100px) + 2 * var(--marquee-pad) + 3px);
+  max-width: calc(var(--marquee-slots, 1) * var(--zone-card-w, 100px) + (var(--marquee-slots, 1) - 1) * var(--marquee-gap) + 2 * var(--marquee-pad) + 3px);
+  border: 1px solid rgb(var(--gold-rgb) / 0.16);
+  border-left: 2px solid rgb(var(--gold-rgb) / 0.45);
+  background: linear-gradient(180deg, rgb(var(--gold-rgb) / 0.06) 0%, rgb(var(--gold-rgb) / 0.02) 100%);
+  box-shadow: inset 0 1px 0 var(--veil-1);
+  scrollbar-color: rgb(var(--gold-rgb) / 0.3) transparent;
 }
 
 .stack-group,
@@ -547,6 +521,11 @@
   padding: 1px var(--sp-0h);
 }
 
+.board-zone.compact-pod .bz-marquee-band {
+  --marquee-gap: var(--sp-1);
+  --marquee-pad: var(--sp-0h);
+}
+
 .board-zone.compact-pod .bz-commander,
 .opponent-zone.compact-pod .oz-commander,
 .player-zone.compact-pod .pz-commander {
@@ -614,6 +593,7 @@
 /* Compact card style: battlefield tiles are landscape art crops (CardSlot `is-compact`). */
 .board-zone.card-style-compact .bz-band,
 .board-zone.card-style-compact .bz-marquee,
+.board-zone.card-style-compact .bz-marquee-band,
 .board-zone.card-style-compact .bz-commander {
   --card-h-ratio: 0.75;
 }

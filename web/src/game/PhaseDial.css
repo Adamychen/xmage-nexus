@@ -91,12 +91,84 @@
   z-index: 2;
 }
 
+.phase-dial .phase-dial-sat {
+  position: absolute;
+  width: 26px;
+  height: 26px;
+  min-width: 0;
+  margin: -13px 0 0 -13px;
+  padding: 0;
+  box-sizing: border-box;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1px solid var(--line-2);
+  background: rgb(var(--ink-1-rgb, 11 16 27) / 0.92);
+  color: var(--fg-3);
+  font-family: var(--font-display, sans-serif);
+  font-size: var(--fs-3xs);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0;
+  white-space: nowrap;
+  cursor: default;
+  pointer-events: auto;
+  transition: border-color 0.15s, background-color 0.15s, color 0.15s;
+}
+
+.phase-dial .phase-dial-sat-label {
+  display: block;
+  white-space: nowrap;
+}
+
+.phase-dial button.phase-dial-sat {
+  cursor: pointer;
+}
+
+.phase-dial button.phase-dial-sat:hover {
+  color: var(--fg-hi);
+  border-color: var(--line-3);
+}
+
+.phase-dial .phase-dial-sat.past {
+  color: var(--dial-past);
+  border-style: dashed;
+}
+
+.phase-dial .phase-dial-sat.active {
+  color: var(--ink-0);
+  background: radial-gradient(circle at 30% 25%, var(--gold-300), var(--gold-500));
+  border-color: var(--gold-300);
+  box-shadow: 0 0 0 2px rgb(var(--gold-rgb) / 0.25), 0 0 10px rgb(var(--gold-rgb) / 0.55);
+  z-index: 2;
+}
+
 .phase-dial-pip .stop-dot {
   position: absolute;
   width: 10px;
   height: 10px;
   border-radius: 50%;
   border: 2px solid var(--ink-gap);
+}
+
+.phase-dial .phase-dial-sat .stop-dot {
+  position: absolute;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  border: 2px solid var(--ink-gap);
+}
+
+.phase-dial .phase-dial-sat .stop-dot-you {
+  right: -2px;
+  top: -2px;
+  background: var(--brand);
+}
+
+.phase-dial .phase-dial-sat .stop-dot-opp {
+  left: -2px;
+  top: -2px;
+  background: var(--warn);
 }
 
 .phase-dial-pip .stop-dot-you {
@@ -278,7 +350,8 @@
   .phase-dial.is-mine::before {
     animation: none;
   }
-  .phase-dial .phase-dial-pip {
+  .phase-dial .phase-dial-pip,
+  .phase-dial .phase-dial-sat {
     transition: none;
   }
 }

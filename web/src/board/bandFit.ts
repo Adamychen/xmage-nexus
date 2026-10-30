@@ -2,6 +2,7 @@ import { CLASSIC_CARD_ASPECT } from './compactCard'
 
 export const CARD_ASPECT = CLASSIC_CARD_ASPECT
 export const MAX_BAND_LINES = 3
+export const BAND_GROW_HYSTERESIS = 2
 const WRAP_WASTE = 1.12
 
 export interface BandFitInput {
@@ -44,6 +45,11 @@ function widthFit(input: BandFitInput, lines: number): number {
 function heightFit(input: BandFitInput, lines: number): number {
   const rowGap = lines > 1 ? Math.max(2, Math.round(input.gap / 2)) : 0
   return (input.availH - (lines - 1) * rowGap) / ((input.aspect ?? CARD_ASPECT) * lines)
+}
+
+export function settleBandCardW(current: number, next: number, linesChanged: boolean): number {
+  if (next < current || linesChanged || next - current >= BAND_GROW_HYSTERESIS) return next
+  return current
 }
 
 /**

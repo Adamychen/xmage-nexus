@@ -1283,6 +1283,7 @@ export const zhs: TranslationSchema = {
     step_attackers: '宣告攻击者',
     step_blockers: '宣告阻挡者',
     step_end_combat: '战斗结束',
+    step_combat_damage: '战斗伤害',
     step_main2: '第二行动阶段',
     step_end_step: '结束步骤',
     step_cleanup: '清除步骤',

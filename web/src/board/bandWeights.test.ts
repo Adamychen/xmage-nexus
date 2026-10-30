@@ -31,10 +31,10 @@ describe('bandFill', () => {
     expect(bandFill({ a: perm(['PLANESWALKER']) }, false)).toEqual({ creatures: true, permanents: false })
   })
 
-  it('BRD-2: a marquee column does not fill the creatures band', () => {
-    expect(bandFill({ a: perm(['PLANESWALKER']) }, false, true)).toEqual({ creatures: false, permanents: false })
-    expect(bandFill({ a: perm(['SAGA']) }, false, true)).toEqual({ creatures: false, permanents: false })
-    expect(bandFill({ a: perm(['PLANESWALKER']), b: perm(['CREATURE']) }, false, true)).toEqual({ creatures: true, permanents: false })
+  it('BRD-2: planeswalkers, sagas and battles fill the creatures band', () => {
+    expect(bandFill({ a: perm(['PLANESWALKER']) }, false)).toEqual({ creatures: true, permanents: false })
+    expect(bandFill({ a: perm(['SAGA']) }, false)).toEqual({ creatures: true, permanents: false })
+    expect(bandFill({ a: perm(['PLANESWALKER']), b: perm(['CREATURE']) }, false)).toEqual({ creatures: true, permanents: false })
   })
 })
 

@@ -50,12 +50,17 @@ interface SeatBoxes {
   landCards: Box[]
   otherCards: Box[]
   creatures: Box | null
+  creatureBand: Box | null
+  creatureCards: Box[]
   permanents: Box | null
   status: Box | null
   marquee: Box | null
   marqueeCards: Box[]
-  marqueeChrome: number
-  bandCardMax: number
+  marqueeBudget: number
+}
+
+function intersects(a: Box, b: Box): boolean {
+  return a.left < b.right - 1 && a.right > b.left + 1 && a.top < b.bottom - 1 && a.bottom > b.top + 1
 }
 
 async function seatBoxes(page: import('@playwright/test').Page): Promise<SeatBoxes[]> {
@@ -74,17 +79,21 @@ async function seatBoxes(page: import('@playwright/test').Page): Promise<SeatBox
       landCards: boxes('[data-testid="lands-band"] .card-slot', zone),
       otherCards: boxes('[data-testid="others-band"] .card-slot', zone),
       creatures: box(zone.querySelector('.bz-creatures-row')),
+      creatureBand: box(zone.querySelector('.creatures-band')),
+      creatureCards: boxes('.creatures-band .card-slot', zone),
       permanents: box(zone.querySelector('.bz-permanents-row')),
       status: box(zone.querySelector('.bz-status-row')),
-      marquee: box(zone.querySelector('.bz-marquee--column')),
-      marqueeCards: boxes('.bz-marquee--column .card-slot', zone),
-      marqueeChrome: (() => {
-        const column = zone.querySelector<HTMLElement>('.bz-marquee--column')
-        if (!column) return 0
-        const cs = getComputedStyle(column)
-        return parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight) + parseFloat(cs.borderLeftWidth) + parseFloat(cs.borderRightWidth)
+      marquee: box(zone.querySelector('[data-testid="marquee-band"]')),
+      marqueeCards: boxes('[data-testid="marquee-band"] .card-slot', zone),
+      marqueeBudget: (() => {
+        const band = zone.querySelector<HTMLElement>('[data-testid="marquee-band"]')
+        if (!band) return 0
+        const slots = parseFloat(band.style.getPropertyValue('--marquee-slots'))
+        const zoneW = parseFloat(getComputedStyle(zone).getPropertyValue('--zone-card-w'))
+        const cs = getComputedStyle(band)
+        const chrome = parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight) + parseFloat(cs.borderLeftWidth) + parseFloat(cs.borderRightWidth)
+        return slots * zoneW + (slots - 1) * parseFloat(cs.columnGap) + chrome
       })(),
-      bandCardMax: Math.max(0, ...boxes('.bz-band .card-slot', zone).map((b) => b.right - b.left)),
     }))
   })
 }
@@ -117,36 +126,43 @@ test('BRD-1: on every seat the lands band sits left of the others band and no ca
   }
 })
 
-test('BRD-2: the marquee column spans the creatures and permanents rows at the right edge of every seat', async ({ page }) => {
+test('BRD-2: the marquee band sits at the right end of the creatures row on every seat with a planeswalker or saga', async ({ page }) => {
   await showGame(page, withKinds(), V2_ARENA)
   await expect(page.getByTestId('arena-board')).toBeVisible({ timeout: 10_000 })
-  await expect(page.locator('.arena-board .bz-marquee--column').first()).toBeVisible({ timeout: 10_000 })
+  await expect(page.locator('.arena-board [data-testid="marquee-band"]').first()).toBeVisible({ timeout: 10_000 })
   const seats = await seatBoxes(page)
-  const withColumn = seats.filter((seat) => seat.marquee)
-  expect(withColumn.length, 'seats with a planeswalker or saga').toBe(3)
-  expect(withColumn.find((seat) => seat.name === 'Adam')?.marqueeCards.length, 'two planeswalkers stacked on Adam').toBe(2)
+  const withBand = seats.filter((seat) => seat.marquee)
+  expect(withBand.length, 'seats with a planeswalker or saga').toBe(3)
+  expect(withBand.find((seat) => seat.name === 'Adam')?.marqueeCards.length, 'two planeswalkers on Adam').toBe(2)
   for (const seat of seats) {
     if (!seat.marquee) {
       expect(seat.creatures, `${seat.name}: creatures row keeps the full width`).not.toBeNull()
       continue
     }
-    const marquee = seat.marquee
+    const band = seat.marquee
+    const row = seat.creatures!
+    const creatureBand = seat.creatureBand!
+    expect(Math.abs(band.top - row.top), `${seat.name}: band starts at the top of the creatures row`).toBeLessThanOrEqual(1)
+    expect(Math.abs(band.bottom - row.bottom), `${seat.name}: band ends at the bottom of the creatures row`).toBeLessThanOrEqual(1)
+    expect(band.left, `${seat.name}: band sits right of the creatures band`).toBeGreaterThanOrEqual(creatureBand.right - 1)
+    expect(seat.marqueeCards.length, `${seat.name}: band holds its permanents`).toBeGreaterThan(0)
     const cardW = seat.marqueeCards[0].right - seat.marqueeCards[0].left
-    expect(marquee.right - marquee.left - cardW, `${seat.name}: column is no wider than one card plus its padding`).toBeLessThanOrEqual(seat.marqueeChrome + cardW * 0.05)
-    expect(cardW, `${seat.name}: column cards are no larger than the band cards`).toBeLessThanOrEqual(seat.bandCardMax + 1)
-    const creatures = seat.creatures!
-    const permanents = seat.permanents!
-    const status = seat.status!
-    expect(marquee.top, `${seat.name}: column starts at the top of the creatures or permanents row`).toBeLessThanOrEqual(Math.min(creatures.top, permanents.top) + 1)
-    expect(marquee.bottom, `${seat.name}: column ends at the bottom of the creatures or permanents row`).toBeGreaterThanOrEqual(Math.max(creatures.bottom, permanents.bottom) - 1)
-    expect(marquee.left, `${seat.name}: column sits right of the battlefield rows`).toBeGreaterThanOrEqual(Math.max(creatures.right, permanents.right) - 1)
-    if (seat.marqueeCards.length > 1) {
-      const [first, second] = seat.marqueeCards
-      expect(second.top, `${seat.name}: second marquee permanent sits below the first`).toBeGreaterThanOrEqual(first.bottom - 1)
-      expect(Math.abs(second.left - first.left), `${seat.name}: marquee permanents share one column`).toBeLessThanOrEqual(1)
+    expect(band.right - band.left, `${seat.name}: band is at least one card wide`).toBeGreaterThanOrEqual(cardW - 1)
+    for (const card of seat.marqueeCards) {
+      expect(card.left, `${seat.name}: a marquee card is clipped on the left`).toBeGreaterThanOrEqual(band.left - 1)
+      expect(card.right, `${seat.name}: a marquee card is clipped on the right`).toBeLessThanOrEqual(band.right + 1)
+      for (const creature of seat.creatureCards) {
+        expect(intersects(card, creature), `${seat.name}: a marquee card overlaps a creature`).toBe(false)
+      }
     }
-    const overlapX = marquee.left < status.right && marquee.right > status.left
-    const overlapY = marquee.top < status.bottom && marquee.bottom > status.top
-    expect(overlapX && overlapY, `${seat.name}: column does not sit on the status row`).toBe(false)
+    expect(band.right - band.left, `${seat.name}: band is no wider than its cards need`).toBeLessThanOrEqual(seat.marqueeBudget + 2)
+    if (seat.creatureCards.length === 2 && seat.marqueeCards.length === 2) {
+      expect(creatureBand.right - creatureBand.left, `${seat.name}: creatures keep the rest of the row`).toBeGreaterThan(band.right - band.left)
+    }
+    seat.marqueeCards.forEach((card, i) => {
+      seat.marqueeCards.slice(i + 1).forEach((other) => {
+        expect(intersects(card, other), `${seat.name}: two marquee cards overlap`).toBe(false)
+      })
+    })
   }
 })

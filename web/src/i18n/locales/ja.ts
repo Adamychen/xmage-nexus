@@ -1283,6 +1283,7 @@ export const ja: TranslationSchema = {
     step_attackers: '攻撃クリーチャー指定',
     step_blockers: 'ブロッククリーチャー指定',
     step_end_combat: '戦闘終了',
+    step_combat_damage: '戦闘ダメージ',
     step_main2: 'メインフェイズ2',
     step_end_step: '終了ステップ',
     step_cleanup: 'クリンナップ',

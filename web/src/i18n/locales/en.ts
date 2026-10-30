@@ -1278,6 +1278,7 @@ export const en = {
     step_attackers: 'Attackers',
     step_blockers: 'Blockers',
     step_end_combat: 'End Combat',
+    step_combat_damage: 'Combat Damage',
     step_main2: 'Main Phase 2',
     step_end_step: 'End Step',
     step_cleanup: 'Cleanup',

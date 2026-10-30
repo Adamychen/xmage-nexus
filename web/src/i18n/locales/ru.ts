@@ -1280,6 +1280,7 @@ export const ru: TranslationSchema = {
     step_attackers: 'Назначение атакующих',
     step_blockers: 'Назначение блокирующих',
     step_end_combat: 'Конец боя',
+    step_combat_damage: 'Боевые повреждения',
     step_main2: 'Главная фаза 2',
     step_end_step: 'Конечный шаг',
     step_cleanup: 'Очистка',

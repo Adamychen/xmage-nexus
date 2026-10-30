@@ -1280,6 +1280,7 @@ export const pt: TranslationSchema = {
     step_attackers: 'Atacantes',
     step_blockers: 'Bloqueadores',
     step_end_combat: 'Fim do Combate',
+    step_combat_damage: 'Dano de combate',
     step_main2: 'Principal 2',
     step_end_step: 'Etapa Final',
     step_cleanup: 'Limpeza',
