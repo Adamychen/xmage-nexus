@@ -3,6 +3,7 @@ import { act, cleanup, renderHook, waitFor } from '@testing-library/react'
 import * as cmds from '../../net/commands'
 import { requestDeckValidation } from '../DeckIssuesDialog'
 import { useCreateTableForm } from './useCreateTableForm'
+import { getState, setState } from '../../state/store'
 import { STORAGE_KEY } from './constants'
 
 vi.mock('../../net/commands', () => ({
@@ -262,6 +263,11 @@ describe('submit: match with native AI', () => {
 
 describe('runDemoTable', () => {
   it('creates a SIM vs SIM table, starts it and watches it', async () => {
+    const before = getState().phase
+    vi.mocked(cmds.watchTable).mockImplementationOnce(async () => {
+      setState({ phase: 'spectating_pending' })
+      return { ok: true } as any
+    })
     const m = await mount()
     await act(() => m.form().runDemoTable())
 
@@ -270,6 +276,23 @@ describe('runDemoTable', () => {
     expect(cmds.watchTable).toHaveBeenCalledWith('tbl')
     expect(m.onClose).toHaveBeenCalled()
     expect(m.form().busy).toBe(false)
+    setState({ phase: before })
+  })
+
+  it('LBY-8: re-sends the watch until the game opens, so a watch the server drops early is not lost', async () => {
+    const before = getState().phase
+    vi.mocked(cmds.watchTable)
+      .mockResolvedValueOnce({ ok: true } as any)
+      .mockImplementationOnce(async () => {
+        setState({ phase: 'spectating_pending' })
+        return { ok: true } as any
+      })
+    const m = await mount()
+    await act(() => m.form().runDemoTable())
+
+    expect(cmds.watchTable).toHaveBeenCalledTimes(2)
+    expect(m.onClose).toHaveBeenCalled()
+    setState({ phase: before })
   })
 
   it('accepts a capitalized TableId and does not watch if it fails to start', async () => {

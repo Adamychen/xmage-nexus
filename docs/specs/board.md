@@ -344,4 +344,4 @@ compresses instead.
 - Why: the fan slid left to stay inside the band when the pile sat near the right edge, so it covered the
   tapped lands in front of it (reported 2026-10-30). The rule already written in `StackPile` ("a mana rock
   beside a land pile is never covered") was not enforced.
-- Guard: `src/board/stackSpread.test.ts`
+- Guard: `src/board/stackSpread.test.ts` · `e2e/land-fan.spec.ts`

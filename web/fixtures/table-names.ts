@@ -44,6 +44,7 @@ export const TABLE = {
   mulliganShowcase: 'Mulligan Showcase',
   stackPriority: 'stack-priority-test',
   tokens: 'tokens-test',
+  landFan: 'land-fan-test',
   manaStack: 'mana-stack-test',
   stackTarget: 'stack-target-test',
   thoughtseize: 'thoughtseize-test',

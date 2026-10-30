@@ -1,5 +1,5 @@
 import * as cmds from '../../net/commands'
-import { setMyDeck } from '../../state/store'
+import { getState, setMyDeck } from '../../state/store'
 import { DEFAULT_DECK, type Deck } from '../decks'
 import { requestDeckValidation } from '../DeckIssuesDialog'
 import type { useTranslation } from '../../i18n'
@@ -388,6 +388,22 @@ async function submitMatch(f: SubmitTableForm, io: SubmitTableIO): Promise<void>
   io.onClose()
 }
 
+const WATCH_RETRY_MS = 500
+const WATCH_DEADLINE_MS = 20_000
+
+/**
+ * Re-sends watchTable until WATCHGAME moves the store to spectating. A watch sent
+ * before the table is DUELING is dropped by the server, and the XMage client reports
+ * it as sent anyway, so one call can be lost without any error (LBY-8).
+ */
+async function watchUntilSpectating(tableId: string): Promise<void> {
+  const deadline = Date.now() + WATCH_DEADLINE_MS
+  while (!['spectating_pending', 'game'].includes(getState().phase) && Date.now() < deadline) {
+    await cmds.watchTable(tableId)
+    await new Promise((resolve) => setTimeout(resolve, WATCH_RETRY_MS))
+  }
+}
+
 /** Dev shortcut: an AI-vs-AI duel that starts at once and is watched. */
 export async function runDemoTable(
   opts: { skipInitShuffling: boolean; skipStartingPlayerChoice: boolean },
@@ -411,7 +427,7 @@ export async function runDemoTable(
       if (tableId) {
         const started = await cmds.startMatch(tableId)
         if (started.ok) {
-          await cmds.watchTable(tableId)
+          await watchUntilSpectating(tableId)
         }
       }
       io.onClose()

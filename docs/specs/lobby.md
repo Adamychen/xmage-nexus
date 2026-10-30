@@ -99,12 +99,15 @@ deck without starting over.
 ### LBY-8 · Watching a match opens its waiting room; watching a tournament opens its bracket
 Watching a regular match enters the spectator waiting room, which becomes the game when it
 starts. Watching a tournament table opens the tournament bracket instead, where each running match
-can be watched. A watch the server refuses shows the error and does not enter the waiting room.
+can be watched. A watch the server refuses shows the error and does not enter the waiting room. A watch
+sent right after a start is re-sent every half second until the game opens: the server drops a watch that
+arrives before the table is dueling and still reports it as sent, so a single call can be lost silently.
 
-- Why: `e08e881492`. The server does not resolve table ids in `getTournament`, so the waiting
+- Why: `e08e881492`. The dev AI-vs-AI shortcut sent its watch 5 ms after the start and lost it, so the
+  player stayed in the lobby with no error (nightly `full-flow`, 2026-10-30). The server does not resolve table ids in `getTournament`, so the waiting
   room of a tournament stayed on "preparing" forever; the bracket uses the real tournament id
   that `SHOW_TOURNAMENT` carries.
-- Guard: `src/lobby/useTableActions.test.tsx`
+- Guard: `src/lobby/useTableActions.test.tsx` · `src/lobby/CreateTable/useCreateTableForm.test.ts`
 
 ### LBY-9 · The waiting room informs about readiness but never blocks the start
 Leaving the waiting room keeps the seat, and "Return to table" goes back to it. "Ready" is a mark the
