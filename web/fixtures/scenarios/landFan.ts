@@ -16,7 +16,7 @@ export function landFanScenario(): Scenario {
       expansionSetCode: 'TEST',
       cardTypes: ['Land'],
       subTypes: [name],
-      supertypes: ['Basic'],
+      superTypes: ['Basic'],
       tapped,
     })
 

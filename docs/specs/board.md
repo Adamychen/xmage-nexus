@@ -287,11 +287,15 @@ and two, and a sixth token left alone stays a single card. Lands follow the same
 drawn as its top card with each other copy a dim edge just behind it, and the count badge in the corner.
 With a mouse, a token pile fans out only after the pointer has rested on it for one second, and only that
 pile; a touch fans it out at once. While a token pile is fanned out the large hover preview is hidden, so
-it never covers the fanned cards. A land pile fans out as soon as the pointer enters.
+it never covers the fanned cards. A land pile fans out as soon as the pointer enters. A fanned pile closes as
+soon as the pointer moves over anything outside it, even when the browser never reports that the pointer left.
 
 - Why: a board of tokens (dozens of Treasures or Soldiers) spread each pile across the row, and passing the
   pointer over a pile fanned it out and pushed its neighbours aside. A pile that holds still and opens on a
   deliberate hover keeps the board readable while every token stays selectable (2026-10-26).
+  A land pile stayed open while the pointer rested on the mana rock it had pushed aside (CI, 2026-10-31):
+  when the card under the pointer is redrawn as the pointer leaves, React reports no leave for the pile, so
+  the pile also watches pointer moves while it is open.
 - Guard: `src/board/stackGroups.test.ts` · `src/board/StackPile.test.tsx` · `e2e/stack-groups.spec.ts`
 
 ### BRD-21 · A board settles: no card size keeps changing for ever
