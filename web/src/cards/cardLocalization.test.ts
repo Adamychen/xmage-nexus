@@ -11,6 +11,7 @@ import {
   resetCardLocalizationCacheForTest,
 } from './cardLocalization'
 import type { CardView } from '../net/types'
+import { setCardLanguage } from '../i18n'
 
 function makeMockCard(overrides: Partial<CardView> = {}): CardView {
   const name = overrides.name ?? 'Card'
@@ -38,6 +39,7 @@ function makeMockCard(overrides: Partial<CardView> = {}): CardView {
 
 describe('cardLocalization', () => {
   beforeEach(() => {
+    setCardLanguage('en')
     resetCardLocalizationCacheForTest()
     try {
       localStorage.clear()
@@ -117,6 +119,7 @@ describe('cardLocalization', () => {
   })
 
   it('localizes DeckCard instances seamlessly', async () => {
+    setCardLanguage('es')
     setCachedCardName('Lightning Bolt', 'Relámpago', 'es')
     const deckCard = { cardName: 'Lightning Bolt', setCode: 'M10', cardNumber: '146', amount: 4 }
 
