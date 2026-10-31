@@ -22,6 +22,7 @@ export const ENGINE_VIEW_REGISTRY: EngineViewRegistryRow[] = [
   { id: 'PermanentView.attachedToZoneChangeCounter', view: 'PermanentView', field: 'attachedToZoneChangeCounter', impacto: 'nulo', decision: 'bookkeeping', causa: 'contador interno de zona para efectos de vínculo; la relación visible llega por attachedTo' },
   { id: 'PermanentView.attacking', view: 'PermanentView', field: 'attacking', impacto: 'nulo', decision: 'duplicado', causa: 'el atacante y su defensor llegan en GameView.combat' },
   { id: 'PermanentView.beforeResetControllerId', view: 'PermanentView', field: 'beforeResetControllerId', impacto: 'nulo', decision: 'bookkeeping', causa: 'controlador previo para deshacer efectos de control; no se muestra' },
+  { id: 'PermanentView.entersAttackingDefenders', view: 'PermanentView', field: 'entersAttackingDefenders', impacto: 'nulo', decision: 'duplicado', causa: 'el permanente que entra atacando se añade al combate (Combat.addEntersAttacking, regla 508.4); llega en GameView.combat' },
   { id: 'PermanentView.blocking', view: 'PermanentView', field: 'blocking', impacto: 'nulo', decision: 'duplicado', causa: 'los bloqueos llegan en GameView.combat' },
   { id: 'PermanentView.blockingSet', view: 'PermanentView', field: 'blockingSet', impacto: 'nulo', decision: 'duplicado', causa: 'los bloqueos llegan en GameView.combat' },
   { id: 'PermanentView.canBeSacrificed', view: 'PermanentView', field: 'canBeSacrificed', impacto: 'bajo', decision: 'accepted', causa: 'restricción usada por el motor; el server ya filtra las acciones ofrecidas' },

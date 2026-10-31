@@ -25,6 +25,7 @@ export const hintRegistry: HintRegistryRow[] = [
   { id: 'rules:Must block attacker {object.getLogName()}{addSourceObjectName(game, ability)}', kind: 'rules', status: 'rendered', ref: 'web/src/board/CardIcons.tsx:27' },
   { id: 'rules:Must block{addSourceObjectName(game, ability)}', kind: 'rules', status: 'rendered', ref: 'web/src/board/CardIcons.tsx:27' },
   { id: 'hint:ConditionHint', kind: 'hint', status: 'known-unrendered', causa: 'contenedor genérico; su texto solo aparece como línea de reglas' },
+  { id: 'hint:StrangeNewWorldsHint', kind: 'hint', status: 'known-unrendered', causa: 'ValueHint "Differently named lands you control" (Strange New Worlds, nuevo en 1.4.63); su texto no lo pinta la web' },
   { id: 'hint:ConditionTrueHint', kind: 'hint', status: 'known-unrendered', causa: 'contenedor genérico; su texto solo aparece como línea de reglas' },
   { id: 'hint:StaticHint', kind: 'hint', status: 'known-unrendered', causa: 'texto estático; visible solo como línea de reglas' },
   { id: 'hint:ValueConditionHint', kind: 'hint', status: 'known-unrendered', causa: 'informativo/cosmético (línea de reglas)' },

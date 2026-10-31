@@ -309,6 +309,10 @@
         "path": "Mage/src/main/java/mage/abilities/hint/common/RenownedHint.java"
       },
       {
+        "name": "StrangeNewWorldsHint",
+        "path": "Mage/src/main/java/mage/abilities/hint/common/StrangeNewWorldsHint.java"
+      },
+      {
         "name": "TeamworkCostWasPaidHint",
         "path": "Mage/src/main/java/mage/abilities/hint/common/TeamworkCostWasPaidHint.java"
       }
