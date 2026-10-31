@@ -94,6 +94,46 @@ describe('StackPile', () => {
     expect(relayoutEvents(spy)).toBe(announced)
   })
 
+  it('BRD-20: closes when the pointer moves onto another permanent even if no leave event arrives', () => {
+    const { container } = render(
+      <div className="permanents-band">
+        <StackPile className="stack-group" name="Plains" count={2} cardIds={['a', 'b']}>
+          <div className="card-slot" />
+          <div className="card-slot" />
+        </StackPile>
+        <div className="card-slot rock" />
+      </div>,
+    )
+    const pile = container.querySelector<HTMLElement>('.stack-group')!
+    fireEvent.pointerEnter(pile)
+    expect(pile.dataset.spread).toBeDefined()
+    fireEvent.pointerMove(pile.querySelector('.card-slot')!)
+    expect(pile.dataset.spread).toBeDefined()
+    fireEvent.pointerMove(container.querySelector('.rock')!)
+    expect(pile.dataset.spread).toBeUndefined()
+    expect(container.querySelector<HTMLElement>('.rock')!.dataset.spreadPushed).toBeUndefined()
+  })
+
+  it('BRD-20: stops watching the pointer once closed or unmounted', () => {
+    const remove = vi.spyOn(document, 'removeEventListener')
+    const { container, unmount } = render(
+      <div className="permanents-band">
+        <StackPile className="stack-group" name="Plains" count={2} cardIds={['a', 'b']}>
+          <div className="card-slot" />
+          <div className="card-slot" />
+        </StackPile>
+      </div>,
+    )
+    const pile = container.querySelector<HTMLElement>('.stack-group')!
+    fireEvent.pointerEnter(pile)
+    fireEvent.pointerLeave(pile)
+    expect(remove.mock.calls.filter(([type]) => type === 'pointermove')).toHaveLength(1)
+    fireEvent.pointerEnter(pile)
+    unmount()
+    expect(remove.mock.calls.filter(([type]) => type === 'pointermove')).toHaveLength(2)
+    remove.mockRestore()
+  })
+
   it('does not re-measure the fanned pile on renders that leave its cards unchanged', () => {
     const cards = (
       <>
