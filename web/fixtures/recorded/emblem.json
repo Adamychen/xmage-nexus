@@ -1,13 +1,13 @@
 {
-  "recordedAt": "2026-10-04T18:36:32.496Z",
-  "gameId": "ba5091c0-e86c-4ad2-8524-2b120b9ae1d0",
+  "recordedAt": "2026-10-31T14:27:49.906Z",
+  "gameId": "086e6717-3d83-40cb-b6bd-9a27742367c9",
   "gameView": {
     "priorityTime": 0,
     "bufferTime": 0,
     "players": [
       {
-        "playerId": "1756f03c-5a24-4374-a47a-5236fe95e37e",
-        "name": "sim-137378",
+        "playerId": "7a11f9e0-fbf3-4217-87f3-ca0f754e868d",
+        "name": "sim-656499",
         "controlled": false,
         "isHuman": true,
         "life": 20,
@@ -33,7 +33,7 @@
         "sideboard": {},
         "helperCards": {},
         "battlefield": {
-          "1c378e10-2db4-44fd-8770-3593828af63f": {
+          "8faec0d9-c8e0-4585-9040-67e17a661092": {
             "tapped": false,
             "flipped": false,
             "phasedIn": true,
@@ -43,7 +43,7 @@
             "original": null,
             "copy": false,
             "nameOwner": "",
-            "nameController": "sim-137378",
+            "nameController": "sim-656499",
             "controlled": false,
             "attachedTo": null,
             "morphed": false,
@@ -54,13 +54,13 @@
             "attachedControllerDiffers": false,
             "mutateView": {
               "name": "Forest",
-              "id": "1c378e10-2db4-44fd-8770-3593828af63f",
+              "id": "8faec0d9-c8e0-4585-9040-67e17a661092",
               "cards": {}
             },
             "mutated": false,
             "parentId": null,
-            "controllerId": "1756f03c-5a24-4374-a47a-5236fe95e37e",
-            "controllerName": "sim-137378",
+            "controllerId": "7a11f9e0-fbf3-4217-87f3-ca0f754e868d",
+            "controllerName": "sim-656499",
             "name": "Forest",
             "displayName": "Forest",
             "displayFullName": "Forest",
@@ -154,7 +154,7 @@
             },
             "originalColorIdentity": "{G}",
             "originalIsCopy": false,
-            "id": "1c378e10-2db4-44fd-8770-3593828af63f",
+            "id": "8faec0d9-c8e0-4585-9040-67e17a661092",
             "expansionSetCode": "IKO",
             "cardNumber": "272",
             "usesVariousArt": true,
@@ -224,7 +224,7 @@
         "commandList": [],
         "attachments": [],
         "statesSavedSize": -1,
-        "priorityTimeSavedTimeMs": 1791138992492,
+        "priorityTimeSavedTimeMs": 1793456869868,
         "priorityTimeLeftSecs": 0,
         "bufferTimeLeft": 0,
         "passedTurn": false,
@@ -238,8 +238,8 @@
         "designationNames": []
       },
       {
-        "playerId": "78aeb310-b3d7-4a8f-9d61-8c5a9c2fd643",
-        "name": "uemble1vaqp7f",
+        "playerId": "bd341247-f2db-4bf0-b689-622dc78ac7d4",
+        "name": "uembleow9uc3",
         "controlled": true,
         "isHuman": true,
         "life": 20,
@@ -265,7 +265,7 @@
         "sideboard": {},
         "helperCards": {},
         "battlefield": {
-          "82d039af-9acf-47a4-add9-74177ec91eff": {
+          "47fcedfb-19fd-44f3-86df-b873aa96dbc0": {
             "tapped": true,
             "flipped": false,
             "phasedIn": true,
@@ -369,7 +369,7 @@
               },
               "originalColorIdentity": "{W}",
               "originalIsCopy": false,
-              "id": "82d039af-9acf-47a4-add9-74177ec91eff",
+              "id": "47fcedfb-19fd-44f3-86df-b873aa96dbc0",
               "expansionSetCode": "M20",
               "cardNumber": "261",
               "usesVariousArt": true,
@@ -385,7 +385,7 @@
             },
             "copy": false,
             "nameOwner": "",
-            "nameController": "uemble1vaqp7f",
+            "nameController": "uembleow9uc3",
             "controlled": true,
             "attachedTo": null,
             "morphed": false,
@@ -396,13 +396,13 @@
             "attachedControllerDiffers": false,
             "mutateView": {
               "name": "Plains",
-              "id": "82d039af-9acf-47a4-add9-74177ec91eff",
+              "id": "47fcedfb-19fd-44f3-86df-b873aa96dbc0",
               "cards": {}
             },
             "mutated": false,
             "parentId": null,
-            "controllerId": "78aeb310-b3d7-4a8f-9d61-8c5a9c2fd643",
-            "controllerName": "uemble1vaqp7f",
+            "controllerId": "bd341247-f2db-4bf0-b689-622dc78ac7d4",
+            "controllerName": "uembleow9uc3",
             "name": "Plains",
             "displayName": "Plains",
             "displayFullName": "Plains",
@@ -496,7 +496,7 @@
             },
             "originalColorIdentity": "{W}",
             "originalIsCopy": false,
-            "id": "82d039af-9acf-47a4-add9-74177ec91eff",
+            "id": "47fcedfb-19fd-44f3-86df-b873aa96dbc0",
             "expansionSetCode": "M20",
             "cardNumber": "261",
             "usesVariousArt": true,
@@ -510,7 +510,7 @@
               "other": []
             }
           },
-          "a9456e38-85b6-493f-aa7c-78292a2617fe": {
+          "a21eccca-64af-4531-91d0-c4ce89cc545e": {
             "tapped": true,
             "flipped": false,
             "phasedIn": true,
@@ -614,7 +614,7 @@
               },
               "originalColorIdentity": "{W}",
               "originalIsCopy": false,
-              "id": "a9456e38-85b6-493f-aa7c-78292a2617fe",
+              "id": "a21eccca-64af-4531-91d0-c4ce89cc545e",
               "expansionSetCode": "KTK",
               "cardNumber": "250",
               "usesVariousArt": true,
@@ -630,7 +630,7 @@
             },
             "copy": false,
             "nameOwner": "",
-            "nameController": "uemble1vaqp7f",
+            "nameController": "uembleow9uc3",
             "controlled": true,
             "attachedTo": null,
             "morphed": false,
@@ -641,13 +641,13 @@
             "attachedControllerDiffers": false,
             "mutateView": {
               "name": "Plains",
-              "id": "a9456e38-85b6-493f-aa7c-78292a2617fe",
+              "id": "a21eccca-64af-4531-91d0-c4ce89cc545e",
               "cards": {}
             },
             "mutated": false,
             "parentId": null,
-            "controllerId": "78aeb310-b3d7-4a8f-9d61-8c5a9c2fd643",
-            "controllerName": "uemble1vaqp7f",
+            "controllerId": "bd341247-f2db-4bf0-b689-622dc78ac7d4",
+            "controllerName": "uembleow9uc3",
             "name": "Plains",
             "displayName": "Plains",
             "displayFullName": "Plains",
@@ -741,7 +741,7 @@
             },
             "originalColorIdentity": "{W}",
             "originalIsCopy": false,
-            "id": "a9456e38-85b6-493f-aa7c-78292a2617fe",
+            "id": "a21eccca-64af-4531-91d0-c4ce89cc545e",
             "expansionSetCode": "KTK",
             "cardNumber": "250",
             "usesVariousArt": true,
@@ -755,7 +755,7 @@
               "other": []
             }
           },
-          "d08e9b0d-19a2-4d76-bacc-304cf80c4a12": {
+          "e8b2db7c-6a72-41e4-90e6-ad449e413ecd": {
             "tapped": true,
             "flipped": false,
             "phasedIn": true,
@@ -859,7 +859,7 @@
               },
               "originalColorIdentity": "{W}",
               "originalIsCopy": false,
-              "id": "d08e9b0d-19a2-4d76-bacc-304cf80c4a12",
+              "id": "e8b2db7c-6a72-41e4-90e6-ad449e413ecd",
               "expansionSetCode": "KTK",
               "cardNumber": "250",
               "usesVariousArt": true,
@@ -875,7 +875,7 @@
             },
             "copy": false,
             "nameOwner": "",
-            "nameController": "uemble1vaqp7f",
+            "nameController": "uembleow9uc3",
             "controlled": true,
             "attachedTo": null,
             "morphed": false,
@@ -886,13 +886,13 @@
             "attachedControllerDiffers": false,
             "mutateView": {
               "name": "Plains",
-              "id": "d08e9b0d-19a2-4d76-bacc-304cf80c4a12",
+              "id": "e8b2db7c-6a72-41e4-90e6-ad449e413ecd",
               "cards": {}
             },
             "mutated": false,
             "parentId": null,
-            "controllerId": "78aeb310-b3d7-4a8f-9d61-8c5a9c2fd643",
-            "controllerName": "uemble1vaqp7f",
+            "controllerId": "bd341247-f2db-4bf0-b689-622dc78ac7d4",
+            "controllerName": "uembleow9uc3",
             "name": "Plains",
             "displayName": "Plains",
             "displayFullName": "Plains",
@@ -986,7 +986,7 @@
             },
             "originalColorIdentity": "{W}",
             "originalIsCopy": false,
-            "id": "d08e9b0d-19a2-4d76-bacc-304cf80c4a12",
+            "id": "e8b2db7c-6a72-41e4-90e6-ad449e413ecd",
             "expansionSetCode": "KTK",
             "cardNumber": "250",
             "usesVariousArt": true,
@@ -1000,7 +1000,7 @@
               "other": []
             }
           },
-          "fa14ea03-88ae-44d3-a298-a2604aa317e0": {
+          "eff7beab-923d-4e0f-9690-f8ff85e7b0c1": {
             "tapped": false,
             "flipped": false,
             "phasedIn": true,
@@ -1104,7 +1104,7 @@
               },
               "originalColorIdentity": "{W}",
               "originalIsCopy": false,
-              "id": "fa14ea03-88ae-44d3-a298-a2604aa317e0",
+              "id": "eff7beab-923d-4e0f-9690-f8ff85e7b0c1",
               "expansionSetCode": "KTK",
               "cardNumber": "250",
               "usesVariousArt": true,
@@ -1120,7 +1120,7 @@
             },
             "copy": false,
             "nameOwner": "",
-            "nameController": "uemble1vaqp7f",
+            "nameController": "uembleow9uc3",
             "controlled": true,
             "attachedTo": null,
             "morphed": false,
@@ -1131,13 +1131,13 @@
             "attachedControllerDiffers": false,
             "mutateView": {
               "name": "Plains",
-              "id": "fa14ea03-88ae-44d3-a298-a2604aa317e0",
+              "id": "eff7beab-923d-4e0f-9690-f8ff85e7b0c1",
               "cards": {}
             },
             "mutated": false,
             "parentId": null,
-            "controllerId": "78aeb310-b3d7-4a8f-9d61-8c5a9c2fd643",
-            "controllerName": "uemble1vaqp7f",
+            "controllerId": "bd341247-f2db-4bf0-b689-622dc78ac7d4",
+            "controllerName": "uembleow9uc3",
             "name": "Plains",
             "displayName": "Plains",
             "displayFullName": "Plains",
@@ -1231,7 +1231,7 @@
             },
             "originalColorIdentity": "{W}",
             "originalIsCopy": false,
-            "id": "fa14ea03-88ae-44d3-a298-a2604aa317e0",
+            "id": "eff7beab-923d-4e0f-9690-f8ff85e7b0c1",
             "expansionSetCode": "KTK",
             "cardNumber": "250",
             "usesVariousArt": true,
@@ -1245,7 +1245,7 @@
               "other": []
             }
           },
-          "7f7a850d-0d24-4954-846c-3fa4a00beeba": {
+          "9f00b113-2e4f-427c-a922-226115e2203f": {
             "tapped": false,
             "flipped": false,
             "phasedIn": true,
@@ -1355,7 +1355,7 @@
               },
               "originalColorIdentity": "{W}",
               "originalIsCopy": false,
-              "id": "7f7a850d-0d24-4954-846c-3fa4a00beeba",
+              "id": "9f00b113-2e4f-427c-a922-226115e2203f",
               "expansionSetCode": "AKH",
               "cardNumber": "14",
               "usesVariousArt": false,
@@ -1371,7 +1371,7 @@
             },
             "copy": false,
             "nameOwner": "",
-            "nameController": "uemble1vaqp7f",
+            "nameController": "uembleow9uc3",
             "controlled": true,
             "attachedTo": null,
             "morphed": false,
@@ -1382,13 +1382,13 @@
             "attachedControllerDiffers": false,
             "mutateView": {
               "name": "Gideon of the Trials",
-              "id": "7f7a850d-0d24-4954-846c-3fa4a00beeba",
+              "id": "9f00b113-2e4f-427c-a922-226115e2203f",
               "cards": {}
             },
             "mutated": false,
             "parentId": null,
-            "controllerId": "78aeb310-b3d7-4a8f-9d61-8c5a9c2fd643",
-            "controllerName": "uemble1vaqp7f",
+            "controllerId": "bd341247-f2db-4bf0-b689-622dc78ac7d4",
+            "controllerName": "uembleow9uc3",
             "name": "Gideon of the Trials",
             "displayName": "Gideon of the Trials",
             "displayFullName": "Gideon of the Trials",
@@ -1493,7 +1493,7 @@
             },
             "originalColorIdentity": "{W}",
             "originalIsCopy": false,
-            "id": "7f7a850d-0d24-4954-846c-3fa4a00beeba",
+            "id": "9f00b113-2e4f-427c-a922-226115e2203f",
             "expansionSetCode": "AKH",
             "cardNumber": "14",
             "usesVariousArt": false,
@@ -1562,7 +1562,7 @@
         },
         "commandList": [
           {
-            "id": "525676e0-ec21-4eb3-ab63-e92e02d5d2f1",
+            "id": "c1c855da-d634-4a72-b3fc-e6967f09bd14",
             "name": "Emblem Gideon",
             "cardNumber": "",
             "imageFileName": "",
@@ -1582,7 +1582,7 @@
         ],
         "attachments": [],
         "statesSavedSize": -1,
-        "priorityTimeSavedTimeMs": 1791138992492,
+        "priorityTimeSavedTimeMs": 1793456869868,
         "priorityTimeLeftSecs": 0,
         "bufferTimeLeft": 0,
         "passedTurn": false,
@@ -1596,9 +1596,9 @@
         "designationNames": []
       }
     ],
-    "myPlayerId": "78aeb310-b3d7-4a8f-9d61-8c5a9c2fd643",
+    "myPlayerId": "bd341247-f2db-4bf0-b689-622dc78ac7d4",
     "myHand": {
-      "fd571836-98c2-4eb7-97ba-4392f714088b": {
+      "5f7c3da1-2d7c-4644-a534-b77b0ba52618": {
         "parentId": null,
         "controllerId": null,
         "controllerName": null,
@@ -1695,7 +1695,7 @@
         },
         "originalColorIdentity": "{W}",
         "originalIsCopy": false,
-        "id": "fd571836-98c2-4eb7-97ba-4392f714088b",
+        "id": "5f7c3da1-2d7c-4644-a534-b77b0ba52618",
         "expansionSetCode": "M20",
         "cardNumber": "261",
         "usesVariousArt": true,
@@ -1709,7 +1709,7 @@
           "other": []
         }
       },
-      "5ad77272-941e-4f06-ab18-11cad38f6ca9": {
+      "355c1a3e-d80f-4c3e-a787-8f56ecb43f0a": {
         "parentId": null,
         "controllerId": null,
         "controllerName": null,
@@ -1806,7 +1806,7 @@
         },
         "originalColorIdentity": "{W}",
         "originalIsCopy": false,
-        "id": "5ad77272-941e-4f06-ab18-11cad38f6ca9",
+        "id": "355c1a3e-d80f-4c3e-a787-8f56ecb43f0a",
         "expansionSetCode": "M20",
         "cardNumber": "261",
         "usesVariousArt": true,
@@ -1820,7 +1820,7 @@
           "other": []
         }
       },
-      "d44764d4-bbe4-4a11-9495-b81964110a5a": {
+      "b7ffe039-0e19-46b5-b75b-5a62c8a2774c": {
         "parentId": null,
         "controllerId": null,
         "controllerName": null,
@@ -1917,7 +1917,7 @@
         },
         "originalColorIdentity": "{W}",
         "originalIsCopy": false,
-        "id": "d44764d4-bbe4-4a11-9495-b81964110a5a",
+        "id": "b7ffe039-0e19-46b5-b75b-5a62c8a2774c",
         "expansionSetCode": "M20",
         "cardNumber": "261",
         "usesVariousArt": true,
@@ -1931,7 +1931,7 @@
           "other": []
         }
       },
-      "0c7c325a-27ca-480d-bb7d-131dae13e0e7": {
+      "15081035-f122-4d10-8676-ad712b466cca": {
         "parentId": null,
         "controllerId": null,
         "controllerName": null,
@@ -2028,7 +2028,7 @@
         },
         "originalColorIdentity": "{W}",
         "originalIsCopy": false,
-        "id": "0c7c325a-27ca-480d-bb7d-131dae13e0e7",
+        "id": "15081035-f122-4d10-8676-ad712b466cca",
         "expansionSetCode": "M20",
         "cardNumber": "261",
         "usesVariousArt": true,
@@ -2042,7 +2042,7 @@
           "other": []
         }
       },
-      "03db5a19-0cb4-4f96-82fe-687eb56bec46": {
+      "5a3a249e-bc71-4b82-be46-4851675c49e7": {
         "parentId": null,
         "controllerId": null,
         "controllerName": null,
@@ -2139,7 +2139,7 @@
         },
         "originalColorIdentity": "{W}",
         "originalIsCopy": false,
-        "id": "03db5a19-0cb4-4f96-82fe-687eb56bec46",
+        "id": "5a3a249e-bc71-4b82-be46-4851675c49e7",
         "expansionSetCode": "M20",
         "cardNumber": "261",
         "usesVariousArt": true,
@@ -2153,7 +2153,7 @@
           "other": []
         }
       },
-      "d7a8c3d6-c2ce-4baa-993c-0e2a986b1da7": {
+      "1e2b955f-e2b3-468e-ac1d-17ee4e5ca7e2": {
         "parentId": null,
         "controllerId": null,
         "controllerName": null,
@@ -2250,7 +2250,7 @@
         },
         "originalColorIdentity": "{W}",
         "originalIsCopy": false,
-        "id": "d7a8c3d6-c2ce-4baa-993c-0e2a986b1da7",
+        "id": "1e2b955f-e2b3-468e-ac1d-17ee4e5ca7e2",
         "expansionSetCode": "M20",
         "cardNumber": "261",
         "usesVariousArt": true,
@@ -2264,7 +2264,7 @@
           "other": []
         }
       },
-      "e1177bd9-caa8-4463-bbdb-b2a8477cc7d4": {
+      "a23131b4-a5f4-4045-9bd8-77e83d062109": {
         "parentId": null,
         "controllerId": null,
         "controllerName": null,
@@ -2361,7 +2361,7 @@
         },
         "originalColorIdentity": "{W}",
         "originalIsCopy": false,
-        "id": "e1177bd9-caa8-4463-bbdb-b2a8477cc7d4",
+        "id": "a23131b4-a5f4-4045-9bd8-77e83d062109",
         "expansionSetCode": "M20",
         "cardNumber": "261",
         "usesVariousArt": true,
@@ -2377,7 +2377,7 @@
       }
     },
     "myHelperEmblems": {
-      "dfb052f8-50de-4129-8e2e-f0ba5f95cb20": {
+      "6eccd98e-6fe6-4fa5-8caa-69af5ec40113": {
         "parentId": null,
         "controllerId": null,
         "controllerName": null,
@@ -2458,7 +2458,7 @@
         "originalToughness": null,
         "originalColorIdentity": null,
         "originalIsCopy": false,
-        "id": "dfb052f8-50de-4129-8e2e-f0ba5f95cb20",
+        "id": "6eccd98e-6fe6-4fa5-8caa-69af5ec40113",
         "expansionSetCode": "XMAGE",
         "cardNumber": "",
         "usesVariousArt": false,
@@ -2472,7 +2472,7 @@
           "other": []
         }
       },
-      "a523340b-f205-406f-becf-58ab7fd5fc41": {
+      "4b6fd8f1-9640-44ff-be90-2604c7a9f818": {
         "parentId": null,
         "controllerId": null,
         "controllerName": null,
@@ -2555,7 +2555,7 @@
         "originalToughness": null,
         "originalColorIdentity": null,
         "originalIsCopy": false,
-        "id": "a523340b-f205-406f-becf-58ab7fd5fc41",
+        "id": "4b6fd8f1-9640-44ff-be90-2604c7a9f818",
         "expansionSetCode": "XMAGE",
         "cardNumber": "",
         "usesVariousArt": false,
@@ -2569,7 +2569,7 @@
           "other": []
         }
       },
-      "cb8deb63-6927-4499-b0e8-18880fd6fe30": {
+      "978af861-2334-4765-8426-fd51c6aea1f7": {
         "parentId": null,
         "controllerId": null,
         "controllerName": null,
@@ -2652,7 +2652,7 @@
         "originalToughness": null,
         "originalColorIdentity": null,
         "originalIsCopy": false,
-        "id": "cb8deb63-6927-4499-b0e8-18880fd6fe30",
+        "id": "978af861-2334-4765-8426-fd51c6aea1f7",
         "expansionSetCode": "XMAGE",
         "cardNumber": "",
         "usesVariousArt": false,
@@ -2674,7 +2674,7 @@
     "exiles": [
       {
         "name": "Permanent - Exile",
-        "id": "88d82443-d697-40cd-bb39-c0def153eb26",
+        "id": "1192eb9d-9818-42d8-a060-46305a617708",
         "cards": {}
       }
     ],
@@ -2684,9 +2684,9 @@
     "combat": [],
     "phase": "POSTCOMBAT_MAIN",
     "step": "POSTCOMBAT_MAIN",
-    "activePlayerId": "78aeb310-b3d7-4a8f-9d61-8c5a9c2fd643",
-    "activePlayerName": "uemble1vaqp7f",
-    "priorityPlayerName": "sim-137378",
+    "activePlayerId": "bd341247-f2db-4bf0-b689-622dc78ac7d4",
+    "activePlayerName": "uembleow9uc3",
+    "priorityPlayerName": "sim-656499",
     "turn": 2,
     "special": false,
     "rollbackTurnsAllowed": false,

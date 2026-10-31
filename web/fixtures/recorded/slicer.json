@@ -1,13 +1,13 @@
 {
-  "recordedAt": "2026-10-04T18:38:46.555Z",
-  "gameId": "466b44d3-dadf-406c-8e78-a29c3e41135c",
+  "recordedAt": "2026-10-31T14:30:34.055Z",
+  "gameId": "f2fac609-128a-440a-a672-168c031d8c36",
   "gameView": {
     "priorityTime": 0,
     "bufferTime": 0,
     "players": [
       {
-        "playerId": "403a011c-288b-4480-94dc-e6cf7a2eb9f4",
-        "name": "uslice1vmakmb",
+        "playerId": "8325c249-85d9-4793-af80-c99a020cee44",
+        "name": "uslicetddd84",
         "controlled": true,
         "isHuman": true,
         "life": 20,
@@ -33,7 +33,7 @@
         "sideboard": {},
         "helperCards": {},
         "battlefield": {
-          "e9849761-dba3-474c-8636-e1eeb8410995": {
+          "e29be828-1521-4061-a8d6-50c70519d4a7": {
             "tapped": false,
             "flipped": false,
             "phasedIn": true,
@@ -137,7 +137,7 @@
               },
               "originalColorIdentity": "{R}",
               "originalIsCopy": false,
-              "id": "e9849761-dba3-474c-8636-e1eeb8410995",
+              "id": "e29be828-1521-4061-a8d6-50c70519d4a7",
               "expansionSetCode": "LEA",
               "cardNumber": "292",
               "usesVariousArt": true,
@@ -153,7 +153,7 @@
             },
             "copy": false,
             "nameOwner": "",
-            "nameController": "uslice1vmakmb",
+            "nameController": "uslicetddd84",
             "controlled": true,
             "attachedTo": null,
             "morphed": false,
@@ -164,13 +164,13 @@
             "attachedControllerDiffers": false,
             "mutateView": {
               "name": "Mountain",
-              "id": "e9849761-dba3-474c-8636-e1eeb8410995",
+              "id": "e29be828-1521-4061-a8d6-50c70519d4a7",
               "cards": {}
             },
             "mutated": false,
             "parentId": null,
-            "controllerId": "403a011c-288b-4480-94dc-e6cf7a2eb9f4",
-            "controllerName": "uslice1vmakmb",
+            "controllerId": "8325c249-85d9-4793-af80-c99a020cee44",
+            "controllerName": "uslicetddd84",
             "name": "Mountain",
             "displayName": "Mountain",
             "displayFullName": "Mountain",
@@ -264,7 +264,7 @@
             },
             "originalColorIdentity": "{R}",
             "originalIsCopy": false,
-            "id": "e9849761-dba3-474c-8636-e1eeb8410995",
+            "id": "e29be828-1521-4061-a8d6-50c70519d4a7",
             "expansionSetCode": "LEA",
             "cardNumber": "292",
             "usesVariousArt": true,
@@ -334,7 +334,7 @@
         "commandList": [],
         "attachments": [],
         "statesSavedSize": -1,
-        "priorityTimeSavedTimeMs": 1791139126552,
+        "priorityTimeSavedTimeMs": 1793457034014,
         "priorityTimeLeftSecs": 0,
         "bufferTimeLeft": 0,
         "passedTurn": false,
@@ -348,8 +348,8 @@
         "designationNames": []
       },
       {
-        "playerId": "f7bfa5fe-57bd-4840-a28f-d0c51978e7e0",
-        "name": "sim-137419",
+        "playerId": "c7f7935a-0267-4f13-a92c-639d2c168a06",
+        "name": "sim-656542",
         "controlled": false,
         "isHuman": true,
         "life": 20,
@@ -375,7 +375,7 @@
         "sideboard": {},
         "helperCards": {},
         "battlefield": {
-          "4bf0e8f4-006b-4b8f-888f-87a53552011a": {
+          "534f3a60-ddb3-4f33-800f-c55206693c65": {
             "tapped": false,
             "flipped": false,
             "phasedIn": true,
@@ -384,8 +384,8 @@
             "attachments": [],
             "original": null,
             "copy": false,
-            "nameOwner": "uslice1vmakmb",
-            "nameController": "sim-137419",
+            "nameOwner": "uslicetddd84",
+            "nameController": "sim-656542",
             "controlled": false,
             "attachedTo": null,
             "morphed": false,
@@ -396,13 +396,13 @@
             "attachedControllerDiffers": false,
             "mutateView": {
               "name": "Slicer, Hired Muscle",
-              "id": "4bf0e8f4-006b-4b8f-888f-87a53552011a",
+              "id": "534f3a60-ddb3-4f33-800f-c55206693c65",
               "cards": {}
             },
             "mutated": false,
             "parentId": null,
-            "controllerId": "f7bfa5fe-57bd-4840-a28f-d0c51978e7e0",
-            "controllerName": "sim-137419",
+            "controllerId": "c7f7935a-0267-4f13-a92c-639d2c168a06",
+            "controllerName": "sim-656542",
             "name": "Slicer, Hired Muscle",
             "displayName": "Slicer, Hired Muscle",
             "displayFullName": "Slicer, Hired Muscle",
@@ -413,7 +413,7 @@
               "At the beginning of each opponent's upkeep, you may have that player gain control of {this} until end of turn. If you do, untap {this}, goad it, and it can't be sacrificed this turn. If you don't, convert it.",
               "This creature can't be sacrificed.",
               "<br/><hintstart/>",
-              "ICON_REQUIREGoaded by <font color='#20B2AA'>uslice1vmakmb</font> (must attack)"
+              "ICON_REQUIREGoaded by <font color='#20B2AA'>uslicetddd84</font> (must attack)"
             ],
             "power": "3",
             "toughness": "4",
@@ -564,7 +564,7 @@
               },
               "originalColorIdentity": "{R}",
               "originalIsCopy": false,
-              "id": "613abea6-4353-4f6d-aaf8-c512948039ca",
+              "id": "aeb7954c-e291-4c77-85e3-9dc1189a1188",
               "expansionSetCode": "BOT",
               "cardNumber": "6",
               "usesVariousArt": true,
@@ -615,7 +615,7 @@
               {
                 "cardIconType": "OTHER_HAS_RESTRICTIONS",
                 "text": "",
-                "hint": "Goaded by <font color='#20B2AA'>uslice1vmakmb</font> (must attack)"
+                "hint": "Goaded by <font color='#20B2AA'>uslicetddd84</font> (must attack)"
               }
             ],
             "originalPower": {
@@ -632,7 +632,7 @@
             },
             "originalColorIdentity": "{R}",
             "originalIsCopy": false,
-            "id": "4bf0e8f4-006b-4b8f-888f-87a53552011a",
+            "id": "534f3a60-ddb3-4f33-800f-c55206693c65",
             "expansionSetCode": "BOT",
             "cardNumber": "6",
             "usesVariousArt": true,
@@ -702,7 +702,7 @@
         "commandList": [],
         "attachments": [],
         "statesSavedSize": -1,
-        "priorityTimeSavedTimeMs": 1791139126552,
+        "priorityTimeSavedTimeMs": 1793457034014,
         "priorityTimeLeftSecs": 0,
         "bufferTimeLeft": 0,
         "passedTurn": false,
@@ -716,9 +716,9 @@
         "designationNames": []
       }
     ],
-    "myPlayerId": "403a011c-288b-4480-94dc-e6cf7a2eb9f4",
+    "myPlayerId": "8325c249-85d9-4793-af80-c99a020cee44",
     "myHand": {
-      "bf92b15b-1108-455a-828c-02b4c3f66391": {
+      "04146166-00db-4c9f-9303-5c35a4a71fbf": {
         "parentId": null,
         "controllerId": null,
         "controllerName": null,
@@ -815,7 +815,7 @@
         },
         "originalColorIdentity": "{R}",
         "originalIsCopy": false,
-        "id": "bf92b15b-1108-455a-828c-02b4c3f66391",
+        "id": "04146166-00db-4c9f-9303-5c35a4a71fbf",
         "expansionSetCode": "LEA",
         "cardNumber": "292",
         "usesVariousArt": true,
@@ -829,7 +829,7 @@
           "other": []
         }
       },
-      "c7a2330e-41d5-4667-b3dc-9b69e68efa2e": {
+      "1de1135b-6d61-47b9-85d8-2029cfe9d234": {
         "parentId": null,
         "controllerId": null,
         "controllerName": null,
@@ -926,7 +926,7 @@
         },
         "originalColorIdentity": "{R}",
         "originalIsCopy": false,
-        "id": "c7a2330e-41d5-4667-b3dc-9b69e68efa2e",
+        "id": "1de1135b-6d61-47b9-85d8-2029cfe9d234",
         "expansionSetCode": "LEA",
         "cardNumber": "292",
         "usesVariousArt": true,
@@ -940,7 +940,7 @@
           "other": []
         }
       },
-      "dbe2d919-f01c-47d2-b4bf-de2140f48031": {
+      "2c210fd6-8ac4-410a-8245-acf276a89e07": {
         "parentId": null,
         "controllerId": null,
         "controllerName": null,
@@ -1037,7 +1037,7 @@
         },
         "originalColorIdentity": "{R}",
         "originalIsCopy": false,
-        "id": "dbe2d919-f01c-47d2-b4bf-de2140f48031",
+        "id": "2c210fd6-8ac4-410a-8245-acf276a89e07",
         "expansionSetCode": "LEA",
         "cardNumber": "292",
         "usesVariousArt": true,
@@ -1051,7 +1051,7 @@
           "other": []
         }
       },
-      "2a54a5cd-be82-4669-9014-1303f0cfebcb": {
+      "4d164708-8eeb-4975-82f8-938d98274e43": {
         "parentId": null,
         "controllerId": null,
         "controllerName": null,
@@ -1148,7 +1148,7 @@
         },
         "originalColorIdentity": "{R}",
         "originalIsCopy": false,
-        "id": "2a54a5cd-be82-4669-9014-1303f0cfebcb",
+        "id": "4d164708-8eeb-4975-82f8-938d98274e43",
         "expansionSetCode": "LEA",
         "cardNumber": "292",
         "usesVariousArt": true,
@@ -1162,7 +1162,7 @@
           "other": []
         }
       },
-      "b3d823a7-e9ca-45e9-b49b-1a9d95166479": {
+      "8bfd6412-1647-437c-afff-5581569d8807": {
         "parentId": null,
         "controllerId": null,
         "controllerName": null,
@@ -1259,7 +1259,7 @@
         },
         "originalColorIdentity": "{R}",
         "originalIsCopy": false,
-        "id": "b3d823a7-e9ca-45e9-b49b-1a9d95166479",
+        "id": "8bfd6412-1647-437c-afff-5581569d8807",
         "expansionSetCode": "LEA",
         "cardNumber": "292",
         "usesVariousArt": true,
@@ -1273,7 +1273,7 @@
           "other": []
         }
       },
-      "8fd54989-4a27-46c9-93cf-11be8a145966": {
+      "4a3888a9-a2ab-42c4-b43e-3c3354741c26": {
         "parentId": null,
         "controllerId": null,
         "controllerName": null,
@@ -1370,7 +1370,7 @@
         },
         "originalColorIdentity": "{R}",
         "originalIsCopy": false,
-        "id": "8fd54989-4a27-46c9-93cf-11be8a145966",
+        "id": "4a3888a9-a2ab-42c4-b43e-3c3354741c26",
         "expansionSetCode": "LEA",
         "cardNumber": "292",
         "usesVariousArt": true,
@@ -1386,7 +1386,7 @@
       }
     },
     "myHelperEmblems": {
-      "40cc0122-b16c-4dfb-8bab-b19cb79e0913": {
+      "bf6f3b4b-8fef-4f21-a4b1-8b79e9964b71": {
         "parentId": null,
         "controllerId": null,
         "controllerName": null,
@@ -1467,7 +1467,7 @@
         "originalToughness": null,
         "originalColorIdentity": null,
         "originalIsCopy": false,
-        "id": "40cc0122-b16c-4dfb-8bab-b19cb79e0913",
+        "id": "bf6f3b4b-8fef-4f21-a4b1-8b79e9964b71",
         "expansionSetCode": "XMAGE",
         "cardNumber": "",
         "usesVariousArt": false,
@@ -1481,7 +1481,7 @@
           "other": []
         }
       },
-      "642bc0fb-313a-47ac-af1e-6d20642f813d": {
+      "694d6f2f-523d-46e6-b898-cced5e8be116": {
         "parentId": null,
         "controllerId": null,
         "controllerName": null,
@@ -1564,7 +1564,7 @@
         "originalToughness": null,
         "originalColorIdentity": null,
         "originalIsCopy": false,
-        "id": "642bc0fb-313a-47ac-af1e-6d20642f813d",
+        "id": "694d6f2f-523d-46e6-b898-cced5e8be116",
         "expansionSetCode": "XMAGE",
         "cardNumber": "",
         "usesVariousArt": false,
@@ -1578,7 +1578,7 @@
           "other": []
         }
       },
-      "3b71c862-af86-431d-8445-50b65d94b688": {
+      "1a15188f-7fa0-4cef-96dd-48b52a8a07f5": {
         "parentId": null,
         "controllerId": null,
         "controllerName": null,
@@ -1661,7 +1661,7 @@
         "originalToughness": null,
         "originalColorIdentity": null,
         "originalIsCopy": false,
-        "id": "3b71c862-af86-431d-8445-50b65d94b688",
+        "id": "1a15188f-7fa0-4cef-96dd-48b52a8a07f5",
         "expansionSetCode": "XMAGE",
         "cardNumber": "",
         "usesVariousArt": false,
@@ -1678,10 +1678,10 @@
     },
     "canPlayObjects": {
       "objects": {
-        "e9849761-dba3-474c-8636-e1eeb8410995": {
+        "e29be828-1521-4061-a8d6-50c70519d4a7": {
           "basicManaAbilities": [
             {
-              "id": "8a245b42-2d14-40a6-be1b-da00d0c294b3",
+              "id": "a97f8f72-b1a0-4c7c-88d1-c0c99f151ad5",
               "value": "{T}: Add {R}."
             }
           ],
@@ -1697,7 +1697,7 @@
     "exiles": [
       {
         "name": "Permanent - Exile",
-        "id": "88d82443-d697-40cd-bb39-c0def153eb26",
+        "id": "1192eb9d-9818-42d8-a060-46305a617708",
         "cards": {}
       }
     ],
@@ -1707,9 +1707,9 @@
     "combat": [],
     "phase": "BEGINNING",
     "step": "UPKEEP",
-    "activePlayerId": "f7bfa5fe-57bd-4840-a28f-d0c51978e7e0",
-    "activePlayerName": "sim-137419",
-    "priorityPlayerName": "uslice1vmakmb",
+    "activePlayerId": "c7f7935a-0267-4f13-a92c-639d2c168a06",
+    "activePlayerName": "sim-656542",
+    "priorityPlayerName": "uslicetddd84",
     "turn": 2,
     "special": false,
     "rollbackTurnsAllowed": false,

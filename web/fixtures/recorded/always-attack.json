@@ -1,13 +1,13 @@
 {
-  "recordedAt": "2026-10-04T18:33:52.051Z",
-  "gameId": "7d2a63cf-f676-4f42-a7e0-9b08b637a73b",
+  "recordedAt": "2026-10-31T14:25:52.274Z",
+  "gameId": "af24ac94-e9c3-4427-8af5-7aa15bc7bf13",
   "gameView": {
     "priorityTime": 0,
     "bufferTime": 0,
     "players": [
       {
-        "playerId": "20843134-1448-41d1-9b4f-5e1f87927349",
-        "name": "ualway1v3l9g9",
+        "playerId": "c0bce6e4-01f1-4c44-995e-72e0e743cb94",
+        "name": "ualwaym1xbu4",
         "controlled": true,
         "isHuman": true,
         "life": 20,
@@ -33,7 +33,7 @@
         "sideboard": {},
         "helperCards": {},
         "battlefield": {
-          "4a5f830d-6bf8-460d-b30a-1bf3b4410fa4": {
+          "3ce5ab4d-a64c-4e97-bfb0-e6ace7bc7f35": {
             "tapped": false,
             "flipped": false,
             "phasedIn": true,
@@ -137,7 +137,7 @@
               },
               "originalColorIdentity": "{G}",
               "originalIsCopy": false,
-              "id": "4a5f830d-6bf8-460d-b30a-1bf3b4410fa4",
+              "id": "3ce5ab4d-a64c-4e97-bfb0-e6ace7bc7f35",
               "expansionSetCode": "IKO",
               "cardNumber": "272",
               "usesVariousArt": true,
@@ -153,7 +153,7 @@
             },
             "copy": false,
             "nameOwner": "",
-            "nameController": "ualway1v3l9g9",
+            "nameController": "ualwaym1xbu4",
             "controlled": true,
             "attachedTo": null,
             "morphed": false,
@@ -164,13 +164,13 @@
             "attachedControllerDiffers": false,
             "mutateView": {
               "name": "Forest",
-              "id": "4a5f830d-6bf8-460d-b30a-1bf3b4410fa4",
+              "id": "3ce5ab4d-a64c-4e97-bfb0-e6ace7bc7f35",
               "cards": {}
             },
             "mutated": false,
             "parentId": null,
-            "controllerId": "20843134-1448-41d1-9b4f-5e1f87927349",
-            "controllerName": "ualway1v3l9g9",
+            "controllerId": "c0bce6e4-01f1-4c44-995e-72e0e743cb94",
+            "controllerName": "ualwaym1xbu4",
             "name": "Forest",
             "displayName": "Forest",
             "displayFullName": "Forest",
@@ -264,7 +264,7 @@
             },
             "originalColorIdentity": "{G}",
             "originalIsCopy": false,
-            "id": "4a5f830d-6bf8-460d-b30a-1bf3b4410fa4",
+            "id": "3ce5ab4d-a64c-4e97-bfb0-e6ace7bc7f35",
             "expansionSetCode": "IKO",
             "cardNumber": "272",
             "usesVariousArt": true,
@@ -334,7 +334,7 @@
         "commandList": [],
         "attachments": [],
         "statesSavedSize": -1,
-        "priorityTimeSavedTimeMs": 1791138832048,
+        "priorityTimeSavedTimeMs": 1793456752235,
         "priorityTimeLeftSecs": 0,
         "bufferTimeLeft": 0,
         "passedTurn": false,
@@ -348,8 +348,8 @@
         "designationNames": []
       },
       {
-        "playerId": "d075233c-b457-4fb4-894f-40ac943be310",
-        "name": "sim-137349",
+        "playerId": "fb2ee5b5-0daa-4640-9ccb-8d02d2fe8bbe",
+        "name": "sim-656470",
         "controlled": false,
         "isHuman": true,
         "life": 20,
@@ -375,7 +375,7 @@
         "sideboard": {},
         "helperCards": {},
         "battlefield": {
-          "96e21836-b616-4874-a8f7-e86ce8a3cfa3": {
+          "d8ed3652-52e7-48de-83df-76f040ca2a72": {
             "tapped": true,
             "flipped": false,
             "phasedIn": true,
@@ -385,7 +385,7 @@
             "original": null,
             "copy": false,
             "nameOwner": "",
-            "nameController": "sim-137349",
+            "nameController": "sim-656470",
             "controlled": false,
             "attachedTo": null,
             "morphed": false,
@@ -396,20 +396,20 @@
             "attachedControllerDiffers": false,
             "mutateView": {
               "name": "Rubblebelt Recluse",
-              "id": "96e21836-b616-4874-a8f7-e86ce8a3cfa3",
+              "id": "d8ed3652-52e7-48de-83df-76f040ca2a72",
               "cards": {}
             },
             "mutated": false,
             "parentId": null,
-            "controllerId": "d075233c-b457-4fb4-894f-40ac943be310",
-            "controllerName": "sim-137349",
+            "controllerId": "fb2ee5b5-0daa-4640-9ccb-8d02d2fe8bbe",
+            "controllerName": "sim-656470",
             "name": "Rubblebelt Recluse",
             "displayName": "Rubblebelt Recluse",
             "displayFullName": "Rubblebelt Recluse",
             "rules": [
               "{this} attacks each combat if able.",
               "<br/><hintstart/>",
-              "ICON_REQUIREMust attack (Rubblebelt Recluse [96e])"
+              "ICON_REQUIREMust attack (Rubblebelt Recluse [d8e])"
             ],
             "power": "6",
             "toughness": "5",
@@ -489,7 +489,7 @@
               {
                 "cardIconType": "OTHER_HAS_RESTRICTIONS",
                 "text": "",
-                "hint": "Must attack (Rubblebelt Recluse [96e])"
+                "hint": "Must attack (Rubblebelt Recluse [d8e])"
               }
             ],
             "originalPower": {
@@ -506,7 +506,7 @@
             },
             "originalColorIdentity": "{R}",
             "originalIsCopy": false,
-            "id": "96e21836-b616-4874-a8f7-e86ce8a3cfa3",
+            "id": "d8ed3652-52e7-48de-83df-76f040ca2a72",
             "expansionSetCode": "RNA",
             "cardNumber": "111",
             "usesVariousArt": false,
@@ -520,7 +520,7 @@
               "other": []
             }
           },
-          "97fbbad6-b818-4aa6-8640-77953cca44b0": {
+          "08a50842-8e55-455d-adda-dde58afa1a12": {
             "tapped": false,
             "flipped": false,
             "phasedIn": true,
@@ -530,7 +530,7 @@
             "original": null,
             "copy": false,
             "nameOwner": "",
-            "nameController": "sim-137349",
+            "nameController": "sim-656470",
             "controlled": false,
             "attachedTo": null,
             "morphed": false,
@@ -541,13 +541,13 @@
             "attachedControllerDiffers": false,
             "mutateView": {
               "name": "Forest",
-              "id": "97fbbad6-b818-4aa6-8640-77953cca44b0",
+              "id": "08a50842-8e55-455d-adda-dde58afa1a12",
               "cards": {}
             },
             "mutated": false,
             "parentId": null,
-            "controllerId": "d075233c-b457-4fb4-894f-40ac943be310",
-            "controllerName": "sim-137349",
+            "controllerId": "fb2ee5b5-0daa-4640-9ccb-8d02d2fe8bbe",
+            "controllerName": "sim-656470",
             "name": "Forest",
             "displayName": "Forest",
             "displayFullName": "Forest",
@@ -641,7 +641,7 @@
             },
             "originalColorIdentity": "{G}",
             "originalIsCopy": false,
-            "id": "97fbbad6-b818-4aa6-8640-77953cca44b0",
+            "id": "08a50842-8e55-455d-adda-dde58afa1a12",
             "expansionSetCode": "IKO",
             "cardNumber": "272",
             "usesVariousArt": true,
@@ -711,7 +711,7 @@
         "commandList": [],
         "attachments": [],
         "statesSavedSize": -1,
-        "priorityTimeSavedTimeMs": 1791138832048,
+        "priorityTimeSavedTimeMs": 1793456752235,
         "priorityTimeLeftSecs": 0,
         "bufferTimeLeft": 0,
         "passedTurn": false,
@@ -725,9 +725,9 @@
         "designationNames": []
       }
     ],
-    "myPlayerId": "20843134-1448-41d1-9b4f-5e1f87927349",
+    "myPlayerId": "c0bce6e4-01f1-4c44-995e-72e0e743cb94",
     "myHand": {
-      "12f9c77c-ad01-426b-9e45-2208d010b9ef": {
+      "e0be33ef-fafa-4366-aff9-1962bcdba5cd": {
         "parentId": null,
         "controllerId": null,
         "controllerName": null,
@@ -824,7 +824,7 @@
         },
         "originalColorIdentity": "{G}",
         "originalIsCopy": false,
-        "id": "12f9c77c-ad01-426b-9e45-2208d010b9ef",
+        "id": "e0be33ef-fafa-4366-aff9-1962bcdba5cd",
         "expansionSetCode": "IKO",
         "cardNumber": "272",
         "usesVariousArt": true,
@@ -838,7 +838,7 @@
           "other": []
         }
       },
-      "50c9ad75-3954-47c4-946f-ac9889c88e5b": {
+      "af8009ed-bade-49d2-a192-a82008ae35c6": {
         "parentId": null,
         "controllerId": null,
         "controllerName": null,
@@ -935,7 +935,7 @@
         },
         "originalColorIdentity": "{G}",
         "originalIsCopy": false,
-        "id": "50c9ad75-3954-47c4-946f-ac9889c88e5b",
+        "id": "af8009ed-bade-49d2-a192-a82008ae35c6",
         "expansionSetCode": "IKO",
         "cardNumber": "272",
         "usesVariousArt": true,
@@ -949,7 +949,7 @@
           "other": []
         }
       },
-      "8e67d71b-06ab-40d7-ae22-da37b169a6a7": {
+      "c84ed2ba-52f1-4d01-a294-9c3cfd8a92d2": {
         "parentId": null,
         "controllerId": null,
         "controllerName": null,
@@ -1046,7 +1046,7 @@
         },
         "originalColorIdentity": "{G}",
         "originalIsCopy": false,
-        "id": "8e67d71b-06ab-40d7-ae22-da37b169a6a7",
+        "id": "c84ed2ba-52f1-4d01-a294-9c3cfd8a92d2",
         "expansionSetCode": "IKO",
         "cardNumber": "272",
         "usesVariousArt": true,
@@ -1060,7 +1060,7 @@
           "other": []
         }
       },
-      "0f933491-d1db-4c12-ae60-f4fa3cfb8a0f": {
+      "05973809-6de8-4311-ba11-cd93bb61a4cc": {
         "parentId": null,
         "controllerId": null,
         "controllerName": null,
@@ -1157,7 +1157,7 @@
         },
         "originalColorIdentity": "{G}",
         "originalIsCopy": false,
-        "id": "0f933491-d1db-4c12-ae60-f4fa3cfb8a0f",
+        "id": "05973809-6de8-4311-ba11-cd93bb61a4cc",
         "expansionSetCode": "IKO",
         "cardNumber": "272",
         "usesVariousArt": true,
@@ -1171,7 +1171,7 @@
           "other": []
         }
       },
-      "edb85668-9816-4088-9ee4-8eec9f6c3e68": {
+      "c7f50aa8-7445-4af2-ac1b-f07deb812b94": {
         "parentId": null,
         "controllerId": null,
         "controllerName": null,
@@ -1268,7 +1268,7 @@
         },
         "originalColorIdentity": "{G}",
         "originalIsCopy": false,
-        "id": "edb85668-9816-4088-9ee4-8eec9f6c3e68",
+        "id": "c7f50aa8-7445-4af2-ac1b-f07deb812b94",
         "expansionSetCode": "IKO",
         "cardNumber": "272",
         "usesVariousArt": true,
@@ -1282,7 +1282,7 @@
           "other": []
         }
       },
-      "928c27a2-6967-447e-b81c-51c974d86ebf": {
+      "7f628127-7c4f-4979-b8a5-73611fe8c21d": {
         "parentId": null,
         "controllerId": null,
         "controllerName": null,
@@ -1379,7 +1379,7 @@
         },
         "originalColorIdentity": "{G}",
         "originalIsCopy": false,
-        "id": "928c27a2-6967-447e-b81c-51c974d86ebf",
+        "id": "7f628127-7c4f-4979-b8a5-73611fe8c21d",
         "expansionSetCode": "IKO",
         "cardNumber": "272",
         "usesVariousArt": true,
@@ -1395,7 +1395,7 @@
       }
     },
     "myHelperEmblems": {
-      "52ec9b63-0993-475c-8144-c4898abf03f2": {
+      "3b90b9e1-cb24-4bfe-a9b3-6c04023cd27e": {
         "parentId": null,
         "controllerId": null,
         "controllerName": null,
@@ -1476,7 +1476,7 @@
         "originalToughness": null,
         "originalColorIdentity": null,
         "originalIsCopy": false,
-        "id": "52ec9b63-0993-475c-8144-c4898abf03f2",
+        "id": "3b90b9e1-cb24-4bfe-a9b3-6c04023cd27e",
         "expansionSetCode": "XMAGE",
         "cardNumber": "",
         "usesVariousArt": false,
@@ -1490,7 +1490,7 @@
           "other": []
         }
       },
-      "6fd674f6-f9d4-45cb-93f2-8154bcb7b423": {
+      "0647f69e-ee55-4de3-9b52-d8be62b6957c": {
         "parentId": null,
         "controllerId": null,
         "controllerName": null,
@@ -1573,7 +1573,7 @@
         "originalToughness": null,
         "originalColorIdentity": null,
         "originalIsCopy": false,
-        "id": "6fd674f6-f9d4-45cb-93f2-8154bcb7b423",
+        "id": "0647f69e-ee55-4de3-9b52-d8be62b6957c",
         "expansionSetCode": "XMAGE",
         "cardNumber": "",
         "usesVariousArt": false,
@@ -1587,7 +1587,7 @@
           "other": []
         }
       },
-      "2844ac94-5bd2-411c-8653-f4a56a451097": {
+      "16682c8a-a13d-4f2a-81fd-bda7fa19a3c2": {
         "parentId": null,
         "controllerId": null,
         "controllerName": null,
@@ -1670,7 +1670,7 @@
         "originalToughness": null,
         "originalColorIdentity": null,
         "originalIsCopy": false,
-        "id": "2844ac94-5bd2-411c-8653-f4a56a451097",
+        "id": "16682c8a-a13d-4f2a-81fd-bda7fa19a3c2",
         "expansionSetCode": "XMAGE",
         "cardNumber": "",
         "usesVariousArt": false,
@@ -1687,10 +1687,10 @@
     },
     "canPlayObjects": {
       "objects": {
-        "4a5f830d-6bf8-460d-b30a-1bf3b4410fa4": {
+        "3ce5ab4d-a64c-4e97-bfb0-e6ace7bc7f35": {
           "basicManaAbilities": [
             {
-              "id": "8caedc86-2fa0-4fa5-93f6-537b2ad86a6f",
+              "id": "01447c04-a3d8-4865-b71d-68e010f71ac6",
               "value": "{T}: Add {G}."
             }
           ],
@@ -1706,7 +1706,7 @@
     "exiles": [
       {
         "name": "Permanent - Exile",
-        "id": "88d82443-d697-40cd-bb39-c0def153eb26",
+        "id": "1192eb9d-9818-42d8-a060-46305a617708",
         "cards": {}
       }
     ],
@@ -1716,7 +1716,7 @@
     "combat": [
       {
         "attackers": {
-          "96e21836-b616-4874-a8f7-e86ce8a3cfa3": {
+          "d8ed3652-52e7-48de-83df-76f040ca2a72": {
             "tapped": true,
             "flipped": false,
             "phasedIn": true,
@@ -1726,7 +1726,7 @@
             "original": null,
             "copy": false,
             "nameOwner": "",
-            "nameController": "sim-137349",
+            "nameController": "sim-656470",
             "controlled": false,
             "attachedTo": null,
             "morphed": false,
@@ -1737,20 +1737,20 @@
             "attachedControllerDiffers": false,
             "mutateView": {
               "name": "Rubblebelt Recluse",
-              "id": "96e21836-b616-4874-a8f7-e86ce8a3cfa3",
+              "id": "d8ed3652-52e7-48de-83df-76f040ca2a72",
               "cards": {}
             },
             "mutated": false,
             "parentId": null,
-            "controllerId": "d075233c-b457-4fb4-894f-40ac943be310",
-            "controllerName": "sim-137349",
+            "controllerId": "fb2ee5b5-0daa-4640-9ccb-8d02d2fe8bbe",
+            "controllerName": "sim-656470",
             "name": "Rubblebelt Recluse",
             "displayName": "Rubblebelt Recluse",
             "displayFullName": "Rubblebelt Recluse",
             "rules": [
               "{this} attacks each combat if able.",
               "<br/><hintstart/>",
-              "ICON_REQUIREMust attack (Rubblebelt Recluse [96e])"
+              "ICON_REQUIREMust attack (Rubblebelt Recluse [d8e])"
             ],
             "power": "6",
             "toughness": "5",
@@ -1830,7 +1830,7 @@
               {
                 "cardIconType": "OTHER_HAS_RESTRICTIONS",
                 "text": "",
-                "hint": "Must attack (Rubblebelt Recluse [96e])"
+                "hint": "Must attack (Rubblebelt Recluse [d8e])"
               }
             ],
             "originalPower": {
@@ -1847,7 +1847,7 @@
             },
             "originalColorIdentity": "{R}",
             "originalIsCopy": false,
-            "id": "96e21836-b616-4874-a8f7-e86ce8a3cfa3",
+            "id": "d8ed3652-52e7-48de-83df-76f040ca2a72",
             "expansionSetCode": "RNA",
             "cardNumber": "111",
             "usesVariousArt": false,
@@ -1864,15 +1864,15 @@
         },
         "blockers": {},
         "isBlocked": false,
-        "defenderName": "ualway1v3l9g9",
-        "defenderId": "20843134-1448-41d1-9b4f-5e1f87927349"
+        "defenderName": "ualwaym1xbu4",
+        "defenderId": "c0bce6e4-01f1-4c44-995e-72e0e743cb94"
       }
     ],
     "phase": "COMBAT",
     "step": "DECLARE_ATTACKERS",
-    "activePlayerId": "d075233c-b457-4fb4-894f-40ac943be310",
-    "activePlayerName": "sim-137349",
-    "priorityPlayerName": "ualway1v3l9g9",
+    "activePlayerId": "fb2ee5b5-0daa-4640-9ccb-8d02d2fe8bbe",
+    "activePlayerName": "sim-656470",
+    "priorityPlayerName": "ualwaym1xbu4",
     "turn": 2,
     "special": false,
     "rollbackTurnsAllowed": false,

@@ -865,14 +865,14 @@
     "mechanic": "land-drop",
     "kind": "game",
     "assert": "hasLandDropWindow",
-    "note": "First own PRECOMBAT_MAIN priority window with a land in hand and none on the battlefield. Proves the engine lists the land drop in canPlayObjects (basicPlayAbilities 'Play Mountain', one entry per hand land), so smart stops can trust the server instead of guessing from card names."
+    "note": "First own PRECOMBAT_MAIN priority window with a land in hand and no land on the battlefield: records whether the engine lists the land drop in canPlayObjects."
   },
   {
     "file": "mana-rocks.json",
     "mechanic": "mana-rocks",
     "kind": "game",
     "assert": "hasManaRocks",
-    "note": "Untapped Sol Ring and Cascade Bluffs (filter land) with priority. Proves the engine files non-basic mana abilities under canPlayObjects `other` (\"{T}: Add {C}{C}.\", \"{U/R}, {T}: Add {U}{U}.\"), not `basicManaAbilities`, so smart stops must recognise them by text or they count as a playable window."
+    "note": "Untapped Sol Ring ({T}: Add {C}{C}) and a filter land (Cascade Bluffs) on the controlled battlefield with priority: records which canPlayObjects bucket the engine puts non-basic mana abilities in, so smart stops know whether they count as a playable window."
   },
   {
     "file": "replicate.json",

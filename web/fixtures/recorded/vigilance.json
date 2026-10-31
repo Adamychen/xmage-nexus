@@ -1,13 +1,13 @@
 {
-  "recordedAt": "2026-10-04T18:47:49.470Z",
-  "gameId": "d8650602-78a9-48b7-9bb3-1121d0ccca46",
+  "recordedAt": "2026-10-31T14:31:32.745Z",
+  "gameId": "6df85700-2055-4161-bc13-a0ca75e49a89",
   "gameView": {
     "priorityTime": 0,
     "bufferTime": 0,
     "players": [
       {
-        "playerId": "79b25ea6-d44d-4b33-9c3c-d7aa004aba54",
-        "name": "sim-137429",
+        "playerId": "8fe66b0d-3fa8-4501-9aea-89ef6ceae923",
+        "name": "sim-656555",
         "controlled": false,
         "isHuman": true,
         "life": 20,
@@ -33,7 +33,7 @@
         "sideboard": {},
         "helperCards": {},
         "battlefield": {
-          "1cbc5fb8-99f1-44e8-8d95-981aa61f4fa9": {
+          "7a551fb3-ea55-4453-a777-19f8867e48c4": {
             "tapped": false,
             "flipped": false,
             "phasedIn": true,
@@ -43,7 +43,7 @@
             "original": null,
             "copy": false,
             "nameOwner": "",
-            "nameController": "sim-137429",
+            "nameController": "sim-656555",
             "controlled": false,
             "attachedTo": null,
             "morphed": false,
@@ -54,13 +54,13 @@
             "attachedControllerDiffers": false,
             "mutateView": {
               "name": "Forest",
-              "id": "1cbc5fb8-99f1-44e8-8d95-981aa61f4fa9",
+              "id": "7a551fb3-ea55-4453-a777-19f8867e48c4",
               "cards": {}
             },
             "mutated": false,
             "parentId": null,
-            "controllerId": "79b25ea6-d44d-4b33-9c3c-d7aa004aba54",
-            "controllerName": "sim-137429",
+            "controllerId": "8fe66b0d-3fa8-4501-9aea-89ef6ceae923",
+            "controllerName": "sim-656555",
             "name": "Forest",
             "displayName": "Forest",
             "displayFullName": "Forest",
@@ -154,7 +154,7 @@
             },
             "originalColorIdentity": "{G}",
             "originalIsCopy": false,
-            "id": "1cbc5fb8-99f1-44e8-8d95-981aa61f4fa9",
+            "id": "7a551fb3-ea55-4453-a777-19f8867e48c4",
             "expansionSetCode": "IKO",
             "cardNumber": "272",
             "usesVariousArt": true,
@@ -224,7 +224,7 @@
         "commandList": [],
         "attachments": [],
         "statesSavedSize": -1,
-        "priorityTimeSavedTimeMs": 1791139669467,
+        "priorityTimeSavedTimeMs": 1793457092704,
         "priorityTimeLeftSecs": 0,
         "bufferTimeLeft": 0,
         "passedTurn": false,
@@ -238,8 +238,8 @@
         "designationNames": []
       },
       {
-        "playerId": "10760e4a-eb05-4c56-9017-dcd4cf2496f0",
-        "name": "uvigil1w0m7ly",
+        "playerId": "70770688-8419-403b-9e1b-7f6363395ac4",
+        "name": "uvigilumkmja",
         "controlled": true,
         "isHuman": true,
         "life": 20,
@@ -265,7 +265,7 @@
         "sideboard": {},
         "helperCards": {},
         "battlefield": {
-          "48d76833-5f1e-4055-9826-61ba2855387b": {
+          "a909f892-b9f8-4d7e-b66a-398ecd4a5669": {
             "tapped": false,
             "flipped": false,
             "phasedIn": true,
@@ -369,7 +369,7 @@
               },
               "originalColorIdentity": "{W}",
               "originalIsCopy": false,
-              "id": "48d76833-5f1e-4055-9826-61ba2855387b",
+              "id": "a909f892-b9f8-4d7e-b66a-398ecd4a5669",
               "expansionSetCode": "M20",
               "cardNumber": "261",
               "usesVariousArt": true,
@@ -385,7 +385,7 @@
             },
             "copy": false,
             "nameOwner": "",
-            "nameController": "uvigil1w0m7ly",
+            "nameController": "uvigilumkmja",
             "controlled": true,
             "attachedTo": null,
             "morphed": false,
@@ -396,13 +396,13 @@
             "attachedControllerDiffers": false,
             "mutateView": {
               "name": "Plains",
-              "id": "48d76833-5f1e-4055-9826-61ba2855387b",
+              "id": "a909f892-b9f8-4d7e-b66a-398ecd4a5669",
               "cards": {}
             },
             "mutated": false,
             "parentId": null,
-            "controllerId": "10760e4a-eb05-4c56-9017-dcd4cf2496f0",
-            "controllerName": "uvigil1w0m7ly",
+            "controllerId": "70770688-8419-403b-9e1b-7f6363395ac4",
+            "controllerName": "uvigilumkmja",
             "name": "Plains",
             "displayName": "Plains",
             "displayFullName": "Plains",
@@ -496,7 +496,7 @@
             },
             "originalColorIdentity": "{W}",
             "originalIsCopy": false,
-            "id": "48d76833-5f1e-4055-9826-61ba2855387b",
+            "id": "a909f892-b9f8-4d7e-b66a-398ecd4a5669",
             "expansionSetCode": "M20",
             "cardNumber": "261",
             "usesVariousArt": true,
@@ -510,7 +510,7 @@
               "other": []
             }
           },
-          "d2793738-03f9-4ccb-85e7-720d90f73a23": {
+          "b4fd6278-4ae6-488f-8d1b-12a549254c4f": {
             "tapped": false,
             "flipped": false,
             "phasedIn": true,
@@ -617,7 +617,7 @@
               },
               "originalColorIdentity": "{W}",
               "originalIsCopy": false,
-              "id": "d2793738-03f9-4ccb-85e7-720d90f73a23",
+              "id": "b4fd6278-4ae6-488f-8d1b-12a549254c4f",
               "expansionSetCode": "BNG",
               "cardNumber": "29",
               "usesVariousArt": false,
@@ -633,7 +633,7 @@
             },
             "copy": false,
             "nameOwner": "",
-            "nameController": "uvigil1w0m7ly",
+            "nameController": "uvigilumkmja",
             "controlled": true,
             "attachedTo": null,
             "morphed": false,
@@ -644,13 +644,13 @@
             "attachedControllerDiffers": false,
             "mutateView": {
               "name": "Vanguard of Brimaz",
-              "id": "d2793738-03f9-4ccb-85e7-720d90f73a23",
+              "id": "b4fd6278-4ae6-488f-8d1b-12a549254c4f",
               "cards": {}
             },
             "mutated": false,
             "parentId": null,
-            "controllerId": "10760e4a-eb05-4c56-9017-dcd4cf2496f0",
-            "controllerName": "uvigil1w0m7ly",
+            "controllerId": "70770688-8419-403b-9e1b-7f6363395ac4",
+            "controllerName": "uvigilumkmja",
             "name": "Vanguard of Brimaz",
             "displayName": "Vanguard of Brimaz",
             "displayFullName": "Vanguard of Brimaz",
@@ -753,7 +753,7 @@
             },
             "originalColorIdentity": "{W}",
             "originalIsCopy": false,
-            "id": "d2793738-03f9-4ccb-85e7-720d90f73a23",
+            "id": "b4fd6278-4ae6-488f-8d1b-12a549254c4f",
             "expansionSetCode": "BNG",
             "cardNumber": "29",
             "usesVariousArt": false,
@@ -823,7 +823,7 @@
         "commandList": [],
         "attachments": [],
         "statesSavedSize": 1,
-        "priorityTimeSavedTimeMs": 1791139669467,
+        "priorityTimeSavedTimeMs": 1793457092704,
         "priorityTimeLeftSecs": 0,
         "bufferTimeLeft": 0,
         "passedTurn": false,
@@ -837,9 +837,9 @@
         "designationNames": []
       }
     ],
-    "myPlayerId": "10760e4a-eb05-4c56-9017-dcd4cf2496f0",
+    "myPlayerId": "70770688-8419-403b-9e1b-7f6363395ac4",
     "myHand": {
-      "12d3f05d-df1c-47b8-9898-0804c21437fb": {
+      "d92f28e2-4170-4d60-b4b3-b27ffd39ba78": {
         "parentId": null,
         "controllerId": null,
         "controllerName": null,
@@ -936,7 +936,7 @@
         },
         "originalColorIdentity": "{W}",
         "originalIsCopy": false,
-        "id": "12d3f05d-df1c-47b8-9898-0804c21437fb",
+        "id": "d92f28e2-4170-4d60-b4b3-b27ffd39ba78",
         "expansionSetCode": "M20",
         "cardNumber": "261",
         "usesVariousArt": true,
@@ -950,7 +950,7 @@
           "other": []
         }
       },
-      "ea7c25fb-397a-4353-ac64-c47f96183a51": {
+      "c83d3384-752a-4960-8f3b-4e868231e3fc": {
         "parentId": null,
         "controllerId": null,
         "controllerName": null,
@@ -1047,7 +1047,7 @@
         },
         "originalColorIdentity": "{W}",
         "originalIsCopy": false,
-        "id": "ea7c25fb-397a-4353-ac64-c47f96183a51",
+        "id": "c83d3384-752a-4960-8f3b-4e868231e3fc",
         "expansionSetCode": "M20",
         "cardNumber": "261",
         "usesVariousArt": true,
@@ -1061,7 +1061,7 @@
           "other": []
         }
       },
-      "e7725481-2275-45e8-bd05-2e152a7feb7b": {
+      "bb9bdaa1-8695-4f19-a1fd-190344c4b57c": {
         "parentId": null,
         "controllerId": null,
         "controllerName": null,
@@ -1158,7 +1158,7 @@
         },
         "originalColorIdentity": "{W}",
         "originalIsCopy": false,
-        "id": "e7725481-2275-45e8-bd05-2e152a7feb7b",
+        "id": "bb9bdaa1-8695-4f19-a1fd-190344c4b57c",
         "expansionSetCode": "M20",
         "cardNumber": "261",
         "usesVariousArt": true,
@@ -1172,7 +1172,7 @@
           "other": []
         }
       },
-      "40c49d50-12e6-4b76-aabe-94c8d22d9072": {
+      "d206fc1b-ff98-4da5-b3d5-667aa51d1f1a": {
         "parentId": null,
         "controllerId": null,
         "controllerName": null,
@@ -1269,7 +1269,7 @@
         },
         "originalColorIdentity": "{W}",
         "originalIsCopy": false,
-        "id": "40c49d50-12e6-4b76-aabe-94c8d22d9072",
+        "id": "d206fc1b-ff98-4da5-b3d5-667aa51d1f1a",
         "expansionSetCode": "M20",
         "cardNumber": "261",
         "usesVariousArt": true,
@@ -1283,7 +1283,7 @@
           "other": []
         }
       },
-      "86efd135-d66e-4062-b708-5258585daecb": {
+      "dea93974-54c6-4f76-80c7-5a16821c2761": {
         "parentId": null,
         "controllerId": null,
         "controllerName": null,
@@ -1380,7 +1380,7 @@
         },
         "originalColorIdentity": "{W}",
         "originalIsCopy": false,
-        "id": "86efd135-d66e-4062-b708-5258585daecb",
+        "id": "dea93974-54c6-4f76-80c7-5a16821c2761",
         "expansionSetCode": "M20",
         "cardNumber": "261",
         "usesVariousArt": true,
@@ -1394,7 +1394,7 @@
           "other": []
         }
       },
-      "42766942-3695-4c15-87d3-129da63d0ba3": {
+      "ac3b605e-143a-42ac-a011-0184ee9a8d1c": {
         "parentId": null,
         "controllerId": null,
         "controllerName": null,
@@ -1491,7 +1491,7 @@
         },
         "originalColorIdentity": "{W}",
         "originalIsCopy": false,
-        "id": "42766942-3695-4c15-87d3-129da63d0ba3",
+        "id": "ac3b605e-143a-42ac-a011-0184ee9a8d1c",
         "expansionSetCode": "M20",
         "cardNumber": "261",
         "usesVariousArt": true,
@@ -1505,7 +1505,7 @@
           "other": []
         }
       },
-      "6c68c080-55cc-4385-b6d0-d4d249932f47": {
+      "f2cd9f5c-389e-4dc7-a78c-c3b2b167c959": {
         "parentId": null,
         "controllerId": null,
         "controllerName": null,
@@ -1602,7 +1602,7 @@
         },
         "originalColorIdentity": "{W}",
         "originalIsCopy": false,
-        "id": "6c68c080-55cc-4385-b6d0-d4d249932f47",
+        "id": "f2cd9f5c-389e-4dc7-a78c-c3b2b167c959",
         "expansionSetCode": "M20",
         "cardNumber": "261",
         "usesVariousArt": true,
@@ -1618,7 +1618,7 @@
       }
     },
     "myHelperEmblems": {
-      "b3d04450-889f-41ac-99f2-102f6ba2ba14": {
+      "befe74b4-6adb-469b-8943-4c2b8dcfc0b6": {
         "parentId": null,
         "controllerId": null,
         "controllerName": null,
@@ -1699,7 +1699,7 @@
         "originalToughness": null,
         "originalColorIdentity": null,
         "originalIsCopy": false,
-        "id": "b3d04450-889f-41ac-99f2-102f6ba2ba14",
+        "id": "befe74b4-6adb-469b-8943-4c2b8dcfc0b6",
         "expansionSetCode": "XMAGE",
         "cardNumber": "",
         "usesVariousArt": false,
@@ -1713,7 +1713,7 @@
           "other": []
         }
       },
-      "27acdabc-6fd5-4345-a79e-f2d95d827ea1": {
+      "c51cdb5b-b707-4db3-a89f-393c9b5fd7db": {
         "parentId": null,
         "controllerId": null,
         "controllerName": null,
@@ -1796,7 +1796,7 @@
         "originalToughness": null,
         "originalColorIdentity": null,
         "originalIsCopy": false,
-        "id": "27acdabc-6fd5-4345-a79e-f2d95d827ea1",
+        "id": "c51cdb5b-b707-4db3-a89f-393c9b5fd7db",
         "expansionSetCode": "XMAGE",
         "cardNumber": "",
         "usesVariousArt": false,
@@ -1810,7 +1810,7 @@
           "other": []
         }
       },
-      "7b3671f6-63d9-4edd-ad9a-cca2a1d22b58": {
+      "d09be4f7-c8d4-4d45-8c60-fd2f10dc3fe4": {
         "parentId": null,
         "controllerId": null,
         "controllerName": null,
@@ -1893,7 +1893,7 @@
         "originalToughness": null,
         "originalColorIdentity": null,
         "originalIsCopy": false,
-        "id": "7b3671f6-63d9-4edd-ad9a-cca2a1d22b58",
+        "id": "d09be4f7-c8d4-4d45-8c60-fd2f10dc3fe4",
         "expansionSetCode": "XMAGE",
         "cardNumber": "",
         "usesVariousArt": false,
@@ -1917,7 +1917,7 @@
     "exiles": [
       {
         "name": "Permanent - Exile",
-        "id": "88d82443-d697-40cd-bb39-c0def153eb26",
+        "id": "1192eb9d-9818-42d8-a060-46305a617708",
         "cards": {}
       }
     ],
@@ -1927,7 +1927,7 @@
     "combat": [
       {
         "attackers": {
-          "d2793738-03f9-4ccb-85e7-720d90f73a23": {
+          "b4fd6278-4ae6-488f-8d1b-12a549254c4f": {
             "tapped": false,
             "flipped": false,
             "phasedIn": true,
@@ -1937,7 +1937,7 @@
             "original": null,
             "copy": false,
             "nameOwner": "",
-            "nameController": "uvigil1w0m7ly",
+            "nameController": "uvigilumkmja",
             "controlled": false,
             "attachedTo": null,
             "morphed": false,
@@ -1948,13 +1948,13 @@
             "attachedControllerDiffers": false,
             "mutateView": {
               "name": "Vanguard of Brimaz",
-              "id": "d2793738-03f9-4ccb-85e7-720d90f73a23",
+              "id": "b4fd6278-4ae6-488f-8d1b-12a549254c4f",
               "cards": {}
             },
             "mutated": false,
             "parentId": null,
-            "controllerId": "10760e4a-eb05-4c56-9017-dcd4cf2496f0",
-            "controllerName": "uvigil1w0m7ly",
+            "controllerId": "70770688-8419-403b-9e1b-7f6363395ac4",
+            "controllerName": "uvigilumkmja",
             "name": "Vanguard of Brimaz",
             "displayName": "Vanguard of Brimaz",
             "displayFullName": "Vanguard of Brimaz",
@@ -2057,7 +2057,7 @@
             },
             "originalColorIdentity": "{W}",
             "originalIsCopy": false,
-            "id": "d2793738-03f9-4ccb-85e7-720d90f73a23",
+            "id": "b4fd6278-4ae6-488f-8d1b-12a549254c4f",
             "expansionSetCode": "BNG",
             "cardNumber": "29",
             "usesVariousArt": false,
@@ -2074,15 +2074,15 @@
         },
         "blockers": {},
         "isBlocked": false,
-        "defenderName": "sim-137429",
-        "defenderId": "79b25ea6-d44d-4b33-9c3c-d7aa004aba54"
+        "defenderName": "sim-656555",
+        "defenderId": "8fe66b0d-3fa8-4501-9aea-89ef6ceae923"
       }
     ],
     "phase": "COMBAT",
     "step": "DECLARE_ATTACKERS",
-    "activePlayerId": "10760e4a-eb05-4c56-9017-dcd4cf2496f0",
-    "activePlayerName": "uvigil1w0m7ly",
-    "priorityPlayerName": "uvigil1w0m7ly",
+    "activePlayerId": "70770688-8419-403b-9e1b-7f6363395ac4",
+    "activePlayerName": "uvigilumkmja",
+    "priorityPlayerName": "uvigilumkmja",
     "turn": 2,
     "special": false,
     "rollbackTurnsAllowed": false,

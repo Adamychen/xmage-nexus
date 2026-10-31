@@ -1,13 +1,13 @@
 {
-  "recordedAt": "2026-10-13T17:43:15.335Z",
-  "gameId": "a0415723-4a7c-42b1-aa7d-133b811ad1fe",
+  "recordedAt": "2026-10-31T14:31:12.229Z",
+  "gameId": "d900cfb0-5aeb-4633-a465-8c9eef9f750a",
   "gameView": {
     "priorityTime": 0,
     "bufferTime": 0,
     "players": [
       {
-        "playerId": "c5b866ca-9c8c-4974-b465-184a9769e445",
-        "name": "sim-013392",
+        "playerId": "1df68d42-e0db-4586-a1b5-a4d2294ba12a",
+        "name": "sim-656551",
         "controlled": false,
         "isHuman": true,
         "life": 20,
@@ -33,7 +33,7 @@
         "sideboard": {},
         "helperCards": {},
         "battlefield": {
-          "c90befca-ea5c-4bf9-bb50-dfc4f949066e": {
+          "6db2d829-d771-44a2-8d93-a13c2fa22f70": {
             "tapped": false,
             "flipped": false,
             "phasedIn": true,
@@ -43,7 +43,7 @@
             "original": null,
             "copy": false,
             "nameOwner": "",
-            "nameController": "sim-013392",
+            "nameController": "sim-656551",
             "controlled": false,
             "attachedTo": null,
             "morphed": false,
@@ -54,13 +54,13 @@
             "attachedControllerDiffers": false,
             "mutateView": {
               "name": "Forest",
-              "id": "c90befca-ea5c-4bf9-bb50-dfc4f949066e",
+              "id": "6db2d829-d771-44a2-8d93-a13c2fa22f70",
               "cards": {}
             },
             "mutated": false,
             "parentId": null,
-            "controllerId": "c5b866ca-9c8c-4974-b465-184a9769e445",
-            "controllerName": "sim-013392",
+            "controllerId": "1df68d42-e0db-4586-a1b5-a4d2294ba12a",
+            "controllerName": "sim-656551",
             "name": "Forest",
             "displayName": "Forest",
             "displayFullName": "Forest",
@@ -154,7 +154,7 @@
             },
             "originalColorIdentity": "{G}",
             "originalIsCopy": false,
-            "id": "c90befca-ea5c-4bf9-bb50-dfc4f949066e",
+            "id": "6db2d829-d771-44a2-8d93-a13c2fa22f70",
             "expansionSetCode": "IKO",
             "cardNumber": "272",
             "usesVariousArt": true,
@@ -224,7 +224,7 @@
         "commandList": [],
         "attachments": [],
         "statesSavedSize": -1,
-        "priorityTimeSavedTimeMs": 1791913395329,
+        "priorityTimeSavedTimeMs": 1793457072225,
         "priorityTimeLeftSecs": 0,
         "bufferTimeLeft": 0,
         "passedTurn": false,
@@ -238,8 +238,8 @@
         "designationNames": []
       },
       {
-        "playerId": "3167682e-cd31-4158-83d6-fc221d8b32e6",
-        "name": "utopca1c26tg7",
+        "playerId": "8a47254a-4c83-4b25-b751-06ad53269cf1",
+        "name": "utopcau7h693",
         "controlled": true,
         "isHuman": true,
         "life": 20,
@@ -265,7 +265,7 @@
         "sideboard": {},
         "helperCards": {},
         "battlefield": {
-          "5ac2e522-2968-4a4a-a77a-978f9b7af53a": {
+          "5ccf2e40-ff4c-40a9-a3ac-6daf2a2835b9": {
             "tapped": true,
             "flipped": false,
             "phasedIn": true,
@@ -369,10 +369,10 @@
               },
               "originalColorIdentity": "{U}",
               "originalIsCopy": false,
-              "id": "5ac2e522-2968-4a4a-a77a-978f9b7af53a",
-              "expansionSetCode": "TRK",
-              "cardNumber": "319",
-              "usesVariousArt": true,
+              "id": "5ccf2e40-ff4c-40a9-a3ac-6daf2a2835b9",
+              "expansionSetCode": "MDD",
+              "cardNumber": "294",
+              "usesVariousArt": false,
               "gameObject": false,
               "isChoosable": false,
               "isSelected": false,
@@ -385,7 +385,7 @@
             },
             "copy": false,
             "nameOwner": "",
-            "nameController": "utopca1c26tg7",
+            "nameController": "utopcau7h693",
             "controlled": true,
             "attachedTo": null,
             "morphed": false,
@@ -396,13 +396,13 @@
             "attachedControllerDiffers": false,
             "mutateView": {
               "name": "Island",
-              "id": "5ac2e522-2968-4a4a-a77a-978f9b7af53a",
+              "id": "5ccf2e40-ff4c-40a9-a3ac-6daf2a2835b9",
               "cards": {}
             },
             "mutated": false,
             "parentId": null,
-            "controllerId": "3167682e-cd31-4158-83d6-fc221d8b32e6",
-            "controllerName": "utopca1c26tg7",
+            "controllerId": "8a47254a-4c83-4b25-b751-06ad53269cf1",
+            "controllerName": "utopcau7h693",
             "name": "Island",
             "displayName": "Island",
             "displayFullName": "Island",
@@ -496,10 +496,10 @@
             },
             "originalColorIdentity": "{U}",
             "originalIsCopy": false,
-            "id": "5ac2e522-2968-4a4a-a77a-978f9b7af53a",
-            "expansionSetCode": "TRK",
-            "cardNumber": "319",
-            "usesVariousArt": true,
+            "id": "5ccf2e40-ff4c-40a9-a3ac-6daf2a2835b9",
+            "expansionSetCode": "MDD",
+            "cardNumber": "294",
+            "usesVariousArt": false,
             "gameObject": true,
             "isChoosable": false,
             "isSelected": false,
@@ -510,7 +510,7 @@
               "other": []
             }
           },
-          "1de18be8-42d5-467e-b211-a524e00e818a": {
+          "9fada2dc-8262-4801-af87-3c896a79247e": {
             "tapped": true,
             "flipped": false,
             "phasedIn": true,
@@ -614,7 +614,7 @@
               },
               "originalColorIdentity": "{U}",
               "originalIsCopy": false,
-              "id": "1de18be8-42d5-467e-b211-a524e00e818a",
+              "id": "9fada2dc-8262-4801-af87-3c896a79247e",
               "expansionSetCode": "KTK",
               "cardNumber": "254",
               "usesVariousArt": true,
@@ -630,7 +630,7 @@
             },
             "copy": false,
             "nameOwner": "",
-            "nameController": "utopca1c26tg7",
+            "nameController": "utopcau7h693",
             "controlled": true,
             "attachedTo": null,
             "morphed": false,
@@ -641,13 +641,13 @@
             "attachedControllerDiffers": false,
             "mutateView": {
               "name": "Island",
-              "id": "1de18be8-42d5-467e-b211-a524e00e818a",
+              "id": "9fada2dc-8262-4801-af87-3c896a79247e",
               "cards": {}
             },
             "mutated": false,
             "parentId": null,
-            "controllerId": "3167682e-cd31-4158-83d6-fc221d8b32e6",
-            "controllerName": "utopca1c26tg7",
+            "controllerId": "8a47254a-4c83-4b25-b751-06ad53269cf1",
+            "controllerName": "utopcau7h693",
             "name": "Island",
             "displayName": "Island",
             "displayFullName": "Island",
@@ -741,7 +741,7 @@
             },
             "originalColorIdentity": "{U}",
             "originalIsCopy": false,
-            "id": "1de18be8-42d5-467e-b211-a524e00e818a",
+            "id": "9fada2dc-8262-4801-af87-3c896a79247e",
             "expansionSetCode": "KTK",
             "cardNumber": "254",
             "usesVariousArt": true,
@@ -755,7 +755,7 @@
               "other": []
             }
           },
-          "1219d66e-e7ab-4ac7-98dc-adb1f2687918": {
+          "405baf1a-b0d5-4bcf-b90d-46a6484bec71": {
             "tapped": true,
             "flipped": false,
             "phasedIn": true,
@@ -859,7 +859,7 @@
               },
               "originalColorIdentity": "{U}",
               "originalIsCopy": false,
-              "id": "1219d66e-e7ab-4ac7-98dc-adb1f2687918",
+              "id": "405baf1a-b0d5-4bcf-b90d-46a6484bec71",
               "expansionSetCode": "KTK",
               "cardNumber": "254",
               "usesVariousArt": true,
@@ -875,7 +875,7 @@
             },
             "copy": false,
             "nameOwner": "",
-            "nameController": "utopca1c26tg7",
+            "nameController": "utopcau7h693",
             "controlled": true,
             "attachedTo": null,
             "morphed": false,
@@ -886,13 +886,13 @@
             "attachedControllerDiffers": false,
             "mutateView": {
               "name": "Island",
-              "id": "1219d66e-e7ab-4ac7-98dc-adb1f2687918",
+              "id": "405baf1a-b0d5-4bcf-b90d-46a6484bec71",
               "cards": {}
             },
             "mutated": false,
             "parentId": null,
-            "controllerId": "3167682e-cd31-4158-83d6-fc221d8b32e6",
-            "controllerName": "utopca1c26tg7",
+            "controllerId": "8a47254a-4c83-4b25-b751-06ad53269cf1",
+            "controllerName": "utopcau7h693",
             "name": "Island",
             "displayName": "Island",
             "displayFullName": "Island",
@@ -986,7 +986,7 @@
             },
             "originalColorIdentity": "{U}",
             "originalIsCopy": false,
-            "id": "1219d66e-e7ab-4ac7-98dc-adb1f2687918",
+            "id": "405baf1a-b0d5-4bcf-b90d-46a6484bec71",
             "expansionSetCode": "KTK",
             "cardNumber": "254",
             "usesVariousArt": true,
@@ -1000,7 +1000,7 @@
               "other": []
             }
           },
-          "6ae42460-9c16-4a34-a0a3-6f7b54bba20f": {
+          "fad126aa-38be-45a3-82bd-c878d72e23dc": {
             "tapped": true,
             "flipped": false,
             "phasedIn": true,
@@ -1104,7 +1104,7 @@
               },
               "originalColorIdentity": "{U}",
               "originalIsCopy": false,
-              "id": "6ae42460-9c16-4a34-a0a3-6f7b54bba20f",
+              "id": "fad126aa-38be-45a3-82bd-c878d72e23dc",
               "expansionSetCode": "KTK",
               "cardNumber": "254",
               "usesVariousArt": true,
@@ -1120,7 +1120,7 @@
             },
             "copy": false,
             "nameOwner": "",
-            "nameController": "utopca1c26tg7",
+            "nameController": "utopcau7h693",
             "controlled": true,
             "attachedTo": null,
             "morphed": false,
@@ -1131,13 +1131,13 @@
             "attachedControllerDiffers": false,
             "mutateView": {
               "name": "Island",
-              "id": "6ae42460-9c16-4a34-a0a3-6f7b54bba20f",
+              "id": "fad126aa-38be-45a3-82bd-c878d72e23dc",
               "cards": {}
             },
             "mutated": false,
             "parentId": null,
-            "controllerId": "3167682e-cd31-4158-83d6-fc221d8b32e6",
-            "controllerName": "utopca1c26tg7",
+            "controllerId": "8a47254a-4c83-4b25-b751-06ad53269cf1",
+            "controllerName": "utopcau7h693",
             "name": "Island",
             "displayName": "Island",
             "displayFullName": "Island",
@@ -1231,7 +1231,7 @@
             },
             "originalColorIdentity": "{U}",
             "originalIsCopy": false,
-            "id": "6ae42460-9c16-4a34-a0a3-6f7b54bba20f",
+            "id": "fad126aa-38be-45a3-82bd-c878d72e23dc",
             "expansionSetCode": "KTK",
             "cardNumber": "254",
             "usesVariousArt": true,
@@ -1245,7 +1245,7 @@
               "other": []
             }
           },
-          "18451845-b82e-4b12-9549-691ab4253ca6": {
+          "55bd6871-222a-4617-af3d-6f7fa6388456": {
             "tapped": true,
             "flipped": false,
             "phasedIn": true,
@@ -1349,7 +1349,7 @@
               },
               "originalColorIdentity": "{U}",
               "originalIsCopy": false,
-              "id": "18451845-b82e-4b12-9549-691ab4253ca6",
+              "id": "55bd6871-222a-4617-af3d-6f7fa6388456",
               "expansionSetCode": "KTK",
               "cardNumber": "254",
               "usesVariousArt": true,
@@ -1365,7 +1365,7 @@
             },
             "copy": false,
             "nameOwner": "",
-            "nameController": "utopca1c26tg7",
+            "nameController": "utopcau7h693",
             "controlled": true,
             "attachedTo": null,
             "morphed": false,
@@ -1376,13 +1376,13 @@
             "attachedControllerDiffers": false,
             "mutateView": {
               "name": "Island",
-              "id": "18451845-b82e-4b12-9549-691ab4253ca6",
+              "id": "55bd6871-222a-4617-af3d-6f7fa6388456",
               "cards": {}
             },
             "mutated": false,
             "parentId": null,
-            "controllerId": "3167682e-cd31-4158-83d6-fc221d8b32e6",
-            "controllerName": "utopca1c26tg7",
+            "controllerId": "8a47254a-4c83-4b25-b751-06ad53269cf1",
+            "controllerName": "utopcau7h693",
             "name": "Island",
             "displayName": "Island",
             "displayFullName": "Island",
@@ -1476,7 +1476,7 @@
             },
             "originalColorIdentity": "{U}",
             "originalIsCopy": false,
-            "id": "18451845-b82e-4b12-9549-691ab4253ca6",
+            "id": "55bd6871-222a-4617-af3d-6f7fa6388456",
             "expansionSetCode": "KTK",
             "cardNumber": "254",
             "usesVariousArt": true,
@@ -1490,7 +1490,7 @@
               "other": []
             }
           },
-          "536dd6a3-230e-43e6-a39e-8eedc34f62d4": {
+          "1ca3ccad-2fc1-44d0-b6f4-fc8f534095bf": {
             "tapped": true,
             "flipped": false,
             "phasedIn": true,
@@ -1594,7 +1594,7 @@
               },
               "originalColorIdentity": "{U}",
               "originalIsCopy": false,
-              "id": "536dd6a3-230e-43e6-a39e-8eedc34f62d4",
+              "id": "1ca3ccad-2fc1-44d0-b6f4-fc8f534095bf",
               "expansionSetCode": "KTK",
               "cardNumber": "254",
               "usesVariousArt": true,
@@ -1610,7 +1610,7 @@
             },
             "copy": false,
             "nameOwner": "",
-            "nameController": "utopca1c26tg7",
+            "nameController": "utopcau7h693",
             "controlled": true,
             "attachedTo": null,
             "morphed": false,
@@ -1621,13 +1621,13 @@
             "attachedControllerDiffers": false,
             "mutateView": {
               "name": "Island",
-              "id": "536dd6a3-230e-43e6-a39e-8eedc34f62d4",
+              "id": "1ca3ccad-2fc1-44d0-b6f4-fc8f534095bf",
               "cards": {}
             },
             "mutated": false,
             "parentId": null,
-            "controllerId": "3167682e-cd31-4158-83d6-fc221d8b32e6",
-            "controllerName": "utopca1c26tg7",
+            "controllerId": "8a47254a-4c83-4b25-b751-06ad53269cf1",
+            "controllerName": "utopcau7h693",
             "name": "Island",
             "displayName": "Island",
             "displayFullName": "Island",
@@ -1721,7 +1721,7 @@
             },
             "originalColorIdentity": "{U}",
             "originalIsCopy": false,
-            "id": "536dd6a3-230e-43e6-a39e-8eedc34f62d4",
+            "id": "1ca3ccad-2fc1-44d0-b6f4-fc8f534095bf",
             "expansionSetCode": "KTK",
             "cardNumber": "254",
             "usesVariousArt": true,
@@ -1735,7 +1735,7 @@
               "other": []
             }
           },
-          "91f09131-803a-4ea6-ade2-1209ca85623d": {
+          "040f5906-0e08-463a-add1-1f86b8ffff98": {
             "tapped": false,
             "flipped": false,
             "phasedIn": true,
@@ -1843,7 +1843,7 @@
               },
               "originalColorIdentity": "{U}",
               "originalIsCopy": false,
-              "id": "91f09131-803a-4ea6-ade2-1209ca85623d",
+              "id": "040f5906-0e08-463a-add1-1f86b8ffff98",
               "expansionSetCode": "E01",
               "cardNumber": "28",
               "usesVariousArt": false,
@@ -1859,7 +1859,7 @@
             },
             "copy": false,
             "nameOwner": "",
-            "nameController": "utopca1c26tg7",
+            "nameController": "utopcau7h693",
             "controlled": true,
             "attachedTo": null,
             "morphed": false,
@@ -1870,13 +1870,13 @@
             "attachedControllerDiffers": false,
             "mutateView": {
               "name": "Sphinx of Jwar Isle",
-              "id": "91f09131-803a-4ea6-ade2-1209ca85623d",
+              "id": "040f5906-0e08-463a-add1-1f86b8ffff98",
               "cards": {}
             },
             "mutated": false,
             "parentId": null,
-            "controllerId": "3167682e-cd31-4158-83d6-fc221d8b32e6",
-            "controllerName": "utopca1c26tg7",
+            "controllerId": "8a47254a-4c83-4b25-b751-06ad53269cf1",
+            "controllerName": "utopcau7h693",
             "name": "Sphinx of Jwar Isle",
             "displayName": "Sphinx of Jwar Isle",
             "displayFullName": "Sphinx of Jwar Isle",
@@ -1985,7 +1985,7 @@
             },
             "originalColorIdentity": "{U}",
             "originalIsCopy": false,
-            "id": "91f09131-803a-4ea6-ade2-1209ca85623d",
+            "id": "040f5906-0e08-463a-add1-1f86b8ffff98",
             "expansionSetCode": "E01",
             "cardNumber": "28",
             "usesVariousArt": false,
@@ -2055,7 +2055,7 @@
         "commandList": [],
         "attachments": [],
         "statesSavedSize": -1,
-        "priorityTimeSavedTimeMs": 1791913395329,
+        "priorityTimeSavedTimeMs": 1793457072226,
         "priorityTimeLeftSecs": 0,
         "bufferTimeLeft": 0,
         "passedTurn": false,
@@ -2069,9 +2069,9 @@
         "designationNames": []
       }
     ],
-    "myPlayerId": "3167682e-cd31-4158-83d6-fc221d8b32e6",
+    "myPlayerId": "8a47254a-4c83-4b25-b751-06ad53269cf1",
     "myHand": {
-      "d99cc036-da43-458b-81bf-d3eac18ef9c3": {
+      "e68e9089-4ec1-4eb3-bb5f-0ee858c8198d": {
         "parentId": null,
         "controllerId": null,
         "controllerName": null,
@@ -2168,10 +2168,10 @@
         },
         "originalColorIdentity": "{U}",
         "originalIsCopy": false,
-        "id": "d99cc036-da43-458b-81bf-d3eac18ef9c3",
-        "expansionSetCode": "TRK",
-        "cardNumber": "319",
-        "usesVariousArt": true,
+        "id": "e68e9089-4ec1-4eb3-bb5f-0ee858c8198d",
+        "expansionSetCode": "MDD",
+        "cardNumber": "294",
+        "usesVariousArt": false,
         "gameObject": true,
         "isChoosable": false,
         "isSelected": false,
@@ -2182,7 +2182,7 @@
           "other": []
         }
       },
-      "0caa53d5-f273-423c-a83d-3b0f1a6254d3": {
+      "515b945b-b829-4de5-999f-00213814b8c1": {
         "parentId": null,
         "controllerId": null,
         "controllerName": null,
@@ -2279,10 +2279,10 @@
         },
         "originalColorIdentity": "{U}",
         "originalIsCopy": false,
-        "id": "0caa53d5-f273-423c-a83d-3b0f1a6254d3",
-        "expansionSetCode": "TRK",
-        "cardNumber": "319",
-        "usesVariousArt": true,
+        "id": "515b945b-b829-4de5-999f-00213814b8c1",
+        "expansionSetCode": "MDD",
+        "cardNumber": "294",
+        "usesVariousArt": false,
         "gameObject": true,
         "isChoosable": false,
         "isSelected": false,
@@ -2293,7 +2293,7 @@
           "other": []
         }
       },
-      "d9bb2537-c0c3-4d2d-b45b-d152c594b682": {
+      "71c79f61-76e8-46c4-9c9e-823370e2b707": {
         "parentId": null,
         "controllerId": null,
         "controllerName": null,
@@ -2390,10 +2390,10 @@
         },
         "originalColorIdentity": "{U}",
         "originalIsCopy": false,
-        "id": "d9bb2537-c0c3-4d2d-b45b-d152c594b682",
-        "expansionSetCode": "TRK",
-        "cardNumber": "319",
-        "usesVariousArt": true,
+        "id": "71c79f61-76e8-46c4-9c9e-823370e2b707",
+        "expansionSetCode": "MDD",
+        "cardNumber": "294",
+        "usesVariousArt": false,
         "gameObject": true,
         "isChoosable": false,
         "isSelected": false,
@@ -2404,7 +2404,7 @@
           "other": []
         }
       },
-      "fc4d7f74-9e3f-4b9d-af78-9856c45e9cb9": {
+      "50b35cb2-a265-480e-8c51-7da14f2017f4": {
         "parentId": null,
         "controllerId": null,
         "controllerName": null,
@@ -2501,10 +2501,10 @@
         },
         "originalColorIdentity": "{U}",
         "originalIsCopy": false,
-        "id": "fc4d7f74-9e3f-4b9d-af78-9856c45e9cb9",
-        "expansionSetCode": "TRK",
-        "cardNumber": "319",
-        "usesVariousArt": true,
+        "id": "50b35cb2-a265-480e-8c51-7da14f2017f4",
+        "expansionSetCode": "MDD",
+        "cardNumber": "294",
+        "usesVariousArt": false,
         "gameObject": true,
         "isChoosable": false,
         "isSelected": false,
@@ -2515,7 +2515,7 @@
           "other": []
         }
       },
-      "5054d5b8-9383-498f-8bea-eb3805c6c91a": {
+      "d4d4b2d7-ef66-4f9b-9ed2-f74da5ca82f5": {
         "parentId": null,
         "controllerId": null,
         "controllerName": null,
@@ -2612,10 +2612,10 @@
         },
         "originalColorIdentity": "{U}",
         "originalIsCopy": false,
-        "id": "5054d5b8-9383-498f-8bea-eb3805c6c91a",
-        "expansionSetCode": "TRK",
-        "cardNumber": "319",
-        "usesVariousArt": true,
+        "id": "d4d4b2d7-ef66-4f9b-9ed2-f74da5ca82f5",
+        "expansionSetCode": "MDD",
+        "cardNumber": "294",
+        "usesVariousArt": false,
         "gameObject": true,
         "isChoosable": false,
         "isSelected": false,
@@ -2626,7 +2626,7 @@
           "other": []
         }
       },
-      "176eb335-0823-4a0e-894b-da6d7c122193": {
+      "35360211-145a-446d-895d-c7b490161ff0": {
         "parentId": null,
         "controllerId": null,
         "controllerName": null,
@@ -2723,10 +2723,10 @@
         },
         "originalColorIdentity": "{U}",
         "originalIsCopy": false,
-        "id": "176eb335-0823-4a0e-894b-da6d7c122193",
-        "expansionSetCode": "TRK",
-        "cardNumber": "319",
-        "usesVariousArt": true,
+        "id": "35360211-145a-446d-895d-c7b490161ff0",
+        "expansionSetCode": "MDD",
+        "cardNumber": "294",
+        "usesVariousArt": false,
         "gameObject": true,
         "isChoosable": false,
         "isSelected": false,
@@ -2737,7 +2737,7 @@
           "other": []
         }
       },
-      "36c7689c-d4b6-4570-84ad-9fc015caa2db": {
+      "8137bd18-534e-48f4-9016-a1c6e7bec959": {
         "parentId": null,
         "controllerId": null,
         "controllerName": null,
@@ -2834,10 +2834,10 @@
         },
         "originalColorIdentity": "{U}",
         "originalIsCopy": false,
-        "id": "36c7689c-d4b6-4570-84ad-9fc015caa2db",
-        "expansionSetCode": "TRK",
-        "cardNumber": "319",
-        "usesVariousArt": true,
+        "id": "8137bd18-534e-48f4-9016-a1c6e7bec959",
+        "expansionSetCode": "MDD",
+        "cardNumber": "294",
+        "usesVariousArt": false,
         "gameObject": true,
         "isChoosable": false,
         "isSelected": false,
@@ -2850,7 +2850,7 @@
       }
     },
     "myHelperEmblems": {
-      "6d48516e-1d4a-4951-bd69-d2afdb72bd9c": {
+      "c9d33e23-1d36-4dc3-8ad4-a2645c4ab390": {
         "parentId": null,
         "controllerId": null,
         "controllerName": null,
@@ -2931,7 +2931,7 @@
         "originalToughness": null,
         "originalColorIdentity": null,
         "originalIsCopy": false,
-        "id": "6d48516e-1d4a-4951-bd69-d2afdb72bd9c",
+        "id": "c9d33e23-1d36-4dc3-8ad4-a2645c4ab390",
         "expansionSetCode": "XMAGE",
         "cardNumber": "",
         "usesVariousArt": false,
@@ -2945,7 +2945,7 @@
           "other": []
         }
       },
-      "a45ae89b-4b6c-42d5-bb63-fed1fea9f6e6": {
+      "804bc569-275a-4624-8aff-e72a80429a04": {
         "parentId": null,
         "controllerId": null,
         "controllerName": null,
@@ -3028,7 +3028,7 @@
         "originalToughness": null,
         "originalColorIdentity": null,
         "originalIsCopy": false,
-        "id": "a45ae89b-4b6c-42d5-bb63-fed1fea9f6e6",
+        "id": "804bc569-275a-4624-8aff-e72a80429a04",
         "expansionSetCode": "XMAGE",
         "cardNumber": "",
         "usesVariousArt": false,
@@ -3042,7 +3042,7 @@
           "other": []
         }
       },
-      "6279cede-e534-41a7-bdc0-f74c5eb1571a": {
+      "fd592c7b-9b79-4301-b3e7-09cbdb7baad2": {
         "parentId": null,
         "controllerId": null,
         "controllerName": null,
@@ -3125,7 +3125,7 @@
         "originalToughness": null,
         "originalColorIdentity": null,
         "originalIsCopy": false,
-        "id": "6279cede-e534-41a7-bdc0-f74c5eb1571a",
+        "id": "fd592c7b-9b79-4301-b3e7-09cbdb7baad2",
         "expansionSetCode": "XMAGE",
         "cardNumber": "",
         "usesVariousArt": false,
@@ -3147,7 +3147,7 @@
     "exiles": [
       {
         "name": "Permanent - Exile",
-        "id": "b084dbaa-0ecb-42bf-859b-032a9bc992f5",
+        "id": "1192eb9d-9818-42d8-a060-46305a617708",
         "cards": {}
       }
     ],
@@ -3156,11 +3156,11 @@
       {
         "name": "Top card of your library",
         "cards": {
-          "7c9cf34f-3c63-44ee-ad03-51e981e6f2de": {
-            "id": "7c9cf34f-3c63-44ee-ad03-51e981e6f2de",
-            "expansionSetCode": "TRK",
-            "cardNumber": "319",
-            "usesVariousArt": true,
+          "45d88890-afe1-4b4f-9d21-0cef8d37afe1": {
+            "id": "45d88890-afe1-4b4f-9d21-0cef8d37afe1",
+            "expansionSetCode": "MDD",
+            "cardNumber": "294",
+            "usesVariousArt": false,
             "gameObject": false,
             "isChoosable": false,
             "isSelected": false,
@@ -3178,9 +3178,9 @@
     "combat": [],
     "phase": "POSTCOMBAT_MAIN",
     "step": "POSTCOMBAT_MAIN",
-    "activePlayerId": "3167682e-cd31-4158-83d6-fc221d8b32e6",
-    "activePlayerName": "utopca1c26tg7",
-    "priorityPlayerName": "sim-013392",
+    "activePlayerId": "8a47254a-4c83-4b25-b751-06ad53269cf1",
+    "activePlayerName": "utopcau7h693",
+    "priorityPlayerName": "sim-656551",
     "turn": 2,
     "special": false,
     "rollbackTurnsAllowed": false,

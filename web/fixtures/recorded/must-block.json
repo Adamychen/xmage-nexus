@@ -1,13 +1,13 @@
 {
-  "recordedAt": "2026-10-04T18:37:58.761Z",
-  "gameId": "f3e3fe20-85cc-41a3-beb0-d34161f3f42c",
+  "recordedAt": "2026-10-31T14:29:37.273Z",
+  "gameId": "ef693279-9263-4ce1-b8aa-037000b8445c",
   "gameView": {
     "priorityTime": 0,
     "bufferTime": 0,
     "players": [
       {
-        "playerId": "ae94b850-5b8a-44a6-b30a-9f45c9f77680",
-        "name": "umustb1vfkj6m",
+        "playerId": "b98ca8ad-aa47-40af-8b56-7699da0ff8d9",
+        "name": "umustbrsk4nt",
         "controlled": true,
         "isHuman": true,
         "life": 20,
@@ -33,7 +33,7 @@
         "sideboard": {},
         "helperCards": {},
         "battlefield": {
-          "a8824684-dbf6-4720-9ee7-1cbf0ae61378": {
+          "97ae6630-9373-44d6-86b7-a4e24e0e4e65": {
             "tapped": true,
             "flipped": false,
             "phasedIn": true,
@@ -137,7 +137,7 @@
               },
               "originalColorIdentity": "{G}",
               "originalIsCopy": false,
-              "id": "a8824684-dbf6-4720-9ee7-1cbf0ae61378",
+              "id": "97ae6630-9373-44d6-86b7-a4e24e0e4e65",
               "expansionSetCode": "IKO",
               "cardNumber": "272",
               "usesVariousArt": true,
@@ -153,7 +153,7 @@
             },
             "copy": false,
             "nameOwner": "",
-            "nameController": "umustb1vfkj6m",
+            "nameController": "umustbrsk4nt",
             "controlled": true,
             "attachedTo": null,
             "morphed": false,
@@ -164,13 +164,13 @@
             "attachedControllerDiffers": false,
             "mutateView": {
               "name": "Forest",
-              "id": "a8824684-dbf6-4720-9ee7-1cbf0ae61378",
+              "id": "97ae6630-9373-44d6-86b7-a4e24e0e4e65",
               "cards": {}
             },
             "mutated": false,
             "parentId": null,
-            "controllerId": "ae94b850-5b8a-44a6-b30a-9f45c9f77680",
-            "controllerName": "umustb1vfkj6m",
+            "controllerId": "b98ca8ad-aa47-40af-8b56-7699da0ff8d9",
+            "controllerName": "umustbrsk4nt",
             "name": "Forest",
             "displayName": "Forest",
             "displayFullName": "Forest",
@@ -264,7 +264,7 @@
             },
             "originalColorIdentity": "{G}",
             "originalIsCopy": false,
-            "id": "a8824684-dbf6-4720-9ee7-1cbf0ae61378",
+            "id": "97ae6630-9373-44d6-86b7-a4e24e0e4e65",
             "expansionSetCode": "IKO",
             "cardNumber": "272",
             "usesVariousArt": true,
@@ -278,14 +278,14 @@
               "other": []
             }
           },
-          "1cd21e79-c96a-46bd-9041-d647332cb00b": {
+          "b09cd388-903b-40d3-85fb-70fde6ec7db0": {
             "tapped": true,
             "flipped": false,
             "phasedIn": true,
             "summoningSickness": false,
             "damage": 0,
             "attachments": [
-              "4bdf2733-96a8-419b-a2bb-8455cfe89774"
+              "4d19fe9d-1edc-42ad-aefc-20a71b07414f"
             ],
             "original": {
               "parentId": null,
@@ -383,7 +383,7 @@
               },
               "originalColorIdentity": "{G}",
               "originalIsCopy": false,
-              "id": "1cd21e79-c96a-46bd-9041-d647332cb00b",
+              "id": "b09cd388-903b-40d3-85fb-70fde6ec7db0",
               "expansionSetCode": "J21",
               "cardNumber": "624",
               "usesVariousArt": false,
@@ -399,7 +399,7 @@
             },
             "copy": false,
             "nameOwner": "",
-            "nameController": "umustb1vfkj6m",
+            "nameController": "umustbrsk4nt",
             "controlled": true,
             "attachedTo": null,
             "morphed": false,
@@ -410,13 +410,13 @@
             "attachedControllerDiffers": false,
             "mutateView": {
               "name": "Runeclaw Bear",
-              "id": "1cd21e79-c96a-46bd-9041-d647332cb00b",
+              "id": "b09cd388-903b-40d3-85fb-70fde6ec7db0",
               "cards": {}
             },
             "mutated": false,
             "parentId": null,
-            "controllerId": "ae94b850-5b8a-44a6-b30a-9f45c9f77680",
-            "controllerName": "umustb1vfkj6m",
+            "controllerId": "b98ca8ad-aa47-40af-8b56-7699da0ff8d9",
+            "controllerName": "umustbrsk4nt",
             "name": "Runeclaw Bear",
             "displayName": "Runeclaw Bear",
             "displayFullName": "Runeclaw Bear",
@@ -509,7 +509,7 @@
             },
             "originalColorIdentity": "{G}",
             "originalIsCopy": false,
-            "id": "1cd21e79-c96a-46bd-9041-d647332cb00b",
+            "id": "b09cd388-903b-40d3-85fb-70fde6ec7db0",
             "expansionSetCode": "J21",
             "cardNumber": "624",
             "usesVariousArt": false,
@@ -523,7 +523,7 @@
               "other": []
             }
           },
-          "072cd46a-3348-435e-90c6-0fa3eadcf83c": {
+          "f7f0f43d-4f59-4c22-a444-17b6f362d1e4": {
             "tapped": true,
             "flipped": false,
             "phasedIn": true,
@@ -627,7 +627,7 @@
               },
               "originalColorIdentity": "{G}",
               "originalIsCopy": false,
-              "id": "072cd46a-3348-435e-90c6-0fa3eadcf83c",
+              "id": "f7f0f43d-4f59-4c22-a444-17b6f362d1e4",
               "expansionSetCode": "KTK",
               "cardNumber": "266",
               "usesVariousArt": true,
@@ -643,7 +643,7 @@
             },
             "copy": false,
             "nameOwner": "",
-            "nameController": "umustb1vfkj6m",
+            "nameController": "umustbrsk4nt",
             "controlled": true,
             "attachedTo": null,
             "morphed": false,
@@ -654,13 +654,13 @@
             "attachedControllerDiffers": false,
             "mutateView": {
               "name": "Forest",
-              "id": "072cd46a-3348-435e-90c6-0fa3eadcf83c",
+              "id": "f7f0f43d-4f59-4c22-a444-17b6f362d1e4",
               "cards": {}
             },
             "mutated": false,
             "parentId": null,
-            "controllerId": "ae94b850-5b8a-44a6-b30a-9f45c9f77680",
-            "controllerName": "umustb1vfkj6m",
+            "controllerId": "b98ca8ad-aa47-40af-8b56-7699da0ff8d9",
+            "controllerName": "umustbrsk4nt",
             "name": "Forest",
             "displayName": "Forest",
             "displayFullName": "Forest",
@@ -754,7 +754,7 @@
             },
             "originalColorIdentity": "{G}",
             "originalIsCopy": false,
-            "id": "072cd46a-3348-435e-90c6-0fa3eadcf83c",
+            "id": "f7f0f43d-4f59-4c22-a444-17b6f362d1e4",
             "expansionSetCode": "KTK",
             "cardNumber": "266",
             "usesVariousArt": true,
@@ -768,7 +768,7 @@
               "other": []
             }
           },
-          "a24be402-1a99-4594-98fc-d6953ea8d2e0": {
+          "2e0b0b7d-65b7-44a0-800d-7db95e575035": {
             "tapped": true,
             "flipped": false,
             "phasedIn": true,
@@ -872,7 +872,7 @@
               },
               "originalColorIdentity": "{G}",
               "originalIsCopy": false,
-              "id": "a24be402-1a99-4594-98fc-d6953ea8d2e0",
+              "id": "2e0b0b7d-65b7-44a0-800d-7db95e575035",
               "expansionSetCode": "KTK",
               "cardNumber": "266",
               "usesVariousArt": true,
@@ -888,7 +888,7 @@
             },
             "copy": false,
             "nameOwner": "",
-            "nameController": "umustb1vfkj6m",
+            "nameController": "umustbrsk4nt",
             "controlled": true,
             "attachedTo": null,
             "morphed": false,
@@ -899,13 +899,13 @@
             "attachedControllerDiffers": false,
             "mutateView": {
               "name": "Forest",
-              "id": "a24be402-1a99-4594-98fc-d6953ea8d2e0",
+              "id": "2e0b0b7d-65b7-44a0-800d-7db95e575035",
               "cards": {}
             },
             "mutated": false,
             "parentId": null,
-            "controllerId": "ae94b850-5b8a-44a6-b30a-9f45c9f77680",
-            "controllerName": "umustb1vfkj6m",
+            "controllerId": "b98ca8ad-aa47-40af-8b56-7699da0ff8d9",
+            "controllerName": "umustbrsk4nt",
             "name": "Forest",
             "displayName": "Forest",
             "displayFullName": "Forest",
@@ -999,7 +999,7 @@
             },
             "originalColorIdentity": "{G}",
             "originalIsCopy": false,
-            "id": "a24be402-1a99-4594-98fc-d6953ea8d2e0",
+            "id": "2e0b0b7d-65b7-44a0-800d-7db95e575035",
             "expansionSetCode": "KTK",
             "cardNumber": "266",
             "usesVariousArt": true,
@@ -1013,7 +1013,7 @@
               "other": []
             }
           },
-          "d20597df-e7bc-46a5-99b2-61c14de232d4": {
+          "fab1b6da-5f3b-44a0-9e21-373c1cc711db": {
             "tapped": false,
             "flipped": false,
             "phasedIn": true,
@@ -1117,7 +1117,7 @@
               },
               "originalColorIdentity": "{G}",
               "originalIsCopy": false,
-              "id": "d20597df-e7bc-46a5-99b2-61c14de232d4",
+              "id": "fab1b6da-5f3b-44a0-9e21-373c1cc711db",
               "expansionSetCode": "KTK",
               "cardNumber": "266",
               "usesVariousArt": true,
@@ -1133,7 +1133,7 @@
             },
             "copy": false,
             "nameOwner": "",
-            "nameController": "umustb1vfkj6m",
+            "nameController": "umustbrsk4nt",
             "controlled": true,
             "attachedTo": null,
             "morphed": false,
@@ -1144,13 +1144,13 @@
             "attachedControllerDiffers": false,
             "mutateView": {
               "name": "Forest",
-              "id": "d20597df-e7bc-46a5-99b2-61c14de232d4",
+              "id": "fab1b6da-5f3b-44a0-9e21-373c1cc711db",
               "cards": {}
             },
             "mutated": false,
             "parentId": null,
-            "controllerId": "ae94b850-5b8a-44a6-b30a-9f45c9f77680",
-            "controllerName": "umustb1vfkj6m",
+            "controllerId": "b98ca8ad-aa47-40af-8b56-7699da0ff8d9",
+            "controllerName": "umustbrsk4nt",
             "name": "Forest",
             "displayName": "Forest",
             "displayFullName": "Forest",
@@ -1244,7 +1244,7 @@
             },
             "originalColorIdentity": "{G}",
             "originalIsCopy": false,
-            "id": "d20597df-e7bc-46a5-99b2-61c14de232d4",
+            "id": "fab1b6da-5f3b-44a0-9e21-373c1cc711db",
             "expansionSetCode": "KTK",
             "cardNumber": "266",
             "usesVariousArt": true,
@@ -1258,7 +1258,7 @@
               "other": []
             }
           },
-          "4bdf2733-96a8-419b-a2bb-8455cfe89774": {
+          "4d19fe9d-1edc-42ad-aefc-20a71b07414f": {
             "tapped": false,
             "flipped": false,
             "phasedIn": true,
@@ -1365,7 +1365,7 @@
               },
               "originalColorIdentity": "{G}",
               "originalIsCopy": false,
-              "id": "4bdf2733-96a8-419b-a2bb-8455cfe89774",
+              "id": "4d19fe9d-1edc-42ad-aefc-20a71b07414f",
               "expansionSetCode": "CHK",
               "cardNumber": "226",
               "usesVariousArt": false,
@@ -1381,9 +1381,9 @@
             },
             "copy": false,
             "nameOwner": "",
-            "nameController": "umustb1vfkj6m",
+            "nameController": "umustbrsk4nt",
             "controlled": true,
-            "attachedTo": "1cd21e79-c96a-46bd-9041-d647332cb00b",
+            "attachedTo": "b09cd388-903b-40d3-85fb-70fde6ec7db0",
             "morphed": false,
             "disguised": false,
             "manifested": false,
@@ -1392,13 +1392,13 @@
             "attachedControllerDiffers": false,
             "mutateView": {
               "name": "Lure",
-              "id": "4bdf2733-96a8-419b-a2bb-8455cfe89774",
+              "id": "4d19fe9d-1edc-42ad-aefc-20a71b07414f",
               "cards": {}
             },
             "mutated": false,
             "parentId": null,
-            "controllerId": "ae94b850-5b8a-44a6-b30a-9f45c9f77680",
-            "controllerName": "umustb1vfkj6m",
+            "controllerId": "b98ca8ad-aa47-40af-8b56-7699da0ff8d9",
+            "controllerName": "umustbrsk4nt",
             "name": "Lure",
             "displayName": "Lure",
             "displayFullName": "Lure",
@@ -1495,7 +1495,7 @@
             },
             "originalColorIdentity": "{G}",
             "originalIsCopy": false,
-            "id": "4bdf2733-96a8-419b-a2bb-8455cfe89774",
+            "id": "4d19fe9d-1edc-42ad-aefc-20a71b07414f",
             "expansionSetCode": "CHK",
             "cardNumber": "226",
             "usesVariousArt": false,
@@ -1565,7 +1565,7 @@
         "commandList": [],
         "attachments": [],
         "statesSavedSize": -1,
-        "priorityTimeSavedTimeMs": 1791139078757,
+        "priorityTimeSavedTimeMs": 1793456977234,
         "priorityTimeLeftSecs": 0,
         "bufferTimeLeft": 0,
         "passedTurn": false,
@@ -1579,8 +1579,8 @@
         "designationNames": []
       },
       {
-        "playerId": "8dd0bca8-693b-4e12-890a-49bbceb1a3c5",
-        "name": "sim-137404",
+        "playerId": "c357b9c6-c317-4bb6-8c44-5ba74f7c0259",
+        "name": "sim-656527",
         "controlled": false,
         "isHuman": true,
         "life": 20,
@@ -1606,7 +1606,7 @@
         "sideboard": {},
         "helperCards": {},
         "battlefield": {
-          "09f7059a-f3b8-4b24-b63c-92698f1d8fcc": {
+          "132f8602-18db-4093-9a76-18e74c1c2004": {
             "tapped": false,
             "flipped": false,
             "phasedIn": true,
@@ -1616,7 +1616,7 @@
             "original": null,
             "copy": false,
             "nameOwner": "",
-            "nameController": "sim-137404",
+            "nameController": "sim-656527",
             "controlled": false,
             "attachedTo": null,
             "morphed": false,
@@ -1627,20 +1627,20 @@
             "attachedControllerDiffers": false,
             "mutateView": {
               "name": "Grizzly Bears",
-              "id": "09f7059a-f3b8-4b24-b63c-92698f1d8fcc",
+              "id": "132f8602-18db-4093-9a76-18e74c1c2004",
               "cards": {}
             },
             "mutated": false,
             "parentId": null,
-            "controllerId": "8dd0bca8-693b-4e12-890a-49bbceb1a3c5",
-            "controllerName": "sim-137404",
+            "controllerId": "c357b9c6-c317-4bb6-8c44-5ba74f7c0259",
+            "controllerName": "sim-656527",
             "name": "Grizzly Bears",
             "displayName": "Grizzly Bears",
             "displayFullName": "Grizzly Bears",
             "rules": [
               "<br/><hintstart/>",
-              "ICON_REQUIREMust block (Lure [4bd])",
-              "ICON_REQUIREMust block attacker <font color='#90EE90' object_id='1cd21e79-c96a-46bd-9041-d647332cb00b'>Runeclaw Bear</font> [1cd] (Lure [4bd])"
+              "ICON_REQUIREMust block (Lure [4d1])",
+              "ICON_REQUIREMust block attacker <font color='#90EE90' object_id='b09cd388-903b-40d3-85fb-70fde6ec7db0'>Runeclaw Bear</font> [b09] (Lure [4d1])"
             ],
             "power": "2",
             "toughness": "2",
@@ -1719,7 +1719,7 @@
               {
                 "cardIconType": "OTHER_HAS_RESTRICTIONS",
                 "text": "",
-                "hint": "Must block (Lure [4bd])<br>Must block attacker <font color='#90EE90' object_id='1cd21e79-c96a-46bd-9041-d647332cb00b'>Runeclaw Bear</font> [1cd] (Lure [4bd])"
+                "hint": "Must block (Lure [4d1])<br>Must block attacker <font color='#90EE90' object_id='b09cd388-903b-40d3-85fb-70fde6ec7db0'>Runeclaw Bear</font> [b09] (Lure [4d1])"
               }
             ],
             "originalPower": {
@@ -1736,7 +1736,7 @@
             },
             "originalColorIdentity": "{G}",
             "originalIsCopy": false,
-            "id": "09f7059a-f3b8-4b24-b63c-92698f1d8fcc",
+            "id": "132f8602-18db-4093-9a76-18e74c1c2004",
             "expansionSetCode": "J21",
             "cardNumber": "580",
             "usesVariousArt": false,
@@ -1806,7 +1806,7 @@
         "commandList": [],
         "attachments": [],
         "statesSavedSize": -1,
-        "priorityTimeSavedTimeMs": 1791139078757,
+        "priorityTimeSavedTimeMs": 1793456977234,
         "priorityTimeLeftSecs": 0,
         "bufferTimeLeft": 0,
         "passedTurn": false,
@@ -1820,9 +1820,9 @@
         "designationNames": []
       }
     ],
-    "myPlayerId": "ae94b850-5b8a-44a6-b30a-9f45c9f77680",
+    "myPlayerId": "b98ca8ad-aa47-40af-8b56-7699da0ff8d9",
     "myHand": {
-      "a440fdeb-b3ce-4bb3-992d-2b5c70414c24": {
+      "00759b2f-fc74-4835-90eb-8b893e1162a3": {
         "parentId": null,
         "controllerId": null,
         "controllerName": null,
@@ -1919,7 +1919,7 @@
         },
         "originalColorIdentity": "{G}",
         "originalIsCopy": false,
-        "id": "a440fdeb-b3ce-4bb3-992d-2b5c70414c24",
+        "id": "00759b2f-fc74-4835-90eb-8b893e1162a3",
         "expansionSetCode": "IKO",
         "cardNumber": "272",
         "usesVariousArt": true,
@@ -1933,7 +1933,7 @@
           "other": []
         }
       },
-      "e2e674c4-70ff-4eaf-b1ad-810af0957a69": {
+      "717f7491-f02d-4e33-81d1-074f585872ce": {
         "parentId": null,
         "controllerId": null,
         "controllerName": null,
@@ -2030,7 +2030,7 @@
         },
         "originalColorIdentity": "{G}",
         "originalIsCopy": false,
-        "id": "e2e674c4-70ff-4eaf-b1ad-810af0957a69",
+        "id": "717f7491-f02d-4e33-81d1-074f585872ce",
         "expansionSetCode": "IKO",
         "cardNumber": "272",
         "usesVariousArt": true,
@@ -2044,7 +2044,7 @@
           "other": []
         }
       },
-      "4528bf2e-76df-4bc9-a8cb-8a3f988a6f5a": {
+      "261dbf06-50cd-43f2-928f-0ef429d0e0b7": {
         "parentId": null,
         "controllerId": null,
         "controllerName": null,
@@ -2141,7 +2141,7 @@
         },
         "originalColorIdentity": "{G}",
         "originalIsCopy": false,
-        "id": "4528bf2e-76df-4bc9-a8cb-8a3f988a6f5a",
+        "id": "261dbf06-50cd-43f2-928f-0ef429d0e0b7",
         "expansionSetCode": "IKO",
         "cardNumber": "272",
         "usesVariousArt": true,
@@ -2155,7 +2155,7 @@
           "other": []
         }
       },
-      "1c166b10-fb23-40dd-bf0b-8972248217eb": {
+      "88c58440-a1d3-48d7-872c-1d888f3b172b": {
         "parentId": null,
         "controllerId": null,
         "controllerName": null,
@@ -2255,7 +2255,7 @@
         },
         "originalColorIdentity": "{G}",
         "originalIsCopy": false,
-        "id": "1c166b10-fb23-40dd-bf0b-8972248217eb",
+        "id": "88c58440-a1d3-48d7-872c-1d888f3b172b",
         "expansionSetCode": "CHK",
         "cardNumber": "226",
         "usesVariousArt": false,
@@ -2269,7 +2269,7 @@
           "other": []
         }
       },
-      "b7448dca-3dcd-4e27-96bd-2b25e329d624": {
+      "e408e32e-e1dd-47eb-bd24-eea02da330b4": {
         "parentId": null,
         "controllerId": null,
         "controllerName": null,
@@ -2369,7 +2369,7 @@
         },
         "originalColorIdentity": "{G}",
         "originalIsCopy": false,
-        "id": "b7448dca-3dcd-4e27-96bd-2b25e329d624",
+        "id": "e408e32e-e1dd-47eb-bd24-eea02da330b4",
         "expansionSetCode": "CHK",
         "cardNumber": "226",
         "usesVariousArt": false,
@@ -2385,7 +2385,7 @@
       }
     },
     "myHelperEmblems": {
-      "29ed3c9d-848a-4f03-8250-d20011aac482": {
+      "909104dc-eca2-4be5-b977-a808d1dd0ed9": {
         "parentId": null,
         "controllerId": null,
         "controllerName": null,
@@ -2466,7 +2466,7 @@
         "originalToughness": null,
         "originalColorIdentity": null,
         "originalIsCopy": false,
-        "id": "29ed3c9d-848a-4f03-8250-d20011aac482",
+        "id": "909104dc-eca2-4be5-b977-a808d1dd0ed9",
         "expansionSetCode": "XMAGE",
         "cardNumber": "",
         "usesVariousArt": false,
@@ -2480,7 +2480,7 @@
           "other": []
         }
       },
-      "1f2d4838-60e7-4205-b361-97db1c4d68f2": {
+      "ae23908b-2462-4259-b6e7-c0dade587278": {
         "parentId": null,
         "controllerId": null,
         "controllerName": null,
@@ -2563,7 +2563,7 @@
         "originalToughness": null,
         "originalColorIdentity": null,
         "originalIsCopy": false,
-        "id": "1f2d4838-60e7-4205-b361-97db1c4d68f2",
+        "id": "ae23908b-2462-4259-b6e7-c0dade587278",
         "expansionSetCode": "XMAGE",
         "cardNumber": "",
         "usesVariousArt": false,
@@ -2577,7 +2577,7 @@
           "other": []
         }
       },
-      "055f2620-33e7-4611-8ea8-180144f20cfc": {
+      "bae3e5d9-9f52-48fd-aca5-73548a436591": {
         "parentId": null,
         "controllerId": null,
         "controllerName": null,
@@ -2660,7 +2660,7 @@
         "originalToughness": null,
         "originalColorIdentity": null,
         "originalIsCopy": false,
-        "id": "055f2620-33e7-4611-8ea8-180144f20cfc",
+        "id": "bae3e5d9-9f52-48fd-aca5-73548a436591",
         "expansionSetCode": "XMAGE",
         "cardNumber": "",
         "usesVariousArt": false,
@@ -2682,7 +2682,7 @@
     "exiles": [
       {
         "name": "Permanent - Exile",
-        "id": "88d82443-d697-40cd-bb39-c0def153eb26",
+        "id": "1192eb9d-9818-42d8-a060-46305a617708",
         "cards": {}
       }
     ],
@@ -2692,19 +2692,19 @@
     "combat": [
       {
         "attackers": {
-          "1cd21e79-c96a-46bd-9041-d647332cb00b": {
+          "b09cd388-903b-40d3-85fb-70fde6ec7db0": {
             "tapped": true,
             "flipped": false,
             "phasedIn": true,
             "summoningSickness": false,
             "damage": 0,
             "attachments": [
-              "4bdf2733-96a8-419b-a2bb-8455cfe89774"
+              "4d19fe9d-1edc-42ad-aefc-20a71b07414f"
             ],
             "original": null,
             "copy": false,
             "nameOwner": "",
-            "nameController": "umustb1vfkj6m",
+            "nameController": "umustbrsk4nt",
             "controlled": false,
             "attachedTo": null,
             "morphed": false,
@@ -2715,13 +2715,13 @@
             "attachedControllerDiffers": false,
             "mutateView": {
               "name": "Runeclaw Bear",
-              "id": "1cd21e79-c96a-46bd-9041-d647332cb00b",
+              "id": "b09cd388-903b-40d3-85fb-70fde6ec7db0",
               "cards": {}
             },
             "mutated": false,
             "parentId": null,
-            "controllerId": "ae94b850-5b8a-44a6-b30a-9f45c9f77680",
-            "controllerName": "umustb1vfkj6m",
+            "controllerId": "b98ca8ad-aa47-40af-8b56-7699da0ff8d9",
+            "controllerName": "umustbrsk4nt",
             "name": "Runeclaw Bear",
             "displayName": "Runeclaw Bear",
             "displayFullName": "Runeclaw Bear",
@@ -2814,7 +2814,7 @@
             },
             "originalColorIdentity": "{G}",
             "originalIsCopy": false,
-            "id": "1cd21e79-c96a-46bd-9041-d647332cb00b",
+            "id": "b09cd388-903b-40d3-85fb-70fde6ec7db0",
             "expansionSetCode": "J21",
             "cardNumber": "624",
             "usesVariousArt": false,
@@ -2830,7 +2830,7 @@
           }
         },
         "blockers": {
-          "09f7059a-f3b8-4b24-b63c-92698f1d8fcc": {
+          "132f8602-18db-4093-9a76-18e74c1c2004": {
             "tapped": false,
             "flipped": false,
             "phasedIn": true,
@@ -2840,7 +2840,7 @@
             "original": null,
             "copy": false,
             "nameOwner": "",
-            "nameController": "sim-137404",
+            "nameController": "sim-656527",
             "controlled": false,
             "attachedTo": null,
             "morphed": false,
@@ -2851,20 +2851,20 @@
             "attachedControllerDiffers": false,
             "mutateView": {
               "name": "Grizzly Bears",
-              "id": "09f7059a-f3b8-4b24-b63c-92698f1d8fcc",
+              "id": "132f8602-18db-4093-9a76-18e74c1c2004",
               "cards": {}
             },
             "mutated": false,
             "parentId": null,
-            "controllerId": "8dd0bca8-693b-4e12-890a-49bbceb1a3c5",
-            "controllerName": "sim-137404",
+            "controllerId": "c357b9c6-c317-4bb6-8c44-5ba74f7c0259",
+            "controllerName": "sim-656527",
             "name": "Grizzly Bears",
             "displayName": "Grizzly Bears",
             "displayFullName": "Grizzly Bears",
             "rules": [
               "<br/><hintstart/>",
-              "ICON_REQUIREMust block (Lure [4bd])",
-              "ICON_REQUIREMust block attacker <font color='#90EE90' object_id='1cd21e79-c96a-46bd-9041-d647332cb00b'>Runeclaw Bear</font> [1cd] (Lure [4bd])"
+              "ICON_REQUIREMust block (Lure [4d1])",
+              "ICON_REQUIREMust block attacker <font color='#90EE90' object_id='b09cd388-903b-40d3-85fb-70fde6ec7db0'>Runeclaw Bear</font> [b09] (Lure [4d1])"
             ],
             "power": "2",
             "toughness": "2",
@@ -2943,7 +2943,7 @@
               {
                 "cardIconType": "OTHER_HAS_RESTRICTIONS",
                 "text": "",
-                "hint": "Must block (Lure [4bd])<br>Must block attacker <font color='#90EE90' object_id='1cd21e79-c96a-46bd-9041-d647332cb00b'>Runeclaw Bear</font> [1cd] (Lure [4bd])"
+                "hint": "Must block (Lure [4d1])<br>Must block attacker <font color='#90EE90' object_id='b09cd388-903b-40d3-85fb-70fde6ec7db0'>Runeclaw Bear</font> [b09] (Lure [4d1])"
               }
             ],
             "originalPower": {
@@ -2960,7 +2960,7 @@
             },
             "originalColorIdentity": "{G}",
             "originalIsCopy": false,
-            "id": "09f7059a-f3b8-4b24-b63c-92698f1d8fcc",
+            "id": "132f8602-18db-4093-9a76-18e74c1c2004",
             "expansionSetCode": "J21",
             "cardNumber": "580",
             "usesVariousArt": false,
@@ -2976,15 +2976,15 @@
           }
         },
         "isBlocked": true,
-        "defenderName": "sim-137404",
-        "defenderId": "8dd0bca8-693b-4e12-890a-49bbceb1a3c5"
+        "defenderName": "sim-656527",
+        "defenderId": "c357b9c6-c317-4bb6-8c44-5ba74f7c0259"
       }
     ],
     "phase": "COMBAT",
     "step": "DECLARE_BLOCKERS",
-    "activePlayerId": "ae94b850-5b8a-44a6-b30a-9f45c9f77680",
-    "activePlayerName": "umustb1vfkj6m",
-    "priorityPlayerName": "sim-137404",
+    "activePlayerId": "b98ca8ad-aa47-40af-8b56-7699da0ff8d9",
+    "activePlayerName": "umustbrsk4nt",
+    "priorityPlayerName": "sim-656527",
     "turn": 1,
     "special": false,
     "rollbackTurnsAllowed": false,

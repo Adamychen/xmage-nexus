@@ -1,15 +1,15 @@
 {
-  "recordedAt": "2026-10-04T18:33:48.772Z",
-  "tournamentId": "297b013d-de1a-4b6c-a300-0b3d8e0b59c2",
-  "tableId": "679066c4-f513-4986-9f6c-ba56e2f62581",
+  "recordedAt": "2026-10-31T14:25:48.600Z",
+  "tournamentId": "c7fcf506-2a93-4b3a-96af-435b547644c0",
+  "tableId": "d0de7a6c-412d-4a80-9682-1bfb92873108",
   "tournament": {
-    "tournamentName": "rec-tournament-end-61568",
+    "tournamentName": "rec-tournament-end-80889",
     "tournamentType": "Sealed Elimination",
     "tournamentState": "Finished",
-    "startTime": 1791138763604,
-    "endTime": 1791138826143,
-    "stepStartTime": 1791138824133,
-    "serverTime": 1791138828768,
+    "startTime": 1793456683048,
+    "endTime": 1793456745619,
+    "stepStartTime": 1793456743617,
+    "serverTime": 1793456748600,
     "constructionTime": 60,
     "watchingAllowed": true,
     "rounds": [
@@ -17,12 +17,12 @@
         "games": [
           {
             "roundNum": 1,
-            "matchId": "df355dda-6d71-4b81-9cf5-8eb8bb928ce6",
-            "gameId": "34d2e50a-97a8-4582-8e1d-1a44268620f4",
+            "matchId": "29ea5bf1-aa35-457d-b72a-39bdd097a638",
+            "gameId": "9107afe6-2d78-487d-8cc3-6e98f5ea4908",
             "state": "Finished (0:00:01)",
-            "result": "Player nexus-A-61568 is the winner",
-            "players": "nexus-A-61568 - nexus-B-61568",
-            "tableId": "52df73e8-318e-42ee-9110-64ce491f96a9"
+            "result": "Player nexus-A-80889 is the winner",
+            "players": "nexus-B-80889 - nexus-A-80889",
+            "tableId": "f1b2d5fd-5be0-4cc5-b4a5-393c2ea39d07"
           }
         ]
       }
@@ -30,18 +30,18 @@
     "players": [
       {
         "flagName": "world.png",
-        "name": "nexus-A-61568",
+        "name": "nexus-A-80889",
         "state": "Finished (Winner)",
-        "results": "R1 nexus-B-61568 [1-0] ",
+        "results": "R1 nexus-B-80889 [1-0] ",
         "history": "Matches: 0 (0%), Tourneys: 1 (0%), Constructed Rating: 800, Limited Rating: 800",
         "points": 3,
         "quit": true
       },
       {
         "flagName": "world.png",
-        "name": "nexus-B-61568",
+        "name": "nexus-B-80889",
         "state": "Eliminated",
-        "results": "R1 nexus-A-61568 [0-1] ",
+        "results": "R1 nexus-A-80889 [0-1] ",
         "history": "Matches: 0 (0%), Tourneys: 1 (0%), Constructed Rating: 800, Limited Rating: 800",
         "points": 0,
         "quit": true
