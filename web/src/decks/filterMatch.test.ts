@@ -174,6 +174,17 @@ describe('matchesArenaFilters', () => {
     expect(matchesArenaFilters(elf, filters({ colorFilter: new Set(['C']) }))).toBe(false)
   })
 
+  it('DCK-18: a colour chip leaves out colourless cards and lands that do not make that colour', () => {
+    const mountainLand = card({ name: 'Red Utility Land', type_line: 'Land', cmc: 0, color_identity: ['R'] })
+    const plainsLand = card({ name: 'White Utility Land', type_line: 'Land', cmc: 0, color_identity: ['W'] })
+    const utilityLand = card({ name: 'Colourless Utility Land', type_line: 'Land', cmc: 0, color_identity: [] })
+    const red = new Set(['R'])
+    expect(matchesArenaFilters(mountainLand, filters({ colorFilter: red }))).toBe(true)
+    expect(matchesArenaFilters(plainsLand, filters({ colorFilter: red }))).toBe(false)
+    expect(matchesArenaFilters(utilityLand, filters({ colorFilter: red }))).toBe(false)
+    expect(matchesArenaFilters(relic, filters({ colorFilter: red }))).toBe(false)
+  })
+
   it('applies type, cmc (7+), rarity, keyword, stats and set', () => {
     expect(matchesArenaFilters(elf, filters({ typeFilter: 'Creature' }))).toBe(true)
     expect(matchesArenaFilters(elf, filters({ typeFilter: 'Sorcery' }))).toBe(false)

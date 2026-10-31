@@ -29,7 +29,10 @@ export function buildScryfallQuery(opts: ScryfallQueryOpts): string {
   if (opts.formatKey) parts.push(`f:${opts.formatKey}`)
   if (opts.colorFilter.size > 0) {
     if (opts.colorFilter.has('C')) parts.push('c:c')
-    else parts.push(`c<=${[...opts.colorFilter].join('').toLowerCase()}`)
+    else {
+      const colors = [...opts.colorFilter].join('').toLowerCase()
+      parts.push(`(c<=${colors} -c:c OR (t:land id<=${colors} -id:c))`)
+    }
   }
   if (opts.typeFilter) parts.push(`t:${opts.typeFilter.toLowerCase()}`)
   if (opts.cmcFilter !== null) {
