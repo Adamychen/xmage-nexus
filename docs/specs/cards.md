@@ -66,3 +66,13 @@ supertypes, types and subtypes ("Legendary Planeswalker — Jace"), never the en
 - Why: without a translated text the type line showed `CREATURE` with no subtypes, and the set and
   rarity, which the client already receives, were nowhere.
 - Guard: `src/board/cardInspectorModel.test.ts`
+
+### CRD-6 · Cards are shown in the language the card picker shows, never the interface's
+Card names, images and texts follow the card language picker alone. Until the player picks one, the
+picker shows English and cards are English; the interface language never changes the card language, so
+an English card language with a Spanish interface shows English cards.
+
+- Why: the effective card language treated English as "not chosen" and fell back to the interface
+  language, so a Spanish interface showed Spanish card names while the picker said English (report of
+  2026-10-31, after importing a deck).
+- Guard: `src/cards/cardLanguage.test.ts`
