@@ -41,21 +41,21 @@ test("with no parsable tag at all, unparsed tags are compared against the fork",
 });
 
 test("upgrade outputs name the upstream tag to merge when the fork is behind", () => {
-  const latest = evaluateReleases(["1.4.62V1", "1.4.63V1"], ours).latest;
+  const latest = evaluateReleases(["1.4.63V1", "1.4.64V1"], ours).latest;
   assert.deepEqual(upgradeOutputs(ours, latest), {
     outdated: "true",
-    current: "1.4.62-V1",
-    latest: "1.4.63-V1",
-    latest_tag: "xmage_1.4.63V1",
+    current: "1.4.63-V1",
+    latest: "1.4.64-V1",
+    latest_tag: "xmage_1.4.64V1",
   });
 });
 
 test("upgrade outputs are quiet when the fork is on the newest release", () => {
-  const latest = evaluateReleases(["1.4.61V1", "1.4.62V1"], ours).latest;
+  const latest = evaluateReleases(["1.4.62V1", "1.4.63V1"], ours).latest;
   assert.deepEqual(upgradeOutputs(ours, latest), {
     outdated: "false",
-    current: "1.4.62-V1",
-    latest: "1.4.62-V1",
+    current: "1.4.63-V1",
+    latest: "1.4.63-V1",
     latest_tag: "",
   });
 });
