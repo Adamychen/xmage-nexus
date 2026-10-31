@@ -46,7 +46,7 @@ rm -rf /tmp/mage-proxy-xdhs && mkdir -p /tmp/mage-proxy-xdhs
 cp Mage.Proxy/pom.xml /tmp/mage-proxy-xdhs/ && cp -R Mage.Proxy/src /tmp/mage-proxy-xdhs/src
 mvn -q -f /tmp/mage-proxy-xdhs/pom.xml -Dmage.version=1.6.1 clean package -DskipTests
 cp /tmp/mage-proxy-xdhs/target/mage-proxy-1.6.1.jar Mage.Proxy/target/
-# -> Mage.Proxy/target/mage-proxy-1.6.1.jar (coexists with mage-proxy-1.4.62.jar)
+# -> Mage.Proxy/target/mage-proxy-1.6.1.jar (coexists with mage-proxy-1.4.63.jar)
 ```
 
 The proxy needs `org.mage:mage-deck-constructed` (deck validation), which is why

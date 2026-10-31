@@ -84,7 +84,7 @@ test("awaitChildListening times out when the child is alive but never listens", 
 
 test("cmdlineMatches recognises each component by its main class or jar", () => {
   const server = "java --add-opens=java.base/java.io=ALL-UNNAMED -cp /x/classes mage.server.Main -testMode";
-  const proxy = "java --add-opens=java.base/java.io=ALL-UNNAMED -cp /x/Mage.Proxy/target/mage-proxy-1.4.62.jar org.mage.proxy.Main --sim on";
+  const proxy = "java --add-opens=java.base/java.io=ALL-UNNAMED -cp /x/Mage.Proxy/target/mage-proxy-1.4.63.jar org.mage.proxy.Main --sim on";
   const vite = "node /x/web/node_modules/vite/bin/vite.js dev";
   assert.equal(cmdlineMatches("server", server), true);
   assert.equal(cmdlineMatches("proxy", proxy), true);

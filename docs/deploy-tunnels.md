@@ -63,7 +63,7 @@ URL players know; the tunnel hostnames are an implementation detail.
 - A machine that stays on (no sleep), with a modern **JRE 17** (`java -version`)
   and the `cloudflared` binary (in `~/bin` on the production host).
 - A user with **linger** enabled and the three units from Part 3.
-- Two files built from this repo (see Part 1): `mage-proxy-1.4.62.jar` and the
+- Two files built from this repo (see Part 1): `mage-proxy-1.4.63.jar` and the
   `web/dist` folder.
 
 ## Part 1 — Build the artifacts (on your dev machine)
@@ -91,7 +91,7 @@ variants.)
 
 ```bash
 rsync -a web/dist/ HOST:~/Escritorio/xmage-nexus/web/dist/
-scp Mage.Proxy/target/mage-proxy-1.4.62.jar HOST:~/
+scp Mage.Proxy/target/mage-proxy-1.4.63.jar HOST:~/
 ```
 
 Keep `~/xmage-proxy.jar` (and `~/xmage-proxy-xdhs.jar` for the XDHS flavor) as

@@ -6,7 +6,7 @@
     "version": "0.4.3",
     "repo": "Adamychen/xmage-nexus",
     "playUrl": "https://web.xmage-nexus.com",
-    "stack": "XMage Server 1.4.62-V1 · Mage.Proxy (Java 17) · React 19 + Vite + TS"
+    "stack": "XMage Server 1.4.63-V1 · Mage.Proxy (Java 17) · React 19 + Vite + TS"
   },
   "release": {
     "version": "0.7.0",
@@ -44,7 +44,7 @@
           "secondaryCta": "Ver en GitHub",
           "playCta": "Probar ahora",
           "playNote": "Partidas reales · abre el cliente y elige tu servidor · sin instalar nada",
-          "trust": ["React 19 + TypeScript", "XMage 1.4.62-V1", "Proxy multi-tenant", "Web o escritorio"]
+          "trust": ["React 19 + TypeScript", "XMage 1.4.63-V1", "Proxy multi-tenant", "Web o escritorio"]
         },
         "demoTitle": "Así se juega",
         "demoSubtitle": "Sin descargas ni cuentas: abre la web y en segundos estás en una mesa. Clips de partidas reales sobre el motor de XMage.",
@@ -137,7 +137,7 @@
           "secondaryCta": "View on GitHub",
           "playCta": "Play now",
           "playNote": "Real games · opens the client, pick your server · no install",
-          "trust": ["React 19 + TypeScript", "XMage 1.4.62-V1", "Multi-tenant proxy", "Web or desktop"]
+          "trust": ["React 19 + TypeScript", "XMage 1.4.63-V1", "Multi-tenant proxy", "Web or desktop"]
         },
         "demoTitle": "See it in action",
         "demoSubtitle": "No downloads, no account: open the page and you're at a table in seconds. Real gameplay clips on the XMage engine.",

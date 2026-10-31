@@ -7,7 +7,7 @@ import path from "node:path";
 import { XMAGE_RELEASE, readForkSha } from "./gen-manifest.mjs";
 
 test("manifest xmage release is the engine version with its release suffix", () => {
-  assert.equal(XMAGE_RELEASE, "1.4.62-V1");
+  assert.equal(XMAGE_RELEASE, "1.4.63-V1");
 });
 
 function tarballWithVersion(dir, target, version) {

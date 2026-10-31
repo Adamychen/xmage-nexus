@@ -98,7 +98,7 @@ Also new: the coin flip that shows who plays first, an Arena-style stack column 
 ┌──────────────────────────┐   WS JSON    ┌────────────────────┐   XMage protocol    ┌───────────────────┐
 │  XMage Nexus Web Client  │ ──────────▶ │ Proxy Java (Mage   │ ─────────────────── │ Server XMage        │
 │  React 19 + TypeScript   │ ◀────────── │ .Proxy)            │ ◀────────────────── │ (Mage.Server)       │
-│  Vite + CSS3 / SVG       │              │ WebSocket :8787    │                     │ 1.4.62-V1           │
+│  Vite + CSS3 / SVG       │              │ WebSocket :8787    │                     │ 1.4.63-V1           │
 └──────────────────────────┘              └────────────────────┘                     └───────────────────┘
 ```
 
@@ -110,7 +110,7 @@ Also new: the coin flip that shows who plays first, an Arena-style stack column 
 
 | Layer | Technologies |
 |---|---|
-| XMage Server | Java 17, jboss-remoting (1.4.62-V1) |
+| XMage Server | Java 17, jboss-remoting (1.4.63-V1) |
 | WebSocket Proxy | Java 17, Java-WebSocket, Gson (`Mage.Proxy`) |
 | Web Client | React 19, TypeScript, Vite 8, CSS3 / SVG, Web Audio API, Vitest, Playwright |
 
@@ -210,7 +210,7 @@ node scripts/ctl.mjs restart proxy
 node scripts/build.mjs
 ```
 
-> The proxy jar is `Mage.Proxy/target/mage-proxy-1.4.62.jar` (`1.4.62-V1`, `Mage.Proxy/pom.xml:11`). Changing the XMage version requires updating the parent pom + rebuilding everything.
+> The proxy jar is `Mage.Proxy/target/mage-proxy-1.4.63.jar` (`1.4.63-V1`, `Mage.Proxy/pom.xml:11`). Changing the XMage version requires updating the parent pom + rebuilding everything.
 
 ### Ports & URLs
 

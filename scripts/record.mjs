@@ -2540,11 +2540,15 @@ function makeEvokeDriver() {
       }
       if (!this._cheated) {
         this._cheated = true
-        ctx.log('onSelect: cheatSetup (Solitude+Swords en mano, Llanura al campo)')
-        void ctx.cheatSetup({
-          hand: ['Solitude', 'Swords to Plowshares'],
-          battlefield: ['Plains'],
-        })
+        ctx.log('onSelect: cheatSetup (Mystic al campo del SIM; Solitude+Swords en mano, Llanura al campo)')
+        const simId = (ctx.gv?.players ?? []).find((q) => !q?.controlled)?.playerId
+        void (async () => {
+          await ctx.send('cheatSetup', { gameId: ctx.gameId, playerId: simId, zones: { battlefield: ['Elvish Mystic'] } })
+          await ctx.cheatSetup({
+            hand: ['Solitude', 'Swords to Plowshares'],
+            battlefield: ['Plains'],
+          })
+        })()
         return
       }
       if (ctx.cardInHand('Solitude')) {

@@ -13,7 +13,7 @@ The goal of **XMage Nexus** is to deliver a fast, modern, and beautiful web clie
 ```
 ┌─────────────────────────┐          WebSocket JSON          ┌──────────────────────────┐      JBoss / TCP      ┌─────────────────────────┐
 │  XMage Nexus Web Client │ ◄──────────────────────────────► │        Mage.Proxy        │ ◄───────────────────► │      XMage Server       │
-│  (React 19 + Vite)      │   (Type-safe protocol schema)    │  (Java 17 / MageClient)  │   (Native protocol)   │  (1.4.62-V1 / Official) │
+│  (React 19 + Vite)      │   (Type-safe protocol schema)    │  (Java 17 / MageClient)  │   (Native protocol)   │  (1.4.63-V1 / Official) │
 └─────────────────────────┘                                  └──────────────────────────┘                       └─────────────────────────┘
 ```
 

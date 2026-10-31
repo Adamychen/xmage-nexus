@@ -21,7 +21,7 @@ function playsPerPlayer(frame: unknown): number[] {
 describe('commanderPlaysCount', () => {
   it('reads the count the server writes into the commander rules', () => {
     expect(playsPerPlayer(commanderZoneFrame)).toEqual([0, 2])
-    expect(playsPerPlayer(commanderPodFrame)).toEqual([0, 0, 0, 1])
+    expect(playsPerPlayer(commanderPodFrame)).toEqual([0, 0, 1, 0])
   })
 
   it('turns the recorded counts into the commander tax', () => {
@@ -238,7 +238,7 @@ describe('commandersOf', () => {
 describe('commanderDamageDealt', () => {
   it('reads the damage the recorded FFA frame reports', () => {
     const gv = (commanderPodFrame as unknown as { gameView: GameView }).gameView
-    expect(damagePairs(gv)).toEqual(['Krenko, Mob Boss of ucomma1v7uk8l -> sim-137363: 3'])
+    expect(damagePairs(gv)).toEqual(['Krenko, Mob Boss of ucommanjphhk -> sim-656485: 3'])
   })
 
   it('does not invent damage from a counter or an unrelated rule line', () => {

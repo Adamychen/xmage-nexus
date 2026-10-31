@@ -19,7 +19,7 @@ JRE+server+proxy y autoaloja (ver Fase 4 en `ROADMAP.md`).
 ## A) Host con playit.gg
 
 Requisitos: máquina always-on, JRE 17, playit de PAGO para túneles TCP custom (el gratis solo
-UDP + preset Minecraft) y dos artefactos: `mage-proxy-1.4.62.jar` + `web/dist`.
+UDP + preset Minecraft) y dos artefactos: `mage-proxy-1.4.63.jar` + `web/dist`.
 
 ```bash
 # En la máquina de desarrollo:
@@ -33,7 +33,7 @@ ALLOWED_ORIGINS="http://<web-tunnel>" XMAGE_HOST=beta.xmage.today XMAGE_PORT=171
   ./start-proxy.sh                      # Windows: start-proxy.bat
 ```
 
-- `scripts/deploy/start-proxy.sh|.bat`: defaults `JAR=./mage-proxy-1.4.62.jar`,
+- `scripts/deploy/start-proxy.sh|.bat`: defaults `JAR=./mage-proxy-1.4.63.jar`,
   `WEB_DIR=./web-dist`, `WS_PORT=8787`, `HTTP_PORT=8788`, `BIND=127.0.0.1`; añade los 5
   `--add-opens` y avisa si `ALLOWED_ORIGINS` está vacío.
 - `ALLOWED_ORIGINS` debe ser el origen EXACTO (esquema incluido, p.ej. `http://abc.playit.gg:12345`);
@@ -42,7 +42,7 @@ ALLOWED_ORIGINS="http://<web-tunnel>" XMAGE_HOST=beta.xmage.today XMAGE_PORT=171
   launchd); en portátil, deshabilitar suspensión.
 - **Flavors del proxy (beta + XDHS)**: `Mage.Proxy/pom.xml` resuelve las deps `org.mage` con la
   property `mage.version` (default = versión del proyecto) y `finalName mage-proxy-${mage.version}`,
-  así ambos jars conviven en `Mage.Proxy/target/`: `mage-proxy-1.4.62.jar` (beta) y
+  así ambos jars conviven en `Mage.Proxy/target/`: `mage-proxy-1.4.63.jar` (beta) y
   `mage-proxy-1.5.8.jar` (XDHS). `assemble-modules.mjs` escoge cada flavor por versión (no
   alfabético) y emite `proxyXdhs` en `version.json` (jar + puertos 8797/8798) si existe el jar o si
   `XDHS_PROXY=1` (jobs de CI, donde el jar se empaqueta en otro job). El shell Tauri descarga el
@@ -136,7 +136,7 @@ Piezas:
 | Proxy WS / HTTP | 8787 / 8788 (beta) · 8797 / 8798 (XDHS) |
 | Vite dev / e2e fake | 5173 / 5175 |
 | FakeServer WS | 8789 |
-| Versión | XMage 1.4.62-V1 (beta) + 1.5.8-XDHS-r1; jars `mage-proxy-1.4.62.jar` / `mage-proxy-1.5.8.jar` |
+| Versión | XMage 1.4.63-V1 (beta) + 1.5.8-XDHS-r1; jars `mage-proxy-1.4.63.jar` / `mage-proxy-1.5.8.jar` |
 
 ## Trampas
 
