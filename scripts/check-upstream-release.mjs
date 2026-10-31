@@ -3,7 +3,9 @@
 // (and therefore the proxy) is built from. The public server moves to every new
 // release and refuses any other version, so a newer tag means the proxy is about
 // to stop logging anyone in: merge it into the fork and rebuild.
-// Usage: node scripts/check-upstream-release.mjs [fork version, e.g. 1.4.61-V1]
+// Usage: node scripts/check-upstream-release.mjs [fork version, e.g. 1.4.61-V1] [--github-output]
+// With --github-output it does not fail on a newer release: it writes outdated, current, latest and
+// latest_tag for the upstream-upgrade workflow, which prepares the merge instead.
 
 import { execFileSync } from 'node:child_process'
 import fs from 'node:fs'
@@ -14,7 +16,7 @@ const UPSTREAM = 'https://github.com/magefree/mage'
 export function parseRelease(version) {
   const m = /^(\d+)\.(\d+)\.(\d+)-?V(\d+)([a-z]*)$/i.exec(version)
   if (!m) return null
-  return { text: `${m[1]}.${m[2]}.${m[3]}-V${m[4]}${m[5]}`, key: [Number(m[1]), Number(m[2]), Number(m[3]), Number(m[4]), m[5].toLowerCase()] }
+  return { text: `${m[1]}.${m[2]}.${m[3]}-V${m[4]}${m[5]}`, raw: version, key: [Number(m[1]), Number(m[2]), Number(m[3]), Number(m[4]), m[5].toLowerCase()] }
 }
 
 function compare(a, b) {
@@ -68,10 +70,30 @@ function upstreamTags() {
     .filter(Boolean)
 }
 
+export function upgradeOutputs(ours, latest) {
+  const outdated = Boolean(latest && compare(latest, ours) > 0)
+  return {
+    outdated: String(outdated),
+    current: ours.text,
+    latest: latest?.text ?? '',
+    latest_tag: outdated ? `xmage_${latest.raw}` : '',
+  }
+}
+
+function writeGithubOutput(values) {
+  const file = process.env.GITHUB_OUTPUT
+  const lines = Object.entries(values).map(([k, v]) => `${k}=${v}`).join('\n') + '\n'
+  if (file) fs.appendFileSync(file, lines)
+  else process.stdout.write(lines)
+}
+
 function main() {
-  const ours = parseRelease(process.argv[2] ?? forkVersion())
+  const args = process.argv.slice(2)
+  const githubOutput = args.includes('--github-output')
+  const versionArg = args.find((a) => !a.startsWith('--'))
+  const ours = parseRelease(versionArg ?? forkVersion())
   if (!ours) {
-    console.error(`::error::cannot read the fork's XMage version (${process.argv[2] ?? forkVersion()})`)
+    console.error(`::error::cannot read the fork's XMage version (${versionArg ?? forkVersion()})`)
     process.exit(2)
   }
   const tags = upstreamTags()
@@ -80,6 +102,14 @@ function main() {
     process.exit(2)
   }
   const { latest, unparsedNewer } = evaluateReleases(tags, ours)
+  if (githubOutput && !unparsedNewer) {
+    const values = upgradeOutputs(ours, latest)
+    writeGithubOutput(values)
+    console.log(values.outdated === 'true'
+      ? `magefree/mage released ${values.latest}; the fork is on ${values.current}: preparing the upgrade.`
+      : `Fork on ${values.current}; newest upstream release ${values.latest || 'none parsed'}: up to date.`)
+    return
+  }
   if (unparsedNewer) {
     console.error(`::error::magefree/mage tagged xmage_${unparsedNewer}, a release this script cannot parse and that is newer than the newest parsed release (${latest?.text ?? 'none'}). `
       + `The fork and the proxy are on ${ours.text}: check the tag and, if it is a release, merge it into the fork (mage-fork-upgrade skill).`)
