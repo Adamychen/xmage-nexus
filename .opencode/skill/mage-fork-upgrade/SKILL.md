@@ -47,6 +47,23 @@ revierte ese fichero y ya está; nada más del fork depende de él.
   `launcher/src/manifest.rs` (tests), `scripts/gen-manifest.mjs` (`--xmage` default),
   `web/fixtures/server-state-schema.json` (campo `version`) y `staging/version.json` (regenerado).
 
+## Lo que ya hace el workflow
+
+`Upstream XMage upgrade` (`.github/workflows/upstream-upgrade.yml`, cada 6 h o a mano) hace los
+pasos 1 y 3 en cuanto magefree/mage publica: fusiona el tag en `nexus-upgrade/xmage_<release>`
+(sin tocar `nexus`), sube la versión en este repo con `scripts/bump-xmage-version.mjs` en
+`upgrade/xmage_<release>`, abre un PR en borrador con los pasos 4-9 como checklist y lanza
+`Web client CI` sobre esa rama, que compila contra `nexus-upgrade/xmage_<release>`. Si el merge
+tiene conflictos abre un issue con los ficheros: resuélvelos a mano, sube `nexus-upgrade/xmage_<release>`
+y el siguiente run prepara el resto. Al fusionar el PR, `nexus` avanza a esa rama (fast-forward).
+Las releases de XMage suelen tocar sus propios `.github/workflows` (1.4.61, 1.4.62 y 1.4.63 lo
+hicieron) y `GITHUB_TOKEN` no puede subir commits que cambien workflows: con el secreto
+`XMAGE_UPGRADE_TOKEN` (token fine-grained de este repo con Contents, Pull requests, Issues y Workflows
+en escritura) todo va solo y el PR lanza la CI por sí mismo; sin él, la subida de la rama del fork se
+rechaza y el run abre un issue con los tres comandos para subirla a mano. Sin token, abrir el PR
+necesita además *Settings > Actions > General > Allow GitHub Actions to create and approve pull
+requests*; si falta, abre un issue con el enlace para crearlo.
+
 ## Procedimiento
 
 1. Fork: `cd ../xmage-fork && git fetch upstream --tags && git checkout nexus`, y merge/rebase del

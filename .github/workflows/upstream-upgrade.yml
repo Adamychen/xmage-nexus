@@ -1,0 +1,223 @@
+name: Upstream XMage upgrade
+
+# Prepares the move to a new magefree/mage release so the maintainer only reviews and publishes it
+# (the mage-fork-upgrade skill, steps 1-3). When the fork is behind:
+#   1. merges the release tag into a new fork branch, nexus-upgrade/xmage_<release>;
+#      a conflict, or a push GitHub refuses, opens an issue with what to do by hand;
+#   2. moves every reference to the release in this repo (scripts/bump-xmage-version.mjs) on
+#      upgrade/xmage_<release> and opens a draft PR with what is left to do by hand;
+#   3. runs Web client CI on that branch, which builds against nexus-upgrade/xmage_<release>.
+# Merging the PR fast-forwards nexus to the fork branch. Nothing is released from here.
+#
+# XMage releases usually change their own .github/workflows files, and GITHUB_TOKEN may not push
+# commits that touch workflow files. The XMAGE_UPGRADE_TOKEN secret (a fine-grained token on this
+# repo with Contents, Pull requests, Issues and Workflows read/write) lets the whole flow run on its
+# own; without it, the fork branch push of such a release is refused and the issue gives the three
+# commands to push it by hand, after which the next run carries on.
+
+on:
+  schedule:
+    - cron: "47 */6 * * *"
+  workflow_dispatch: {}
+  pull_request:
+    types: [closed]
+    branches: [master]
+
+concurrency:
+  group: upstream-upgrade
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+      actions: write
+    env:
+      GH_TOKEN: ${{ secrets.XMAGE_UPGRADE_TOKEN || github.token }}
+      HAS_UPGRADE_TOKEN: ${{ secrets.XMAGE_UPGRADE_TOKEN != '' }}
+      NEXUS_FORK_DIR: ${{ github.workspace }}/xmage-fork
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          token: ${{ secrets.XMAGE_UPGRADE_TOKEN || github.token }}
+      - uses: actions/checkout@v6
+        with:
+          ref: nexus
+          path: xmage-fork
+          fetch-depth: 0
+          token: ${{ secrets.XMAGE_UPGRADE_TOKEN || github.token }}
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 26
+
+      - name: Compare the fork with the newest magefree/mage release
+        id: release
+        run: node scripts/check-upstream-release.mjs --github-output
+
+      - name: Skip a release that is already prepared
+        id: existing
+        if: steps.release.outputs.outdated == 'true'
+        env:
+          TAG: ${{ steps.release.outputs.latest_tag }}
+        run: |
+          if git ls-remote --exit-code --heads origin "upgrade/$TAG" > /dev/null; then
+            echo "prepared=true" >> "$GITHUB_OUTPUT"
+            echo "upgrade/$TAG already exists: nothing to prepare."
+          else
+            echo "prepared=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Merge the release into a fork branch
+        id: merge
+        if: steps.release.outputs.outdated == 'true' && steps.existing.outputs.prepared == 'false'
+        working-directory: xmage-fork
+        env:
+          TAG: ${{ steps.release.outputs.latest_tag }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git ls-remote --exit-code --heads origin "nexus-upgrade/$TAG" > /dev/null; then
+            echo "nexus-upgrade/$TAG already exists (pushed by hand): using it."
+            echo "result=ready" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          git fetch --no-tags https://github.com/magefree/mage "refs/tags/$TAG:refs/tags/$TAG"
+          git checkout -b "nexus-upgrade/$TAG"
+          if ! git merge --no-edit "$TAG"; then
+            {
+              echo "result=conflict"
+              echo "conflicts<<CONFLICTS_EOF"
+              git diff --name-only --diff-filter=U
+              echo "CONFLICTS_EOF"
+            } >> "$GITHUB_OUTPUT"
+            git merge --abort
+            exit 0
+          fi
+          if git push origin "nexus-upgrade/$TAG"; then
+            echo "result=ready" >> "$GITHUB_OUTPUT"
+          else
+            echo "result=refused" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Report a merge that needs a hand
+        if: steps.merge.outputs.result == 'conflict' || steps.merge.outputs.result == 'refused'
+        env:
+          TAG: ${{ steps.release.outputs.latest_tag }}
+          CURRENT: ${{ steps.release.outputs.current }}
+          LATEST: ${{ steps.release.outputs.latest }}
+          RESULT: ${{ steps.merge.outputs.result }}
+          CONFLICTS: ${{ steps.merge.outputs.conflicts }}
+        run: |
+          if [ "$RESULT" = "conflict" ]; then
+            title="Merging $TAG into the fork has conflicts"
+          else
+            title="Push the clean merge of $TAG into the fork"
+          fi
+          if [ -z "$(gh issue list --state open --search "\"$title\" in:title" --json number --jq '.[0].number')" ]; then
+            {
+              echo "magefree/mage released $LATEST; the fork is on $CURRENT."
+              echo
+              if [ "$RESULT" = "conflict" ]; then
+                echo "Merging \`$TAG\` into \`nexus\` stops on these files:"
+                echo
+                echo "$CONFLICTS" | sed 's/^/- `/; s/$/`/'
+                echo
+                echo "Check them against the patch inventory of the mage-fork-upgrade skill (\`.opencode/skill/mage-fork-upgrade/SKILL.md\`), then:"
+              else
+                echo "The merge is clean, but GitHub refused the push: the release changes \`.github/workflows\` files and this run had no token allowed to push them (add the \`XMAGE_UPGRADE_TOKEN\` secret to make this automatic). Push it from a fork checkout:"
+              fi
+              echo
+              echo '```bash'
+              echo "git fetch origin nexus && git fetch https://github.com/magefree/mage tag $TAG"
+              echo "git checkout -b nexus-upgrade/$TAG origin/nexus && git merge --no-edit $TAG"
+              echo "git push origin nexus-upgrade/$TAG"
+              echo '```'
+              echo
+              echo "The next run of the Upstream XMage upgrade workflow (or a manual run) then prepares the rest."
+            } > issue.md
+            gh issue create --title "$title" --body-file issue.md
+          fi
+          echo "::error::$title"
+          exit 1
+
+      - name: Move the product to the new release
+        if: steps.merge.outputs.result == 'ready'
+        env:
+          TAG: ${{ steps.release.outputs.latest_tag }}
+          CURRENT: ${{ steps.release.outputs.current }}
+          LATEST: ${{ steps.release.outputs.latest }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "upgrade/$TAG"
+          node scripts/bump-xmage-version.mjs "$CURRENT" "$LATEST"
+          git commit -am "chore(xmage): move the product to $LATEST (upstream $TAG)"
+          git push origin "upgrade/$TAG"
+
+      - name: Open the draft PR and run the CI on it
+        if: steps.merge.outputs.result == 'ready'
+        env:
+          TAG: ${{ steps.release.outputs.latest_tag }}
+          CURRENT: ${{ steps.release.outputs.current }}
+          LATEST: ${{ steps.release.outputs.latest }}
+        run: |
+          cat > pr.md <<EOF
+          magefree/mage released $LATEST. This draft was prepared by the Upstream XMage upgrade workflow.
+
+          Done:
+          - \`$TAG\` merged into the fork with no conflicts: \`nexus-upgrade/$TAG\` (\`nexus\` is untouched until this PR is merged).
+          - Every reference to $CURRENT in this repo moved to $LATEST (\`scripts/bump-xmage-version.mjs\`).
+          - Web client CI runs on this branch and builds the proxy against \`nexus-upgrade/$TAG\`.
+
+          Left to do before merging (mage-fork-upgrade skill, steps 4-9):
+          - [ ] Rebuild and restart the local stack against the new fork (\`mvn clean install\` first: incremental builds keep stale classes).
+          - [ ] Re-validate the contract: \`view-schema\`, \`engine-view-schema\`, \`server-state-schema\`, then \`gen-types\`, \`gen-zod\`, \`gen-server-state\`.
+          - [ ] Re-record the golden frames and replay them.
+          - [ ] \`verify\`, \`self-test\`, \`human-test\` on the new stack.
+          - [ ] ROADMAP and release notes.
+
+          Merging this PR fast-forwards \`nexus\` to \`nexus-upgrade/$TAG\`. Publishing stays manual (Release workflow).
+          EOF
+          if ! gh pr create --draft --base master --head "upgrade/$TAG" --title "chore(xmage): upgrade to $LATEST" --body-file pr.md; then
+            {
+              echo "The upgrade to $LATEST is prepared on \`upgrade/$TAG\` and \`nexus-upgrade/$TAG\`, but this workflow could not open the PR"
+              echo "(add the \`XMAGE_UPGRADE_TOKEN\` secret, or enable Settings > Actions > General > Allow GitHub Actions to create and approve pull requests)."
+              echo
+              echo "Open it from https://github.com/$GITHUB_REPOSITORY/compare/master...upgrade/$TAG with this description:"
+              echo
+              cat pr.md
+            } > issue.md
+            gh issue create --title "Upgrade to $LATEST is ready for review" --body-file issue.md
+          fi
+          if [ "$HAS_UPGRADE_TOKEN" != "true" ]; then
+            gh workflow run web-ci.yml --ref "upgrade/$TAG"
+          fi
+
+  promote:
+    if: >-
+      github.event_name == 'pull_request'
+      && github.event.pull_request.merged
+      && github.event.pull_request.head.repo.full_name == github.repository
+      && startsWith(github.event.pull_request.head.ref, 'upgrade/xmage_')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ secrets.XMAGE_UPGRADE_TOKEN || github.token }}
+      BRANCH: ${{ github.event.pull_request.head.ref }}
+    steps:
+      - name: Fast-forward nexus to the merged fork branch
+        run: |
+          fork_branch="nexus-upgrade/${BRANCH#upgrade/}"
+          sha=$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/$fork_branch" --jq .object.sha)
+          if ! gh api -X PATCH "repos/$GITHUB_REPOSITORY/git/refs/heads/nexus" -f sha="$sha" -F force=false > /dev/null; then
+            echo "::error::could not fast-forward nexus to $fork_branch ($sha). From a fork checkout: git fetch origin $fork_branch && git push origin origin/$fork_branch:nexus"
+            exit 1
+          fi
+          gh api -X DELETE "repos/$GITHUB_REPOSITORY/git/refs/heads/$fork_branch"
+          echo "nexus is now $sha ($fork_branch)."

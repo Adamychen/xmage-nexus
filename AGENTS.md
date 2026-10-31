@@ -55,7 +55,17 @@ triage. See `web/INTERACTION_COVERAGE.md`.
   the proxy won't connect: the fork must be updated (fetch upstream + merge, in
   `../xmage-fork`) and everything rebuilt. The `Upstream XMage release` workflow
   (`scripts/check-upstream-release.mjs`, every 6 h) fails as soon as magefree/mage tags a newer
-  release than the fork's `MageVersion`; that failure email is the signal to do it.
+  release than the fork's `MageVersion`; that failure email is the signal to do it. The
+  `Upstream XMage upgrade` workflow (`.github/workflows/upstream-upgrade.yml`, every 6 h and on
+  demand) prepares the routine part: it merges the release tag into `nexus-upgrade/xmage_<release>`
+  (a conflict opens an issue listing the files), moves every reference to the release on
+  `upgrade/xmage_<release>` with `scripts/bump-xmage-version.mjs`, opens a draft PR with the manual
+  steps left and runs `Web client CI` on it, which builds an `upgrade/xmage_*` branch against its
+  `nexus-upgrade/xmage_*` fork branch. Merging that PR fast-forwards `nexus`; releasing stays manual.
+  XMage releases usually touch their own `.github/workflows`, which `GITHUB_TOKEN` may not push: the
+  `XMAGE_UPGRADE_TOKEN` secret (fine-grained, this repo: Contents, Pull requests, Issues, Workflows)
+  makes it fully automatic; without it the run opens an issue with the three commands to push the
+  merge by hand, and the next run carries on.
 - Smoke test against the public server: works via the proxy (WS probe: login, SIM table, WATCHGAME/GAME_INIT/updates).
   **Anonymous login to `beta.xmage.today` is stable** (measured 2026-09-20: 17/17 logins, ~1.6 s each).
   The former "intermittent beta handshake bug" was a **misdiagnosis**: the server rejects any username
