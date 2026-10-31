@@ -5,6 +5,7 @@
   padding: var(--sp-2) var(--sp-3);
   background: rgb(var(--ink-2-rgb) / 0.85);
   border-bottom: 1px solid var(--veil-2);
+  container-type: inline-size;
 }
 
 .filter-bar-top {
@@ -50,7 +51,6 @@
 .arena-search-clear { position: absolute; right: 6px; }
 
 .arena-search-help-wrap {
-  position: relative;
   margin-left: var(--sp-1h);
 }
 
@@ -61,7 +61,7 @@
   top: 100%;
   left: 0;
   margin-top: var(--sp-1h);
-  width: 320px;
+  width: min(320px, 100cqi);
   background: var(--ink-3);
   border: 1px solid var(--veil-4);
   border-radius: var(--r-md);
