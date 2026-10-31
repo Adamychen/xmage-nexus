@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { evaluateReleases, parseRelease } from "./check-upstream-release.mjs";
+import { evaluateReleases, parseRelease, upgradeOutputs } from "./check-upstream-release.mjs";
 
 const ours = parseRelease("1.4.62V1");
 
@@ -38,4 +38,24 @@ test("the highest unparsed prefix is the one named", () => {
 test("with no parsable tag at all, unparsed tags are compared against the fork", () => {
   assert.equal(evaluateReleases(["1_4_9v2"], ours).latest, null);
   assert.equal(evaluateReleases(["2_0_0"], ours).unparsedNewer, "2_0_0");
+});
+
+test("upgrade outputs name the upstream tag to merge when the fork is behind", () => {
+  const latest = evaluateReleases(["1.4.62V1", "1.4.63V1"], ours).latest;
+  assert.deepEqual(upgradeOutputs(ours, latest), {
+    outdated: "true",
+    current: "1.4.62-V1",
+    latest: "1.4.63-V1",
+    latest_tag: "xmage_1.4.63V1",
+  });
+});
+
+test("upgrade outputs are quiet when the fork is on the newest release", () => {
+  const latest = evaluateReleases(["1.4.61V1", "1.4.62V1"], ours).latest;
+  assert.deepEqual(upgradeOutputs(ours, latest), {
+    outdated: "false",
+    current: "1.4.62-V1",
+    latest: "1.4.62-V1",
+    latest_tag: "",
+  });
 });

@@ -28,9 +28,17 @@ jobs:
       NEXUS_FORK_DIR: ${{ github.workspace }}/xmage-fork
     steps:
       - uses: actions/checkout@v6
+      - name: Pick the fork branch (an upgrade/xmage_* branch builds against its nexus-upgrade/xmage_* fork branch)
+        id: fork-ref
+        run: |
+          branch="${GITHUB_HEAD_REF:-$GITHUB_REF_NAME}"
+          case "$branch" in
+            upgrade/xmage_*) echo "ref=nexus-upgrade/${branch#upgrade/}" >> "$GITHUB_OUTPUT" ;;
+            *) echo "ref=nexus" >> "$GITHUB_OUTPUT" ;;
+          esac
       - uses: actions/checkout@v6
         with:
-          ref: nexus
+          ref: ${{ steps.fork-ref.outputs.ref }}
           path: xmage-fork
           fetch-depth: 1
       - uses: actions/setup-node@v5
@@ -120,9 +128,17 @@ jobs:
       NEXUS_FORK_DIR: ${{ github.workspace }}/xmage-fork
     steps:
       - uses: actions/checkout@v6
+      - name: Pick the fork branch (an upgrade/xmage_* branch builds against its nexus-upgrade/xmage_* fork branch)
+        id: fork-ref
+        run: |
+          branch="${GITHUB_HEAD_REF:-$GITHUB_REF_NAME}"
+          case "$branch" in
+            upgrade/xmage_*) echo "ref=nexus-upgrade/${branch#upgrade/}" >> "$GITHUB_OUTPUT" ;;
+            *) echo "ref=nexus" >> "$GITHUB_OUTPUT" ;;
+          esac
       - uses: actions/checkout@v6
         with:
-          ref: nexus
+          ref: ${{ steps.fork-ref.outputs.ref }}
           path: xmage-fork
           fetch-depth: 1
       - uses: actions/setup-java@v5
@@ -253,9 +269,17 @@ jobs:
       NEXUS_PROXY_WARMUP_MS: '1200000'
     steps:
       - uses: actions/checkout@v6
+      - name: Pick the fork branch (an upgrade/xmage_* branch builds against its nexus-upgrade/xmage_* fork branch)
+        id: fork-ref
+        run: |
+          branch="${GITHUB_HEAD_REF:-$GITHUB_REF_NAME}"
+          case "$branch" in
+            upgrade/xmage_*) echo "ref=nexus-upgrade/${branch#upgrade/}" >> "$GITHUB_OUTPUT" ;;
+            *) echo "ref=nexus" >> "$GITHUB_OUTPUT" ;;
+          esac
       - uses: actions/checkout@v6
         with:
-          ref: nexus
+          ref: ${{ steps.fork-ref.outputs.ref }}
           path: xmage-fork
           fetch-depth: 1
         id: fork
