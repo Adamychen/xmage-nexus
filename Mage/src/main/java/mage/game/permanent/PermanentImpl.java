@@ -95,6 +95,7 @@ public abstract class PermanentImpl extends CardImpl implements Permanent {
     protected boolean indirectPhase = false;
     protected boolean faceDown;
     protected MageObjectReference attacking; // refers to defenderId if attacking, null if not attacking
+    protected Set<UUID> entersAttackingDefenders; // enters the battlefield attacking one of them (508.4), null if not
     protected int blocking;
     protected final Set<MageObjectReference> blockingSet = new HashSet<>(); // refers to blocked creatures
     // number of creatures the permanent can block
@@ -165,6 +166,7 @@ public abstract class PermanentImpl extends CardImpl implements Permanent {
         this.indirectPhase = permanent.indirectPhase;
         this.faceDown = permanent.faceDown;
         this.attacking = permanent.attacking;
+        this.entersAttackingDefenders = permanent.entersAttackingDefenders == null ? null : new LinkedHashSet<>(permanent.entersAttackingDefenders);
         this.blocking = permanent.blocking;
         this.blockingSet.addAll(permanent.blockingSet);
         this.maxBlocks = permanent.maxBlocks;
@@ -869,6 +871,8 @@ public abstract class PermanentImpl extends CardImpl implements Permanent {
     @Override
     public boolean phaseOut(Game game, boolean indirectPhase) {
         if (phasedIn && !replaceEvent(EventType.PHASE_OUT, game)) {
+            // a phased-out permanent is treated as though it doesn't exist, so keep its last known information
+            game.rememberLKI(Zone.BATTLEFIELD, this);
             for (UUID attachedId : this.getAttachments()) {
                 Permanent attachedPerm = game.getPermanent(attachedId);
                 if (attachedPerm != null) {
@@ -1170,7 +1174,10 @@ public abstract class PermanentImpl extends CardImpl implements Permanent {
             return 0;
         }
         int lethal = getLethalDamage(attackerId, game);
-        MageObject attacker = game.getObject(attackerId);
+        MageObject attacker = game.getPermanentOrLKIBattlefield(attackerId);
+        if (attacker == null) {
+            attacker = game.getObject(attackerId);
+        }
         if (this.isCreature(game)) {
             if (checkWither(event, attacker, game)) {
                 if (markDamage) {
@@ -1739,6 +1746,21 @@ public abstract class PermanentImpl extends CardImpl implements Permanent {
     @Override
     public void setAttacking(MageObjectReference defender) {
         this.attacking = defender;
+    }
+
+    @Override
+    public void setEntersAttacking(Set<UUID> possibleDefenders) {
+        this.entersAttackingDefenders = possibleDefenders == null ? null : new LinkedHashSet<>(possibleDefenders);
+    }
+
+    @Override
+    public boolean isEntersAttacking() {
+        return this.entersAttackingDefenders != null;
+    }
+
+    @Override
+    public Set<UUID> getEntersAttackingDefenders() {
+        return this.entersAttackingDefenders;
     }
 
     @Override

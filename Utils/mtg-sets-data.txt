@@ -10,6 +10,7 @@ Alchemy: Secrets of Strixhaven|YSOS|
 Alchemy: Wilds of Eldraine|YWOE|
 Alliances|ALL|
 Amonkhet|AKH|
+Amonkhet Invocations|MP2|
 Anthologies|ATH|
 Antiquities|ATQ|
 Apocalypse|APC|
@@ -61,6 +62,7 @@ Core Set 2020|M20|
 Core Set 2021|M21|
 Crimson Vow Commander|VOC|
 Dark Ascension|DKA|
+Darkhold Destiny Commander|MDC|
 Darksteel|DST|
 Deckmasters|DKM|
 Dissension|DIS|
@@ -162,6 +164,7 @@ Jumpstart: Historic Horizons|J21|
 Jumpstart|JMP|
 Jurassic World Collection|REX|
 Kaladesh|KLD|
+Kaladesh Inventions|MPS|
 Kaldheim Commander|KHC|
 Kaldheim|KHM|
 Kamigawa: Neon Dynasty|NEO|
@@ -185,12 +188,11 @@ Magic Player Rewards|MPRP|
 March of the Machine Commander|MOC|
 March of the Machine: The Aftermath|MAT|
 March of the Machine|MOM|
+Marvel: Darkhold Destiny|MDD|
 Marvel Super Heroes Commander|MSC|
 Marvel Super Heroes|MSH|
 Marvel's Spider-Man Eternal|SPE|
 Marvel's Spider-Man|SPM|
-Masterpiece Series Amonkhet||
-Masterpiece Series|MPS|
 Masters 25|A25|
 Masters Edition III|ME3|
 Masters Edition II|ME2|

@@ -774,8 +774,20 @@ public abstract class GameImpl implements Game {
         Permanent permanent = state.getPermanent(permanentId);
         if (permanent == null) {
             permanent = (Permanent) this.getLastKnownInformation(permanentId, Zone.BATTLEFIELD);
+        } else if (!permanent.isPhasedIn()) {
+            permanent = getPhasedOutLKI(permanent);
         }
         return permanent;
+    }
+
+    /**
+     * 702.26b A phased-out permanent is treated as though it does not exist, so effects that look for it
+     * must use its last known information, as for a permanent that is no longer on the battlefield.
+     * The information is kept on phase out until the stack is empty (see resetLKI).
+     */
+    private Permanent getPhasedOutLKI(Permanent phasedOutPermanent) {
+        MageObject object = this.getLastKnownInformation(phasedOutPermanent.getId(), Zone.BATTLEFIELD);
+        return object instanceof Permanent ? (Permanent) object : phasedOutPermanent;
     }
 
     @Override
@@ -784,6 +796,8 @@ public abstract class GameImpl implements Game {
         Permanent permanent = state.getPermanent(id);
         if (permanent == null || state.getZoneChangeCounter(id) != permanentRef.getZoneChangeCounter()) {
             permanent = (Permanent) this.getLastKnownInformation(id, Zone.BATTLEFIELD, permanentRef.getZoneChangeCounter());
+        } else if (!permanent.isPhasedIn()) {
+            permanent = getPhasedOutLKI(permanent);
         }
         return permanent;
     }
@@ -1009,6 +1023,15 @@ public abstract class GameImpl implements Game {
      */
     @Override
     public GameState restoreState(int bookmark, String context) {
+        return restoreState(bookmark, context, false);
+    }
+
+    @Override
+    public GameState restoreStateKeepingStack(int bookmark, String context) {
+        return restoreState(bookmark, context, true);
+    }
+
+    private GameState restoreState(int bookmark, String context, boolean keepStack) {
         if (!simulation && !this.hasEnded()) { // if player left or game is over no undo is possible - this could lead to wrong winner
             if (bookmark != 0) {
                 if (!savedStates.contains(bookmark - 1)) {
@@ -1021,7 +1044,7 @@ public abstract class GameImpl implements Game {
                     removeBookmark(bookmark);
                     GameState restore = gameStates.rollback(stateNum);
                     if (restore != null) {
-                        state.restore(restore);
+                        state.restore(restore, keepStack);
                         playerList.setCurrent(state.getPlayerByOrderId());
                         return state;
                     }
