@@ -317,3 +317,29 @@ describe('DecksGallery empty state (gallery polish)', () => {
     expect(storeState.decks.find((d) => d.id === openedId)?.source).toBe('custom')
   })
 })
+
+describe('DecksGallery · a new deck is a draft until it gets a card', () => {
+  it('DCK-17: Create deck stores the new deck as a draft and opens it', async () => {
+    const onEdit = vi.fn()
+    render(<DecksGallery onEdit={onEdit} />)
+    await waitFor(() => expect(document.querySelector('.deck-box-create')).not.toBeNull())
+    fireEvent.click(document.querySelector('.deck-box-create')!)
+    await waitFor(() => expect(onEdit).toHaveBeenCalledOnce())
+    expect(storeState.decks).toHaveLength(1)
+    expect(storeState.decks[0]).toMatchObject({ id: onEdit.mock.calls[0][0], draft: true, cards: [], sideboard: [] })
+  })
+
+  it('DCK-17: opening the gallery drops an empty draft left behind and keeps every other deck', async () => {
+    storeState.decks = [
+      customDeck({ id: 'left-empty', name: 'Mazo 1', cards: [], draft: true }),
+      customDeck({ id: 'draft-with-cards', name: 'Mazo 2', draft: true }),
+      customDeck({ id: 'kept-empty', name: 'Vacío a propósito', cards: [] }),
+      customDeck({ id: 'burn', name: 'Mi Burn' }),
+    ]
+    render(<DecksGallery onEdit={() => {}} />)
+    await waitFor(() => expect(storeState.decks.map((d) => d.id)).not.toContain('left-empty'))
+    expect(storeState.decks.map((d) => d.id).sort()).toEqual(['burn', 'draft-with-cards', 'kept-empty'])
+    await waitFor(() => expect(document.querySelector('.decks-grid')?.textContent).toContain('Mi Burn'))
+    expect(document.querySelector('.decks-grid')?.textContent).not.toContain('Mazo 1')
+  })
+})

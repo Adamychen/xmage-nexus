@@ -10,7 +10,7 @@ import { DeckBox, DeckBoxCreate } from './DeckBox'
 import { fetchCardJson } from '../cards/scryfallCards'
 import { getDeckStorage } from './storage'
 import type { DeckV2 } from './types'
-import { MAX_DECKS, deckMainCount, makeDeckId } from './types'
+import { MAX_DECKS, deckMainCount, isEmptyDraft, makeDeckId } from './types'
 import { ALL_FORMATS } from './formatRules'
 import { exportDck, exportArena, exportTxt, exportDek } from './parseDck'
 import { bundledDecks, type DeckCard } from '../lobby/decks'
@@ -123,7 +123,13 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
       return custom.length > 0 ? custom[0].id : null
     })
   }
-  useEffect(() => { void load() }, [])
+  useEffect(() => {
+    void (async () => {
+      const drafts = (await storage.list()).filter(isEmptyDraft)
+      await Promise.all(drafts.map((d) => storage.del(d.id)))
+      await load()
+    })()
+  }, [])
 
   const selected = useMemo(() => decks.find((d) => d.id === selectedId) ?? null, [decks, selectedId])
 
@@ -222,6 +228,7 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
       createdAt: now,
       updatedAt: now,
       source: 'custom',
+      draft: true,
     }
     await storage.put(empty)
     await load()

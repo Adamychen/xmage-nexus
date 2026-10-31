@@ -6,7 +6,7 @@ import Icon from '../ui/Icon'
 import Tabs from '../ui/Tabs'
 import { getDeckStorage } from './storage'
 import type { DeckV2 } from './types'
-import { deckMainCount, deckSideCount } from './types'
+import { deckMainCount, deckSideCount, isEmptyDraft, settleDraft } from './types'
 import type { ScryfallSearchCard } from './scryfallSearch'
 import { scryfallCardImage, scryfallCardBackImage } from './scryfallSearch'
 import SearchPanel from './SearchPanel'
@@ -283,7 +283,7 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
   const persist = async (next: DeckV2) => {
     setSaveState('saving')
     try {
-      await storage.put({ ...next, updatedAt: Date.now() })
+      await storage.put(settleDraft({ ...next, updatedAt: Date.now() }))
     } catch {
       setSaveState('error')
       return
@@ -294,7 +294,8 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
   }
 
   const schedulePersist = (next: DeckV2) => {
-    const pruned = next.stackPiles ? { ...next, stackPiles: pruneStackPiles(next.stackPiles, next.cards) } : next
+    const settled = settleDraft(next)
+    const pruned = settled.stackPiles ? { ...settled, stackPiles: pruneStackPiles(settled.stackPiles, settled.cards) } : settled
     setDeck(pruned)
     if (debounceRef.current) window.clearTimeout(debounceRef.current)
     debounceRef.current = window.setTimeout(() => {
@@ -305,6 +306,12 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
   const schedulePersistStable = useEventCallback(schedulePersist)
 
   const handleClose = () => {
+    if (deck && isEmptyDraft(deck)) {
+      if (debounceRef.current) window.clearTimeout(debounceRef.current)
+      debounceRef.current = null
+      void storage.del(deck.id).catch(() => undefined).then(onClose)
+      return
+    }
     if (debounceRef.current) {
       window.clearTimeout(debounceRef.current)
       debounceRef.current = null
