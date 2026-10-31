@@ -41,6 +41,7 @@
     "gen-showcase-art:validate": "node ../scripts/gen-showcase-art.mjs --validate"
   },
   "dependencies": {
+    "country-flag-emoji-polyfill": "^0.1.10",
     "idb-keyval": "^6.3.0",
     "lucide-react": "^1.41.0",
     "react": "^19.2.8",

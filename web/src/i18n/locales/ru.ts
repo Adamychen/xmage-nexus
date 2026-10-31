@@ -39,6 +39,7 @@ export const ru: TranslationSchema = {
     connecting_server: 'Подключение к серверу XMage…',
     attribution_scryfall: 'Изображения карт предоставлены Scryfall · Не связано с Wizards of the Coast',
     attribution_engine: 'Движок правил XMage',
+    attribution_flags: 'Флаги: Twemoji (CC BY 4.0)',
     reload: 'Перезагрузить',
     crash_title: 'Что-то пошло не так',
     crash_desc: 'Произошла непредвиденная ошибка. Пожалуйста, перезагрузите приложение.',
