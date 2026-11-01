@@ -10,6 +10,8 @@ export default function Attribution() {
       {parts[1] ?? ' · Not affiliated with Wizards of the Coast'}
       {' · '}
       <a href="https://github.com/magefree/mage" target="_blank" rel="noopener noreferrer">{t('common', 'attribution_engine')}</a>
+      {' · '}
+      <a href="https://github.com/twitter/twemoji" target="_blank" rel="noopener noreferrer">{t('common', 'attribution_flags')}</a>
     </>
   )
 }

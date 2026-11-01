@@ -262,3 +262,15 @@ even if it is emptied later, and an empty deck that was not just created is neve
 - Why: opening "Create deck" only to check whether a card is implemented left an empty "Deck N" in My
   decks every time (report of 2026-10-31).
 - Guard: `src/decks/DecksGallery.test.tsx` · `src/decks/DeckBuilder.test.tsx` · `e2e/decks-gallery.spec.ts`
+
+### DCK-18 · A colour chip shows cards of that colour and the lands that make it
+In the editor's search, picking one or more colour chips (white, blue, black, red, green) shows cards
+whose colours are all among the picked ones, and lands whose colour identity is among them and not
+empty, that is, lands that make one of the picked colours. Colourless cards and lands that make none of
+those colours are left out; the colourless chip shows them on its own. Suggestions filter the same way
+by colour identity.
+
+- Why: picking only red listed colourless lands that make no red (Abandoned Air Temple, Academy Ruins)
+  and colourless artifacts first, because a colourless card's colours are always "within" any pick
+  (report of 2026-10-31). MTG Arena's colour filter keeps colourless cards behind their own chip too.
+- Guard: `src/decks/filterQuery.test.ts` · `src/decks/filterMatch.test.ts`

@@ -39,6 +39,7 @@ export const zhs: TranslationSchema = {
     connecting_server: '正在连接至 XMage 服务器…',
     attribution_scryfall: '卡图由 Scryfall 提供 · 与威世智无关',
     attribution_engine: '规则引擎由 XMage 提供',
+    attribution_flags: '旗帜：Twemoji (CC BY 4.0)',
     reload: '重新加载',
     crash_title: '出现错误',
     crash_desc: '发生了意外错误。请重新加载应用。',
