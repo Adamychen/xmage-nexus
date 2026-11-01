@@ -26,6 +26,15 @@ export default function PublicRankingScreen() {
     <div className="login-wrap public-ranking-wrap">
       <div className="login-card panel public-ranking" data-testid="public-ranking">
         <header className="public-ranking-header">
+          <Button
+            variant="subtle"
+            size="sm"
+            icon="chevronLeft"
+            className="public-ranking-back"
+            onClick={() => { window.location.hash = '#/' }}
+          >
+            {'Back to login'}
+          </Button>
           <h1>{'Public ranking'}</h1>
           <p className="subtitle">{'Players and recent matches, updated every few minutes.'}</p>
         </header>
@@ -40,10 +49,6 @@ export default function PublicRankingScreen() {
         />
 
         {tab === 'ranking' ? <RankingPanel /> : <MatchesPanel />}
-
-        <Button variant="ghost" onClick={() => { window.location.hash = '#/' }}>
-          {'Back to login'}
-        </Button>
       </div>
     </div>
   )

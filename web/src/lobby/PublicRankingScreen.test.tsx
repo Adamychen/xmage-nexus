@@ -88,6 +88,22 @@ describe('PublicRankingScreen', () => {
     expect(screen.getByText('alice won')).toBeTruthy()
     expect(String(fetchMock.mock.calls[1][0])).toBe('/api/matches?limit=50')
   })
+
+  it('LBY-27: the only way back to login is the first control of the header', async () => {
+    fetchMock.mockResolvedValue(jsonResponse(200, RANKING))
+    window.location.hash = '#/ranking'
+
+    render(<PublicRankingScreen />)
+    await screen.findByText('alice')
+
+    const backs = screen.getAllByRole('button', { name: 'Back to login' })
+    expect(backs).toHaveLength(1)
+    const header = screen.getByRole('heading', { name: 'Public ranking' }).closest('header')
+    expect(header?.firstElementChild).toBe(backs[0])
+
+    fireEvent.click(backs[0])
+    expect(window.location.hash).toBe('#/')
+  })
 })
 
 describe('isPublicRankingHash', () => {

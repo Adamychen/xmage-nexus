@@ -15,6 +15,10 @@
   padding: var(--sp-4);
 }
 
+.public-ranking-back {
+  margin-bottom: var(--sp-2);
+}
+
 .public-ranking-header h1 {
   margin: 0;
   font-size: var(--fs-2xl);
