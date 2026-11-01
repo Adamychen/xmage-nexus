@@ -16,6 +16,12 @@ proxy over a JSON WebSocket and contains **no XMage/Java code**.
 - `npm install` (once)
 - `npm run dev` — Vite dev server (port 5173)
 - `npm run test` / `test:coverage` — vitest (pure logic)
+- The engine guards (`engineViewCoverage.test.ts`, `hintCoverage.test.ts`) read the XMage
+  fork, not this repo. Their baselines were generated from the `nexus-1.4.63` checkout, so
+  point them at it: `export NEXUS_FORK_DIR=<path to a checkout of nexus-1.4.63>` (e.g.
+  `git -C ../xmage-fork worktree add ../xmage-fork-1.4.63 nexus-1.4.63`). Without it,
+  `../xmage-fork` is used, and any other branch there fails these four tests for reasons
+  unrelated to the change.
 - `npm run typecheck` — `tsc -b --noEmit`
 - `npm run lint` — oxlint (`.oxlintrc.json`): fails on the rules of hooks, the correctness set and `any` in shipped code; missing effect dependencies are warnings ratcheted per file by `src/lintRatchet.test.ts` (lower the baseline with `UPDATE_LINT_BASELINE=1 npx vitest run src/lintRatchet.test.ts`)
 - `npm run build` — `tsc -b && vite build`
