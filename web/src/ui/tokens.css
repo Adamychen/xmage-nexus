@@ -155,7 +155,7 @@
      face than the one this machine happens to resolve. `system-ui` on Linux
      resolves to a face ~7 % wider than macOS's, and a layout that only fits
      the narrow one is a layout bug, not a test bug. */
-  --font-ui: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --font-ui: 'Twemoji Country Flags', 'Segoe UI', system-ui, -apple-system, sans-serif;
 
   --fs-3xs: 0.625rem;
   --fs-2xs: 0.688rem;

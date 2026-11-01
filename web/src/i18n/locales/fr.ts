@@ -39,6 +39,7 @@ export const fr: TranslationSchema = {
     connecting_server: 'Connexion au serveur XMage…',
     attribution_scryfall: 'Images de cartes avec l’aimable autorisation de Scryfall · Non affilié à Wizards of the Coast',
     attribution_engine: 'Moteur de règles par XMage',
+    attribution_flags: 'Drapeaux : Twemoji (CC BY 4.0)',
     reload: 'Recharger',
     crash_title: 'Une erreur est survenue',
     crash_desc: 'Une erreur inattendue s’est produite. Veuillez recharger l’application.',

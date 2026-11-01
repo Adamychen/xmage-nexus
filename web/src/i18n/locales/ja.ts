@@ -39,6 +39,7 @@ export const ja: TranslationSchema = {
     connecting_server: 'XMageサーバーに接続中…',
     attribution_scryfall: 'カード画像はScryfall提供 · Wizards of the Coastとは無関係です',
     attribution_engine: 'ルールエンジン: XMage',
+    attribution_flags: '国旗: Twemoji (CC BY 4.0)',
     reload: '再読み込み',
     crash_title: '問題が発生しました',
     crash_desc: '予期せぬエラーが発生しました。アプリを再読み込みしてください。',

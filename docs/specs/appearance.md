@@ -50,3 +50,15 @@ token change that drops below the minimum fails the unit run.
   were reviewed; requiring 3:1 on every divider would change the look of the whole app for a need that
   WCAG does not place on decorative lines. The light appearance did not exist at review time.
 - Guard: `src/appearance/appearanceContrast.test.ts`
+
+### APR-4 · Flag emoji show as flags on every system
+The language pickers, the login country picker and the players' flags in the lobby show a flag, never two
+letters, on every operating system. When the browser cannot draw flag emoji (Windows has no glyphs for
+them, so 🇪🇸 shows as "ES"), the app loads a font that only holds the flags, served by the app itself so
+the desktop app and offline play get it too; `--font-ui` and `--font-display` list it first, and its
+unicode-range leaves every other character on the usual fonts. The flags come from Twemoji under CC BY 4.0,
+credited next to Scryfall and XMage.
+
+- Why: on Chrome and Edge for Windows every flag in the app read as two capital letters (report of
+  2026-10-31).
+- Guard: `src/system/flagEmoji.test.ts`

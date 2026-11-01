@@ -37,6 +37,7 @@ export const en = {
     connecting_server: 'Connecting to XMage server…',
     attribution_scryfall: 'Card images courtesy of Scryfall · Not affiliated with Wizards of the Coast',
     attribution_engine: 'Rules engine by XMage',
+    attribution_flags: 'Flags: Twemoji (CC BY 4.0)',
     reload: 'Reload',
     crash_title: 'Something went wrong',
     crash_desc: 'An unexpected error occurred. Please reload the application.',

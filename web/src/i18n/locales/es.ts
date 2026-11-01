@@ -39,6 +39,7 @@ export const es: TranslationSchema = {
     connecting_server: 'Conectando al servidor XMage…',
     attribution_scryfall: 'Imágenes de cartas cortesía de Scryfall · No afiliado a Wizards of the Coast',
     attribution_engine: 'Motor de reglas por XMage',
+    attribution_flags: 'Banderas: Twemoji (CC BY 4.0)',
     reload: 'Recargar',
     crash_title: 'Algo salió mal',
     crash_desc: 'Ocurrió un error inesperado. Por favor recarga la aplicación.',
