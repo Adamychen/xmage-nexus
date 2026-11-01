@@ -14,9 +14,6 @@
   "src/board/useCombatHeld.ts": {
     "react-hooks(exhaustive-deps)": 1
   },
-  "src/decks/DeckBox.tsx": {
-    "react-hooks(exhaustive-deps)": 1
-  },
   "src/decks/DeckBuilder.tsx": {
     "react-hooks(exhaustive-deps)": 4
   },

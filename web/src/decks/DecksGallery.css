@@ -293,6 +293,15 @@
   white-space: nowrap;
 }
 .decks-footer-meta { font-size: var(--fs-xs); color: var(--fg-3); }
+.decks-footer-issue {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  font-size: var(--fs-xs);
+  color: var(--err);
+  overflow: hidden;
+}
 .decks-footer-actions { display: flex; align-items: center; justify-content: flex-end; gap: var(--sp-2); flex-wrap: wrap; }
 
 .decks-footer-btn.fav-active { color: var(--gold-300); border-color: rgb(var(--warn-rgb) / 0.5); background: rgb(var(--warn-rgb) / 0.12); }

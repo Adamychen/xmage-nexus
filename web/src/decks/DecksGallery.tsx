@@ -7,6 +7,7 @@ import IconButton from '../ui/IconButton'
 import ChipButton from '../ui/ChipButton'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { DeckBox, DeckBoxCreate } from './DeckBox'
+import { useDeckLegality } from './deckLegality'
 import { fetchCardJson } from '../cards/scryfallCards'
 import { getDeckStorage } from './storage'
 import type { DeckV2 } from './types'
@@ -526,6 +527,7 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
                 <>
                   <span className="decks-footer-name" title={selected.name}>{selected.name}</span>
                   <span className="decks-footer-meta">{deckMainCount(selected)} {t('decks', 'total_cards')} · {selected.format}</span>
+                  <SelectedDeckIssue deck={selected} />
                 </>
               )}
             </div>
@@ -591,5 +593,15 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
         />
       )}
     </div>
+  )
+}
+
+function SelectedDeckIssue({ deck }: { deck: DeckV2 }) {
+  const { isValid, reasons } = useDeckLegality(deck)
+  if (isValid || reasons.length === 0) return null
+  return (
+    <span className="decks-footer-issue" data-testid="decks-footer-issue" title={reasons.join('\n')}>
+      <Icon name="alert" size={12} /> {reasons[0]}{reasons.length > 1 ? ` (+${reasons.length - 1})` : ''}
+    </span>
   )
 }
