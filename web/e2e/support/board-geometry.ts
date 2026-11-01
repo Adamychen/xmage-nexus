@@ -19,8 +19,8 @@ export const CARD_STYLES: CardStyle[] = ['classic', 'compact']
 
 export const BOARD_SELECTOR = '[data-testid$="-board"]'
 export const MAX_BOARD_CHANGES = 0
-const CALM_FRAMES = 30
-const SETTLE_CAP_MS = 2000
+export const CALM_MS = 500
+export const SETTLE_CAP_MS = 15_000
 const WINDOW_MS = 500
 const FLOOR_W = 46
 const FLOOR_W_COMPACT_POD = 38
@@ -110,7 +110,7 @@ export interface Settle {
 export async function settleAndCount(page: Page): Promise<Settle> {
   await page.waitForFunction(() => [...document.images].every((img) => img.complete), undefined, { timeout: 20_000 })
   const settled = await page.evaluate(
-    (opts: { selector: string; calmFrames: number; capMs: number; windowMs: number }) =>
+    (opts: { selector: string; calmMs: number; capMs: number; windowMs: number }) =>
       new Promise<Settle>((resolve) => {
         const board = document.querySelector(opts.selector)
         if (!board) {
@@ -161,16 +161,16 @@ export async function settleAndCount(page: Page): Promise<Settle> {
           attributeFilter: ['style', ...SIZING_ATTRS],
         })
         const started = performance.now()
-        let calm = 0
+        let lastChange = started
         let last = 0
         const frame = () => {
-          if (total === last) calm++
-          else {
-            calm = 0
+          const now = performance.now()
+          if (total !== last) {
             last = total
+            lastChange = now
           }
-          if (calm >= opts.calmFrames || performance.now() - started > opts.capMs) {
-            const settled = calm >= opts.calmFrames
+          if (now - lastChange >= opts.calmMs || now - started > opts.capMs) {
+            const settled = now - lastChange >= opts.calmMs
             const base = total
             setTimeout(() => {
               mo.disconnect()
@@ -180,7 +180,7 @@ export async function settleAndCount(page: Page): Promise<Settle> {
         }
         requestAnimationFrame(frame)
       }),
-    { selector: BOARD_SELECTOR, calmFrames: CALM_FRAMES, capMs: SETTLE_CAP_MS, windowMs: WINDOW_MS },
+    { selector: BOARD_SELECTOR, calmMs: CALM_MS, capMs: SETTLE_CAP_MS, windowMs: WINDOW_MS },
   )
   return settled
 }

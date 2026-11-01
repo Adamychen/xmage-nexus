@@ -1,14 +1,12 @@
 import { test, expect } from './fixtures'
 import { fakeOnly } from './support/fake-mode'
 import { dismissSetupWizard } from './support/start-game'
-import { DENSE, LAYOUT_SETTINGS, boardGame, diffRecords, drawBoard, flattenBoard, inspectBoard, type CardStyle } from './support/board-geometry'
+import { CALM_MS, DENSE, LAYOUT_SETTINGS, SETTLE_CAP_MS, boardGame, diffRecords, drawBoard, flattenBoard, inspectBoard, type CardStyle } from './support/board-geometry'
 
 fakeOnly()
 
 test.use({ launchOptions: { ignoreDefaultArgs: ['--hide-scrollbars'] } })
 
-const SETTLE_CAP_MS = 8000
-const CALM_FRAMES = 30
 const WINDOW_MS = 1000
 const RESIZE_PATH = [1600, 1000, 1600]
 
@@ -55,20 +53,21 @@ async function waitSettled(page: import('@playwright/test').Page): Promise<numbe
       new Promise<number>((resolve) => {
         const state = (window as unknown as { __sizing: { writes: number } }).__sizing
         const started = performance.now()
-        let quiet = 0
+        let lastChange = started
         let last = state.writes
         const frame = () => {
-          if (state.writes === last) quiet++
-          else {
-            quiet = 0
+          const now = performance.now()
+          if (state.writes !== last) {
             last = state.writes
+            lastChange = now
           }
-          if (quiet >= calm || performance.now() - started > cap) resolve(quiet >= calm ? 0 : 1)
+          const quiet = now - lastChange >= calm
+          if (quiet || now - started > cap) resolve(quiet ? 0 : 1)
           else requestAnimationFrame(frame)
         }
         requestAnimationFrame(frame)
       }),
-    { calm: CALM_FRAMES, cap: SETTLE_CAP_MS },
+    { calm: CALM_MS, cap: SETTLE_CAP_MS },
   )
 }
 
