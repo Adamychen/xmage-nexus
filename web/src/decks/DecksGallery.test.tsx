@@ -343,3 +343,32 @@ describe('DecksGallery · a new deck is a draft until it gets a card', () => {
     expect(document.querySelector('.decks-grid')?.textContent).not.toContain('Mazo 1')
   })
 })
+
+describe('DecksGallery · why a deck is not legal', () => {
+  it('DCK-19: selecting a deck that is not legal shows why under its name', async () => {
+    storeState.decks = [customDeck({ id: 'short', name: 'Corto', format: 'Commander' })]
+    render(<DecksGallery onEdit={() => {}} />)
+    const box = await waitFor(() => {
+      const el = document.querySelector('.deck-box[aria-label="Corto"]')
+      expect(el).not.toBeNull()
+      return el as HTMLElement
+    })
+    fireEvent.click(box)
+    const issue = await screen.findByTestId('decks-footer-issue')
+    expect(issue.textContent).toContain('4/100')
+    expect(issue.getAttribute('title')).toContain(t('decks', 'commander_hint'))
+  })
+
+  it('DCK-19: a legal deck shows no reason', async () => {
+    storeState.decks = [customDeck({ id: 'burn', name: 'Mi Burn' })]
+    render(<DecksGallery onEdit={() => {}} />)
+    const box = await waitFor(() => {
+      const el = document.querySelector('.deck-box[aria-label="Mi Burn"]')
+      expect(el).not.toBeNull()
+      return el as HTMLElement
+    })
+    fireEvent.click(box)
+    await waitFor(() => expect(document.querySelector('.decks-footer-name')?.textContent).toBe('Mi Burn'))
+    expect(screen.queryByTestId('decks-footer-issue')).toBeNull()
+  })
+})

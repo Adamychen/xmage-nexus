@@ -23,7 +23,7 @@ export interface ServerIssueItem {
  * so the detail survives, dropping a group that repeats the validator name,
  * the card name, or the message itself (GameException errors send both).
  */
-function xmageErrorText(e: XmageFormatError, validator: string): string {
+export function xmageErrorText(e: XmageFormatError, validator: string): string {
   const group = e.group?.trim()
   const message = e.message?.trim()
   if (!message) return group || e.type
