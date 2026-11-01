@@ -29,13 +29,14 @@ const mocks = vi.hoisted(() => {
     partnerCard: null,
     updatedAt: 0,
   }
-  return { deck, put: vi.fn(async (_d: unknown) => {}) }
+  return { deck, put: vi.fn(async (_d: unknown) => {}), del: vi.fn(async (_id: string) => {}) }
 })
 
 vi.mock('./storage', () => ({
   getDeckStorage: () => ({
     get: async (id: string) => (fallbackMocks.missing.includes(id) ? null : { ...(fallbackMocks.deck ?? mocks.deck) }),
     put: mocks.put,
+    del: mocks.del,
     list: async () => fallbackMocks.available,
   }),
 }))
@@ -139,6 +140,51 @@ describe('DeckBuilder · saving on close (UX audit)', () => {
     await waitFor(() => expect(mocks.put).toHaveBeenCalledOnce())
     expect(mocks.put.mock.calls[0][0]).toMatchObject({ name: 'Otro Nombre' })
     expect(onClose).toHaveBeenCalledOnce()
+  })
+})
+
+describe('DeckBuilder · a new deck left empty is not kept', () => {
+  afterEach(() => {
+    cleanup()
+    mocks.put.mockClear()
+    mocks.del.mockClear()
+    fallbackMocks.deck = null
+  })
+
+  it('DCK-17: leaving a new deck with no card deletes it instead of saving it, even after a rename', async () => {
+    fallbackMocks.deck = { ...mocks.deck, id: 'fresh', draft: true }
+    const onClose = vi.fn()
+    render(<DeckBuilder deckId="fresh" onClose={onClose} />)
+    const input = await screen.findByDisplayValue('Mazo Original')
+    fireEvent.change(input, { target: { value: 'Solo miraba una carta' } })
+    fireEvent.click(document.querySelector('.builder-back')!)
+    await waitFor(() => expect(onClose).toHaveBeenCalledOnce())
+    expect(mocks.del).toHaveBeenCalledWith('fresh')
+    expect(mocks.put).not.toHaveBeenCalled()
+  })
+
+  it('DCK-17: a new deck that has a card is saved as a normal deck', async () => {
+    fallbackMocks.deck = { ...mocks.deck, id: 'fresh', draft: true, cards: [{ cardName: 'Lightning Bolt', setCode: 'M10', cardNumber: '146', amount: 1 }] }
+    const onClose = vi.fn()
+    render(<DeckBuilder deckId="fresh" onClose={onClose} />)
+    const input = await screen.findByDisplayValue('Mazo Original')
+    fireEvent.change(input, { target: { value: 'Burn' } })
+    fireEvent.click(document.querySelector('[data-testid="builder-done"]')!)
+    await waitFor(() => expect(mocks.put).toHaveBeenCalled())
+    const saved = mocks.put.mock.calls.at(-1)![0] as Record<string, unknown>
+    expect(saved).toMatchObject({ id: 'fresh', name: 'Burn' })
+    expect(saved.draft).toBeUndefined()
+    expect(mocks.del).not.toHaveBeenCalled()
+  })
+
+  it('DCK-17: an empty deck that was not created in this visit is saved as before', async () => {
+    const onClose = vi.fn()
+    render(<DeckBuilder deckId="d1" onClose={onClose} />)
+    const input = await screen.findByDisplayValue('Mazo Original')
+    fireEvent.change(input, { target: { value: 'Vacío a propósito' } })
+    fireEvent.click(document.querySelector('.builder-back')!)
+    await waitFor(() => expect(mocks.put).toHaveBeenCalledOnce())
+    expect(mocks.del).not.toHaveBeenCalled()
   })
 })
 

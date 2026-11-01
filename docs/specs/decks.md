@@ -252,6 +252,17 @@ stays one row.
   first version left out (2026-10-28).
 - Guard: `src/state/persistence.test.ts` · `src/decks/stackColumns.test.ts` · `src/decks/DeckEditorToolbar.test.tsx` · `src/decks/DeckBuilder.test.tsx`
 
+### DCK-17 · A new deck left without cards is not kept
+"Create deck" opens the editor on a new deck that stays a draft until it gets its first card, in the main
+deck, the sideboard or as commander. Leaving the editor while it still has none deletes it instead of
+saving it, whatever its name or format; a draft left behind by closing or reloading the page is deleted
+the next time My decks opens. Once it has had a card it is a normal deck and is kept,
+even if it is emptied later, and an empty deck that was not just created is never removed.
+
+- Why: opening "Create deck" only to check whether a card is implemented left an empty "Deck N" in My
+  decks every time (report of 2026-10-31).
+- Guard: `src/decks/DecksGallery.test.tsx` · `src/decks/DeckBuilder.test.tsx` · `e2e/decks-gallery.spec.ts`
+
 ### DCK-18 · A colour chip shows cards of that colour and the lands that make it
 In the editor's search, picking one or more colour chips (white, blue, black, red, green) shows cards
 whose colours are all among the picked ones, and lands whose colour identity is among them and not

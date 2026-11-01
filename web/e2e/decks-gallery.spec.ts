@@ -97,6 +97,29 @@ test.describe('Decks Gallery', () => {
       await expect(page.locator('.decks-gallery')).toBeVisible({ timeout: 8000 })
     })
   })
+  test('DCK-17: a new deck left without cards is not kept @decks', async ({ page }) => {
+    await withFakeServer(decksGalleryScenario, async () => {
+      await page.goto(`/?proxyPort=${proxyPort()}`)
+      await dismissSetupWizard(page)
+      await page.getByPlaceholder(/Usuario|Username/i).fill(`draft_${String(Date.now()).slice(-8)}`)
+      await page.getByPlaceholder(/Contraseña|Password/i).fill('pass')
+      await page.getByRole('button', { name: /Conectar/i }).click()
+      await expect(page.getByRole('button', { name: /Mesas/ })).toBeVisible({ timeout: 15000 })
+      await page.getByRole('button', { name: /Mis Mazos|Mazos/i }).click()
+      const boxes = page.locator('.deck-box:not(.deck-box-create)')
+      await expect(page.locator('.deck-box-create')).toBeVisible({ timeout: 8000 })
+      await expect(boxes.first()).toBeVisible()
+      const before = await boxes.count()
+
+      await page.locator('.deck-box-create').click()
+      await expect(page.locator('.deck-editor-name')).toBeVisible({ timeout: 8000 })
+      await page.locator('.builder-back').click()
+      await expect(page.locator('.decks-gallery')).toBeVisible({ timeout: 8000 })
+      await expect(page.locator('.deck-box-create')).toBeVisible()
+      await expect(boxes).toHaveCount(before)
+    })
+  })
+
   test('precon: Abrir clona el mazo y abre el editor (regresión "Cargando...") @decks', async ({ page }) => {
     await withFakeServer(decksGalleryScenario, async () => {
       await page.goto(`/?proxyPort=${proxyPort()}`)

@@ -13,6 +13,21 @@ export interface DeckV2 extends Deck {
   createdAt: number
   updatedAt: number
   source: 'custom' | 'imported' | 'precon'
+  draft?: true
+}
+
+export function deckHasCards(d: DeckV2): boolean {
+  return d.cards.length > 0 || d.sideboard.length > 0 || !!d.commanderCard || !!d.partnerCard
+}
+
+export function isEmptyDraft(d: DeckV2): boolean {
+  return d.draft === true && !deckHasCards(d)
+}
+
+export function settleDraft(d: DeckV2): DeckV2 {
+  if (!d.draft || !deckHasCards(d)) return d
+  const { draft: _draft, ...kept } = d
+  return kept
 }
 
 export function deckTotalCards(d: Deck): number {
