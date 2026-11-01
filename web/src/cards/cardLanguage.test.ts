@@ -7,9 +7,23 @@ async function freshModules() {
   return { ...i18n, getEffectiveCardLang: localization.getEffectiveCardLang }
 }
 
+// Node 25+ ships its own `localStorage` global, unusable without --localstorage-file, which
+// shadows jsdom's in CI; an in-memory one keeps the stored picks readable on every Node.
+function memoryStorage(): Storage {
+  const data = new Map<string, string>()
+  return {
+    get length() { return data.size },
+    clear: () => data.clear(),
+    getItem: (k) => data.get(k) ?? null,
+    key: (i) => [...data.keys()][i] ?? null,
+    removeItem: (k) => { data.delete(k) },
+    setItem: (k, v) => { data.set(k, String(v)) },
+  }
+}
+
 describe('card language', () => {
-  beforeEach(() => localStorage.clear())
-  afterEach(() => localStorage.clear())
+  beforeEach(() => vi.stubGlobal('localStorage', memoryStorage()))
+  afterEach(() => vi.unstubAllGlobals())
 
   it('CRD-6: English picked as card language stays English with a Spanish interface', async () => {
     localStorage.setItem('nexus_lang', 'es')
