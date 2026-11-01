@@ -20,6 +20,7 @@ export const ja: TranslationSchema = {
     clear: 'クリア',
     copy: 'コピー',
     copied: 'コピー完了！',
+    download: 'ダウンロード',
     done: '完了',
     language: 'インターフェース言語',
     card_language: 'カード言語',

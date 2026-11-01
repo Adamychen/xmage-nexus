@@ -20,6 +20,7 @@ export const pt: TranslationSchema = {
     clear: 'Limpar',
     copy: 'Copiar',
     copied: 'Copiado!',
+    download: 'Baixar',
     done: 'Concluído',
     language: 'Idioma da Interface',
     card_language: 'Idioma dos Cards',

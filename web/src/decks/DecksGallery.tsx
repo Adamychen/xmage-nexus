@@ -12,12 +12,13 @@ import { getDeckStorage } from './storage'
 import type { DeckV2 } from './types'
 import { MAX_DECKS, deckMainCount, isEmptyDraft, makeDeckId } from './types'
 import { ALL_FORMATS } from './formatRules'
-import { exportDck, exportArena, exportTxt, exportDek } from './parseDck'
 import { bundledDecks, type DeckCard } from '../lobby/decks'
 import Icon from '../ui/Icon'
 import { DeckBrowser } from './DeckBrowser'
 import { cloneDeckForEdit } from './cloneDeck'
 import { DeckInspectorModal } from './DeckInspectorModal'
+import { DeckExportDialog } from './DeckExportDialog'
+import type { DeckExportKind } from './exportDeckFile'
 import { ImportDeckDialog } from './ImportDeckDialog'
 import type { MetaDeckItem } from './metaDeckCatalog'
 import { ManaPip } from './ArenaManaSymbols'
@@ -299,13 +300,7 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
     await cloneDeck(selected)
   }
 
-  const handleExport = async (fmt: 'dck' | 'arena' | 'plain' | 'dek') => {
-    if (!selected) return
-    const text = fmt === 'dck' ? exportDck(selected) : fmt === 'arena' ? exportArena(selected) : fmt === 'dek' ? exportDek(selected) : exportTxt(selected)
-    try { await navigator.clipboard.writeText(text) } catch {}
-    const ext = fmt === 'dck' ? 'dck' : fmt === 'arena' ? 'txt' : fmt === 'dek' ? 'dek' : 'plain.txt'
-    downloadBlob(new Blob([text], { type: 'text/plain;charset=utf-8' }), `${selected.name.replace(/[^a-z0-9\-_ ]/gi, '_')}.${ext}`)
-  }
+  const [exportKind, setExportKind] = useState<DeckExportKind | null>(null)
 
   const handleFavorite = async () => {
     if (!selected || selected.source === 'precon') return
@@ -541,10 +536,10 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
               <Button variant="subtle" size="sm" className={`decks-footer-btn ${selected?.favorite ? 'fav-active' : ''}`} disabled={!selected || selected?.source === 'precon'} aria-pressed={!!selected?.favorite} onClick={handleFavorite}><span aria-hidden="true">★</span> {t('decks', 'favorite')}</Button>
               <Button variant="subtle" size="sm" className="decks-footer-btn" icon="copy" disabled={!selected} onClick={handleClone}>{t('common', 'copy')}</Button>
               <DropdownMenu label={t('decks', 'export_deck')} icon="download" direction="up" align="end" disabled={!selected} className="decks-footer-btn" data-testid="decks-export-menu">
-                <MenuItem role="menuitem" icon="save" onClick={() => handleExport('dck')}>.dck</MenuItem>
-                <MenuItem role="menuitem" icon="clipboard" onClick={() => handleExport('arena')}>Arena</MenuItem>
-                <MenuItem role="menuitem" icon="file" onClick={() => handleExport('plain')}>Plain</MenuItem>
-                <MenuItem role="menuitem" icon="file" onClick={() => handleExport('dek')}>.dek</MenuItem>
+                <MenuItem role="menuitem" icon="save" onClick={() => setExportKind('dck')}>.dck</MenuItem>
+                <MenuItem role="menuitem" icon="clipboard" onClick={() => setExportKind('arena')}>Arena</MenuItem>
+                <MenuItem role="menuitem" icon="file" onClick={() => setExportKind('txt')}>Plain</MenuItem>
+                <MenuItem role="menuitem" icon="file" onClick={() => setExportKind('dek')}>.dek</MenuItem>
               </DropdownMenu>
               <Button variant="soft-danger" size="sm" className="decks-footer-btn" icon="trash" disabled={!selected || selected?.source === 'precon'} title={selected?.source === 'precon' ? t('decks', 'browser_filter_precon') : undefined} onClick={handleDelete}>{t('common', 'delete')}</Button>
               <Button variant="primary" className="decks-edit-btn" icon="pencil" disabled={!selected} onClick={() => selected && void openForEdit(selected)}>{t('decks', 'editor_open')}</Button>
@@ -589,6 +584,10 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
           onCopy={handleClone}
           onSelectCover={inspectingDeck.source === 'precon' ? undefined : handleSelectCover}
         />
+      )}
+
+      {selected && exportKind && (
+        <DeckExportDialog deck={selected} kind={exportKind} onClose={() => setExportKind(null)} />
       )}
     </div>
   )

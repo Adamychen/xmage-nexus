@@ -2,7 +2,8 @@ import { useId, useLayoutEffect, useState, type CSSProperties, type ReactNode } 
 import type { DeckV2 } from './types'
 import { ALL_FORMATS } from './formatRules'
 import type { ValidationIssue } from './formatRules'
-import { downloadDeckFile, type DeckExportKind } from './exportDeckFile'
+import type { DeckExportKind } from './exportDeckFile'
+import { DeckExportDialog } from './DeckExportDialog'
 import { EXPORT_KINDS, legalityOf } from './DeckEditorTopBar'
 import { CardSizeSlider } from './CardSizeSlider'
 import { canSeparateCreatures } from './stackColumns'
@@ -101,9 +102,7 @@ export function DeckEditorPhoneTopBar({
     ? t('decks', 'legal_in', { format })
     : legality.shortBy > 0 ? t('decks', 'cards_short', { n: legality.shortBy }) : legality.message
 
-  const exportDeck = (kind: DeckExportKind) => {
-    void downloadDeckFile(deck, kind, `✓ ${t('common', 'copied')}`)
-  }
+  const [exportKind, setExportKind] = useState<DeckExportKind | null>(null)
 
   return (
     <header className="deck-phone-top">
@@ -129,7 +128,7 @@ export function DeckEditorPhoneTopBar({
           <MenuItem role="menuitem" icon="download" onClick={onImport}>{t('decks', 'import_deck')}</MenuItem>
           <MenuCaption>{t('decks', 'export_deck')}</MenuCaption>
           {EXPORT_KINDS.map((item) => (
-            <MenuItem key={item.kind} role="menuitem" icon={item.icon} onClick={() => exportDeck(item.kind)}>
+            <MenuItem key={item.kind} role="menuitem" icon={item.icon} onClick={() => setExportKind(item.kind)}>
               {item.label}
             </MenuItem>
           ))}
@@ -220,6 +219,7 @@ export function DeckEditorPhoneTopBar({
           ))}
         </ul>
       )}
+      {exportKind && <DeckExportDialog deck={deck} kind={exportKind} onClose={() => setExportKind(null)} />}
     </header>
   )
 }

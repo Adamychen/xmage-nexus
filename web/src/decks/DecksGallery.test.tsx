@@ -186,6 +186,17 @@ describe('DecksGallery footer (C.13-mayores §1–§2)', () => {
     }
   })
 
+  it('DCK-20: a format from the export menu opens the export window with the selected deck', async () => {
+    storeState.decks = [customDeck()]
+    render(<DecksGallery onEdit={() => {}} />)
+    fireEvent.click(await screen.findByTestId('decks-export-menu'))
+    fireEvent.click(await screen.findByRole('menuitem', { name: 'Plain' }))
+    const text = (await screen.findByTestId('deck-export-text')) as HTMLTextAreaElement
+    expect(text.value).toContain('4 Lightning Bolt')
+    fireEvent.click(screen.getByTestId('deck-export-dialog-close'))
+    await waitFor(() => expect(screen.queryByTestId('deck-export-dialog')).toBeNull())
+  })
+
   it('el confirm de borrado muestra el NOMBRE del mazo', async () => {
     storeState.decks = [customDeck()]
     render(<DecksGallery onEdit={() => {}} />)
