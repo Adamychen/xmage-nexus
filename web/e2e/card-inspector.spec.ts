@@ -64,6 +64,11 @@ test.describe('Card inspector (right click)', { tag: '@game' }, () => {
   })
 
   test('falls back to the engine rules when Scryfall has no localized text', async ({ page }) => {
+    await page.addInitScript(() => {
+      try {
+        localStorage.setItem('nexus_card_lang', 'es')
+      } catch {}
+    })
     await stubScryfall(page, NO_TEXT)
     await withFakeServer(cardInspectorScenario, async () => {
       const { pageErrors } = await quickStartGame(page, {

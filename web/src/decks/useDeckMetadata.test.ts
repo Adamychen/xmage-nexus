@@ -4,6 +4,7 @@ import { useDeckMetadata } from './useDeckMetadata'
 import { isMetaLoaded } from './metaLoaded'
 import { resetCardArtPreferences, setCardArtPreference } from '../cards/artPreferences'
 import { getCachedCardName } from '../cards/cardLocalization'
+import { setCardLanguage } from '../i18n'
 import { fetchCardJson } from '../cards/scryfallCards'
 import { resetScryfallClient, setScryfallPacing } from '../cards/scryfallClient'
 import type { DeckCard } from '../lobby/decks'
@@ -21,6 +22,7 @@ function scryfallCard(imageUrl: string) {
 
 describe('useDeckMetadata printing changes', () => {
   beforeEach(() => {
+    setCardLanguage('en')
     vi.unstubAllGlobals()
     resetCardArtPreferences()
   })
@@ -103,6 +105,7 @@ describe('useDeckMetadata printing changes', () => {
   })
 
   it('no envenena la caché con el nombre de otra impresión (AUDIT)', async () => {
+    setCardLanguage('es')
     const fetchMock = vi.fn().mockImplementation(() =>
       Promise.resolve({
         ok: true,

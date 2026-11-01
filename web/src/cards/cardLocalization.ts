@@ -1,5 +1,5 @@
 import type { CardView } from '../net/types'
-import { getLanguage, getCardLanguage } from '../i18n'
+import { getCardLanguage } from '../i18n'
 import { isAbilityCard, getSourceCardName } from './cardImages'
 import { scryfallFetch, scryfallJson } from './scryfallClient'
 import { localizedPrintingJsonUrl, type ScryfallCardFaceJson, type ScryfallCardJson } from './scryfallCards'
@@ -26,10 +26,7 @@ export interface LocalizedCardText {
 }
 
 export function getEffectiveCardLang(): string {
-  const cardLang = getCardLanguage()
-  if (cardLang && cardLang !== 'en') return cardLang
-  const uiLang = getLanguage()
-  return uiLang || 'en'
+  return getCardLanguage() || 'en'
 }
 
 export function getCachedCardName(englishName: string, lang: string = getEffectiveCardLang()): string | null {
