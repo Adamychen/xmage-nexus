@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { CardView } from '../net/types'
 import CardSlot from './CardSlot'
-import { galleryPinnedStatusH, layoutSize } from './useZoneScale'
 import Icon from '../ui/Icon'
 import { clickableProps } from '../ui/clickable'
 import { useTranslation } from '../i18n'
@@ -57,7 +56,8 @@ export default function HandZone({
     if (!el) return
 
     const measure = () => {
-      const { width: availW, height: ownH } = layoutSize(el)
+      const availW = el.offsetWidth
+      const ownH = el.offsetHeight
       const rowH = el.parentElement?.offsetHeight ?? 0
       const availH = compact && rowH > 0 ? rowH : ownH
       const count = entries.length
@@ -66,11 +66,7 @@ export default function HandZone({
       let baseW = compact ? MAX_CARD_W : 116
 
       if (compact) {
-        // Galería (dev): la altura propia depende del tamaño de estas cartas
-        // (ciclo con el alto de la fila de estado) → se fija para que el layout
-        // sea reproducible entre sesiones. En la app se mide en vivo.
-        const pinnedH = galleryPinnedStatusH()
-        const maxH = pinnedH ?? (availH > 20 ? availH - 4 : MAX_CARD_W * 1.4)
+        const maxH = availH > 20 ? availH - 4 : MAX_CARD_W * 1.4
         const wByHeight = maxH / 1.4
         baseW = Math.min(MAX_CARD_W, Math.max(MIN_CARD_W, wByHeight))
       }

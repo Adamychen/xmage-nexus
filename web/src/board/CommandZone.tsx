@@ -161,6 +161,23 @@ export function hasCommandObjects(
   return items.some((item) => shownOn(item, side))
 }
 
+export function commandSlotCounts(
+  player: PlayerView | undefined,
+  helperEmblems?: Record<string, CardView>,
+  side?: 'my' | 'opp'
+): { commanders: number; planes: number; emblems: number } {
+  if (!player) return { commanders: 0, planes: 0, emblems: 0 }
+  const items = parseCommandList(player.commandList, {
+    ...(player.helperCards ?? {}),
+    ...(side === 'my' ? (helperEmblems ?? {}) : {}),
+  }).filter((item) => shownOn(item, side))
+  return {
+    commanders: items.filter((item) => item.isCommander || item.isCompanion).length,
+    planes: items.filter((item) => item.isPlane).length,
+    emblems: items.filter((item) => item.isEmblem).length,
+  }
+}
+
 export default function CommandZone({
   player,
   side,

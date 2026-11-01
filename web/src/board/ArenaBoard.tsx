@@ -6,7 +6,6 @@ import { useBoardPresenter, useBoardPlayers } from './useBoardPresenter'
 import { opponentRevealedCards } from './revealedCards'
 import { isPlayerOut, MAX_BOARD_PLAYERS, spectatorHomeSeat, useSeatStates, useSpectatorBottomHand, useSwitchedHand, type BoardProps } from './boardShared'
 import { liveOpponentIds, useSeatFocus } from './seatFocus'
-import { useOwnCardCap } from './ownCardCap'
 import { EMPTY_TARGET_ZONES } from './targetZones'
 import DefeatedSeat from './DefeatedSeat'
 import './ArenaBoard.css'
@@ -69,13 +68,14 @@ export default function ArenaBoard({
   const liveIds = useMemo(() => liveOpponentIds(oppRow), [oppRow])
   const { focusId, select, showAll } = useSeatFocus(liveIds, game)
   const focusable = liveIds.length >= 2
-  const ownCardW = useOwnCardCap(presenter.boardRef)
 
   return (
     <BoardShell
       className="arena-board"
       testId="arena-board"
       presenter={presenter}
+      layout="arena"
+      opponentsCappedByOwn
       handBar={!isSpectator ? {
         cards: switchedHand ?? game?.myHand ?? {},
         onCardClick: onPlayableClick,
@@ -93,7 +93,7 @@ export default function ArenaBoard({
           const focused = !!opp && opp.playerId === focusId
           const shrunk = focusId != null && !!opp && !isPlayerOut(opp) && !focused
           const focusControl = focusable && !!opp && !isPlayerOut(opp)
-            ? { focused, onToggle: () => select(opp.playerId), showAll, maxCardW: ownCardW }
+            ? { focused, onToggle: () => select(opp.playerId), showAll }
             : undefined
           return (
             <Fragment key={opp?.playerId ?? `arena-empty-${i}`}>

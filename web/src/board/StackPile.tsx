@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, type ReactNode } from 'react'
 import { spreadLayout } from './stackSpread'
-import { BOARD_RELAYOUT_EVENT } from './useBandFit'
+import { BOARD_RELAYOUT_EVENT } from './layout/relayout'
 
 const SPREAD_GAP = 6
 const BAND_EDGE = 4

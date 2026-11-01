@@ -1,4 +1,5 @@
 import { useLayoutEffect, type RefObject } from 'react'
+import { BOARD_RELAYOUT_EVENT } from '../board/layout/relayout'
 
 const ZONE = '.arena-board > .zone-bottom'
 const LEFT_OVERLAYS = ['.arena-board > .zone-bottom .pz-bottom-row', '[data-testid="combat-ledger"]', '[data-testid="log-ticker"]']
@@ -23,6 +24,7 @@ function overlapsVertically(a: DOMRect, b: DOMRect): boolean {
 function dockCommander(wrap: HTMLElement, zone: HTMLElement, zoneRect: DOMRect, zoom: number) {
   const dock = zone.querySelector<HTMLElement>(COMMANDER)
   if (!dock) return
+  const wasDocked = zone.dataset.commanderDock === 'column'
   let anchorTop = Infinity
   let colLeft = Infinity
   let colRight = -Infinity
@@ -48,12 +50,14 @@ function dockCommander(wrap: HTMLElement, zone: HTMLElement, zoneRect: DOMRect, 
   ))
   if (!Number.isFinite(cardW) || cardW < Math.min(baseW, MIN_COMMANDER_W)) {
     delete zone.dataset.commanderDock
+    if (wasDocked) window.dispatchEvent(new Event(BOARD_RELAYOUT_EVENT))
     return
   }
   zone.dataset.commanderDock = 'column'
   zone.style.setProperty('--cmd-left', `${Math.round((colLeft - zoneRect.left) / zoom)}px`)
   zone.style.setProperty('--cmd-bottom', `${Math.round((zoneRect.bottom - anchorTop) / zoom + GAP / 2)}px`)
   zone.style.setProperty('--cmd-card-w', `${cardW}px`)
+  if (!wasDocked) window.dispatchEvent(new Event(BOARD_RELAYOUT_EVENT))
 }
 
 /** Keeps the own battlefield between the overlays the v2 chrome floats over the board: the

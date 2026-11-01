@@ -7,6 +7,8 @@ import HandRow from './HandRow'
 import FloatingCardPreview from './FloatingCardPreview'
 import FlyingCardOverlay from './FlyingCardOverlay'
 import type { BoardPresenter } from './useBoardPresenter'
+import { BoardLayoutProvider } from './layout/BoardLayoutProvider'
+import type { BoardLayoutKind } from './layout/solveBoardLayout'
 import { useStore, useSettings, isMulliganDecision } from '../state/store'
 import { useChromeActions } from '../game/chromeActions'
 import './BoardShell.css'
@@ -25,6 +27,9 @@ export interface BoardShellProps {
     targetIds?: Set<string>
   } | null
   style?: CSSProperties
+  layout?: BoardLayoutKind
+  /** BRD-3: no opponent's cards are larger than the own board's. */
+  opponentsCappedByOwn?: boolean
   children: ReactNode
 }
 
@@ -55,7 +60,7 @@ export function BoardColDivider() {
 
 /** Marco común de los tableros: tapete, montaje de HandBar y de las capas
  *  flotantes (preview + vuelos). El layout específico va en `children`. */
-export default function BoardShell({ className, testId, presenter, handBar = null, style, children }: BoardShellProps) {
+export default function BoardShell({ className, testId, presenter, handBar = null, style, layout = 'standard', opponentsCappedByOwn = false, children }: BoardShellProps) {
   const setHandPromptSlot = useContext(HandPromptSlotContext)
   const raised = useStore((s) => isMulliganDecision(s.feedback))
   const { handRail, handRailWidth, handRow } = useSettings()
@@ -63,6 +68,7 @@ export default function BoardShell({ className, testId, presenter, handBar = nul
   const railed = handRail && !!handBar && !raised && !sidePanelOpen
   const rowed = handRow && !handRail && !!handBar && !raised
   return (
+    <BoardLayoutProvider boardRef={presenter.boardRef} layout={layout} opponentsCappedByOwn={opponentsCappedByOwn}>
     <div className={`board-shell board-surface ${className}${railed ? ' has-hand-rail' : ''}`} data-testid={testId} ref={presenter.boardRef} style={railed ? ({ ...style, '--hand-rail-w': `${handRailWidth}px` } as CSSProperties) : style}>
       {children}
       {railed && handBar && (
@@ -100,5 +106,6 @@ export default function BoardShell({ className, testId, presenter, handBar = nul
       />
       <FlyingCardOverlay />
     </div>
+    </BoardLayoutProvider>
   )
 }
