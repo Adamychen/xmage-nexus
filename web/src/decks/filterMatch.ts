@@ -110,7 +110,7 @@ function statMatches(raw: string | undefined, op: string, value: string): boolea
 function identityWithin(card: ScryfallSearchCard, selected: Set<string>): boolean {
   const identity = card.color_identity ?? []
   if (selected.has('C')) return identity.length === 0
-  return identity.every((c) => selected.has(c))
+  return identity.length > 0 && identity.every((c) => selected.has(c))
 }
 
 function keywordMatches(card: ScryfallSearchCard, keyword: string): boolean {

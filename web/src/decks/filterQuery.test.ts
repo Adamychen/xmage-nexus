@@ -36,4 +36,13 @@ describe('filterQuery (AUDIT)', () => {
     const q = buildScryfallQuery(base({ powerFilter: { op: '>', value: 3 } }))
     expect(q).toContain('pow>3')
   })
+
+  it('DCK-18: picked colours keep coloured cards and only the lands that make those colours', () => {
+    expect(buildScryfallQuery(base({ colorFilter: new Set(['R']) }))).toBe('game:paper -t:basic (c<=r -c:c OR (t:land id<=r -id:c))')
+    expect(buildScryfallQuery(base({ colorFilter: new Set(['R', 'G']) }))).toContain('(c<=rg -c:c OR (t:land id<=rg -id:c))')
+  })
+
+  it('DCK-18: the colourless chip still asks for colourless cards', () => {
+    expect(buildScryfallQuery(base({ colorFilter: new Set(['C']) }))).toBe('game:paper -t:basic c:c')
+  })
 })
