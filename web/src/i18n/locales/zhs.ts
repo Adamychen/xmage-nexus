@@ -20,6 +20,7 @@ export const zhs: TranslationSchema = {
     clear: '清空',
     copy: '复制',
     copied: '已复制！',
+    download: '下载',
     done: '完成',
     language: '界面语言',
     card_language: '卡牌语言',

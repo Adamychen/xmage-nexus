@@ -4,24 +4,21 @@ import { downloadBlob } from '../utils/download'
 
 export type DeckExportKind = 'dck' | 'arena' | 'txt' | 'dek'
 
-/**
- * Exporta el mazo a fichero (y al portapapeles si está disponible), con
- * feedback visual en el botón que lanzó la acción.
- */
-export async function downloadDeckFile(deck: DeckV2, kind: DeckExportKind, copiedText: string): Promise<void> {
-  const text = kind === 'dck' ? exportDck(deck) : kind === 'arena' ? exportArena(deck) : kind === 'dek' ? exportDek(deck) : exportTxt(deck)
-  const filename = kind === 'dck'
-    ? `${deck.name}.dck`
+export function deckExportText(deck: DeckV2, kind: DeckExportKind): string {
+  return kind === 'dck' ? exportDck(deck) : kind === 'arena' ? exportArena(deck) : kind === 'dek' ? exportDek(deck) : exportTxt(deck)
+}
+
+export function deckExportFilename(deck: DeckV2, kind: DeckExportKind): string {
+  const name = deck.name.replace(/[^a-z0-9\-_ ]/gi, '_')
+  return kind === 'dck'
+    ? `${name}.dck`
     : kind === 'arena'
-      ? `${deck.name}.txt`
+      ? `${name}.txt`
       : kind === 'dek'
-        ? `${deck.name}.dek`
-        : `${deck.name}-plain.txt`
-  let copied = false
-  try { await navigator.clipboard.writeText(text); copied = true } catch {}
-  downloadBlob(new Blob([text], { type: 'text/plain' }), filename)
-  if (copied) {
-    const btn = document.activeElement as HTMLElement | null
-    if (btn) { const prev = btn.textContent; btn.textContent = copiedText; setTimeout(() => { if (prev) btn.textContent = prev }, 1400) }
-  }
+        ? `${name}.dek`
+        : `${name}-plain.txt`
+}
+
+export function downloadDeckExport(deck: DeckV2, kind: DeckExportKind, text = deckExportText(deck, kind)): void {
+  downloadBlob(new Blob([text], { type: 'text/plain;charset=utf-8' }), deckExportFilename(deck, kind))
 }

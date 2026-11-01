@@ -20,6 +20,7 @@ export const ru: TranslationSchema = {
     clear: 'Очистить',
     copy: 'Копировать',
     copied: 'Скопировано!',
+    download: 'Скачать',
     done: 'Готово',
     language: 'Язык интерфейса',
     card_language: 'Язык карт',
