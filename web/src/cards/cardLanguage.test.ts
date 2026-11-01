@@ -1,5 +1,17 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+function memoryStorage(): Storage {
+  const data = new Map<string, string>()
+  return {
+    get length() { return data.size },
+    clear: () => data.clear(),
+    getItem: (k) => data.get(k) ?? null,
+    key: (i) => [...data.keys()][i] ?? null,
+    removeItem: (k) => { data.delete(k) },
+    setItem: (k, v) => { data.set(k, String(v)) },
+  }
+}
+
 async function freshModules() {
   vi.resetModules()
   const i18n = await import('../i18n')
@@ -8,8 +20,8 @@ async function freshModules() {
 }
 
 describe('card language', () => {
-  beforeEach(() => localStorage.clear())
-  afterEach(() => localStorage.clear())
+  beforeEach(() => vi.stubGlobal('localStorage', memoryStorage()))
+  afterEach(() => vi.unstubAllGlobals())
 
   it('CRD-6: English picked as card language stays English with a Spanish interface', async () => {
     localStorage.setItem('nexus_lang', 'es')
