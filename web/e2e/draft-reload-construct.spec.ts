@@ -26,12 +26,21 @@ test.describe('Draft reload', { tag: '@draft' }, () => {
       await page.getByTestId('draft-card').first().click()
       await expect(page.locator('.construct-screen').first()).toBeVisible({ timeout: 15_000 })
 
-      const poolStrip = page.locator('[data-fly-target="pool"] .arena-card-strip').first()
-      const cardKey = await poolStrip.getAttribute('data-card-key')
+      // Pin the card by its key: the pool can re-sort between reading the key and
+      // clicking, and a first()-locator would then swap a different card.
+      const cardKey = await page.locator('[data-fly-target="pool"] .arena-card-strip').first().getAttribute('data-card-key')
       expect(cardKey).toBeTruthy()
+      const poolStrip = page.locator(`[data-fly-target="pool"] .arena-card-strip[data-card-key="${cardKey}"]`)
       const mainCardSelector = `[data-fly-target="main"] .arena-card-strip[data-card-key="${cardKey}"]`
-      await poolStrip.hover()
-      await poolStrip.locator('.strip-btn.swap').click()
+      const swap = poolStrip.locator('.strip-btn.swap')
+      // The swap button is shown only while the strip is hovered, and a re-layout
+      // under load can move the strip away from the pointer between hover and click.
+      // Re-hover on every attempt (same pattern as decks-gallery.spec.ts).
+      await expect(async () => {
+        await poolStrip.hover()
+        await expect(swap).toBeVisible({ timeout: 2_000 })
+        await swap.dispatchEvent('click')
+      }).toPass({ timeout: 20_000 })
       await expect(page.locator(mainCardSelector)).toHaveCount(1)
 
       const plains = page.locator('.basic-land-btn').first()
