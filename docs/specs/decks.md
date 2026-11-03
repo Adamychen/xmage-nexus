@@ -275,6 +275,19 @@ by colour identity.
   (report of 2026-10-31). MTG Arena's colour filter keeps colourless cards behind their own chip too.
 - Guard: `src/decks/filterQuery.test.ts` · `src/decks/filterMatch.test.ts`
 
+### DCK-19 · My decks judges a deck as the editor does, and says why it is not legal
+A deck's format badge in My decks takes XMage's DeckValidator verdict, the same one the editor shows and
+the server applies at a table, whenever the proxy is connected and the format has a validator; the local
+check against Scryfall's legalities is only the fallback without it. Each saved version of a deck is
+validated once, one deck at a time. Selecting a deck that is not legal shows the first reason under its
+name in the footer, with how many more there are, and all of them on hover.
+
+- Why: a Commander deck led by Gargantos, the Endbringer was legal in the editor and not legal in My
+  decks, with nothing on screen saying why (report of 2026-11-01). The list only ran the local check, and
+  Scryfall marks every card of a set that is not out yet (Gargantos and The Darkhold, out 2027-04-09) as
+  not legal in every format, while XMage, which implements them, accepts them.
+- Guard: `src/decks/deckLegality.test.ts` · `src/decks/DecksGallery.test.tsx`
+
 ### DCK-20 · Exporting opens a window to copy the deck, and downloads only on request
 Choosing a format to export a deck (.dck, Arena, Plain, .dek), from the editor on any screen size or from
 My decks, opens a window with the deck written in that format. Copy puts the text on the clipboard and

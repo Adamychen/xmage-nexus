@@ -1,9 +1,7 @@
-import { useEffect, type CSSProperties } from 'react'
+import type { CSSProperties } from 'react'
 import type { DeckV2 } from './types'
-import { deckMainCount, deckInitials } from './types'
-import { validateDeckForFormat, FORMAT_CONFIGS } from './formatRules'
-import { commanderCardsFor } from './deckUtils'
-import { useDeckMetadata } from './useDeckMetadata'
+import { deckInitials } from './types'
+import { useDeckLegality } from './deckLegality'
 import { useCardArtUrl } from './useCardArtUrl'
 import { ManaPip } from './ArenaManaSymbols'
 import Icon from '../ui/Icon'
@@ -44,19 +42,9 @@ export function DeckBox({
 }) {
   const { t } = useTranslation()
   const coverUrl = useDeckCoverUrl(deck)
-  const total = deckMainCount(deck)
   const colors = deck.colors
-  const { metaMap, updateMetaForDeck } = useDeckMetadata()
-  useEffect(() => {
-    if (!FORMAT_CONFIGS[deck.format]?.hasCommander) return
-    const commanders = commanderCardsFor(deck.cards, deck.commanderCard ?? null, deck.partnerCard ?? null, new Map())
-    if (commanders.length > 0) updateMetaForDeck(commanders)
-  }, [deck.format, deck.cards, deck.commanderCard, deck.partnerCard])
-  const formatReport = validateDeckForFormat(deck, metaMap)
-  const hasErrors = formatReport.issues.some((i) => i.severity === 'error')
-  const minRequired = FORMAT_CONFIGS[deck.format]?.minMain ?? 60
-  const isValid = !hasErrors && total >= minRequired
-  const issueTooltip = formatReport.issues.map((i) => `• ${i.message}`).join('\n')
+  const { isValid, reasons, total, minRequired } = useDeckLegality(deck)
+  const issueTooltip = reasons.map((r) => `• ${r}`).join('\n')
 
   return (
     <div
