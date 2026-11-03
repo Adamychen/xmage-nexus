@@ -20,6 +20,7 @@ export const de: TranslationSchema = {
     clear: 'Löschen',
     copy: 'Kopieren',
     copied: 'Kopiert!',
+    download: 'Herunterladen',
     done: 'Fertig',
     language: 'Oberflächensprache',
     card_language: 'Kartensprache',

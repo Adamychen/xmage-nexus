@@ -1,0 +1,10 @@
+.deck-export-text {
+  font-family: var(--font-mono, monospace);
+  width: 100%;
+  padding: var(--sp-3) var(--sp-4);
+  font-size: var(--fs-sm);
+  line-height: 1.5;
+  resize: vertical;
+  min-height: 240px;
+  max-height: 50vh;
+}

@@ -20,6 +20,7 @@ export const it: TranslationSchema = {
     clear: 'Pulisci',
     copy: 'Copia',
     copied: 'Copiato!',
+    download: 'Scarica',
     done: 'Fatto',
     language: 'Lingua dell’interfaccia',
     card_language: 'Lingua delle carte',
