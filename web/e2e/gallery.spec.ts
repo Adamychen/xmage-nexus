@@ -92,8 +92,8 @@ async function openGallery(page: Page) {
   // Arranque en frío: el primer `/#/gallery` de cada worker compila el builder
   // de la galería en Vite, y con varios bloques a la vez 5 s no bastan.
   await expect(page.locator('[data-gallery]')).toBeVisible({ timeout: 30_000 })
-  // Espera a las fuentes antes de montar entradas: las medidas de layout
-  // (`useZoneScale`, tarjetas) usan métricas finales y no las de reserva.
+  // Wait for the fonts before mounting entries: the layout measurements (the
+  // board layout solver, cards) must use final metrics, not the fallback ones.
   await page.evaluate(() => document.fonts.ready)
 }
 
@@ -112,13 +112,12 @@ async function showEntry(page: Page, id: string) {
   // nuevas al aparecer y un swap tardío cambia métricas a mitad de captura.
   await page.evaluate(() => document.fonts.ready)
   await page.waitForTimeout(250)
-  // `CombatArrowsOverlay` mide rects una vez al montar y solo recalcula si el
-  // tablero (o la ventana) cambia de tamaño; el primer cálculo puede caer
-  // antes de que asiente el escalado de zonas (useZoneScale), y unas sesiones
-  // reciben después un tick del ResizeObserver y otras no → geometría de
-  // flechas distinta entre sesiones (hasta 9 px; WebKit lo destapó). Forzar el
-  // mismo camino de recálculo que usa la app en un resize deja el estado
-  // asentado y reproducible.
+  // CombatArrowsOverlay measures its rects once on mount and only recomputes
+  // when the board (or the window) changes size. The first measurement can
+  // land before the board layout settles, and some sessions then get one more
+  // ResizeObserver tick than others: the arrow geometry differed between
+  // sessions by up to 9 px (WebKit exposed it). Taking the same recompute path
+  // the app takes on a resize leaves the state settled and reproducible.
   await page.evaluate(() => window.dispatchEvent(new Event('resize')))
   await page.waitForTimeout(150)
 }

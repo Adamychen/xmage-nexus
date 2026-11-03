@@ -44,6 +44,7 @@ export function stackGroupKeyOf(
 ): { key: string; name: string; groupKind: StackGroupKind } | null {
   const name = perm.name || 'Card'
   if (excludeIds?.has(id)) return null
+  if ((perm.attachments ?? []).length > 0 || perm.mutated === true) return null
   if (kind === 'lands') {
     return { key: `land:${name}:${tappedFlag(perm)}`, name, groupKind: 'land' }
   }
@@ -54,7 +55,6 @@ export function stackGroupKeyOf(
   if (kind === 'other') {
     return { key: `token:${name}:${tappedFlag(perm)}`, name, groupKind: 'token' }
   }
-  if (perm.mutated === true) return null
   const pt = `${perm.power ?? ''}/${perm.toughness ?? ''}`
   return { key: `ctoken:${name}:${tappedFlag(perm)}:${pt}`, name, groupKind: 'creature-token' }
 }

@@ -23,16 +23,6 @@ import ProjectileGalleryStage from './ProjectileGalleryStage'
 import KeywordGlyphGallery from './KeywordGlyphGallery'
 import './GalleryScreen.css'
 
-// Layout reproducible: la escala de las zonas del tablero se mide contra la
-// fila de estado (que contiene la mano rival, dimensionada a su vez por esa
-// escala) y el ciclo tiene varios puntos fijos entre sesiones. La galería fija
-// el alto de esa fila (`galleryPinnedStatusH`) para que los baselines de
-// regresión visual sean deterministas; el resto de la app mide en vivo.
-const GALLERY_STATUS_H = '116'
-if (typeof document !== 'undefined') {
-  document.documentElement.dataset.galleryStatusH = GALLERY_STATUS_H
-}
-
 function stageOf(entry: GalleryEntry | undefined) {
   if (!entry) return null
   if (entry.screen === 'lobby') return <LobbyScreen />
@@ -157,15 +147,6 @@ export default function GalleryScreen() {
     const lang = active.lang ?? savedLang.current
     if (lang !== getLanguage()) setLanguage(lang)
   }, [active])
-
-  useEffect(() => {
-    // Re-aplicado en el efecto (no solo al importar el módulo): StrictMode
-    // monta/desmonta efectos y el cleanup lo borraría.
-    document.documentElement.dataset.galleryStatusH = GALLERY_STATUS_H
-    return () => {
-      delete document.documentElement.dataset.galleryStatusH
-    }
-  }, [])
 
   useEffect(() => {
     const saved = savedState.current

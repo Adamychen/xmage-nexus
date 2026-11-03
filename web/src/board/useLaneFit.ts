@@ -19,7 +19,7 @@ function px(value: string): number {
  * The room is the *parent's* width, not the walkway's: `.game-strip-center` is
  * `flex: 1`, so its width does not depend on what the walkway renders, which is
  * what stops the measurement from feeding itself (the mistake behind the
- * band-fit flip: see `bandFit.ts`).
+ * band-fit flip: see `layout/solveRow.ts`).
  */
 export function useLaneFit(enabled: boolean, key: string): {
   ref: (el: HTMLElement | null) => void

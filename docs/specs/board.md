@@ -34,11 +34,10 @@ with the creatures, as before.
 ### BRD-2 · Planeswalkers, sagas and battles get their own zone in the creatures row
 Non-creature planeswalkers, sagas and battles sit in their own band at the right end of the
 creatures row, beside the creatures band, drawn with the gold marquee frame. The row is split the
-way BRD-1 splits the other row: each band's width follows how many cards it holds (one slot per
-pile or card), measured at run time, and each band shrinks or wraps its own cards to fit. The
-marquee band is never narrower than one card at the board's size and never wider than its cards
-need at that size (the rest of the row goes to the creatures), and neither bound nor its card size
-depends on the size the creatures or the other bands chose. They never stack with each other, each shows
+way BRD-1 splits the other row: the bands share one card size and each band's width follows what
+its cards need at that size (BRD-26). The marquee band is never narrower than one of its cards and
+never wider than its cards need (the width left over goes to the creatures). The sizes come from
+the board's single layout function (BRD-25), so no band reads a size another band chose. They never stack with each other, each shows
 its own loyalty, lore or defense, and a seat without any has no marquee band, so the creatures
 band keeps the whole row. A seat with only marquee permanents (no creatures, no commander) still
 has a creatures row: it is the row that holds them.
@@ -48,7 +47,7 @@ has a creatures row: it is the row that holds them.
   other every frame, so a board with one planeswalker kept resizing forever (user report,
   2026-10-29; reproduced at 1366×900 with 6 creatures and 7 lands: about 180 style changes per
   second). A band of its own in the creatures row has no such dependency, and the user chose it.
-- Guard: `src/board/BoardZone.kindColumns.test.tsx` · `src/board/bandWeights.test.ts` · `e2e/kind-bands.spec.ts`
+- Guard: `src/board/BoardZone.kindColumns.test.tsx` · `src/board/bandWeights.test.ts` · `src/board/layout/solveRow.test.ts` · `e2e/kind-bands.spec.ts`
 
 ### BRD-3 · One opponent's board can take the whole opponents' row
 In the Arena and Table layouts with the main board setting off (BRD-6) and two or more opponents
@@ -63,14 +62,15 @@ seat, or an "All boards" button, brings back the equal columns; focusing a shrun
 focus to it. Your own board and hand never move or shrink. Focus is local to this client, is not
 saved, and is dropped when the focused player leaves or loses. Focusing changes only sizes, never
 what is visible: a hidden card stays hidden on a focused board. A click on the portrait itself
-still targets the player (TGT-8) and never changes the focus.
+still targets the player (TGT-8) and never changes the focus. In these layouts no opponent's
+cards, focused or not, are ever larger than the largest cards of your own board.
 
 - Why: in a four-player Commander game every opponent column is a third of the screen and cards
   shrink until they are unreadable; issue #23 (part 2) asked for one board on the whole screen.
   The own board stays because a full point-of-view switch hides the blockers, targets and triggers
   the player must answer; the main board mode (BRD-6) is the point-of-view switch that keeps every
   other board on screen.
-- Guard: `src/board/ArenaBoard.test.tsx` · `src/board/TurnOrderRing.test.tsx` · `src/board/seatFocus.test.ts` · `src/board/ownCardCap.test.ts` · `e2e/seat-focus.spec.ts`
+- Guard: `src/board/ArenaBoard.test.tsx` · `src/board/TurnOrderRing.test.tsx` · `src/board/seatFocus.test.ts` · `src/board/layout/solveBoardLayout.test.ts` · `e2e/seat-focus.spec.ts`
 
 ### BRD-4 · A shrunk seat still tells you when it matters
 While another seat is focused, a shrunk seat pulses once whenever a permanent enters or leaves its
@@ -119,7 +119,7 @@ once and never drops an open prompt.
   of squeezing permanents into a narrow column do not come back. It is a single switch, not one per
   part, because the layouts already multiply with the interfaces. Spectators were left out at first
   and asked for it at once: watching a pod has the same crowded columns, and nothing to answer.
-- Guard: `src/board/ScaledCopy.test.tsx` · `src/board/SpotlightBoard.test.tsx` · `src/board/cardOverlays.test.ts` · `src/board/spotlight.test.ts` · `src/board/useZoneScale.test.tsx` · `src/game/GameScreen.test.tsx` · `src/state/persistence.test.ts` · `e2e/spotlight.spec.ts`
+- Guard: `src/board/ScaledCopy.test.tsx` · `src/board/SpotlightBoard.test.tsx` · `src/board/cardOverlays.test.ts` · `src/board/spotlight.test.ts` · `src/game/GameScreen.test.tsx` · `src/state/persistence.test.ts` · `e2e/spotlight.spec.ts`
 
 ### BRD-7 · A click on a copy brings that board to the main area
 Clicking a copy — anywhere that is not something the current prompt can pick (BRD-8) — swaps it:
@@ -300,25 +300,26 @@ soon as the pointer moves over anything outside it, even when the browser never 
 
 ### BRD-21 · A board settles: no card size keeps changing for ever
 Once a board has been drawn and nothing changes (no new game view, no window resize, no hover),
-no band, marquee or zone keeps changing its card size or its number of lines: every size reaches
-a final value and stays there. How fast it gets there is not part of the rule: on the first draw
-of a large board in a small window the lands and other permanents bands may still adjust each
-other for a second or so, and that is accepted; changing for ever is not. A band only grows its cards when the gain is at least two pixels, while it
-shrinks them as soon as they do not fit, so a one-pixel difference in the room it measures can
-never flip it back and forth. A compact hand in a status row (an opponent's hand) takes no height
-of its own: the row's height comes from the rest of the row, the hand stretches to it and sizes
-its cards from it in one step, instead of shrinking a few pixels per frame from a height its own
-cards set. The guard sweeps every board layout (Standard, Pod, Arena, Table)
-with 2 and 4 seats, boards of several sizes with planeswalkers, sagas, commanders, tokens and
-attachments, both card styles, and several window sizes, and counts the size changes after the
-board has settled.
+no band, marquee or zone changes its card size or its number of lines again: the sizes are written
+once per change of input and then stay. This holds for a board drawn at a window size and for a
+board already on screen whose window is then resized, with the browser's scrollbars visible. A
+compact hand in a status row (an opponent's hand) takes no height of its own: the row's height
+comes from the rest of the row, the hand stretches to it and sizes its cards from it in one step.
+The guard sweeps every board layout (Standard, Pod, Arena, Table) with 2 and 4 seats, boards of
+several sizes with planeswalkers, sagas, commanders, tokens and attachments, both card styles and
+several window sizes, both drawn fresh and reached by resizing a drawn board, and allows no size
+change at all after the board has settled.
 
 - Why: the planeswalker column of BRD-2 made a board resize every frame without end (user
   report, 2026-10-29; the user then set the bar: a slow transition does not matter, a loop does), and no test watched a board after it was drawn; the size of a card was
   checked once, so an oscillation passed every spec. The first run of the guard found the
   opponent's hand in the Standard layout shrinking from 160 px to 65 px in 3 px steps for about a
-  second, relaying out the whole board at every step.
-- Guard: `src/board/bandFit.test.ts` · `src/board/HandZone.test.tsx` · `e2e/board-settle.spec.ts`
+  second, relaying out the whole board at every step. The 2-pixel hysteresis that fix added only
+  moved the fixed points: on 2026-11-01 a Table board with 4 seats and compact cards, resized from
+  1600 to 1000 px with scrollbars visible, flipped its lands and other permanents bands between
+  47 and 110 px 120-180 times a second, while the guard (fresh draws only, scrollbars hidden,
+  2 changes tolerated) stayed green. The board is now sized by one pure function (BRD-25).
+- Guard: `src/board/HandZone.test.tsx` · `e2e/board-settle.spec.ts` · `e2e/board-spotlight-settle.spec.ts`
 
 ### BRD-22 · The phase dial shows the steps of combat
 On the phase dial (v2 chrome) the combat pip keeps its place on the arc, and five small circles
@@ -358,3 +359,67 @@ graveyard) never needs a sideways scroll on a desktop or a phone screen.
 - Why: the list was one row at a fixed 760 px, so ten cards spread over 2 300 px and the player had to
   slide sideways to see them all (reported 2026-10-30).
 - Guard: `e2e/cross-zone-layout.spec.ts`
+
+### BRD-25 · The same board in the same window always looks the same
+Every card size, band width and number of lines on the board is a function of the game view, the
+window (the board's box) and the settings, and of nothing else: not of the sizes chosen a moment
+earlier, not of the path the window took to reach its size, not of whether a scrollbar happened
+to be showing. A board resized from 1600 to 1000 px and back to 1600 px is identical, pixel for
+pixel, to the same board drawn at 1600 px; drawn at 1000 px it is identical to the one resized
+into 1000 px. All sizes come from a single pure function for the whole board,
+`solveBoardLayout` (`web/src/board/layout/`): it reads the board's measured boxes once (each
+seat's box and its status row, which the function never writes), computes every seat, row and
+band in one pass, and the result is written in one frame. No band, seat or hand measures a size
+that another part of the board wrote. Rules that span seats (an opponent's cards are never larger
+than your own, BRD-3; the focused seat's cap) are comparisons inside that function, never a seat
+reading another seat's applied size.
+
+- Why: seven independent fitters (a scale hook per seat, five band fitters per seat, the own-card
+  cap, the hand) each measured DOM the others wrote, and every loop found so far was patched with
+  memory (a growth hysteresis, an overflow ceiling, a pinned status height for the gallery). With
+  memory the same window gave different boards: measured 2026-11-01, a 4-seat Arena board resized
+  1600 → 1000 → 1600 px came back with bands at 106 px where the fresh draw had 101, and a band at
+  its full size where the fresh draw had shrunk it.
+- Guard: `src/board/layout/layoutEngine.test.ts` · `src/board/layout/solveBoardLayout.test.ts` · `e2e/board-resize.spec.ts`
+
+### BRD-26 · Bands that share a row share it by what they hold
+The bands of one row (creatures, marquee and commander in the creatures row; lands and other
+permanents in the other row in the Arena and Table layouts) use one card size: the largest, up to
+the seat's cap, at which every band of the row fits its cards in at most three lines inside the
+row's width and height. Each band is then as wide as its cards need at that size, and the width
+left over is shared in proportion to that need. So a band never shrinks to the floor or scrolls
+while a band beside it in the same row keeps room it does not use. Only when not even the floor
+size fits does the row stay at the floor and the bands that overflow scroll (BRD-27). Rows of the
+same seat may use different sizes.
+
+- Why: measured 2026-11-01 on a 4-seat Table board at 1000 px, the creatures band of the own seat
+  was 38 px wide (the floor) for seven creatures, scrolling 294 px of content, while the marquee
+  band beside it kept 122 px for one planeswalker: each band fitted itself inside a width that
+  flex had already handed out.
+- Guard: `src/board/layout/layoutEngine.test.ts` · `src/board/layout/solveBoardLayout.test.ts` · `e2e/board-resize.spec.ts` · `e2e/board-fill.spec.ts`
+
+### BRD-27 · A band that scrolls takes no room for its scrollbar
+A band that cannot fit its cards even at the floor size scrolls sideways (wheel, drag, keyboard
+focus) without a visible scrollbar: the scrollbar never takes height from the cards, and a soft
+fade at the clipped edge shows there is more. Showing or hiding the scroll never changes any size
+on the board.
+
+- Why: the horizontal scrollbar took about 10 px of a band's height, so a band that overflowed
+  measured less room, chose smaller wrapped cards, stopped overflowing, measured more room and
+  grew back: the 2-cycle behind both the "vibrating compact board" (`docs/lessons.md`) and the
+  2026-11-01 resize loop. Headless Chromium hides scrollbars, so no spec saw it.
+- Guard: `e2e/board-resize.spec.ts`
+
+### BRD-28 · The board's size model matches what the browser draws
+`solveBoardLayout` predicts each item's width from the card size (a card, a tapped card, a pile of
+lands or tokens, tapped or not, a permanent with attachments, both card styles, upright or tilted
+tapped cards) without measuring it. Those predictions match the width Chromium lays out for the
+same item at two card sizes within one pixel, so a CSS change to a card's margins or a pile's
+overlap that the model does not follow fails a test instead of overflowing a band. The command zone
+is modelled slot by slot (commanders and companions, planes, and one slot for all emblems). A
+permanent that carries an attachment (an aura, an equipment) or is mutated is never part of a pile:
+it is not identical to the others (BRD-20) and stays a single card with its attachments beside it.
+
+- Why: a model that drifts from the CSS silently overflows or wastes room; measuring each item
+  instead would bring back the measure-what-you-wrote loop of BRD-25.
+- Guard: `src/board/layout/itemModel.test.ts` · `src/board/stackGroups.test.ts` · `e2e/board-item-model.spec.ts`

@@ -113,17 +113,6 @@ describe('BoardZone kind columns', () => {
     expect(container.querySelector('.creatures-band')?.classList.contains('full-width')).toBe(true)
   })
 
-  it('BRD-2: the creatures band and the marquee band share the row by slot count', () => {
-    const bears2 = makePermanent({ name: 'Grizzly Bears', id: 'bears2' })
-    const bears3 = makePermanent({ name: 'Grizzly Bears', id: 'bears3' })
-    const { container } = renderZone(playerWith(bf(bears, bears2, bears3, walker)), true)
-    const creatures = container.querySelector<HTMLElement>('.creatures-band')!
-    const marquee = container.querySelector<HTMLElement>('[data-testid="marquee-band"]')!
-    expect(creatures.style.flexGrow).toBe('3')
-    expect(marquee.style.flexGrow).toBe('1')
-    expect(creatures.classList.contains('full-width')).toBe(false)
-  })
-
   it('BRD-2: a seat with only a walker and a land has no no-creatures class', () => {
     const { container } = renderZone(playerWith(bf(plains, walker)), true)
     expect(container.querySelector('.board-zone')?.classList.contains('no-creatures')).toBe(false)

@@ -50,6 +50,7 @@ const LAYERS = [
     args: ["playwright", "test", ...REAL_E2E_SPECS],
     cwd: webDir,
     timeoutMs: 1_800_000,
+    warmFirst: true,
     env: {
       E2E_BACKEND: "real",
       E2E_SERVER_HOST: process.env.E2E_SERVER_HOST || "127.0.0.1",
@@ -156,6 +157,10 @@ async function main() {
       log(`warmup ${warm.code === 0 ? "ok" : "FAILED (continuing, the layers retry on their own)"} in ${secs}s`)
 
       for (const layer of LAYERS) {
+        if (layer.warmFirst) {
+          const rewarm = run("node", ["scripts/warmup.mjs"], { quiet: true })
+          log(`warmup before ${layer.label} ${rewarm.code === 0 ? "ok" : "FAILED (continuing)"}`)
+        }
         const started = Date.now()
         const res = run(layer.cmd, layer.args, { cwd: layer.cwd, timeoutMs: layer.timeoutMs, env: layer.env })
         const secs = ((Date.now() - started) / 1000).toFixed(1)

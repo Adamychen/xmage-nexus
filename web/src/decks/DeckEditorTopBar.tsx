@@ -3,7 +3,8 @@ import type { DeckV2 } from './types'
 import { deckInitials } from './types'
 import { ALL_FORMATS, FORMAT_CONFIGS } from './formatRules'
 import type { ValidationIssue } from './formatRules'
-import { downloadDeckFile, type DeckExportKind } from './exportDeckFile'
+import type { DeckExportKind } from './exportDeckFile'
+import { DeckExportDialog } from './DeckExportDialog'
 import Button from '../ui/Button'
 import DropdownMenu from '../ui/DropdownMenu'
 import MenuItem from '../ui/MenuItem'
@@ -89,9 +90,7 @@ export function DeckEditorTopBar({
     })
   }
 
-  const exportDeck = (kind: DeckExportKind) => {
-    void downloadDeckFile(deck, kind, `✓ ${t('common', 'copied')}`)
-  }
+  const [exportKind, setExportKind] = useState<DeckExportKind | null>(null)
 
   const chipClass = `deck-editor-legality ${isValid ? 'is-valid' : 'is-invalid'}`
 
@@ -202,7 +201,7 @@ export function DeckEditorTopBar({
           data-testid="deck-editor-export"
         >
           {EXPORT_KINDS.map((item) => (
-            <MenuItem key={item.kind} role="menuitem" icon={item.icon} onClick={() => exportDeck(item.kind)}>
+            <MenuItem key={item.kind} role="menuitem" icon={item.icon} onClick={() => setExportKind(item.kind)}>
               {item.label}
             </MenuItem>
           ))}
@@ -228,6 +227,7 @@ export function DeckEditorTopBar({
         </Button>
         <LanguageSelector compact showCardLangToggle />
       </div>
+      {exportKind && <DeckExportDialog deck={deck} kind={exportKind} onClose={() => setExportKind(null)} />}
     </header>
   )
 }

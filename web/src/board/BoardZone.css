@@ -220,6 +220,7 @@
   display: flex;
   flex-wrap: nowrap;
   gap: var(--sp-2h);
+  row-gap: var(--sp-0h);
   padding: var(--sp-0h) var(--sp-2);
   overflow-x: auto;
   overflow-y: hidden;
@@ -230,10 +231,27 @@
   justify-content: safe center;
   min-width: 0;
   min-height: 0;
-  scrollbar-width: thin;
-  scrollbar-color: rgb(var(--brand-rgb) / 0.3) transparent;
+  scrollbar-width: none;
   box-sizing: border-box;
-  transition: gap 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.bz-band::-webkit-scrollbar,
+.bz-marquee::-webkit-scrollbar {
+  display: none;
+}
+
+.bz-band[data-band-overflow],
+.bz-marquee[data-band-overflow] {
+  -webkit-mask-image: linear-gradient(90deg, rgb(var(--ink-rgb)) calc(100% - 28px), transparent 100%);
+  mask-image: linear-gradient(90deg, rgb(var(--ink-rgb)) calc(100% - 28px), transparent 100%);
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .bz-band[data-band-overflow],
+  .bz-marquee[data-band-overflow] {
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
 }
 
 .bz-band.creatures-band,
@@ -245,7 +263,7 @@
   justify-content: safe center;
 }
 
-/* Banda repartida en varias líneas (useBandFit): con cartas más pequeñas caben
+/* Banda repartida en varias líneas (layout solver): con cartas más pequeñas caben
    2-3 filas en la misma altura, así que se envuelve en vez de hacer scroll. */
 .bz-band[data-band-lines] {
   flex-wrap: wrap;
@@ -281,7 +299,6 @@
 .pz-commander,
 .oz-commander {
   width: auto;
-  max-width: 55%;
   flex-shrink: 0;
   border-radius: var(--r-base);
   border: none;
@@ -296,7 +313,6 @@
 .oz-marquee {
   flex-shrink: 0;
   margin-left: auto;
-  max-width: 45%;
   display: flex;
   align-items: center;
   gap: var(--sp-2h);
@@ -312,15 +328,13 @@
   min-height: 0;
   height: 100%;
   box-sizing: border-box;
-  scrollbar-width: thin;
-  scrollbar-color: rgb(var(--gold-rgb) / 0.3) transparent;
+  scrollbar-width: none;
 }
 
 .bz-band.bz-lands-band,
 .bz-band.bz-others-band {
   flex: 1 1 0;
   width: auto;
-  min-width: var(--card-w, 100px);
 }
 
 .bz-band.bz-split-band {
@@ -336,15 +350,10 @@
 .bz-band.bz-marquee-band {
   flex: 1 1 0;
   width: auto;
-  --marquee-gap: var(--sp-2h);
-  --marquee-pad: var(--sp-2);
-  min-width: calc(var(--zone-card-w, 100px) + 2 * var(--marquee-pad) + 3px);
-  max-width: calc(var(--marquee-slots, 1) * var(--zone-card-w, 100px) + (var(--marquee-slots, 1) - 1) * var(--marquee-gap) + 2 * var(--marquee-pad) + 3px);
   border: 1px solid rgb(var(--gold-rgb) / 0.16);
   border-left: 2px solid rgb(var(--gold-rgb) / 0.45);
   background: linear-gradient(180deg, rgb(var(--gold-rgb) / 0.06) 0%, rgb(var(--gold-rgb) / 0.02) 100%);
   box-shadow: inset 0 1px 0 var(--veil-1);
-  scrollbar-color: rgb(var(--gold-rgb) / 0.3) transparent;
 }
 
 .stack-group,
@@ -521,16 +530,14 @@
   padding: 1px var(--sp-0h);
 }
 
-.board-zone.compact-pod .bz-marquee-band {
-  --marquee-gap: var(--sp-1);
-  --marquee-pad: var(--sp-0h);
+.board-zone.compact-pod .bz-marquee {
+  gap: var(--sp-1);
 }
 
 .board-zone.compact-pod .bz-commander,
 .opponent-zone.compact-pod .oz-commander,
 .player-zone.compact-pod .pz-commander {
   width: auto;
-  max-width: 60%;
 }
 
 /* ── Defeated / Left Overlay ─────────────────────────────────────── */
@@ -707,6 +714,8 @@
    bottom-right of the battlefield; the row keeps room for them on its right. */
 .board-zone.has-pile-corner {
   position: relative;
+  container-type: inline-size;
+  --pile-corner-w: min(calc(var(--zone-card-w, 0px) * 1.35 + var(--sp-1) * 2), 25cqw);
 }
 
 .bz-status-row.has-pile-corner,
@@ -723,6 +732,6 @@
   right: calc(var(--sp-3h) + var(--sp-1));
   bottom: 0;
   z-index: 11;
-  max-width: 25%;
+  max-width: 25cqw;
   min-width: 0;
 }

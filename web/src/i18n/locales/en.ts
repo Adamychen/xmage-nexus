@@ -18,6 +18,7 @@ export const en = {
     clear: 'Clear',
     copy: 'Copy',
     copied: 'Copied!',
+    download: 'Download',
     done: 'Done',
     language: 'Interface Language',
     card_language: 'Card Language',

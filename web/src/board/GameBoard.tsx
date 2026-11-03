@@ -76,6 +76,7 @@ export default function GameBoard({
     <BoardShell
       className="game-board"
       testId="game-board"
+      layout="standard"
       presenter={presenter}
       handBar={!isSpectator ? {
         cards: switchedHand ?? game?.myHand ?? {},

@@ -322,6 +322,7 @@ export default function SpotlightBoard({
     <BoardShell
       className="arena-board spotlight-board"
       testId="spotlight-board"
+      layout="spotlight"
       style={{
         '--main-inset-right': `${panelPercent}%`,
         ...(cornerAnchor ? {

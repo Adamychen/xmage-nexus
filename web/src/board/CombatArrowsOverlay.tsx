@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo, useCallback } from 'react'
-import { BOARD_RELAYOUT_EVENT } from './useBandFit'
+import { BOARD_RELAYOUT_EVENT } from './layout/relayout'
 import { isPlayerOut } from './boardShared'
 import type { GameView } from '../net/types'
 import { seatColorVar, seatIndexOf } from './seatColor'

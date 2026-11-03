@@ -1,7 +1,7 @@
 import { createEvent, fireEvent, render } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import StackPile from './StackPile'
-import { BOARD_RELAYOUT_EVENT } from './useBandFit'
+import { BOARD_RELAYOUT_EVENT } from './layout/relayout'
 
 function relayoutEvents(spy: { mock: { calls: unknown[][] } }): number {
   return spy.mock.calls.filter(([event]) => (event as Event).type === BOARD_RELAYOUT_EVENT).length

@@ -181,4 +181,18 @@ describe('groupStackables', () => {
     expect(solos).toHaveLength(1)
     expect(solos[0][1].counters).toHaveLength(1)
   })
+
+  it('BRD-28: a token with an attachment or a mutated permanent is never piled, it stays a solo card', () => {
+    const equipped = creatureToken('Soldier', { attachments: ['sword'] })
+    const mutated = creatureToken('Soldier', { mutated: true })
+    expect(stackGroupKeyOf('x', equipped, 'creatures')).toBeNull()
+    expect(stackGroupKeyOf('x', mutated, 'creatures')).toBeNull()
+    expect(stackGroupKeyOf('x', { ...token('Treasure'), attachments: ['aura'] }, 'other')).toBeNull()
+    expect(stackGroupKeyOf('x', { ...land('Forest'), attachments: ['aura'] }, 'lands')).toBeNull()
+    const perms = [creatureToken('Soldier'), creatureToken('Soldier'), creatureToken('Soldier'), creatureToken('Soldier'), equipped]
+    const { groups, solos } = groupStackables(entries(perms), 'creatures')
+    expect(groups).toHaveLength(1)
+    expect(groups[0].items).toHaveLength(4)
+    expect(solos.map(([, p]) => p.attachments)).toEqual([['sword']])
+  })
 })

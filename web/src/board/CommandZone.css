@@ -21,12 +21,13 @@
 }
 
 .command-zone.compact.multi-commander {
+  --cz-card-w: var(--card-w, 100px);
   gap: var(--sp-1);
   padding: var(--sp-0h) var(--sp-1);
 }
 
 .command-zone.compact.multi-commander .commander-slot {
-  --card-w: calc(var(--card-w) * 0.88);
+  --card-w: calc(var(--cz-card-w) * 0.88);
 }
 
 .commander-card-wrap {

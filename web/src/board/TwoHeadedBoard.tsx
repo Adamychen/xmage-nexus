@@ -124,6 +124,7 @@ export default function TwoHeadedBoard({
   return (
     <BoardShell
       className={shellClass}
+      layout="pod"
       presenter={presenter}
       handBar={!isSpectator ? {
         cards: switchedHand ?? game?.myHand ?? {},
