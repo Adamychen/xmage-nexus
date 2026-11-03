@@ -287,3 +287,16 @@ name in the footer, with how many more there are, and all of them on hover.
   Scryfall marks every card of a set that is not out yet (Gargantos and The Darkhold, out 2027-04-09) as
   not legal in every format, while XMage, which implements them, accepts them.
 - Guard: `src/decks/deckLegality.test.ts` · `src/decks/DecksGallery.test.tsx`
+
+### DCK-20 · Exporting opens a window to copy the deck, and downloads only on request
+Choosing a format to export a deck (.dck, Arena, Plain, .dek), from the editor on any screen size or from
+My decks, opens a window with the deck written in that format. Copy puts the text on the clipboard and
+the button says it was copied for a moment; when the browser refuses the clipboard, the text is selected
+so it can be copied by hand. Download saves the file in that format, and nothing is downloaded or copied
+until one of the two is pressed.
+
+- Why: every export copied the deck and downloaded a file at once, so a player who only wanted to paste
+  the list got the browser's "where to save" window each time; and in the editor, telling the player the
+  copy worked rewrote the text of whatever had focus, which after the menu closed was the page itself,
+  so the whole app was replaced by "Copied!" (report of 2026-11-01).
+- Guard: `src/decks/DeckExportDialog.test.tsx` · `src/decks/DecksGallery.test.tsx`
