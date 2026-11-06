@@ -325,7 +325,7 @@ without tokens, memorabilia or digital-only sets). Picking a set applies it and 
 the search applies a set typed by its name by its code, and anything else as typed. The keyword dropdown
 lists the 24 common keywords and has a search box over every keyword ability Scryfall knows, by English or
 translated name; Enter picks the first match, a picked keyword outside the common list stays on top, and a
-keyword of two words is searched as one phrase (`keyword:"first strike"`). A dropdown that
+keyword of two words is searched as one phrase (`keyword:"first strike"`). A search box with no match says so. A dropdown that
 filters is highlighted and names what it filters by; "Any" (or All) clears it. Escape or a click outside
 closes an open menu.
 

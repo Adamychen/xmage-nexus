@@ -389,6 +389,13 @@
   font-size: var(--fs-xs);
 }
 
+.arena-filter-dd-empty {
+  margin: 0;
+  padding: var(--sp-2);
+  font-size: var(--fs-xs);
+  color: var(--fg-3);
+}
+
 .arena-filter-dd-code {
   min-width: 3.5em;
   font-weight: 800;

@@ -118,6 +118,10 @@ describe('ArenaFilterBar', () => {
     fireEvent.keyDown(search, { key: 'Enter' })
     expect(props.onToggleKeyword).toHaveBeenLastCalledWith('Living weapon')
 
+    fireEvent.change(search, { target: { value: 'zzz' } })
+    expect(screen.queryAllByRole('menuitemcheckbox')).toHaveLength(0)
+    expect(screen.getByRole('status').textContent).toBe(t('decks', 'builder_search_no_results', { query: 'zzz' }))
+
     fireEvent.change(search, { target: { value: '' } })
     expect(screen.getAllByRole('menuitemcheckbox')).toHaveLength(24)
   })

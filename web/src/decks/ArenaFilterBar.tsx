@@ -379,6 +379,9 @@ export function ArenaFilterBar({
                           {keywordLabel(kw)}
                         </MenuItem>
                       ))}
+                      {extra.length + shown.length === 0 && (
+                        <p className="arena-filter-dd-empty" role="status">{t('decks', 'builder_search_no_results', { query: keywordQuery.trim() })}</p>
+                      )}
                     </div>
                   </>
                 )
@@ -411,6 +414,9 @@ export function ArenaFilterBar({
                     <MenuItem role="option" aria-selected={!setFilter} selected={!setFilter} onClick={() => { onSetChange(null); close() }}>
                       {t('decks', 'filter_any')}
                     </MenuItem>
+                    {sets.length > 0 && setQuery.trim() !== '' && matchingSets(sets, setQuery).length === 0 && (
+                      <p className="arena-filter-dd-empty" role="status">{t('decks', 'builder_search_no_results', { query: setQuery.trim() })}</p>
+                    )}
                     {matchingSets(sets, setQuery).map((s) => (
                       <MenuItem key={s.code} role="option" aria-selected={setFilter === s.code} selected={setFilter === s.code} onClick={() => { onSetChange(s.code); close() }}>
                         <span className="arena-filter-dd-code">{s.code.toUpperCase()}</span>
