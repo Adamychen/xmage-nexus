@@ -2,7 +2,7 @@ import type { DeckEditorView, DeckStacksCopies, DeckStacksGroup, DeckStacksSort 
 import Button from '../ui/Button'
 import { useTranslation } from '../i18n'
 import { CardSizeSlider } from './CardSizeSlider'
-import { canSeparateCreatures, listGroupOf } from './stackColumns'
+import { canSeparateCreatures } from './stackColumns'
 import { DECK_STACKS_SCALE_MAX, DECK_STACKS_SCALE_MIN, DECK_STACKS_SCALE_STEP } from './stacksScale'
 import './DeckEditorToolbar.css'
 
@@ -130,7 +130,7 @@ export function DeckEditorToolbar({
       <Segmented<DeckStacksGroup>
         control="group"
         label={t('decks', 'editor_group')}
-        value={piles ? group : listGroupOf(group)}
+        value={group}
         onChange={onGroupChange}
         options={[
           { value: 'type', label: t('decks', 'group_type') },
@@ -139,7 +139,7 @@ export function DeckEditorToolbar({
           { value: 'rarity', label: t('decks', 'group_rarity') },
           { value: 'identity', label: t('decks', 'group_identity') },
           { value: 'edh', label: t('decks', 'group_edh') },
-          ...(piles ? [{ value: 'free' as const, label: t('decks', 'group_free') }] : []),
+          { value: 'free', label: t('decks', 'group_free') },
         ]}
       />
 

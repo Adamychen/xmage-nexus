@@ -811,6 +811,7 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
         layout={layout}
         group={group}
         sort={sort}
+        piles={piles}
         onInc={stableInc}
         onDec={stableDec}
         onRemove={stableRemove}

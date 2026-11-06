@@ -280,8 +280,24 @@ describe('DeckListPanel grouping', () => {
     expect(headers().length).toBeGreaterThan(0)
   })
 
-  it('DCK-25: the free grouping of Piles shows the list by type', () => {
+  it('DCK-25: the free grouping lists the deck by its own piles, and by type until it has any', () => {
+    const sectionIds = () => [...document.querySelectorAll('.deck-category-section[data-group]')].map((el) => el.getAttribute('data-group'))
     renderPanel({ cards: [bolt, goblin], metaMap, group: 'free' })
-    expect([...document.querySelectorAll('.deck-category-section[data-group]')].map((el) => el.getAttribute('data-group'))).toEqual(['creatures', 'instants'])
+    expect(sectionIds()).toEqual(['creatures', 'instants'])
+    cleanup()
+
+    renderPanel({
+      cards: [bolt, goblin],
+      metaMap,
+      group: 'free',
+      piles: {
+        piles: [{ id: 'p1', label: 'Burn' }, { id: 'p2', label: 'Beaters' }],
+        assign: { 'M10:146:Lightning Bolt': { p1: 4 }, 'ZEN:126:Goblin Guide': { p2: 1 } },
+      },
+    })
+    expect(sectionIds()).toEqual(['p1', 'p2'])
+    expect(document.querySelector('[data-group="p1"]')?.textContent).toContain('Burn')
+    expect(document.querySelector('[data-group="p1"]')?.textContent).toContain('Lightning Bolt')
+    expect(document.querySelector('[data-group="p2"]')?.textContent).toContain('Goblin Guide')
   })
 })

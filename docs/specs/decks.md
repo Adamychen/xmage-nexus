@@ -301,16 +301,19 @@ until one of the two is pressed.
 - Guard: `src/decks/DeckExportDialog.test.tsx` · `src/decks/DecksGallery.test.tsx`
 
 ### DCK-25 · List view groups and sorts like Piles
-In List view the toolbar shows Group (Type, Mana value, Colour, Rarity, Identity, EDH power; the free
-piles of Piles view have no list form, so a deck grouped that way is listed by type) and Sort (mana value or
-name). The vertical list makes one section per group, under the commander section, and the horizontal
-list makes one column per group with the commander column first; both follow the same choice. Columns
-are at least 200 px wide and wrap to a new row instead of shrinking, so a card's name is never covered
-by its cost. Grouping by rarity uses each card's rarity from Scryfall. The commander's crown sits in the
-strip's quantity slot, beside the name.
+In List view the toolbar shows the same Group as Piles (Type, Mana value, Colour, Rarity, Identity, EDH
+power, Free) and Sort (mana value or name). The grouping is one setting for both views and both list
+layouts, so switching between Piles, List, vertical and horizontal keeps it; Free lists the deck by its
+own piles, and by type while it has none yet. The vertical list makes one section per group, under the
+commander section, and the horizontal list one column per group with the commander column first. The
+horizontal columns are at least 200 px wide and flow like newspaper columns: a group is never split or
+squeezed and never overlaps the next one, so a card's name is never covered by its cost. Grouping by
+rarity uses each card's rarity from Scryfall. The commander's crown sits in the strip's quantity slot,
+beside the name.
 
 - Why: List view only grouped by type, the horizontal list always used fixed mana value columns about
   95 px wide where the cost covered the name, grouping by rarity left a whole deck in one "other" column
-  because card details dropped the rarity, and the board's `.commander-badge` style pulled the list's
+  because card details dropped the rarity, a long group in the horizontal list was squeezed over the
+  next row, and the board's `.commander-badge` style pulled the list's
   crown on top of the commander's name (report of 2026-11-06).
 - Guard: `src/decks/DeckEditorToolbar.test.tsx` · `src/decks/DeckListPanel.test.tsx` · `src/decks/deckCardOps.test.ts` · `src/decks/ArenaCardStrip.test.tsx`

@@ -170,10 +170,6 @@ export function buildStackColumns(
   return columns
 }
 
-export function listGroupOf(group: StackGroup): Exclude<StackGroup, 'free'> {
-  return group === 'free' ? 'type' : group
-}
-
 const SEPARATABLE_GROUPS: ReadonlySet<StackGroup> = new Set<StackGroup>(['cmc', 'color', 'identity', 'edh', 'rarity'])
 
 export function canSeparateCreatures(group: StackGroup): boolean {

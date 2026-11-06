@@ -8,7 +8,8 @@ import type { DeckFormat } from './types'
 import { commanderCardsFor } from './deckUtils'
 import { commanderEligibleFor } from './useCommanderEligibility'
 import { aggregateCards } from './deckCardOps'
-import { buildStackColumns, listGroupOf, type StackGroup, type StackSort } from './stackColumns'
+import { buildStackColumns, type StackGroup, type StackSort } from './stackColumns'
+import type { DeckStackPiles } from './stackPiles'
 import type { StackItem } from './ArenaCardStacks'
 import { useStackLabels } from './useStackLabels'
 import { ArenaCardStrip } from './ArenaCardStrip'
@@ -34,6 +35,7 @@ export default function DeckListPanel({
   layout = 'vertical',
   group = 'type',
   sort = 'cmc',
+  piles,
   onInc,
   onDec,
   onRemove,
@@ -60,6 +62,7 @@ export default function DeckListPanel({
   layout?: 'vertical' | 'horizontal'
   group?: StackGroup
   sort?: StackSort
+  piles?: DeckStackPiles
   onInc: (key: string) => void
   onDec: (key: string) => void
   onRemove: (key: string) => void
@@ -195,10 +198,10 @@ export default function DeckListPanel({
     : displayCards
 
   const metaOf = (c: DeckCard) => metaMap.get(`${c.setCode}/${c.cardNumber}`) ?? metaMap.get(c.cardName.toLowerCase())
-  const listGroup = listGroupOf(group)
-  const sections = buildStackColumns(mainCardsWithoutCommander, metaOf, { group: listGroup, sort, labels })
+  const listGroup: StackGroup = group === 'free' && !(piles && piles.piles.length > 0) ? 'type' : group
+  const sections = buildStackColumns(mainCardsWithoutCommander, metaOf, { group: listGroup, sort, labels, piles })
   const columns = layout === 'horizontal'
-    ? buildStackColumns(displayCards, metaOf, { group: listGroup, sort, labels, commanderKeys })
+    ? buildStackColumns(displayCards, metaOf, { group: listGroup, sort, labels, piles, commanderKeys })
     : []
   const countOf = (items: StackItem[]) => items.reduce((sum, item) => sum + item.card.amount, 0)
   const mainStrip = (card: DeckCard, commanderIndex = -1) => {
