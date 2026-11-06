@@ -325,9 +325,10 @@ first in its top bar. There is no second copy at the end of the page.
   one place to look for it.
 - Guard: `src/lobby/PublicRankingScreen.test.tsx`
 
-### LBY-28 · Leaving the Decks tab closes the deck editor
+### LBY-28 · The top tabs close the deck editor, so Decks opens on My decks
 When the player goes from the deck editor to another tab (Tables, History, Ranking or the active-table
 shortcut), the editor closes with its changes saved, so the Decks tab opens on My decks the next time.
+Pressing the Decks tab while the editor is open also closes it and shows My decks.
 Opening a deck from the create-table dialog still lands in the editor.
 
 - Why: the Decks tab reopened the last deck the player had left, instead of the list they expect from a

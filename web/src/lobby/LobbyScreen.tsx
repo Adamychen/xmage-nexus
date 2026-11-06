@@ -61,7 +61,7 @@ export default function LobbyScreen() {
   const [activeTab, setActiveTab] = useState<LobbyTab>('tables')
   const [deckBuilderId, setDeckBuilderId] = useState<string | null>(null)
   const changeTab = (tab: LobbyTab) => {
-    if (tab !== 'decks') setDeckBuilderId(null)
+    setDeckBuilderId(null)
     setActiveTab(tab)
   }
   const [createKind, setCreateKind] = useState<CreateKind | null>(null)
