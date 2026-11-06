@@ -757,9 +757,8 @@ for (const vp of [{ width: 1920, height: 1080 }, { width: 1600, height: 900 }, {
 
       const card = page.locator('.hand-bar .hand-card').first()
       await card.hover({ position: { x: 10, y: 24 } })
-      await page.waitForTimeout(500)
+      await expect.poll(async () => (await handOverBattlefield(page)).handTop, { message: 'the hovered card rises', timeout: 2000 }).toBeLessThan(rest.handTop - 20)
       const hovered = await handOverBattlefield(page)
-      expect(hovered.handTop, 'the hovered card rises').toBeLessThan(rest.handTop - 20)
       expect(hovered.board.map((b) => [Math.round(b.left), Math.round(b.top)]), 'hover does not move the battlefield').toEqual(rest.board.map((b) => [Math.round(b.left), Math.round(b.top)]))
       const onTop = await card.evaluate((el) => {
         const r = el.getBoundingClientRect()
