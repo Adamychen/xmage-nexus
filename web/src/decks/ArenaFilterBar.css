@@ -319,6 +319,23 @@
   flex-wrap: wrap;
 }
 
+.adv-oracle-row {
+  gap: var(--sp-2);
+}
+
+.arena-filter-oracle {
+  flex: 1 1 220px;
+  min-width: 0;
+  padding: var(--sp-1) var(--sp-2);
+  font-size: var(--fs-xs);
+}
+
+.arena-filter-oracle-hint {
+  flex-basis: 100%;
+  font-size: var(--fs-2xs);
+  color: var(--fg-3);
+}
+
 .adv-dd-row {
   gap: var(--sp-2h);
 }

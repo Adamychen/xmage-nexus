@@ -30,6 +30,7 @@ const WHITELIST = new Set<string>([
   'board.cloak',
   'board.opp_dead',
   'decks.browser_filter_aggro',
+  'decks.filter_oracle_placeholder',
   'decks.browser_filter_midrange',
   'decks.browser_filter_control',
   'decks.browser_filter_combo',

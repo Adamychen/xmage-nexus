@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useId } from 'react'
 import MenuItem from '../ui/MenuItem'
 import IconButton from '../ui/IconButton'
 import Button from '../ui/Button'
@@ -82,6 +82,8 @@ export function ArenaFilterBar({
   onToughnessChange,
   setFilter,
   onSetChange,
+  oracleText = '',
+  onOracleTextChange,
   onReset,
   searchLang = 'any',
   onSearchLangChange,
@@ -111,6 +113,8 @@ export function ArenaFilterBar({
   onToughnessChange: (f: StatFilter | null) => void
   setFilter: string | null
   onSetChange: (s: string | null) => void
+  oracleText?: string
+  onOracleTextChange?: (text: string) => void
   onReset: () => void
   searchLang?: string
   onSearchLangChange?: (lang: string) => void
@@ -128,6 +132,7 @@ export function ArenaFilterBar({
   const [advancedOpen, setAdvancedOpen] = useState(false)
   const [setQuery, setSetQuery] = useState('')
   const [keywordQuery, setKeywordQuery] = useState('')
+  const oracleId = useId()
   const [powerOp, setPowerOp] = useState<StatOp>('>=')
   const [toughnessOp, setToughnessOp] = useState<StatOp>('>=')
   const langMenuRef = useRef<HTMLDivElement>(null)
@@ -160,7 +165,8 @@ export function ArenaFilterBar({
     keywordFilter.size > 0 ||
     powerFilter !== null ||
     toughnessFilter !== null ||
-    (setFilter !== null && setFilter.trim() !== '')
+    (setFilter !== null && setFilter.trim() !== '') ||
+    oracleText.trim() !== ''
 
   return (
     <div className="arena-filter-bar">
@@ -347,6 +353,22 @@ export function ArenaFilterBar({
 
       {advancedOpen && (
         <div className="filter-advanced-panel">
+          {onOracleTextChange && (
+            <div className="adv-row adv-oracle-row">
+              <label className="arena-chip-label" htmlFor={oracleId}>{t('decks', 'filter_oracle')}</label>
+              <input
+                id={oracleId}
+                className="arena-filter-oracle"
+                type="search"
+                spellCheck={false}
+                placeholder={t('decks', 'filter_oracle_placeholder')}
+                aria-describedby={`${oracleId}-hint`}
+                value={oracleText}
+                onChange={(e) => onOracleTextChange(e.target.value)}
+              />
+              <span id={`${oracleId}-hint`} className="arena-filter-oracle-hint">{t('decks', 'filter_oracle_hint')}</span>
+            </div>
+          )}
           <div className="adv-row adv-dd-row">
             <FilterDropdown
               label={t('decks', 'filter_rarity')}

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildScryfallQuery, hasSearchCriteria, rawQueryHasColor, type ScryfallQueryOpts } from './filterQuery'
+import { buildScryfallQuery, hasSearchCriteria, oracleTerms, rawQueryHasColor, type ScryfallQueryOpts } from './filterQuery'
 
 function base(over: Partial<ScryfallQueryOpts> = {}): ScryfallQueryOpts {
   return {
@@ -70,5 +70,21 @@ describe('type filter', () => {
   it('DCK-22: several types are searched as one OR group', () => {
     expect(buildScryfallQuery(base({ typeFilter: new Set(['Creature']) }))).toContain('t:creature')
     expect(buildScryfallQuery(base({ typeFilter: new Set(['Creature', 'Artifact']) }))).toContain('(t:creature OR t:artifact)')
+  })
+})
+
+describe('oracle text', () => {
+  it('DCK-24: each word is its own rules-text term, and quotes keep a phrase together', () => {
+    expect(oracleTerms('draw a card')).toEqual(['draw', 'a', 'card'])
+    expect(oracleTerms('"enters tapped"  sacrifice')).toEqual(['enters tapped', 'sacrifice'])
+    expect(oracleTerms('  "" ')).toEqual([])
+  })
+
+  it('DCK-24: rules text becomes Scryfall o: terms and counts as something to search for', () => {
+    const q = buildScryfallQuery(base({ oracleText: '"enters tapped" draw' }))
+    expect(q).toContain('o:"enters tapped"')
+    expect(q).toContain('o:"draw"')
+    expect(hasSearchCriteria(base({ oracleText: '  ' }))).toBe(false)
+    expect(hasSearchCriteria(base({ oracleText: 'draw' }))).toBe(true)
   })
 })

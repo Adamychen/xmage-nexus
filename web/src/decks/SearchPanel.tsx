@@ -53,6 +53,7 @@ export default function SearchPanel({
         powerFilter: filters.powerFilter,
         toughnessFilter: filters.toughnessFilter,
         setFilter: filters.setFilter,
+        oracleText: filters.oracleText,
       }
       return hasSearchCriteria(opts) ? buildScryfallQuery(opts) : ''
     },
@@ -67,6 +68,7 @@ export default function SearchPanel({
       filters.powerFilter,
       filters.toughnessFilter,
       filters.setFilter,
+      filters.oracleText,
     ],
   )
 
@@ -108,6 +110,8 @@ export default function SearchPanel({
         onToughnessChange={filters.setToughnessFilter}
         setFilter={filters.setFilter}
         onSetChange={filters.setSetFilter}
+        oracleText={filters.oracleText}
+        onOracleTextChange={filters.setOracleText}
         onReset={handleReset}
         sortOrder={sortOrder}
         onSortOrderChange={setSortOrder}
