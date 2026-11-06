@@ -372,6 +372,7 @@ export default function DeckListPanel({
       ) : (
         <>
           <div className="arena-deck-cols-layout deck-cols">
+            <div className="deck-cols-flow">
             {columns.map((column) => (
               <div key={column.id} className={`arena-deck-column deck-col${column.kind === 'commander' ? ' deck-col--commander' : ''}`} data-group={column.id}>
                 <div className="arena-deck-col-head deck-col-head">
@@ -383,6 +384,7 @@ export default function DeckListPanel({
                 </div>
               </div>
             ))}
+            </div>
           </div>
           {sideboardSection}
         </>
