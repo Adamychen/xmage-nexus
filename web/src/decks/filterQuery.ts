@@ -59,7 +59,7 @@ export function buildScryfallQuery(opts: ScryfallQueryOpts): string {
     else parts.push(`(${r.map((x) => `rarity:${x}`).join(' OR ')})`)
   }
   if (opts.keywordFilter.size > 0) {
-    for (const kw of opts.keywordFilter) parts.push(`keyword:${kw.toLowerCase()}`)
+    for (const kw of opts.keywordFilter) parts.push(/\s/.test(kw) ? `keyword:"${kw.toLowerCase()}"` : `keyword:${kw.toLowerCase()}`)
   }
   if (opts.powerFilter && Number.isFinite(opts.powerFilter.value)) parts.push(`pow${opts.powerFilter.op}${opts.powerFilter.value}`)
   if (opts.toughnessFilter && Number.isFinite(opts.toughnessFilter.value)) parts.push(`tou${opts.toughnessFilter.op}${opts.toughnessFilter.value}`)

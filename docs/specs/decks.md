@@ -316,6 +316,25 @@ filter empties the grid again.
   image the player did not ask for.
 - Guard: `src/decks/filterQuery.test.ts` · `src/decks/SearchPanel.test.tsx`
 
+### DCK-22 · Every filter with a list of values is a dropdown
+In the editor's filter bar, mana value (All, 0 to 6, 7+) and card type (All and the eight types) are one
+dropdown each. In the advanced filters, rarity, keyword and set are dropdowns too: rarity and keyword
+keep several picks (the menu stays open and each value toggles), and the set dropdown has a search box over
+every paper set by code and name (Scryfall's set list, loaded the first time the advanced filters open,
+without tokens, memorabilia or digital-only sets). Picking a set applies it and closes the menu; Enter in
+the search applies a set typed by its name by its code, and anything else as typed. The keyword dropdown
+lists the 24 common keywords and has a search box over every keyword ability Scryfall knows, by English or
+translated name; Enter picks the first match, a picked keyword outside the common list stays on top, and a
+keyword of two words is searched as one phrase (`keyword:"first strike"`). A dropdown that
+filters is highlighted and names what it filters by; "Any" (or All) clears it. Escape or a click outside
+closes an open menu.
+
+- Why: eight mana value chips and eight type chips took three rows of the narrow search column, the
+  rarity letters sat off-centre, the keyword chips needed a "More" toggle, and the eight quick set chips
+  only covered sets from 2023 and 2024; a native `datalist` for the set looked different in every browser
+  and showed no list at all in Chrome until typing (reports of 2026-11-01 and 2026-11-06).
+- Guard: `src/decks/ArenaFilterBar.test.tsx`
+
 ### DCK-23 · My decks equips a deck without opening it, and the label stays clear of the buttons
 The bottom bar of My decks has an Equip button for the selected deck, next to Open. It does what the
 editor's Equip does: the deck becomes the one used to join tables, the button turns into "✓ Equipped"

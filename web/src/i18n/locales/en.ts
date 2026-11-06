@@ -1969,6 +1969,8 @@ export const en = {
     filter_toughness: 'Toughness',
     filter_set: 'Set',
     filter_set_placeholder: 'e.g. mh3, blb, dsk…',
+    filter_any: 'Any',
+    filter_keyword_search: 'Search keywords…',
     filter_search_placeholder: 'Search by name…',
     filter_raw_color_clash: 'Free text already filters by color — it may contradict the chips',
     filter_more: 'More',

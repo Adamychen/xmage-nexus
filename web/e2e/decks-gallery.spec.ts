@@ -531,8 +531,8 @@ test.describe('Decks Gallery', () => {
       await expect(page.locator('.sg-panel .arena-filter-bar')).toBeVisible({ timeout: 8000 })
       await expect(page.locator('.sg-tile')).toHaveCount(3)
 
-      // Chip de tipo: solo criaturas
-      await page.locator('.sg-panel').getByRole('button', { name: /^(Criatura|Creature)$/ }).click()
+      // Type dropdown: creatures only
+      await page.locator('.sg-panel').getByRole('combobox', { name: /^(Tipo|Type)$/ }).selectOption('Creature')
       await expect(page.locator('.sg-tile')).toHaveCount(1)
       await expect(page.locator('.sg-tile img[alt="Llanowar Elves"]')).toBeVisible()
       await expect(page.locator('.sg-tile img[alt="Sol Ring"]')).toHaveCount(0)

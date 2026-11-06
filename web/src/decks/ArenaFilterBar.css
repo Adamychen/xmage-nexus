@@ -278,6 +278,25 @@
   font-weight: 700;
 }
 
+.arena-filter-select {
+  padding-block: var(--sp-1);
+  padding-inline-start: var(--sp-1h);
+  font-size: var(--fs-2xs);
+  font-weight: 700;
+}
+
+.arena-filter-select-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1h);
+}
+
+.arena-filter-select.is-active {
+  color: var(--gold-300);
+  background-color: var(--gold-soft);
+  border-color: var(--gold-line);
+}
+
 .filter-advanced-panel {
   display: flex;
   flex-direction: column;
@@ -300,25 +319,87 @@
   flex-wrap: wrap;
 }
 
-.rarity-chip {
-  width: 28px;
-  height: 24px;
-  border-radius: var(--r-xs);
-  border: 1px solid var(--veil-4);
-  background: var(--veil-1);
-  color: var(--fg-2);
-  font-size: var(--fs-2xs);
-  font-weight: 800;
-  cursor: pointer;
-  transition: all 120ms ease;
+.adv-dd-row {
+  position: relative;
+  gap: var(--sp-2h);
 }
 
-.rarity-chip:hover { background: var(--veil-3); color: var(--fg-hi); }
-.rarity-chip.active { color: var(--fg-hi); box-shadow: 0 0 6px var(--veil-5); }
-.rarity-common.active { background: color-mix(in srgb, var(--rarity-common) 40%, var(--ink-2)); border-color: var(--rarity-common); }
-.rarity-uncommon.active { background: color-mix(in srgb, var(--rarity-uncommon) 40%, var(--ink-2)); border-color: var(--rarity-uncommon); }
-.rarity-rare.active { background: color-mix(in srgb, var(--rarity-rare) 40%, var(--ink-2)); border-color: var(--rarity-rare); }
-.rarity-mythic.active { background: color-mix(in srgb, var(--rarity-mythic) 40%, var(--ink-2)); border-color: var(--rarity-mythic); }
+.arena-filter-dd {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1h);
+  min-width: 0;
+}
+
+.arena-filter-dd-trigger {
+  max-width: 120px;
+  color: var(--text);
+  background-color: var(--ink-1);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-md);
+  padding-inline-end: var(--sp-6);
+  text-align: start;
+  background-image: linear-gradient(45deg, transparent 50%, var(--fg-2) 50%), linear-gradient(135deg, var(--fg-2) 50%, transparent 50%);
+  background-position: calc(100% - 15px) 50%, calc(100% - 10px) 50%;
+  background-size: 5px 5px;
+  background-repeat: no-repeat;
+}
+
+.arena-filter-dd-trigger:active { transform: none; }
+
+.arena-filter-dd-summary {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.arena-filter-dd-panel {
+  position: absolute;
+  top: calc(100% + var(--sp-1));
+  left: 0;
+  right: 0;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  padding: var(--sp-1);
+  background: var(--ink-3);
+  border: 1px solid var(--veil-4);
+  border-radius: var(--r-base);
+  box-shadow: 0 8px 24px var(--shade-3);
+}
+
+.arena-filter-dd-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-0h);
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.arena-filter-dd-check {
+  display: inline-block;
+  width: 1em;
+  color: var(--gold-300);
+}
+
+.arena-filter-dd-search {
+  padding: var(--sp-1) var(--sp-2);
+  font-size: var(--fs-xs);
+}
+
+.arena-filter-dd-code {
+  min-width: 3.5em;
+  font-weight: 800;
+  color: var(--fg-2);
+}
+
+.arena-filter-dd-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
 .adv-stats-row {
   gap: var(--sp-4);
@@ -342,12 +423,6 @@
   padding: var(--sp-1) var(--sp-1h);
   font-size: var(--fs-xs);
   text-align: center;
-}
-
-.set-filter-group .set-input {
-  width: 110px;
-  padding: var(--sp-1) var(--sp-2);
-  font-size: var(--fs-xs);
 }
 
 .arena-search-spinner { margin-right: var(--sp-1h); }

@@ -188,7 +188,7 @@ describe('SuggestionsPanel', () => {
     expect(await screen.findByAltText('Sol Ring')).not.toBeNull()
   })
 
-  it('filters the suggestions with the type chips and the raw query', async () => {
+  it('filters the suggestions with the type dropdown and the raw query', async () => {
     fetchMock.mockResolvedValue(EDHREC_OK)
     resolveMock.mockResolvedValue(resolvedMap())
     render(
@@ -202,7 +202,7 @@ describe('SuggestionsPanel', () => {
     await screen.findByAltText('Sol Ring')
     expect(screen.getByAltText('Llanowar Elves')).not.toBeNull()
 
-    fireEvent.click(screen.getByRole('button', { name: 'Creature' }))
+    fireEvent.change(screen.getByRole('combobox', { name: 'Type' }), { target: { value: 'Creature' } })
     expect(screen.queryByAltText('Sol Ring')).toBeNull()
     expect(screen.queryByAltText('Arcane Signet')).toBeNull()
     expect(screen.getByAltText('Llanowar Elves')).not.toBeNull()
