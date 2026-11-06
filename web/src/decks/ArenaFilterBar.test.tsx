@@ -30,8 +30,8 @@ function renderBar(over: Partial<Parameters<typeof ArenaFilterBar>[0]> = {}) {
     onToggleColor: vi.fn(),
     cmcFilter: null,
     onCmcChange: vi.fn(),
-    typeFilter: null,
-    onTypeChange: vi.fn(),
+    typeFilter: new Set<string>(),
+    onToggleType: vi.fn(),
     rarityFilter: new Set<never>(),
     onToggleRarity: vi.fn(),
     keywordFilter: new Set<string>(),
@@ -57,28 +57,47 @@ afterEach(() => {
 })
 
 describe('ArenaFilterBar', () => {
-  it('DCK-22: mana value is one dropdown, and All clears it', () => {
+  it('DCK-22: mana value is one dropdown that picks a single value, and All clears it', () => {
     const props = renderBar({ cmcFilter: 3 })
-    const select = screen.getByRole('combobox', { name: t('decks', 'filter_cmc') }) as HTMLSelectElement
+    const trigger = screen.getByRole('button', { name: t('decks', 'filter_cmc') })
+    expect(trigger.textContent).toBe('3')
 
-    expect(select.value).toBe('3')
-    expect([...select.options].map((o) => o.textContent)).toEqual([t('common', 'all'), '0', '1', '2', '3', '4', '5', '6', '7+'])
-    fireEvent.change(select, { target: { value: '7' } })
+    fireEvent.click(trigger)
+    const options = within(screen.getByRole('listbox', { name: t('decks', 'filter_cmc') })).getAllByRole('option')
+    expect(options.map((o) => o.textContent)).toEqual([t('common', 'all'), '0', '1', '2', '3', '4', '5', '6', '7+'])
+    expect(options[4].getAttribute('aria-selected')).toBe('true')
+    fireEvent.click(options[8])
     expect(props.onCmcChange).toHaveBeenLastCalledWith(7)
-    fireEvent.change(select, { target: { value: '' } })
+    expect(screen.queryByRole('listbox')).toBeNull()
+
+    fireEvent.click(trigger)
+    fireEvent.click(within(screen.getByRole('listbox')).getAllByRole('option')[0])
     expect(props.onCmcChange).toHaveBeenLastCalledWith(null)
   })
 
-  it('DCK-22: card type is one dropdown, and All clears it', () => {
-    const props = renderBar()
-    const select = screen.getByRole('combobox', { name: t('decks', 'filter_type') }) as HTMLSelectElement
+  it('DCK-22: card type is one dropdown that keeps several types', () => {
+    const props = renderBar({ typeFilter: new Set(['Creature', 'Artifact']) })
+    const trigger = screen.getByRole('button', { name: t('decks', 'filter_type') })
+    expect(trigger.textContent).toBe(`${t('game', 'type_creature')} +1`)
 
-    expect(select.value).toBe('')
-    expect(select.options).toHaveLength(9)
-    fireEvent.change(select, { target: { value: 'Creature' } })
-    expect(props.onTypeChange).toHaveBeenLastCalledWith('Creature')
-    fireEvent.change(select, { target: { value: '' } })
-    expect(props.onTypeChange).toHaveBeenLastCalledWith(null)
+    fireEvent.click(trigger)
+    const items = screen.getAllByRole('menuitemcheckbox')
+    expect(items).toHaveLength(8)
+    expect(items.filter((i) => i.getAttribute('aria-checked') === 'true')).toHaveLength(2)
+    fireEvent.click(screen.getByRole('menuitemcheckbox', { name: new RegExp(t('game', 'type_land')) }))
+    expect(props.onToggleType).toHaveBeenLastCalledWith('Land')
+    expect(screen.getAllByRole('menuitemcheckbox')).toHaveLength(8)
+  })
+
+  it('DCK-22: the sort order is the same kind of dropdown', () => {
+    const onSortOrderChange = vi.fn()
+    renderBar({ sortOrder: 'cmc', onSortOrderChange })
+    const trigger = screen.getByRole('button', { name: t('decks', 'sort_by') })
+    expect(trigger.textContent).toBe(t('decks', 'sort_cmc'))
+    fireEvent.click(trigger)
+    expect(within(screen.getByRole('listbox')).getAllByRole('option')).toHaveLength(6)
+    fireEvent.click(within(screen.getByRole('listbox')).getByRole('option', { name: t('decks', 'sort_name') }))
+    expect(onSortOrderChange).toHaveBeenLastCalledWith('name')
   })
 
   it('DCK-22: rarity is one dropdown that keeps several picks', () => {
@@ -194,7 +213,7 @@ describe('keywordCatalog', () => {
 
   it('DCK-22: a keyword of two words is searched as one phrase', () => {
     const q = buildScryfallQuery({
-      rawQuery: '', colorFilter: new Set(), typeFilter: null, cmcFilter: null, rarityFilter: new Set(),
+      rawQuery: '', colorFilter: new Set(), typeFilter: new Set(), cmcFilter: null, rarityFilter: new Set(),
       keywordFilter: new Set(['First Strike', 'Flying']), powerFilter: null, toughnessFilter: null, setFilter: null,
     })
     expect(q).toContain('keyword:"first strike"')

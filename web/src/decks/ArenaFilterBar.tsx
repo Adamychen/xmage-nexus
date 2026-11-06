@@ -69,7 +69,7 @@ export function ArenaFilterBar({
   cmcFilter,
   onCmcChange,
   typeFilter,
-  onTypeChange,
+  onToggleType,
   rarityFilter,
   onToggleRarity,
   keywordFilter,
@@ -97,8 +97,8 @@ export function ArenaFilterBar({
   onToggleColor: (color: string) => void
   cmcFilter: number | null
   onCmcChange: (cmc: number | null) => void
-  typeFilter: string | null
-  onTypeChange: (type: string | null) => void
+  typeFilter: Set<string>
+  onToggleType: (type: string) => void
   rarityFilter: Set<Rarity>
   onToggleRarity: (r: Rarity) => void
   keywordFilter: Set<string>
@@ -153,7 +153,7 @@ export function ArenaFilterBar({
     query.trim() !== '' ||
     colorFilter.size > 0 ||
     cmcFilter !== null ||
-    typeFilter !== null ||
+    typeFilter.size > 0 ||
     rarityFilter.size > 0 ||
     keywordFilter.size > 0 ||
     powerFilter !== null ||
@@ -263,35 +263,48 @@ export function ArenaFilterBar({
       </div>
 
       <div className="filter-bar-bottom">
-        <label className="arena-filter-select-wrap">
-          <span className="arena-chip-label">{t('decks', 'filter_cmc')}</span>
-          <select
-            className={`arena-filter-select ${cmcFilter !== null ? 'is-active' : ''}`}
-            value={cmcFilter ?? ''}
-            onChange={(e) => onCmcChange(e.target.value === '' ? null : Number(e.target.value))}
-            aria-label={t('decks', 'filter_cmc')}
-          >
-            <option value="">{t('common', 'all')}</option>
-            {CMC_VALUES.map((n) => (
-              <option key={n} value={n}>{n === 7 ? '7+' : n}</option>
-            ))}
-          </select>
-        </label>
+        <FilterDropdown
+          label={t('decks', 'filter_cmc')}
+          active={cmcFilter !== null}
+          testId="filter-cmc"
+          summary={cmcFilter === null ? t('common', 'all') : cmcFilter === 7 ? '7+' : String(cmcFilter)}
+        >
+          {(close) => (
+            <div className="arena-filter-dd-list" role="listbox" aria-label={t('decks', 'filter_cmc')}>
+              <MenuItem role="option" aria-selected={cmcFilter === null} selected={cmcFilter === null} onClick={() => { onCmcChange(null); close() }}>
+                {t('common', 'all')}
+              </MenuItem>
+              {CMC_VALUES.map((n) => (
+                <MenuItem key={n} role="option" aria-selected={cmcFilter === n} selected={cmcFilter === n} onClick={() => { onCmcChange(n); close() }}>
+                  {n === 7 ? '7+' : n}
+                </MenuItem>
+              ))}
+            </div>
+          )}
+        </FilterDropdown>
 
-        <label className="arena-filter-select-wrap">
-          <span className="arena-chip-label">{t('decks', 'filter_type')}</span>
-          <select
-            className={`arena-filter-select ${typeFilter !== null ? 'is-active' : ''}`}
-            value={typeFilter ?? ''}
-            onChange={(e) => onTypeChange(e.target.value === '' ? null : e.target.value)}
-            aria-label={t('decks', 'filter_type')}
-          >
-            <option value="">{t('common', 'all')}</option>
-            {TYPES.map((tKey) => (
-              <option key={tKey} value={tKey}>{t('game', TYPE_LABEL_KEYS[tKey])}</option>
-            ))}
-          </select>
-        </label>
+        <FilterDropdown
+          label={t('decks', 'filter_type')}
+          active={typeFilter.size > 0}
+          testId="filter-type"
+          summary={typeFilter.size === 0
+            ? t('common', 'all')
+            : (() => {
+              const picked = TYPES.filter((tKey) => typeFilter.has(tKey))
+              return `${t('game', TYPE_LABEL_KEYS[picked[0]])}${picked.length > 1 ? ` +${picked.length - 1}` : ''}`
+            })()}
+        >
+          {() => (
+            <div className="arena-filter-dd-list">
+              {TYPES.map((tKey) => (
+                <MenuItem key={tKey} role="menuitemcheckbox" aria-checked={typeFilter.has(tKey)} selected={typeFilter.has(tKey)} onClick={() => onToggleType(tKey)}>
+                  <span className="arena-filter-dd-check" aria-hidden="true">{typeFilter.has(tKey) ? '✓' : ''}</span>
+                  {t('game', TYPE_LABEL_KEYS[tKey])}
+                </MenuItem>
+              ))}
+            </div>
+          )}
+        </FilterDropdown>
 
         <ChipButton size="sm" activeTone="gold" active={advancedOpen} onClick={() => setAdvancedOpen((v) => !v)} aria-expanded={advancedOpen}>
           {t('decks', 'filter_advanced')} {advancedOpen ? '▴' : '▾'}
@@ -299,17 +312,17 @@ export function ArenaFilterBar({
 
         {onSortOrderChange && sortOrder && (
           <div className="arena-sort-wrap">
-            <span className="arena-chip-label">{t('decks', 'sort_by')}</span>
-            <select
-              className="arena-sort-select"
-              value={sortOrder}
-              onChange={(e) => onSortOrderChange(e.target.value as ScryfallSortOrder)}
-              aria-label={t('decks', 'sort_by')}
-            >
-              {SORT_ORDERS.map((o) => (
-                <option key={o} value={o}>{t('decks', SORT_LABEL_KEYS[o])}</option>
-              ))}
-            </select>
+            <FilterDropdown label={t('decks', 'sort_by')} active={false} testId="arena-sort" summary={t('decks', SORT_LABEL_KEYS[sortOrder])}>
+              {(close) => (
+                <div className="arena-filter-dd-list" role="listbox" aria-label={t('decks', 'sort_by')}>
+                  {SORT_ORDERS.map((o) => (
+                    <MenuItem key={o} role="option" aria-selected={sortOrder === o} selected={sortOrder === o} onClick={() => { onSortOrderChange(o); close() }}>
+                      {t('decks', SORT_LABEL_KEYS[o])}
+                    </MenuItem>
+                  ))}
+                </div>
+              )}
+            </FilterDropdown>
             {onSortDirChange && (
               <IconButton data-testid="arena-sort-dir-btn" label={sortDir === 'desc' ? t('decks', 'sort_desc') : t('decks', 'sort_asc')}
                 onClick={() => onSortDirChange(sortDir === 'desc' ? 'asc' : 'desc')}>

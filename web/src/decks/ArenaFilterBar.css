@@ -320,7 +320,6 @@
 }
 
 .adv-dd-row {
-  position: relative;
   gap: var(--sp-2h);
 }
 
@@ -328,6 +327,12 @@
   display: inline-flex;
   align-items: center;
   gap: var(--sp-1h);
+  min-width: 0;
+}
+
+.arena-filter-dd-anchor {
+  position: relative;
+  display: inline-flex;
   min-width: 0;
 }
 
@@ -358,7 +363,9 @@
   position: absolute;
   top: calc(100% + var(--sp-1));
   left: 0;
-  right: 0;
+  min-width: 100%;
+  width: max-content;
+  max-width: min(260px, calc(100vw - 32px));
   z-index: 100;
   display: flex;
   flex-direction: column;
@@ -374,7 +381,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--sp-0h);
-  max-height: 260px;
+  max-height: 320px;
   overflow-y: auto;
 }
 

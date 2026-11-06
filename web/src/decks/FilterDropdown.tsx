@@ -36,6 +36,7 @@ export function FilterDropdown({
   return (
     <div ref={rootRef} className="arena-filter-dd" data-testid={testId}>
       <span className="arena-chip-label">{label}</span>
+      <span className="arena-filter-dd-anchor">
       <button
         ref={triggerRef}
         type="button"
@@ -53,6 +54,7 @@ export function FilterDropdown({
           {children(close)}
         </div>
       )}
+      </span>
     </div>
   )
 }
