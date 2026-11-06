@@ -300,3 +300,17 @@ until one of the two is pressed.
   copy worked rewrote the text of whatever had focus, which after the menu closed was the page itself,
   so the whole app was replaced by "Copied!" (report of 2026-11-01).
 - Guard: `src/decks/DeckExportDialog.test.tsx` · `src/decks/DecksGallery.test.tsx`
+
+### DCK-21 · The editor's search shows cards only once there is something to search for
+Opening the editor's Search tab asks Scryfall for nothing: the grid says, across its whole width, to type a
+name or pick a filter, and the count and load-more footer are hidden until there is a search, which then
+reads "175 of 8,027 cards".
+Typing a name, or picking any filter (colour, mana value, type, rarity, keyword, power, toughness or
+set), runs the search; the deck's format and the sort order alone do not. Clearing the name and every
+filter empties the grid again.
+
+- Why: the grid loaded the whole of `game:paper -t:basic` with its images every time the editor opened,
+  while most players import their decks and never use it (report of 2026-11-01). Every tile is a Scryfall
+  image the player did not ask for.
+- Guard: `src/decks/filterQuery.test.ts` · `src/decks/SearchPanel.test.tsx`
+

@@ -21,6 +21,20 @@ export function rawQueryHasColor(rawQuery: string): boolean {
   return RAW_COLOR_RE.test(rawQuery.trim())
 }
 
+export function hasSearchCriteria(opts: ScryfallQueryOpts): boolean {
+  return (
+    opts.rawQuery.trim() !== '' ||
+    opts.colorFilter.size > 0 ||
+    opts.typeFilter !== null ||
+    opts.cmcFilter !== null ||
+    opts.rarityFilter.size > 0 ||
+    opts.keywordFilter.size > 0 ||
+    opts.powerFilter !== null ||
+    opts.toughnessFilter !== null ||
+    (opts.setFilter ?? '').trim() !== ''
+  )
+}
+
 export function buildScryfallQuery(opts: ScryfallQueryOpts): string {
   const parts: string[] = []
   const raw = opts.rawQuery.trim()
