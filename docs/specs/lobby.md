@@ -324,3 +324,12 @@ first in its top bar. There is no second copy at the end of the page.
   (report of 2026-10-31). The full-page screens put their exit at the top, and a single control keeps
   one place to look for it.
 - Guard: `src/lobby/PublicRankingScreen.test.tsx`
+
+### LBY-28 · Leaving the Decks tab closes the deck editor
+When the player goes from the deck editor to another tab (Tables, History, Ranking or the active-table
+shortcut), the editor closes with its changes saved, so the Decks tab opens on My decks the next time.
+Opening a deck from the create-table dialog still lands in the editor.
+
+- Why: the Decks tab reopened the last deck the player had left, instead of the list they expect from a
+  top-level tab (report of 2026-11-06).
+- Guard: `src/lobby/LobbyScreen.render.test.tsx`
