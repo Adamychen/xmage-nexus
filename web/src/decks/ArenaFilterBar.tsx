@@ -40,6 +40,8 @@ const KEYWORDS = [
 ] as const
 const keywordIdOfLabel = (label: string): string => label.toLowerCase().replace(/ /g, '_')
 const CMC_VALUES = [0, 1, 2, 3, 4, 5, 6, 7] as const
+const STAT_OPS: StatOp[] = ['>=', '=', '<=', '>', '<']
+const STAT_OP_LABEL: Record<StatOp, string> = { '>=': '≥', '=': '=', '<=': '≤', '>': '>', '<': '<' }
 const SORT_ORDERS: ScryfallSortOrder[] = ['cmc', 'name', 'rarity', 'color', 'edhrec', 'released']
 const SORT_LABEL_KEYS: Record<ScryfallSortOrder, keyof import('../i18n').TranslationSchema['decks']> = {
   cmc: 'sort_cmc',
@@ -444,23 +446,21 @@ export function ArenaFilterBar({
 
           <div className="adv-row adv-stats-row">
             <div className="stat-filter-group">
-              <span className="arena-chip-label">{t('decks', 'filter_power')}</span>
-              <select
-                className="stat-op-select"
-                value={powerFilter?.op ?? powerOp}
-                aria-label={t('decks', 'filter_power')}
-                onChange={(e) => {
-                  const op = e.target.value as StatOp
-                  setPowerOp(op)
-                  if (powerFilter) onPowerChange({ op, value: powerFilter.value })
-                }}
-              >
-                <option value=">=">≥</option>
-                <option value="=">=</option>
-                <option value="<=">≤</option>
-                <option value=">">&gt;</option>
-                <option value="<">&lt;</option>
-              </select>
+              <FilterDropdown label={t('decks', 'filter_power')} active={!!powerFilter} testId="filter-power-op" summary={STAT_OP_LABEL[powerFilter?.op ?? powerOp]}>
+                {(close) => (
+                  <div className="arena-filter-dd-list" role="listbox" aria-label={t('decks', 'filter_power')}>
+                    {STAT_OPS.map((op) => (
+                      <MenuItem key={op} role="option" aria-selected={(powerFilter?.op ?? powerOp) === op} selected={(powerFilter?.op ?? powerOp) === op} onClick={() => {
+                        setPowerOp(op)
+                        if (powerFilter) onPowerChange({ op, value: powerFilter.value })
+                        close()
+                      }}>
+                        {STAT_OP_LABEL[op]}
+                      </MenuItem>
+                    ))}
+                  </div>
+                )}
+              </FilterDropdown>
               <input
                 className="stat-num-input"
                 type="number"
@@ -483,23 +483,21 @@ export function ArenaFilterBar({
             </div>
 
             <div className="stat-filter-group">
-              <span className="arena-chip-label">{t('decks', 'filter_toughness')}</span>
-              <select
-                className="stat-op-select"
-                value={toughnessFilter?.op ?? toughnessOp}
-                aria-label={t('decks', 'filter_toughness')}
-                onChange={(e) => {
-                  const op = e.target.value as StatOp
-                  setToughnessOp(op)
-                  if (toughnessFilter) onToughnessChange({ op, value: toughnessFilter.value })
-                }}
-              >
-                <option value=">=">≥</option>
-                <option value="=">=</option>
-                <option value="<=">≤</option>
-                <option value=">">&gt;</option>
-                <option value="<">&lt;</option>
-              </select>
+              <FilterDropdown label={t('decks', 'filter_toughness')} active={!!toughnessFilter} testId="filter-toughness-op" summary={STAT_OP_LABEL[toughnessFilter?.op ?? toughnessOp]}>
+                {(close) => (
+                  <div className="arena-filter-dd-list" role="listbox" aria-label={t('decks', 'filter_toughness')}>
+                    {STAT_OPS.map((op) => (
+                      <MenuItem key={op} role="option" aria-selected={(toughnessFilter?.op ?? toughnessOp) === op} selected={(toughnessFilter?.op ?? toughnessOp) === op} onClick={() => {
+                        setToughnessOp(op)
+                        if (toughnessFilter) onToughnessChange({ op, value: toughnessFilter.value })
+                        close()
+                      }}>
+                        {STAT_OP_LABEL[op]}
+                      </MenuItem>
+                    ))}
+                  </div>
+                )}
+              </FilterDropdown>
               <input
                 className="stat-num-input"
                 type="number"

@@ -430,13 +430,6 @@
   gap: var(--sp-1);
 }
 
-.stat-op-select {
-  padding-block: var(--sp-1);
-  padding-inline-start: var(--sp-1h);
-  font-size: var(--fs-xs);
-  font-weight: 700;
-}
-
 .stat-num-input {
   width: 52px;
   padding: var(--sp-1) var(--sp-1h);

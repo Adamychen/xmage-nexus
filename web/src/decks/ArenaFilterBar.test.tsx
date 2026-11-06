@@ -203,6 +203,21 @@ describe('ArenaFilterBar', () => {
     spy.mockRestore()
   })
 
+  it('DCK-22: power and toughness pick their comparison from the same kind of dropdown', () => {
+    const onPowerChange = vi.fn()
+    renderBar({ powerFilter: { op: '>=', value: 3 }, onPowerChange })
+    fireEvent.click(screen.getByRole('button', { name: new RegExp(t('decks', 'filter_advanced')) }))
+    expect(document.querySelector('select')).toBeNull()
+    const trigger = screen.getByRole('button', { name: t('decks', 'filter_power') })
+    expect(trigger.textContent).toBe('≥')
+    fireEvent.click(trigger)
+    expect(within(screen.getByRole('listbox')).getAllByRole('option').map((o) => o.textContent)).toEqual(['≥', '=', '≤', '>', '<'])
+    fireEvent.click(within(screen.getByRole('listbox')).getByRole('option', { name: '≤' }))
+    expect(onPowerChange).toHaveBeenLastCalledWith({ op: '<=', value: 3 })
+    expect(screen.queryByRole('listbox')).toBeNull()
+    expect(screen.getByRole('button', { name: t('decks', 'filter_toughness') }).textContent).toBe('≥')
+  })
+
   it('DCK-22: Escape or a click outside closes a dropdown', () => {
     renderBar()
     fireEvent.click(screen.getByRole('button', { name: new RegExp(t('decks', 'filter_advanced')) }))
