@@ -107,7 +107,7 @@
   font-variant-numeric: tabular-nums;
 }
 
-.strip-qty.commander-badge {
+.strip-qty.strip-qty-commander {
   color: var(--gold-300);
   font-size: var(--fs-lg);
 }
