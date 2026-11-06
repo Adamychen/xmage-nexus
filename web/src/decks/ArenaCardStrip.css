@@ -50,9 +50,10 @@
   top: 0;
   right: 0;
   bottom: 0;
-  width: 75%;
+  width: min(75%, 260px);
   background-size: cover;
   background-position: center 25%;
+  mask-image: linear-gradient(90deg, transparent 0%, #000 45%);
   opacity: 0.85;
   pointer-events: none;
   transition: opacity 150ms ease;
