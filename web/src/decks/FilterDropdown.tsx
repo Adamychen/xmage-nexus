@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useId, useRef, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { useEscape } from '../ui/useEscape'
 
 export function FilterDropdown({
@@ -15,7 +15,9 @@ export function FilterDropdown({
   testId?: string
 }) {
   const [open, setOpen] = useState(false)
+  const [alignEnd, setAlignEnd] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)
+  const panelRef = useRef<HTMLDivElement>(null)
   const triggerRef = useRef<HTMLButtonElement>(null)
   const panelId = useId()
   const close = useCallback(() => {
@@ -23,6 +25,16 @@ export function FilterDropdown({
     triggerRef.current?.focus()
   }, [])
   useEscape(close, open)
+
+  useLayoutEffect(() => {
+    if (!open) {
+      setAlignEnd(false)
+      return
+    }
+    const panel = panelRef.current?.getBoundingClientRect()
+    const bounds = (rootRef.current?.closest('.arena-filter-bar') ?? document.documentElement).getBoundingClientRect()
+    if (panel && panel.right > bounds.right) setAlignEnd(true)
+  }, [open])
 
   useEffect(() => {
     if (!open) return
@@ -50,7 +62,7 @@ export function FilterDropdown({
         <span className="arena-filter-dd-summary">{summary}</span>
       </button>
       {open && (
-        <div id={panelId} className="arena-filter-dd-panel" role="group" aria-label={label}>
+        <div ref={panelRef} id={panelId} className={`arena-filter-dd-panel${alignEnd ? ' is-end' : ''}`} role="group" aria-label={label}>
           {children(close)}
         </div>
       )}

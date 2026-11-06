@@ -250,7 +250,7 @@
 .arena-lang-dropdown {
   position: absolute;
   top: 100%;
-  left: 0;
+  right: 0;
   margin-top: var(--sp-1);
   background: var(--ink-3);
   border: 1px solid var(--veil-4);
@@ -375,6 +375,11 @@
   border: 1px solid var(--veil-4);
   border-radius: var(--r-base);
   box-shadow: 0 8px 24px var(--shade-3);
+}
+
+.arena-filter-dd-panel.is-end {
+  left: auto;
+  right: 0;
 }
 
 .arena-filter-dd-list {

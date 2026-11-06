@@ -189,6 +189,20 @@ describe('ArenaFilterBar', () => {
     expect(props.onSetChange).toHaveBeenLastCalledWith('xyz')
   })
 
+  it('DCK-22: a menu that would run past the filter bar opens toward the left instead', () => {
+    const rect = (left: number, right: number) => ({ left, right, top: 0, bottom: 0, width: right - left, height: 0, x: left, y: 0, toJSON: () => ({}) }) as DOMRect
+    const spy = vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
+      if (this.classList.contains('arena-filter-bar')) return rect(0, 300)
+      if (this.classList.contains('arena-filter-dd-panel')) return rect(220, 480)
+      return rect(0, 0)
+    })
+    renderBar()
+    fireEvent.click(screen.getByRole('button', { name: new RegExp(t('decks', 'filter_advanced')) }))
+    fireEvent.click(screen.getByRole('button', { name: t('decks', 'filter_keyword') }))
+    expect(document.querySelector('.arena-filter-dd-panel')?.classList.contains('is-end')).toBe(true)
+    spy.mockRestore()
+  })
+
   it('DCK-22: Escape or a click outside closes a dropdown', () => {
     renderBar()
     fireEvent.click(screen.getByRole('button', { name: new RegExp(t('decks', 'filter_advanced')) }))
