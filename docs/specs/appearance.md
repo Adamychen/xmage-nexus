@@ -56,11 +56,12 @@ The language pickers, the login country picker and the players' flags in the lob
 letters, on every operating system. When the browser cannot draw flag emoji (Windows has no glyphs for
 them, so 🇪🇸 shows as "ES"), the app loads a font that only holds the flags, served by the app itself so
 the desktop app and offline play get it too; `--font-ui` and `--font-display` list it first, and its
-unicode-range leaves every other character on the usual fonts. No screen sets an interface font of its own
-that leaves the flag font out. The flags come from Twemoji under CC BY 4.0,
-credited next to Scryfall and XMage.
+unicode-range leaves every other character on the usual fonts. No screen sets an interface font of its
+own that leaves the flag font out. The flags come from Twemoji under CC BY 4.0, credited in About next to
+Scryfall and XMage; the page footer only credits Scryfall and XMage.
 
 - Why: on Chrome and Edge for Windows every flag in the app read as two capital letters (report of
   2026-10-31). The deck editor still showed "GB EN" and "ES" because its stylesheet set a font stack of
-  its own without the flag font (report of 2026-11-06).
-- Guard: `src/system/flagEmoji.test.ts` · `src/system/flagFontStacks.test.ts`
+  its own without the flag font, and the flags credit took a third link in the footer of every page
+  (reports of 2026-11-06).
+- Guard: `src/system/flagEmoji.test.ts` · `src/system/flagFontStacks.test.ts` · `src/system/Attribution.test.tsx`
