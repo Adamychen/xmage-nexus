@@ -1,6 +1,6 @@
 import { useTranslation } from '../i18n'
 
-export default function Attribution() {
+export default function Attribution({ withFlags = false }: { withFlags?: boolean }) {
   const { t } = useTranslation()
   const parts = t('common', 'attribution_scryfall').split('Scryfall')
   return (
@@ -10,8 +10,12 @@ export default function Attribution() {
       {parts[1] ?? ' · Not affiliated with Wizards of the Coast'}
       {' · '}
       <a href="https://github.com/magefree/mage" target="_blank" rel="noopener noreferrer">{t('common', 'attribution_engine')}</a>
-      {' · '}
-      <a href="https://github.com/twitter/twemoji" target="_blank" rel="noopener noreferrer">{t('common', 'attribution_flags')}</a>
+      {withFlags && (
+        <>
+          {' · '}
+          <a href="https://github.com/twitter/twemoji" target="_blank" rel="noopener noreferrer">{t('common', 'attribution_flags')}</a>
+        </>
+      )}
     </>
   )
 }

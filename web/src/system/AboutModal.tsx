@@ -130,7 +130,7 @@ export default function AboutModal({ onClose, initialTab = 'about' }: AboutModal
                 <Icon name="download" size={13} /> {t('system', 'diag_export')}
               </Button>
             </div>
-            <p className="about-attribution"><Attribution /></p>
+            <p className="about-attribution"><Attribution withFlags /></p>
           </div>
         ) : (
           <div className="about-pane">
