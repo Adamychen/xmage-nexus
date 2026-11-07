@@ -5,7 +5,7 @@
   width: 100%;
   background: var(--ink-1);
   overflow: hidden;
-  font-family: var(--font-sans, system-ui, sans-serif);
+  font-family: var(--font-ui);
 }
 
 .mechanics-tray.empty {

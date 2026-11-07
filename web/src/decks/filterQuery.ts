@@ -28,7 +28,7 @@ export function buildScryfallQuery(opts: ScryfallQueryOpts): string {
   else parts.push('game:paper -t:basic')
   if (opts.formatKey) parts.push(`f:${opts.formatKey}`)
   if (opts.colorFilter.size > 0) {
-    if (opts.colorFilter.has('C')) parts.push('c:c')
+    if (opts.colorFilter.has('C')) parts.push('(c:c -t:land OR (t:land id:c))')
     else {
       const colors = [...opts.colorFilter].join('').toLowerCase()
       parts.push(`(c<=${colors} -c:c OR (t:land id<=${colors} -id:c))`)
