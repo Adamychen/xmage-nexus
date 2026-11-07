@@ -204,14 +204,21 @@
 
 /* Horizontal Columns Layout */
 .arena-deck-cols-layout {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(108px, 1fr));
-  gap: var(--sp-2);
+  display: block;
   padding: var(--sp-2h);
   overflow-y: auto;
   overflow-x: hidden;
   flex: 1;
-  align-items: start;
+}
+
+.deck-cols-flow {
+  column-width: 200px;
+  column-gap: var(--sp-2);
+}
+
+.deck-cols-flow > .arena-deck-column {
+  break-inside: avoid;
+  margin-bottom: var(--sp-2);
 }
 
 .arena-deck-column {

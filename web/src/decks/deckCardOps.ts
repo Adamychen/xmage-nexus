@@ -220,6 +220,7 @@ export function stripMetaFromSearch(card: ScryfallSearchCard): CardStripMeta {
     oracleText: card.oracle_text ?? '',
     keywords: card.keywords ?? [],
     legalities: card.legalities,
+    rarity: card.rarity,
   }
 }
 
@@ -234,6 +235,7 @@ export interface ScryfallJson {
   keywords?: string[]
   colors?: string[]
   color_identity?: string[]
+  rarity?: string
   legalities?: CardStripMeta['legalities']
   image_uris?: { art_crop?: string; normal?: string }
   card_faces?: {
@@ -262,5 +264,6 @@ export function stripMetaFromJson(data: ScryfallJson): CardStripMeta {
     oracleText: data.oracle_text ?? data.card_faces?.[0]?.oracle_text ?? '',
     keywords: data.keywords ?? [],
     legalities: data.legalities,
+    rarity: data.rarity,
   }
 }

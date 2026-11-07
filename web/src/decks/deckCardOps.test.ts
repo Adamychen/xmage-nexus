@@ -248,3 +248,10 @@ describe('one printing split across repeated lines', () => {
     expect(nextTo.reduce((s, c) => s + c.amount, 0)).toBe(99)
   })
 })
+
+describe('card rarity', () => {
+  it('DCK-25: card details keep the rarity, so grouping by rarity has something to group by', () => {
+    expect(stripMetaFromJson({ cmc: 1, rarity: 'mythic' }).rarity).toBe('mythic')
+    expect(stripMetaFromSearch({ name: 'Bolt', rarity: 'common' } as never).rarity).toBe('common')
+  })
+})

@@ -239,7 +239,7 @@ function ArenaCardStripView({
       <div className={`strip-color-bar ${colorClass}`} />
 
       {/* Quantity badge */}
-      <div className={`strip-qty ${isCommander ? 'commander-badge' : ''}`}>
+      <div className={`strip-qty ${isCommander ? 'strip-qty-commander' : ''}`}>
         {isCommander ? <Icon name="crown" size={13} /> : `${card.amount}x`}
       </div>
 

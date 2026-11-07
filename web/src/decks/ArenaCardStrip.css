@@ -50,9 +50,10 @@
   top: 0;
   right: 0;
   bottom: 0;
-  width: 75%;
+  width: min(75%, 260px);
   background-size: cover;
   background-position: center 25%;
+  mask-image: linear-gradient(90deg, transparent 0%, var(--ink-0) 45%);
   opacity: 0.85;
   pointer-events: none;
   transition: opacity 150ms ease;
@@ -107,7 +108,7 @@
   font-variant-numeric: tabular-nums;
 }
 
-.strip-qty.commander-badge {
+.strip-qty.strip-qty-commander {
   color: var(--gold-300);
   font-size: var(--fs-lg);
 }
