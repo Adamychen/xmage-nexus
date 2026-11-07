@@ -85,6 +85,7 @@ test.describe('ACC-9: hover-only information has a keyboard and tap equivalent',
   test('ACC-9: focusing a search grid tile shows its preview and blurring hides it @decks', async ({ page }) => {
     await withFakeServer(decksGalleryScenario, async () => {
       await openBuilderWithBolt(page, `a11y_${String(Date.now()).slice(-8)}`)
+      await page.locator('.arena-search-input').fill('bolt')
       const tile = page.locator('.arena-grid-card').first()
       await expect(tile).toBeVisible({ timeout: 15000 })
       await page.mouse.move(8, 8)

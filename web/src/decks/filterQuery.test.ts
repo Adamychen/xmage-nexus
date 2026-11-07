@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildScryfallQuery, rawQueryHasColor, type ScryfallQueryOpts } from './filterQuery'
+import { buildScryfallQuery, hasSearchCriteria, rawQueryHasColor, type ScryfallQueryOpts } from './filterQuery'
 
 function base(over: Partial<ScryfallQueryOpts> = {}): ScryfallQueryOpts {
   return {
@@ -44,5 +44,24 @@ describe('filterQuery (AUDIT)', () => {
 
   it('DCK-18: the colourless chip asks for colourless cards and only the lands of colourless identity', () => {
     expect(buildScryfallQuery(base({ colorFilter: new Set(['C']) }))).toBe('game:paper -t:basic (c:c -t:land OR (t:land id:c))')
+  })
+})
+
+describe('hasSearchCriteria', () => {
+  it('DCK-21: the format and an empty or blank search are not something to search for', () => {
+    expect(hasSearchCriteria(base())).toBe(false)
+    expect(hasSearchCriteria(base({ formatKey: 'commander', rawQuery: '   ', setFilter: ' ' }))).toBe(false)
+  })
+
+  it('DCK-21: a name or any one filter is', () => {
+    expect(hasSearchCriteria(base({ rawQuery: 'bolt' }))).toBe(true)
+    expect(hasSearchCriteria(base({ colorFilter: new Set(['R']) }))).toBe(true)
+    expect(hasSearchCriteria(base({ typeFilter: 'Creature' }))).toBe(true)
+    expect(hasSearchCriteria(base({ cmcFilter: 0 }))).toBe(true)
+    expect(hasSearchCriteria(base({ rarityFilter: new Set(['mythic']) }))).toBe(true)
+    expect(hasSearchCriteria(base({ keywordFilter: new Set(['Flying']) }))).toBe(true)
+    expect(hasSearchCriteria(base({ powerFilter: { op: '>=', value: 3 } }))).toBe(true)
+    expect(hasSearchCriteria(base({ toughnessFilter: { op: '<', value: 2 } }))).toBe(true)
+    expect(hasSearchCriteria(base({ setFilter: 'mh3' }))).toBe(true)
   })
 })
