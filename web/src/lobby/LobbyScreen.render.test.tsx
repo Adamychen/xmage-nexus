@@ -1,4 +1,4 @@
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import LobbyScreen from './LobbyScreen'
 import { initialState, setState } from '../state/state'
@@ -65,6 +65,35 @@ describe('LobbyScreen', () => {
     expect(tables.className).not.toContain('active')
     await act(async () => { fireEvent.click(byLabel(/historial|history/i)) })
     expect(byLabel(/historial|history/i).className).toContain('active')
+  })
+
+  it('LBY-28: leaving the decks tab closes the deck editor, so coming back shows my decks', async () => {
+    show()
+    const nav = document.querySelector<HTMLElement>('nav.lobby-top-nav')!
+    const tab = (re: RegExp) => Array.from(nav.querySelectorAll<HTMLButtonElement>('button.top-nav-btn')).find((b) => re.test(b.title))!
+    await act(async () => { fireEvent.click(tab(/mazos|decks/i)) })
+    const edit = await screen.findAllByTestId('deckbox-quick-edit', {}, { timeout: 5000 })
+    await act(async () => { fireEvent.click(edit[0]) })
+    await waitFor(() => expect(document.querySelector('.deck-builder')).not.toBeNull(), { timeout: 5000 })
+
+    await act(async () => { fireEvent.click(tab(/mesas|tables/i)) })
+    await act(async () => { fireEvent.click(tab(/mazos|decks/i)) })
+    expect(document.querySelector('.deck-builder')).toBeNull()
+    expect((await screen.findAllByTestId('deckbox-quick-edit', {}, { timeout: 5000 })).length).toBeGreaterThan(0)
+  })
+
+  it('LBY-28: the Decks tab itself takes the editor back to my decks', async () => {
+    show()
+    const nav = document.querySelector<HTMLElement>('nav.lobby-top-nav')!
+    const decks = Array.from(nav.querySelectorAll<HTMLButtonElement>('button.top-nav-btn')).find((b) => /mazos|decks/i.test(b.title))!
+    await act(async () => { fireEvent.click(decks) })
+    const edit = await screen.findAllByTestId('deckbox-quick-edit', {}, { timeout: 5000 })
+    await act(async () => { fireEvent.click(edit[0]) })
+    await waitFor(() => expect(document.querySelector('.deck-builder')).not.toBeNull(), { timeout: 5000 })
+
+    await act(async () => { fireEvent.click(decks) })
+    expect(document.querySelector('.deck-builder')).toBeNull()
+    expect((await screen.findAllByTestId('deckbox-quick-edit', {}, { timeout: 5000 })).length).toBeGreaterThan(0)
   })
 
   it('LBY-24: opens the create-table dialog from the Create menu, not from the header', async () => {
