@@ -42,7 +42,7 @@ describe('filterQuery (AUDIT)', () => {
     expect(buildScryfallQuery(base({ colorFilter: new Set(['R', 'G']) }))).toContain('(c<=rg -c:c OR (t:land id<=rg -id:c))')
   })
 
-  it('DCK-18: the colourless chip still asks for colourless cards', () => {
-    expect(buildScryfallQuery(base({ colorFilter: new Set(['C']) }))).toBe('game:paper -t:basic c:c')
+  it('DCK-18: the colourless chip asks for colourless cards and only the lands of colourless identity', () => {
+    expect(buildScryfallQuery(base({ colorFilter: new Set(['C']) }))).toBe('game:paper -t:basic (c:c -t:land OR (t:land id:c))')
   })
 })

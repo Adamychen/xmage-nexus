@@ -267,12 +267,15 @@ even if it is emptied later, and an empty deck that was not just created is neve
 In the editor's search, picking one or more colour chips (white, blue, black, red, green) shows cards
 whose colours are all among the picked ones, and lands whose colour identity is among them and not
 empty, that is, lands that make one of the picked colours. Colourless cards and lands that make none of
-those colours are left out; the colourless chip shows them on its own. Suggestions filter the same way
-by colour identity.
+those colours are left out. The colourless chip shows them on its own: colourless cards that are not
+lands, and lands whose colour identity is colourless, so a land that makes coloured mana (Abandoned
+Campground) stays out of it. Suggestions filter the same way by colour identity.
 
 - Why: picking only red listed colourless lands that make no red (Abandoned Air Temple, Academy Ruins)
   and colourless artifacts first, because a colourless card's colours are always "within" any pick
   (report of 2026-10-31). MTG Arena's colour filter keeps colourless cards behind their own chip too.
+  The colourless chip listed every land, coloured ones included, because no land has a colour (report of
+  2026-11-06).
 - Guard: `src/decks/filterQuery.test.ts` · `src/decks/filterMatch.test.ts`
 
 ### DCK-19 · My decks judges a deck as the editor does, and says why it is not legal
