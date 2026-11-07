@@ -453,6 +453,38 @@ test.describe('Decks Gallery', () => {
     })
   })
 
+  test('DCK-23: the format label never sits under the quick actions of a deck tile @decks', async ({ page }) => {
+    await page.setViewportSize({ width: 1366, height: 768 })
+    await withFakeServer(decksGalleryScenario, async () => {
+      await page.goto(`/?proxyPort=${proxyPort()}`)
+      await dismissSetupWizard(page)
+      await page.getByPlaceholder(/Usuario|Username/i).fill(`deck_lbl_${String(Date.now()).slice(-5)}`)
+      await page.getByPlaceholder(/Contraseña|Password/i).fill('pass')
+      await page.getByRole('button', { name: /Conectar/i }).click()
+      await expect(page.getByRole('button', { name: /Mesas/ })).toBeVisible({ timeout: 15000 })
+      await page.getByRole('button', { name: /Mis Mazos|Mazos/i }).click()
+      await expect(page.locator('.deck-box').nth(1)).toBeVisible({ timeout: 8000 })
+      await page.locator('[data-testid="deckbox-quick-clone"]').first().click({ force: true })
+      await expect(page.locator('[data-testid="deckbox-quick-fav"]').first()).toBeAttached({ timeout: 8000 })
+
+      for (const density of [/cómoda|comfortable/i, /compacta|compact/i]) {
+        await page.getByRole('button', { name: density }).click()
+        const tile = page.locator('.deck-box', { has: page.locator('[data-testid="deckbox-quick-fav"]') }).first()
+        await tile.hover()
+        await page.waitForTimeout(300)
+        const clash = await tile.evaluate((el) => {
+          const actions = el.querySelector('.deck-box-actions')!.getBoundingClientRect()
+          const badge = el.querySelector('.deck-box-format-badge')!.getBoundingClientRect()
+          const box = el.getBoundingClientRect()
+          const overlaps = badge.left < actions.right && badge.right > actions.left && badge.top < actions.bottom && badge.bottom > actions.top
+          const inside = badge.left >= box.left && badge.right <= box.right && badge.top >= box.top && badge.bottom <= box.bottom
+          return { overlaps, inside }
+        })
+        expect(clash).toEqual({ overlaps: false, inside: true })
+      }
+    })
+  })
+
   test('U8: suggestions panel filters, sorts and shares the card size @decks', async ({ page }) => {
     await withFakeServer(decksGalleryScenario, async () => {
       await blockLocalizedEnrich(page)

@@ -303,3 +303,14 @@ until one of the two is pressed.
   copy worked rewrote the text of whatever had focus, which after the menu closed was the page itself,
   so the whole app was replaced by "Copied!" (report of 2026-11-01).
 - Guard: `src/decks/DeckExportDialog.test.tsx` · `src/decks/DecksGallery.test.tsx`
+
+### DCK-23 · My decks equips a deck without opening it, and the label stays clear of the buttons
+The bottom bar of My decks has an Equip button for the selected deck, next to Open. It does what the
+editor's Equip does: the deck becomes the one used to join tables, the button turns into "✓ Equipped"
+and stays disabled, and the deck's tile says "✓ Equipped" under its name. Only one tile carries the mark.
+On a tile, the format label moves below the quick actions whenever they show (hover, focus, the selected
+tile, and always on touch screens), so the buttons never cover it.
+
+- Why: equipping meant opening the editor just to press one button, and the quick actions sat on top of
+  the format label on narrow tiles (report of 2026-11-06).
+- Guard: `src/decks/DecksGallery.test.tsx` · `e2e/decks-gallery.spec.ts`

@@ -6,6 +6,7 @@ import type { DeckV2 } from './types'
 import { alertDialog } from '../ui/confirmDialog'
 import { captureUnhandledRejections, settle } from '../utils/unhandledRejections'
 import { t } from '../i18n'
+import { getState, initialState, setState } from '../state/state'
 
 const storeState = vi.hoisted(() => ({ decks: [] as DeckV2[] }))
 const confirmState = vi.hoisted(() => ({ calls: [] as string[], resolve: true }))
@@ -368,6 +369,39 @@ describe('DecksGallery · why a deck is not legal', () => {
     const issue = await screen.findByTestId('decks-footer-issue')
     expect(issue.textContent).toContain('4/100')
     expect(issue.getAttribute('title')).toContain(t('decks', 'commander_hint'))
+  })
+
+  it('DCK-23: My decks equips the selected deck and marks it on its tile', async () => {
+    const values = new Map<string, string>()
+    vi.stubGlobal('localStorage', {
+      get length() { return values.size },
+      clear: () => values.clear(),
+      getItem: (k: string) => values.get(k) ?? null,
+      key: (i: number) => [...values.keys()][i] ?? null,
+      removeItem: (k: string) => { values.delete(k) },
+      setItem: (k: string, v: string) => { values.set(k, String(v)) },
+    })
+    setState({ ...initialState } as never)
+    storeState.decks = [customDeck({ id: 'burn', name: 'Mi Burn' }), customDeck({ id: 'krenko', name: 'Krenko' })]
+    render(<DecksGallery onEdit={() => {}} />)
+    const box = await waitFor(() => {
+      const el = document.querySelector('.deck-box[aria-label="Krenko"]')
+      expect(el).not.toBeNull()
+      return el as HTMLElement
+    })
+    expect(screen.queryByTestId('deckbox-equipped')).toBeNull()
+
+    fireEvent.click(box)
+    const equip = await screen.findByTestId('decks-equip')
+    expect(equip.textContent).toBe(t('decks', 'builder_equip'))
+    fireEvent.click(equip)
+
+    expect((getState().myDeck as { id?: string } | null)?.id).toBe('krenko')
+    expect(equip.textContent).toBe(`✓ ${t('decks', 'builder_equipped')}`)
+    expect((equip as HTMLButtonElement).disabled).toBe(true)
+    expect(box.querySelector('[data-testid="deckbox-equipped"]')).not.toBeNull()
+    expect(screen.getAllByTestId('deckbox-equipped')).toHaveLength(1)
+    setState({ ...initialState } as never)
   })
 
   it('DCK-19: a legal deck shows no reason', async () => {
