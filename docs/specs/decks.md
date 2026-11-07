@@ -60,18 +60,17 @@ as before.
 - Guard: `e2e/decks-touch.spec.ts`
 
 ### DCK-5 · One deck editor with two views, Piles and List
-The gallery opens a deck with one button, "Open" (it replaces "Edit" and "Stacks editor"); the
-separate stacks screen is gone. The editor has a top bar and a toolbar. The top bar holds, left to
-right: back to My decks, the cover thumbnail, the editable name, and under it the format selector,
-the legality chip ("Legal in <format>" or what is wrong; clicking it opens today's issue list), the
-main and sideboard counts and the save state (saving, saved, failed with retry); then Import,
-Export, Sample hand, Equip and Done. The toolbar holds the catalogue toggle (DCK-12), View
-(Piles | List), and in Piles view Group, Copies, Sort and Card size (DCK-1, DCK-6, DCK-8). List view
-is today's strip list with every strip action; Piles view is DCK-6 to DCK-11. Everything the old
+The gallery opens a deck with one button, "Open" (it replaces "Edit" and "Stacks editor"); the separate
+stacks screen is gone. The editor has a top bar and a toolbar. The top bar holds, left to right: back
+to My decks, the cover thumbnail, the editable name, and under it the format selector, the legality
+chip ("Legal in <format>" or what is wrong; clicking it opens today's issue list), the main and
+sideboard counts and the save state (saving, saved, failed with retry); then Import, Export, Sample
+hand, Equip and Done. The toolbar holds the catalogue toggle (DCK-12), View (Piles | List), Group and
+Sort (List view groups too, DCK-25), and in Piles view Copies and Card size (DCK-1, DCK-6, DCK-8). List
+view is today's strip list with every strip action; Piles view is DCK-6 to DCK-11. Everything the old
 builder offered stays reachable in both views: server and XMage format issue banners with repair,
-commander and partner, printings, cover, curve, basic lands, the deck inspector, suggestions,
-dropping a deck file. The view is a player setting (`deckEditorView`, default Piles) kept across
-sessions.
+commander and partner, printings, cover, curve, basic lands, the deck inspector, suggestions, dropping
+a deck file. The view is a player setting (`deckEditorView`, default Piles) kept across sessions.
 
 - Why: the review of 2026-10-28 found two screens for one job with different features (the stacks
   screen had no curve, validation, commander, printings or cover; the builder had no piles), and a

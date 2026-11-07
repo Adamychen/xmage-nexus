@@ -8,7 +8,10 @@ import type { DeckFormat } from './types'
 import { commanderCardsFor } from './deckUtils'
 import { commanderEligibleFor } from './useCommanderEligibility'
 import { aggregateCards } from './deckCardOps'
-import { categorizeCard } from './cardCategory'
+import { buildStackColumns, type StackGroup, type StackSort } from './stackColumns'
+import type { DeckStackPiles } from './stackPiles'
+import type { StackItem } from './ArenaCardStacks'
+import { useStackLabels } from './useStackLabels'
 import { ArenaCardStrip } from './ArenaCardStrip'
 import Icon from '../ui/Icon'
 import { useTranslation } from '../i18n'
@@ -30,6 +33,9 @@ export default function DeckListPanel({
   commanderEligibilityMap,
   cardIssues,
   layout = 'vertical',
+  group = 'type',
+  sort = 'cmc',
+  piles,
   onInc,
   onDec,
   onRemove,
@@ -54,6 +60,9 @@ export default function DeckListPanel({
   commanderEligibilityMap?: Map<string, boolean> | null
   cardIssues?: Map<string, ValidationIssue>
   layout?: 'vertical' | 'horizontal'
+  group?: StackGroup
+  sort?: StackSort
+  piles?: DeckStackPiles
   onInc: (key: string) => void
   onDec: (key: string) => void
   onRemove: (key: string) => void
@@ -68,6 +77,7 @@ export default function DeckListPanel({
   onDropFile?: (f: File) => void
 }) {
   const { t } = useTranslation()
+  const labels = useStackLabels()
   const [isDragOver, setIsDragOver] = useState(false)
   const [isSideDragOver, setIsSideDragOver] = useState(false)
   const [isCommanderDragOver, setIsCommanderDragOver] = useState(false)
@@ -187,39 +197,56 @@ export default function DeckListPanel({
     ? displayCards.filter((c) => !commanderKeys.has(getCardKey(c)))
     : displayCards
 
-  // Group main cards by category
-  const categoriesOrder = ['creatures', 'planeswalkers', 'instants', 'sorceries', 'artifacts', 'enchantments', 'lands', 'other']
-  const catDisplay: Record<string, string> = {
-    creatures: t('decks', 'creatures'),
-    planeswalkers: t('game', 'category_planeswalkers'),
-    instants: t('game', 'category_instants'),
-    sorceries: t('game', 'category_sorceries'),
-    artifacts: t('game', 'category_artifacts'),
-    enchantments: t('game', 'category_enchantments'),
-    lands: t('game', 'category_lands'),
-    other: t('game', 'category_other'),
-  }
-  const groupedCards = new Map<string, DeckCard[]>()
-  for (const cat of categoriesOrder) groupedCards.set(cat, [])
-
-  for (const card of mainCardsWithoutCommander) {
-    const meta = metaMap.get(`${card.setCode}/${card.cardNumber}`) ?? metaMap.get(card.cardName.toLowerCase())
-    const cat = categorizeCard(meta?.typeLine)
-    const list = groupedCards.get(cat) ?? groupedCards.get('other')!
-    list.push(card)
-  }
-  for (const cat of categoriesOrder) {
-    const list = groupedCards.get(cat)
-    if (list && list.length > 1) {
-      list.sort((a, b) => {
-        const ma = metaMap.get(`${a.setCode}/${a.cardNumber}`) ?? metaMap.get(a.cardName.toLowerCase())
-        const mb = metaMap.get(`${b.setCode}/${b.cardNumber}`) ?? metaMap.get(b.cardName.toLowerCase())
-        const ca = ma?.cmc ?? 0
-        const cb = mb?.cmc ?? 0
-        if (ca !== cb) return ca - cb
-        return a.cardName.localeCompare(b.cardName)
-      })
+  const metaOf = (c: DeckCard) => metaMap.get(`${c.setCode}/${c.cardNumber}`) ?? metaMap.get(c.cardName.toLowerCase())
+  const listGroup: StackGroup = group === 'free' && !(piles && piles.piles.length > 0) ? 'type' : group
+  const sections = buildStackColumns(mainCardsWithoutCommander, metaOf, { group: listGroup, sort, labels, piles })
+  const columns = layout === 'horizontal'
+    ? buildStackColumns(displayCards, metaOf, { group: listGroup, sort, labels, piles, commanderKeys })
+    : []
+  const countOf = (items: StackItem[]) => items.reduce((sum, item) => sum + item.card.amount, 0)
+  const mainStrip = (card: DeckCard, commanderIndex = -1) => {
+    const k = getCardKey(card)
+    const meta = metaOf(card)
+    const issue = cardIssues?.get(k)?.message ?? cardIssues?.get(card.cardName)?.message
+    if (commanderIndex >= 0) {
+      return (
+        <ArenaCardStrip
+          key={k}
+          card={card}
+          meta={meta}
+          isCommander
+          isCover={commanderIndex === 0}
+          onInc={onInc}
+          onDec={onDec}
+          onRemove={onRemove}
+          onSetCover={onSetCover}
+          onSetCommander={commanderIndex === 0 ? onSetCommander : onSetPartner}
+          onHover={onHover}
+          onLeave={onLeave}
+          onChangePrinting={onChangePrinting}
+        />
+      )
     }
+    return (
+      <ArenaCardStrip
+        key={k}
+        card={card}
+        meta={meta}
+        isCover={coverKey === k}
+        issue={issue}
+        onInc={onInc}
+        onDec={onDec}
+        onRemove={onRemove}
+        onSetCover={onSetCover}
+        onSetCommander={onSetCommander}
+        commanderEligible={commanderEligibleFor(commanderEligibilityMap, card.cardName, meta)}
+        onHover={onHover}
+        onLeave={onLeave}
+        onChangePrinting={onChangePrinting}
+        onSwap={onSwap}
+        swapLabel={t('decks', 'builder_swap_to_side')}
+      />
+    )
   }
 
   // Total counts
@@ -325,46 +352,15 @@ export default function DeckListPanel({
           {/* Commander Banner (1 card, or 2 with Partner — U7-7) */}
           {commanderSection}
 
-          {/* Grouped Categories */}
-          {categoriesOrder.map((cat) => {
-            const list = groupedCards.get(cat) ?? []
-            if (list.length === 0) return null
-            const count = list.reduce((s, c) => s + c.amount, 0)
-
-            return (
-              <div key={cat} className="deck-category-section">
-                <div className="deck-category-header">
-                  <span>{catDisplay[cat] ?? cat}</span>
-                  <span className="deck-category-count">{count}</span>
-                </div>
-                {list.map((card) => {
-                  const k = getCardKey(card)
-                  const meta = metaMap.get(`${card.setCode}/${card.cardNumber}`) ?? metaMap.get(card.cardName.toLowerCase())
-                  const issue = cardIssues?.get(k)?.message ?? cardIssues?.get(card.cardName)?.message
-                  return (
-                    <ArenaCardStrip
-                      key={k}
-                      card={card}
-                      meta={meta}
-                      isCover={coverKey === k}
-                      issue={issue}
-                      onInc={onInc}
-                      onDec={onDec}
-                      onRemove={onRemove}
-                      onSetCover={onSetCover}
-                      onSetCommander={onSetCommander}
-                      commanderEligible={commanderEligibleFor(commanderEligibilityMap, card.cardName, meta)}
-                      onHover={onHover}
-                      onLeave={onLeave}
-                      onChangePrinting={onChangePrinting}
-                      onSwap={onSwap}
-                      swapLabel={t('decks', 'builder_swap_to_side')}
-                    />
-                  )
-                })}
+          {sections.map((section) => (
+            <div key={section.id} className="deck-category-section" data-group={section.id}>
+              <div className="deck-category-header">
+                <span>{section.label}</span>
+                <span className="deck-category-count">{countOf(section.items)}</span>
               </div>
-            )
-          })}
+              {section.items.map((item) => mainStrip(item.card))}
+            </div>
+          ))}
 
           {/* Empty State */}
           {mainTotal === 0 && (
@@ -378,53 +374,20 @@ export default function DeckListPanel({
         </div>
       ) : (
         <>
-          {/* Horizontal Mode (Columns by CMC) */}
           <div className="arena-deck-cols-layout deck-cols">
-            {[0, 1, 2, 3, 4, 5, 6, 7].map((cmc) => {
-              const colCards = displayCards.filter((c) => {
-                const meta = metaMap.get(`${c.setCode}/${c.cardNumber}`) ?? metaMap.get(c.cardName.toLowerCase())
-                const cardCmc = meta?.cmc ?? 0
-                return cmc === 7 ? cardCmc >= 7 : cardCmc === cmc
-              })
-              const totalInCol = colCards.reduce((s, c) => s + c.amount, 0)
-              if (colCards.length === 0) return null
-
-              return (
-                <div key={cmc} className="arena-deck-column deck-col">
-                  <div className="arena-deck-col-head deck-col-head">
-                    <span className="deck-col-title">{cmc === 7 ? '7+' : `${t('decks', 'filter_cmc')} ${cmc}`}</span>
-                    <span className="deck-col-count">{totalInCol}</span>
-                  </div>
-                  <div className="deck-col-list">
-                    {colCards.map((card) => {
-                      const k = getCardKey(card)
-                      const meta = metaMap.get(`${card.setCode}/${card.cardNumber}`) ?? metaMap.get(card.cardName.toLowerCase())
-                      const issue = cardIssues?.get(k)?.message ?? cardIssues?.get(card.cardName)?.message
-                      return (
-                        <ArenaCardStrip
-                          key={k}
-                          card={card}
-                          meta={meta}
-                          isCover={coverKey === k}
-                          issue={issue}
-                          onInc={onInc}
-                          onDec={onDec}
-                          onRemove={onRemove}
-                          onSetCover={onSetCover}
-                          onSetCommander={onSetCommander}
-                          commanderEligible={commanderEligibleFor(commanderEligibilityMap, card.cardName, meta)}
-                          onHover={onHover}
-                          onLeave={onLeave}
-                          onChangePrinting={onChangePrinting}
-                          onSwap={onSwap}
-                          swapLabel={t('decks', 'builder_swap_to_side')}
-                        />
-                      )
-                    })}
-                  </div>
+            <div className="deck-cols-flow">
+            {columns.map((column) => (
+              <div key={column.id} className={`arena-deck-column deck-col${column.kind === 'commander' ? ' deck-col--commander' : ''}`} data-group={column.id}>
+                <div className="arena-deck-col-head deck-col-head">
+                  <span className="deck-col-title">{column.label}</span>
+                  <span className="deck-col-count">{countOf(column.items)}</span>
                 </div>
-              )
-            })}
+                <div className="deck-col-list">
+                  {column.items.map((item) => mainStrip(item.card, column.kind === 'commander' ? commanderCards.findIndex((c) => getCardKey(c) === item.key) : -1))}
+                </div>
+              </div>
+            ))}
+            </div>
           </div>
           {sideboardSection}
         </>
