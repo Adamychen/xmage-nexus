@@ -1971,6 +1971,8 @@ export const de: TranslationSchema = {
     filter_toughness: 'Widerstandskraft',
     filter_set: 'Set',
     filter_set_placeholder: 'z. B. mh3, blb, dsk…',
+    filter_any: 'Beliebig',
+    filter_keyword_search: 'Fähigkeit suchen…',
     filter_search_placeholder: 'Nach Namen suchen…',
     filter_raw_color_clash: 'Der Freitext filtert bereits nach Farbe — kann den Chips widersprechen',
     filter_more: 'Mehr',

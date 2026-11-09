@@ -6,7 +6,7 @@ export interface ScryfallQueryOpts {
   rawQuery: string
   formatKey?: string | null
   colorFilter: Set<string>
-  typeFilter: string | null
+  typeFilter: Set<string>
   cmcFilter: number | null
   rarityFilter: Set<Rarity>
   keywordFilter: Set<string>
@@ -25,7 +25,7 @@ export function hasSearchCriteria(opts: ScryfallQueryOpts): boolean {
   return (
     opts.rawQuery.trim() !== '' ||
     opts.colorFilter.size > 0 ||
-    opts.typeFilter !== null ||
+    opts.typeFilter.size > 0 ||
     opts.cmcFilter !== null ||
     opts.rarityFilter.size > 0 ||
     opts.keywordFilter.size > 0 ||
@@ -48,7 +48,10 @@ export function buildScryfallQuery(opts: ScryfallQueryOpts): string {
       parts.push(`(c<=${colors} -c:c OR (t:land id<=${colors} -id:c))`)
     }
   }
-  if (opts.typeFilter) parts.push(`t:${opts.typeFilter.toLowerCase()}`)
+  if (opts.typeFilter.size > 0) {
+    const types = [...opts.typeFilter].map((x) => `t:${x.toLowerCase()}`)
+    parts.push(types.length === 1 ? types[0] : `(${types.join(' OR ')})`)
+  }
   if (opts.cmcFilter !== null) {
     if (opts.cmcFilter >= 7) parts.push('cmc>=7')
     else parts.push(`cmc=${opts.cmcFilter}`)
@@ -59,7 +62,7 @@ export function buildScryfallQuery(opts: ScryfallQueryOpts): string {
     else parts.push(`(${r.map((x) => `rarity:${x}`).join(' OR ')})`)
   }
   if (opts.keywordFilter.size > 0) {
-    for (const kw of opts.keywordFilter) parts.push(`keyword:${kw.toLowerCase()}`)
+    for (const kw of opts.keywordFilter) parts.push(/\s/.test(kw) ? `keyword:"${kw.toLowerCase()}"` : `keyword:${kw.toLowerCase()}`)
   }
   if (opts.powerFilter && Number.isFinite(opts.powerFilter.value)) parts.push(`pow${opts.powerFilter.op}${opts.powerFilter.value}`)
   if (opts.toughnessFilter && Number.isFinite(opts.toughnessFilter.value)) parts.push(`tou${opts.toughnessFilter.op}${opts.toughnessFilter.value}`)

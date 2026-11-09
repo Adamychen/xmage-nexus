@@ -6,7 +6,7 @@ function base(over: Partial<ScryfallQueryOpts> = {}): ScryfallQueryOpts {
     rawQuery: '',
     formatKey: null,
     colorFilter: new Set<string>(),
-    typeFilter: null,
+    typeFilter: new Set<string>(),
     cmcFilter: null,
     rarityFilter: new Set(),
     keywordFilter: new Set<string>(),
@@ -56,12 +56,19 @@ describe('hasSearchCriteria', () => {
   it('DCK-21: a name or any one filter is', () => {
     expect(hasSearchCriteria(base({ rawQuery: 'bolt' }))).toBe(true)
     expect(hasSearchCriteria(base({ colorFilter: new Set(['R']) }))).toBe(true)
-    expect(hasSearchCriteria(base({ typeFilter: 'Creature' }))).toBe(true)
+    expect(hasSearchCriteria(base({ typeFilter: new Set(['Creature']) }))).toBe(true)
     expect(hasSearchCriteria(base({ cmcFilter: 0 }))).toBe(true)
     expect(hasSearchCriteria(base({ rarityFilter: new Set(['mythic']) }))).toBe(true)
     expect(hasSearchCriteria(base({ keywordFilter: new Set(['Flying']) }))).toBe(true)
     expect(hasSearchCriteria(base({ powerFilter: { op: '>=', value: 3 } }))).toBe(true)
     expect(hasSearchCriteria(base({ toughnessFilter: { op: '<', value: 2 } }))).toBe(true)
     expect(hasSearchCriteria(base({ setFilter: 'mh3' }))).toBe(true)
+  })
+})
+
+describe('type filter', () => {
+  it('DCK-22: several types are searched as one OR group', () => {
+    expect(buildScryfallQuery(base({ typeFilter: new Set(['Creature']) }))).toContain('t:creature')
+    expect(buildScryfallQuery(base({ typeFilter: new Set(['Creature', 'Artifact']) }))).toContain('(t:creature OR t:artifact)')
   })
 })

@@ -5,7 +5,7 @@ export interface ArenaFilterValues {
   rawQuery: string
   colorFilter: Set<string>
   cmcFilter: number | null
-  typeFilter: string | null
+  typeFilter: Set<string>
   rarityFilter: Set<Rarity>
   keywordFilter: Set<string>
   powerFilter: StatFilter | null
@@ -18,7 +18,7 @@ export function hasActiveArenaFilters(f: ArenaFilterValues): boolean {
     f.rawQuery.trim() !== '' ||
     f.colorFilter.size > 0 ||
     f.cmcFilter !== null ||
-    f.typeFilter !== null ||
+    f.typeFilter.size > 0 ||
     f.rarityFilter.size > 0 ||
     f.keywordFilter.size > 0 ||
     f.powerFilter !== null ||
@@ -263,7 +263,7 @@ export function matchesRawQuery(card: ScryfallSearchCard, rawQuery: string): boo
 export function matchesArenaFilters(card: ScryfallSearchCard, f: ArenaFilterValues): boolean {
   if (!matchesRawQuery(card, f.rawQuery)) return false
   if (f.colorFilter.size > 0 && !identityWithin(card, f.colorFilter)) return false
-  if (f.typeFilter && !typeLineOf(card).includes(f.typeFilter.toLowerCase())) return false
+  if (f.typeFilter.size > 0 && ![...f.typeFilter].some((type) => typeLineOf(card).includes(type.toLowerCase()))) return false
   if (f.cmcFilter !== null) {
     const cmc = card.cmc ?? 0
     if (f.cmcFilter >= 7 ? cmc < 7 : cmc !== f.cmcFilter) return false

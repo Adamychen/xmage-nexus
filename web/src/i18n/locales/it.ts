@@ -1971,6 +1971,8 @@ export const it: TranslationSchema = {
     filter_toughness: 'Costituzione',
     filter_set: 'Set',
     filter_set_placeholder: 'es. mh3, blb, dsk…',
+    filter_any: 'Qualsiasi',
+    filter_keyword_search: 'Cerca abilità…',
     filter_search_placeholder: 'Cerca per nome…',
     filter_raw_color_clash: 'Il testo libero filtra già per colore — può contraddire i chip',
     filter_more: 'Altro',

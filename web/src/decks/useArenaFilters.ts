@@ -7,7 +7,7 @@ export function useArenaFilters() {
   const [rawQuery, setRawQuery] = useState('')
   const [colorFilter, setColorFilter] = useState<Set<string>>(new Set())
   const [cmcFilter, setCmcFilter] = useState<number | null>(null)
-  const [typeFilter, setTypeFilter] = useState<string | null>(null)
+  const [typeFilter, setTypeFilter] = useState<Set<string>>(new Set())
   const [rarityFilter, setRarityFilter] = useState<Set<Rarity>>(new Set())
   const [keywordFilter, setKeywordFilter] = useState<Set<string>>(new Set())
   const [powerFilter, setPowerFilter] = useState<StatFilter | null>(null)
@@ -39,6 +39,15 @@ export function useArenaFilters() {
     })
   }
 
+  const toggleType = (type: string) => {
+    setTypeFilter((prev) => {
+      const next = new Set(prev)
+      if (next.has(type)) next.delete(type)
+      else next.add(type)
+      return next
+    })
+  }
+
   const toggleKeyword = (keyword: string) => {
     setKeywordFilter((prev) => {
       const next = new Set(prev)
@@ -52,7 +61,7 @@ export function useArenaFilters() {
     setRawQuery('')
     setColorFilter(new Set())
     setCmcFilter(null)
-    setTypeFilter(null)
+    setTypeFilter(new Set())
     setRarityFilter(new Set())
     setKeywordFilter(new Set())
     setPowerFilter(null)
@@ -68,6 +77,7 @@ export function useArenaFilters() {
     cmcFilter,
     setCmcFilter,
     typeFilter,
+    toggleType,
     setTypeFilter,
     rarityFilter,
     toggleRarity,

@@ -1971,6 +1971,8 @@ export const ru: TranslationSchema = {
     filter_toughness: 'Выносливость',
     filter_set: 'Выпуск',
     filter_set_placeholder: 'напр. mh3, blb, dsk…',
+    filter_any: 'Любая',
+    filter_keyword_search: 'Поиск способности…',
     filter_search_placeholder: 'Поиск по имени…',
     filter_raw_color_clash: 'Свободный текст уже фильтрует по цвету — может противоречить чипсам',
     filter_more: 'Ещё',

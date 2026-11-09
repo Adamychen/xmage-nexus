@@ -337,10 +337,11 @@ test.describe('Decks Gallery', () => {
       await showDeckListView(page)
 
       // U6-1: sort select with 6 orders + direction toggle
-      const sortSelect = page.locator('.arena-sort-select')
-      await expect(sortSelect).toBeVisible()
-      await expect(sortSelect.locator('option')).toHaveCount(6)
-      await sortSelect.selectOption('name')
+      const sortTrigger = page.locator('.arena-search-panel [data-testid="arena-sort"] .arena-filter-dd-trigger')
+      await expect(sortTrigger).toBeVisible()
+      await sortTrigger.click()
+      await expect(page.locator('.arena-search-panel [data-testid="arena-sort"] [role="option"]')).toHaveCount(6)
+      await page.locator('.arena-search-panel [data-testid="arena-sort"] [role="option"]', { hasText: /^(Nombre|Name)$/ }).click()
       await expect(page.getByTestId('arena-sort-dir-btn')).toBeVisible()
       await page.getByTestId('arena-sort-dir-btn').click()
       await expect(page.getByTestId('arena-sort-dir-btn')).toHaveText('↓')
@@ -531,8 +532,10 @@ test.describe('Decks Gallery', () => {
       await expect(page.locator('.sg-panel .arena-filter-bar')).toBeVisible({ timeout: 8000 })
       await expect(page.locator('.sg-tile')).toHaveCount(3)
 
-      // Chip de tipo: solo criaturas
-      await page.locator('.sg-panel').getByRole('button', { name: /^(Criatura|Creature)$/ }).click()
+      // Type dropdown: creatures only
+      await page.locator('.sg-panel [data-testid="filter-type"] .arena-filter-dd-trigger').click()
+      await page.locator('.sg-panel [data-testid="filter-type"] [role="menuitemcheckbox"]', { hasText: /(Criatura|Creature)$/ }).click()
+      await page.keyboard.press('Escape')
       await expect(page.locator('.sg-tile')).toHaveCount(1)
       await expect(page.locator('.sg-tile img[alt="Llanowar Elves"]')).toBeVisible()
       await expect(page.locator('.sg-tile img[alt="Sol Ring"]')).toHaveCount(0)
@@ -544,7 +547,8 @@ test.describe('Decks Gallery', () => {
       await expect(page.locator('.sg-tile')).toHaveCount(3)
 
       // Orden por nombre dentro de la sección
-      await page.locator('.sg-panel .arena-sort-select').selectOption('name')
+      await page.locator('.sg-panel [data-testid="arena-sort"] .arena-filter-dd-trigger').click()
+      await page.locator('.sg-panel [data-testid="arena-sort"] [role="option"]', { hasText: /^(Nombre|Name)$/ }).click()
       await expect(page.locator('.sg-section').first().locator('img').first()).toHaveAttribute('alt', 'Arcane Signet')
 
       // El tamaño de carta se comparte con la pestaña Buscar

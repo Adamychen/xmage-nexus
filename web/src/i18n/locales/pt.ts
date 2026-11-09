@@ -1971,6 +1971,8 @@ export const pt: TranslationSchema = {
     filter_toughness: 'Resistência',
     filter_set: 'Coleção',
     filter_set_placeholder: 'ex. mh3, blb, dsk…',
+    filter_any: 'Qualquer',
+    filter_keyword_search: 'Buscar mecânica…',
     filter_search_placeholder: 'Buscar por nome…',
     filter_raw_color_clash: 'O texto livre já filtra por cor — pode contradizer os marcadores',
     filter_more: 'Mais',

@@ -1971,6 +1971,8 @@ export const zhs: TranslationSchema = {
     filter_toughness: '防御',
     filter_set: '系列',
     filter_set_placeholder: '例如 mh3, blb, dsk…',
+    filter_any: '任意',
+    filter_keyword_search: '搜索关键词异能…',
     filter_search_placeholder: '按名称搜索…',
     filter_raw_color_clash: '自由文本已按颜色过滤 — 可能与所选冲突',
     filter_more: '更多',

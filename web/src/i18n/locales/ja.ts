@@ -1971,6 +1971,8 @@ export const ja: TranslationSchema = {
     filter_toughness: 'タフネス',
     filter_set: 'セット',
     filter_set_placeholder: '例 mh3, blb, dsk…',
+    filter_any: 'すべて',
+    filter_keyword_search: 'キーワード能力を検索…',
     filter_search_placeholder: '名前で検索…',
     filter_raw_color_clash: 'フリーテキストが既に色で絞り込み中 — チップと矛盾する可能性あり',
     filter_more: 'もっと見る',

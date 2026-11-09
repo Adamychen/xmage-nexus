@@ -97,7 +97,7 @@ export default function SearchPanel({
         cmcFilter={filters.cmcFilter}
         onCmcChange={filters.setCmcFilter}
         typeFilter={filters.typeFilter}
-        onTypeChange={filters.setTypeFilter}
+        onToggleType={filters.toggleType}
         rarityFilter={filters.rarityFilter}
         onToggleRarity={filters.toggleRarity}
         keywordFilter={filters.keywordFilter}

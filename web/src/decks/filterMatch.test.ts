@@ -26,7 +26,7 @@ function filters(over: Partial<ArenaFilterValues> = {}): ArenaFilterValues {
     rawQuery: '',
     colorFilter: new Set(),
     cmcFilter: null,
-    typeFilter: null,
+    typeFilter: new Set<string>(),
     rarityFilter: new Set(),
     keywordFilter: new Set(),
     powerFilter: null,
@@ -186,8 +186,9 @@ describe('matchesArenaFilters', () => {
   })
 
   it('applies type, cmc (7+), rarity, keyword, stats and set', () => {
-    expect(matchesArenaFilters(elf, filters({ typeFilter: 'Creature' }))).toBe(true)
-    expect(matchesArenaFilters(elf, filters({ typeFilter: 'Sorcery' }))).toBe(false)
+    expect(matchesArenaFilters(elf, filters({ typeFilter: new Set(['Creature']) }))).toBe(true)
+    expect(matchesArenaFilters(elf, filters({ typeFilter: new Set(['Sorcery']) }))).toBe(false)
+    expect(matchesArenaFilters(elf, filters({ typeFilter: new Set(['Sorcery', 'Creature']) }))).toBe(true)
     expect(matchesArenaFilters(wrath, filters({ cmcFilter: 4 }))).toBe(true)
     expect(matchesArenaFilters(wrath, filters({ cmcFilter: 3 }))).toBe(false)
     expect(matchesArenaFilters(relic, filters({ cmcFilter: 7 }))).toBe(false)

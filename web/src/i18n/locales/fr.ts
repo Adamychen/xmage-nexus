@@ -1971,6 +1971,8 @@ export const fr: TranslationSchema = {
     filter_toughness: 'Endurance',
     filter_set: 'Édition',
     filter_set_placeholder: 'ex. mh3, blb, dsk…',
+    filter_any: 'Toutes',
+    filter_keyword_search: 'Chercher une capacité…',
     filter_search_placeholder: 'Rechercher par nom…',
     filter_raw_color_clash: 'Le texte libre filtre déjà par couleur — peut contredire les pastilles',
     filter_more: 'Plus',

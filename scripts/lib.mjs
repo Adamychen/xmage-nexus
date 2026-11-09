@@ -68,6 +68,7 @@ export function forkCommit() {
  * `.nexus-fork-commit` no coincide (p. ej. caché de Maven de CI), reinstala.
  */
 export function ensureMageArtifacts() {
+  copyBundledRepository()
   const commit = forkCommit()
   let stamped = null
   try { stamped = fs.readFileSync(mageStampFile(), 'utf8').trim() } catch {}
@@ -84,6 +85,29 @@ export function ensureMageArtifacts() {
     throw new Error(`mvn install of the fork failed:\n${lastLines(`${res.stdout}\n${res.stderr}`, 60)}`)
   }
   stampMageArtifacts(commit)
+}
+
+/**
+ * Puts the jars the fork ships in its `repository/` folder (jspf-core 0.9.1) in ~/.m2 as locally
+ * installed. The fork's poms reach that folder through `file://${project.basedir}/../repository`,
+ * which only resolves while building the fork itself: the proxy build, which takes mage-common from
+ * ~/.m2, falls back to the remote repositories, and the JBoss one stopped serving jspf-core in
+ * November 2026. Missing files are copied, and Maven's `_remote.repositories` is removed from those
+ * folders: a cached copy recorded as coming from a repository the proxy build does not list is
+ * otherwise ignored and downloaded again.
+ */
+export function copyBundledRepository(forkRoot = forkDir(), home = os.homedir()) {
+  const source = path.join(forkRoot, 'repository')
+  if (!fs.existsSync(source)) return
+  const target = path.join(home, '.m2', 'repository')
+  for (const entry of fs.readdirSync(source, { recursive: true, withFileTypes: true })) {
+    if (!entry.isFile()) continue
+    const dir = path.join(target, path.relative(source, entry.parentPath ?? entry.path))
+    fs.mkdirSync(dir, { recursive: true })
+    const file = path.join(dir, entry.name)
+    if (!fs.existsSync(file)) fs.copyFileSync(path.join(entry.parentPath ?? entry.path, entry.name), file)
+    fs.rmSync(path.join(dir, '_remote.repositories'), { force: true })
+  }
 }
 
 /** Registra en ~/.m2 el commit del fork del que salen los artefactos org.mage. */
