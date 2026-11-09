@@ -252,7 +252,7 @@ test("mageArtifactsPresent needs the deck-constructed jar the proxy depends on",
   assert.equal(mageArtifactsPresent(home), true);
 });
 
-test("copyBundledRepository puts the fork's bundled jars in ~/.m2 and keeps what is already there", () => {
+test("copyBundledRepository puts the fork's bundled jars in ~/.m2 as locally installed and keeps what is already there", () => {
   const fork = fs.mkdtempSync(path.join(os.tmpdir(), "fork-test-"));
   const home = fs.mkdtempSync(path.join(os.tmpdir(), "m2-test-"));
   const rel = path.join("com", "googlecode", "jspf", "jspf-core", "0.9.1");
@@ -262,10 +262,12 @@ test("copyBundledRepository puts the fork's bundled jars in ~/.m2 and keeps what
   const m2 = path.join(home, ".m2", "repository", rel);
   fs.mkdirSync(m2, { recursive: true });
   fs.writeFileSync(path.join(m2, "jspf-core-0.9.1.pom"), "cached");
+  fs.writeFileSync(path.join(m2, "_remote.repositories"), "jspf-core-0.9.1.pom>jboss-public-repository=\n");
 
   copyBundledRepository(fork, home);
   assert.equal(fs.readFileSync(path.join(m2, "jspf-core-0.9.1.jar"), "utf8"), "bundled");
   assert.equal(fs.readFileSync(path.join(m2, "jspf-core-0.9.1.pom"), "utf8"), "cached");
+  assert.equal(fs.existsSync(path.join(m2, "_remote.repositories")), false, "Maven treats the folder as locally installed");
 
   copyBundledRepository(path.join(fork, "missing"), home);
 });
