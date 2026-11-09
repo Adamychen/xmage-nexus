@@ -68,6 +68,7 @@ export function forkCommit() {
  * `.nexus-fork-commit` no coincide (p. ej. caché de Maven de CI), reinstala.
  */
 export function ensureMageArtifacts() {
+  copyBundledRepository()
   const commit = forkCommit()
   let stamped = null
   try { stamped = fs.readFileSync(mageStampFile(), 'utf8').trim() } catch {}
@@ -84,6 +85,19 @@ export function ensureMageArtifacts() {
     throw new Error(`mvn install of the fork failed:\n${lastLines(`${res.stdout}\n${res.stderr}`, 60)}`)
   }
   stampMageArtifacts(commit)
+}
+
+/**
+ * Copies the jars the fork ships in its `repository/` folder (jspf-core 0.9.1) into ~/.m2 when they
+ * are missing. The fork's poms reach that folder through `file://${project.basedir}/../repository`,
+ * which only resolves while building the fork itself: the proxy build, which takes mage-common from
+ * ~/.m2, falls back to the remote repositories, and the JBoss one stopped serving jspf-core in
+ * November 2026. Files already in ~/.m2 are left alone.
+ */
+export function copyBundledRepository(forkRoot = forkDir(), home = os.homedir()) {
+  const source = path.join(forkRoot, 'repository')
+  if (!fs.existsSync(source)) return
+  fs.cpSync(source, path.join(home, '.m2', 'repository'), { recursive: true, force: false, errorOnExist: false })
 }
 
 /** Registra en ~/.m2 el commit del fork del que salen los artefactos org.mage. */
