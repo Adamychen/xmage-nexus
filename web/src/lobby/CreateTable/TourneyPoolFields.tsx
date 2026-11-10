@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import Button from '../../ui/Button'
 import Field from '../../ui/Field'
+import Select from '../../ui/Select'
 import { useTranslation } from '../../i18n'
 import { composeTournamentType, type TournamentChoice } from '../tournament/tournamentType'
 import { DEFAULT_DRAFT_CUBES } from './constants'
@@ -22,12 +23,14 @@ export default function TourneyPoolFields({ form, choice }: { form: CreateTableF
 
       {isCubeBased(choice) && (
         <Field label={t('lobby', 'create_field_cube')}>
-          <select value={form.draftCubeName} onChange={(e) => form.setDraftCubeName(e.target.value)}>
-            <option value="">{t('lobby', 'create_cube_random', { all: t('common', 'all') })}</option>
-            {(form.draftCubes.length ? form.draftCubes : DEFAULT_DRAFT_CUBES).map((c) => (
-              <option key={c} value={c}>{c}</option>
-            ))}
-          </select>
+          <Select
+            value={form.draftCubeName}
+            onChange={form.setDraftCubeName}
+            options={[
+              { value: '', label: t('lobby', 'create_cube_random', { all: t('common', 'all') }) },
+              ...(form.draftCubes.length ? form.draftCubes : DEFAULT_DRAFT_CUBES).map((c) => ({ value: c, label: c })),
+            ]}
+          />
         </Field>
       )}
 

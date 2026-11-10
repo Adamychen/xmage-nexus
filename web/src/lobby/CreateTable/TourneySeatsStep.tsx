@@ -4,6 +4,7 @@ import Button from '../../ui/Button'
 import Chip from '../../ui/Chip'
 import ChipButton from '../../ui/ChipButton'
 import Field from '../../ui/Field'
+import Select from '../../ui/Select'
 import Icon from '../../ui/Icon'
 import { Switch } from '../../ui/Toggle'
 import { useStore } from '../../state/store'
@@ -141,17 +142,16 @@ export default function TourneySeatsStep({ form, onEditDeck }: { form: CreateTab
             </>
           )}
           <Field label={t('lobby', 'trn_d_bots_deck')}>
-            <select
+            <Select
               data-testid="trn-bots-deck"
               value={form.simDeck ? deckRef(form.simDeck) : ''}
               disabled={form.availableDecks.length === 0}
-              onChange={(e) => form.selectGlobalSimDeck(e.target.value)}
-            >
-              {!form.simDeck && <option value="">{t('lobby', 'create_warn_seat_deck_empty')}</option>}
-              {form.availableDecks.map((d) => (
-                <option key={deckRef(d)} value={deckRef(d)}>{d.name}</option>
-              ))}
-            </select>
+              onChange={form.selectGlobalSimDeck}
+              options={[
+                ...(!form.simDeck ? [{ value: '', label: t('lobby', 'create_warn_seat_deck_empty') }] : []),
+                ...form.availableDecks.map((d) => ({ value: deckRef(d), label: d.name })),
+              ]}
+            />
           </Field>
         </section>
       )}
@@ -236,27 +236,21 @@ function SeatRowItem({ seatNumber, seatIdx, cfg, limited, form, botType, deck }:
       {!human && (
         <div className="trn-seat-controls">
           <Field label={t('lobby', 'trn_d_bot_type')}>
-            <select
+            <Select
               data-testid={`seat-type-${seatIdx}`}
               value={normalizeSeatType(cfg.type)}
-              onChange={(e) => form.setSeatType(seatIdx, e.target.value)}
-            >
-              {form.playerTypes.map((pt) => (
-                <option key={pt} value={normalizeSeatType(pt)}>{seatTypeLabel(pt, t)}</option>
-              ))}
-            </select>
+              onChange={(v) => form.setSeatType(seatIdx, v)}
+              options={form.playerTypes.map((pt) => ({ value: normalizeSeatType(pt), label: seatTypeLabel(pt, t) }))}
+            />
           </Field>
           <Field label={t('lobby', 'create_field_seat_skill')}>
-            <select
+            <Select
               data-testid={`seat-skill-${seatIdx}`}
               value={cfg.skill ?? 2}
-              onChange={(e) => form.setSeatSkill(seatIdx, Number(e.target.value))}
+              onChange={(v) => form.setSeatSkill(seatIdx, v)}
               className="create-seat-select create-seat-select--skill"
-            >
-              {Array.from({ length: 10 }, (_, i) => i + 1).map((v) => (
-                <option key={v} value={v}>{v}</option>
-              ))}
-            </select>
+              options={Array.from({ length: 10 }, (_, i) => ({ value: i + 1, label: String(i + 1) }))}
+            />
           </Field>
           {!limited && (
             <Field
@@ -264,17 +258,16 @@ function SeatRowItem({ seatNumber, seatIdx, cfg, limited, form, botType, deck }:
               hint={deckEmpty ? t('lobby', 'create_warn_seat_deck_empty') : `${deckCards} ${t('decks', 'total_cards')}`}
               hintTone={deckEmpty ? 'warn' : 'muted'}
             >
-              <select
+              <Select
                 data-testid={`seat-deck-${seatIdx}`}
                 value={deck ? deckRef(deck) : ''}
                 disabled={form.availableDecks.length === 0}
-                onChange={(e) => form.setSeatDeck(seatIdx, e.target.value)}
-              >
-                {!deck && <option value="">{t('lobby', 'create_warn_seat_deck_empty')}</option>}
-                {form.availableDecks.map((d) => (
-                  <option key={deckRef(d)} value={deckRef(d)}>{d.name}</option>
-                ))}
-              </select>
+                onChange={(v) => form.setSeatDeck(seatIdx, v)}
+                options={[
+                  ...(!deck ? [{ value: '', label: t('lobby', 'create_warn_seat_deck_empty') }] : []),
+                  ...form.availableDecks.map((d) => ({ value: deckRef(d), label: d.name })),
+                ]}
+              />
             </Field>
           )}
         </div>

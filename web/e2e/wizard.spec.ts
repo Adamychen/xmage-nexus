@@ -54,7 +54,8 @@ test.describe('Wizard crear mesa (U3)', () => {
       // default seats now wait for humans: opt the seat into the Mad AI to get a bot seat with skill
       await page.getByTestId('seat-node-1').click()
       await page.getByRole('radio', { name: /Mad/ }).click()
-      await page.getByTestId('seat-skill-0').selectOption('7')
+      await page.getByTestId('seat-skill-0').click()
+      await page.getByRole('option', { name: '7', exact: true }).click()
       await page.getByRole('button', { name: /Siguiente/ }).click()
       await page.getByRole('button', { name: /Crear Mesa/ }).click()
       await expect(page.getByTestId('staging-player-actions')).toBeVisible({ timeout: 15_000 })
