@@ -154,6 +154,22 @@ describe('ArenaFilterBar', () => {
     expect(items[0].getAttribute('aria-checked')).toBe('true')
   })
 
+  it('DCK-24: the advanced filters have a rules text field when the panel can search by it', () => {
+    const onOracleTextChange = vi.fn()
+    renderBar({ oracleText: 'draw', onOracleTextChange })
+    fireEvent.click(screen.getByRole('button', { name: new RegExp(t('decks', 'filter_advanced')) }))
+    const field = screen.getByRole('searchbox', { name: t('decks', 'filter_oracle') }) as HTMLInputElement
+    expect(field.value).toBe('draw')
+    expect(field.getAttribute('aria-describedby')).toBeTruthy()
+    fireEvent.change(field, { target: { value: 'draw a card' } })
+    expect(onOracleTextChange).toHaveBeenLastCalledWith('draw a card')
+    cleanup()
+
+    renderBar()
+    fireEvent.click(screen.getByRole('button', { name: new RegExp(t('decks', 'filter_advanced')) }))
+    expect(screen.queryByRole('searchbox', { name: t('decks', 'filter_oracle') })).toBeNull()
+  })
+
   it('DCK-22: the set dropdown lists every paper set once the advanced filters open, with a search box', async () => {
     const props = renderBar()
     expect(scryfallJson).not.toHaveBeenCalled()

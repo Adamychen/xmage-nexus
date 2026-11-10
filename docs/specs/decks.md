@@ -351,6 +351,18 @@ tile, and always on touch screens), so the buttons never cover it.
   the format label on narrow tiles (report of 2026-11-06).
 - Guard: `src/decks/DecksGallery.test.tsx` · `e2e/decks-gallery.spec.ts`
 
+### DCK-24 · The editor's search can look for words in the rules text
+The advanced filters of the editor's search have a "Rules text" field. Each word typed there must appear
+in the card's Oracle text, and a phrase in quotes must appear as it is; each one becomes a Scryfall `o:`
+term (`"enters tapped" draw` searches `o:"enters tapped" o:"draw"`). Text in the field is enough to start
+a search (DCK-21), Clear empties it, and a hint under the field says the text is matched in English,
+because Scryfall's Oracle text is English only. The suggestions panel, which filters a fixed list, has no
+such field.
+
+- Why: finding cards by what they do (draw, sacrifice, "enters tapped") needed Scryfall syntax typed by
+  hand in the name box, while other deck builders offer the field (report of 2026-11-06).
+- Guard: `src/decks/filterQuery.test.ts` · `src/decks/ArenaFilterBar.test.tsx` · `src/decks/SearchPanel.test.tsx`
+
 ### DCK-25 · List view groups and sorts like Piles
 In List view the toolbar shows the same Group as Piles (Type, Mana value, Colour, Rarity, Identity, EDH
 power, Free) and Sort (mana value or name). The grouping is one setting for both views and both list

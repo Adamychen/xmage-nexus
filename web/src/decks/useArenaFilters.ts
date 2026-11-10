@@ -13,6 +13,7 @@ export function useArenaFilters() {
   const [powerFilter, setPowerFilter] = useState<StatFilter | null>(null)
   const [toughnessFilter, setToughnessFilter] = useState<StatFilter | null>(null)
   const [setFilter, setSetFilter] = useState<string | null>(null)
+  const [oracleText, setOracleText] = useState('')
 
   const toggleColor = (color: string) => {
     setColorFilter((prev) => {
@@ -67,6 +68,7 @@ export function useArenaFilters() {
     setPowerFilter(null)
     setToughnessFilter(null)
     setSetFilter(null)
+    setOracleText('')
   }
 
   return {
@@ -89,6 +91,8 @@ export function useArenaFilters() {
     setToughnessFilter,
     setFilter,
     setSetFilter,
+    oracleText,
+    setOracleText,
     reset,
   }
 }

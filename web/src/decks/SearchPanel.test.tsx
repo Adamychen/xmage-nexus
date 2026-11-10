@@ -42,4 +42,11 @@ describe('SearchPanel', () => {
     fireEvent.click(screen.getByRole('button', { name: t('game', 'color_red') }))
     expect(searchQueries.at(-1)).toContain('game:paper -t:basic f:commander')
   })
+
+  it('DCK-24: rules text alone starts the search with Scryfall o: terms', () => {
+    render(<SearchPanel onAdd={() => {}} format="Commander" />)
+    fireEvent.click(screen.getByRole('button', { name: new RegExp(t('decks', 'filter_advanced')) }))
+    fireEvent.change(screen.getByRole('searchbox', { name: t('decks', 'filter_oracle') }), { target: { value: '"enters tapped" draw' } })
+    expect(searchQueries.at(-1)).toBe('game:paper -t:basic f:commander o:"enters tapped" o:"draw"')
+  })
 })
