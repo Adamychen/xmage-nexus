@@ -1,5 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { onScryfallThrottle, resetScryfallClient, scryfallFetch, scryfallJson, scryfallThrottleMs, setScryfallPacing } from './scryfallClient'
+import {
+  isRateLimitedScryfallUrl, onScryfallThrottle, resetScryfallClient, ScryfallUnavailableError, scryfallFetch, scryfallJson,
+  scryfallThrottleMs, setScryfallPacing,
+} from './scryfallClient'
 import { fetchCardJson } from './scryfallCards'
 
 function ok(body: unknown): Response {
@@ -429,5 +432,105 @@ describe('DCK-11 network errors pause only background requests', () => {
     expect(await urgent).toEqual({ name: 'Shared' })
     expect(await background).toEqual({ name: 'Shared' })
     expect(starts).toEqual([t0])
+  })
+})
+
+describe('DCK-26 rate-limited endpoints, 429 and 503', () => {
+  beforeEach(() => {
+    resetScryfallClient()
+  })
+  afterEach(() => {
+    vi.useRealTimers()
+    vi.unstubAllGlobals()
+  })
+
+  it('DCK-26: knows which Scryfall endpoints are limited to 2 requests per second', () => {
+    expect(isRateLimitedScryfallUrl('https://api.scryfall.com/cards/named?exact=Shock')).toBe(true)
+    expect(isRateLimitedScryfallUrl('https://api.scryfall.com/cards/search?q=bolt')).toBe(true)
+    expect(isRateLimitedScryfallUrl('https://api.scryfall.com/cards/random')).toBe(true)
+    expect(isRateLimitedScryfallUrl('https://api.scryfall.com/cards/collection')).toBe(true)
+    expect(isRateLimitedScryfallUrl('https://api.scryfall.com/cards/m10/146?format=json')).toBe(false)
+    expect(isRateLimitedScryfallUrl('https://api.scryfall.com/sets/m10')).toBe(false)
+    expect(isRateLimitedScryfallUrl('https://cards.scryfall.io/normal/front/a.jpg')).toBe(false)
+  })
+
+  it('DCK-26: spaces limited requests 500 ms apart without holding the rest of the API behind them', async () => {
+    vi.useFakeTimers()
+    setScryfallPacing({ spacingMs: 0, maxConcurrent: 3 })
+    const starts = new Map<string, number>()
+    vi.stubGlobal('fetch', vi.fn(async (url: string) => {
+      starts.set(url, Date.now())
+      return ok({})
+    }))
+    const t0 = Date.now()
+    const named = ['A', 'B', 'C'].map((n) => `https://api.scryfall.com/cards/named?exact=${n}`)
+    const printing = 'https://api.scryfall.com/cards/m10/146?format=json'
+    const all = Promise.all([...named, printing].map((url) => scryfallFetch(url, { urgent: true })))
+    await vi.advanceTimersByTimeAsync(2000)
+    await all
+
+    expect(starts.get(named[0])! - t0).toBeLessThan(50)
+    expect(starts.get(named[1])! - starts.get(named[0])!).toBeGreaterThanOrEqual(500)
+    expect(starts.get(named[2])! - starts.get(named[1])!).toBeGreaterThanOrEqual(500)
+    expect(starts.get(printing)! - t0).toBeLessThan(50)
+  })
+
+  it('DCK-26: a 429 without Retry-After pauses for the whole 30 s block of Scryfall before the retry', async () => {
+    vi.useFakeTimers()
+    setScryfallPacing({ spacingMs: 0, maxConcurrent: 1 })
+    const times: number[] = []
+    vi.stubGlobal('fetch', vi.fn(async () => {
+      times.push(Date.now())
+      return times.length === 1 ? status(429) : ok({ ok: 1 })
+    }))
+    const res = scryfallFetch('https://api.scryfall.com/cards/collection', { method: 'POST', urgent: true })
+    await vi.advanceTimersByTimeAsync(29_000)
+    expect(times).toHaveLength(1)
+    await vi.advanceTimersByTimeAsync(2000)
+    expect((await res).status).toBe(200)
+    expect(times[1] - times[0]).toBeGreaterThanOrEqual(30_000)
+  })
+
+  it('DCK-26: a 429 with Retry-After waits exactly that long', async () => {
+    vi.useFakeTimers()
+    setScryfallPacing({ spacingMs: 0, maxConcurrent: 1 })
+    const times: number[] = []
+    vi.stubGlobal('fetch', vi.fn(async () => {
+      times.push(Date.now())
+      return times.length === 1 ? status(429, { 'Retry-After': '5' }) : ok({})
+    }))
+    const res = scryfallFetch('https://api.scryfall.com/cards/named?exact=Shock', { urgent: true })
+    await vi.advanceTimersByTimeAsync(6000)
+    expect((await res).status).toBe(200)
+    expect(times[1] - times[0]).toBeGreaterThanOrEqual(5000)
+    expect(times[1] - times[0]).toBeLessThan(6000)
+  })
+
+  it('DCK-26: a 503 is retried after a short pause', async () => {
+    vi.useFakeTimers()
+    setScryfallPacing({ spacingMs: 0, maxConcurrent: 1 })
+    const times: number[] = []
+    vi.stubGlobal('fetch', vi.fn(async () => {
+      times.push(Date.now())
+      return times.length === 1 ? status(503) : ok({})
+    }))
+    const res = scryfallFetch('https://api.scryfall.com/cards/m10/146', { urgent: true })
+    await vi.advanceTimersByTimeAsync(3000)
+    expect((await res).status).toBe(200)
+    expect(times[1] - times[0]).toBeGreaterThanOrEqual(2000)
+  })
+
+  it('DCK-26: with rejectOnFailure a lookup Scryfall did not answer rejects, a 404 is still null', async () => {
+    setScryfallPacing({ spacingMs: 0, maxAttempts: 1 })
+    vi.stubGlobal('fetch', vi.fn(async (url: string) => {
+      if (url.includes('Missing')) return status(404)
+      if (url.includes('Throttled')) return status(429, { 'Retry-After': '0' })
+      throw new TypeError('Failed to fetch')
+    }))
+    const opts = { urgent: true, rejectOnFailure: true }
+    expect(await scryfallJson('https://api.scryfall.com/cards/named?exact=Missing', opts)).toBeNull()
+    await expect(scryfallJson('https://api.scryfall.com/cards/named?exact=Throttled', opts)).rejects.toBeInstanceOf(ScryfallUnavailableError)
+    await expect(scryfallJson('https://api.scryfall.com/cards/named?exact=Offline', opts)).rejects.toBeInstanceOf(ScryfallUnavailableError)
+    expect(await scryfallJson('https://api.scryfall.com/cards/named?exact=Offline', { urgent: true })).toBeNull()
   })
 })

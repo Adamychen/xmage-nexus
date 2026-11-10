@@ -2,9 +2,14 @@ import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest'
 import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/react'
 
 const scryfallJson = vi.hoisted(() => vi.fn())
-vi.mock('../cards/scryfallClient', () => ({ scryfallJson }))
+vi.mock('../cards/scryfallClient', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../cards/scryfallClient')>()),
+  scryfallJson,
+  scryfallFetch: async () => { throw new TypeError('offline') },
+}))
 
 import { ImportDeckDialog } from './ImportDeckDialog'
+import { ScryfallUnavailableError } from '../cards/scryfallClient'
 import { captureUnhandledRejections, settle } from '../utils/unhandledRejections'
 import type { DeckV2 } from './types'
 
@@ -73,6 +78,38 @@ describe('ImportDeckDialog wizard', () => {
     await waitFor(() => expect(onImport).toHaveBeenCalled())
     const all = [...onImport.mock.calls[0][0].cards, ...onImport.mock.calls[0][0].sideboard]
     expect(all.some((c) => c.cardName === 'Smash to Smithereens')).toBe(false)
+  })
+
+  it('DCK-26: lists cards Scryfall did not answer for apart from the missing ones and tries them again', async () => {
+    let throttled = true
+    scryfallJson.mockImplementation(async (url: string, opts?: { rejectOnFailure?: boolean }) => {
+      if (url.includes('Lightning%20Bolt')) return card('Lightning Bolt', 'clu', '141')
+      if (url.includes('Shock')) {
+        if (!throttled) return card('Shock', 'm21', '159')
+        if (opts?.rejectOnFailure) throw new ScryfallUnavailableError(url)
+        return null
+      }
+      return null
+    })
+    const onImport = vi.fn<(d: DeckV2) => void>()
+    render(<ImportDeckDialog onImport={onImport} onClose={vi.fn()} />)
+    paste(ARENA)
+    fireEvent.click(screen.getByTestId('import-next-btn'))
+    await screen.findByTestId('import-step-setup')
+    fireEvent.click(screen.getByTestId('import-resolve-btn'))
+
+    const unanswered = await screen.findByTestId('import-unanswered')
+    expect(unanswered.textContent).toContain('Scryfall no respondió (1)')
+    expect(unanswered.textContent).toContain('Shock')
+    expect(screen.getByTestId('import-unresolved').textContent).not.toContain('Shock')
+    expect(screen.getByTestId('import-unresolved').textContent).toContain('Smash to Smithereens')
+
+    throttled = false
+    fireEvent.click(screen.getByTestId('import-retry-btn'))
+    await waitFor(() => expect(screen.queryByTestId('import-unanswered')).toBeNull())
+    fireEvent.click(screen.getByTestId('import-create-btn'))
+    await waitFor(() => expect(onImport).toHaveBeenCalled())
+    expect(onImport.mock.calls[0][0].cards.find((c) => c.cardName === 'Shock')).toMatchObject({ setCode: 'M21', cardNumber: '159', amount: 2 })
   })
 
   it('keeps the quick import path that skips setup', async () => {

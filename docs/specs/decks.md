@@ -380,3 +380,25 @@ beside the name.
   next row, and the board's `.commander-badge` style pulled the list's
   crown on top of the commander's name (report of 2026-11-06).
 - Guard: `src/decks/DeckEditorToolbar.test.tsx` · `src/decks/DeckListPanel.test.tsx` · `src/decks/deckCardOps.test.ts` · `src/decks/ArenaCardStrip.test.tsx`
+
+### DCK-26 · An import never calls a card missing because Scryfall did not answer
+When an import or a resolve has cards XMage did not place, it asks Scryfall about them by name (and by
+set for "A specific set"; a split card by its first face) in batches of up to 75 per `/cards/collection`
+request, and looks a card up on its own (exact name, then fuzzy, or the release-ordered search of
+"Oldest printing") only when the batch reports it not found or did not answer. The answers are cached
+like single lookups, so a second import of the same cards asks Scryfall nothing. Requests to the
+endpoints Scryfall limits to 2 per second (`/cards/search`, `/cards/named`, `/cards/random`,
+`/cards/collection`) are at least 500 ms apart,
+while the rest of the API keeps its 150 ms spacing and is not held behind them. A 429 pauses every
+request for its `Retry-After`, or for Scryfall's full 30 s block when it has none, and a 503 for its
+`Retry-After` or 2 s; the request is then sent again, up to three attempts. A card Scryfall did not
+answer for (throttled past every attempt, offline, or an HTTP error other than 404) is not listed under
+"Not found": the review lists it under "Scryfall did not answer", says the card stays in the deck as
+written, and offers to try again, which resolves the deck again from the cache and asks only for what
+is still unknown.
+
+- Why: importing a 100-card deck whose names XMage did not resolve fired one rate-limited request per
+  card at 150 ms; Scryfall answered 429 and blocked for 30 s, the 2 s back-off spent the three attempts
+  inside the block, and every card that lost its lookup was shown as "No encontradas" although it exists
+  (report of 2026-11-10).
+- Guard: `src/cards/scryfallClient.test.ts` · `src/cards/scryfallCards.test.ts` · `src/decks/importResolve.scryfall.test.ts` · `src/decks/ImportDeckDialog.test.tsx`

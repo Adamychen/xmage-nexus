@@ -525,6 +525,20 @@ export function ImportDeckDialog({
             </div>
           )}
 
+          {result.unanswered.length > 0 && (
+            <div className="import-review-block warning" data-testid="import-unanswered">
+              <div className="import-review-title">{t('decks', 'import_review_unanswered', { count: String(result.unanswered.length) })}</div>
+              <div className="import-review-names">{result.unanswered.join(', ')}</div>
+              <span className="import-hint-text">{t('decks', 'import_review_unanswered_hint')}</span>
+              <div>
+                <Button variant="subtle" size="sm" data-testid="import-retry-btn" disabled={busy}
+                  onClick={() => void handleResolve()}>
+                  {busy && progress ? t('decks', 'import_resolving', { done: String(progress.done), total: String(progress.total) }) : t('decks', 'import_review_retry')}
+                </Button>
+              </div>
+            </div>
+          )}
+
           <div className={`import-review-block${validation && validation.issues.length > 0 ? ' warning' : ''}`}>
             {validation && validation.issues.length === 0 && result.metaByName.size > 0 ? (
               <div className="import-review-title">
