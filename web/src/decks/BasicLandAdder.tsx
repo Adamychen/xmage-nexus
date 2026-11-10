@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import ChipButton from '../ui/ChipButton'
 import Button from '../ui/Button'
+import Select from '../ui/Select'
 import { BASIC_LAND_PRESETS, BASIC_LAND_SETS, countManaPips, suggestBasicLands, getBasicLandLabel, landPrinting, loadBasicLandSet, saveBasicLandSet, type BasicLandPreset } from './deckUtils'
 import type { DeckCard } from '../lobby/decks'
 import { ManaPip } from './ArenaManaSymbols'
@@ -142,16 +143,13 @@ export function BasicLandAdder({
           <div className="suggester-action-row">
             <label className="suggester-target-label">
               {t('system', 'land_set')}:
-              <select
+              <Select
                 value={landSet}
-                onChange={(e) => handleLandSetChange(e.target.value)}
+                onChange={handleLandSetChange}
                 className="suggester-input"
                 data-testid="land-set-select"
-              >
-                {BASIC_LAND_SETS.map((s) => (
-                  <option key={s.code} value={s.code}>{s.label}</option>
-                ))}
-              </select>
+                options={BASIC_LAND_SETS.map((s) => ({ value: s.code, label: s.label }))}
+              />
             </label>
             <label className="suggester-target-label">
               {t('decks', 'builder_lands_target')}:

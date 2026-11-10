@@ -978,7 +978,7 @@ export const ja: TranslationSchema = {
     appearance_title: '外観とボード',
     match_badge: 'マッチ',
     create_field_boosters: 'ブースター',
-    filter_more_formats: '▾ さらにフォーマットを表示…',
+    filter_more_formats: 'さらにフォーマットを表示…',
   },
   game: {
     turn: 'ターン',
@@ -1910,6 +1910,7 @@ export const ja: TranslationSchema = {
     builder_aria_mana_sources: 'マナ源の内訳',
     builder_aria_basic_lands: '基本土地の内訳',
     card: 'カード',
+    browser_filter_archetype: 'アーキタイプ',
     browser_filter_aggro: 'Aggro',
     browser_filter_midrange: 'Midrange',
     browser_filter_control: 'Control',

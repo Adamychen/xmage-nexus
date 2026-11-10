@@ -395,6 +395,7 @@ export default function Select<V extends SelectValue>({
         onKeyUp={onTriggerKeyUp}
       >
         <span className="ui-select-value">{selected?.label ?? ''}</span>
+        <span className="ui-select-chevron" aria-hidden="true" />
       </button>
       {panel && createPortal(panel, document.body)}
     </>

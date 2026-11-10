@@ -1,19 +1,16 @@
-.ui-select-trigger {
+:where(.ui-select-trigger) {
   display: inline-flex;
   align-items: center;
+  gap: var(--sp-2h);
   max-width: 100%;
   min-width: 0;
   font: inherit;
   color: var(--text);
   text-align: start;
   background-color: var(--ink-1);
-  background-image: linear-gradient(45deg, transparent 50%, var(--fg-2) 50%), linear-gradient(135deg, var(--fg-2) 50%, transparent 50%);
-  background-position: calc(100% - 15px) 50%, calc(100% - 10px) 50%;
-  background-size: 5px 5px;
-  background-repeat: no-repeat;
   border: 1px solid var(--line-2);
   border-radius: var(--r-md);
-  padding: var(--sp-2) var(--sp-6) var(--sp-2) var(--sp-2h);
+  padding: var(--sp-2) var(--sp-2h);
   cursor: pointer;
 }
 .ui-select-trigger:active:not(:disabled) { transform: none; }
@@ -23,6 +20,15 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+.ui-select-chevron {
+  flex: none;
+  width: 10px;
+  height: 5px;
+  background-image: linear-gradient(45deg, transparent 50%, var(--fg-2) 50%), linear-gradient(135deg, var(--fg-2) 50%, transparent 50%);
+  background-position: 0 0, 5px 0;
+  background-size: 5px 5px;
+  background-repeat: no-repeat;
 }
 
 .ui-select-panel {

@@ -1,4 +1,5 @@
 import CloseButton from '../ui/CloseButton'
+import Select from '../ui/Select'
 import { useId, useMemo, useRef, useState } from 'react'
 import { parseAnyDeck } from './parseDck'
 import { loadDeckFromOnlineSource } from './onlineDeckService'
@@ -425,16 +426,13 @@ export function ImportDeckDialog({
           </Field>
 
           <Field label={t('decks', 'import_setup_format')} hint={t('decks', 'import_setup_format_detected', { format: suggested })}>
-            <select
+            <Select
               className="import-format-select"
               data-testid="import-format-select"
               value={format}
-              onChange={(e) => setFormat(e.target.value as DeckFormat)}
-            >
-              {ALL_FORMATS.map((f) => (
-                <option key={f} value={f}>{f}{f === suggested ? ' ✓' : ''}</option>
-              ))}
-            </select>
+              onChange={setFormat}
+              options={ALL_FORMATS.map((f) => ({ value: f, label: `${f}${f === suggested ? ' ✓' : ''}`, text: f }))}
+            />
           </Field>
 
           <fieldset className="import-printing-group">

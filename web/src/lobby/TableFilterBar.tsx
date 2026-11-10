@@ -1,6 +1,7 @@
 import { useState, useMemo, type ReactNode } from 'react'
 import CloseButton from '../ui/CloseButton'
 import Button from '../ui/Button'
+import Select from '../ui/Select'
 import ChipButton from '../ui/ChipButton'
 import Chip from '../ui/Chip'
 import Checkbox from '../ui/Checkbox'
@@ -343,25 +344,20 @@ export default function TableFilterBar({ tables, filters, onChange, onReset, cla
           })}
 
           <div className="tfb-more-formats-wrap">
-            <select
+            <Select
               className={`tfb-more-select ${isOtherFormatSelected ? 'active' : ''}`}
               aria-label={t('lobby', 'filter_more_formats')}
               value={isOtherFormatSelected ? filters.format : ''}
-              onChange={(e) => {
-                if (e.target.value) {
-                  onChange({ ...filters, format: e.target.value })
-                }
-              }}
-            >
-              <option value="" disabled>
-                {isOtherFormatSelected ? t('lobby', 'filter_selected_format', { format: filters.format }) : t('lobby', 'filter_more_formats')}
-              </option>
-              {extraFormats.map((fmt) => (
-                <option key={fmt} value={fmt}>
-                  {fmt.replace(/^Constructed - /, '')}
-                </option>
-              ))}
-            </select>
+              onChange={(format) => { if (format) onChange({ ...filters, format }) }}
+              options={[
+                {
+                  value: '',
+                  label: isOtherFormatSelected ? t('lobby', 'filter_selected_format', { format: filters.format }) : t('lobby', 'filter_more_formats'),
+                  disabled: true,
+                },
+                ...extraFormats.map((fmt) => ({ value: fmt, label: fmt.replace(/^Constructed - /, '') })),
+              ]}
+            />
           </div>
         </div>
         <div className="tfb-segment-tail">

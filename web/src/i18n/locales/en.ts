@@ -976,7 +976,7 @@ export const en = {
     appearance_title: 'Appearance & Board',
     match_badge: 'Match',
     create_field_boosters: 'Boosters',
-    filter_more_formats: '▾ More formats…',
+    filter_more_formats: 'More formats…',
   },
   game: {
     turn: 'Turn',
@@ -1908,6 +1908,7 @@ export const en = {
     builder_aria_mana_sources: 'Mana source breakdown',
     builder_aria_basic_lands: 'Basic land breakdown',
     card: 'Card',
+    browser_filter_archetype: 'Archetype',
     browser_filter_aggro: 'Aggro',
     browser_filter_midrange: 'Midrange',
     browser_filter_control: 'Control',

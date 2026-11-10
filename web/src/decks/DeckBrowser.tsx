@@ -13,6 +13,7 @@ import { useCardArtUrl } from './useCardArtUrl'
 import type { DeckCard } from '../lobby/decks'
 import './DeckBrowser.css'
 import Button from '../ui/Button'
+import Select from '../ui/Select'
 
 function BrowserDeckArt({ cover, children }: { cover: DeckCard; children: ReactNode }) {
   const artUrl = useCardArtUrl(cover)
@@ -87,33 +88,33 @@ export function DeckBrowser({
           />
         </div>
 
-        <select
+        <Select
           value={formatFilter}
-          onChange={(e) => setFormatFilter(e.target.value)}
+          onChange={setFormatFilter}
           className="browser-select"
-        >
-          <option value="All Formats">{t('decks', 'filter_all_formats')}</option>
-          {ALL_FORMATS.map((f) => (
-            <option key={f} value={f}>
-              {f}
-            </option>
-          ))}
-        </select>
+          aria-label={t('lobby', 'filter_format_label')}
+          options={[
+            { value: 'All Formats', label: t('decks', 'filter_all_formats') },
+            ...ALL_FORMATS.map((f) => ({ value: f, label: f })),
+          ]}
+        />
 
-        <select
+        <Select
           value={archetypeFilter}
-          onChange={(e) => setArchetypeFilter(e.target.value)}
+          onChange={setArchetypeFilter}
           className="browser-select"
-        >
-          <option value="All Archetypes">{t('common', 'all')}</option>
-          <option value="Aggro">{t('decks', 'browser_filter_aggro')}</option>
-          <option value="Midrange">{t('decks', 'browser_filter_midrange')}</option>
-          <option value="Control">{t('decks', 'browser_filter_control')}</option>
-          <option value="Combo">{t('decks', 'browser_filter_combo')}</option>
-          <option value="Ramp">{t('decks', 'browser_filter_ramp')}</option>
-          <option value="Tribal">{t('decks', 'browser_filter_tribal')}</option>
-          <option value="Precon">{t('decks', 'browser_filter_precon')}</option>
-        </select>
+          aria-label={t('decks', 'browser_filter_archetype')}
+          options={[
+            { value: 'All Archetypes', label: t('common', 'all') },
+            { value: 'Aggro', label: t('decks', 'browser_filter_aggro') },
+            { value: 'Midrange', label: t('decks', 'browser_filter_midrange') },
+            { value: 'Control', label: t('decks', 'browser_filter_control') },
+            { value: 'Combo', label: t('decks', 'browser_filter_combo') },
+            { value: 'Ramp', label: t('decks', 'browser_filter_ramp') },
+            { value: 'Tribal', label: t('decks', 'browser_filter_tribal') },
+            { value: 'Precon', label: t('decks', 'browser_filter_precon') },
+          ]}
+        />
 
         <div className="deck-browser-colors">
           {(['W', 'U', 'B', 'R', 'G'] as const).map((c) => (

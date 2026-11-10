@@ -156,7 +156,8 @@ test.describe('Decks Gallery', () => {
       await showDeckListView(page)
 
       // Formato Commander sin comandante: slot vacío, no la primera carta
-      await page.locator('.deck-editor-format').selectOption('Commander')
+      await page.locator('.deck-editor-format').click()
+      await page.getByRole('option', { name: 'Commander', exact: true }).click()
       await expect(page.getByText(/Designa una carta legendaria como comandante/)).toBeVisible()
 
       // Importar un mazo con una carta en main: NO debe aparecer como comandante
@@ -228,7 +229,8 @@ test.describe('Decks Gallery', () => {
       await page.locator('.deck-box-create').click()
       await expect(page.locator('.deck-builder-body')).toBeVisible({ timeout: 8000 })
       await showDeckListView(page)
-      await page.locator('.deck-editor-format').selectOption('Commander')
+      await page.locator('.deck-editor-format').click()
+      await page.getByRole('option', { name: 'Commander', exact: true }).click()
 
       await page.getByRole('button', { name: /Importar Mazo/i }).click()
       await page.locator('.deck-import-textarea').fill("1 [PC2:1] Sidar Kondo of Jamuraa\n1 [C16:56] Tana, the Bloodsower\n20 [M10:234] Mountain")
@@ -525,7 +527,8 @@ test.describe('Decks Gallery', () => {
         'Commander\n1 Test Commander\nDeck\n1 Sol Ring\n1 Arcane Signet\n1 Llanowar Elves\n',
       )
       await page.locator('[data-testid="import-submit-btn"]').click()
-      await page.locator('.deck-editor-format').selectOption('Commander')
+      await page.locator('.deck-editor-format').click()
+      await page.getByRole('option', { name: 'Commander', exact: true }).click()
 
       // El fake sirve la página de EDHREC y el stub resuelve las cartas por nombre
       await page.getByRole('tab', { name: /Sugerencias|Suggestions/ }).click()

@@ -978,7 +978,7 @@ export const zhs: TranslationSchema = {
     appearance_title: '外观与牌桌',
     match_badge: '对局',
     create_field_boosters: '补充包数量',
-    filter_more_formats: '▾ 更多赛制…',
+    filter_more_formats: '更多赛制…',
   },
   game: {
     turn: '回合',
@@ -1910,6 +1910,7 @@ export const zhs: TranslationSchema = {
     builder_aria_mana_sources: '法术力来源分布',
     builder_aria_basic_lands: '基本地分布',
     card: '牌张',
+    browser_filter_archetype: '套路',
     browser_filter_aggro: 'Aggro',
     browser_filter_midrange: 'Midrange',
     browser_filter_control: 'Control',

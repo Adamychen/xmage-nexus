@@ -978,7 +978,7 @@ export const es: TranslationSchema = {
     appearance_title: 'Apariencia y tablero',
     match_badge: 'Partida',
     create_field_boosters: 'Sobres',
-    filter_more_formats: '▾ Más formatos…',
+    filter_more_formats: 'Más formatos…',
   },
   game: {
     turn: 'Turno',
@@ -1910,6 +1910,7 @@ export const es: TranslationSchema = {
     builder_aria_mana_sources: 'Reparto de fuentes de maná',
     builder_aria_basic_lands: 'Reparto de tierras básicas',
     card: 'Carta',
+    browser_filter_archetype: 'Arquetipo',
     browser_filter_aggro: 'Aggro',
     browser_filter_midrange: 'Midrange',
     browser_filter_control: 'Control',

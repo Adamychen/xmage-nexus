@@ -978,7 +978,7 @@ export const de: TranslationSchema = {
     appearance_title: 'Aussehen & Spielfeld',
     match_badge: 'Match',
     create_field_boosters: 'Booster',
-    filter_more_formats: '▾ Mehr Formate…',
+    filter_more_formats: 'Mehr Formate…',
   },
   game: {
     turn: 'Zug',
@@ -1910,6 +1910,7 @@ export const de: TranslationSchema = {
     builder_aria_mana_sources: 'Manaquellen-Verteilung',
     builder_aria_basic_lands: 'Standardland-Verteilung',
     card: 'Karte',
+    browser_filter_archetype: 'Archetyp',
     browser_filter_aggro: 'Aggro',
     browser_filter_midrange: 'Midrange',
     browser_filter_control: 'Control',

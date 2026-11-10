@@ -978,7 +978,7 @@ export const pt: TranslationSchema = {
     appearance_title: 'Aparência e tabuleiro',
     match_badge: 'Partida',
     create_field_boosters: 'Pacotes de Reforço',
-    filter_more_formats: '▾ Mais formatos…',
+    filter_more_formats: 'Mais formatos…',
   },
   game: {
     turn: 'Turno',
@@ -1910,6 +1910,7 @@ export const pt: TranslationSchema = {
     builder_aria_mana_sources: 'Distribuição de fontes de mana',
     builder_aria_basic_lands: 'Distribuição de terrenos básicos',
     card: 'Carta',
+    browser_filter_archetype: 'Arquétipo',
     browser_filter_aggro: 'Aggro',
     browser_filter_midrange: 'Midrange',
     browser_filter_control: 'Control',
