@@ -65,3 +65,18 @@ Scryfall and XMage; the page footer only credits Scryfall and XMage.
   its own without the flag font, and the flags credit took a third link in the footer of every page
   (reports of 2026-11-06).
 - Guard: `src/system/flagEmoji.test.ts` · `src/system/flagFontStacks.test.ts` · `src/system/Attribution.test.tsx`
+
+### APR-5 · The client loads no font from a third-party host
+Every web font the client loads is served by the app itself, so it loads under the proxy's
+Content-Security-Policy (`default-src 'self'`, no font host) and in the desktop app and offline play.
+Cinzel and Merriweather ship as woff2 files sliced by unicode-range, so a page only fetches the slices it
+draws; Merriweather carries the Cyrillic that Cinzel lacks. No page or stylesheet asks a font CDN for
+anything, and fonts are never inlined as `data:` URLs, which that policy blocks too. Japanese and Chinese
+use the system CJK fonts their stacks list (Hiragino Sans, Yu Gothic, PingFang SC, Microsoft YaHei); the
+Noto Sans JP and SC files are not bundled.
+
+- Why: `index.html` loaded Cinzel, Merriweather and Noto Sans JP/SC from Google Fonts, which the proxy's
+  CSP blocks, so on xmage-nexus.com every display title fell back to Georgia (report of 2026-11-10).
+  Bundling Noto Sans JP and SC would add about 15 MB to the build and the desktop installer for fonts
+  the systems that read those languages already have.
+- Guard: `src/system/webFonts.test.ts`

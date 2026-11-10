@@ -1,0 +1,12 @@
+/* The display fonts ship with the app (APR-5): Vite fingerprints the woff2 files and the proxy serves
+   them under its own Content-Security-Policy, which allows no font host but 'self'. Each face carries
+   a unicode-range, so the browser only fetches the slices a page draws.
+   Cinzel has no Cyrillic; Merriweather draws the Cyrillic titles of the ru locale.
+   Noto Sans JP and SC are not bundled: ja and zh use the system CJK fonts their stacks list.
+   Source: @fontsource/cinzel and @fontsource/merriweather (Google Fonts files, SIL OFL 1.1,
+   license text in each package). */
+@import '@fontsource/cinzel/400.css';
+@import '@fontsource/cinzel/600.css';
+@import '@fontsource/cinzel/700.css';
+@import '@fontsource/merriweather/400.css';
+@import '@fontsource/merriweather/700.css';

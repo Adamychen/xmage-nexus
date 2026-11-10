@@ -41,6 +41,8 @@
     "gen-showcase-art:validate": "node ../scripts/gen-showcase-art.mjs --validate"
   },
   "dependencies": {
+    "@fontsource/cinzel": "^5.3.0",
+    "@fontsource/merriweather": "^5.3.0",
     "country-flag-emoji-polyfill": "^0.1.10",
     "idb-keyval": "^6.3.0",
     "lucide-react": "^1.41.0",
