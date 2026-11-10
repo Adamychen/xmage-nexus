@@ -319,7 +319,7 @@ filter empties the grid again.
 ### DCK-22 · Every filter with a list of values is a dropdown
 In the editor's filter bar, mana value (All, 0 to 6, 7+), card type and sort order are dropdowns, and in
 the advanced filters so are rarity, keyword, set and the comparison (≥, =, ≤, >, <) of power and
-toughness. All of them open the same kind of menu, anchored under its button and as wide as its content;
+toughness. All of them open the shared list of CTL-1, anchored under its button and as wide as its content;
 a menu that would run past the filter bar opens toward the left, as does the card language menu. Mana
 value, sort order, set and the comparisons pick one value and close; card type, rarity and keyword keep
 several picks (the menu stays open and each value toggles; several types are searched as one OR group,

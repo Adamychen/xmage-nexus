@@ -59,7 +59,7 @@ afterEach(() => {
 describe('ArenaFilterBar', () => {
   it('DCK-22: mana value is one dropdown that picks a single value, and All clears it', () => {
     const props = renderBar({ cmcFilter: 3 })
-    const trigger = screen.getByRole('button', { name: t('decks', 'filter_cmc') })
+    const trigger = screen.getByRole('combobox', { name: t('decks', 'filter_cmc') })
     expect(trigger.textContent).toBe('3')
 
     fireEvent.click(trigger)
@@ -77,22 +77,22 @@ describe('ArenaFilterBar', () => {
 
   it('DCK-22: card type is one dropdown that keeps several types', () => {
     const props = renderBar({ typeFilter: new Set(['Creature', 'Artifact']) })
-    const trigger = screen.getByRole('button', { name: t('decks', 'filter_type') })
+    const trigger = screen.getByRole('combobox', { name: t('decks', 'filter_type') })
     expect(trigger.textContent).toBe(`${t('game', 'type_creature')} +1`)
 
     fireEvent.click(trigger)
-    const items = screen.getAllByRole('menuitemcheckbox')
+    const items = screen.getAllByRole('option')
     expect(items).toHaveLength(8)
-    expect(items.filter((i) => i.getAttribute('aria-checked') === 'true')).toHaveLength(2)
-    fireEvent.click(screen.getByRole('menuitemcheckbox', { name: new RegExp(t('game', 'type_land')) }))
+    expect(items.filter((i) => i.getAttribute('aria-selected') === 'true')).toHaveLength(2)
+    fireEvent.click(screen.getByRole('option', { name: new RegExp(t('game', 'type_land')) }))
     expect(props.onToggleType).toHaveBeenLastCalledWith('Land')
-    expect(screen.getAllByRole('menuitemcheckbox')).toHaveLength(8)
+    expect(screen.getAllByRole('option')).toHaveLength(8)
   })
 
   it('DCK-22: the sort order is the same kind of dropdown', () => {
     const onSortOrderChange = vi.fn()
     renderBar({ sortOrder: 'cmc', onSortOrderChange })
-    const trigger = screen.getByRole('button', { name: t('decks', 'sort_by') })
+    const trigger = screen.getByRole('combobox', { name: t('decks', 'sort_by') })
     expect(trigger.textContent).toBe(t('decks', 'sort_cmc'))
     fireEvent.click(trigger)
     expect(within(screen.getByRole('listbox')).getAllByRole('option')).toHaveLength(6)
@@ -103,55 +103,55 @@ describe('ArenaFilterBar', () => {
   it('DCK-22: rarity is one dropdown that keeps several picks', () => {
     const props = renderBar({ rarityFilter: new Set(['rare']) })
     fireEvent.click(screen.getByRole('button', { name: new RegExp(t('decks', 'filter_advanced')) }))
-    const trigger = screen.getByRole('button', { name: t('decks', 'filter_rarity') })
+    const trigger = screen.getByRole('combobox', { name: t('decks', 'filter_rarity') })
     expect(trigger.textContent).toBe(t('decks', 'rarity_rare'))
 
     fireEvent.click(trigger)
-    const options = screen.getAllByRole('menuitemcheckbox')
-    expect(options.map((o) => o.getAttribute('aria-checked'))).toEqual(['false', 'false', 'true', 'false'])
-    fireEvent.click(screen.getByRole('menuitemcheckbox', { name: new RegExp(t('decks', 'rarity_mythic')) }))
+    const options = screen.getAllByRole('option')
+    expect(options.map((o) => o.getAttribute('aria-selected'))).toEqual(['false', 'false', 'true', 'false'])
+    fireEvent.click(screen.getByRole('option', { name: new RegExp(t('decks', 'rarity_mythic')) }))
     expect(props.onToggleRarity).toHaveBeenLastCalledWith('mythic')
-    expect(screen.getAllByRole('menuitemcheckbox')).toHaveLength(4)
+    expect(screen.getAllByRole('option')).toHaveLength(4)
   })
 
   it('DCK-22: keywords are one dropdown that keeps several picks and names how many there are', () => {
     const props = renderBar({ keywordFilter: new Set(['Flying', 'Haste']) })
     fireEvent.click(screen.getByRole('button', { name: new RegExp(t('decks', 'filter_advanced')) }))
-    const trigger = screen.getByRole('button', { name: t('decks', 'filter_keyword') })
+    const trigger = screen.getByRole('combobox', { name: t('decks', 'filter_keyword') })
     expect(trigger.textContent).toMatch(/ \+1$/)
 
     fireEvent.click(trigger)
-    expect(screen.getAllByRole('menuitemcheckbox')).toHaveLength(24)
-    fireEvent.click(screen.getAllByRole('menuitemcheckbox')[2])
+    expect(screen.getAllByRole('option')).toHaveLength(24)
+    fireEvent.click(screen.getAllByRole('option')[2])
     expect(props.onToggleKeyword).toHaveBeenLastCalledWith('Trample')
   })
 
   it('DCK-22: the keyword dropdown searches every keyword ability, and Enter picks the first match', async () => {
     const props = renderBar()
     fireEvent.click(screen.getByRole('button', { name: new RegExp(t('decks', 'filter_advanced')) }))
-    fireEvent.click(screen.getByRole('button', { name: t('decks', 'filter_keyword') }))
-    const search = screen.getByRole('textbox', { name: t('decks', 'filter_keyword') })
+    fireEvent.click(screen.getByRole('combobox', { name: t('decks', 'filter_keyword') }))
+    const search = screen.getByRole('combobox', { name: t('decks', 'filter_keyword_search') })
 
     fireEvent.change(search, { target: { value: 'living' } })
-    await waitFor(() => expect(screen.getAllByRole('menuitemcheckbox')).toHaveLength(1))
+    await waitFor(() => expect(screen.getAllByRole('option')).toHaveLength(1))
     fireEvent.keyDown(search, { key: 'Enter' })
     expect(props.onToggleKeyword).toHaveBeenLastCalledWith('Living weapon')
 
     fireEvent.change(search, { target: { value: 'zzz' } })
-    expect(screen.queryAllByRole('menuitemcheckbox')).toHaveLength(0)
+    expect(screen.queryAllByRole('option')).toHaveLength(0)
     expect(screen.getByRole('status').textContent).toBe(t('decks', 'builder_search_no_results', { query: 'zzz' }))
 
     fireEvent.change(search, { target: { value: '' } })
-    expect(screen.getAllByRole('menuitemcheckbox')).toHaveLength(24)
+    expect(screen.getAllByRole('option')).toHaveLength(24)
   })
 
   it('DCK-22: a picked keyword outside the common list stays on top of the list', () => {
     renderBar({ keywordFilter: new Set(['Afflict']) })
     fireEvent.click(screen.getByRole('button', { name: new RegExp(t('decks', 'filter_advanced')) }))
-    fireEvent.click(screen.getByRole('button', { name: t('decks', 'filter_keyword') }))
-    const items = screen.getAllByRole('menuitemcheckbox')
+    fireEvent.click(screen.getByRole('combobox', { name: t('decks', 'filter_keyword') }))
+    const items = screen.getAllByRole('option')
     expect(items).toHaveLength(25)
-    expect(items[0].getAttribute('aria-checked')).toBe('true')
+    expect(items[0].getAttribute('aria-selected')).toBe('true')
   })
 
   it('DCK-24: the advanced filters have a rules text field when the panel can search by it', () => {
@@ -175,13 +175,13 @@ describe('ArenaFilterBar', () => {
     expect(scryfallJson).not.toHaveBeenCalled()
 
     fireEvent.click(screen.getByRole('button', { name: new RegExp(t('decks', 'filter_advanced')) }))
-    const trigger = screen.getByRole('button', { name: t('decks', 'filter_set') })
+    const trigger = screen.getByRole('combobox', { name: t('decks', 'filter_set') })
     expect(trigger.textContent).toBe(t('decks', 'filter_any'))
     fireEvent.click(trigger)
     await waitFor(() => expect(setOptions()).toHaveLength(3))
     expect(setOptions().map((o) => o.textContent)).toEqual([t('decks', 'filter_any'), 'MSCMarvel Super Heroes Commander', 'MH3Modern Horizons 3'])
 
-    fireEvent.change(screen.getByRole('textbox', { name: t('decks', 'filter_set') }), { target: { value: 'marvel' } })
+    fireEvent.change(screen.getByRole('combobox', { name: t('decks', 'filter_set_placeholder') }), { target: { value: 'marvel' } })
     expect(setOptions()).toHaveLength(2)
     fireEvent.click(within(screen.getByRole('listbox')).getByRole('option', { name: /Marvel Super Heroes Commander/ }))
     expect(props.onSetChange).toHaveBeenLastCalledWith('msc')
@@ -191,17 +191,17 @@ describe('ArenaFilterBar', () => {
   it('DCK-22: Enter in the set search applies a typed name by its code, or anything else as typed', async () => {
     const props = renderBar()
     fireEvent.click(screen.getByRole('button', { name: new RegExp(t('decks', 'filter_advanced')) }))
-    fireEvent.click(screen.getByRole('button', { name: t('decks', 'filter_set') }))
+    fireEvent.click(screen.getByRole('combobox', { name: t('decks', 'filter_set') }))
     await waitFor(() => expect(setOptions()).toHaveLength(3))
 
-    const search = screen.getByRole('textbox', { name: t('decks', 'filter_set') })
+    const search = screen.getByRole('combobox', { name: t('decks', 'filter_set_placeholder') })
     fireEvent.change(search, { target: { value: 'Modern Horizons 3' } })
     fireEvent.keyDown(search, { key: 'Enter' })
     expect(props.onSetChange).toHaveBeenLastCalledWith('mh3')
 
-    fireEvent.click(screen.getByRole('button', { name: t('decks', 'filter_set') }))
-    fireEvent.change(screen.getByRole('textbox', { name: t('decks', 'filter_set') }), { target: { value: 'xyz' } })
-    fireEvent.keyDown(screen.getByRole('textbox', { name: t('decks', 'filter_set') }), { key: 'Enter' })
+    fireEvent.click(screen.getByRole('combobox', { name: t('decks', 'filter_set') }))
+    fireEvent.change(screen.getByRole('combobox', { name: t('decks', 'filter_set_placeholder') }), { target: { value: 'xyz' } })
+    fireEvent.keyDown(screen.getByRole('combobox', { name: t('decks', 'filter_set_placeholder') }), { key: 'Enter' })
     expect(props.onSetChange).toHaveBeenLastCalledWith('xyz')
   })
 
@@ -209,13 +209,16 @@ describe('ArenaFilterBar', () => {
     const rect = (left: number, right: number) => ({ left, right, top: 0, bottom: 0, width: right - left, height: 0, x: left, y: 0, toJSON: () => ({}) }) as DOMRect
     const spy = vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
       if (this.classList.contains('arena-filter-bar')) return rect(0, 300)
-      if (this.classList.contains('arena-filter-dd-panel')) return rect(220, 480)
+      if (this.classList.contains('ui-select-panel')) return rect(100, 360)
+      if (this.classList.contains('arena-filter-dd-trigger')) return rect(100, 180)
       return rect(0, 0)
     })
     renderBar()
     fireEvent.click(screen.getByRole('button', { name: new RegExp(t('decks', 'filter_advanced')) }))
-    fireEvent.click(screen.getByRole('button', { name: t('decks', 'filter_keyword') }))
-    expect(document.querySelector('.arena-filter-dd-panel')?.classList.contains('is-end')).toBe(true)
+    fireEvent.click(screen.getByRole('combobox', { name: t('decks', 'filter_keyword') }))
+    const panel = screen.getByTestId('filter-keyword-panel')
+    expect(panel.dataset.align).toBe('end')
+    expect(panel.style.left).toBe('8px')
     spy.mockRestore()
   })
 
@@ -224,27 +227,27 @@ describe('ArenaFilterBar', () => {
     renderBar({ powerFilter: { op: '>=', value: 3 }, onPowerChange })
     fireEvent.click(screen.getByRole('button', { name: new RegExp(t('decks', 'filter_advanced')) }))
     expect(document.querySelector('select')).toBeNull()
-    const trigger = screen.getByRole('button', { name: t('decks', 'filter_power') })
+    const trigger = screen.getByRole('combobox', { name: t('decks', 'filter_power') })
     expect(trigger.textContent).toBe('≥')
     fireEvent.click(trigger)
     expect(within(screen.getByRole('listbox')).getAllByRole('option').map((o) => o.textContent)).toEqual(['≥', '=', '≤', '>', '<'])
     fireEvent.click(within(screen.getByRole('listbox')).getByRole('option', { name: '≤' }))
     expect(onPowerChange).toHaveBeenLastCalledWith({ op: '<=', value: 3 })
     expect(screen.queryByRole('listbox')).toBeNull()
-    expect(screen.getByRole('button', { name: t('decks', 'filter_toughness') }).textContent).toBe('≥')
+    expect(screen.getByRole('combobox', { name: t('decks', 'filter_toughness') }).textContent).toBe('≥')
   })
 
   it('DCK-22: Escape or a click outside closes a dropdown', () => {
     renderBar()
     fireEvent.click(screen.getByRole('button', { name: new RegExp(t('decks', 'filter_advanced')) }))
-    fireEvent.click(screen.getByRole('button', { name: t('decks', 'filter_rarity') }))
-    expect(screen.getAllByRole('menuitemcheckbox')).toHaveLength(4)
+    fireEvent.click(screen.getByRole('combobox', { name: t('decks', 'filter_rarity') }))
+    expect(screen.getAllByRole('option')).toHaveLength(4)
     fireEvent.keyDown(document, { key: 'Escape' })
-    expect(screen.queryAllByRole('menuitemcheckbox')).toHaveLength(0)
+    expect(screen.queryAllByRole('option')).toHaveLength(0)
 
-    fireEvent.click(screen.getByRole('button', { name: t('decks', 'filter_rarity') }))
+    fireEvent.click(screen.getByRole('combobox', { name: t('decks', 'filter_rarity') }))
     fireEvent.pointerDown(document.body)
-    expect(screen.queryAllByRole('menuitemcheckbox')).toHaveLength(0)
+    expect(screen.queryAllByRole('option')).toHaveLength(0)
   })
 })
 

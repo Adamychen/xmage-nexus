@@ -37,7 +37,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--sp-1);
-  max-width: calc(100vw - var(--sp-4));
+  max-width: min(260px, calc(100vw - var(--sp-4)));
   padding: var(--sp-1);
   color: var(--text);
   background: var(--ink-3);
@@ -82,6 +82,22 @@
   align-items: center;
   gap: var(--sp-1h);
   min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ui-select-check {
+  display: inline-block;
+  flex: none;
+  width: 1em;
+  color: var(--gold-300);
+}
+.ui-select-group {
+  padding: var(--sp-1) var(--sp-2) var(--sp-0h);
+  font-size: var(--fs-2xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--gold-300);
 }
 .ui-select-empty {
   margin: 0;

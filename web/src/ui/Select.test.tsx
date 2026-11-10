@@ -255,3 +255,130 @@ describe('Select search', () => {
     expect(screen.getByRole('combobox', { name: 'Buscar...' })).toBeTruthy()
   })
 })
+
+describe('Select with several values', () => {
+  function Multi({ onToggle }: { onToggle?: (v: string) => void }) {
+    const [picked, setPicked] = useState<string[]>(['banana'])
+    return (
+      <Select
+        aria-label="Fruit"
+        multiple
+        selectedValues={picked}
+        summary={picked.length ? picked.join(', ') : 'Any'}
+        options={FRUITS}
+        onChange={(v) => {
+          setPicked((p) => (p.includes(v) ? p.filter((x) => x !== v) : [...p, v]))
+          onToggle?.(v)
+        }}
+      />
+    )
+  }
+
+  it('CTL-4: a pick toggles the value with a check and the list stays open', () => {
+    const onToggle = vi.fn()
+    render(<Multi onToggle={onToggle} />)
+    fireEvent.click(trigger())
+    expect(listbox()?.getAttribute('aria-multiselectable')).toBe('true')
+    expect(screen.getByRole('option', { name: /Banana/ }).querySelector('.ui-select-check')?.textContent).toBe('✓')
+    fireEvent.click(screen.getByRole('option', { name: /Cherry/ }))
+    expect(onToggle).toHaveBeenLastCalledWith('cherry')
+    expect(listbox()).not.toBeNull()
+    expect(trigger().textContent).toBe('banana, cherry')
+    fireEvent.keyDown(trigger(), { key: 'Home' })
+    fireEvent.keyDown(trigger(), { key: 'Enter' })
+    expect(onToggle).toHaveBeenLastCalledWith('apple')
+    fireEvent.click(screen.getByRole('option', { name: /Banana/ }))
+    expect(onToggle).toHaveBeenLastCalledWith('banana')
+    expect(screen.getByRole('option', { name: /Banana/ }).getAttribute('aria-selected')).toBe('false')
+  })
+
+  it('CTL-4: typing on the closed control does not toggle anything', () => {
+    const onToggle = vi.fn()
+    render(<Multi onToggle={onToggle} />)
+    fireEvent.keyDown(trigger(), { key: 'c' })
+    expect(onToggle).not.toHaveBeenCalled()
+  })
+
+  it('CTL-1: titled groups share one list, and a group can keep the list open after its pick', () => {
+    const onChange = vi.fn()
+    const ui = <>Interface</>
+    const cards = <>Cards</>
+    render(
+      <Select
+        aria-label="Fruit"
+        selectedValues={['ui:es', 'card:en']}
+        keepOpen={(v) => v.startsWith('card:')}
+        onChange={onChange}
+        options={[
+          { value: 'ui:es', label: 'Español', group: ui },
+          { value: 'ui:en', label: 'English', group: ui },
+          { value: 'card:es', label: 'Español', group: cards },
+          { value: 'card:en', label: 'English', group: cards },
+        ]}
+      />,
+    )
+    fireEvent.click(trigger())
+    expect([...document.querySelectorAll('.ui-select-group')].map((g) => g.textContent)).toEqual(['Interface', 'Cards'])
+    expect(screen.getAllByRole('option').map((o) => o.getAttribute('aria-selected'))).toEqual(['true', 'false', 'false', 'true'])
+    fireEvent.click(screen.getAllByRole('option')[2])
+    expect(onChange).toHaveBeenLastCalledWith('card:es')
+    expect(listbox()).not.toBeNull()
+    fireEvent.click(screen.getAllByRole('option')[1])
+    expect(onChange).toHaveBeenLastCalledWith('ui:en')
+    expect(listbox()).toBeNull()
+  })
+
+  it('CTL-3: a screen can run its own search, and Enter on the typed text is its own unless the arrows moved first', () => {
+    const onChange = vi.fn()
+    const onEnter = vi.fn(() => true)
+    function Searched() {
+      const [query, setQuery] = useState('')
+      const shown = FRUITS.filter((f) => f.value.includes(query))
+      return (
+        <Select
+          aria-label="Fruit"
+          value="apple"
+          options={shown}
+          onChange={onChange}
+          search={{ query, onQueryChange: setQuery, label: 'Find fruit', onEnter, empty: query !== '' && shown.length === 0 }}
+        />
+      )
+    }
+    render(<Searched />)
+    fireEvent.click(trigger())
+    const search = screen.getByRole('combobox', { name: 'Find fruit' })
+    fireEvent.change(search, { target: { value: 'an' } })
+    expect(screen.getAllByRole('option').map((o) => o.textContent)).toEqual(['Banana'])
+    fireEvent.keyDown(search, { key: 'Enter' })
+    expect(onEnter).toHaveBeenLastCalledWith('an')
+    expect(onChange).not.toHaveBeenCalled()
+    expect(listbox()).toBeNull()
+
+    fireEvent.click(trigger())
+    fireEvent.change(screen.getByRole('combobox', { name: 'Find fruit' }), { target: { value: 'e' } })
+    fireEvent.keyDown(screen.getByRole('combobox', { name: 'Find fruit' }), { key: 'ArrowDown' })
+    fireEvent.keyDown(screen.getByRole('combobox', { name: 'Find fruit' }), { key: 'Enter' })
+    expect(onChange).toHaveBeenLastCalledWith('cherry')
+    expect(onEnter).toHaveBeenCalledTimes(1)
+  })
+
+  it('CTL-1: a list that would run past its boundary opens toward the left', () => {
+    const rect = (left: number, right: number) => ({ left, right, top: 0, bottom: 0, width: right - left, height: 0, x: left, y: 0, toJSON: () => ({}) }) as DOMRect
+    const spy = vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
+      if (this.classList.contains('bar')) return rect(0, 300)
+      if (this.classList.contains('ui-select-panel')) return rect(200, 400)
+      if (this.classList.contains('ui-select-trigger')) return rect(200, 260)
+      return rect(0, 0)
+    })
+    render(
+      <div className="bar">
+        <Select aria-label="Fruit" value="apple" options={FRUITS} onChange={() => {}} boundary=".bar" data-testid="fruit" />
+      </div>,
+    )
+    fireEvent.click(trigger())
+    const panel = screen.getByTestId('fruit-panel')
+    expect(panel.dataset.align).toBe('end')
+    expect(panel.style.left).toBe('60px')
+    spy.mockRestore()
+  })
+})

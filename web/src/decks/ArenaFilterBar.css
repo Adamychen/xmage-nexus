@@ -242,28 +242,6 @@
   color: var(--fg-2);
 }
 
-.arena-lang-btn .lang-arrow {
-  font-size: var(--fs-3xs);
-  color: var(--fg-3);
-}
-
-.arena-lang-dropdown {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  margin-top: var(--sp-1);
-  background: var(--ink-3);
-  border: 1px solid var(--veil-4);
-  border-radius: var(--r-base);
-  box-shadow: 0 8px 24px var(--shade-3);
-  z-index: 100;
-  min-width: 140px;
-  padding: var(--sp-1);
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-0h);
-}
-
 .arena-sort-wrap {
   display: inline-flex;
   align-items: center;
@@ -347,82 +325,16 @@
   min-width: 0;
 }
 
-.arena-filter-dd-anchor {
-  position: relative;
-  display: inline-flex;
-  min-width: 0;
-}
-
 .arena-filter-dd-trigger {
   max-width: 120px;
-  color: var(--text);
-  background-color: var(--ink-1);
-  border: 1px solid var(--line-2);
-  border-radius: var(--r-md);
-  padding-inline-end: var(--sp-6);
-  text-align: start;
-  background-image: linear-gradient(45deg, transparent 50%, var(--fg-2) 50%), linear-gradient(135deg, var(--fg-2) 50%, transparent 50%);
-  background-position: calc(100% - 15px) 50%, calc(100% - 10px) 50%;
-  background-size: 5px 5px;
-  background-repeat: no-repeat;
+  gap: var(--sp-1h);
 }
-
-.arena-filter-dd-trigger:active { transform: none; }
 
 .arena-filter-dd-summary {
   display: block;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.arena-filter-dd-panel {
-  position: absolute;
-  top: calc(100% + var(--sp-1));
-  left: 0;
-  min-width: 100%;
-  width: max-content;
-  max-width: min(260px, calc(100vw - 32px));
-  z-index: 100;
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-1);
-  padding: var(--sp-1);
-  background: var(--ink-3);
-  border: 1px solid var(--veil-4);
-  border-radius: var(--r-base);
-  box-shadow: 0 8px 24px var(--shade-3);
-}
-
-.arena-filter-dd-panel.is-end {
-  left: auto;
-  right: 0;
-}
-
-.arena-filter-dd-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-0h);
-  max-height: 320px;
-  overflow-y: auto;
-}
-
-.arena-filter-dd-check {
-  display: inline-block;
-  width: 1em;
-  color: var(--gold-300);
-}
-
-.arena-filter-dd-search {
-  padding: var(--sp-1) var(--sp-2);
-  font-size: var(--fs-xs);
-}
-
-.arena-filter-dd-empty {
-  margin: 0;
-  padding: var(--sp-2);
-  font-size: var(--fs-xs);
-  color: var(--fg-3);
 }
 
 .arena-filter-dd-code {
@@ -455,4 +367,9 @@
 }
 
 .arena-search-spinner { margin-right: var(--sp-1h); }
-.arena-lang-check { margin-left: auto; }
+
+.arena-lang-btn .ui-select-value {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1h);
+}

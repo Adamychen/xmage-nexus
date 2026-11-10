@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
+import { Fragment, useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { useEscape } from './useEscape'
 import { useTranslation } from '../i18n'
@@ -11,14 +11,33 @@ export interface SelectOption<V extends SelectValue> {
   label: ReactNode
   text?: string
   disabled?: boolean
+  className?: string
+  group?: ReactNode
+}
+
+export interface SelectSearch {
+  query: string
+  onQueryChange: (query: string) => void
+  label?: string
+  placeholder?: string
+  onEnter?: (query: string) => boolean
+  empty?: boolean
 }
 
 export interface SelectProps<V extends SelectValue> {
-  value: V
+  value?: V
+  selectedValues?: readonly V[]
+  multiple?: boolean
   options: readonly SelectOption<V>[]
   onChange: (value: V) => void
+  keepOpen?: (value: V) => boolean
+  summary?: ReactNode
+  search?: SelectSearch
+  boundary?: string
+  panelTestId?: string
   id?: string
   className?: string
+  title?: string
   disabled?: boolean
   searchable?: boolean
   'aria-label'?: string
@@ -65,10 +84,18 @@ function nameOf(trigger: HTMLButtonElement | null, ariaLabel?: string, labelledB
 
 export default function Select<V extends SelectValue>({
   value,
+  selectedValues,
+  multiple = false,
   options,
   onChange,
+  keepOpen,
+  summary,
+  search,
+  boundary,
+  panelTestId,
   id,
   className = '',
+  title,
   disabled = false,
   searchable,
   'aria-label': ariaLabel,
@@ -79,7 +106,7 @@ export default function Select<V extends SelectValue>({
   const { t } = useTranslation()
   const listId = useId()
   const [open, setOpen] = useState(false)
-  const [query, setQuery] = useState('')
+  const [ownQuery, setOwnQuery] = useState('')
   const [active, setActive] = useState(-1)
   const [surface, setSurface] = useState('')
   const [listName, setListName] = useState<string | undefined>(undefined)
@@ -90,13 +117,20 @@ export default function Select<V extends SelectValue>({
   const typeahead = useRef({ text: '', at: 0 })
   const openedByKey = useRef(false)
 
-  const withSearch = searchable ?? options.length > SELECT_SEARCH_THRESHOLD
-  const selected = options.find((o) => o.value === value)
+  const query = search ? search.query : ownQuery
+  const withSearch = search ? true : searchable ?? options.length > SELECT_SEARCH_THRESHOLD
+  const isSelected = useCallback(
+    (option: SelectOption<V>) => (selectedValues ? selectedValues.includes(option.value) : option.value === value),
+    [selectedValues, value],
+  )
+  const picksWhileClosed = !multiple && !selectedValues
+  const selected = options.find(isSelected)
   const visible = useMemo(() => {
     const needle = normalizeOptionText(query)
-    if (!needle) return options
+    if (search || !needle) return options
     return options.filter((o) => normalizeOptionText(optionText(o)).includes(needle))
-  }, [options, query])
+  }, [options, query, search])
+  const showEmpty = search?.empty ?? visible.length === 0
 
   const firstEnabled = useCallback((list: readonly SelectOption<V>[], from = 0, step = 1) => {
     for (let i = from; i >= 0 && i < list.length; i += step) {
@@ -107,7 +141,7 @@ export default function Select<V extends SelectValue>({
 
   const close = useCallback((returnFocus = true) => {
     setOpen(false)
-    setQuery('')
+    setOwnQuery('')
     if (returnFocus) triggerRef.current?.focus()
   }, [])
   const closeOnEscape = useCallback(() => close(true), [close])
@@ -116,9 +150,9 @@ export default function Select<V extends SelectValue>({
   const openList = (byKey = false) => {
     if (disabled) return
     openedByKey.current = byKey
-    const index = options.findIndex((o) => o.value === value)
+    const index = options.findIndex(isSelected)
     setActive(index >= 0 && !options[index].disabled ? index : firstEnabled(options))
-    setQuery('')
+    setOwnQuery('')
     setNavByKey(false)
     setSurface(surfaceClassOf(triggerRef.current))
     setListName(nameOf(triggerRef.current, ariaLabel, ariaLabelledBy))
@@ -127,7 +161,8 @@ export default function Select<V extends SelectValue>({
 
   const choose = (option: SelectOption<V> | undefined) => {
     if (!option || option.disabled) return
-    if (option.value !== value) onChange(option.value)
+    if (multiple || !isSelected(option)) onChange(option.value)
+    if (multiple || keepOpen?.(option.value)) return
     close(true)
   }
 
@@ -162,10 +197,13 @@ export default function Select<V extends SelectValue>({
       panel.style.maxHeight = `${Math.max(MIN_PANEL_HEIGHT, up ? above : below)}px`
       panel.style.top = up ? '' : `${rect.bottom + PANEL_GAP}px`
       panel.style.bottom = up ? `${vh - rect.top + PANEL_GAP}px` : ''
-      const width = panel.offsetWidth
-      const overflowsRight = rect.left + width > vw - VIEWPORT_MARGIN
+      const width = panel.getBoundingClientRect().width || panel.offsetWidth
+      const limit = boundary ? trigger.closest(boundary)?.getBoundingClientRect().right : undefined
+      const right = Math.min(vw - VIEWPORT_MARGIN, limit ?? Number.POSITIVE_INFINITY)
+      const overflowsRight = rect.left + width > right
       panel.style.left = `${overflowsRight ? Math.max(VIEWPORT_MARGIN, rect.right - width) : rect.left}px`
       panel.dataset.side = up ? 'top' : 'bottom'
+      panel.dataset.align = overflowsRight ? 'end' : 'start'
     }
     place()
     const onScroll = (e: Event) => {
@@ -178,7 +216,7 @@ export default function Select<V extends SelectValue>({
       window.removeEventListener('resize', place)
       window.removeEventListener('scroll', onScroll, true)
     }
-  }, [open, visible.length])
+  }, [open, visible.length, boundary])
 
   useEffect(() => {
     if (!open || !withSearch) return
@@ -235,7 +273,7 @@ export default function Select<V extends SelectValue>({
     const needle = normalizeOptionText(state.text)
     const repeated = needle.length > 1 && [...needle].every((c) => c === needle[0])
     const prefix = repeated ? needle[0] : needle
-    const current = open ? active : options.findIndex((o) => o.value === value)
+    const current = open ? active : options.findIndex(isSelected)
     const start = repeated || needle.length === 1 ? current + 1 : Math.max(current, 0)
     for (let n = 0; n < options.length; n++) {
       const i = (start + n) % options.length
@@ -255,7 +293,7 @@ export default function Select<V extends SelectValue>({
         openList(true)
         return
       }
-      if (isPrintable(e)) {
+      if (isPrintable(e) && picksWhileClosed) {
         const index = typeaheadMatch(e.key)
         if (index >= 0 && options[index].value !== value) onChange(options[index].value)
         e.preventDefault()
@@ -297,6 +335,10 @@ export default function Select<V extends SelectValue>({
     }
     if (e.key === 'Enter') {
       e.preventDefault()
+      if (!navByKey && search?.onEnter?.(search.query)) {
+        if (!multiple) close(true)
+        return
+      }
       choose(visible[active])
       return
     }
@@ -306,7 +348,12 @@ export default function Select<V extends SelectValue>({
   }
 
   const onQueryChange = (next: string) => {
-    setQuery(next)
+    if (search) {
+      search.onQueryChange(next)
+      setActive(0)
+      return
+    }
+    setOwnQuery(next)
     const needle = normalizeOptionText(next)
     const list = needle ? options.filter((o) => normalizeOptionText(optionText(o)).includes(needle)) : options
     setActive(firstEnabled(list))
@@ -317,7 +364,7 @@ export default function Select<V extends SelectValue>({
       ref={panelRef}
       className={['ui-select-panel', surface].filter(Boolean).join(' ')}
       data-nav={navByKey ? 'keys' : undefined}
-      data-testid={testId ? `${testId}-panel` : undefined}
+      data-testid={panelTestId ?? (testId ? `${testId}-panel` : undefined)}
     >
       {withSearch && (
         <input
@@ -329,8 +376,8 @@ export default function Select<V extends SelectValue>({
           aria-controls={listId}
           aria-autocomplete="list"
           aria-activedescendant={activeId}
-          aria-label={t('common', 'search')}
-          placeholder={t('common', 'search')}
+          aria-label={search?.label ?? t('common', 'search')}
+          placeholder={search?.placeholder ?? t('common', 'search')}
           autoComplete="off"
           spellCheck={false}
           value={query}
@@ -338,21 +385,24 @@ export default function Select<V extends SelectValue>({
           onKeyDown={onSearchKeyDown}
         />
       )}
-      <div id={listId} role="listbox" aria-label={listName} className="ui-select-list">
+      <div id={listId} role="listbox" aria-label={listName} aria-multiselectable={multiple || undefined} className="ui-select-list">
         {visible.map((option, i) => {
-          const isSelected = option.value === value
+          const chosen = isSelected(option)
           const cls = [
             'ui-select-option',
-            isSelected ? 'is-selected' : '',
+            chosen ? 'is-selected' : '',
             i === active ? 'is-active' : '',
             option.disabled ? 'is-disabled' : '',
+            option.className ?? '',
           ].filter(Boolean).join(' ')
+          const header = option.group != null && (i === 0 || visible[i - 1].group !== option.group)
           return (
+            <Fragment key={String(option.value)}>
+            {header && <div className="ui-select-group" role="presentation">{option.group}</div>}
             <div
-              key={String(option.value)}
               id={`${listId}-${i}`}
               role="option"
-              aria-selected={isSelected}
+              aria-selected={chosen}
               aria-disabled={option.disabled || undefined}
               className={cls}
               onPointerDown={(e) => e.preventDefault()}
@@ -362,11 +412,13 @@ export default function Select<V extends SelectValue>({
               }}
               onClick={() => choose(option)}
             >
+              {multiple && <span className="ui-select-check" aria-hidden="true">{chosen ? '✓' : ''}</span>}
               <span className="ui-select-option-label">{option.label}</span>
             </div>
+            </Fragment>
           )
         })}
-        {visible.length === 0 && (
+        {showEmpty && (
           <p className="ui-select-empty" role="status">{t('decks', 'builder_search_no_results', { query: query.trim() })}</p>
         )}
       </div>
@@ -379,6 +431,7 @@ export default function Select<V extends SelectValue>({
         ref={triggerRef}
         type="button"
         id={id}
+        title={title}
         role="combobox"
         aria-haspopup="listbox"
         aria-expanded={open}
@@ -394,7 +447,7 @@ export default function Select<V extends SelectValue>({
         onKeyDown={onTriggerKeyDown}
         onKeyUp={onTriggerKeyUp}
       >
-        <span className="ui-select-value">{selected?.label ?? ''}</span>
+        <span className="ui-select-value">{summary ?? selected?.label ?? ''}</span>
         <span className="ui-select-chevron" aria-hidden="true" />
       </button>
       {panel && createPortal(panel, document.body)}

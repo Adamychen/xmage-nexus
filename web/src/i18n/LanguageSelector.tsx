@@ -1,5 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
-import MenuItem from '../ui/MenuItem'
+import Select from '../ui/Select'
 import { useTranslation, type SupportedLanguage } from './index'
 import Icon from '../ui/Icon'
 import './LanguageSelector.css'
@@ -9,90 +8,39 @@ export interface LanguageSelectorProps {
   showCardLangToggle?: boolean
 }
 
+const UI_PREFIX = 'ui:'
+const CARD_PREFIX = 'card:'
+
 export default function LanguageSelector({ compact = false, showCardLangToggle = false }: LanguageSelectorProps) {
   const { lang, setLanguage, languages, cardLang, setCardLanguage, cardLanguages, t } = useTranslation()
-  const [isOpen, setIsOpen] = useState(false)
-  const menuRef = useRef<HTMLDivElement>(null)
-
   const currentLangInfo = languages.find((l) => l.code === lang) ?? languages[0]
+  const uiGroup = <><Icon name="globe" size={13} /> {t('common.language')}</>
+  const cardGroup = <><Icon name="layers" size={13} /> {t('common.card_language')}</>
+  const optionLabel = (flag: string, name: string) => <><span className="option-flag">{flag}</span><span className="option-name">{name}</span></>
 
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setIsOpen(false)
-      }
-    }
-    if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside)
-    }
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside)
-    }
-  }, [isOpen])
+  const options = [
+    ...languages.map((l) => ({ value: UI_PREFIX + l.code, label: optionLabel(l.flag, l.name), text: l.name, group: uiGroup })),
+    ...(showCardLangToggle
+      ? cardLanguages.map((cl) => ({ value: CARD_PREFIX + cl.code, label: optionLabel(cl.flag, cl.name), text: cl.name, group: cardGroup }))
+      : []),
+  ]
 
   return (
-    <div className="language-selector-wrapper" ref={menuRef}>
-      <button
-        type="button"
-        className={`language-selector-btn ${compact ? 'compact' : ''} ${isOpen ? 'active' : ''}`}
-        onClick={() => setIsOpen(!isOpen)}
-        title={t('common.language')}
+    <div className="language-selector-wrapper">
+      <Select
+        className={`language-selector-btn${compact ? ' compact' : ''}`}
         aria-label={t('common.language')}
-        aria-expanded={isOpen}
-      >
-        <span className="lang-flag">{currentLangInfo.flag}</span>
-        {!compact && <span className="lang-name">{currentLangInfo.name}</span>}
-        <span className="lang-arrow">▾</span>
-      </button>
-
-      {isOpen && (
-        <div className="language-dropdown-menu panel" role="menu">
-          <div className="dropdown-section-header">
-            <span><Icon name="globe" size={13} /> {t('common.language')}</span>
-          </div>
-
-          <div className="dropdown-options-list">
-            {languages.map((l) => (
-              <MenuItem
-                selected={l.code === lang}
-                key={l.code}
-                onClick={() => {
-                  setLanguage(l.code as SupportedLanguage)
-                  setIsOpen(false)
-                }}
-              >
-                <span className="option-flag">{l.flag}</span>
-                <span className="option-name">{l.name}</span>
-                {l.code === lang && <span className="option-check">✓</span>}
-              </MenuItem>
-            ))}
-          </div>
-
-          {showCardLangToggle && (
-            <>
-              <div className="dropdown-divider" />
-              <div className="dropdown-section-header">
-                <span><Icon name="layers" size={13} /> {t('common.card_language')}</span>
-              </div>
-              <div className="dropdown-options-list card-lang-list">
-                {cardLanguages.map((cl) => (
-                  <MenuItem
-                    selected={cl.code === cardLang}
-                    key={cl.code}
-                    onClick={() => {
-                      setCardLanguage(cl.code)
-                    }}
-                  >
-                    <span className="option-flag">{cl.flag}</span>
-                    <span className="option-name">{cl.name}</span>
-                    {cl.code === cardLang && <span className="option-check">✓</span>}
-                  </MenuItem>
-                ))}
-              </div>
-            </>
-          )}
-        </div>
-      )}
+        title={t('common.language')}
+        searchable={false}
+        selectedValues={[UI_PREFIX + lang, ...(showCardLangToggle ? [CARD_PREFIX + cardLang] : [])]}
+        keepOpen={(value) => value.startsWith(CARD_PREFIX)}
+        onChange={(value) => {
+          if (value.startsWith(UI_PREFIX)) setLanguage(value.slice(UI_PREFIX.length) as SupportedLanguage)
+          else setCardLanguage(value.slice(CARD_PREFIX.length))
+        }}
+        summary={<><span className="lang-flag">{currentLangInfo.flag}</span>{!compact && <span className="lang-name">{currentLangInfo.name}</span>}</>}
+        options={options}
+      />
     </div>
   )
 }

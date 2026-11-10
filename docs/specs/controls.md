@@ -14,7 +14,9 @@ control and as wide as its longest option, with the chosen option highlighted. T
 when there is more room above, shifts left when it would leave the window, and scrolls inside when the
 list is taller than the room left. It is drawn above the page, so a dialog's edges never clip it, and it
 keeps the appearance of the surface it was opened from (APR-1, APR-2). A click outside closes it without
-changing the value and without closing the dialog behind it.
+changing the value and without closing the dialog behind it. A screen can bound the panel by its own
+container instead of the window (the deck editor's filter bar), group the options under titled headers,
+and keep the list open after a pick in one group (the language menu's card language).
 
 - Why: the client had 29 native `<select>`s next to three hand-made menus and the deck editor's filter
   dropdowns. A native list opens in the operating system's style, so the same kind of choice looked
@@ -43,3 +45,13 @@ screen can ask for the box on a shorter list too.
 
 - Why: the native country picker made the player scroll or type blind through 79 countries.
 - Guard: `src/ui/Select.test.tsx` · `src/lobby/LoginScreen.test.tsx`
+
+### CTL-4 · A list that takes several values stays open and checks each pick
+When a control keeps several values (the card types, rarities and keywords of the deck editor's filters,
+DCK-22), a click, Enter or Space on an option toggles it and the list stays open; each picked option is
+highlighted and carries a gold check on its left, and the closed control names what is picked. Typing on
+the closed control does nothing, since there is no single value to move to.
+
+- Why: the filter dropdowns already worked this way before they moved onto `Select`, and a several-value
+  list that closed after each pick would make the player reopen it for every value.
+- Guard: `src/ui/Select.test.tsx`
