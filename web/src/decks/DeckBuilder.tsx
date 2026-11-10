@@ -809,6 +809,9 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
         commanderEligibilityMap={commanderEligibilityMap}
         cardIssues={mergedCardIssues}
         layout={layout}
+        group={group}
+        sort={sort}
+        piles={piles}
         onInc={stableInc}
         onDec={stableDec}
         onRemove={stableRemove}

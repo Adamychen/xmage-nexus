@@ -127,23 +127,37 @@ export function DeckEditorToolbar({
         </Button>
       )}
 
+      <Segmented<DeckStacksGroup>
+        control="group"
+        label={t('decks', 'editor_group')}
+        value={group}
+        onChange={onGroupChange}
+        options={[
+          { value: 'type', label: t('decks', 'group_type') },
+          { value: 'cmc', label: t('decks', 'group_cmc') },
+          { value: 'color', label: t('decks', 'group_color') },
+          { value: 'rarity', label: t('decks', 'group_rarity') },
+          { value: 'identity', label: t('decks', 'group_identity') },
+          { value: 'edh', label: t('decks', 'group_edh') },
+          { value: 'free', label: t('decks', 'group_free') },
+        ]}
+      />
+
+      {!piles && (
+        <Segmented<DeckStacksSort>
+          control="sort"
+          label={t('decks', 'editor_sort')}
+          value={sort}
+          onChange={onSortChange}
+          options={[
+            { value: 'cmc', label: t('decks', 'sort_cmc') },
+            { value: 'name', label: t('decks', 'sort_name') },
+          ]}
+        />
+      )}
+
       {piles && (
         <>
-          <Segmented<DeckStacksGroup>
-            control="group"
-            label={t('decks', 'editor_group')}
-            value={group}
-            onChange={onGroupChange}
-            options={[
-              { value: 'type', label: t('decks', 'group_type') },
-              { value: 'cmc', label: t('decks', 'group_cmc') },
-              { value: 'color', label: t('decks', 'group_color') },
-              { value: 'rarity', label: t('decks', 'group_rarity') },
-              { value: 'identity', label: t('decks', 'group_identity') },
-              { value: 'edh', label: t('decks', 'group_edh') },
-              { value: 'free', label: t('decks', 'group_free') },
-            ]}
-          />
 
           <Segmented<DeckStacksCopies>
             control="copies"

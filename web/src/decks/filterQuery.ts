@@ -6,19 +6,44 @@ export interface ScryfallQueryOpts {
   rawQuery: string
   formatKey?: string | null
   colorFilter: Set<string>
-  typeFilter: string | null
+  typeFilter: Set<string>
   cmcFilter: number | null
   rarityFilter: Set<Rarity>
   keywordFilter: Set<string>
   powerFilter: StatFilter | null
   toughnessFilter: StatFilter | null
   setFilter: string | null
+  oracleText?: string
 }
 
 const RAW_COLOR_RE = /(?:^|\s)(?:c|id|color|colour|identity|commander)\s*(?::|<=|>=|<|>|=)/i
 /** true si el texto libre ya filtra por color (chocaría con los chips de color). */
 export function rawQueryHasColor(rawQuery: string): boolean {
   return RAW_COLOR_RE.test(rawQuery.trim())
+}
+
+export function hasSearchCriteria(opts: ScryfallQueryOpts): boolean {
+  return (
+    opts.rawQuery.trim() !== '' ||
+    opts.colorFilter.size > 0 ||
+    opts.typeFilter.size > 0 ||
+    opts.cmcFilter !== null ||
+    opts.rarityFilter.size > 0 ||
+    opts.keywordFilter.size > 0 ||
+    (opts.oracleText ?? '').trim() !== '' ||
+    opts.powerFilter !== null ||
+    opts.toughnessFilter !== null ||
+    (opts.setFilter ?? '').trim() !== ''
+  )
+}
+
+export function oracleTerms(text: string): string[] {
+  const terms: string[] = []
+  for (const m of text.matchAll(/"([^"]*)"|(\S+)/g)) {
+    const term = (m[1] ?? m[2] ?? '').replace(/"/g, '').trim()
+    if (term) terms.push(term)
+  }
+  return terms
 }
 
 export function buildScryfallQuery(opts: ScryfallQueryOpts): string {
@@ -28,13 +53,16 @@ export function buildScryfallQuery(opts: ScryfallQueryOpts): string {
   else parts.push('game:paper -t:basic')
   if (opts.formatKey) parts.push(`f:${opts.formatKey}`)
   if (opts.colorFilter.size > 0) {
-    if (opts.colorFilter.has('C')) parts.push('c:c')
+    if (opts.colorFilter.has('C')) parts.push('(c:c -t:land OR (t:land id:c))')
     else {
       const colors = [...opts.colorFilter].join('').toLowerCase()
       parts.push(`(c<=${colors} -c:c OR (t:land id<=${colors} -id:c))`)
     }
   }
-  if (opts.typeFilter) parts.push(`t:${opts.typeFilter.toLowerCase()}`)
+  if (opts.typeFilter.size > 0) {
+    const types = [...opts.typeFilter].map((x) => `t:${x.toLowerCase()}`)
+    parts.push(types.length === 1 ? types[0] : `(${types.join(' OR ')})`)
+  }
   if (opts.cmcFilter !== null) {
     if (opts.cmcFilter >= 7) parts.push('cmc>=7')
     else parts.push(`cmc=${opts.cmcFilter}`)
@@ -45,8 +73,9 @@ export function buildScryfallQuery(opts: ScryfallQueryOpts): string {
     else parts.push(`(${r.map((x) => `rarity:${x}`).join(' OR ')})`)
   }
   if (opts.keywordFilter.size > 0) {
-    for (const kw of opts.keywordFilter) parts.push(`keyword:${kw.toLowerCase()}`)
+    for (const kw of opts.keywordFilter) parts.push(/\s/.test(kw) ? `keyword:"${kw.toLowerCase()}"` : `keyword:${kw.toLowerCase()}`)
   }
+  for (const term of oracleTerms(opts.oracleText ?? '')) parts.push(`o:"${term}"`)
   if (opts.powerFilter && Number.isFinite(opts.powerFilter.value)) parts.push(`pow${opts.powerFilter.op}${opts.powerFilter.value}`)
   if (opts.toughnessFilter && Number.isFinite(opts.toughnessFilter.value)) parts.push(`tou${opts.toughnessFilter.op}${opts.toughnessFilter.value}`)
   if (opts.setFilter) {

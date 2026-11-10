@@ -103,3 +103,16 @@ describe('ArenaCardStrip UX (auditoría)', () => {
     })
   })
 })
+
+describe('ArenaCardStrip commander badge', () => {
+  afterEach(() => cleanup())
+
+  it('DCK-25: the commander crown sits in the quantity slot, clear of the board commander badge', () => {
+    const krenko: DeckCard = { cardName: 'Krenko, Mob Boss', setCode: 'M13', cardNumber: '139', amount: 1 }
+    const { container } = render(<ArenaCardStrip card={krenko} isCommander />)
+    const slot = container.querySelector('.strip-qty')!
+    expect(slot.classList.contains('strip-qty-commander')).toBe(true)
+    expect(slot.classList.contains('commander-badge')).toBe(false)
+    expect(slot.querySelector('svg')).not.toBeNull()
+  })
+})

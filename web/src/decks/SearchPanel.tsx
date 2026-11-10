@@ -6,7 +6,7 @@ import { ArenaCardGrid } from './ArenaCardGrid'
 import type { DeckFormat } from './types'
 import { FORMAT_CONFIGS } from './formatRules'
 import { useTranslation } from '../i18n'
-import { buildScryfallQuery } from './filterQuery'
+import { buildScryfallQuery, hasSearchCriteria } from './filterQuery'
 import { useArenaFilters } from './useArenaFilters'
 import { useXmageUnimplemented } from './useXmageImplemented'
 import './SearchPanel.css'
@@ -41,8 +41,8 @@ export default function SearchPanel({
   const config = FORMAT_CONFIGS[format] ?? FORMAT_CONFIGS.Freeform
 
   const scryfallQuery = useMemo(
-    () =>
-      buildScryfallQuery({
+    () => {
+      const opts = {
         rawQuery: filters.rawQuery,
         formatKey: config.scryfallKey ?? null,
         colorFilter: filters.colorFilter,
@@ -53,7 +53,10 @@ export default function SearchPanel({
         powerFilter: filters.powerFilter,
         toughnessFilter: filters.toughnessFilter,
         setFilter: filters.setFilter,
-      }),
+        oracleText: filters.oracleText,
+      }
+      return hasSearchCriteria(opts) ? buildScryfallQuery(opts) : ''
+    },
     [
       filters.rawQuery,
       config.scryfallKey,
@@ -65,6 +68,7 @@ export default function SearchPanel({
       filters.powerFilter,
       filters.toughnessFilter,
       filters.setFilter,
+      filters.oracleText,
     ],
   )
 
@@ -95,7 +99,7 @@ export default function SearchPanel({
         cmcFilter={filters.cmcFilter}
         onCmcChange={filters.setCmcFilter}
         typeFilter={filters.typeFilter}
-        onTypeChange={filters.setTypeFilter}
+        onToggleType={filters.toggleType}
         rarityFilter={filters.rarityFilter}
         onToggleRarity={filters.toggleRarity}
         keywordFilter={filters.keywordFilter}
@@ -106,6 +110,8 @@ export default function SearchPanel({
         onToughnessChange={filters.setToughnessFilter}
         setFilter={filters.setFilter}
         onSetChange={filters.setSetFilter}
+        oracleText={filters.oracleText}
+        onOracleTextChange={filters.setOracleText}
         onReset={handleReset}
         sortOrder={sortOrder}
         onSortOrderChange={setSortOrder}

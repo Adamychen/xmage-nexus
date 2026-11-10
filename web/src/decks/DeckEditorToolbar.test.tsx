@@ -35,7 +35,7 @@ describe('DeckEditorToolbar', () => {
     cleanup()
   })
 
-  it('DCK-5: switching to List calls back and hides Group, Copies, Sort and the card size in List view', () => {
+  it('DCK-5: switching to List calls back and hides Copies and the card size in List view', () => {
     const onViewChange = vi.fn()
     const { container, rerender } = render(<DeckEditorToolbar {...props({ onViewChange })} />)
     expect(container.querySelector('[data-control="group"]')).not.toBeNull()
@@ -48,10 +48,23 @@ describe('DeckEditorToolbar', () => {
 
     rerender(<DeckEditorToolbar {...props({ view: 'list' })} />)
     expect(option('view', 'list').getAttribute('aria-pressed')).toBe('true')
-    expect(container.querySelector('[data-control="group"]')).toBeNull()
     expect(container.querySelector('[data-control="copies"]')).toBeNull()
-    expect(container.querySelector('[data-control="sort"]')).toBeNull()
     expect(screen.queryByRole('slider')).toBeNull()
+  })
+
+  it('DCK-25: List view offers the same groupings as Piles and keeps the one picked', () => {
+    const onGroupChange = vi.fn()
+    const { container, rerender } = render(<DeckEditorToolbar {...props({ view: 'list', group: 'rarity', onGroupChange })} />)
+    expect(container.querySelectorAll('[data-control="group"] [data-value]')).toHaveLength(7)
+    expect(option('group', 'rarity').getAttribute('aria-pressed')).toBe('true')
+    expect(container.querySelector('[data-control="sort"]')).not.toBeNull()
+    fireEvent.click(option('group', 'cmc'))
+    expect(onGroupChange).toHaveBeenCalledWith('cmc')
+
+    for (const view of ['piles', 'list'] as const) {
+      rerender(<DeckEditorToolbar {...props({ view, group: 'free' })} />)
+      expect(option('group', 'free').getAttribute('aria-pressed')).toBe('true')
+    }
   })
 
   it('DCK-5: the toolbar is the stable hook for the editor controls', () => {

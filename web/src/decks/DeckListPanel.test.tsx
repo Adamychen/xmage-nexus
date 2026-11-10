@@ -240,3 +240,64 @@ describe('DeckListPanel commander drop', () => {
     expect(mainTana?.textContent).toContain('Tana')
   })
 })
+
+describe('DeckListPanel grouping', () => {
+  afterEach(() => cleanup())
+
+  const goblin: DeckCard = { cardName: 'Goblin Guide', setCode: 'ZEN', cardNumber: '126', amount: 1 }
+  const krenko: DeckCard = { cardName: 'Krenko, Mob Boss', setCode: 'M13', cardNumber: '139', amount: 1 }
+  const rarityMeta = (rarity: string, typeLine: string, cmc: number): CardStripMeta => ({ ...meta, rarity, typeLine, cmc })
+  const metaMap = new Map<string, CardStripMeta>([
+    ['M10/146', rarityMeta('common', 'Instant', 1)],
+    ['LEA/292', rarityMeta('common', 'Basic Land — Mountain', 0)],
+    ['ZEN/126', rarityMeta('rare', 'Creature — Goblin Scout', 1)],
+    ['M13/139', rarityMeta('rare', 'Legendary Creature — Goblin Warrior', 4)],
+    ['4ED/218', meta],
+  ])
+  const headers = () => [...document.querySelectorAll('.deck-category-header > span:first-child, .deck-col-title')].map((el) => el.textContent)
+
+  it('DCK-25: the vertical list groups by the chosen grouping', () => {
+    renderPanel({ cards: [bolt, mountain, goblin], metaMap, group: 'rarity' })
+    expect(document.querySelector('[data-group="rare"]')?.textContent).toContain('Goblin Guide')
+    expect(document.querySelector('[data-group="common"]')?.textContent).toContain('Lightning Bolt')
+    expect(document.querySelector('[data-group="common"]')?.textContent).toContain('Mountain')
+  })
+
+  it('DCK-25: the horizontal list uses the same grouping, with the commander first', () => {
+    renderPanel({
+      cards: [krenko, bolt, mountain, goblin],
+      metaMap,
+      layout: 'horizontal',
+      group: 'type',
+      isCommanderFormat: true,
+      format: 'Commander',
+      commanderCard: krenko,
+    })
+    const columns = [...document.querySelectorAll('.deck-col')].map((el) => el.getAttribute('data-group'))
+    expect(columns).toEqual(['commander', 'creatures', 'instants', 'lands'])
+    expect(document.querySelector('[data-group="commander"]')?.textContent).toContain('Krenko, Mob Boss')
+    expect(document.querySelector('[data-group="creatures"]')?.textContent).not.toContain('Krenko')
+    expect(headers().length).toBeGreaterThan(0)
+  })
+
+  it('DCK-25: the free grouping lists the deck by its own piles, and by type until it has any', () => {
+    const sectionIds = () => [...document.querySelectorAll('.deck-category-section[data-group]')].map((el) => el.getAttribute('data-group'))
+    renderPanel({ cards: [bolt, goblin], metaMap, group: 'free' })
+    expect(sectionIds()).toEqual(['creatures', 'instants'])
+    cleanup()
+
+    renderPanel({
+      cards: [bolt, goblin],
+      metaMap,
+      group: 'free',
+      piles: {
+        piles: [{ id: 'p1', label: 'Burn' }, { id: 'p2', label: 'Beaters' }],
+        assign: { 'M10:146:Lightning Bolt': { p1: 4 }, 'ZEN:126:Goblin Guide': { p2: 1 } },
+      },
+    })
+    expect(sectionIds()).toEqual(['p1', 'p2'])
+    expect(document.querySelector('[data-group="p1"]')?.textContent).toContain('Burn')
+    expect(document.querySelector('[data-group="p1"]')?.textContent).toContain('Lightning Bolt')
+    expect(document.querySelector('[data-group="p2"]')?.textContent).toContain('Goblin Guide')
+  })
+})

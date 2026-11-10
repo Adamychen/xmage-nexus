@@ -30,9 +30,11 @@ export function DeckBox({
   onInspect,
   onClone,
   onToggleFavorite,
+  equipped,
 }: {
   deck: DeckV2
   selected?: boolean
+  equipped?: boolean
   onSelect?: () => void
   onDoubleClick?: () => void
   onEdit?: () => void
@@ -111,6 +113,7 @@ export function DeckBox({
       <div className="deck-box-meta">
         <span className="deck-box-count">{total} {t('decks', 'total_cards')}</span>
         {deck.favorite && <span className="deck-box-fav">★</span>}
+        {equipped && <span className="deck-box-equipped" data-testid="deckbox-equipped">✓ {t('decks', 'builder_equipped')}</span>}
         {deck.source === 'precon' && <span className="deck-box-precon">Precon</span>}
       </div>
       {selected && <div className="deck-box-ring" />}

@@ -287,10 +287,14 @@ export function ArenaCardGrid({
       </div>
 
       {/* Persistent Footer count and loader */}
+      {query && (
       <div className="arena-grid-footer">
         <div className="arena-footer-left">
           <span className="arena-grid-count">
-            {cards.length.toLocaleString(toBcp47Locale(lang))} {totalCards ? t('decks', 'grid_of_total', { total: totalCards.toLocaleString(toBcp47Locale(lang)) }) : ''} {t('decks', 'total_cards')}
+            {t('decks', 'grid_of_total', {
+              shown: cards.length.toLocaleString(toBcp47Locale(lang)),
+              total: (totalCards ?? cards.length).toLocaleString(toBcp47Locale(lang)),
+            })}
           </span>
         </div>
 
@@ -315,6 +319,7 @@ export function ArenaCardGrid({
           <span>{t('decks', 'builder_drag_hint')}</span>
         </div>
       </div>
+      )}
     </div>
   )
 }
