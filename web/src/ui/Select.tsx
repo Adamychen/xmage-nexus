@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
-import Icon from './Icon'
 import { useEscape } from './useEscape'
 import { useTranslation } from '../i18n'
 import './Select.css'
@@ -84,6 +83,7 @@ export default function Select<V extends SelectValue>({
   const [active, setActive] = useState(-1)
   const [surface, setSurface] = useState('')
   const [listName, setListName] = useState<string | undefined>(undefined)
+  const [navByKey, setNavByKey] = useState(false)
   const triggerRef = useRef<HTMLButtonElement>(null)
   const panelRef = useRef<HTMLDivElement>(null)
   const searchRef = useRef<HTMLInputElement>(null)
@@ -119,6 +119,7 @@ export default function Select<V extends SelectValue>({
     const index = options.findIndex((o) => o.value === value)
     setActive(index >= 0 && !options[index].disabled ? index : firstEnabled(options))
     setQuery('')
+    setNavByKey(false)
     setSurface(surfaceClassOf(triggerRef.current))
     setListName(nameOf(triggerRef.current, ariaLabel, ariaLabelledBy))
     setOpen(true)
@@ -193,6 +194,7 @@ export default function Select<V extends SelectValue>({
 
   const moveActive = (key: string): boolean => {
     const last = visible.length - 1
+    if (['ArrowDown', 'ArrowUp', 'Home', 'End', 'PageDown', 'PageUp'].includes(key)) setNavByKey(true)
     switch (key) {
       case 'ArrowDown': {
         const next = firstEnabled(visible, active + 1)
@@ -276,7 +278,10 @@ export default function Select<V extends SelectValue>({
     if (isPrintable(e)) {
       e.preventDefault()
       const index = typeaheadMatch(e.key)
-      if (index >= 0) setActive(index)
+      if (index >= 0) {
+        setActive(index)
+        setNavByKey(true)
+      }
     }
   }
 
@@ -311,28 +316,27 @@ export default function Select<V extends SelectValue>({
     <div
       ref={panelRef}
       className={['ui-select-panel', surface].filter(Boolean).join(' ')}
+      data-nav={navByKey ? 'keys' : undefined}
       data-testid={testId ? `${testId}-panel` : undefined}
     >
       {withSearch && (
-        <div className="ui-select-search">
-          <Icon name="search" size={13} />
-          <input
-            ref={searchRef}
-            type="text"
-            role="combobox"
-            aria-expanded="true"
-            aria-controls={listId}
-            aria-autocomplete="list"
-            aria-activedescendant={activeId}
-            aria-label={t('common', 'search')}
-            placeholder={t('common', 'search')}
-            autoComplete="off"
-            spellCheck={false}
-            value={query}
-            onChange={(e) => onQueryChange(e.target.value)}
-            onKeyDown={onSearchKeyDown}
-          />
-        </div>
+        <input
+          ref={searchRef}
+          className="ui-select-search"
+          type="text"
+          role="combobox"
+          aria-expanded="true"
+          aria-controls={listId}
+          aria-autocomplete="list"
+          aria-activedescendant={activeId}
+          aria-label={t('common', 'search')}
+          placeholder={t('common', 'search')}
+          autoComplete="off"
+          spellCheck={false}
+          value={query}
+          onChange={(e) => onQueryChange(e.target.value)}
+          onKeyDown={onSearchKeyDown}
+        />
       )}
       <div id={listId} role="listbox" aria-label={listName} className="ui-select-list">
         {visible.map((option, i) => {
@@ -352,15 +356,19 @@ export default function Select<V extends SelectValue>({
               aria-disabled={option.disabled || undefined}
               className={cls}
               onPointerDown={(e) => e.preventDefault()}
-              onPointerMove={() => { if (!option.disabled && i !== active) setActive(i) }}
+              onPointerMove={() => {
+                if (navByKey) setNavByKey(false)
+                if (!option.disabled && i !== active) setActive(i)
+              }}
               onClick={() => choose(option)}
             >
               <span className="ui-select-option-label">{option.label}</span>
-              {isSelected && <Icon name="check" size={13} className="ui-select-check" />}
             </div>
           )
         })}
-        {visible.length === 0 && <div className="ui-select-empty">{t('common', 'no_matches')}</div>}
+        {visible.length === 0 && (
+          <p className="ui-select-empty" role="status">{t('decks', 'builder_search_no_results', { query: query.trim() })}</p>
+        )}
       </div>
     </div>
   )
@@ -387,7 +395,6 @@ export default function Select<V extends SelectValue>({
         onKeyUp={onTriggerKeyUp}
       >
         <span className="ui-select-value">{selected?.label ?? ''}</span>
-        <Icon name="chevronDown" size={12} className="ui-select-chevron" />
       </button>
       {panel && createPortal(panel, document.body)}
     </>

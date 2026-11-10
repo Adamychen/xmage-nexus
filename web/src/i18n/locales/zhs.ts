@@ -13,7 +13,6 @@ export const zhs: TranslationSchema = {
     loading: '加载中...',
     error: '错误',
     search: '搜索...',
-    no_matches: '没有匹配的选项',
     all: '全部',
     online: '在线',
     offline: '离线',

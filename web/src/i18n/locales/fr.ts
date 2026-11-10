@@ -13,7 +13,6 @@ export const fr: TranslationSchema = {
     loading: 'Chargement...',
     error: 'Erreur',
     search: 'Rechercher...',
-    no_matches: 'Aucune option correspondante',
     all: 'Tous',
     online: 'En ligne',
     offline: 'Hors ligne',

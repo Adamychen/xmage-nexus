@@ -11,7 +11,6 @@ export const en = {
     loading: 'Loading...',
     error: 'Error',
     search: 'Search...',
-    no_matches: 'No matching options',
     all: 'All',
     online: 'Online',
     offline: 'Offline',

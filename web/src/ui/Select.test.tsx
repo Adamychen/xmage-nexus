@@ -43,7 +43,7 @@ const activeOption = () => {
 }
 
 describe('Select', () => {
-  it('CTL-1: shows the chosen value and opens a list with the choice checked, outside the page flow', () => {
+  it('CTL-1: shows the chosen value and opens a list with the choice highlighted, outside the page flow', () => {
     render(<Harness />)
     expect(trigger().textContent).toBe('Banana')
     expect(trigger().getAttribute('aria-expanded')).toBe('false')
@@ -54,7 +54,8 @@ describe('Select', () => {
     expect(list.parentElement?.parentElement).toBe(document.body)
     const selected = screen.getByRole('option', { selected: true })
     expect(selected.textContent).toBe('Banana')
-    expect(selected.querySelector('.ui-select-check')).not.toBeNull()
+    expect(selected.classList.contains('is-selected')).toBe(true)
+    expect(screen.getAllByRole('option').filter((o) => o.classList.contains('is-selected'))).toHaveLength(1)
     expect(document.querySelector('select')).toBeNull()
   })
 
@@ -245,7 +246,7 @@ describe('Select search', () => {
     expect(search.getAttribute('aria-activedescendant')).not.toBe(first)
     fireEvent.change(search, { target: { value: 'zzz' } })
     expect(screen.queryAllByRole('option')).toHaveLength(0)
-    expect(screen.getByText('Sin opciones coincidentes')).toBeTruthy()
+    expect(screen.getByRole('status').textContent).toBe('Sin resultados para «zzz»')
   })
 
   it('CTL-3: a screen can ask for the search box on a short list', () => {
