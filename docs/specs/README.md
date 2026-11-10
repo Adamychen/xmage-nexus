@@ -24,6 +24,7 @@ test that names the decision.
 | `accessibility.md` | `ACC` | Reduce Transparency, Increase Contrast, text and touch sizes, safe areas, phone login, hover |
 | `panel.md` | `PNL` | The game's side panel: header and tabs, log, chat, deck tracker, commander damage, mechanics |
 | `tournaments.md` | `TRN` | Creating a tournament, its bracket and standings, following it during a game |
+| `controls.md` | `CTL` | Shared controls: how a choice among values opens, looks and answers the keyboard |
 
 Areas without a file yet are written the first time someone changes them (see `ROADMAP.md` §4.12).
 Candidates: stack, draft, spectating.

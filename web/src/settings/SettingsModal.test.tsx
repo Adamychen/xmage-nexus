@@ -34,8 +34,8 @@ describe('SettingsModal', () => {
 
     fireEvent.click(screen.getByTestId('settings-nav-language'))
     expect(screen.getByTestId('settings-section-language')).toBeTruthy()
-    expect(screen.getByTestId('settings-ui-lang').tagName).toBe('SELECT')
-    expect(screen.getByTestId('settings-card-lang').tagName).toBe('SELECT')
+    expect(screen.getByTestId('settings-ui-lang').getAttribute('role')).toBe('combobox')
+    expect(screen.getByTestId('settings-card-lang').getAttribute('role')).toBe('combobox')
     expect(screen.getByTestId('settings-nav-language').getAttribute('aria-current')).toBe('page')
     expect(document.getElementById('settings-title')?.textContent).toBe(t('lobby', 'settings_language'))
   })

@@ -13,6 +13,7 @@ export const es: TranslationSchema = {
     loading: 'Cargando...',
     error: 'Error',
     search: 'Buscar...',
+    no_matches: 'Sin opciones coincidentes',
     all: 'Todos',
     online: 'En línea',
     offline: 'Desconectado',

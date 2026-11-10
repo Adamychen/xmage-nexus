@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, fireEvent, render } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import LoginScreen from './LoginScreen'
 import { doConnect } from '../state/gateway'
@@ -110,5 +110,22 @@ describe('LoginScreen saved connection', () => {
     first.unmount()
     const { getByTestId } = render(<LoginScreen />)
     expect((getByTestId('login-password') as HTMLInputElement).value).toBe('')
+  })
+})
+
+describe('LoginScreen flag picker', () => {
+  afterEach(() => {
+    cleanup()
+  })
+
+  it('CTL-3: the country picker opens with a search box and a typed country becomes the flag', () => {
+    const { container, getByTestId } = render(<LoginScreen />)
+    fireEvent.click(getByTestId('login-flag'))
+    const search = screen.getByRole('combobox', { name: 'Buscar...' })
+    expect(document.activeElement).toBe(search)
+    fireEvent.change(search, { target: { value: 'japon' } })
+    fireEvent.keyDown(search, { key: 'Enter' })
+    expect(getByTestId('login-flag').textContent).toContain('Japón')
+    expect(container.querySelector('.country-flag-icon')?.getAttribute('alt')).toBe('JP')
   })
 })

@@ -13,6 +13,7 @@ export const ru: TranslationSchema = {
     loading: 'Загрузка...',
     error: 'Ошибка',
     search: 'Поиск...',
+    no_matches: 'Нет подходящих вариантов',
     all: 'Все',
     online: 'В сети',
     offline: 'Не в сети',

@@ -13,6 +13,7 @@ export const ja: TranslationSchema = {
     loading: '読み込み中...',
     error: 'エラー',
     search: '検索...',
+    no_matches: '一致する選択肢がありません',
     all: 'すべて',
     online: 'オンライン',
     offline: 'オフライン',

@@ -52,6 +52,7 @@ function urlProxyPort(): number | null {
 import { sortedFlags, countryName, type ServerPreset } from './flags'
 import Button from '../ui/Button'
 import Field from '../ui/Field'
+import Select from '../ui/Select'
 import WhatsNewButton from '../system/WhatsNew'
 
 // Deployment defaults baked at build time. When a public/hosted build bakes a
@@ -336,13 +337,12 @@ export default function LoginScreen() {
                   />
                 </Field>
                 <Field className="login-field-flag" label={t('login.flag')}>
-                  <select value={flagName} onChange={(e) => setFlagName(e.target.value)}>
-                    {sortedFlags(lang).map((f) => (
-                      <option key={f.code} value={f.code}>
-                        {f.emoji} {countryName(f.code, lang)}
-                      </option>
-                    ))}
-                  </select>
+                  <Select
+                    value={flagName}
+                    onChange={setFlagName}
+                    options={sortedFlags(lang).map((f) => ({ value: f.code, label: `${f.emoji} ${countryName(f.code, lang)}`, text: countryName(f.code, lang) }))}
+                    data-testid="login-flag"
+                  />
                 </Field>
               </div>
               <Field label={t('login.password')} hint={passwordDisabledOnBeta && t('login', 'password_disabled_beta')} hintTone="warn">

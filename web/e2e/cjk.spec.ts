@@ -45,7 +45,8 @@ test.describe('CJK boost', () => {
 
       await page.getByTestId('open-settings').click()
       await page.getByTestId('settings-nav-language').click()
-      await page.getByTestId('settings-ui-lang').selectOption('ja')
+      await page.getByTestId('settings-ui-lang').click()
+      await page.getByRole('option', { name: '日本語' }).click()
       await expect(async () => {
         expect(await headingFontPx(page)).toBeCloseTo(base * 1.15, 0)
       }).toPass({ timeout: 5_000 })

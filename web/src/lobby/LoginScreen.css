@@ -280,7 +280,7 @@
 }
 
 .login-card input,
-.login-card select {
+.login-card .ui-select-trigger {
   width: 100%;
   min-width: 0;
   padding: var(--sp-2h) var(--sp-3);
@@ -288,10 +288,6 @@
   text-transform: none;
   letter-spacing: normal;
   font-weight: 500;
-}
-
-.login-card select {
-  padding-inline-end: var(--sp-6);
 }
 
 /* Network Connection Configuration Box */
@@ -728,7 +724,7 @@ details.login-network-box .login-network-fields {
 }
 
 .login-card input:focus,
-.login-card select:focus {
+.login-card .ui-select-trigger:focus-visible {
   animation: fieldFocus 0.6s ease-out;
 }
 
@@ -792,7 +788,7 @@ details.login-network-box .login-network-fields {
   .login-tagline,
   .login-card > *,
   .login-card input:focus,
-  .login-card select:focus,
+  .login-card .ui-select-trigger:focus-visible,
   .login-submit-btn::after,
   .mana-pip {
     animation: none;

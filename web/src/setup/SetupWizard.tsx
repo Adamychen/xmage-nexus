@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import Button from '../ui/Button'
+import Select from '../ui/Select'
 import { useTranslation } from '../i18n'
 import DialogShell from '../ui/DialogShell'
 import Icon from '../ui/Icon'
@@ -195,11 +196,12 @@ export default function SetupWizard({ onClose }: { onClose: () => void }) {
                   <input value={password} onChange={(e) => setPassword(e.target.value)} type="password" autoComplete="current-password" disabled={passwordDisabledOnBeta} data-testid="setup-password" />
                 </Field>
                 <Field className="setup-field" label={t('login', 'flag')}>
-                  <select value={flagName} onChange={(e) => setFlagName(e.target.value)} data-testid="setup-flag">
-                    {sortedFlags(lang).map((f) => (
-                      <option key={f.code} value={f.code}>{f.emoji} {countryName(f.code, lang)}</option>
-                    ))}
-                  </select>
+                  <Select
+                    value={flagName}
+                    onChange={setFlagName}
+                    options={sortedFlags(lang).map((f) => ({ value: f.code, label: `${f.emoji} ${countryName(f.code, lang)}`, text: countryName(f.code, lang) }))}
+                    data-testid="setup-flag"
+                  />
                 </Field>
               </div>
             </div>
