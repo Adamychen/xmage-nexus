@@ -23,7 +23,6 @@ test('the lobby can be driven with the keyboard alone @a11y', async ({ page }) =
     await create.focus()
     await expect(create).toBeFocused()
     await page.keyboard.press('Enter')
-    await page.keyboard.press('Tab')
     await expect(page.getByRole('button', { name: /Nueva mesa/i })).toBeFocused()
     await page.keyboard.press('Enter')
     const heading = page.getByRole('heading', { name: /Nueva mesa|Crear Mesa/i })

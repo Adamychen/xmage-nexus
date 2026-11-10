@@ -124,6 +124,7 @@ export function DeckEditorPhoneTopBar({
           direction="down"
           aria-label={t('decks', 'editor_more')}
           className="deck-phone-more"
+          menuClassName="deck-phone-more-panel"
           data-testid="deck-editor-more"
         >
           <MenuItem role="menuitem" icon="download" onClick={onImport}>{t('decks', 'import_deck')}</MenuItem>

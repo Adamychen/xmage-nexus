@@ -1,8 +1,11 @@
-import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 import Button, { type ButtonProps } from './Button'
 import Icon from './Icon'
 import { useEscape } from './useEscape'
+import { menuKeyDown, surfaceClassOf, useAnchoredPanel, useMenuFocus } from './anchoredPanel'
 import './primitives.css'
+import './Select.css'
 
 export interface DropdownMenuProps {
   label: ReactNode
@@ -13,6 +16,7 @@ export interface DropdownMenuProps {
   align?: 'start' | 'end'
   direction?: 'up' | 'down'
   className?: string
+  menuClassName?: string
   hideChevron?: boolean
   'aria-label'?: string
   'data-testid'?: string
@@ -28,20 +32,33 @@ export default function DropdownMenu({
   align = 'start',
   direction = 'down',
   className = '',
+  menuClassName = '',
   hideChevron = false,
   'aria-label': ariaLabel,
   'data-testid': testId,
   children,
 }: DropdownMenuProps) {
   const [open, setOpen] = useState(false)
+  const [surface, setSurface] = useState('')
   const rootRef = useRef<HTMLDivElement>(null)
-  const close = useCallback(() => setOpen(false), [])
-  useEscape(close, open)
+  const triggerRef = useRef<HTMLButtonElement>(null)
+  const panelRef = useRef<HTMLDivElement>(null)
+
+  const close = useCallback((returnFocus = true) => {
+    setOpen(false)
+    if (returnFocus) triggerRef.current?.focus()
+  }, [])
+  const closeOnEscape = useCallback(() => close(true), [close])
+  useEscape(closeOnEscape, open)
+  useAnchoredPanel(open, triggerRef, panelRef, { prefer: direction === 'up' ? 'up' : 'down', align, matchWidth: false })
+  useMenuFocus(open, panelRef)
 
   useEffect(() => {
     if (!open) return
     const onPointerDown = (e: PointerEvent) => {
-      if (!rootRef.current?.contains(e.target as Node)) close()
+      const target = e.target as Node
+      if (rootRef.current?.contains(target) || panelRef.current?.contains(target)) return
+      close(false)
     }
     document.addEventListener('pointerdown', onPointerDown)
     return () => document.removeEventListener('pointerdown', onPointerDown)
@@ -51,10 +68,25 @@ export default function DropdownMenu({
     if (disabled) setOpen(false)
   }, [disabled])
 
+  const openMenu = () => {
+    if (disabled) return
+    setSurface(surfaceClassOf(rootRef.current))
+    setOpen(true)
+  }
+
+  const onTriggerKeyDown = (e: KeyboardEvent<HTMLButtonElement>) => {
+    if (!open && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+      e.preventDefault()
+      openMenu()
+    }
+  }
+
   const cls = ['ui-dropdown', className].filter(Boolean).join(' ')
+  const panelCls = ['ui-popover', 'ui-popover--fixed', 'ui-menu-panel', menuClassName, surface].filter(Boolean).join(' ')
   return (
     <div ref={rootRef} className={cls}>
       <Button
+        ref={triggerRef}
         variant={variant}
         size={size}
         icon={icon}
@@ -63,19 +95,23 @@ export default function DropdownMenu({
         aria-expanded={open}
         aria-label={ariaLabel}
         data-testid={testId}
-        onClick={() => setOpen((o) => !o)}
+        onClick={() => (open ? close(true) : openMenu())}
+        onKeyDown={onTriggerKeyDown}
       >
         {label}
         {!hideChevron && <Icon name={direction === 'up' ? 'chevronUp' : 'chevronDown'} size={12} />}
       </Button>
-      {open && (
+      {open && createPortal(
         <div
+          ref={panelRef}
           role="menu"
-          className={`ui-dropdown-menu ui-dropdown-menu--${direction} ui-dropdown-menu--${align}`}
-          onClick={close}
+          className={panelCls}
+          onKeyDown={(e) => menuKeyDown(e, panelRef.current, () => close(false))}
+          onClick={() => close(true)}
         >
           {children}
-        </div>
+        </div>,
+        document.body,
       )}
     </div>
   )

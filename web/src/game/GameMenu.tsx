@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import MenuItem from '../ui/MenuItem'
 import CloseButton from '../ui/CloseButton'
@@ -26,6 +26,8 @@ import SettingsModal from '../settings/SettingsModal'
 import HelpWikiModal from './HelpWikiModal'
 import ReportDialog from './ReportDialog'
 import { confirmDialog } from '../ui/confirmDialog'
+import { useEscape } from '../ui/useEscape'
+import { menuKeyDown, useMenuFocus } from '../ui/anchoredPanel'
 import './GameMenu.css'
 
 export default function GameMenu() {
@@ -34,6 +36,7 @@ export default function GameMenu() {
   const gameId = useStore((s) => s.gameId)
   const settings = useSettings()
   const [open, setOpen] = useState(false)
+  const [openedByKey, setOpenedByKey] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
   const [showHelp, setShowHelp] = useState(false)
   const [showReport, setShowReport] = useState(false)
@@ -75,9 +78,17 @@ export default function GameMenu() {
     { key: 'smart', label: t('game', 'mana_payment_smart'), tip: t('game', 'mana_payment_smart_tip'), testid: 'game-menu-mana-smart' },
   ]
 
+  const triggerRef = useRef<HTMLButtonElement>(null)
+  const panelRef = useRef<HTMLDivElement>(null)
   const close = () => {
     setOpen(false)
   }
+  const closeAndFocus = useCallback(() => {
+    setOpen(false)
+    triggerRef.current?.focus()
+  }, [])
+  useEscape(closeAndFocus, open)
+  useMenuFocus(open && openedByKey, panelRef)
 
   const toggleMenu = () => {
     soundManager.play('ui_click', 'ui')
@@ -87,20 +98,31 @@ export default function GameMenu() {
   return (
     <div className="game-menu">
       <button
+        ref={triggerRef}
         type="button"
         className={`game-menu-btn ${open ? 'is-open' : ''}`}
         data-testid="game-menu-btn"
         title={t('game', 'game_menu')}
         aria-haspopup="menu"
         aria-expanded={open}
-        onClick={toggleMenu}
+        onClick={() => {
+          setOpenedByKey(false)
+          toggleMenu()
+        }}
+        onKeyDown={(e) => {
+          if (!open && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+            e.preventDefault()
+            setOpenedByKey(true)
+            toggleMenu()
+          }
+        }}
       >
         ⋯
       </button>
       {open && (
         <>
           <div className="game-menu-overlay" onClick={close} />
-          <div className="game-menu-panel" role="menu" data-testid="game-menu">
+          <div ref={panelRef} className="ui-popover ui-menu-panel game-menu-panel" role="menu" data-testid="game-menu" onKeyDown={(e) => menuKeyDown(e, panelRef.current, close)}>
             {me && (
               <MenuItem
                 danger

@@ -178,10 +178,43 @@ describe('DropdownMenu', () => {
     const { rerender } = render(<DropdownMenu label="X" disabled><MenuItem role="menuitem">a</MenuItem></DropdownMenu>)
     fireEvent.click(screen.getByRole('button', { name: /X/ }))
     expect(screen.queryByRole('menu')).toBeNull()
+    const spy = vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
+      const r = this.tagName === 'BUTTON' ? { left: 400, right: 480, top: 700, bottom: 730 } : { left: 0, right: 200, top: 0, bottom: 100 }
+      return { ...r, width: r.right - r.left, height: r.bottom - r.top, x: r.left, y: r.top, toJSON: () => ({}) } as DOMRect
+    })
     rerender(<DropdownMenu label="X" direction="up" align="end"><MenuItem role="menuitem">a</MenuItem></DropdownMenu>)
     fireEvent.click(screen.getByRole('button', { name: /X/ }))
-    expect(screen.getByRole('menu').className).toContain('ui-dropdown-menu--up')
-    expect(screen.getByRole('menu').className).toContain('ui-dropdown-menu--end')
+    expect(screen.getByRole('menu').dataset.side).toBe('top')
+    expect(screen.getByRole('menu').dataset.align).toBe('end')
+    expect(screen.getByRole('menu').style.left).toBe('280px')
+    spy.mockRestore()
+  })
+})
+
+describe('DropdownMenu keyboard', () => {
+  it('CTL-5: the menu opens above the page in the shared panel, and the arrows walk its items', () => {
+    render(
+      <DropdownMenu label="Exportar">
+        <MenuItem role="menuitem">.dck</MenuItem>
+        <MenuItem role="menuitem" disabled>Arena</MenuItem>
+        <MenuItem role="menuitem">Plain</MenuItem>
+      </DropdownMenu>,
+    )
+    const trigger = screen.getByRole('button', { name: /Exportar/ })
+    fireEvent.keyDown(trigger, { key: 'ArrowDown' })
+    const menu = screen.getByRole('menu')
+    expect(menu.parentElement).toBe(document.body)
+    expect(menu.classList.contains('ui-popover')).toBe(true)
+    expect(document.activeElement?.textContent).toBe('.dck')
+    fireEvent.keyDown(document.activeElement!, { key: 'ArrowDown' })
+    expect(document.activeElement?.textContent).toBe('Plain')
+    fireEvent.keyDown(document.activeElement!, { key: 'ArrowDown' })
+    expect(document.activeElement?.textContent).toBe('.dck')
+    fireEvent.keyDown(document.activeElement!, { key: 'End' })
+    expect(document.activeElement?.textContent).toBe('Plain')
+    fireEvent.keyDown(window, { key: 'Escape' })
+    expect(screen.queryByRole('menu')).toBeNull()
+    expect(document.activeElement).toBe(trigger)
   })
 })
 

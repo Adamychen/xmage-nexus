@@ -55,3 +55,16 @@ the closed control does nothing, since there is no single value to move to.
 - Why: the filter dropdowns already worked this way before they moved onto `Select`, and a several-value
   list that closed after each pick would make the player reopen it for every value.
 - Guard: `src/ui/Select.test.tsx`
+
+### CTL-5 · An action menu opens the same panel and the arrows walk its items
+A button that opens a list of actions (`DropdownMenu`: the lobby's More and Create, My decks' More and
+Export, the editor's Export and its phone menu) opens the panel of CTL-1, drawn above the page and
+anchored under or over its button. The arrows, Home and End move the focus through its items, skipping
+disabled ones, ArrowDown or ArrowUp on the closed button opens it on its first item, and Escape or a pick
+closes it with the focus back on the button. The game's ⋯ menu and the pass options keep their place
+on the board and take the same panel and keys, but they move the focus into the menu only when the
+keyboard opened it, so Space after a click still passes priority.
+
+- Why: the action menus were a second kind of dropdown with their own panel and no arrow keys, and the
+  in-game menus a third (2026-11-10).
+- Guard: `src/ui/primitives.test.tsx` · `src/game/GameMenu.test.tsx` · `src/game/PassMenu.test.tsx`

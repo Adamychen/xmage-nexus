@@ -79,4 +79,20 @@ describe('GameMenu', () => {
     expect(modal).not.toBeNull()
     expect(container.contains(modal)).toBe(false)
   })
+
+  it('CTL-5: the arrows open the menu on its first item, a click leaves the focus where it was, and Escape closes it', () => {
+    const { container } = render(<GameMenu />)
+    const btn = container.querySelector<HTMLButtonElement>('[data-testid="game-menu-btn"]')!
+    fireEvent.click(btn)
+    const menu = container.querySelector('[data-testid="game-menu"]')!
+    expect(menu.classList.contains('ui-popover')).toBe(true)
+    expect(menu.contains(document.activeElement)).toBe(false)
+    fireEvent.click(btn)
+    btn.focus()
+    fireEvent.keyDown(btn, { key: 'ArrowDown' })
+    expect(container.querySelector('[data-testid="game-menu"]')?.contains(document.activeElement)).toBe(true)
+    fireEvent.keyDown(window, { key: 'Escape' })
+    expect(container.querySelector('[data-testid="game-menu"]')).toBeNull()
+    expect(document.activeElement).toBe(btn)
+  })
 })

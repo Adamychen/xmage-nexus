@@ -1,4 +1,6 @@
+import { useRef } from 'react'
 import * as cmds from '../net/commands'
+import { menuKeyDown, useMenuFocus } from '../ui/anchoredPanel'
 import MenuItem from '../ui/MenuItem'
 import Checkbox from '../ui/Checkbox'
 import { useSettings, setSetting, useStore } from '../state/store'
@@ -10,17 +12,20 @@ import './PassMenu.css'
 interface PassMenuProps {
   game: GameView | null
   onSkip: (action: string) => void
+  focusFirst?: boolean
 }
 
-export default function PassMenu({ game, onSkip }: PassMenuProps) {
+export default function PassMenu({ game, onSkip, focusFirst = false }: PassMenuProps) {
   const { t } = useTranslation()
   const settings = useSettings()
   const gameId = useStore((s) => s.gameId)
   const me = game?.players?.find((p) => p.controlled)
   const activeSkip = activeSkipOf(me)
+  const panelRef = useRef<HTMLDivElement>(null)
+  useMenuFocus(focusFirst, panelRef)
 
   return (
-    <div className="pass-menu" role="menu" data-testid="pass-menu">
+    <div ref={panelRef} className="ui-popover ui-menu-panel pass-menu" role="menu" data-testid="pass-menu" onKeyDown={(e) => menuKeyDown(e, panelRef.current)}>
       <div className="pass-menu-section-label">{t('game', 'pass_options')}</div>
       {SKIPS.map((skip) => (
         <MenuItem

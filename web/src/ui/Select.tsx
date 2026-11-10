@@ -1,6 +1,7 @@
-import { Fragment, useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
+import { Fragment, useCallback, useEffect, useId, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { useEscape } from './useEscape'
+import { surfaceClassOf, useAnchoredPanel } from './anchoredPanel'
 import { useTranslation } from '../i18n'
 import './Select.css'
 
@@ -47,9 +48,6 @@ export interface SelectProps<V extends SelectValue> {
 }
 
 export const SELECT_SEARCH_THRESHOLD = 12
-const PANEL_GAP = 6
-const VIEWPORT_MARGIN = 8
-const MIN_PANEL_HEIGHT = 120
 const TYPEAHEAD_RESET_MS = 600
 
 export function normalizeOptionText(text: string): string {
@@ -60,12 +58,6 @@ export function optionText<V extends SelectValue>(option: SelectOption<V>): stri
   if (option.text != null) return option.text
   if (typeof option.label === 'string' || typeof option.label === 'number') return String(option.label)
   return String(option.value)
-}
-
-function surfaceClassOf(el: Element | null): string {
-  const surface = el?.closest('.chrome-surface, .board-surface')
-  if (!surface) return ''
-  return surface.classList.contains('chrome-surface') ? 'chrome-surface' : 'board-surface'
 }
 
 function nameOf(trigger: HTMLButtonElement | null, ariaLabel?: string, labelledBy?: string): string | undefined {
@@ -181,42 +173,7 @@ export default function Select<V extends SelectValue>({
     return () => document.removeEventListener('pointerdown', onPointerDown)
   }, [open, close])
 
-  useLayoutEffect(() => {
-    if (!open) return
-    const place = () => {
-      const trigger = triggerRef.current
-      const panel = panelRef.current
-      if (!trigger || !panel) return
-      const rect = trigger.getBoundingClientRect()
-      const vw = window.innerWidth
-      const vh = window.innerHeight
-      panel.style.minWidth = `${rect.width}px`
-      const below = vh - rect.bottom - PANEL_GAP - VIEWPORT_MARGIN
-      const above = rect.top - PANEL_GAP - VIEWPORT_MARGIN
-      const up = panel.scrollHeight > below && above > below
-      panel.style.maxHeight = `${Math.max(MIN_PANEL_HEIGHT, up ? above : below)}px`
-      panel.style.top = up ? '' : `${rect.bottom + PANEL_GAP}px`
-      panel.style.bottom = up ? `${vh - rect.top + PANEL_GAP}px` : ''
-      const width = panel.getBoundingClientRect().width || panel.offsetWidth
-      const limit = boundary ? trigger.closest(boundary)?.getBoundingClientRect().right : undefined
-      const right = Math.min(vw - VIEWPORT_MARGIN, limit ?? Number.POSITIVE_INFINITY)
-      const overflowsRight = rect.left + width > right
-      panel.style.left = `${overflowsRight ? Math.max(VIEWPORT_MARGIN, rect.right - width) : rect.left}px`
-      panel.dataset.side = up ? 'top' : 'bottom'
-      panel.dataset.align = overflowsRight ? 'end' : 'start'
-    }
-    place()
-    const onScroll = (e: Event) => {
-      if (panelRef.current?.contains(e.target as Node)) return
-      place()
-    }
-    window.addEventListener('resize', place)
-    window.addEventListener('scroll', onScroll, true)
-    return () => {
-      window.removeEventListener('resize', place)
-      window.removeEventListener('scroll', onScroll, true)
-    }
-  }, [open, visible.length, boundary])
+  useAnchoredPanel(open, triggerRef, panelRef, { boundary }, visible.length)
 
   useEffect(() => {
     if (!open || !withSearch) return
@@ -362,7 +319,7 @@ export default function Select<V extends SelectValue>({
   const panel = open && (
     <div
       ref={panelRef}
-      className={['ui-select-panel', surface].filter(Boolean).join(' ')}
+      className={['ui-popover', 'ui-select-panel', surface].filter(Boolean).join(' ')}
       data-nav={navByKey ? 'keys' : undefined}
       data-testid={panelTestId ?? (testId ? `${testId}-panel` : undefined)}
     >

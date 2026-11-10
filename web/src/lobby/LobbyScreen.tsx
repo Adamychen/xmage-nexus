@@ -241,6 +241,7 @@ export default function LobbyScreen() {
                           size="md"
                           align="end"
                           className="tables-create-menu"
+                          menuClassName="tables-create-panel"
                           data-testid="create-menu"
                           label={<><Icon name="plus" size={14} /> {t('lobby', 'create_menu')}</>}
                         >

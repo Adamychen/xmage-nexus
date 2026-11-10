@@ -40,6 +40,17 @@ describe('PassMenu', () => {
     })
   }
 
+  it('CTL-5: the pass menu takes the focus only when the keyboard opened it, so Space still passes priority', () => {
+    const { container, unmount } = render(<PassMenu game={gameWith()} onSkip={() => {}} />)
+    expect(container.querySelector('.pass-menu')?.classList.contains('ui-popover')).toBe(true)
+    expect(container.querySelector('.pass-menu')?.contains(document.activeElement)).toBe(false)
+    unmount()
+    const keyed = render(<PassMenu game={gameWith()} onSkip={() => {}} focusFirst />)
+    expect(document.activeElement).toBe(keyed.container.querySelector('[data-testid="skip-turn"]'))
+    fireEvent.keyDown(document.activeElement!, { key: 'ArrowDown' })
+    expect(document.activeElement).toBe(keyed.container.querySelector('[data-testid="skip-endStep"]'))
+  })
+
   it('KEY-6, KEY-8: renders the 6 skips with their shortcuts', () => {
     const { container } = render(<PassMenu game={gameWith()} onSkip={() => {}} />)
     for (const key of ['turn', 'endStep', 'nextMain', 'myTurn', 'stack', 'beforeMine']) {
