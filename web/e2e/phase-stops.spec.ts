@@ -52,7 +52,7 @@ test.describe('Phase stops', { tag: '@phasestops' }, () => {
     })
   })
 
-  test('game seeds from lobby defaults and in-game edits stay in-session', async ({ page }) => {
+  test('SET-11: the board shows and edits the Settings stops, both ways', async ({ page }) => {
     PHASE_PREFS.length = 0
     await page.addInitScript(() => {
       window.localStorage.setItem(
@@ -68,27 +68,68 @@ test.describe('Phase stops', { tag: '@phasestops' }, () => {
       expect(pageErrors).toEqual([])
 
       await expect.poll(() => PHASE_PREFS.length, { timeout: 5000 }).toBeGreaterThan(0)
-      const seeded = PHASE_PREFS[0] as { yourTurn: Record<string, boolean>; opponentTurn: Record<string, boolean> }
+      const seeded = PHASE_PREFS[PHASE_PREFS.length - 1] as { yourTurn: Record<string, boolean>; opponentTurn: Record<string, boolean> }
       expect(seeded.yourTurn.main1).toBe(false)
       expect(seeded.yourTurn.upkeep).toBe(true)
       expect(seeded.opponentTurn.main1).toBe(true)
 
-      await page.locator('[data-testid="game-menu-btn"]').click()
-      await expect(page.locator('[data-testid="game-menu-settings"]')).toBeVisible()
-      await page.locator('.game-menu-overlay').click()
-      await expect(page.locator('[data-testid="game-menu"]')).toHaveCount(0)
+      // board -> Settings: the change is saved and pushed to the running game
       const m1 = page.getByTestId('phase-bar-step-PRECOMBAT_MAIN')
       await expect(m1).toBeVisible()
       await expect(m1.locator('.stop-dot-you')).toHaveCount(0)
-      const before = PHASE_PREFS.length
+      let before = PHASE_PREFS.length
       await m1.click()
       await expect(m1.locator('.stop-dot-you')).toHaveCount(1)
       await expect.poll(() => PHASE_PREFS.length, { timeout: 5000 }).toBeGreaterThan(before)
-      const pushed = PHASE_PREFS[PHASE_PREFS.length - 1] as { yourTurn: Record<string, boolean> }
-      expect(pushed.yourTurn.main1).toBe(true)
-
+      expect((PHASE_PREFS[PHASE_PREFS.length - 1] as { yourTurn: Record<string, boolean> }).yourTurn.main1).toBe(true)
       const stored = await page.evaluate(() => window.localStorage.getItem('mage-web-phase-stops'))
-      expect(JSON.parse(stored ?? '{}').yourTurn.main1).toBe(false)
+      expect(JSON.parse(stored ?? '{}').yourTurn.main1).toBe(true)
+
+      await page.locator('[data-testid="game-menu-btn"]').click()
+      await page.locator('[data-testid="game-menu-settings"]').click()
+      const settingsM1 = page.getByTestId('settings-stop-your-main1')
+      await expect(settingsM1).toHaveClass(/active/)
+
+      // Settings -> board: the same toggle, the same result
+      before = PHASE_PREFS.length
+      await settingsM1.click()
+      await expect(settingsM1).not.toHaveClass(/active/)
+      await expect.poll(() => PHASE_PREFS.length, { timeout: 5000 }).toBeGreaterThan(before)
+      expect((PHASE_PREFS[PHASE_PREFS.length - 1] as { yourTurn: Record<string, boolean> }).yourTurn.main1).toBe(false)
+      await page.getByTestId('settings-close').click()
+      await expect(m1.locator('.stop-dot-you')).toHaveCount(0)
+    })
+  })
+
+  test('SET-11: a rejoin with no GAME_INIT still shows the Settings stops', async ({ page }) => {
+    const allOff = () => Object.fromEntries(['upkeep', 'draw', 'main1', 'beginCombat', 'endCombat', 'main2', 'endStep'].map((k) => [k, false]))
+    await page.addInitScript((stops) => {
+      // only on the first load: the reload must keep what the page saved
+      if (!window.sessionStorage.getItem('ps-seeded')) {
+        window.localStorage.setItem('mage-web-phase-stops', JSON.stringify(stops))
+        window.sessionStorage.setItem('ps-seeded', '1')
+      }
+    }, { yourTurn: allOff(), opponentTurn: allOff() })
+    // the rejoin brings back only the last state, as the proxy's replay does
+    const rejoinScenario = () => makeBaseScenario({
+      tableId: 'table-ps-rejoin',
+      tableName: 'phase-stops-rejoin',
+      gameId: 'game-ps-rejoin',
+      gameView: playerGameView,
+      onJoinGame: (conn, gameId) => {
+        conn.broadcast('GAME_UPDATE', { gameView: playerGameView }, gameId)
+      },
+    })
+    await withFakeServer(rejoinScenario, async () => {
+      await quickStartGame(page, { prefix: 'psr', skipAsks: true })
+      const bar = page.locator('.phase-bar, .phase-dial').first()
+      await expect(bar).toBeVisible()
+      await expect(page.locator('.stop-dot')).toHaveCount(0)
+
+      await page.reload({ waitUntil: 'domcontentloaded' })
+      await expect(page.locator('.game-board')).toBeVisible({ timeout: 30_000 })
+      await expect(bar).toBeVisible()
+      await expect(page.locator('.stop-dot')).toHaveCount(0)
     })
   })
 })

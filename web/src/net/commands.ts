@@ -324,12 +324,14 @@ export interface PhaseStops {
   opponentTurn: Record<string, boolean>
 }
 
-export async function updatePreferences(phases: PhaseStops) {
-  return getGateway().send('updatePreferences', { phases })
+export interface ServerPreferences {
+  phases: PhaseStops
+  confirmEmptyManaPool: boolean
 }
 
-export async function updateManaConfirmPreference(confirmEmptyManaPool: boolean) {
-  return getGateway().send('updatePreferences', { confirmEmptyManaPool })
+/** Always every field: the server replaces the whole UserData (see `pushServerPreferences`). */
+export async function updatePreferences(prefs: ServerPreferences) {
+  return getGateway().send('updatePreferences', { phases: prefs.phases, confirmEmptyManaPool: prefs.confirmEmptyManaPool })
 }
 
 export async function quitMatch(gameId: string) {

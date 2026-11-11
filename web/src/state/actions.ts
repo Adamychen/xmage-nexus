@@ -5,7 +5,7 @@ import type { ChatMessageEvent, DeckJson, GameView } from '../net/types'
 import { advanceProgress, dungeonProgressKey, findDungeonGraph, parseDungeonEntry } from '../game/dungeons'
 import { parseRoomDoor, roomDoorKey, mergeRoomDoor } from '../game/rooms'
 import { parseSpeedLevel, speedLevelKey } from '../game/speed'
-import { serverPhaseStops } from '../game/phaseStops'
+import { pushServerPreferences } from './serverPreferences'
 import { decideStop } from '../game/stopPolicy'
 import { manaPaymentActions } from '../game/manaPayment'
 import { serverAutoAnswerActions } from '../game/autoAnswers'
@@ -488,11 +488,11 @@ export function setSetting<K extends keyof AppState['settings']>(key: K, value: 
   setState({ settings: next })
   persistClientSettings(next, prev)
   if (key === 'autoAnswers') syncAutoAnswersToServer()
-  if (key === 'smartStops') {
+  // One set of stops (SET-11): a change from Settings or from the board reaches the
+  // running game's HumanPlayer right away, not on the next game.
+  if (key === 'smartStops' || key === 'phaseStops' || key === 'manaPayment') {
     const gameId = getState().gameId
-    if (gameId && (getState().game?.players ?? []).some((p) => p.controlled)) {
-      void cmds.updatePreferences(serverPhaseStops(next.smartStops, getState().phaseStops))
-    }
+    if (gameId && (getState().game?.players ?? []).some((p) => p.controlled)) pushServerPreferences(next)
   }
 }
 
@@ -518,8 +518,7 @@ export function applyGameplayPreset(id: GameplayPresetId) {
   persistClientSettings(next, s.settings)
   if (!s.gameId) return
   for (const action of manaPaymentActions(next.manaPayment)) void cmds.sendManaPaymentMode(action, s.gameId)
-  void cmds.updateManaConfirmPreference(next.manaPayment.confirmEmptyPool)
-  void cmds.updatePreferences(serverPhaseStops(next.smartStops, next.phaseStops))
+  pushServerPreferences(next)
   void cmds.sendPlayerAction(next.holdPriority ? 'HOLD_PRIORITY' : 'UNHOLD_PRIORITY', s.gameId)
 }
 
@@ -535,7 +534,7 @@ export function maybeAutoPass(game: GameView) {
   if (s.combat && s.combat.selectable.length > 0) return
   const request = s.priorityRequest
   if (!request || s.game !== request || request === lastSmartAnswer) return
-  if (decideStop(game, s.phaseStops).action === 'stop') return
+  if (decideStop(game, s.settings.phaseStops).action === 'stop') return
   lastSmartAnswer = request
   void cmds.sendPlayerBoolean(false, s.gameId)
 }

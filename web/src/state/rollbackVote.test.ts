@@ -263,8 +263,7 @@ describe('rollback vote (4-player commander)', () => {
     const view = commander({ me: 'Alice', turn: 3, priority: 'Alice' })
     handleMessage({ type: 'event', method: 'GAME_SELECT', messageId: 9, objectId: GAME, data: { gameView: view, message: 'Pass priority' } })
     setState({
-      settings: { ...getState().settings, smartStops: true },
-      phaseStops: { yourTurn: {}, opponentTurn: {} },
+      settings: { ...getState().settings, smartStops: true, phaseStops: { yourTurn: {}, opponentTurn: {} } },
       feedback: null,
     })
     maybeAutoPass(view)

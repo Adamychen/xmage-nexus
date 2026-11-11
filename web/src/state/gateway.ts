@@ -2,7 +2,7 @@ import { Gateway } from '../net/Gateway'
 import * as cmds from '../net/commands'
 import { getState, setState, addLog, initialState } from './state'
 import { handleMessage } from './eventHandler'
-import { serverPhaseStops } from '../game/phaseStops'
+import { pushServerPreferences } from './serverPreferences'
 import { saveConn, loadActiveGame, clearActiveGame, loadActiveDraft, clearActiveDraft, loadActiveConstruct, clearActiveConstruct, saveResumeToken, loadResumeToken, clearResumeToken, type ConnectionInfo } from './persistence'
 import { resetGameEventOrder } from './gameUtils'
 import { t } from '../i18n'
@@ -329,7 +329,7 @@ async function runConnect(
     const chatId = await cmds.getRoomChatId()
     if (stale()) return
     setState({ roomChatId: chatId ?? null })
-    void cmds.updatePreferences(serverPhaseStops(getState().settings.smartStops, getState().settings.phaseStops))
+    pushServerPreferences()
   } else {
     // final failure: the retries ran out with the server still holding the old session, which
     // no amount of waiting-here fixes — the user needs to know what to do (wait it out, close
