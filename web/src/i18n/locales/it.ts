@@ -1509,7 +1509,7 @@ export const it: TranslationSchema = {
     fx_effects_hint: 'Attiva o disattiva le animazioni del campo',
     fx_speed: 'Velocità',
     sound_enabled: 'Effetti sonori',
-    sound_enabled_hint: 'Attiva o disattiva i suoni',
+    sound_enabled_hint: 'Suoni della partita e dell’interfaccia; la musica ha un interruttore a parte',
     sound_volume_master: 'Volume principale',
     sound_priority_mode: 'Avviso di priorità',
     sound_priority_mode_hint: 'Il server chiede in ogni fase: "Ogni prompt" suona a ogni richiesta, "Alla priorità" solo quando la priorità passa a te',

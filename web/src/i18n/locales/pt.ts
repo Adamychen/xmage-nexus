@@ -1509,7 +1509,7 @@ export const pt: TranslationSchema = {
     fx_effects_hint: 'Ativa ou desativa as animações do tabuleiro',
     fx_speed: 'Velocidade',
     sound_enabled: 'Efeitos sonoros',
-    sound_enabled_hint: 'Ativar ou silenciar sons',
+    sound_enabled_hint: 'Sons da partida e da interface; a música tem um interruptor próprio',
     sound_volume_master: 'Volume geral',
     sound_priority_mode: 'Aviso de prioridade',
     sound_priority_mode_hint: 'O servidor pergunta a cada fase: "Cada prompt" toca a cada pergunta; "Ao ganhar prioridade" só quando a prioridade passa a você',
