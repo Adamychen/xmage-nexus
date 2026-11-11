@@ -156,7 +156,8 @@ test.describe('Decks Gallery', () => {
       await showDeckListView(page)
 
       // Formato Commander sin comandante: slot vacío, no la primera carta
-      await page.locator('.deck-editor-format').selectOption('Commander')
+      await page.locator('.deck-editor-format').click()
+      await page.getByRole('option', { name: 'Commander', exact: true }).click()
       await expect(page.getByText(/Designa una carta legendaria como comandante/)).toBeVisible()
 
       // Importar un mazo con una carta en main: NO debe aparecer como comandante
@@ -228,7 +229,8 @@ test.describe('Decks Gallery', () => {
       await page.locator('.deck-box-create').click()
       await expect(page.locator('.deck-builder-body')).toBeVisible({ timeout: 8000 })
       await showDeckListView(page)
-      await page.locator('.deck-editor-format').selectOption('Commander')
+      await page.locator('.deck-editor-format').click()
+      await page.getByRole('option', { name: 'Commander', exact: true }).click()
 
       await page.getByRole('button', { name: /Importar Mazo/i }).click()
       await page.locator('.deck-import-textarea').fill("1 [PC2:1] Sidar Kondo of Jamuraa\n1 [C16:56] Tana, the Bloodsower\n20 [M10:234] Mountain")
@@ -340,8 +342,8 @@ test.describe('Decks Gallery', () => {
       const sortTrigger = page.locator('.arena-search-panel [data-testid="arena-sort"] .arena-filter-dd-trigger')
       await expect(sortTrigger).toBeVisible()
       await sortTrigger.click()
-      await expect(page.locator('.arena-search-panel [data-testid="arena-sort"] [role="option"]')).toHaveCount(6)
-      await page.locator('.arena-search-panel [data-testid="arena-sort"] [role="option"]', { hasText: /^(Nombre|Name)$/ }).click()
+      await expect(page.getByTestId('arena-sort-panel').getByRole('option')).toHaveCount(6)
+      await page.getByTestId('arena-sort-panel').getByRole('option', { name: /^(Nombre|Name)$/ }).click()
       await expect(page.getByTestId('arena-sort-dir-btn')).toBeVisible()
       await page.getByTestId('arena-sort-dir-btn').click()
       await expect(page.getByTestId('arena-sort-dir-btn')).toHaveText('↓')
@@ -525,7 +527,8 @@ test.describe('Decks Gallery', () => {
         'Commander\n1 Test Commander\nDeck\n1 Sol Ring\n1 Arcane Signet\n1 Llanowar Elves\n',
       )
       await page.locator('[data-testid="import-submit-btn"]').click()
-      await page.locator('.deck-editor-format').selectOption('Commander')
+      await page.locator('.deck-editor-format').click()
+      await page.getByRole('option', { name: 'Commander', exact: true }).click()
 
       // El fake sirve la página de EDHREC y el stub resuelve las cartas por nombre
       await page.getByRole('tab', { name: /Sugerencias|Suggestions/ }).click()
@@ -534,7 +537,7 @@ test.describe('Decks Gallery', () => {
 
       // Type dropdown: creatures only
       await page.locator('.sg-panel [data-testid="filter-type"] .arena-filter-dd-trigger').click()
-      await page.locator('.sg-panel [data-testid="filter-type"] [role="menuitemcheckbox"]', { hasText: /(Criatura|Creature)$/ }).click()
+      await page.getByTestId('filter-type-panel').getByRole('option', { name: /(Criatura|Creature)$/ }).click()
       await page.keyboard.press('Escape')
       await expect(page.locator('.sg-tile')).toHaveCount(1)
       await expect(page.locator('.sg-tile img[alt="Llanowar Elves"]')).toBeVisible()
@@ -548,7 +551,7 @@ test.describe('Decks Gallery', () => {
 
       // Orden por nombre dentro de la sección
       await page.locator('.sg-panel [data-testid="arena-sort"] .arena-filter-dd-trigger').click()
-      await page.locator('.sg-panel [data-testid="arena-sort"] [role="option"]', { hasText: /^(Nombre|Name)$/ }).click()
+      await page.getByTestId('arena-sort-panel').getByRole('option', { name: /^(Nombre|Name)$/ }).click()
       await expect(page.locator('.sg-section').first().locator('img').first()).toHaveAttribute('alt', 'Arcane Signet')
 
       // El tamaño de carta se comparte con la pestaña Buscar

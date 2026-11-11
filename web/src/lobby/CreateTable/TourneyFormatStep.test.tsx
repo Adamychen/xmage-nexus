@@ -214,7 +214,8 @@ describe('TourneyFormatStep: sets', () => {
 
   it('TRN-7: a slot changes on its own and keeps the others', () => {
     const form = renderStep({ draftSetsRaw: 'M21, M21, M21' })
-    fireEvent.change(screen.getByLabelText(/^Sobre 2/), { target: { value: 'BLB' } })
+    fireEvent.click(screen.getByLabelText(/^Sobre 2/))
+    fireEvent.click(screen.getByRole('option', { name: /^BLB/ }))
     expect(form.setDraftSetsRaw).toHaveBeenCalledWith('M21, BLB, M21')
   })
 
@@ -244,7 +245,8 @@ describe('TourneyFormatStep: sets', () => {
   it('TRN-7: a cube draft shows the cube select instead of the set slots', () => {
     renderStep({ tournamentType: 'Booster Draft Swiss (Cube)' })
     expect(screen.queryByLabelText(/^Sobre 1/)).toBeNull()
-    expect(screen.getByRole('combobox').querySelectorAll('option').length).toBeGreaterThan(1)
+    fireEvent.click(screen.getByRole('combobox'))
+    expect(screen.getAllByRole('option').length).toBeGreaterThan(1)
   })
 
   it('TRN-7: a random pool shows the button that opens the pool dialog', () => {

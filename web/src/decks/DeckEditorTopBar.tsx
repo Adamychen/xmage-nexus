@@ -6,6 +6,7 @@ import type { ValidationIssue } from './formatRules'
 import type { DeckExportKind } from './exportDeckFile'
 import { DeckExportDialog } from './DeckExportDialog'
 import Button from '../ui/Button'
+import Select from '../ui/Select'
 import DropdownMenu from '../ui/DropdownMenu'
 import MenuItem from '../ui/MenuItem'
 import LanguageSelector from '../i18n/LanguageSelector'
@@ -120,18 +121,13 @@ export function DeckEditorTopBar({
           />
 
           <div className="deck-editor-meta">
-            <select
+            <Select
               value={format}
-              onChange={(e) => onFormatChange(e.target.value as DeckV2['format'])}
+              onChange={onFormatChange}
               className="deck-editor-format"
               aria-label={t('lobby', 'filter_format_label')}
-            >
-              {ALL_FORMATS.map((f) => (
-                <option key={f} value={f}>
-                  {f}
-                </option>
-              ))}
-            </select>
+              options={ALL_FORMATS.map((f) => ({ value: f, label: f }))}
+            />
 
             {issues.length > 0 ? (
               <button

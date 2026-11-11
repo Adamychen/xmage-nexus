@@ -44,8 +44,7 @@
   flex: none;
 }
 
-.deck-phone-more > .ui-dropdown-menu {
-  z-index: 50;
+.deck-phone-more-panel {
   width: min(calc(100vw - 24px), 300px);
   min-width: 0;
   max-height: 70dvh;

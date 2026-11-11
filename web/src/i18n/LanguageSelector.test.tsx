@@ -9,14 +9,14 @@ describe('LanguageSelector', () => {
 
   it('renders with default language flag', () => {
     const { getByRole, getByText } = render(<LanguageSelector />)
-    const btn = getByRole('button')
+    const btn = getByRole('combobox')
     expect(btn).not.toBeNull()
     expect(getByText(/Español|English/i)).not.toBeNull()
   })
 
   it('opens dropdown and allows selecting another language', () => {
     const { getByRole, getByText, queryByText } = render(<LanguageSelector />)
-    const btn = getByRole('button')
+    const btn = getByRole('combobox')
     fireEvent.click(btn)
 
     expect(getByText('English')).not.toBeNull()

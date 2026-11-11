@@ -73,7 +73,9 @@ export default function ActionButton({
 }: ActionButtonProps) {
   const { t } = useTranslation()
   const [menuOpen, setMenuOpen] = useState(false)
+  const [menuByKey, setMenuByKey] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
+  const toggleRef = useRef<HTMLButtonElement>(null)
   const me = game?.players?.find((p) => p.controlled)
   const waitingFor = useStore((s) => s.waitingFor)
   const waiting = waitingState(game, feedback, waitingFor)
@@ -87,7 +89,10 @@ export default function ActionButton({
       if (!containerRef.current?.contains(e.target as Node)) setMenuOpen(false)
     }
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setMenuOpen(false)
+      if (e.key === 'Escape') {
+        setMenuOpen(false)
+        toggleRef.current?.focus()
+      }
     }
     window.addEventListener('pointerdown', handlePointerDown)
     window.addEventListener('keydown', handleKeyDown)
@@ -174,13 +179,24 @@ export default function ActionButton({
         </button>
         {!!me && (
           <button
+            ref={toggleRef}
             type="button"
             className={`big-action-toggle ${menuOpen ? 'is-open' : ''}`}
             data-testid="pass-split-toggle"
             title={t('game', 'pass_options')}
             aria-haspopup="menu"
             aria-expanded={menuOpen}
-            onClick={() => setMenuOpen((prev) => !prev)}
+            onClick={() => {
+              setMenuByKey(false)
+              setMenuOpen((prev) => !prev)
+            }}
+            onKeyDown={(e) => {
+              if (!menuOpen && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+                e.preventDefault()
+                setMenuByKey(true)
+                setMenuOpen(true)
+              }
+            }}
           >
             ▾
           </button>
@@ -189,6 +205,7 @@ export default function ActionButton({
       {menuOpen && (
         <PassMenu
           game={game}
+          focusFirst={menuByKey}
           onSkip={(action) => {
             setMenuOpen(false)
             onSkip(action)

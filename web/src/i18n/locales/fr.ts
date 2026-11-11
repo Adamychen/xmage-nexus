@@ -978,7 +978,7 @@ export const fr: TranslationSchema = {
     appearance_title: 'Apparence & plateau',
     match_badge: 'Match',
     create_field_boosters: 'Packs',
-    filter_more_formats: '▾ Plus de formats…',
+    filter_more_formats: 'Plus de formats…',
   },
   game: {
     turn: 'Tour',
@@ -1910,6 +1910,7 @@ export const fr: TranslationSchema = {
     builder_aria_mana_sources: 'Répartition des sources de mana',
     builder_aria_basic_lands: 'Répartition des terrains de base',
     card: 'Carte',
+    browser_filter_archetype: 'Archétype',
     browser_filter_aggro: 'Aggro',
     browser_filter_midrange: 'Midrange',
     browser_filter_control: 'Control',

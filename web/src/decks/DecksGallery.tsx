@@ -1,5 +1,6 @@
 import Tabs from '../ui/Tabs'
 import Button from '../ui/Button'
+import Select from '../ui/Select'
 import DropdownMenu from '../ui/DropdownMenu'
 import MenuItem from '../ui/MenuItem'
 import CloseButton from '../ui/CloseButton'
@@ -437,18 +438,28 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
 
         {mainView === 'my-decks' && (
           <div className="decks-filters">
-            <select value={formatFilter} onChange={(e) => setFormatFilter(e.target.value)} className="decks-select">
-              <option value="All Decks">{t('decks', 'gallery_all_formats')}</option>
-              {ALL_FORMATS.map((f) => (
-                <option key={f} value={f}>{f}</option>
-              ))}
-              <option value="Favoritos">★ {t('decks', 'favorite')}</option>
-            </select>
-            <select value={sortBy} onChange={(e) => setSortBy(e.target.value as never)} className="decks-select">
-              <option value="updated">{t('decks', 'gallery_recent')}</option>
-              <option value="name">{t('common', 'search')} A–Z</option>
-              <option value="size">{t('decks', 'total_cards')}</option>
-            </select>
+            <Select
+              value={formatFilter}
+              onChange={setFormatFilter}
+              className="decks-select"
+              aria-label={t('lobby', 'filter_format_label')}
+              options={[
+                { value: 'All Decks', label: t('decks', 'gallery_all_formats') },
+                ...ALL_FORMATS.map((f) => ({ value: f, label: f })),
+                { value: 'Favoritos', label: `★ ${t('decks', 'favorite')}` },
+              ]}
+            />
+            <Select
+              value={sortBy}
+              onChange={setSortBy}
+              className="decks-select"
+              aria-label={t('decks', 'sort_by')}
+              options={[
+                { value: 'updated', label: t('decks', 'gallery_recent') },
+                { value: 'name', label: `${t('common', 'search')} A–Z` },
+                { value: 'size', label: t('decks', 'total_cards') },
+              ]}
+            />
             <div className="decks-search-wrap">
               <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t('common', 'search')} className="decks-search" />
               {search && <CloseButton variant="plain" size="sm" className="decks-search-clear" label={t('common', 'clear')} onClick={() => setSearch('')} />}

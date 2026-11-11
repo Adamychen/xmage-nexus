@@ -24,6 +24,7 @@ import { isUuidLikeCardName } from '../cards/cardLocalization'
 import Modal from '../ui/Modal'
 import './ConstructScreen.css'
 import Button from '../ui/Button'
+import Select from '../ui/Select'
 import { POOL_SORTS, sortPool, type PoolSort } from './poolSort'
 
 function deckCardKey(c: DeckCard): string {
@@ -461,17 +462,14 @@ export default function ConstructScreen() {
                     onChange={(e) => setPoolFilter(e.target.value)}
                   />
                 )}
-                <select
+                <Select
                   className="construct-sort"
                   value={poolSort}
-                  onChange={(e) => setPoolSort(e.target.value as PoolSort)}
+                  onChange={setPoolSort}
                   aria-label={t('decks', 'sort_by')}
                   data-testid="construct-pool-sort"
-                >
-                  {POOL_SORTS.map((s) => (
-                    <option key={s} value={s}>{t('decks', POOL_SORT_LABEL[s])}</option>
-                  ))}
-                </select>
+                  options={POOL_SORTS.map((s) => ({ value: s, label: t('decks', POOL_SORT_LABEL[s]) }))}
+                />
               </div>
             )}
             <div className="construct-card-list construct-arena-list">

@@ -4,17 +4,18 @@ import Icon from '../../ui/Icon'
 import { TIME_LIMIT_OPTIONS, BUFFER_TIME_OPTIONS, getTimeLimitLabel, getBufferTimeLabel } from './constants'
 import type { CreateTableForm } from './useCreateTableForm'
 import Field from '../../ui/Field'
+import Select from '../../ui/Select'
 import CustomOptions from './CustomOptions'
 
 export function TimeLimitField({ form }: { form: CreateTableForm }) {
   const { t } = useTranslation()
   return (
     <Field label={t('lobby','create_field_timing_limit')}>
-      <select value={form.timeLimit} onChange={(e) => form.setTimeLimit(e.target.value)}>
-        {TIME_LIMIT_OPTIONS.map((opt) => (
-          <option key={opt.value} value={opt.value}>{getTimeLimitLabel(opt, t)}</option>
-        ))}
-      </select>
+      <Select
+        value={form.timeLimit}
+        onChange={form.setTimeLimit}
+        options={TIME_LIMIT_OPTIONS.map((opt) => ({ value: opt.value, label: getTimeLimitLabel(opt, t) }))}
+      />
     </Field>
   )
 }
@@ -23,11 +24,11 @@ export function BufferTimeField({ form }: { form: CreateTableForm }) {
   const { t } = useTranslation()
   return (
     <Field label={t('lobby','create_field_buffer_time')}>
-      <select value={form.bufferTime} onChange={(e) => form.setBufferTime(e.target.value)}>
-        {BUFFER_TIME_OPTIONS.map((opt) => (
-          <option key={opt.value} value={opt.value}>{getBufferTimeLabel(opt, t)}</option>
-        ))}
-      </select>
+      <Select
+        value={form.bufferTime}
+        onChange={form.setBufferTime}
+        options={BUFFER_TIME_OPTIONS.map((opt) => ({ value: opt.value, label: getBufferTimeLabel(opt, t) }))}
+      />
     </Field>
   )
 }
@@ -59,18 +60,26 @@ export function RangeAttackBox({ form }: { form: CreateTableForm }) {
       <span className="multiplayer-box-title"><Icon name="crown" size={13} /> {t('lobby','create_tab_multi')}</span>
       <div className="create-grid-2col">
         <Field label={t('lobby','create_field_attack_option')}>
-          <select value={form.attackOption} onChange={(e) => form.setAttackOption(e.target.value)}>
-            <option value="LEFT">{t('lobby','create_option_attack_left')}</option>
-            <option value="RIGHT">{t('lobby','create_option_attack_right')}</option>
-            <option value="MULTIPLE">{t('lobby','create_option_attack_multiple')}</option>
-          </select>
+          <Select
+            value={form.attackOption}
+            onChange={form.setAttackOption}
+            options={[
+              { value: 'LEFT', label: t('lobby','create_option_attack_left') },
+              { value: 'RIGHT', label: t('lobby','create_option_attack_right') },
+              { value: 'MULTIPLE', label: t('lobby','create_option_attack_multiple') },
+            ]}
+          />
         </Field>
         <Field label={t('lobby','create_field_range')}>
-          <select value={form.range} onChange={(e) => form.setRange(e.target.value)}>
-            <option value="ALL">{t('lobby','create_option_range_all')}</option>
-            <option value="ONE">{t('lobby','create_option_range_one')}</option>
-            <option value="TWO">{t('lobby','create_option_range_two')}</option>
-          </select>
+          <Select
+            value={form.range}
+            onChange={form.setRange}
+            options={[
+              { value: 'ALL', label: t('lobby','create_option_range_all') },
+              { value: 'ONE', label: t('lobby','create_option_range_one') },
+              { value: 'TWO', label: t('lobby','create_option_range_two') },
+            ]}
+          />
         </Field>
       </div>
     </div>

@@ -1,6 +1,7 @@
 import Icon from '../../ui/Icon'
 import { useTranslation } from '../../i18n'
 import Field from '../../ui/Field'
+import Select from '../../ui/Select'
 import TypeFields from './TypeFields'
 import { RatedField, SkillField, WinsField } from './RuleFields'
 import type { CreateTableForm } from './types'
@@ -11,12 +12,14 @@ export default function GeneralTab({ form }: { form: CreateTableForm }) {
 
   const playersField = form.selectedGameTypeInfo && form.selectedGameTypeInfo.minPlayers !== form.selectedGameTypeInfo.maxPlayers && (
     <Field label={t('lobby','create_field_num_players')} hint={t('lobby', 'create_hint_min_max', { min: form.selectedGameTypeInfo.minPlayers, max: form.selectedGameTypeInfo.maxPlayers })}>
-      <select value={form.numPlayers} onChange={(e) => form.setNumPlayers(Number(e.target.value))}>
-        {Array.from({ length: form.selectedGameTypeInfo.maxPlayers - form.selectedGameTypeInfo.minPlayers + 1 }, (_, i) => {
+      <Select
+        value={form.numPlayers}
+        onChange={form.setNumPlayers}
+        options={Array.from({ length: form.selectedGameTypeInfo.maxPlayers - form.selectedGameTypeInfo.minPlayers + 1 }, (_, i) => {
           const n = form.selectedGameTypeInfo!.minPlayers + i
-          return <option key={n} value={n}>{t('lobby','staging_seats_count',{count:n})}</option>
+          return { value: n, label: t('lobby','staging_seats_count',{count:n}) }
         })}
-      </select>
+      />
     </Field>
   )
 

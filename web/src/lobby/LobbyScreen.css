@@ -945,7 +945,7 @@ html:lang(zh) .hero-deck-label {
 .hero-deck-badge,
 .tables-create-menu > .ui-btn { min-height: 44px; }
 
-.tables-create-menu .ui-dropdown-menu { min-width: 300px; }
+.tables-create-panel { min-width: 300px; }
 .tables-create-item { align-items: flex-start; }
 
 .tables-create-text {

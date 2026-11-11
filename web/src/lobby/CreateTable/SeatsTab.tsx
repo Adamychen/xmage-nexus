@@ -7,6 +7,7 @@ import { deckRef, type Deck } from '../decks'
 import { HUMAN_SEAT, isHumanSeatType, normalizeSeatType, seatTypeLabel } from './constants'
 import type { CreateTableForm } from './useCreateTableForm'
 import Field from '../../ui/Field'
+import Select from '../../ui/Select'
 import Button from '../../ui/Button'
 import StarterDecksOffer from '../../decks/StarterDecksOffer'
 import DeckCarousel from './DeckCarousel'
@@ -187,11 +188,12 @@ function YouEditor({ form, onEditDeck }: { form: CreateTableForm; onEditDeck?: (
         <StarterDecksOffer onAdded={form.adoptStarterDecks} />
       )}
       <Field label={t('lobby','create_field_my_skill')}>
-        <select data-testid="my-skill" value={form.mySkill} onChange={(e) => form.setMySkill(Number(e.target.value))}>
-          {Array.from({ length: 10 }, (_, i) => i + 1).map((v) => (
-            <option key={v} value={v}>{v}</option>
-          ))}
-        </select>
+        <Select
+          data-testid="my-skill"
+          value={form.mySkill}
+          onChange={form.setMySkill}
+          options={Array.from({ length: 10 }, (_, i) => ({ value: i + 1, label: String(i + 1) }))}
+        />
       </Field>
     </div>
   )
@@ -249,11 +251,13 @@ function SeatEditor({ form, idx, seatNumber, findSeatDeck }: { form: CreateTable
       ) : (
         <>
           <Field label={t('lobby','create_field_seat_skill')}>
-            <select data-testid={`seat-skill-${idx}`} value={cfg.skill ?? 2} onChange={(e) => form.setSeatSkill(idx, Number(e.target.value))} className="create-seat-select create-seat-select--skill">
-              {Array.from({ length: 10 }, (_, i) => i + 1).map((v) => (
-                <option key={v} value={v}>{v}</option>
-              ))}
-            </select>
+            <Select
+              data-testid={`seat-skill-${idx}`}
+              value={cfg.skill ?? 2}
+              onChange={(v) => form.setSeatSkill(idx, v)}
+              className="create-seat-select create-seat-select--skill"
+              options={Array.from({ length: 10 }, (_, i) => ({ value: i + 1, label: String(i + 1) }))}
+            />
           </Field>
           <Field
             group

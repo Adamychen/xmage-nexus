@@ -216,16 +216,12 @@
   width: 100%;
 }
 
-.create-table-dialog select {
+.create-table-dialog .ui-select-trigger {
   padding-block: var(--sp-2);
   padding-inline-start: var(--sp-3);
   font-size: var(--fs-sm);
   width: 100%;
   min-width: 0;
-}
-
-.create-table-dialog select option {
-  padding: var(--sp-2);
 }
 
 .create-grid-2col {
@@ -887,8 +883,8 @@
   gap: var(--sp-2);
 }
 
-.trn-seat-controls select,
-.trn-seats-decks select {
+.trn-seat-controls .ui-select-trigger,
+.trn-seats-decks .ui-select-trigger {
   min-height: 44px;
 }
 

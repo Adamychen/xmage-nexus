@@ -978,7 +978,7 @@ export const it: TranslationSchema = {
     appearance_title: 'Aspetto e tavolo',
     match_badge: 'Partita',
     create_field_boosters: 'Buste',
-    filter_more_formats: '▾ Altri formati…',
+    filter_more_formats: 'Altri formati…',
   },
   game: {
     turn: 'Turno',
@@ -1910,6 +1910,7 @@ export const it: TranslationSchema = {
     builder_aria_mana_sources: 'Ripartizione fonti di mana',
     builder_aria_basic_lands: 'Ripartizione terre base',
     card: 'Carta',
+    browser_filter_archetype: 'Archetipo',
     browser_filter_aggro: 'Aggro',
     browser_filter_midrange: 'Midrange',
     browser_filter_control: 'Control',

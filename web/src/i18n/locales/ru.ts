@@ -978,7 +978,7 @@ export const ru: TranslationSchema = {
     appearance_title: 'Внешний вид и поле',
     match_badge: 'Матч',
     create_field_boosters: 'Бустеры',
-    filter_more_formats: '▾ Больше форматов…',
+    filter_more_formats: 'Больше форматов…',
   },
   game: {
     turn: 'Ход',
@@ -1910,6 +1910,7 @@ export const ru: TranslationSchema = {
     builder_aria_mana_sources: 'Распределение источников маны',
     builder_aria_basic_lands: 'Распределение базовых земель',
     card: 'Карта',
+    browser_filter_archetype: 'Архетип',
     browser_filter_aggro: 'Aggro',
     browser_filter_midrange: 'Midrange',
     browser_filter_control: 'Control',

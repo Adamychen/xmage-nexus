@@ -48,8 +48,9 @@ describe('ImportDeckDialog wizard', () => {
     fireEvent.click(screen.getByTestId('import-next-btn'))
 
     await screen.findByTestId('import-step-setup')
-    expect((screen.getByTestId('import-format-select') as HTMLSelectElement).value).toBe('Freeform')
-    fireEvent.change(screen.getByTestId('import-format-select'), { target: { value: 'Modern' } })
+    expect(screen.getByTestId('import-format-select').textContent).toMatch(/^Freeform/)
+    fireEvent.click(screen.getByTestId('import-format-select'))
+    fireEvent.click(screen.getByRole('option', { name: /^Modern/ }))
 
     fireEvent.click(screen.getByTestId('import-resolve-btn'))
     await screen.findByTestId('import-step-review')
@@ -177,9 +178,9 @@ describe('ImportDeckDialog wizard', () => {
     paste(ARENA)
     fireEvent.click(screen.getByTestId('import-next-btn'))
     await screen.findByTestId('import-step-setup')
-    const select = screen.getByTestId('import-format-select') as HTMLSelectElement
-    const detected = select.value
-    const option = [...select.options].find((o) => o.value === detected)
-    expect(option?.textContent).toContain('✓')
+    fireEvent.click(screen.getByTestId('import-format-select'))
+    const marked = screen.getAllByRole('option').filter((o) => o.textContent?.includes('✓'))
+    expect(marked).toHaveLength(1)
+    expect(marked[0].getAttribute('aria-selected')).toBe('true')
   })
 })

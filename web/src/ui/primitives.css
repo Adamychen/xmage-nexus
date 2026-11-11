@@ -301,23 +301,28 @@
   .ui-menu-item--selected { color: var(--fg-hi); font-weight: 700; background: var(--brand-soft); }
 
   .ui-dropdown { position: relative; display: inline-flex; }
-  .ui-dropdown-menu {
-    position: absolute;
-    z-index: 40;
-    min-width: 200px;
+  .ui-popover {
     display: flex;
     flex-direction: column;
-    gap: var(--sp-0h);
+    gap: var(--sp-1);
     padding: var(--sp-1);
-    background: var(--ink-2);
-    border: 1px solid var(--line-2);
-    border-radius: var(--r-md);
-    box-shadow: var(--shadow-2);
+    color: var(--text);
+    background: var(--ink-3);
+    border: 1px solid var(--veil-4);
+    border-radius: var(--r-base);
+    box-shadow: 0 8px 24px var(--shade-3);
   }
-  .ui-dropdown-menu--down { top: calc(100% + 6px); }
-  .ui-dropdown-menu--up { bottom: calc(100% + 6px); }
-  .ui-dropdown-menu--start { left: 0; }
-  .ui-dropdown-menu--end { right: 0; }
+  .ui-popover--fixed {
+    position: fixed;
+    z-index: 2000;
+    max-width: calc(100vw - var(--sp-4));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  .ui-menu-panel {
+    gap: var(--sp-0h);
+    min-width: 200px;
+  }
 
   .ui-field {
     display: flex;

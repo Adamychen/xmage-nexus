@@ -202,8 +202,8 @@ describe('SuggestionsPanel', () => {
     await screen.findByAltText('Sol Ring')
     expect(screen.getByAltText('Llanowar Elves')).not.toBeNull()
 
-    fireEvent.click(screen.getByRole('button', { name: 'Type' }))
-    fireEvent.click(screen.getByRole('menuitemcheckbox', { name: /Creature/ }))
+    fireEvent.click(screen.getByRole('combobox', { name: 'Type' }))
+    fireEvent.click(screen.getByRole('option', { name: /Creature/ }))
     expect(screen.queryByAltText('Sol Ring')).toBeNull()
     expect(screen.queryByAltText('Arcane Signet')).toBeNull()
     expect(screen.getByAltText('Llanowar Elves')).not.toBeNull()
@@ -253,7 +253,7 @@ describe('SuggestionsPanel', () => {
     }
     expect(sectionNames()).toEqual(['Sol Ring', 'Arcane Signet'])
 
-    fireEvent.click(screen.getByRole('button', { name: 'Sort' }))
+    fireEvent.click(screen.getByRole('combobox', { name: 'Sort' }))
     fireEvent.click(screen.getByRole('option', { name: 'Name' }))
     expect(sectionNames()).toEqual(['Arcane Signet', 'Sol Ring'])
   })

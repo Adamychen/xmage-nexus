@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useId } from 'react'
-import MenuItem from '../ui/MenuItem'
+import Select from '../ui/Select'
 import IconButton from '../ui/IconButton'
 import Button from '../ui/Button'
 import ChipButton from '../ui/ChipButton'
@@ -127,7 +127,6 @@ export function ArenaFilterBar({
   onGridSizeChange?: (size: number) => void
 }) {
   const { t, cardLanguages } = useTranslation()
-  const [langMenuOpen, setLangMenuOpen] = useState(false)
   const [helpOpen, setHelpOpen] = useState(false)
   const [advancedOpen, setAdvancedOpen] = useState(false)
   const [setQuery, setSetQuery] = useState('')
@@ -135,7 +134,6 @@ export function ArenaFilterBar({
   const oracleId = useId()
   const [powerOp, setPowerOp] = useState<StatOp>('>=')
   const [toughnessOp, setToughnessOp] = useState<StatOp>('>=')
-  const langMenuRef = useRef<HTMLDivElement>(null)
   const helpRef = useRef<HTMLDivElement>(null)
   const helpBtnRef = useRef<HTMLButtonElement>(null)
   const sets = useScryfallSets(advancedOpen)
@@ -144,18 +142,23 @@ export function ArenaFilterBar({
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (langMenuRef.current && !langMenuRef.current.contains(e.target as Node)) setLangMenuOpen(false)
       if (helpRef.current && !helpRef.current.contains(e.target as Node)) setHelpOpen(false)
     }
-    if (langMenuOpen || helpOpen) document.addEventListener('mousedown', handleClickOutside)
+    if (helpOpen) document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [langMenuOpen, helpOpen])
+  }, [helpOpen])
 
   const allLangOptions = [
     { code: 'any', name: t('common', 'all'), flag: '🌐' },
     ...cardLanguages,
   ]
   const activeLangOption = allLangOptions.find((l) => l.code === searchLang) ?? allLangOptions[0]
+  const shownKeywords = matchingKeywords(KEYWORDS, keywordCatalog, keywordQuery, keywordLabel)
+  const keywordOptions = [
+    ...(keywordQuery.trim() ? [] : [...keywordFilter].filter((kw) => !shownKeywords.some((s) => s.toLowerCase() === kw.toLowerCase()))),
+    ...shownKeywords,
+  ]
+  const shownSets = matchingSets(sets, setQuery)
   const hasActiveFilters =
     query.trim() !== '' ||
     colorFilter.size > 0 ||
@@ -222,30 +225,17 @@ export function ArenaFilterBar({
         )}
 
         {onSearchLangChange && (
-          <div className="arena-lang-select-wrap" ref={langMenuRef}>
-            <button type="button" className="arena-lang-btn" onClick={() => setLangMenuOpen(!langMenuOpen)} title={t('common', 'card_language')} aria-label={t('common', 'card_language')}>
-              <span className="lang-flag">{activeLangOption.flag}</span>
-              <span className="lang-code">{activeLangOption.code.toUpperCase()}</span>
-              <span className="lang-arrow">▾</span>
-            </button>
-            {langMenuOpen && (
-              <div className="arena-lang-dropdown" role="menu">
-                {allLangOptions.map((l) => (
-                  <MenuItem
-                    selected={l.code === searchLang}
-                    key={l.code}
-                    onClick={() => {
-                      onSearchLangChange(l.code)
-                      setLangMenuOpen(false)
-                    }}
-                  >
-                    <span>{l.flag}</span>
-                    <span>{l.name}</span>
-                    {l.code === searchLang && <span className="arena-lang-check">✓</span>}
-                  </MenuItem>
-                ))}
-              </div>
-            )}
+          <div className="arena-lang-select-wrap">
+            <Select
+              className="arena-lang-btn"
+              aria-label={t('common', 'card_language')}
+              title={t('common', 'card_language')}
+              value={searchLang}
+              onChange={onSearchLangChange}
+              searchable={false}
+              summary={<><span className="lang-flag">{activeLangOption.flag}</span><span className="lang-code">{activeLangOption.code.toUpperCase()}</span></>}
+              options={allLangOptions.map((l) => ({ value: l.code, label: <><span>{l.flag}</span><span>{l.name}</span></>, text: l.name }))}
+            />
           </div>
         )}
 
@@ -276,20 +266,13 @@ export function ArenaFilterBar({
           active={cmcFilter !== null}
           testId="filter-cmc"
           summary={cmcFilter === null ? t('common', 'all') : cmcFilter === 7 ? '7+' : String(cmcFilter)}
-        >
-          {(close) => (
-            <div className="arena-filter-dd-list" role="listbox" aria-label={t('decks', 'filter_cmc')}>
-              <MenuItem role="option" aria-selected={cmcFilter === null} selected={cmcFilter === null} onClick={() => { onCmcChange(null); close() }}>
-                {t('common', 'all')}
-              </MenuItem>
-              {CMC_VALUES.map((n) => (
-                <MenuItem key={n} role="option" aria-selected={cmcFilter === n} selected={cmcFilter === n} onClick={() => { onCmcChange(n); close() }}>
-                  {n === 7 ? '7+' : n}
-                </MenuItem>
-              ))}
-            </div>
-          )}
-        </FilterDropdown>
+          value={cmcFilter ?? -1}
+          onChange={(v) => onCmcChange(v < 0 ? null : v)}
+          options={[
+            { value: -1, label: t('common', 'all') },
+            ...CMC_VALUES.map((n) => ({ value: n, label: n === 7 ? '7+' : String(n) })),
+          ]}
+        />
 
         <FilterDropdown
           label={t('decks', 'filter_type')}
@@ -301,18 +284,11 @@ export function ArenaFilterBar({
               const picked = TYPES.filter((tKey) => typeFilter.has(tKey))
               return `${t('game', TYPE_LABEL_KEYS[picked[0]])}${picked.length > 1 ? ` +${picked.length - 1}` : ''}`
             })()}
-        >
-          {() => (
-            <div className="arena-filter-dd-list">
-              {TYPES.map((tKey) => (
-                <MenuItem key={tKey} role="menuitemcheckbox" aria-checked={typeFilter.has(tKey)} selected={typeFilter.has(tKey)} onClick={() => onToggleType(tKey)}>
-                  <span className="arena-filter-dd-check" aria-hidden="true">{typeFilter.has(tKey) ? '✓' : ''}</span>
-                  {t('game', TYPE_LABEL_KEYS[tKey])}
-                </MenuItem>
-              ))}
-            </div>
-          )}
-        </FilterDropdown>
+          multiple
+          selectedValues={TYPES.filter((tKey) => typeFilter.has(tKey))}
+          onChange={onToggleType}
+          options={TYPES.map((tKey) => ({ value: tKey, label: t('game', TYPE_LABEL_KEYS[tKey]) }))}
+        />
 
         <ChipButton size="sm" activeTone="gold" active={advancedOpen} onClick={() => setAdvancedOpen((v) => !v)} aria-expanded={advancedOpen}>
           {t('decks', 'filter_advanced')} {advancedOpen ? '▴' : '▾'}
@@ -320,17 +296,15 @@ export function ArenaFilterBar({
 
         {onSortOrderChange && sortOrder && (
           <div className="arena-sort-wrap">
-            <FilterDropdown label={t('decks', 'sort_by')} active={false} testId="arena-sort" summary={t('decks', SORT_LABEL_KEYS[sortOrder])}>
-              {(close) => (
-                <div className="arena-filter-dd-list" role="listbox" aria-label={t('decks', 'sort_by')}>
-                  {SORT_ORDERS.map((o) => (
-                    <MenuItem key={o} role="option" aria-selected={sortOrder === o} selected={sortOrder === o} onClick={() => { onSortOrderChange(o); close() }}>
-                      {t('decks', SORT_LABEL_KEYS[o])}
-                    </MenuItem>
-                  ))}
-                </div>
-              )}
-            </FilterDropdown>
+            <FilterDropdown
+              label={t('decks', 'sort_by')}
+              active={false}
+              testId="arena-sort"
+              summary={t('decks', SORT_LABEL_KEYS[sortOrder])}
+              value={sortOrder}
+              onChange={onSortOrderChange}
+              options={SORT_ORDERS.map((o) => ({ value: o, label: t('decks', SORT_LABEL_KEYS[o]) }))}
+            />
             {onSortDirChange && (
               <IconButton data-testid="arena-sort-dir-btn" label={sortDir === 'desc' ? t('decks', 'sort_desc') : t('decks', 'sort_asc')}
                 onClick={() => onSortDirChange(sortDir === 'desc' ? 'asc' : 'desc')}>
@@ -375,14 +349,11 @@ export function ArenaFilterBar({
               active={rarityFilter.size > 0}
               testId="filter-rarity"
               summary={rarityFilter.size === 0 ? t('decks', 'filter_any') : RARITIES.filter((r) => rarityFilter.has(r)).map((r) => t('decks', RARITY_LABEL_KEYS[r])).join(', ')}
-            >
-              {() => RARITIES.map((r) => (
-                <MenuItem key={r} role="menuitemcheckbox" aria-checked={rarityFilter.has(r)} selected={rarityFilter.has(r)} className={`rarity-option rarity-${r}`} onClick={() => onToggleRarity(r)}>
-                  <span className="arena-filter-dd-check" aria-hidden="true">{rarityFilter.has(r) ? '✓' : ''}</span>
-                  {t('decks', RARITY_LABEL_KEYS[r])}
-                </MenuItem>
-              ))}
-            </FilterDropdown>
+              multiple
+              selectedValues={RARITIES.filter((r) => rarityFilter.has(r))}
+              onChange={onToggleRarity}
+              options={RARITIES.map((r) => ({ value: r, label: t('decks', RARITY_LABEL_KEYS[r]), className: `rarity-option rarity-${r}` }))}
+            />
 
             <FilterDropdown
               label={t('decks', 'filter_keyword')}
@@ -391,98 +362,61 @@ export function ArenaFilterBar({
               summary={keywordFilter.size === 0
                 ? t('decks', 'filter_any')
                 : `${keywordLabel([...keywordFilter][0])}${keywordFilter.size > 1 ? ` +${keywordFilter.size - 1}` : ''}`}
-            >
-              {() => {
-                const shown = matchingKeywords(KEYWORDS, keywordCatalog, keywordQuery, keywordLabel)
-                const extra = keywordQuery.trim() ? [] : [...keywordFilter].filter((kw) => !shown.some((s) => s.toLowerCase() === kw.toLowerCase()))
-                return (
-                  <>
-                    <input
-                      className="set-input arena-filter-dd-search"
-                      type="text"
-                      autoFocus
-                      aria-label={t('decks', 'filter_keyword')}
-                      placeholder={t('decks', 'filter_keyword_search')}
-                      value={keywordQuery}
-                      onChange={(e) => setKeywordQuery(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' && keywordQuery.trim() && shown[0]) onToggleKeyword(shown[0])
-                      }}
-                    />
-                    <div className="arena-filter-dd-list">
-                      {[...extra, ...shown].map((kw) => (
-                        <MenuItem key={kw} role="menuitemcheckbox" aria-checked={keywordFilter.has(kw)} selected={keywordFilter.has(kw)} onClick={() => onToggleKeyword(kw)}>
-                          <span className="arena-filter-dd-check" aria-hidden="true">{keywordFilter.has(kw) ? '✓' : ''}</span>
-                          {keywordLabel(kw)}
-                        </MenuItem>
-                      ))}
-                      {extra.length + shown.length === 0 && (
-                        <p className="arena-filter-dd-empty" role="status">{t('decks', 'builder_search_no_results', { query: keywordQuery.trim() })}</p>
-                      )}
-                    </div>
-                  </>
-                )
+              multiple
+              selectedValues={[...keywordFilter]}
+              onChange={onToggleKeyword}
+              options={keywordOptions.map((kw) => ({ value: kw, label: keywordLabel(kw) }))}
+              search={{
+                query: keywordQuery,
+                onQueryChange: setKeywordQuery,
+                label: t('decks', 'filter_keyword_search'),
+                placeholder: t('decks', 'filter_keyword_search'),
               }}
-            </FilterDropdown>
+            />
 
             <FilterDropdown
               label={t('decks', 'filter_set')}
               active={!!setFilter}
               testId="filter-set"
               summary={setFilter ? <span title={sets.find((s) => s.code === setFilter)?.name}>{setFilter.toUpperCase()}</span> : t('decks', 'filter_any')}
-            >
-              {(close) => (
-                <>
-                  <input
-                    className="set-input arena-filter-dd-search"
-                    type="text"
-                    autoFocus
-                    aria-label={t('decks', 'filter_set')}
-                    placeholder={t('decks', 'filter_set_placeholder')}
-                    value={setQuery}
-                    onChange={(e) => setSetQuery(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key !== 'Enter') return
-                      onSetChange(setCodeFor(setQuery, sets))
-                      close()
-                    }}
-                  />
-                  <div className="arena-filter-dd-list" role="listbox" aria-label={t('decks', 'filter_set')}>
-                    <MenuItem role="option" aria-selected={!setFilter} selected={!setFilter} onClick={() => { onSetChange(null); close() }}>
-                      {t('decks', 'filter_any')}
-                    </MenuItem>
-                    {sets.length > 0 && setQuery.trim() !== '' && matchingSets(sets, setQuery).length === 0 && (
-                      <p className="arena-filter-dd-empty" role="status">{t('decks', 'builder_search_no_results', { query: setQuery.trim() })}</p>
-                    )}
-                    {matchingSets(sets, setQuery).map((s) => (
-                      <MenuItem key={s.code} role="option" aria-selected={setFilter === s.code} selected={setFilter === s.code} onClick={() => { onSetChange(s.code); close() }}>
-                        <span className="arena-filter-dd-code">{s.code.toUpperCase()}</span>
-                        <span className="arena-filter-dd-name">{s.name}</span>
-                      </MenuItem>
-                    ))}
-                  </div>
-                </>
-              )}
-            </FilterDropdown>
+              value={setFilter ?? ''}
+              onChange={(code) => onSetChange(code || null)}
+              options={[
+                { value: '', label: t('decks', 'filter_any') },
+                ...shownSets.map((s) => ({
+                  value: s.code,
+                  label: <><span className="arena-filter-dd-code">{s.code.toUpperCase()}</span><span className="arena-filter-dd-name">{s.name}</span></>,
+                  text: `${s.code} ${s.name}`,
+                })),
+              ]}
+              search={{
+                query: setQuery,
+                onQueryChange: setSetQuery,
+                label: t('decks', 'filter_set_placeholder'),
+                placeholder: t('decks', 'filter_set_placeholder'),
+                onEnter: (typed) => {
+                  onSetChange(setCodeFor(typed, sets))
+                  return true
+                },
+                empty: sets.length > 0 && setQuery.trim() !== '' && shownSets.length === 0,
+              }}
+            />
           </div>
 
           <div className="adv-row adv-stats-row">
             <div className="stat-filter-group">
-              <FilterDropdown label={t('decks', 'filter_power')} active={!!powerFilter} testId="filter-power-op" summary={STAT_OP_LABEL[powerFilter?.op ?? powerOp]}>
-                {(close) => (
-                  <div className="arena-filter-dd-list" role="listbox" aria-label={t('decks', 'filter_power')}>
-                    {STAT_OPS.map((op) => (
-                      <MenuItem key={op} role="option" aria-selected={(powerFilter?.op ?? powerOp) === op} selected={(powerFilter?.op ?? powerOp) === op} onClick={() => {
-                        setPowerOp(op)
-                        if (powerFilter) onPowerChange({ op, value: powerFilter.value })
-                        close()
-                      }}>
-                        {STAT_OP_LABEL[op]}
-                      </MenuItem>
-                    ))}
-                  </div>
-                )}
-              </FilterDropdown>
+              <FilterDropdown
+                label={t('decks', 'filter_power')}
+                active={!!powerFilter}
+                testId="filter-power-op"
+                summary={STAT_OP_LABEL[powerFilter?.op ?? powerOp]}
+                value={powerFilter?.op ?? powerOp}
+                onChange={(op) => {
+                  setPowerOp(op)
+                  if (powerFilter) onPowerChange({ op, value: powerFilter.value })
+                }}
+                options={STAT_OPS.map((op) => ({ value: op, label: STAT_OP_LABEL[op] }))}
+              />
               <input
                 className="stat-num-input"
                 type="number"
@@ -505,21 +439,18 @@ export function ArenaFilterBar({
             </div>
 
             <div className="stat-filter-group">
-              <FilterDropdown label={t('decks', 'filter_toughness')} active={!!toughnessFilter} testId="filter-toughness-op" summary={STAT_OP_LABEL[toughnessFilter?.op ?? toughnessOp]}>
-                {(close) => (
-                  <div className="arena-filter-dd-list" role="listbox" aria-label={t('decks', 'filter_toughness')}>
-                    {STAT_OPS.map((op) => (
-                      <MenuItem key={op} role="option" aria-selected={(toughnessFilter?.op ?? toughnessOp) === op} selected={(toughnessFilter?.op ?? toughnessOp) === op} onClick={() => {
-                        setToughnessOp(op)
-                        if (toughnessFilter) onToughnessChange({ op, value: toughnessFilter.value })
-                        close()
-                      }}>
-                        {STAT_OP_LABEL[op]}
-                      </MenuItem>
-                    ))}
-                  </div>
-                )}
-              </FilterDropdown>
+              <FilterDropdown
+                label={t('decks', 'filter_toughness')}
+                active={!!toughnessFilter}
+                testId="filter-toughness-op"
+                summary={STAT_OP_LABEL[toughnessFilter?.op ?? toughnessOp]}
+                value={toughnessFilter?.op ?? toughnessOp}
+                onChange={(op) => {
+                  setToughnessOp(op)
+                  if (toughnessFilter) onToughnessChange({ op, value: toughnessFilter.value })
+                }}
+                options={STAT_OPS.map((op) => ({ value: op, label: STAT_OP_LABEL[op] }))}
+              />
               <input
                 className="stat-num-input"
                 type="number"

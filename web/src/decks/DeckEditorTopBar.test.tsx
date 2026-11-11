@@ -53,7 +53,7 @@ describe('DeckEditorTopBar', () => {
       <DeckEditorTopBar {...props({ coverArtUrl: 'https://img.test/cover.jpg' })} />,
     )
     expect(screen.getByRole('textbox', { name: t('decks', 'builder_deck_name_placeholder') })).toHaveProperty('value', 'Burn')
-    expect(screen.getByRole('combobox', { name: t('lobby', 'filter_format_label') })).toHaveProperty('value', 'Modern')
+    expect(screen.getByRole('combobox', { name: t('lobby', 'filter_format_label') }).textContent).toBe('Modern')
     expect(container.querySelector('.deck-editor-counts')?.textContent).toBe(
       `60 ${t('decks', 'zone_main')} · 15 ${t('decks', 'sideboard')}`,
     )
@@ -104,9 +104,8 @@ describe('DeckEditorTopBar', () => {
       target: { value: 'Burn 2' },
     })
     expect(onNameChange).toHaveBeenCalledWith('Burn 2')
-    fireEvent.change(screen.getByRole('combobox', { name: t('lobby', 'filter_format_label') }), {
-      target: { value: 'Legacy' },
-    })
+    fireEvent.click(screen.getByRole('combobox', { name: t('lobby', 'filter_format_label') }))
+    fireEvent.click(screen.getByRole('option', { name: 'Legacy' }))
     expect(onFormatChange).toHaveBeenCalledWith('Legacy')
   })
 

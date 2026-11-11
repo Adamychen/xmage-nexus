@@ -56,6 +56,12 @@ function pickRowKind(row: number, name: RegExp) {
   fireEvent.click(within(screen.getAllByRole('listitem')[row]).getByRole('radio', { name }))
 }
 
+
+function pick(control: HTMLElement, option: string) {
+  fireEvent.click(control)
+  fireEvent.click(screen.getByRole('option', { name: option }))
+}
+
 describe('CreateTableDialog', () => {
   const onClose = vi.fn()
 
@@ -281,8 +287,7 @@ describe('CreateTableDialog', () => {
     fireEvent.click(screen.getByRole('button', { name: /Siguiente/ }))
     // default extra seats wait for a human rival; opt into the Mad AI to get a bot seat with skill
     await pickSeatType(1, /IA Mad/)
-    const seatSkill = await screen.findByTestId('seat-skill-0') as HTMLSelectElement
-    fireEvent.change(seatSkill, { target: { value: '7' } })
+    pick(await screen.findByTestId('seat-skill-0'), '7')
 
     for (let i = 0; i < 5; i++) {
       const nextBtn = screen.queryByRole('button', { name: /Siguiente/ })
@@ -395,9 +400,9 @@ describe('CreateTableDialog', () => {
     goToStep('Formato')
     fireEvent.click(screen.getByRole('radio', { name: /Draft de sobres/ }))
     goToStep('Reglas')
-    const timingSelect = await screen.findByLabelText(/Draft pick time|Tiempo por pick/i) as HTMLSelectElement
-    expect(timingSelect.value).toBe('REGULAR')
-    fireEvent.change(timingSelect, { target: { value: 'PROFESSIONAL' } })
+    const timingSelect = await screen.findByLabelText(/Draft pick time|Tiempo por pick/i)
+    expect(timingSelect.textContent).toBe('Regular (x1.5)')
+    pick(timingSelect, 'Profesional (x1.0)')
     // Sin bots: todos los asientos en HUMANO (los bots no entregan el mazo construido)
     goToStep('Plazas')
     pickRowKind(1, /Humano/)
@@ -885,10 +890,10 @@ describe('CreateTableDialog: tournament summary and rules', () => {
     goToStep('Reglas')
 
     fireEvent.click(screen.getByRole('tab', { name: 'Bo5' }))
-    fireEvent.change(screen.getByLabelText(/Reloj de Prioridad por Jugador/), { target: { value: 'MIN__30' } })
-    fireEvent.change(screen.getByLabelText(/Buffer de tiempo/), { target: { value: 'SEC__10' } })
-    fireEvent.change(screen.getByLabelText(/Tiempo de construcción/), { target: { value: '1500' } })
-    fireEvent.change(screen.getByLabelText(/Tiempo por pick del draft/), { target: { value: 'PROFESSIONAL' } })
+    pick(screen.getByLabelText(/Reloj de Prioridad por Jugador/), '30 Minutos')
+    pick(screen.getByLabelText(/Buffer de tiempo/), '10 Segundos')
+    pick(screen.getByLabelText(/Tiempo de construcción/), '25 minutos')
+    pick(screen.getByLabelText(/Tiempo por pick del draft/), 'Profesional (x1.0)')
     fireEvent.click(screen.getByText(/Partida única en lugar de un match/))
 
     fireEvent.change(screen.getByLabelText(/Contraseña de la Mesa/), { target: { value: 'secreto' } })

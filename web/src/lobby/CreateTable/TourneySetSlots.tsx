@@ -2,6 +2,7 @@ import { useEffect, useId, useMemo, useState } from 'react'
 import Button from '../../ui/Button'
 import ChipButton from '../../ui/ChipButton'
 import Field from '../../ui/Field'
+import Select from '../../ui/Select'
 import Tabs from '../../ui/Tabs'
 import { useTranslation } from '../../i18n'
 import { getExpansionsWithBoosters, type BoosterSetInfo } from '../../net/commands'
@@ -87,15 +88,14 @@ export default function TourneySetSlots({ form }: { form: CreateTableForm }) {
         <div className="trn-slots">
           {slots.map((code, index) => (
             <Field key={index} label={t('lobby', 'draft_sets_booster_n', { n: index + 1 })}>
-              <select
+              <Select
                 value={code}
-                onChange={(e) => form.setDraftSetsRaw(withSlot(form.draftSetsRaw, boosters, index, e.target.value))}
-              >
-                {code === '' && <option value="">—</option>}
-                {options.map((s) => (
-                  <option key={s.code} value={s.code}>{s.code} — {s.name}</option>
-                ))}
-              </select>
+                onChange={(v) => form.setDraftSetsRaw(withSlot(form.draftSetsRaw, boosters, index, v))}
+                options={[
+                  ...(code === '' ? [{ value: '', label: '—' }] : []),
+                  ...options.map((s) => ({ value: s.code, label: `${s.code} — ${s.name}`, text: `${s.code} ${s.name}` })),
+                ]}
+              />
             </Field>
           ))}
         </div>

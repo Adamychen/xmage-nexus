@@ -1,13 +1,11 @@
 {
   "appearance/AppearanceSettingsModal.css": 4,
   "appearance/SleevePickerModal.css": 2,
-  "decks/ArenaFilterBar.css": 1,
   "decks/BasicLandAdder.css": 1,
   "decks/DeckBox.css": 1,
   "decks/SampleHandModal.css": 2,
   "decks/SuggestionsPanel.css": 2,
   "dev/GalleryScreen.css": 1,
-  "i18n/LanguageSelector.css": 2,
   "settings/OptionPreview.css": 2,
   "settings/PresetDemo.css": 1,
   "settings/SettingsModal.css": 2,

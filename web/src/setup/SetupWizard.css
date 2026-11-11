@@ -60,13 +60,9 @@
 }
 
 .setup-field input,
-.setup-field select {
+.setup-field .ui-select-trigger {
   font-size: var(--fs-md);
   padding: var(--sp-2) var(--sp-2h);
-}
-
-.setup-field select {
-  padding-inline-end: var(--sp-6);
 }
 
 .setup-presets {

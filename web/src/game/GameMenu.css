@@ -45,14 +45,6 @@
   z-index: 200;
   min-width: 220px;
   max-width: 280px;
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-0h);
-  padding: var(--sp-1h);
-  background: var(--ink-2);
-  border: 1px solid var(--ink-4);
-  border-radius: var(--r-base);
-  box-shadow: 0 10px 30px var(--shade-2);
 }
 
 .game-menu-divider {

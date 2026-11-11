@@ -92,11 +92,13 @@ describe('TourneySeatsStep: the seats as a list (TRN-6)', () => {
   })
 
   it('TRN-6: a bot row shows its type, its skill and, in a constructed tournament, its deck', () => {
-    const { form } = renderSeats({ seatConfigs: [BOT, ...Array.from({ length: 6 }, () => ({ ...HUMAN }))] })
+    const { form } = renderSeats({ seatConfigs: [{ ...BOT, deckName: '' }, ...Array.from({ length: 6 }, () => ({ ...HUMAN }))] })
     expect(screen.getByTestId('seat-type-0')).toBeDefined()
-    fireEvent.change(screen.getByTestId('seat-skill-0'), { target: { value: '7' } })
+    fireEvent.click(screen.getByTestId('seat-skill-0'))
+    fireEvent.click(screen.getByRole('option', { name: '7' }))
     expect(form.setSeatSkill).toHaveBeenCalledWith(0, 7)
-    fireEvent.change(screen.getByTestId('seat-deck-0'), { target: { value: 'deck-red' } })
+    fireEvent.click(screen.getByTestId('seat-deck-0'))
+    fireEvent.click(screen.getByRole('option', { name: 'Mono Red' }))
     expect(form.setSeatDeck).toHaveBeenCalledWith(0, 'deck-red')
   })
 

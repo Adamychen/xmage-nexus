@@ -18,6 +18,7 @@ import PresetPicker from './PresetPicker'
 import { boardLayoutChoiceOf, chooseBoardLayout, type BoardLayoutChoice } from './boardLayoutChoice'
 import { HAND_RAIL_MAX_W, HAND_RAIL_MIN_W, KEYWORD_AURA_MODES, KEYWORD_ICON_SETS, PT_BADGE_MODES, SICKNESS_STYLES } from '../board/cardOverlays'
 import Button from '../ui/Button'
+import Select from '../ui/Select'
 import { CARD_STYLES, TAP_STYLES } from '../board/compactCard'
 import { CARD_PREVIEW_SCALE_DEFAULT, CARD_PREVIEW_SCALE_MAX, CARD_PREVIEW_SCALE_MIN, CARD_PREVIEW_SCALE_STEP, cardPreviewPercent, normalizeCardPreviewScale } from '../board/cardPreviewScale'
 import { saveBoardRewind, saveBrowserNotifications, saveGameLogAutoSave, saveTurnRecap, type ManaPaymentStored } from '../state/persistence'
@@ -47,34 +48,28 @@ export function LanguageSection() {
     <SettingsGroup>
       <SettingsRow id="ui-language" label={t('common', 'language')} hint={t('lobby', 'settings_ui_lang_hint')}>
         {({ controlId, hintId }) => (
-          <select
+          <Select
             id={controlId}
             className="settings-select"
             value={lang}
             aria-describedby={hintId}
-            onChange={(e) => setLanguage(e.target.value as Parameters<typeof setLanguage>[0])}
+            onChange={(code) => setLanguage(code as Parameters<typeof setLanguage>[0])}
+            options={languages.map((l) => ({ value: l.code, label: l.name }))}
             data-testid="settings-ui-lang"
-          >
-            {languages.map((l) => (
-              <option key={l.code} value={l.code}>{l.name}</option>
-            ))}
-          </select>
+          />
         )}
       </SettingsRow>
       <SettingsRow id="card-language" label={t('common', 'card_language')} hint={t('lobby', 'settings_card_lang_hint')}>
         {({ controlId, hintId }) => (
-          <select
+          <Select
             id={controlId}
             className="settings-select"
             value={cardLang}
             aria-describedby={hintId}
-            onChange={(e) => setCardLanguage(e.target.value)}
+            onChange={setCardLanguage}
+            options={cardLanguages.map((cl) => ({ value: cl.code, label: cl.name }))}
             data-testid="settings-card-lang"
-          >
-            {cardLanguages.map((cl) => (
-              <option key={cl.code} value={cl.code}>{cl.name}</option>
-            ))}
-          </select>
+          />
         )}
       </SettingsRow>
     </SettingsGroup>
