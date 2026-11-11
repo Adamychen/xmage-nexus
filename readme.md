@@ -19,6 +19,14 @@
   </tr>
 </table>
 
+## What's new in 0.8.0
+
+- **Search by rules text**: type part of a card's text in the deck editor and the results narrow to the cards that say it. The search waits for a name or a filter before loading cards.
+- **Dropdowns everywhere**: every deck editor filter with a list of values is a dropdown, and every list of values in the app opens that same dropdown.
+- **List view** groups and sorts like Piles, with readable columns. Colour chips list the lands that make that colour, and cards follow the card language picker, not the interface language.
+- **Deck import**: cards are no longer reported as "not found" when Scryfall throttles the lookups; if Scryfall does not answer, they are listed apart with a Retry button.
+- **My decks**: judges a deck the way the editor does and says why it is not legal, lets you equip a deck straight from the list, and is where Decks opens. Exporting a deck opens a window to copy it and downloads a file only when you ask; a new deck left without cards is not kept.
+
 ## What's new in 0.7.0
 
 The interface was rebuilt for simplicity and for phones: the lobby, the deck editor and the card inspector now read the same at a desktop window and at 390 px wide.
