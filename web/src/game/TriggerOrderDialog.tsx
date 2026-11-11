@@ -3,9 +3,8 @@ import Tabs from '../ui/Tabs'
 import * as cmds from '../net/commands'
 import type { FeedbackPrompt } from './feedback'
 import type { FeedbackCard } from './feedback/types'
-import CardSlot from '../board/CardSlot'
-import FloatingCardPreview from '../board/FloatingCardPreview'
 import FormattedText from './FormattedText'
+import { PromptCardThumb, usePromptCardPreview, type PromptCardPreview } from './promptCardPreview'
 import Icon from '../ui/Icon'
 import DialogShell from '../ui/DialogShell'
 import { useTranslation } from '../i18n'
@@ -13,7 +12,11 @@ import {
   gameObjectNames,
   triggerDisplayName,
   triggerExtraRules,
+  triggerObjects,
   triggerRuleText,
+  triggerSourceCard,
+  triggerSourceKey,
+  type TriggerObject,
   type TriggerRuleScope,
 } from './triggerOrder'
 import {
@@ -43,7 +46,7 @@ export default function TriggerOrderDialog({ prompt, send, sendNow, busy }: Trig
   const game = useStore((s) => s.game)
   const [scope, setScope] = useState<TriggerRuleScope>('card')
   const [order, setOrder] = useState<string[]>(() => (prompt.cards ?? []).map((card) => card.id))
-  const [hovered, setHovered] = useState<{ card: FeedbackCard; rect: DOMRect | null } | null>(null)
+  const cardPreview = usePromptCardPreview()
   const [saved, setSaved] = useState<Record<string, 'first' | 'last'>>({})
   const [dragId, setDragId] = useState<string | null>(null)
   const [, setPlanTick] = useState(0)
@@ -51,6 +54,12 @@ export default function TriggerOrderDialog({ prompt, send, sendNow, busy }: Trig
   const triggers = prompt.cards ?? []
   const cardsById = useMemo(() => new Map(triggers.map((card) => [card.id, card])), [triggers])
   const names = useMemo(() => gameObjectNames(game), [game])
+  // Triggers of one source differ only by what they point at: those rows put it first.
+  const sourceCounts = useMemo(() => {
+    const counts = new Map<string, number>()
+    for (const card of prompt.cards ?? []) counts.set(triggerSourceKey(card), (counts.get(triggerSourceKey(card)) ?? 0) + 1)
+    return counts
+  }, [prompt.cards])
   const plan = getTriggerOrderPlan()
   const planActive = Boolean(plan && plan.gameId === prompt.gameId && plan.order.length > 0)
   const remaining = Math.max(triggers.length, prompt.options.length, 1)
@@ -156,6 +165,8 @@ export default function TriggerOrderDialog({ prompt, send, sendNow, busy }: Trig
     void remember(() => cmds.sendTriggerAutoOrder('TRIGGER_AUTO_ORDER_RESET_ALL', prompt.gameId))
   }
 
+  // The object thumbnails add a column: give the rows the wide dialog only when they need it.
+  const withObjectArt = triggers.some((card) => triggerObjects(card, game).some((object) => object.card))
   const sentCount = planActive && plan ? plan.sent.length : 0
   const totalCount = planActive && plan ? plan.picks.length : 0
 
@@ -165,13 +176,14 @@ export default function TriggerOrderDialog({ prompt, send, sendNow, busy }: Trig
       titleId="trigger-title"
       legacyBackdropClass="trigger-backdrop"
       legacyPanelClass="trigger-dialog"
+      size={withObjectArt ? 'lg' : 'md'}
       kickerIcon="refresh"
       kickerLabel={t('game', 'trigger_title').toUpperCase()}
       title={planActive
         ? t('game', 'trigger_applying', { done: sentCount, total: totalCount })
         : t('game', 'trigger_remaining', { count: remaining })}
       message={t('game', 'trigger_hint')}
-      trailing={<FloatingCardPreview card={(hovered?.card ?? null) as never} anchorRect={hovered?.rect ?? null} boardRect={null} inModal />}
+      trailing={cardPreview.preview}
     >
       <div className="trigger-scope">
         <span className="trigger-scope-label">{t('game', 'trigger_scope')}:</span>
@@ -188,19 +200,24 @@ export default function TriggerOrderDialog({ prompt, send, sendNow, busy }: Trig
           }))}
         />
       </div>
-      <ul className={`trigger-list${planActive ? ' is-planning' : ''}`}>
+      <ul className={`trigger-list${planActive ? ' is-planning' : ''}${withObjectArt ? ' has-object-art' : ''}`}>
         {rows.map(({ card, sent, nextUp }, index) => {
           const name = triggerDisplayName(card)
           const rule = triggerRuleText(card)
           const realRule = rule.trim().toLowerCase() !== name.trim().toLowerCase()
-          const extras = triggerExtraRules(card)
-          const targetNames = (card.targets ?? []).map((id) => names.get(id) ?? id.slice(0, 8))
+          const objects = triggerObjects(card, game, names)
+          // The "Related objects" line only repeats what the object chips show; keep it when one
+          // of them could not be found in the view.
+          const extras = objects.length > 0 && objects.every((object) => object.card || object.isPlayer) ? [] : triggerExtraRules(card)
+          const sibling = (sourceCounts.get(triggerSourceKey(card)) ?? 0) > 1
+          const source = triggerSourceCard(card, game)
           const savedKind = saved[card.id]
           return (
             <li
               key={card.id}
               className={[
                 'trigger-row',
+                sibling ? 'is-sibling' : '',
                 sent ? 'is-sent' : '',
                 nextUp ? 'is-next' : '',
                 dragId === card.id ? 'is-dragging' : '',
@@ -235,22 +252,45 @@ export default function TriggerOrderDialog({ prompt, send, sendNow, busy }: Trig
                   </Button>
                 </span>
               </span>
-              <span className="trigger-art">
-                <CardSlot
-                  card={card as never}
-                  cardId={card.id}
-                  onHover={(c, rect) => setHovered(c ? { card: c as unknown as FeedbackCard, rect: rect ?? null } : null)}
+              <span className="trigger-cards">
+                <PromptCardThumb
+                  preview={cardPreview}
+                  previewKey={`${card.id}:source`}
+                  card={source}
+                  label={name}
+                  title={t('game', 'trigger_card_hint')}
+                  className="trigger-art"
                 />
+                {objects.some((object) => object.card) && (
+                  <>
+                    <Icon name="chevronRight" size={14} className="trigger-arrow" aria-hidden />
+                    {objects.filter((object) => object.card).slice(0, 2).map((object) => (
+                      <PromptCardThumb
+                        key={object.id}
+                        preview={cardPreview}
+                        previewKey={`${card.id}:${object.id}`}
+                        card={object.card!}
+                        label={object.name}
+                        title={t('game', 'trigger_card_hint')}
+                        className="trigger-art trigger-object-art"
+                      />
+                    ))}
+                  </>
+                )}
               </span>
               <span className="trigger-text">
                 <span className="trigger-name">{name}</span>
+                {objects.length > 0 && (
+                  <span className="trigger-objects">
+                    {objects.map((object) => (
+                      <TriggerObjectLabel key={object.id} object={object} preview={cardPreview} previewKey={`${card.id}:${object.id}:name`} />
+                    ))}
+                  </span>
+                )}
                 {realRule && <span className="trigger-rule" title={rule}>{rule}</span>}
                 {extras.map((extra) => (
                   <span key={extra} className="trigger-related">{extra}</span>
                 ))}
-                {targetNames.length > 0 && (
-                  <span className="trigger-targets">{t('game', 'trigger_targets', { names: targetNames.join(', ') })}</span>
-                )}
                 {savedKind && (
                   <span className="trigger-saved">
                     {t('game', savedKind === 'first' ? 'trigger_saved_first' : 'trigger_saved_last')}
@@ -317,5 +357,34 @@ export default function TriggerOrderDialog({ prompt, send, sendNow, busy }: Trig
         )}
       </footer>
     </DialogShell>
+  )
+}
+
+const ZONE_KEYS = {
+  battlefield: 'trigger_zone_battlefield',
+  graveyard: 'trigger_zone_graveyard',
+  exile: 'trigger_zone_exile',
+  hand: 'trigger_zone_hand',
+  command: 'trigger_zone_command',
+  stack: 'trigger_zone_stack',
+} as const
+
+/** "→ Llanowar Elves · in sim-1's graveyard": the object a trigger points at, named where it is now. */
+function TriggerObjectLabel({ object, preview, previewKey }: { object: TriggerObject; preview: PromptCardPreview; previewKey: string }) {
+  const { t } = useTranslation()
+  const zoneKey = object.zone && object.zone !== 'other' ? ZONE_KEYS[object.zone] : null
+  const where = zoneKey ? t('game', zoneKey, { player: object.ownerName ?? '?' }) : null
+  return (
+    <span className={`trigger-object${object.isPlayer ? ' is-player' : ''}`} data-object-id={object.id}>
+      <Icon name={object.isPlayer ? 'user' : 'target'} size={11} aria-hidden />
+      {object.card ? (
+        <span role="button" tabIndex={0} className="trigger-object-name is-previewable" {...preview.bind(previewKey, object.card)}>
+          {object.name}
+        </span>
+      ) : (
+        <span className="trigger-object-name">{object.name}</span>
+      )}
+      {where && <span className="trigger-object-zone"> · {where}</span>}
+    </span>
   )
 }

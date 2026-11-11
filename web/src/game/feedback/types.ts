@@ -1,4 +1,5 @@
 import type { TargetProgress } from './progress'
+import type { CardView } from '../../net/types'
 
 export type FeedbackMode = 'boolean' | 'string' | 'uuid' | 'integer' | 'multiString' | 'mana' | 'combat' | 'order'
 
@@ -31,6 +32,9 @@ export interface FeedbackCard {
   /** Targets already chosen for the ability (`CardView.targets`), used to tell
    *  apart duplicate triggers in the order dialog. */
   targets?: string[]
+  /** `AbilityView.sourceCard`: the whole card the ability comes from (last known
+   *  information when it already left its zone). Only abilities carry it. */
+  sourceCard?: CardView
   faceDown?: boolean
 }
 

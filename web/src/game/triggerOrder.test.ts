@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { gameObjectNames, triggerDisplayName, triggerExtraRules, triggerPickOrder, triggerRuleText } from './triggerOrder'
+import { gameObjectNames, resolveTriggerObject, triggerDisplayName, triggerExtraRules, triggerPickOrder, triggerRuleText, triggerSourceCard, triggerSourceKey } from './triggerOrder'
 import type { FeedbackCard } from './feedback/types'
 import type { GameView } from '../net/types'
 
@@ -83,5 +83,37 @@ describe('gameObjectNames', () => {
     expect(names.get('h1')).toBe('Island')
     expect(names.get('c1')).toBe('Atraxa')
     expect(gameObjectNames(null).size).toBe(0)
+  })
+})
+
+describe('PRM-14: trigger objects and sources', () => {
+  const game = {
+    players: [
+      { playerId: 'p-me', name: 'Me', controlled: true, battlefield: { 'perm-t': { id: 'perm-t', name: 'Tergrid, God of Fright', power: '4' } }, graveyard: {}, exile: {} },
+      { playerId: 'p-opp', name: 'Rival', battlefield: {}, graveyard: { g1: { id: 'g1', name: 'Llanowar Elves' } }, exile: { e1: { id: 'e1', name: 'Sol Ring' } } },
+    ],
+    stack: {},
+    myHand: { h1: { id: 'h1', name: 'Opt' } },
+  } as unknown as GameView
+
+  it('PRM-14: finds the card in any zone with the player whose zone holds it', () => {
+    expect(resolveTriggerObject(game, 'g1')).toMatchObject({ name: 'Llanowar Elves', zone: 'graveyard', ownerName: 'Rival', isPlayer: false })
+    expect(resolveTriggerObject(game, 'e1')).toMatchObject({ zone: 'exile', ownerName: 'Rival' })
+    expect(resolveTriggerObject(game, 'perm-t')).toMatchObject({ zone: 'battlefield', ownerName: 'Me' })
+    expect(resolveTriggerObject(game, 'h1')).toMatchObject({ zone: 'hand', ownerName: 'Me' })
+  })
+
+  it('PRM-14: a player is an object without a card; an unknown id keeps a name and no card', () => {
+    expect(resolveTriggerObject(game, 'p-opp')).toMatchObject({ name: 'Rival', isPlayer: true, card: null })
+    expect(resolveTriggerObject(game, 'missing-id-123', new Map([['missing-id-123', 'Mox Opal']]))).toMatchObject({ name: 'Mox Opal', card: null, zone: null })
+  })
+
+  it('PRM-14: the source is the live object first, then the card the server sent', () => {
+    const trigger = card({ sourceCard: { id: 'perm-t', name: 'Tergrid, God of Fright', manaValue: 5 } as never })
+    expect((triggerSourceCard(trigger, game) as { power?: string }).power).toBe('4')
+    expect(triggerSourceCard(trigger, null).name).toBe('Tergrid, God of Fright')
+    expect(triggerSourceCard(card(), game).name).toBe('Soul Warden')
+    expect(triggerSourceKey(trigger)).toBe('perm-t')
+    expect(triggerSourceKey(card())).toBe('Soul Warden')
   })
 })

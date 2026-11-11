@@ -2826,7 +2826,7 @@ export function buildGalleryEntries(): GalleryEntry[] {
         id: `${id}:ability-${index}`,
         name: sourceName,
         sourceName,
-        sourceCard: source,
+        sourceCard: source as unknown as FeedbackCard['sourceCard'],
         expansionSetCode: source.expansionSetCode,
         cardNumber: source.cardNumber,
         rules: [`Whenever ${sourceName} or another creature enters the battlefield, you gain 1 life.`],
