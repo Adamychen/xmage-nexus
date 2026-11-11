@@ -168,8 +168,8 @@ export default function ActionButton({
         >
           <span className="action-btn-glow" aria-hidden="true" />
           <div className="action-btn-content">
+            <span className="action-btn-icon" aria-hidden="true"><Icon name={modeIcon} size={15} /></span>
             <span className="action-btn-label">
-              <span className="action-btn-icon" aria-hidden="true"><Icon name={modeIcon} size={15} /></span>{' '}
               {busy ? t('game', 'action_sending') : (labelNode ?? label)}
             </span>
             {sublabel && !busy && <span className="action-btn-sublabel">{sublabel}</span>}
