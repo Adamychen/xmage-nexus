@@ -1,3 +1,5 @@
+import { APP_VERSION } from './version'
+
 export interface NewsRelease {
   repo: 'nexus' | 'xmage'
   tag: string
@@ -12,6 +14,7 @@ export const XMAGE_REPO = 'magefree/mage'
 const NEWS_CACHE_KEY = 'mage-web-news-cache-v2'
 const NEWS_SEEN_KEY = 'mage-web-news-seen'
 export const NEWS_TTL_MS = 24 * 60 * 60 * 1000
+export const NEWS_NEW_VERSION_TTL_MS = 10 * 60 * 1000
 const MAX_BODY_CHARS = 4000
 const PER_REPO = 5
 
@@ -48,8 +51,34 @@ function saveNewsCache(cache: NewsCache): void {
   } catch {}
 }
 
-export function isNewsCacheFresh(cache: NewsCache | null, now = Date.now()): boolean {
-  return !!cache && now - cache.fetchedAt < NEWS_TTL_MS
+/** "v0.8.0" or "0.8.0" as numbers; null when the tag is not a dotted version. */
+function versionParts(version: string): number[] | null {
+  const m = version.trim().match(/^v?(\d+(?:\.\d+)*)/)
+  return m ? m[1].split('.').map(Number) : null
+}
+
+/** True when `a` is a later version than `b`; tags that are not versions never compare as newer. */
+export function isNewerVersion(a: string, b: string): boolean {
+  const pa = versionParts(a)
+  const pb = versionParts(b)
+  if (!pa || !pb) return false
+  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+    const d = (pa[i] ?? 0) - (pb[i] ?? 0)
+    if (d !== 0) return d > 0
+  }
+  return false
+}
+
+/**
+ * A cache is fresh for 24 h, unless the running app is newer than the latest Nexus release it holds:
+ * then a deploy has outrun the cached list, and it is fresh only for NEWS_NEW_VERSION_TTL_MS, so the
+ * bell finds the new release soon after it is published without asking GitHub on every load.
+ */
+export function isNewsCacheFresh(cache: NewsCache | null, now = Date.now(), appVersion = APP_VERSION): boolean {
+  if (!cache) return false
+  const latest = cache.releases.find((r) => r.repo === 'nexus')?.tag
+  const ttl = latest && isNewerVersion(appVersion, latest) ? NEWS_NEW_VERSION_TTL_MS : NEWS_TTL_MS
+  return now - cache.fetchedAt < ttl
 }
 
 interface GithubRelease {

@@ -334,3 +334,13 @@ Opening a deck from the create-table dialog still lands in the editor.
 - Why: the Decks tab reopened the last deck the player had left, instead of the list they expect from a
   top-level tab (report of 2026-11-06).
 - Guard: `src/lobby/LobbyScreen.render.test.tsx`
+
+### LBY-29 · The bell finds a new release soon after a deploy, not a day later
+The release list behind the bell (LBY-26) is kept for 24 hours. When the running app is newer than the
+latest Nexus release in that list, the list was fetched before this version was released, so it is kept
+for 10 minutes only and asked again after that, until GitHub lists the release. Tags that are not dotted
+versions never count as newer.
+
+- Why: 0.8.0 was deployed and released on 2026-11-11, but a player who had opened the web that morning
+  kept seeing 0.8.0 in the header and 0.7.1 as the latest news until the next day.
+- Guard: `src/system/news.test.ts`
