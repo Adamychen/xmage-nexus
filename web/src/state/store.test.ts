@@ -6,7 +6,7 @@ import { getState, setState, addLog } from './state'
 import { applyGameplayPreset, handleMessage, maybeAutoPass, reset, setSetting, returnToLobby, enterTableChat, exitTableChat, openStagingTable, leaveStagingTable, enterTournamentChat, exitTournamentChat } from './store'
 import { handleWatchGame } from './events/game'
 import { getTableChatId, getTournamentChatId, joinChat, leaveChat } from '../net/commands'
-import { loadActiveGame, loadGameplayPreset, saveGameplayPreset } from './persistence'
+import { loadActiveGame, loadGameplayPreset, loadPhaseStops, saveGameplayPreset } from './persistence'
 
 vi.mock('../net/commands', () => ({
   setGateway: vi.fn(),
@@ -134,7 +134,7 @@ describe('handleMessage', () => {
     vi.mocked(updatePreferences).mockClear()
     const next = togglePhaseStop(getState().settings.phaseStops, 'yourTurn', 'upkeep')
     setSetting('phaseStops', next)
-    expect(JSON.parse(window.localStorage.getItem('mage-web-phase-stops') ?? '{}').yourTurn.upkeep).toBe(false)
+    expect(loadPhaseStops().yourTurn.upkeep).toBe(false)
     expect(updatePreferences).toHaveBeenCalledWith({ phases: next, confirmEmptyManaPool: getState().settings.manaPayment.confirmEmptyPool })
     setSetting('phaseStops', clonePhaseStops(DEFAULT_PHASE_STOPS))
   })
