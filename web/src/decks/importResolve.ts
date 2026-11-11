@@ -1,7 +1,7 @@
 import type { Deck, DeckCard } from '../lobby/decks'
 import type { CardStripMeta } from './ArenaCardStrip'
-import { fetchCardJson, hasPrinting, type ScryfallCardJson } from '../cards/scryfallCards'
-import { scryfallJson } from '../cards/scryfallClient'
+import { fetchCardJson, hasPrinting, namedCardUrl, primeCardsByName, type ScryfallCardJson } from '../cards/scryfallCards'
+import { ScryfallUnavailableError, scryfallCachedJson, scryfallJson } from '../cards/scryfallClient'
 import { stripMetaFromJson } from './deckCardOps'
 import { foldCardName } from './deckIssues'
 import { FORMAT_CONFIGS } from './formatRules'
@@ -26,6 +26,8 @@ export interface ResolveResult {
   resolved: number
   fellBack: string[]
   unresolved: string[]
+  /** Cards Scryfall did not answer for (throttled or offline): unknown, not missing. */
+  unanswered: string[]
 }
 
 type DeckLike = Pick<Deck, 'cards' | 'sideboard' | 'commanders'> & Pick<DeckV2, 'commanderCard' | 'partnerCard'>
@@ -75,28 +77,46 @@ async function lookupPrinting(
   strategy: PrintingStrategy,
   setCode: string | undefined,
 ): Promise<{ json: ScryfallCardJson | null; fellBack: boolean }> {
-  const opts = { persist: true, urgent: true }
+  const opts = { persist: true, urgent: true, rejectOnFailure: true }
   if (strategy === 'oldest') {
     const q = encodeURIComponent(`!"${name}" game:paper`)
     const res = await scryfallJson<{ data?: ScryfallCardJson[] }>(
       `https://api.scryfall.com/cards/search?q=${q}&unique=prints&order=released&dir=asc`,
-      { urgent: true },
+      { urgent: true, rejectOnFailure: true },
     )
     const first = res?.data?.[0]
     if (first) return { json: first, fellBack: false }
   } else if (strategy === 'set' && setCode) {
-    const json = await scryfallJson<ScryfallCardJson>(
-      `${NAMED}?exact=${encodeURIComponent(name)}&set=${encodeURIComponent(setCode.toLowerCase())}`,
-      opts,
-    )
+    const json = await scryfallJson<ScryfallCardJson>(namedCardUrl(name, setCode), opts)
     if (json) return { json, fellBack: false }
-    const dflt = await fetchCardJson({ cardName: name }, { urgent: true })
+    const dflt = await fetchCardJson({ cardName: name }, { urgent: true, rejectOnFailure: true })
     return { json: dflt, fellBack: !!dflt }
   }
-  const exact = await fetchCardJson({ cardName: name }, { urgent: true })
+  const exact = await fetchCardJson({ cardName: name }, { urgent: true, rejectOnFailure: true })
   if (exact) return { json: exact, fellBack: strategy !== 'default' }
   const fuzzy = await scryfallJson<ScryfallCardJson>(`${NAMED}?fuzzy=${encodeURIComponent(name)}`, opts)
   return { json: fuzzy, fellBack: !!fuzzy }
+}
+
+/**
+ * Warms the cache of the exact-name lookups the per-card pass will make, with
+ * a few /cards/collection requests instead of one rate-limited request per
+ * card. For a set, the cards missing from it are then asked by name alone.
+ */
+async function primeLeftovers(names: string[], opts: ResolveOptions): Promise<void> {
+  if (names.length === 0 || opts.strategy === 'oldest') return
+  const batch = { urgent: true, signal: opts.signal }
+  if (opts.strategy === 'set' && opts.setCode) {
+    const setCode = opts.setCode
+    await primeCardsByName(names.map((name) => ({ name, setCode })), batch)
+    const missing: string[] = []
+    for (const name of names) {
+      if ((await scryfallCachedJson(namedCardUrl(name, setCode), { persist: true })) === null) missing.push(name)
+    }
+    await primeCardsByName(missing.map((name) => ({ name })), batch)
+    return
+  }
+  await primeCardsByName(names.map((name) => ({ name })), batch)
 }
 
 function mergeDuplicates(cards: DeckCard[]): DeckCard[] {
@@ -148,6 +168,7 @@ export async function resolveDeckPrintings(deck: DeckLike, opts: ResolveOptions)
   const metaByName = new Map<string, CardStripMeta>()
   const fellBack: string[] = []
   const unresolved: string[] = []
+  const unanswered: string[] = []
 
   // La impresión la decide XMage (mismas funciones que sus importadores), así
   // el mazo importado solo lleva impresiones que el servidor conoce. Scryfall
@@ -158,6 +179,11 @@ export async function resolveDeckPrintings(deck: DeckLike, opts: ResolveOptions)
     opts.strategy === 'keep' || toResolve.length === 0 || opts.signal?.aborted
       ? null
       : await xmagePrintingsFor(toResolve, opts.strategy, opts.setCode)
+
+  const byName = [...reps.values()]
+    .filter((c) => needsPrinting(c) && (opts.strategy === 'keep' || !fromXmage?.has(c.cardName.toLowerCase())))
+    .map((c) => c.cardName)
+  if (!opts.signal?.aborted) await primeLeftovers(byName, opts)
 
   await Promise.all(
     [...reps].map(async ([key, rep]) => {
@@ -185,8 +211,8 @@ export async function resolveDeckPrintings(deck: DeckLike, opts: ResolveOptions)
         } else {
           unresolved.push(name)
         }
-      } catch {
-        if (needsPrinting(rep)) unresolved.push(name)
+      } catch (err) {
+        if (needsPrinting(rep)) (err instanceof ScryfallUnavailableError ? unanswered : unresolved).push(name)
       } finally {
         done += 1
         opts.onProgress?.(done, total)
@@ -201,5 +227,6 @@ export async function resolveDeckPrintings(deck: DeckLike, opts: ResolveOptions)
     resolved: printings.size,
     fellBack: fellBack.sort(),
     unresolved: unresolved.sort(),
+    unanswered: unanswered.sort(),
   }
 }

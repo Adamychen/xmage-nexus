@@ -2,7 +2,11 @@ import { describe, expect, it, vi } from 'vitest'
 import { act, renderHook, waitFor } from '@testing-library/react'
 
 const scryfallJson = vi.hoisted(() => vi.fn())
-vi.mock('../cards/scryfallClient', () => ({ scryfallJson }))
+vi.mock('../cards/scryfallClient', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../cards/scryfallClient')>()),
+  scryfallJson,
+  scryfallFetch: async () => { throw new TypeError('offline') },
+}))
 
 import { useDeckMutations } from './useDeckMutations'
 import type { DeckV2 } from './types'

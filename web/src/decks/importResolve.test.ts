@@ -1,7 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 const scryfallJson = vi.hoisted(() => vi.fn())
-vi.mock('../cards/scryfallClient', () => ({ scryfallJson }))
+vi.mock('../cards/scryfallClient', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../cards/scryfallClient')>()),
+  scryfallJson,
+  scryfallFetch: async () => { throw new TypeError('offline') },
+}))
 const xmagePrintingsFor = vi.hoisted(() => vi.fn())
 vi.mock('./xmageCatalog', () => ({ xmagePrintingsFor }))
 

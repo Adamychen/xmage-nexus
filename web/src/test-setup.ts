@@ -13,5 +13,5 @@ beforeEach(async () => {
   setLanguage('es')
   await ensureLocaleLoaded('es')
   resetScryfallClient()
-  setScryfallPacing({ spacingMs: 0 })
+  setScryfallPacing({ spacingMs: 0, limitedSpacingMs: 0 })
 })
