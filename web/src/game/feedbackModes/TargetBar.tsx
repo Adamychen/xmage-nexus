@@ -7,11 +7,13 @@ import { localizeServerMessage } from '../serverMessageTranslation'
 import type { UseFeedbackForm } from '../useFeedbackForm'
 import { stripTargetProgress, targetProgressLabel } from '../feedback'
 import { DockPrompt } from '../GameDock'
+import { usePromptCancelKey } from '../usePromptCancelKey'
 import './promptBars.css'
 
 export default function TargetBar({ form, onExpand }: { form: UseFeedbackForm; onExpand?: () => void }) {
   const { t } = useTranslation()
   const { prompt, busy, finishOptionalTarget } = form
+  usePromptCancelKey(prompt?.cancelable && !busy ? finishOptionalTarget : null)
   if (!prompt) return null
   const isDiscard = /descart|discard/i.test(prompt.message)
   const titleText = prompt.isStartingPlayer
@@ -60,7 +62,9 @@ export default function TargetBar({ form, onExpand }: { form: UseFeedbackForm; o
             />
           )}
           {prompt.required === false && (
-            <Button disabled={busy} onClick={finishOptionalTarget}>{t('game', 'targeting_finish')}</Button>
+            <Button disabled={busy} onClick={finishOptionalTarget} aria-keyshortcuts={prompt.cancelable ? 'Escape' : undefined}>
+              {prompt.cancelable ? t('game', 'targeting_cancel') : t('game', 'targeting_finish')}
+            </Button>
           )}
         </div>
       </div>

@@ -2,7 +2,7 @@ import * as cmds from '../../net/commands'
 import IconButton from '../../ui/IconButton'
 import Checkbox from '../../ui/Checkbox'
 import EmptyState from '../../ui/EmptyState'
-import type { FeedbackOption, FeedbackPrompt } from '../feedback'
+import { CHOOSE_OPTION_CANCEL_ID, type FeedbackOption, type FeedbackPrompt } from '../feedback'
 import FormattedText from '../FormattedText'
 import DialogShell from '../../ui/DialogShell'
 import { useEffect, useMemo, useState } from 'react'
@@ -199,6 +199,14 @@ export default function GenericDialog({ form }: { form: UseFeedbackForm }) {
     if (typedValue !== null) sendChoice(typedValue)
   }
   const amountValid = Number.isInteger(amount) && amount >= prompt.min && amount <= prompt.max
+  const serverCancelOption = prompt.options.find((opt) => opt.id === CHOOSE_OPTION_CANCEL_ID)
+  const onEscape = busy
+    ? undefined
+    : prompt.cancelable
+      ? cancel
+      : serverCancelOption
+        ? () => selectOption(serverCancelOption)
+        : undefined
 
   return (
     <DialogShell
@@ -206,6 +214,7 @@ export default function GenericDialog({ form }: { form: UseFeedbackForm }) {
       titleId="feedback-title"
       legacyBackdropClass="feedback-backdrop"
       legacyPanelClass="feedback-dialog"
+      onEscape={onEscape}
       kickerIcon={kicker.icon}
       kickerLabel={kicker.label}
       title={<FormattedText text={title} />}
@@ -433,15 +442,17 @@ export default function GenericDialog({ form }: { form: UseFeedbackForm }) {
               <EmptyState size="sm">{t('game', 'grid_no_results')}</EmptyState>
             )}
           </div>
-          {(prompt.mode === 'uuid' && prompt.max > 1 || prompt.required === false) && (
+          {(prompt.mode === 'uuid' && prompt.max > 1 || prompt.required === false || prompt.cancelable) && (
             <div className="feedback-dialog-actions">
               {prompt.mode === 'uuid' && prompt.max > 1 && (
                 <Button variant="primary" disabled={busy || selected.length < Math.max(prompt.min, 1)} onClick={confirmSelected}>
                   {t('game', 'selected_count', { count: selected.length })}
                 </Button>
               )}
-              {prompt.required === false && (
-                <Button variant="subtle" disabled={busy} onClick={finishOptionalTarget} className="cancel-btn">{t('game', 'targeting_finish')}</Button>
+              {(prompt.required === false || prompt.cancelable) && (
+                <Button variant="subtle" disabled={busy} onClick={finishOptionalTarget} className="cancel-btn" aria-keyshortcuts={prompt.cancelable ? 'Escape' : undefined}>
+                  {prompt.cancelable ? t('game', 'targeting_cancel') : t('game', 'targeting_finish')}
+                </Button>
               )}
             </div>
           )}

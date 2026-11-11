@@ -10,6 +10,7 @@ const { FakeServer } = await vite.ssrLoadModule('/fixtures/fake.ts')
 const SCENARIOS = {
   commander: ['/fixtures/scenarios/commanderPlayground.ts', 'commanderPlaygroundScenario', 'Commander playground'],
   manaStack: ['/fixtures/scenarios/manaStack.ts', 'manaStackScenario', 'mana-stack-test'],
+  abilityCancel: ['/fixtures/scenarios/abilityCancel.ts', 'abilityCancelScenario', 'ability-cancel-test'],
 }
 const [scenarioFile, scenarioExport, scenarioTable] = SCENARIOS[process.env.SCENARIO || 'commander']
 const scenario = (await vite.ssrLoadModule(scenarioFile))[scenarioExport]

@@ -59,7 +59,7 @@ function renderPrompt(form: UseFeedbackForm, handPick: boolean, onExpandHandPick
 
   // ── Planeswalker: diálogo dedicado
   if (prompt.isPlaneswalkerAbility) {
-    return <PlaneswalkerAbilityDialog prompt={prompt} send={send} busy={busy} />
+    return <PlaneswalkerAbilityDialog prompt={prompt} send={send} cancel={cancel} busy={busy} />
   }
 
   // ── Decisión de quién empieza: diálogo dedicado

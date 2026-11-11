@@ -13,7 +13,10 @@ export const BASIC_LANDS = new Set(['Plains', 'Island', 'Swamp', 'Mountain', 'Fo
 export type CastStep =
   | { type: 'amount'; message: string; min?: number; max?: number }
   | { type: 'ability'; message: string; choices: Array<{ id: string; label: string }> }
-  | { type: 'target'; message: string; targets?: string[]; required?: boolean; targetZone?: string }
+  // `min` mirrors Target.minNumberOfTargets: with min 0 a declined optional target lets the cast go
+  // on (fail to find) and the server labels the button "Done"; with min >= 1 (the default) a
+  // decline while activating abandons the activation, as AbilityImpl.activate does.
+  | { type: 'target'; message: string; targets?: string[]; required?: boolean; targetZone?: string; min?: number }
   | { type: 'mana'; message: string; sources: number }
 
 export interface LandConfig {
@@ -30,7 +33,22 @@ export interface CrossZoneConfig {
   zone?: 'graveyard' | 'exile'
 }
 
+/**
+ * An activated ability of a permanent of `myBattle`. Clicking the permanent follows the engine's
+ * HumanPlayer.activateAbility: the ability picker (GAME_CHOOSE_ABILITY, never suppressed for a
+ * non-mana ability), then `steps`. A `sendPlayerBoolean(false)` at any step abandons the
+ * activation and the board goes back to how it was (PlayerImpl.activateAbility restores state).
+ */
+export interface ActivatedAbilityConfig {
+  permanent: string
+  text: string
+  steps: CastStep[]
+  tapSource?: boolean
+  damageToSim?: number
+}
+
 export interface HumanGameOptions {
+  abilities?: ActivatedAbilityConfig[]
   tableName?: string
   lands?: LandConfig[]
   hand: string[]
