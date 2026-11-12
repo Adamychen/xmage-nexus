@@ -10,6 +10,8 @@ import {
   refreshNews,
   playerNotes,
   NEWS_TTL_MS,
+  NEWS_NEW_VERSION_TTL_MS,
+  isNewerVersion,
   type NewsRelease,
 } from './news'
 
@@ -123,6 +125,39 @@ describe('news cache and seen markers', () => {
     expect(isNewsCacheFresh(null)).toBe(false)
     expect(isNewsCacheFresh({ fetchedAt: Date.now(), releases: [] })).toBe(true)
     expect(isNewsCacheFresh({ fetchedAt: Date.now() - NEWS_TTL_MS, releases: [] })).toBe(false)
+  })
+
+  it('LBY-29: a cache older than the running app expires after 10 minutes, not 24 hours', () => {
+    const now = Date.now()
+    const cache = (fetchedAt: number) => ({ fetchedAt, releases: [mk('nexus', 'v0.7.1'), mk('xmage', 'xmage_1.4.63V1')] })
+    expect(isNewsCacheFresh(cache(now - NEWS_NEW_VERSION_TTL_MS + 1000), now, '0.8.0')).toBe(true)
+    expect(isNewsCacheFresh(cache(now - NEWS_NEW_VERSION_TTL_MS), now, '0.8.0')).toBe(false)
+    expect(isNewsCacheFresh(cache(now - NEWS_NEW_VERSION_TTL_MS), now, '0.7.1')).toBe(true)
+    expect(isNewsCacheFresh(cache(now - NEWS_NEW_VERSION_TTL_MS), now, '0.7.0')).toBe(true)
+  })
+
+  it('LBY-29: getNews asks GitHub again when the app is newer than the cached releases', async () => {
+    mockStorage['mage-web-news-cache-v2'] = JSON.stringify({
+      fetchedAt: Date.now() - NEWS_NEW_VERSION_TTL_MS - 1,
+      releases: [mk('nexus', 'v0.0.1')],
+    })
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve([{ tag_name: 'v99.0.0', name: 'v99.0.0', body: '', html_url: 'u', published_at: null }]),
+    })
+    vi.stubGlobal('fetch', fetchMock)
+    const { releases } = await getNews()
+    expect(fetchMock).toHaveBeenCalled()
+    expect(releases[0].tag).toBe('v99.0.0')
+  })
+
+  it('LBY-29: compares dotted versions with or without the v prefix', () => {
+    expect(isNewerVersion('0.8.0', 'v0.7.1')).toBe(true)
+    expect(isNewerVersion('0.10.0', 'v0.9.9')).toBe(true)
+    expect(isNewerVersion('v0.8.0', '0.8.0')).toBe(false)
+    expect(isNewerVersion('0.8', 'v0.8.0')).toBe(false)
+    expect(isNewerVersion('0.7.1', 'v0.8.0')).toBe(false)
+    expect(isNewerVersion('0.8.0', 'nightly')).toBe(false)
   })
 })
 
