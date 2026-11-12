@@ -4068,6 +4068,24 @@ export function buildGalleryEntries(): GalleryEntry[] {
       gameId,
       action: { label: 'Replay', run: replayQuiet(paidBase, gameId, castPaidFromPool) },
     })
+    const oppId = opponentPlayer(animBase)?.playerId
+    const oppFloats = (g: GameView): GameView => ({
+      ...g,
+      players: players(g).map((p) =>
+        p.playerId === oppId ? { ...p, manaPool: { red: 1, green: 0, blue: 2, white: 0, black: 0, colorless: 1 } } : p,
+      ),
+    })
+    entries.push({
+      id: 'mana:opp-floating',
+      group: 'Animaciones',
+      label: 'Mana: opponent floating mana (new table)',
+      description: 'The opponent has two blue, one red and one colourless mana floating: their portrait panel shows the pool under the life total, not clickable. "Replay" starts from an empty pool, where the section is not drawn.',
+      phase: 'game',
+      game: oppFloats(animBase),
+      gameId,
+      gameUi: 'v2',
+      action: { label: 'Replay', run: replayQuiet(animBase, gameId, oppFloats) },
+    })
     const goadBase = withCardIcons(animBase, mystic, [])
     entries.push({
       id: 'anim:goad',
