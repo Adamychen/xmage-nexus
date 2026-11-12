@@ -7,6 +7,7 @@ import {
   computeHandBarSizing,
   computeHandHoverScale,
   computeHandSideReserve,
+  computeCostPipLayout,
   computeCostPipSize,
   handLandsGap,
   handRestHeight,
@@ -34,15 +35,16 @@ import './targetZone.css'
 
 /** Printed mana cost as bubbles over the card's top edge (split cards show
  *  both halves). The server never sends the reduced cost of a card in hand.
- *  They sit at the printed corner, so on a card the next one overlaps they show
- *  when the card is hovered. */
-function HandCardCost({ card, pipSize }: { card: CardView; pipSize: number }) {
+ *  They sit at the left of the card, in the strip the next card leaves
+ *  uncovered, and a long cost stacks its bubbles to stay inside that strip. */
+function HandCardCost({ card, pipSize, stripW }: { card: CardView; pipSize: number; stripW: number }) {
   if (card.faceDown) return null
   const symbols = [...(card.manaCostLeftStr ?? []), ...(card.manaCostRightStr ?? [])].flatMap((s) => (s.includes('{') ? parseManaSymbols(s) : [s]))
   if (symbols.length === 0) return null
+  const { step } = computeCostPipLayout(stripW, pipSize, symbols.length)
   return (
     <div className="hand-card-cost" aria-hidden="true">
-      <div className="hand-card-cost-pips">
+      <div className="hand-card-cost-pips" style={{ '--pip-overlap': `${step - pipSize}px` } as React.CSSProperties}>
         {symbols.map((sym, i) => (
           <ManaPip key={`${sym}-${i}`} symbol={sym} size={pipSize} />
         ))}
@@ -259,7 +261,7 @@ export default function HandBar({
               isTarget={targetIds.has(id)}
               className="hand-card"
             />
-            {showHandCost && <HandCardCost card={card} pipSize={pipSize} />}
+            {showHandCost && <HandCardCost card={card} pipSize={pipSize} stripW={stripW} />}
           </div>
         )
       })}

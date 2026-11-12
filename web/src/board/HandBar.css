@@ -151,7 +151,9 @@
 
 /* Printed cost bubbles: a layer with the card's exact box and transform, so
    they ride the fan, the hover growth and the dimming; they poke out above
-   the top edge, which the card itself clips. */
+   the top edge, which the card itself clips. They sit at the left, in the strip
+   the next card leaves uncovered: at the printed top-right corner each cost
+   landed over the next card and read as that card's. */
 .hand-bar .hand-card-slot .hand-card-cost {
   position: absolute;
   left: 0;
@@ -168,13 +170,19 @@
 
 .hand-card-cost-pips {
   position: absolute;
-  right: var(--sp-1);
+  left: var(--sp-1);
   top: 0;
   display: flex;
   transform: translateY(-55%);
 }
 
 .hand-card-cost-pips > .mana-symbol + .mana-symbol {
+  margin-left: var(--pip-overlap, var(--sp-0h));
+  transition: margin-left 0.2s ease-out;
+}
+
+/* The grown card shows whole: a stacked cost spreads out again. */
+.hand-bar .hand-card-slot:hover .hand-card-cost-pips > .mana-symbol + .mana-symbol {
   margin-left: var(--sp-0h);
 }
 
