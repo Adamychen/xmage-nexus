@@ -1,10 +1,8 @@
-import { useState } from 'react'
 import Button from '../ui/Button'
 import * as cmds from '../net/commands'
 import type { FeedbackPrompt } from './feedback'
 import type { FeedbackCard } from './feedback/types'
-import CardSlot from '../board/CardSlot'
-import FloatingCardPreview from '../board/FloatingCardPreview'
+import { PromptCardThumb, usePromptCardPreview } from './promptCardPreview'
 import FormattedText from './FormattedText'
 import DialogShell from '../ui/DialogShell'
 import { useTranslation, dynamicT } from '../i18n'
@@ -19,18 +17,12 @@ interface PileDialogProps {
 
 export default function PileDialog({ prompt, send, busy }: PileDialogProps) {
   const { t } = useTranslation()
-  const [hoveredCard, setHoveredCard] = useState<FeedbackCard | null>(null)
-  const [anchorRect, setAnchorRect] = useState<DOMRect | null>(null)
+  const cardPreview = usePromptCardPreview()
   const piles = prompt.pileCards
   if (!piles) return null
 
   const choose = (pile1: boolean) => {
     void send(() => cmds.sendPlayerBoolean(pile1, prompt.gameId), t('errors', 'send_failed'))
-  }
-
-  const handleHover = (card: FeedbackCard | null, rect?: DOMRect) => {
-    setHoveredCard(card)
-    setAnchorRect(rect ?? null)
   }
 
   const renderPile = (cards: FeedbackCard[], pile1: boolean, label: string, testId: string) => (
@@ -43,12 +35,7 @@ export default function PileDialog({ prompt, send, busy }: PileDialogProps) {
       <span className="pile-cards">
         {cards.map((card) => (
           <span key={card.id} className="pile-card-wrap">
-            <CardSlot
-              card={card as never}
-              cardId={card.id}
-              isPlayable={false}
-              onHover={(c, rect) => handleHover(c as unknown as FeedbackCard, rect)}
-            />
+            <PromptCardThumb preview={cardPreview} previewKey={card.id} card={card as never} />
           </span>
         ))}
       </span>
@@ -74,7 +61,7 @@ export default function PileDialog({ prompt, send, busy }: PileDialogProps) {
         ? <FormattedText text={prompt.sourceName} />
         : undefined}
       message={<FormattedText text={localizeServerMessage(prompt.message, dynamicT(t))} />}
-      trailing={<FloatingCardPreview card={hoveredCard as never} anchorRect={anchorRect} boardRect={null} inModal />}
+      trailing={cardPreview.preview}
     >
       <div className="pile-columns">
         {renderPile(piles.pile1, true, t('game', 'pile_1'), 'pile-column-1')}

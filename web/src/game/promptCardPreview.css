@@ -1,0 +1,52 @@
+.prompt-card-thumb {
+  display: block;
+  cursor: zoom-in;
+  border-radius: var(--r-sm);
+  touch-action: manipulation;
+  -webkit-touch-callout: none;
+}
+
+.prompt-card-thumb:focus-visible,
+.prompt-card-thumb.is-previewing {
+  outline: 2px solid var(--brand-line);
+  outline-offset: 2px;
+}
+
+/* A card that answers the prompt when clicked: its wrapper anchors the zoom button and the preview. */
+.prompt-card-zoomable {
+  position: relative;
+}
+
+.prompt-card-zoomable > .prompt-card-zoom {
+  position: absolute;
+  top: var(--sp-1);
+  right: var(--sp-1);
+  z-index: 20;
+  color: var(--fg-1);
+  background: rgb(var(--scrim-rgb) / 0.6);
+  touch-action: manipulation;
+  -webkit-touch-callout: none;
+}
+
+.prompt-card-zoomable > .prompt-card-zoom:hover {
+  background: rgb(var(--scrim-rgb) / 0.8);
+}
+
+/* With a mouse the preview already follows the pointer, so the button shows on hover or focus. */
+@media (hover: hover) {
+  .prompt-card-zoomable > .prompt-card-zoom {
+    opacity: 0;
+    transition: opacity 0.12s;
+  }
+
+  .prompt-card-zoomable:hover > .prompt-card-zoom,
+  .prompt-card-zoomable:focus-within > .prompt-card-zoom {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .prompt-card-zoomable > .prompt-card-zoom {
+    transition: none;
+  }
+}

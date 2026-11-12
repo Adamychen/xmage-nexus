@@ -1713,6 +1713,7 @@ export const es: TranslationSchema = {
     cardgrid_only_valid: 'Solo válidas ({count})',
     cardgrid_peek_hint: 'Mantén Alt para ver el tablero',
     cardgrid_peek_release: 'Suelta Alt para volver a tus cartas',
+    card_zoom: 'Ampliar {name}',
     cardgrid_done: 'Hecho ({count})',
     card_printings_title: 'Seleccionar Edición & Arte',
     card_inspect_no_translation: 'No hay texto en el idioma de carta seleccionado — se muestra el original (inglés).',

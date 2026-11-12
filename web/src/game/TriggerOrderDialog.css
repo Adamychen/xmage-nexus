@@ -213,20 +213,6 @@
   margin-top: var(--sp-3h);
 }
 
-.prompt-card-thumb {
-  display: block;
-  cursor: zoom-in;
-  border-radius: var(--r-sm);
-  touch-action: manipulation;
-  -webkit-touch-callout: none;
-}
-
-.prompt-card-thumb:focus-visible,
-.prompt-card-thumb.is-previewing {
-  outline: 2px solid var(--brand-line);
-  outline-offset: 2px;
-}
-
 /* Phone width: the actions move under the cards and text instead of squeezing them. */
 @media (max-width: 560px) {
   .trigger-row {

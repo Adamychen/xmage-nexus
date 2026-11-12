@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import Chip from '../ui/Chip'
 import * as cmds from '../net/commands'
 import type { CardView } from '../net/types'
@@ -7,7 +7,7 @@ import type { FeedbackPrompt } from './feedback'
 import DialogShell from '../ui/DialogShell'
 import Icon from '../ui/Icon'
 import CardSlot from '../board/CardSlot'
-import FloatingCardPreview from '../board/FloatingCardPreview'
+import { PromptCardZoomable, usePromptCardPreview } from './promptCardPreview'
 import { useTranslation, t as staticT } from '../i18n'
 import { confirmDialog } from '../ui/confirmDialog'
 import { ManaCost } from '../decks/ArenaManaSymbols'
@@ -74,8 +74,7 @@ export default function MulliganDialog({ prompt, send, cancel, busy }: MulliganD
   const hand = (game?.myHand ?? {}) as Record<string, CardView>
   const handEntries = Object.entries(hand)
   const isLondon = prompt.isMulliganLondon === true
-  const [hoveredCard, setHoveredCard] = useState<CardView | null>(null)
-  const [anchorRect, setAnchorRect] = useState<DOMRect | null>(null)
+  const cardPreview = usePromptCardPreview()
 
   const evaluation = useMemo(
     () => computeMulliganEvaluation(Object.values(hand), myDeck, game, game?.myPlayerId),
@@ -94,11 +93,6 @@ export default function MulliganDialog({ prompt, send, cancel, busy }: MulliganD
   const pickOne = (id: string) => {
     if (busy) return
     void send(() => cmds.sendPlayerUUID(id, prompt.gameId), t('errors', 'send_failed'))
-  }
-
-  const handleHover = (card: CardView | null, rect?: DOMRect) => {
-    setHoveredCard(card)
-    setAnchorRect(rect ?? null)
   }
 
   const cardCount = handEntries.length
@@ -122,13 +116,16 @@ export default function MulliganDialog({ prompt, send, cancel, busy }: MulliganD
           </span>
         )}
         message={t('dialogs', 'mulligan_london_pick_hint')}
-        trailing={<FloatingCardPreview card={hoveredCard} anchorRect={anchorRect} boardRect={null} inModal />}
+        trailing={cardPreview.preview}
       >
           {pickable.length > 0 && (
             <div className="mulligan-hand-grid" data-testid="mulligan-london-grid" aria-busy={busy}>
               {pickable.map(([id, card], i) => (
-                <div
+                <PromptCardZoomable
                   key={id}
+                  preview={cardPreview}
+                  previewKey={id}
+                  card={card}
                   className="mulligan-card-wrap"
                   style={{ animationDelay: `${i * 55}ms` }}
                 >
@@ -136,10 +133,9 @@ export default function MulliganDialog({ prompt, send, cancel, busy }: MulliganD
                     cardId={id}
                     card={card}
                     isPlayable={!busy}
-                    onHover={handleHover}
                     onClick={() => pickOne(id)}
                   />
-                </div>
+                </PromptCardZoomable>
               ))}
             </div>
           )}

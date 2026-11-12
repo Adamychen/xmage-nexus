@@ -117,16 +117,22 @@
 /* Los visores de tablero (PileOverlay/HandViewer/CrossZoneOverlay) se portan a
    [data-overlay-root]; con el portal a <body> (z-index 100) la galería (500) los
    tapaba y las reveladas/miradas no se veían. Dentro del stage se centran en él
-   y quedan por encima del tablero pero por debajo del selector (z-index 1000000). */
+   y quedan por encima del tablero pero por debajo del selector (z-index 1000000).
+   La raíz no crea contexto de apilamiento: cada visor compite con su propio
+   z-index, como en el juego, y el inspector de carta (12000) queda por encima
+   del diálogo de un prompt (521) en vez de quedar debajo. */
 .gallery-overlay-root {
   position: absolute;
   inset: 0;
-  z-index: 100;
   pointer-events: none;
 }
 
 .gallery-overlay-root .pile-overlay-backdrop {
   position: absolute;
+  pointer-events: auto;
+}
+
+.gallery-overlay-root .card-inspector-backdrop {
   pointer-events: auto;
 }
 
