@@ -423,3 +423,21 @@ it is not identical to the others (BRD-20) and stays a single card with its atta
 - Why: a model that drifts from the CSS silently overflows or wastes room; measuring each item
   instead would bring back the measure-what-you-wrote loop of BRD-25.
 - Guard: `src/board/layout/itemModel.test.ts` · `src/board/stackGroups.test.ts` · `e2e/board-item-model.spec.ts`
+
+### BRD-29 · The classic bar's waiting pill keeps its text, clock and arrow aligned
+On the classic interface (v1) the action button shows "Waiting for <name>" while another player
+holds priority. Its text sits on one line, or on two when it does not fit, breaking only between
+words ("ESPERANDO / A" is a bug); a name that still does not fit its line is cut with an ellipsis,
+never clipped at the pill's edge, and stays whole in the button's tooltip. The hourglass sits in its
+own column, centred on the whole text block, and the clock line ("thinking 0:13", plus the time left
+when the match has a timer) starts at the same x as the text above it. When the clock line is too
+narrow, the time left moves under "thinking" as a whole. The arrow box beside the pill is as tall as
+the pill, starts at the same y, and its arrow is centred in it. This holds for a 14-character name
+(the server's maximum) in the nine languages, on desktop and on a 390 px phone. The other modes of
+the button (pass, resolve, combat) use the same columns: the icon centred on the label and the line
+under it aligned with the label.
+
+- Why: the label was a flex row, so its translated prefix became a shrinking flex item that split
+  ("ESPERANDO / A"), the name had no room to shrink and was clipped, and the clock started under the
+  hourglass instead of under the text (user report with a production screenshot, 2026-11-11).
+- Guard: `e2e/action-bar-waiting.spec.ts`
