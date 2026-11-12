@@ -554,6 +554,8 @@ export default function BoardZone({
     </button>
   )
 
+  const oppFloating = !effectiveControlled && Object.values(player.manaPool ?? {}).some((n) => (n ?? 0) > 0)
+
   const statusRow = (
     <div
       key="status-row"
@@ -586,11 +588,11 @@ export default function BoardZone({
             targetZones={targetZones}
             onTargetClick={onCardClick}
           />
-          {effectiveControlled && compactPod && <ResourceBar player={player} side="my" poolOnly />}
+          {compactPod && (effectiveControlled || oppFloating) && <ResourceBar player={player} side={statusSide} poolOnly />}
           </>
         ) : undefined}
         handView={portrait && handViewable ? { known: knownHandEntries.length, onOpen: () => setHandViewerOpen(true) } : undefined}
-        pool={portrait && effectiveControlled && !compactPod ? <ResourceBar player={player} side="my" poolOnly /> : undefined}
+        pool={portrait && !compactPod && (effectiveControlled || oppFloating) ? <ResourceBar player={player} side={statusSide} poolOnly /> : undefined}
       />
       {seatFocus && (
         <button

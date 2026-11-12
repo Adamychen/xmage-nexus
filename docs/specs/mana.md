@@ -120,3 +120,13 @@ desktop's shape, although the 1.4.62 engine never sends it (nothing calls `fireP
 - Why: the engine silently re-asks on an out-of-range value (`HumanPlayer.announceX`), so the
   button would look broken; amounts were range-checked in `8fbb005e7b`.
 - Guard: `src/game/feedbackModes/GenericDialog.test.tsx` · `src/game/feedback.test.ts`
+
+### MNA-11 · In the v2 table, an opponent's floating mana shows in their panel
+While an opponent has mana in their pool, their v2 player panel shows it below the life total, one
+pip and count per colour holding mana (MNA-3's view, never clickable). With an empty pool the
+section is not drawn. The classic interface already shows every player's pool in its resource bar.
+
+- Why: floating mana tells you what an opponent can still cast or activate this step, and the v2
+  panel only showed your own pool. Hiding it when empty keeps every opponent panel free of a
+  permanent "—" for something that is empty almost all the time.
+- Guard: `src/board/BoardZone.oppPool.test.tsx`
