@@ -1509,7 +1509,7 @@ export const es: TranslationSchema = {
     fx_effects_hint: 'Activa o desactiva las animaciones de la mesa',
     fx_speed: 'Velocidad',
     sound_enabled: 'Efectos de sonido',
-    sound_enabled_hint: 'Activar o silenciar el sonido',
+    sound_enabled_hint: 'Sonidos de la partida y de la interfaz; la música va aparte',
     sound_volume_master: 'Volumen general',
     sound_priority_mode: 'Aviso de prioridad',
     sound_priority_mode_hint: 'El servidor pregunta en cada fase: "Cada prompt" suena en cada una; "Al ganar prioridad" solo cuando la prioridad pasa a ti',

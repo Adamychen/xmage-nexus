@@ -116,7 +116,7 @@ class SoundManager {
   }
 
   isMusicAudible(): boolean {
-    return this.settings.soundEnabled && this.settings.masterVolume > 0 && this.musicVolume > 0
+    return this.settings.masterVolume > 0 && this.musicVolume > 0
   }
 
   getMusicBus(): { ctx: AudioContext; out: GainNode } | null {
@@ -127,9 +127,9 @@ class SoundManager {
   private applySettings() {
     if (!this.masterGain || !this.sfxGain || !this.uiGain) return
     const { soundEnabled, masterVolume, sfxVolume, uiVolume } = this.settings
-    this.masterGain.gain.value = soundEnabled ? Math.max(0, Math.min(1, masterVolume)) : 0
-    this.sfxGain.gain.value = Math.max(0, Math.min(1, sfxVolume))
-    this.uiGain.gain.value = Math.max(0, Math.min(1, uiVolume))
+    this.masterGain.gain.value = Math.max(0, Math.min(1, masterVolume))
+    this.sfxGain.gain.value = soundEnabled ? Math.max(0, Math.min(1, sfxVolume)) : 0
+    this.uiGain.gain.value = soundEnabled ? Math.max(0, Math.min(1, uiVolume)) : 0
     if (this.musicGain) this.musicGain.gain.value = this.musicVolume
   }
 

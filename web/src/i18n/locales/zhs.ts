@@ -1509,7 +1509,7 @@ export const zhs: TranslationSchema = {
     fx_effects_hint: '开启或关闭棋盘动画',
     fx_speed: '速度',
     sound_enabled: '音效',
-    sound_enabled_hint: '开启或静音',
+    sound_enabled_hint: '游戏和界面音效（音乐单独设置）',
     sound_volume_master: '主音量',
     sound_priority_mode: '优先级提示',
     sound_priority_mode_hint: '服务器每个阶段都会询问：“每次提示”会在每次询问时响，“获得优先权时”只在优先权转到你手上时响',

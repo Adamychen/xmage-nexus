@@ -1509,7 +1509,7 @@ export const ru: TranslationSchema = {
     fx_effects_hint: 'Включить или отключить анимации на столе',
     fx_speed: 'Скорость',
     sound_enabled: 'Звуковые эффекты',
-    sound_enabled_hint: 'Включить или отключить звук',
+    sound_enabled_hint: 'Звуки игры и интерфейса; у музыки свой переключатель',
     sound_volume_master: 'Общая громкость',
     sound_priority_mode: 'Сигнал приоритета',
     sound_priority_mode_hint: 'Сервер спрашивает на каждой фазе: «Каждый запрос» звучит на каждый запрос, «При приоритете» — только когда приоритет переходит к вам',

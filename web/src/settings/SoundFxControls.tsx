@@ -13,7 +13,7 @@ const PRIORITY_LABEL = {
 
 type VolumeKey = 'masterVolume' | 'sfxVolume' | 'musicVolume' | 'uiVolume'
 
-function VolumeRow({ id, label, volumeKey, disabled }: { id: string; label: string; volumeKey: VolumeKey; disabled: boolean }) {
+function VolumeRow({ id, label, volumeKey, disabled }: { id: string; label: string; volumeKey: VolumeKey; disabled?: boolean }) {
   const settings = useSettings()
   const value = settings[volumeKey]
   return (
@@ -76,7 +76,7 @@ export default function SoundFxControls() {
             if (next) soundManager.play('ui_click', 'ui')
           }}
         />
-        <VolumeRow id="volume-master" label={t('game', 'sound_volume_master')} volumeKey="masterVolume" disabled={muted} />
+        <VolumeRow id="volume-master" label={t('game', 'sound_volume_master')} volumeKey="masterVolume" />
         <VolumeRow id="volume-sfx" label={t('game', 'sound_volume_sfx')} volumeKey="sfxVolume" disabled={muted} />
         <VolumeRow id="volume-ui" label={t('game', 'sound_volume_ui')} volumeKey="uiVolume" disabled={muted} />
         <SettingsRow id="priority-sound" label={t('game', 'sound_priority_mode')} hint={t('game', 'sound_priority_mode_hint')} disabled={muted}>
@@ -97,10 +97,9 @@ export default function SoundFxControls() {
           label={t('game', 'music_enabled')}
           hint={t('game', 'music_enabled_hint')}
           checked={settings.musicEnabled}
-          disabled={muted}
           onChange={(next) => setSetting('musicEnabled', next)}
         />
-        <VolumeRow id="music-volume" label={t('game', 'music_volume')} volumeKey="musicVolume" disabled={muted || !settings.musicEnabled} />
+        <VolumeRow id="music-volume" label={t('game', 'music_volume')} volumeKey="musicVolume" disabled={!settings.musicEnabled} />
       </SettingsGroup>
     </>
   )

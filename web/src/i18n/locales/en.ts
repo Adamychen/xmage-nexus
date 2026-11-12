@@ -1507,7 +1507,7 @@ export const en = {
     fx_effects_hint: 'Toggle board animations',
     fx_speed: 'Speed',
     sound_enabled: 'Sound effects',
-    sound_enabled_hint: 'Enable or mute game sounds',
+    sound_enabled_hint: 'Game and interface sounds; music has its own switch',
     sound_volume_master: 'Master volume',
     sound_priority_mode: 'Priority cue',
     sound_priority_mode_hint: 'The server asks on every phase: "Every prompt" beeps on each ask, "On priority" only when priority comes to you',

@@ -145,3 +145,15 @@ because XMage replaces the whole `UserData` on each update.
   confirmation in a game reset the server stops to the engine defaults, and every stops push
   turned that confirmation back on (report of 2026-11-11).
 - Guard: `src/state/store.test.ts` · `e2e/phase-stops.spec.ts`
+
+### SET-12 · Sound effects and music have their own switches
+The "Sound effects" switch mutes the game and interface sounds (effects, interface and the priority
+sound) and nothing else. The music has its own switch and volume, which stay adjustable while the
+effects are off, and the master volume governs both. A player who had sound effects off before the
+split keeps a silent app: the first load after it turns their music off once, and from then on the
+two switches are independent.
+
+- Why: the effects switch was the master mute, so turning it off also silenced the music and greyed
+  out its controls, and there was no way to play with music and without effects (report of
+  2026-11-11).
+- Guard: `src/settings/SoundFxControls.test.tsx` · `src/audio/soundManager.test.ts` · `src/state/persistence.test.ts`

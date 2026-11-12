@@ -1509,7 +1509,7 @@ export const de: TranslationSchema = {
     fx_effects_hint: 'Animationen des Spielfelds ein- oder ausschalten',
     fx_speed: 'Geschwindigkeit',
     sound_enabled: 'Soundeffekte',
-    sound_enabled_hint: 'Sound aktivieren oder stummschalten',
+    sound_enabled_hint: 'Spiel- und Oberflächengeräusche; die Musik hat einen eigenen Schalter',
     sound_volume_master: 'Gesamtlautstärke',
     sound_priority_mode: 'Prioritätssignal',
     sound_priority_mode_hint: 'Der Server fragt in jeder Phase: "Jede Aufforderung" piept bei jeder Anfrage, "Bei Priorität" nur, wenn die Priorität an dich geht',

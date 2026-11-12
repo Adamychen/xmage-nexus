@@ -1509,7 +1509,7 @@ export const fr: TranslationSchema = {
     fx_effects_hint: 'Activer ou désactiver les animations du plateau',
     fx_speed: 'Vitesse',
     sound_enabled: 'Effets sonores',
-    sound_enabled_hint: 'Activer ou couper le son',
+    sound_enabled_hint: 'Sons du jeu et de l’interface ; la musique a son propre interrupteur',
     sound_volume_master: 'Volume principal',
     sound_priority_mode: 'Signal de priorité',
     sound_priority_mode_hint: 'Le serveur demande une réponse à chaque phase : « Chaque invite » sonne à chaque demande, « Priorité reçue » seulement quand la priorité arrive',

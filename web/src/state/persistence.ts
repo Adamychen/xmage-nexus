@@ -826,7 +826,20 @@ export interface MusicSettings {
 export const MUSIC_SETTINGS_KEY = 'mage-web-music'
 export const DEFAULT_MUSIC_SETTINGS: MusicSettings = { musicEnabled: true, musicVolume: 0.35 }
 
+export const SOUND_MUSIC_SPLIT_KEY = 'mage-web-sound-music-split'
+
+function migrateSoundMusicSplit(): void {
+  if (readJson<boolean>(SOUND_MUSIC_SPLIT_KEY)) return
+  const audio = readJson<Partial<AudioSettings>>(AUDIO_SETTINGS_KEY)
+  if (audio?.soundEnabled === false) {
+    const music = readJson<Partial<MusicSettings>>(MUSIC_SETTINGS_KEY)
+    writeJson(MUSIC_SETTINGS_KEY, { ...DEFAULT_MUSIC_SETTINGS, ...music, musicEnabled: false })
+  }
+  writeJson(SOUND_MUSIC_SPLIT_KEY, true)
+}
+
 export function loadMusicSettings(): MusicSettings {
+  migrateSoundMusicSplit()
   const parsed = readJson<Partial<MusicSettings>>(MUSIC_SETTINGS_KEY)
   if (parsed) {
     return {

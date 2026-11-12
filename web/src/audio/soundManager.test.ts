@@ -111,6 +111,17 @@ describe('soundManager', () => {
     expect(() => soundManager.play('ui_click', 'ui')).not.toThrow()
   })
 
+  it('SET-12: the sound effects switch does not silence the music, the master volume does', () => {
+    soundManager.setMusicVolume(0.4)
+    soundManager.setSettings({ soundEnabled: false, masterVolume: 0.8, sfxVolume: 0.8, uiVolume: 0.7 })
+    expect(soundManager.isMusicAudible()).toBe(true)
+    soundManager.setSettings({ soundEnabled: true, masterVolume: 0, sfxVolume: 0.8, uiVolume: 0.7 })
+    expect(soundManager.isMusicAudible()).toBe(false)
+    soundManager.setSettings({ soundEnabled: true, masterVolume: 0.8, sfxVolume: 0.8, uiVolume: 0.7 })
+    soundManager.setMusicVolume(0)
+    expect(soundManager.isMusicAudible()).toBe(false)
+  })
+
   it('skips playback when soundEnabled is false', () => {
     soundManager.setSettings({
       soundEnabled: false,

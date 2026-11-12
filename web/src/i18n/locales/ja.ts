@@ -1509,7 +1509,7 @@ export const ja: TranslationSchema = {
     fx_effects_hint: '盤面のアニメーションの切り替え',
     fx_speed: '速度',
     sound_enabled: '効果音',
-    sound_enabled_hint: 'サウンドのオン・オフ',
+    sound_enabled_hint: 'ゲームとUIの効果音（音楽は別に設定）',
     sound_volume_master: 'マスター音量',
     sound_priority_mode: '優先権の通知',
     sound_priority_mode_hint: 'サーバーはフェイズごとに質問します。「毎回」は質問ごとに鳴り、「優先権獲得時」は優先権が自分に回ってきた時だけ鳴ります',
