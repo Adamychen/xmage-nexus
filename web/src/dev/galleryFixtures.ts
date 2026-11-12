@@ -1210,7 +1210,7 @@ const QUIET_RESET_GAME_ID = 'gallery-quiet-reset'
  */
 function replayQuiet(base: GameView, gameId: string, change: (game: GameView) => GameView): () => void {
   return () => {
-    setState({ game: { ...base }, gameId: QUIET_RESET_GAME_ID })
+    setState({ game: { ...base }, gameId: QUIET_RESET_GAME_ID, outReasons: {} })
     setTimeout(() => setState({ game: { ...base }, gameId }), 0)
     setTimeout(() => {
       const current = getState().game
@@ -1395,7 +1395,7 @@ const logObject = (id: string, name: string) => `<font color='#B0C4DE' object_id
 /** Like `replayQuiet`, plus a log line fed after the reset and before the change (the server sends the line first). */
 function replayQuietWithLog(base: GameView, gameId: string, line: () => string, change: (game: GameView) => GameView): () => void {
   return () => {
-    setState({ game: { ...base }, gameId: QUIET_RESET_GAME_ID })
+    setState({ game: { ...base }, gameId: QUIET_RESET_GAME_ID, outReasons: {} })
     setTimeout(() => setState({ game: { ...base }, gameId }), 0)
     setTimeout(() => announce(line())(), 40)
     setTimeout(() => {
@@ -1424,6 +1424,11 @@ function withPermanentOn(game: GameView, playerId: string, id: string): GameView
 
 function withPlayerOut(game: GameView, playerId: string): GameView {
   return { ...game, players: players(game).map((p) => (p.playerId === playerId ? { ...p, life: 0, hasLeft: true } : p)) }
+}
+
+/** A player who conceded or quit: out of the game with their life unchanged. */
+function withPlayerLeft(game: GameView, playerId: string): GameView {
+  return { ...game, players: players(game).map((p) => (p.playerId === playerId ? { ...p, hasLeft: true } : p)) }
 }
 
 /** A mulligan view: turn 1 with no phase, and the hand dealt under ids tagged with `round`. */
@@ -3131,6 +3136,40 @@ export function buildGalleryEntries(): GalleryEntry[] {
         },
       },
       {
+        id: 'prompt:scry-order',
+        label: 'Escrutar 3 (ordenar)',
+        description: 'Scry: order the top cards and send some to the bottom; every card zooms without moving (PRM-15).',
+        prompt: {
+          method: 'GAME_CHOOSE_CARDS_ORDER',
+          gameId,
+          title: 'Scry 3',
+          message: 'Put the cards on top of your library in any order',
+          mode: 'order',
+          options: LIBRARY_CARDS.slice(0, 3).map((c) => ({ id: c.id, label: c.name, value: c.id })),
+          min: 0,
+          max: 3,
+          cards: LIBRARY_CARDS.slice(0, 3),
+          sourceName: 'Opt',
+        },
+      },
+      {
+        id: 'prompt:choose-pile',
+        label: 'Elegir montón (Fact or Fiction)',
+        description: 'Two piles to choose from; each card zooms without choosing its pile (PRM-15).',
+        prompt: {
+          method: 'GAME_CHOOSE_PILE',
+          gameId,
+          title: 'Choose pile',
+          message: 'Choose a pile to put into your hand',
+          mode: 'boolean',
+          options: [],
+          min: 0,
+          max: 1,
+          pileCards: { pile1: LIBRARY_CARDS.slice(0, 2), pile2: LIBRARY_CARDS.slice(2, 5) },
+          sourceName: 'Fact or Fiction',
+        },
+      },
+      {
         id: 'prompt:trigger-order',
         label: 'Orden de triggers',
         description: 'Dos triggers simultáneos sin orden fijado.',
@@ -3774,6 +3813,41 @@ export function buildGalleryEntries(): GalleryEntry[] {
         boardLayout: 'arena',
         boardSpotlight: true,
         action: { label: 'Replay', run: replayQuiet(fourPlayers, gameId, (g) => withPermanentOn(g, copySeat.playerId, 'gallery-copy-land')) },
+      })
+      entries.push({
+        id: 'anim:spotlight-duel',
+        group: 'Animaciones',
+        label: 'Main board with side panel: a duel',
+        description: 'Two-player game with the main board setting on: your board fills the main area and the only opponent sits in the side panel as a copy; a click on the copy or on their pill swaps them (BRD-6, BRD-7).',
+        phase: 'game',
+        game: animBase,
+        gameId,
+        boardLayout: 'arena',
+        boardSpotlight: true,
+      })
+      entries.push({
+        id: 'anim:spotlight-player-out',
+        group: 'Animaciones',
+        label: 'Main board with side panel: a player in the panel dies',
+        description: `Four-player arena with the main board setting on. "Replay" drops ${copySeat.name} to 0 life and out of the game: their copy folds to its head in the side panel, with the skull and "has been defeated" and no board under it (BRD-30).`,
+        phase: 'game',
+        game: fourPlayers,
+        gameId,
+        boardLayout: 'arena',
+        boardSpotlight: true,
+        action: { label: 'Replay', run: replayQuiet(fourPlayers, gameId, (g) => withPlayerOut(g, copySeat.playerId)) },
+      })
+      entries.push({
+        id: 'anim:spotlight-player-left',
+        group: 'Animaciones',
+        label: 'Main board with side panel: a player in the panel concedes or quits',
+        description: `Four-player arena with the main board setting on. "Replay" feeds "${copySeat.name} has conceded." and takes them out of the game with their life unchanged (a quit or a dropped connection reaches the client the same way): their copy folds to its head in the side panel, with the door and "has left the game" (BRD-30).`,
+        phase: 'game',
+        game: fourPlayers,
+        gameId,
+        boardLayout: 'arena',
+        boardSpotlight: true,
+        action: { label: 'Replay', run: replayQuietWithLog(fourPlayers, gameId, () => `${logName(copySeat.name)} has conceded.`, (g) => withPlayerLeft(g, copySeat.playerId)) },
       })
     }
     entries.push({

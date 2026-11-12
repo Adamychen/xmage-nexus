@@ -397,8 +397,11 @@ export default function GameScreen() {
   const hasCommanders = useMemo(() => hasCommandersInGame(game), [game])
 
   const totalPlayers = game?.players?.length ?? opps.length + (isSpectator ? 0 : 1)
+  // With the main board setting on, the Arena preference keeps the Arena layout in a duel too, so the
+  // side panel stays (BRD-6); without it a duel falls back to Standard as before.
+  const arenaDuel = !v2 && settings.boardSpotlight && settings.boardLayout === 'arena'
   const effectiveLayout =
-    v2 && totalPlayers <= MAX_BOARD_PLAYERS
+    (v2 || arenaDuel) && totalPlayers <= MAX_BOARD_PLAYERS
       ? 'arena'
       : effectiveBoardLayout(settings.boardLayout, settings.boardLayoutManual ?? false, opps.length, totalPlayers)
   const isArenaLayout = effectiveLayout === 'arena'

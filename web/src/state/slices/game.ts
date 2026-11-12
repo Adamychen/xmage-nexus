@@ -1,3 +1,4 @@
+import type { OutReason } from '../../board/outReason'
 import type { CardView, DeckCardEntry, DeckJson, GameEndInfo, GameView, PermanentView } from '../../net/types'
 import type { FeedbackPrompt, FeedbackCard } from '../../game/feedback'
 import { loadActiveDeck } from '../persistence'
@@ -105,6 +106,8 @@ export interface GameSlice {
   speedLevels: Record<string, number>
   /** Unlocked Room doors by `roomDoorKey(gameId, cardName)` (chat sniff, engine fields not in DTO). */
   roomDoors: Record<string, { left: boolean; right: boolean }>
+  /** Why each player left the game by `outReasonKey(gameId, player)` (log sniff, the view only has `hasLeft`). */
+  outReasons: Record<string, OutReason>
   turnRecap: TurnRecap | null
   enteredThisTurn: Record<string, true>
   priorityRequest: GameView | null
@@ -139,6 +142,7 @@ export const initialGame: GameSlice = {
   dungeonProgress: {},
   speedLevels: {},
   roomDoors: {},
+  outReasons: {},
   turnRecap: null,
   enteredThisTurn: {},
   priorityRequest: null,

@@ -4,7 +4,7 @@ import {
   Circle, CircleAlert, Castle, Clock, Clipboard, ChartColumn, Copy, Download, Dices, Eye, EyeOff, Flame, Funnel,
   Gamepad2, Gauge, Gem, File, Folder, Globe, Hand, Hourglass, House, Inbox, Info, Key, Keyboard, Landmark, Layers, LayoutGrid, List, Lock, LockOpen, LogOut, Map, Maximize, Medal, MessageCircle,
   Ellipsis, Minus, MapPin, Mountain, Package, Palette, Pause, Pencil, Play, Plus, RefreshCw, RotateCcw, RotateCw, Save, Scale, ScrollText, Search, Send, Settings,
-  Star, Smile, Square, Tag, Hash, Trash, TriangleAlert, TreePine, Trophy, Undo2, Upload, UserCheck, Users, UserX, VolumeX, Wand, Wind, X, Zap,
+  Star, Smile, Square, Tag, Hash, Trash, TriangleAlert, TreePine, Trophy, Undo2, Upload, UserCheck, Users, UserX, VolumeX, Wand, Wind, X, Zap, ZoomIn,
   type LucideIcon,
 } from 'lucide-react'
 
@@ -116,6 +116,7 @@ export type IconName =
   | 'folder'
   | 'wand'
   | 'maximize'
+  | 'zoomIn'
   | 'undo'
   | 'keyboard'
   | 'pin'
@@ -210,6 +211,7 @@ const LUCIDE_ICONS: Record<string, LucideIcon> = {
   folder: Folder,
   wand: Wand,
   maximize: Maximize,
+  zoomIn: ZoomIn,
   undo: Undo2,
   keyboard: Keyboard,
   pin: MapPin,

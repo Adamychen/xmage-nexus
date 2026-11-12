@@ -3,8 +3,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import SpotlightBoard from './SpotlightBoard'
 import { pileCornerLift, pileCornerReaches } from './pileCorner'
 import { makeCard, makeGameView, makePlayer } from '../__fixtures__/gameViews'
-import type { CardView, GameView, PermanentView } from '../net/types'
+import type { CardView, GameView, PermanentView, PlayerView } from '../net/types'
 import { getState, setSetting } from '../state/store'
+import { setState } from '../state/state'
+import { outReasonKey, type OutReason } from './outReason'
 
 class NoopResizeObserver {
   observe() {}
@@ -54,6 +56,7 @@ describe('SpotlightBoard', () => {
     setSetting('boardSpotlightPanel', 22)
   })
   afterEach(() => {
+    setState({ gameId: null, outReasons: {} })
     cleanup()
     vi.unstubAllGlobals()
   })
@@ -77,19 +80,119 @@ describe('SpotlightBoard', () => {
     expect(container.querySelectorAll('.spotlight-seat > .zone-bottom').length).toBe(4)
   })
 
-  it('BRD-6: a seat that has lost keeps its place in the panel as a defeated seat', () => {
-    const game = fourPlayerGame({
+  function withCarol(carol: Partial<PlayerView>): GameView {
+    return fourPlayerGame({
       players: [
         makePlayer({ playerId: 'p1', name: 'Alice', controlled: true, commandList: [] }),
         makePlayer({ playerId: 'p2', name: 'Bob', life: 40, commandList: [] }),
-        makePlayer({ playerId: 'p3', name: 'Carol', life: 0, hasLeft: true, commandList: [] }),
+        makePlayer({ playerId: 'p3', name: 'Carol', life: 40, commandList: [], ...carol }),
         makePlayer({ playerId: 'p4', name: 'Dave', life: 40, commandList: [] }),
       ],
     })
-    const { getByTestId, container } = render(<SpotlightBoard game={game} homeId="p1" mainId="p2" onSelectSeat={() => {}} />)
-    const copy = container.querySelector('[data-testid="spotlight-copy-p3"]') as HTMLElement
-    expect(copy.querySelector('[data-testid="defeated-seat"][data-seat-id="p3"]')).not.toBeNull()
-    expect(getByTestId('spotlight-panel').querySelectorAll('[data-copy-player]').length).toBe(3)
+  }
+
+  const listEntries = (list: HTMLElement) =>
+    [...list.children].map((el) => {
+      const copy = el.querySelector('[data-copy-player]')?.getAttribute('data-copy-player')
+      return copy ?? `head:${el.querySelector('[data-testid^="spotlight-head-"]')?.getAttribute('data-testid')?.slice(15)}`
+    })
+
+  const logged = (reason: OutReason) => setState({ gameId: 'g1', outReasons: { [outReasonKey('g1', 'Carol')]: reason } })
+
+  it.each([
+    ['concedes', { life: 40, hasLeft: true }, 'conceded', 'conceded', 'ha concedido'],
+    ['dies', { life: 0, hasLeft: true }, 'died', 'died', 'ha muerto'],
+    ['loses to an effect', { life: 12, hasLeft: true }, 'died', 'died', 'ha muerto'],
+    ['quits the match', { life: 23, hasLeft: true }, 'left', 'left', 'ha abandonado la partida'],
+    ['is out with no log line (0 life)', { life: 0, hasLeft: true }, null, 'died', 'ha muerto'],
+    ['is out with no log line', { life: 23, hasLeft: true }, null, 'left', 'ha abandonado la partida'],
+  ] as const)('BRD-6, BRD-30: a player who %s keeps the turn-order place folded to the head that says why, with no board', (_case, carol, reason, out, status) => {
+    if (reason) logged(reason)
+    const alive = render(<SpotlightBoard game={withCarol({})} homeId="p1" mainId="p2" onSelectSeat={() => {}} />)
+    const aliveOrder = listEntries(alive.getByTestId('spotlight-panel-list'))
+    alive.unmount()
+    const { getByTestId, queryByTestId } = render(<SpotlightBoard game={withCarol(carol)} homeId="p1" mainId="p2" onSelectSeat={() => {}} />)
+    expect(listEntries(getByTestId('spotlight-panel-list'))).toEqual(aliveOrder.map((id) => (id === 'p3' ? 'head:p3' : id)))
+    expect(queryByTestId('spotlight-copy-p3')).toBeNull()
+    const head = getByTestId('spotlight-head-p3')
+    expect(head.classList.contains('is-out')).toBe(true)
+    expect(head.getAttribute('data-out')).toBe(out)
+    expect(head.querySelector('.spotlight-copy-head-name')?.textContent).toBe('Carol')
+    expect(head.querySelector('.spotlight-copy-head-status')?.textContent).toBe(status)
+    expect(head.querySelector('.spotlight-copy-head-life')).toBeNull()
+  })
+
+  it('BRD-30: the folded head is not a button and never swaps the main board', () => {
+    const picked: string[] = []
+    const { getByTestId } = render(<SpotlightBoard game={withCarol({ hasLeft: true })} homeId="p1" mainId="p2" onSelectSeat={(id) => picked.push(id)} />)
+    const head = getByTestId('spotlight-head-p3')
+    expect(head.tagName).not.toBe('BUTTON')
+    fireEvent.click(head)
+    expect(picked).toEqual([])
+  })
+
+  it('BRD-30: the own seat stays a copy even when the player is out', () => {
+    const game = withCarol({})
+    const meOut = { ...game, players: game.players!.map((p) => (p.playerId === 'p1' ? { ...p, hasLeft: true } : p)) }
+    const { queryByTestId } = render(<SpotlightBoard game={meOut} homeId="p1" mainId="p2" onSelectSeat={() => {}} />)
+    expect(queryByTestId('spotlight-copy-p1')).not.toBeNull()
+  })
+
+  it('BRD-30: the seat folds as soon as a new game view marks the player out', () => {
+    const { getByTestId, queryByTestId, rerender } = render(
+      <SpotlightBoard game={withCarol({})} homeId="p1" mainId="p2" onSelectSeat={() => {}} />,
+    )
+    expect(queryByTestId('spotlight-copy-p3')).not.toBeNull()
+    rerender(<SpotlightBoard game={withCarol({ hasLeft: true })} homeId="p1" mainId="p2" onSelectSeat={() => {}} />)
+    expect(queryByTestId('spotlight-copy-p3')).toBeNull()
+    expect(getByTestId('spotlight-head-p3').classList.contains('is-out')).toBe(true)
+  })
+
+  it('BRD-31: every copy has the name and life of its player above it, outside the scaled board', () => {
+    const { getByTestId } = render(<SpotlightBoard game={withCarol({ life: 17 })} homeId="p1" mainId="p2" onSelectSeat={() => {}} />)
+    const panel = getByTestId('spotlight-panel')
+    for (const [id, name, life] of [['p3', 'Carol', '17'], ['p4', 'Dave', '40'], ['p1', 'Alice', '20']]) {
+      const head = getByTestId(`spotlight-head-${id}`)
+      expect(head.querySelector('.spotlight-copy-head-name')?.textContent).toBe(name)
+      expect(head.querySelector('.spotlight-copy-head-life')?.textContent).toBe(life)
+      expect(head.closest('[data-copy-player]')).toBeNull()
+      expect(panel.contains(head)).toBe(true)
+    }
+    expect(panel.querySelector('[data-testid="spotlight-head-p2"]')).toBeNull()
+  })
+
+  it('BRD-31: the head follows the life in each new game view and marks the player whose turn it is', () => {
+    const { getByTestId, rerender } = render(<SpotlightBoard game={withCarol({})} homeId="p1" mainId="p2" onSelectSeat={() => {}} />)
+    expect(getByTestId('spotlight-head-p3').classList.contains('is-active')).toBe(false)
+    rerender(<SpotlightBoard game={{ ...withCarol({ life: 31 }), activePlayerId: 'p3' }} homeId="p1" mainId="p2" onSelectSeat={() => {}} />)
+    const head = getByTestId('spotlight-head-p3')
+    expect(head.querySelector('.spotlight-copy-head-life')?.textContent).toBe('31')
+    expect(head.classList.contains('is-active')).toBe(true)
+    expect(head.querySelector('.spotlight-copy-head-turn')).not.toBeNull()
+    expect(getByTestId('spotlight-head-p4').querySelector('.spotlight-copy-head-turn')).toBeNull()
+  })
+
+  it('BRD-6: every copy box takes the main area proportions once the main area is measured', () => {
+    class SizedResizeObserver {
+      constructor(private cb: ResizeObserverCallback) {}
+      observe() {
+        this.cb([{ contentRect: { width: 1200, height: 800 } } as ResizeObserverEntry], this as unknown as ResizeObserver)
+      }
+      unobserve() {}
+      disconnect() {}
+    }
+    vi.stubGlobal('ResizeObserver', SizedResizeObserver)
+    const { getByTestId } = render(<SpotlightBoard game={fourPlayerGame()} homeId="p1" mainId="p2" onSelectSeat={() => {}} />)
+    const panel = getByTestId('spotlight-panel')
+    expect(panel.classList.contains('has-copy-ratio')).toBe(true)
+    expect(panel.style.getPropertyValue('--copy-ratio')).toBe('1.5000')
+  })
+
+  it('BRD-31: a click on the head brings that seat to the main area', () => {
+    const picked: string[] = []
+    const { getByTestId } = render(<SpotlightBoard game={withCarol({})} homeId="p1" mainId="p2" onSelectSeat={(id) => picked.push(id)} />)
+    fireEvent.click(getByTestId('spotlight-head-p4'))
+    expect(picked).toEqual(['p4'])
   })
 
   it('BRD-7: clicking a copy asks to bring that seat to the main area', () => {
@@ -138,9 +241,13 @@ describe('SpotlightBoard', () => {
     fireEvent.click(container.querySelector('[data-testid="spotlight-copy-p4"]') as HTMLElement)
     expect(targeted).toEqual(['p4'])
     expect(picked).toEqual([])
+    fireEvent.click(container.querySelector('[data-testid="spotlight-head-p3"]') as HTMLElement)
+    expect(targeted).toEqual(['p4', 'p3'])
+    expect(picked).toEqual([])
     fireEvent.click(container.querySelector('[data-testid="spotlight-copy-p2"]') as HTMLElement)
-    expect(picked).toEqual(['p2'])
-    expect(targeted).toEqual(['p4'])
+    fireEvent.click(container.querySelector('[data-testid="spotlight-head-p2"]') as HTMLElement)
+    expect(picked).toEqual(['p2', 'p2'])
+    expect(targeted).toEqual(['p4', 'p3'])
   })
 
   it('BRD-7: the main board mode has no focus buttons', () => {

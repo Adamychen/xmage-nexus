@@ -156,3 +156,22 @@ first or last, by card or by text) is unchanged.
   in a graveyard, could not be looked at (reported 2026-11-11). The Swing client shows the trigger as
   a card and repeats the related object only as text.
 - Guard: `src/game/TriggerOrderDialog.test.tsx` · `src/game/triggerOrder.test.ts` · `e2e/trigger-order.spec.ts`
+
+### PRM-15 · Every card a prompt shows can be looked at without choosing it
+Every card shown inside a prompt can be seen enlarged, as on the board, and looking at it never answers
+the prompt: the card grid (scry, surveil, searching a library, looking at the top cards, picking from a
+list, choosing targets), the library order dialog, the piles to choose from, the London mulligan's bottom
+pick, the revealed and looked-at cards inside a prompt, and the revealed, looked-at and zone viewers. A
+card that only shows (library order, piles, a revealed card nobody can play) is itself the preview
+control: pointing at it or focusing it shows the floating preview, a touch shows it and keeps it until the
+next touch (ACC-9), and a right click, a long press or Enter opens the card inspector. A card that is
+chosen or played by a click keeps that click, on a tap too; pointing at it with a mouse or reaching it
+with the keyboard shows the preview, and a zoom button in its corner, named "Zoom" and the card name,
+shows the preview on a touch and opens the inspector on a click, Enter or Space. A card the prompt does not
+accept (the full list of a grid) can still be looked at. A face-down card nobody may see has no zoom.
+
+- Why: the dialogs that show cards to choose from had no preview on a phone and none at all in the card
+  grid and the library order dialog, so a player searching a library or scrying could not read the cards
+  (reported 2026-11-12). A tap on a grid card already answers the prompt, so on a touch screen the preview
+  needs its own control; the mouse and the keyboard reach the preview without one, as on the board.
+- Guard: `src/game/promptCardZoom.test.tsx`

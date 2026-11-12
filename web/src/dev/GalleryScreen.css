@@ -20,12 +20,85 @@
   background: var(--ink-1);
 }
 
+.gallery.is-collapsed {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.gallery-sidebar[hidden] {
+  display: none;
+}
+
 .gallery-head {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-2);
+  padding: var(--sp-3) var(--sp-3h);
+  border-bottom: 1px solid var(--ink-4);
+}
+
+.gallery-head-text {
+  flex: 1 1 auto;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: var(--sp-0h);
-  padding: var(--sp-3) var(--sp-3h);
-  border-bottom: 1px solid var(--ink-4);
+}
+
+.gallery-collapse,
+.gallery-mini-open,
+.gallery-mini-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--ink-4);
+  border-radius: var(--r-sm);
+  background: var(--ink-3);
+  color: var(--fg-1);
+  cursor: pointer;
+}
+
+.gallery-collapse {
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+}
+
+.gallery-collapse:hover,
+.gallery-mini-open:hover,
+.gallery-mini-action:hover {
+  background: var(--ink-4);
+}
+
+/* The folded gallery leaves a slim tab on the left edge so the whole width goes to the stage. */
+.gallery-mini {
+  position: fixed;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 1000000;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  padding: var(--sp-1);
+  background: rgb(var(--ink-2-rgb) / 0.85);
+  border: 1px solid var(--ink-4);
+  border-left: 0;
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
+}
+
+.gallery-mini-open {
+  width: 28px;
+  height: 36px;
+  padding: 0;
+}
+
+.gallery-mini-action {
+  padding: var(--sp-1) var(--sp-0h);
+  border-color: var(--brand);
+  font-size: var(--fs-2xs);
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
 }
 
 .gallery-head strong {
@@ -117,16 +190,22 @@
 /* Los visores de tablero (PileOverlay/HandViewer/CrossZoneOverlay) se portan a
    [data-overlay-root]; con el portal a <body> (z-index 100) la galería (500) los
    tapaba y las reveladas/miradas no se veían. Dentro del stage se centran en él
-   y quedan por encima del tablero pero por debajo del selector (z-index 1000000). */
+   y quedan por encima del tablero pero por debajo del selector (z-index 1000000).
+   La raíz no crea contexto de apilamiento: cada visor compite con su propio
+   z-index, como en el juego, y el inspector de carta (12000) queda por encima
+   del diálogo de un prompt (521) en vez de quedar debajo. */
 .gallery-overlay-root {
   position: absolute;
   inset: 0;
-  z-index: 100;
   pointer-events: none;
 }
 
 .gallery-overlay-root .pile-overlay-backdrop {
   position: absolute;
+  pointer-events: auto;
+}
+
+.gallery-overlay-root .card-inspector-backdrop {
   pointer-events: auto;
 }
 

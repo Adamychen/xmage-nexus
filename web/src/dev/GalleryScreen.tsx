@@ -21,7 +21,27 @@ import SetupWizard from '../setup/SetupWizard'
 import RenderedCardsGallery from './RenderedCardsGallery'
 import ProjectileGalleryStage from './ProjectileGalleryStage'
 import KeywordGlyphGallery from './KeywordGlyphGallery'
+import IconButton from '../ui/IconButton'
+import Button from '../ui/Button'
 import './GalleryScreen.css'
+
+const COLLAPSED_KEY = 'mage-web-gallery-collapsed'
+
+function readCollapsed(): boolean {
+  try {
+    return localStorage.getItem(COLLAPSED_KEY) === '1'
+  } catch {
+    return false
+  }
+}
+
+function writeCollapsed(collapsed: boolean): void {
+  try {
+    localStorage.setItem(COLLAPSED_KEY, collapsed ? '1' : '0')
+  } catch {
+    /* storage unavailable: the choice lasts until reload */
+  }
+}
 
 function stageOf(entry: GalleryEntry | undefined) {
   if (!entry) return null
@@ -93,6 +113,13 @@ function runAction(action: GalleryAction): void {
 export default function GalleryScreen() {
   const entries = useMemo(() => buildGalleryEntries(), [])
   const [activeId, setActiveId] = useState(() => entries[0]?.id ?? '')
+  const [collapsed, setCollapsed] = useState(readCollapsed)
+  const toggleCollapsed = () => {
+    setCollapsed((current) => {
+      writeCollapsed(!current)
+      return !current
+    })
+  }
   const active = entries.find((e) => e.id === activeId) ?? entries[0]
   const savedState = useRef(getState())
   const savedLang = useRef(getLanguage())
@@ -181,11 +208,24 @@ export default function GalleryScreen() {
   const groups = [...new Set(entries.map((e) => e.group))]
 
   return (
-    <div className="gallery" data-gallery>
-      <aside className="gallery-sidebar">
+    <div className={`gallery${collapsed ? ' is-collapsed' : ''}`} data-gallery data-gallery-collapsed={collapsed ? '1' : undefined}>
+      {collapsed && (
+        <div className="gallery-mini" data-gallery-mini>
+          <IconButton className="gallery-mini-open" data-gallery-expand label="Mostrar la galería" icon="chevronRight" size="md" onClick={toggleCollapsed} />
+          {action && (
+            <Button className="gallery-mini-action" data-gallery-action size="sm" title={active?.label} onClick={() => runAction(action)}>
+              {action.label}
+            </Button>
+          )}
+        </div>
+      )}
+      <aside className="gallery-sidebar" hidden={collapsed}>
         <div className="gallery-head">
-          <strong>Galería de estados</strong>
-          <span>{entries.length} estados · dev</span>
+          <div className="gallery-head-text">
+            <strong>Galería de estados</strong>
+            <span>{entries.length} estados · dev</span>
+          </div>
+          <IconButton className="gallery-collapse" data-gallery-collapse label="Ocultar la galería" icon="chevronLeft" size="md" onClick={toggleCollapsed} />
         </div>
         <nav className="gallery-nav">
           {groups.map((group) => (
@@ -208,7 +248,7 @@ export default function GalleryScreen() {
             </section>
           ))}
         </nav>
-        {action && (
+        {action && !collapsed && (
           <button type="button" className="gallery-action" data-gallery-action onClick={() => runAction(action)}>
             {action.label}
           </button>

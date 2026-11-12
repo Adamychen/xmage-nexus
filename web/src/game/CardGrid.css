@@ -89,7 +89,19 @@
   padding: var(--sp-1) var(--sp-0h);
 }
 
+.card-grid-item {
+  display: flex;
+  border-radius: var(--r-md);
+  transition: transform 0.15s;
+}
+
+.card-grid-item:hover:not(:has(.card-grid-cell:disabled)) {
+  transform: translateY(-2px);
+}
+
 .card-grid-cell {
+  flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -99,12 +111,12 @@
   border-radius: var(--r-md);
   background: var(--veil-1);
   cursor: pointer;
-  transition: transform 0.15s, border-color 0.15s, background 0.15s;
+  transition: border-color 0.15s, background 0.15s;
 }
 
-.card-grid-cell:hover {
+.card-grid-cell:hover:not(:disabled),
+.card-grid-item.is-previewing > .card-grid-cell {
   background: var(--veil-2);
-  transform: translateY(-2px);
 }
 
 .card-grid-cell.selected {
@@ -151,6 +163,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .card-grid-filter,
+  .card-grid-item,
   .card-grid-cell {
     transition: none;
   }

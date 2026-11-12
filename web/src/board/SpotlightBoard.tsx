@@ -6,7 +6,7 @@ import PlayerZone from './PlayerZone'
 import BoardShell, { BoardDivider } from './BoardShell'
 import { useBoardPresenter, useBoardPlayers } from './useBoardPresenter'
 import { opponentRevealedCards } from './revealedCards'
-import { useSeatStates, useSpectatorBottomHand, useSwitchedHand, type BoardProps } from './boardShared'
+import { isPlayerDefeated, isPlayerOut, useSeatStates, useSpectatorBottomHand, useSwitchedHand, type BoardProps } from './boardShared'
 import { useBattlefieldPulse } from './seatFocus'
 import { panelSeatIds } from './spotlight'
 import { pileCornerLift } from './pileCorner'
@@ -14,8 +14,11 @@ import { turnOrderSeats } from './TurnOrderRing'
 import { EMPTY_TARGET_ZONES } from './targetZones'
 import DefeatedSeat from './DefeatedSeat'
 import ScaledCopy, { useLayoutBox } from './ScaledCopy'
+import { seatColorVar, seatIndexOf } from './seatColor'
+import Icon from '../ui/Icon'
 import { normalizeBoardSpotlightPanel, SPOTLIGHT_PANEL_MAX, SPOTLIGHT_PANEL_MIN } from './cardOverlays'
-import { setSetting, useSettings } from '../state/store'
+import { setSetting, useSettings, useStore } from '../state/store'
+import { outReasonKey, type OutReason } from './outReason'
 import './SpotlightBoard.css'
 
 export interface SpotlightBoardProps extends BoardProps {
@@ -87,6 +90,53 @@ function CopyPulse({ player }: { player: PlayerView | undefined }) {
 }
 
 /** Left edge of the panel: drag it, or press the arrow keys, to resize the panel (BRD-13). */
+const OUT_STATUS = { died: 'player_died', conceded: 'player_conceded', left: 'player_left' } as const
+const OUT_ICON = { died: 'skull', conceded: 'flag', left: 'door' } as const
+
+/** A copy's name and life at full size above it (BRD-31): a scaled copy is too small to tell whose it is. */
+function CopyHead({ player, players, active, onSelect }: { player: PlayerView; players: PlayerView[]; active: boolean; onSelect: () => void }) {
+  const { t } = useTranslation()
+  const lifeLabel = t('board', 'turn_life_label')
+  const loggedReason = useStore((s) => (s.gameId ? s.outReasons[outReasonKey(s.gameId, player.name)] : undefined))
+  const seat = { '--seat': seatColorVar(seatIndexOf(players, player.playerId)) } as CSSProperties
+  if (isPlayerOut(player) && !player.controlled) {
+    // BRD-30: an opponent out of the game folds to its head; there is no board left to show. Why they
+    // left comes from the log; without it, 0 life reads as a death and anything else as leaving.
+    const reason: OutReason = loggedReason ?? (isPlayerDefeated(player) ? 'died' : 'left')
+    const status = t('game', OUT_STATUS[reason])
+    return (
+      <div
+        className="spotlight-copy-head is-out"
+        data-testid={`spotlight-head-${player.playerId}`}
+        data-out={reason}
+        style={seat}
+        aria-label={`${player.name} ${status}`}
+      >
+        <Icon name={OUT_ICON[reason]} size={12} />
+        <span className="spotlight-copy-head-name">{player.name}</span>
+        <span className="spotlight-copy-head-status">{status}</span>
+      </div>
+    )
+  }
+  return (
+    <button
+      type="button"
+      className={`spotlight-copy-head${active ? ' is-active' : ''}`}
+      data-testid={`spotlight-head-${player.playerId}`}
+      style={seat}
+      aria-label={`${player.name} · ${lifeLabel}: ${player.life}`}
+      onClick={onSelect}
+    >
+      {active && <span className="spotlight-copy-head-turn">{t('board', 'turn_active_badge')}</span>}
+      <span className="spotlight-copy-head-name">{player.name}</span>
+      <span className="spotlight-copy-head-life" title={lifeLabel}>
+        <Icon name="heart" size={12} />
+        {player.life}
+      </span>
+    </button>
+  )
+}
+
 function PanelHandle({ percent }: { percent: number }) {
   const { t } = useTranslation()
   const ref = useRef<HTMLDivElement>(null)
@@ -223,11 +273,19 @@ export default function SpotlightBoard({
   const mainIsOwn = mainPlayer?.controlled === true
   const mainHand = useSpectatorBottomHand(game, isSpectator, mainPlayer)
   const cornerAnchor = useMainCornerAnchor(mainRef, `${mainId}:${mainIsOwn}`)
+  // A copy spans the panel's width at the main area's proportions (BRD-6); the panel scrolls when they do not fit.
+  const copyRatio = mainBox.w > 0 && mainBox.h > 0 ? (mainBox.w / mainBox.h).toFixed(4) : null
 
   const copyTargeted = (id: string): boolean => {
     const player = playerById.get(id)
     if (!player) return false
     return targetIdSet.has(id) || Object.keys(player.battlefield ?? {}).some((cardId) => targetIdSet.has(cardId))
+  }
+
+  // BRD-8: while the prompt asks for this player, the copy and its head pick them instead of swapping.
+  const pickOrSwap = (id: string) => {
+    if (targetIdSet.has(id) && onTargetClick) onTargetClick(id)
+    else onSelectSeat(id)
   }
 
   const seatBoard = (id: string) => {
@@ -346,29 +404,43 @@ export default function SpotlightBoard({
           {seatBoard(mainId)}
         </div>
         <div
-          className="spotlight-panel"
+          className={`spotlight-panel${copyRatio ? ' has-copy-ratio' : ''}`}
           data-testid="spotlight-panel"
-          style={{ '--spotlight-panel-w': `${panelPercent}%` } as CSSProperties}
+          style={{ '--spotlight-panel-w': `${panelPercent}%`, ...(copyRatio ? { '--copy-ratio': copyRatio } : null) } as CSSProperties}
         >
           <PanelHandle percent={panelPercent} />
-          {order.map((id) => (
-            <ScaledCopy
-              key={id}
-              className={`spotlight-copy-slot${copyTargeted(id) ? ' target-zone' : ''}`}
-              testId={`spotlight-copy-${id}`}
-              playerId={id}
-              refWidth={mainBox.w}
-              refHeight={mainBox.h}
-              onClick={(e) => {
-                if (pickedInside(e.target, pickable, targetIdSet)) return
-                if (targetIdSet.has(id) && onTargetClick) onTargetClick(id)
-                else onSelectSeat(id)
-              }}
-              overlay={<CopyPulse player={playerById.get(id)} />}
-            >
-              {seatBoard(id)}
-            </ScaledCopy>
-          ))}
+          <div className="spotlight-panel-list" data-testid="spotlight-panel-list">
+            {order.map((id) => {
+              const player = playerById.get(id)
+              if (player && !player.controlled && isPlayerOut(player)) {
+                return (
+                  <div key={id} className="spotlight-copy-item is-out">
+                    <CopyHead player={player} players={players} active={false} onSelect={() => {}} />
+                  </div>
+                )
+              }
+              return (
+                <div key={id} className="spotlight-copy-item">
+                  {player && (
+                    <CopyHead player={player} players={players} active={game?.activePlayerId === id} onSelect={() => pickOrSwap(id)} />
+                  )}
+                  <ScaledCopy
+                    className={`spotlight-copy-slot${copyTargeted(id) ? ' target-zone' : ''}`}
+                    testId={`spotlight-copy-${id}`}
+                    playerId={id}
+                    refWidth={mainBox.w}
+                    refHeight={mainBox.h}
+                    onClick={(e) => {
+                      if (!pickedInside(e.target, pickable, targetIdSet)) pickOrSwap(id)
+                    }}
+                    overlay={<CopyPulse player={player} />}
+                  >
+                    {seatBoard(id)}
+                  </ScaledCopy>
+                </div>
+              )
+            })}
+          </div>
         </div>
       </div>
     </BoardShell>
