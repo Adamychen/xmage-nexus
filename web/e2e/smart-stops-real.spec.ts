@@ -58,7 +58,7 @@ test('smart stops pass empty windows and hold castable ones (real engine) @real'
     const store = (globalThis as any).__mageStore
     store.setSetting('smartStops', true)
     const none = () => ({ upkeep: false, draw: false, main1: false, beginCombat: false, endCombat: false, main2: false, endStep: false })
-    store.setState({ phaseStops: { yourTurn: none(), opponentTurn: none() } })
+    store.setSetting('phaseStops', { yourTurn: none(), opponentTurn: none() })
   })
 
   const passBtn = page.locator('.big-action-btn.interactive')

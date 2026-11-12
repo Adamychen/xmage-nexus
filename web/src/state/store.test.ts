@@ -1,12 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { joinGame, sendManaPaymentMode, sendPlayerAction, sendPlayerBoolean, sendPlayerUUID, updateManaConfirmPreference, updatePreferences } from '../net/commands'
+import { joinGame, sendManaPaymentMode, sendPlayerAction, sendPlayerBoolean, sendPlayerUUID, updatePreferences } from '../net/commands'
 import { makeCard, makeGameView, makePermanent, makePlayer, minimalGameView } from '../__fixtures__/gameViews'
 import { DEFAULT_PHASE_STOPS, clonePhaseStops, togglePhaseStop } from '../game/phaseStops'
 import { getState, setState, addLog } from './state'
 import { applyGameplayPreset, handleMessage, maybeAutoPass, reset, setSetting, returnToLobby, enterTableChat, exitTableChat, openStagingTable, leaveStagingTable, enterTournamentChat, exitTournamentChat } from './store'
 import { handleWatchGame } from './events/game'
 import { getTableChatId, getTournamentChatId, joinChat, leaveChat } from '../net/commands'
-import { loadActiveGame, loadGameplayPreset, saveGameplayPreset } from './persistence'
+import { loadActiveGame, loadGameplayPreset, loadPhaseStops, saveGameplayPreset } from './persistence'
 
 vi.mock('../net/commands', () => ({
   setGateway: vi.fn(),
@@ -42,7 +42,6 @@ vi.mock('../net/commands', () => ({
   sendPlayerString: vi.fn(),
   sendPlayerUUID: vi.fn(),
   sendManaPaymentMode: vi.fn(),
-  updateManaConfirmPreference: vi.fn(),
 }))
 
 describe('handleMessage', () => {
@@ -101,15 +100,59 @@ describe('handleMessage', () => {
     expect(getState().game?.stack?.['s-1']?.controllerName).toBe('Alice')
   })
 
-  it('GAME_INIT seeds session phase stops from the lobby defaults and pushes them to the server', () => {
+  it('SET-11: GAME_INIT pushes the Settings stops to the server and keeps no per-game copy', () => {
     const custom = clonePhaseStops(DEFAULT_PHASE_STOPS)
     custom.opponentTurn.main1 = false
     setSetting('phaseStops', custom)
     const me = makePlayer({ playerId: 'p-me', name: 'Me', controlled: true })
     const game = makeGameView({ players: [me] })
     handleMessage({ type: 'event', method: 'GAME_INIT', messageId: 1, objectId: 'g-stops', data: game })
-    expect(getState().phaseStops).toEqual(custom)
-    expect(updatePreferences).toHaveBeenCalledWith(custom)
+    expect(getState().settings.phaseStops).toEqual(custom)
+    expect('phaseStops' in getState()).toBe(false)
+    expect(updatePreferences).toHaveBeenCalledWith({ phases: custom, confirmEmptyManaPool: getState().settings.manaPayment.confirmEmptyPool })
+    setSetting('phaseStops', clonePhaseStops(DEFAULT_PHASE_STOPS))
+  })
+
+  it('SET-11: a game rejoined without GAME_INIT still runs on the Settings stops', () => {
+    const none = { yourTurn: {}, opponentTurn: {} } as ReturnType<typeof clonePhaseStops>
+    for (const k of Object.keys(DEFAULT_PHASE_STOPS.yourTurn)) {
+      none.yourTurn[k] = false
+      none.opponentTurn[k] = false
+    }
+    setSetting('phaseStops', none)
+    const me = makePlayer({ playerId: 'p-me', name: 'Me', controlled: true })
+    setState({ resumingGameId: 'g-rejoin' })
+    handleMessage({ type: 'event', method: 'GAME_UPDATE', messageId: 7, objectId: 'g-rejoin', data: makeGameView({ players: [me], turn: 4 }) })
+    expect(getState().phase).toBe('game')
+    expect(getState().settings.phaseStops).toEqual(none)
+    setSetting('phaseStops', clonePhaseStops(DEFAULT_PHASE_STOPS))
+  })
+
+  it('SET-11: changing a stop mid-game saves it in Settings and pushes it to the running game', () => {
+    const me = makePlayer({ playerId: 'p-me', name: 'Me', controlled: true })
+    handleMessage({ type: 'event', method: 'GAME_INIT', messageId: 1, objectId: 'g-live', data: makeGameView({ players: [me] }) })
+    vi.mocked(updatePreferences).mockClear()
+    const next = togglePhaseStop(getState().settings.phaseStops, 'yourTurn', 'upkeep')
+    setSetting('phaseStops', next)
+    expect(loadPhaseStops().yourTurn.upkeep).toBe(false)
+    expect(updatePreferences).toHaveBeenCalledWith({ phases: next, confirmEmptyManaPool: getState().settings.manaPayment.confirmEmptyPool })
+    setSetting('phaseStops', clonePhaseStops(DEFAULT_PHASE_STOPS))
+  })
+
+  it('SET-11: every push carries the stops and the empty-pool confirmation together', () => {
+    // XMage replaces the whole UserData: a push with one of them alone resets the other
+    const me = makePlayer({ playerId: 'p-me', name: 'Me', controlled: true })
+    handleMessage({ type: 'event', method: 'GAME_INIT', messageId: 1, objectId: 'g-both', data: makeGameView({ players: [me] }) })
+    const stops = togglePhaseStop(clonePhaseStops(DEFAULT_PHASE_STOPS), 'opponentTurn', 'draw')
+    setSetting('phaseStops', stops)
+    vi.mocked(updatePreferences).mockClear()
+    setSetting('manaPayment', { ...getState().settings.manaPayment, confirmEmptyPool: false })
+    expect(updatePreferences).toHaveBeenCalledWith({ phases: stops, confirmEmptyManaPool: false })
+    vi.mocked(updatePreferences).mockClear()
+    const more = togglePhaseStop(stops, 'yourTurn', 'endStep')
+    setSetting('phaseStops', more)
+    expect(updatePreferences).toHaveBeenCalledWith({ phases: more, confirmEmptyManaPool: false })
+    setSetting('manaPayment', { ...getState().settings.manaPayment, confirmEmptyPool: true })
     setSetting('phaseStops', clonePhaseStops(DEFAULT_PHASE_STOPS))
   })
 
@@ -425,7 +468,7 @@ describe('maybeAutoPass with smart stops', () => {
     vi.clearAllMocks()
     setSetting('smartStops', true)
     handleMessage({ type: 'event', method: 'START_GAME', messageId: 1, objectId: 'g-1', data: { gameId: 'g-1' } })
-    setState({ phaseStops: { yourTurn: {}, opponentTurn: {} } })
+    setState({ settings: { ...getState().settings, phaseStops: { yourTurn: {}, opponentTurn: {} } } })
   })
 
   it('passes a window where only mana sources are available when no stop is set', () => {
@@ -440,7 +483,7 @@ describe('maybeAutoPass with smart stops', () => {
   })
 
   it('holds an empty window on a step the player marked as a stop', () => {
-    setState({ phaseStops: { yourTurn: { upkeep: true }, opponentTurn: {} } })
+    setState({ settings: { ...getState().settings, phaseStops: { yourTurn: { upkeep: true }, opponentTurn: {} } } })
     maybeAutoPass(select(makeGameView({ step: 'UPKEEP', players: [me(true)], canPlayObjects: { objects: { mountain: mana } } })))
     expect(sendPlayerBoolean).not.toHaveBeenCalled()
   })
@@ -819,7 +862,7 @@ describe('phaseStops', () => {
   })
 
   it('has every default phase stop enabled', () => {
-    const stops = getState().phaseStops
+    const stops = getState().settings.phaseStops
     for (const key of ['upkeep', 'draw', 'main1', 'beginCombat', 'endCombat', 'main2', 'endStep']) {
       expect(stops.yourTurn[key]).toBe(true)
       expect(stops.opponentTurn[key]).toBe(true)
@@ -827,7 +870,7 @@ describe('phaseStops', () => {
   })
 
   it('default phase stops are independent for your turn and opponent turn', () => {
-    const stops = getState().phaseStops
+    const stops = getState().settings.phaseStops
     const toggled = togglePhaseStop(stops, 'opponentTurn', 'main1')
     expect(toggled.opponentTurn.main1).toBe(false)
     expect(toggled.yourTurn.main1).toBe(true)
@@ -1543,11 +1586,11 @@ describe('applyGameplayPreset', () => {
     expect(sendManaPaymentMode).toHaveBeenCalledWith('MANA_AUTO_PAYMENT_ON', 'g-1')
     expect(sendManaPaymentMode).toHaveBeenCalledWith('MANA_AUTO_PAYMENT_RESTRICTED_OFF', 'g-1')
     expect(sendManaPaymentMode).toHaveBeenCalledWith('USE_FIRST_MANA_ABILITY_OFF', 'g-1')
-    expect(updateManaConfirmPreference).toHaveBeenCalledWith(false)
     expect(s.phaseStops.yourTurn.main1).toBe(false)
-    expect(updatePreferences).toHaveBeenCalledWith(
-      expect.objectContaining({ yourTurn: expect.objectContaining({ main1: true }) }),
-    )
+    expect(updatePreferences).toHaveBeenCalledWith({
+      phases: expect.objectContaining({ yourTurn: expect.objectContaining({ main1: true }) }),
+      confirmEmptyManaPool: false,
+    })
     expect(sendPlayerAction).toHaveBeenCalledWith('UNHOLD_PRIORITY', 'g-1')
     expect(loadGameplayPreset()).toBe('simple')
   })

@@ -79,7 +79,7 @@ test(
       await page.getByTestId(`phase-bar-step-${step}`).click({ modifiers: ['Shift'] })
     }
     await expect
-      .poll(() => page.evaluate(() => (globalThis as any).__mageStore?.getState?.()?.phaseStops))
+      .poll(() => page.evaluate(() => (globalThis as any).__mageStore?.getState?.()?.settings?.phaseStops))
       .toMatchObject({
         yourTurn: { upkeep: true, draw: false, main1: false, beginCombat: false, endCombat: false, main2: false, endStep: false },
         opponentTurn: { upkeep: false, draw: false, main1: false, beginCombat: false, endCombat: false, main2: false, endStep: false },

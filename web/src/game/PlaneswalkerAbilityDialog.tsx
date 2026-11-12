@@ -4,11 +4,13 @@ import type { FeedbackPrompt } from './feedback'
 import FormattedText from './FormattedText'
 import DialogShell from '../ui/DialogShell'
 import { useTranslation } from '../i18n'
+import Button from '../ui/Button'
 import './PlaneswalkerAbilityDialog.css'
 
 interface PlaneswalkerAbilityDialogProps {
   prompt: FeedbackPrompt
   send: (action: () => Promise<{ ok: boolean; error?: string }>, fallback: string) => void
+  cancel?: () => void
   busy: boolean
 }
 
@@ -26,7 +28,7 @@ function deltaLabel(delta: number | null): string {
   return '0'
 }
 
-export default function PlaneswalkerAbilityDialog({ prompt, send, busy }: PlaneswalkerAbilityDialogProps) {
+export default function PlaneswalkerAbilityDialog({ prompt, send, cancel, busy }: PlaneswalkerAbilityDialogProps) {
   const { t } = useTranslation()
   const game = useStore((s) => s.game)
   const deltas = prompt.loyaltyDeltas ?? []
@@ -50,6 +52,7 @@ export default function PlaneswalkerAbilityDialog({ prompt, send, busy }: Planes
       titleId="pw-title"
       legacyBackdropClass="pw-backdrop"
       legacyPanelClass="pw-dialog"
+      onEscape={prompt.cancelable && !busy ? cancel : undefined}
       kickerIcon="sparkles"
       kickerLabel={t('game', 'planeswalker_choose')}
       title={<FormattedText text={prompt.title} />}
@@ -76,6 +79,11 @@ export default function PlaneswalkerAbilityDialog({ prompt, send, busy }: Planes
           })}
         </div>
         <div className="pw-hint">{t('game', 'planeswalker_hint')}</div>
+        {prompt.cancelable && cancel && (
+          <div className="feedback-dialog-actions">
+            <Button variant="subtle" disabled={busy} onClick={cancel} className="cancel-btn" aria-keyshortcuts="Escape">{t('game', 'targeting_cancel')}</Button>
+          </div>
+        )}
     </DialogShell>
   )
 }

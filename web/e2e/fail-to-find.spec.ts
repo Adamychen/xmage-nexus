@@ -18,7 +18,7 @@ function failToFindScenario() {
     hand: ['Evolving Wilds', 'Mountain', 'Mountain'],
     playable: ['Evolving Wilds'],
     cast: [
-      { type: 'target', message: 'Search your library for a basic land card', targets: SEARCH_TARGETS, required: false },
+      { type: 'target', message: 'Search your library for a basic land card', targets: SEARCH_TARGETS, required: false, min: 0 },
       { type: 'mana', message: 'Pay {1}', sources: 1 },
     ],
   })
