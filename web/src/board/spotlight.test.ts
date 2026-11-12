@@ -23,19 +23,21 @@ function main(chosen: SpotlightChoice | null, declaration: string | null = null,
 }
 
 describe('spotlight', () => {
-  it('BRD-6: the main board mode needs the switch, an Arena or Table layout, a player seat and two live opponents', () => {
+  it('BRD-6: the main board mode needs the switch, an Arena or Table layout and one live opponent, a duel included', () => {
     const on = { enabled: true, arenaLayout: true, isSpectator: false, liveOppCount: 2 }
     expect(spotlightActive(on)).toBe(true)
+    expect(spotlightActive({ ...on, liveOppCount: 1 })).toBe(true)
     expect(spotlightActive({ ...on, enabled: false })).toBe(false)
     expect(spotlightActive({ ...on, arenaLayout: false })).toBe(false)
-    expect(spotlightActive({ ...on, liveOppCount: 1 })).toBe(false)
+    expect(spotlightActive({ ...on, liveOppCount: 0 })).toBe(false)
   })
 
-  it('BRD-6: a spectator gets the main board mode with three or more players left, not with two', () => {
+  it('BRD-6: a spectator gets the main board mode with two or more players left, not with one', () => {
     const on = { enabled: true, arenaLayout: true, isSpectator: true, liveOppCount: 3 }
     expect(spotlightActive(on)).toBe(true)
     expect(spotlightActive({ ...on, liveOppCount: 4 })).toBe(true)
-    expect(spotlightActive({ ...on, liveOppCount: 2 })).toBe(false)
+    expect(spotlightActive({ ...on, liveOppCount: 2 })).toBe(true)
+    expect(spotlightActive({ ...on, liveOppCount: 1 })).toBe(false)
     expect(spotlightActive({ ...on, enabled: false })).toBe(false)
     expect(spotlightActive({ ...on, arenaLayout: false })).toBe(false)
   })

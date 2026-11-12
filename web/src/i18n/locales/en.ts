@@ -1044,6 +1044,8 @@ export const en = {
     preset_manual_desc: 'No automation: tap and pay everything yourself, with all phase stops on.',
     player_left: 'has left the game',
     player_defeated: 'has been defeated',
+    player_died: 'has died',
+    player_conceded: 'has conceded',
     player_left_desc: 'Player has disconnected or conceded',
     life_zero_desc: 'Life reduced to 0',
     status_left: 'Left',

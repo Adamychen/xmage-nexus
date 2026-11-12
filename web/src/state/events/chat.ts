@@ -7,6 +7,7 @@ import { sniffRollbackAnnounce } from './game'
 import { ingestRollbackChat } from '../rollbackVote'
 import { sniffShuffle } from '../../board/shuffleFx'
 import { sniffGameLogFx } from '../../board/gameLogFx'
+import { sniffOutReason } from '../actions'
 
 export function handleChatMessage(data: unknown, objectId: string | null, s: Snapshot): void {
   const m = data as ChatMessageEvent
@@ -33,6 +34,7 @@ export function handleChatMessage(data: unknown, objectId: string | null, s: Sna
   if (channel === 'game' && s.gameId) sniffRollbackAnnounce(m.message, s.gameId)
   if (channel === 'game' && s.gameId) sniffShuffle(m.message, s.gameId)
   if (channel === 'game' && s.gameId) sniffGameLogFx(m.message, s.gameId)
+  if (channel === 'game' && s.gameId) sniffOutReason(m.message, s.gameId)
   if (channel === 'chat' && s.gameId) ingestRollbackChat(m.username, m.message, s.gameId)
   const fromRoom = s.phase === 'game' && !!m.chatId && !!s.roomChatId && !!s.gameChatId && m.chatId === s.roomChatId && m.chatId !== s.gameChatId
   addLog(m.username, m.message, objectId ?? undefined, channel, fromRoom)

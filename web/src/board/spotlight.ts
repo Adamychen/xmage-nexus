@@ -16,7 +16,7 @@ export function spotlightActive({ enabled, arenaLayout, isSpectator, liveOppCoun
   isSpectator: boolean
   liveOppCount: number
 }): boolean {
-  return enabled && arenaLayout && liveOppCount >= (isSpectator ? 3 : 2)
+  return enabled && arenaLayout && liveOppCount >= (isSpectator ? 2 : 1)
 }
 
 export function mainSeatId({ chosen, homeId, liveOppIds, declaration }: {

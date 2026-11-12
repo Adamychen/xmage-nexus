@@ -147,6 +147,23 @@ test.describe('galería de estados (P3)', () => {
     })
   }
 
+  test('the state list folds away so the stage gets the full width, keeps Replay at hand and is remembered', async ({ page }) => {
+    await openGallery(page)
+    await showEntry(page, 'anim:spotlight-copy-pulse')
+    const stage = page.locator('.gallery-stage')
+    const narrow = (await stage.boundingBox())!.width
+    await page.locator('[data-gallery-collapse]').click()
+    await expect(page.locator('.gallery-sidebar')).toBeHidden()
+    await expect.poll(async () => (await stage.boundingBox())!.width).toBeGreaterThan(narrow + 200)
+    await expect(page.locator('[data-gallery-mini] [data-gallery-action]')).toBeVisible()
+    const remembered = () => page.evaluate(() => localStorage.getItem('mage-web-gallery-collapsed'))
+    expect(await remembered()).toBe('1')
+    await page.locator('[data-gallery-expand]').click()
+    await expect(page.locator('.gallery-sidebar')).toBeVisible()
+    await expect(page.locator('[data-gallery-mini]')).toHaveCount(0)
+    expect(await remembered()).toBe('0')
+  })
+
   test('el ASK de Slicer sanea {this} con el nombre de la fuente', async ({ page }) => {
     await openGallery(page)
     await showEntry(page, 'prompt:ask-slicer')

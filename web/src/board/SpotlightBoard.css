@@ -93,6 +93,147 @@
   transition: border-color 0.15s ease-out;
 }
 
+.spotlight-copy-item {
+  --copy-head-h: 24px;
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* BRD-6: a copy spans the panel's width at the main area's proportions; when the copies do not fit,
+   the list scrolls. The gutter is reserved so a scrollbar never changes the width they size from. */
+.spotlight-panel-list {
+  flex: 1 1 0;
+  min-height: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+}
+
+.spotlight-panel.has-copy-ratio .spotlight-panel-list {
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+}
+
+.spotlight-panel.has-copy-ratio .spotlight-copy-item {
+  flex: 0 0 auto;
+}
+
+.spotlight-panel.has-copy-ratio .spotlight-copy-item > .spotlight-copy-slot {
+  flex: 0 0 auto;
+  aspect-ratio: var(--copy-ratio);
+}
+
+.spotlight-copy-item > .spotlight-copy-slot {
+  border-top: 0;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
+.spotlight-copy-head {
+  flex: 0 0 auto;
+  box-sizing: border-box;
+  height: var(--copy-head-h);
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1h);
+  min-width: 0;
+  padding: var(--sp-0h) var(--sp-2);
+  font: inherit;
+  color: var(--fg-1);
+  text-align: left;
+  cursor: pointer;
+  background: var(--ink-2);
+  border: 1px solid var(--line-2);
+  border-bottom: 0;
+  border-left: 3px solid var(--seat, var(--line-3));
+  border-radius: var(--r-md, 6px) var(--r-md, 6px) 0 0;
+  transition: background 0.15s ease-out;
+}
+
+.spotlight-copy-head:hover,
+.spotlight-copy-head:focus-visible {
+  background: var(--ink-3);
+}
+
+.spotlight-copy-head.is-active {
+  border-top-color: rgb(var(--gold-rgb) / 0.6);
+  border-right-color: rgb(var(--gold-rgb) / 0.6);
+}
+
+/* BRD-30: an opponent out of the game keeps its place folded to its head, with no board under it. */
+.spotlight-copy-item.is-out,
+.spotlight-panel.has-copy-ratio .spotlight-copy-item.is-out {
+  flex: 0 0 auto;
+}
+
+.spotlight-copy-head.is-out {
+  cursor: default;
+  color: var(--fg-3);
+  border-bottom: 1px solid var(--line-2);
+  border-radius: var(--r-md, 6px);
+}
+
+.spotlight-copy-head.is-out:hover {
+  background: var(--ink-2);
+}
+
+.spotlight-copy-head.is-out > svg {
+  flex: 0 0 auto;
+  color: var(--err);
+}
+
+.spotlight-copy-head-status {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--fs-2xs);
+}
+
+.spotlight-copy-head-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-display);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+}
+
+.spotlight-copy-head-life {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.spotlight-copy-head-life > svg {
+  color: var(--err);
+}
+
+.spotlight-copy-head-turn {
+  flex: 0 0 auto;
+  padding: 0 var(--sp-1h);
+  font-size: var(--fs-2xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--gold-300);
+  background: rgb(var(--gold-rgb) / 0.16);
+  border-radius: var(--r-pill);
+}
+
 .spotlight-copy-slot:hover {
   border-color: var(--line-3);
 }

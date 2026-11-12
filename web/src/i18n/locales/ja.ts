@@ -1046,6 +1046,8 @@ export const ja: TranslationSchema = {
     preset_manual_desc: '自動化なし。タップも支払いもすべて自分で行い、全フェーズ停止を有効にします。',
     player_left: 'がゲームを退出しました',
     player_defeated: 'が敗北しました',
+    player_died: 'が死亡しました',
+    player_conceded: 'が投了しました',
     player_left_desc: 'プレイヤーが切断または投了しました',
     life_zero_desc: 'ライフが0になりました',
     status_left: '退出',

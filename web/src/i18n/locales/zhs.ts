@@ -1046,6 +1046,8 @@ export const zhs: TranslationSchema = {
     preset_manual_desc: '无自动化：自行横置和支付一切，所有阶段停止均开启。',
     player_left: '离开了游戏',
     player_defeated: '已被击败',
+    player_died: '已阵亡',
+    player_conceded: '已认输',
     player_left_desc: '玩家已断线或认输',
     life_zero_desc: '生命值降至0',
     status_left: '已离开',

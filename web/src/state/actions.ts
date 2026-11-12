@@ -1,3 +1,4 @@
+import { mergeOutReason, outReasonKey, parseOutReason } from '../board/outReason'
 import { getState, setState } from './state'
 import * as cmds from '../net/commands'
 import { cleanMageText } from '../game/gameEventParser'
@@ -73,6 +74,22 @@ export function sniffSpeedLevel(message: string, gameId: string | null) {
   const key = speedLevelKey(gameId, hit.player)
   if (getState().speedLevels[key] === hit.level) return
   setState({ speedLevels: { ...getState().speedLevels, [key]: hit.level } })
+}
+
+/** Sniff why a player left the game (BRD-30): conceded, quit or died. A message about a player the
+ *  current view already shows out (a dead player who then closes the table) changes nothing. */
+export function sniffOutReason(message: string, gameId: string | null | undefined) {
+  if (!gameId) return
+  const hit = parseOutReason(message)
+  if (!hit) return
+  const s = getState()
+  const named = hit.player.toLowerCase()
+  const key = outReasonKey(gameId, hit.player)
+  const current = s.outReasons[key]
+  const alreadyOut = s.gameId === gameId && s.game?.players?.some((p) => p.hasLeft && p.name.trim().toLowerCase() === named)
+  if (alreadyOut && current) return
+  const next = mergeOutReason(current, hit.reason)
+  if (next !== current) setState({ outReasons: { ...s.outReasons, [key]: next } })
 }
 
 /** Sniff server Room-door broadcasts (`PermanentImpl.unlockDoor`). */
