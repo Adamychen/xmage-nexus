@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { render, fireEvent } from '@testing-library/react'
+import { act, render, fireEvent } from '@testing-library/react'
 import TriggerOrderDialog from './TriggerOrderDialog'
 import type { FeedbackPrompt } from './feedback'
 import { clearTriggerOrderPlan } from './triggerOrderPlan'
@@ -35,6 +35,13 @@ function prompt(): FeedbackPrompt {
     ],
     isTriggerOrder: true,
   }
+}
+
+/** jsdom has no PointerEvent: a pointerdown that reports a touch, as a phone sends it. */
+function touchDown(el: Element) {
+  const event = new MouseEvent('pointerdown', { bubbles: true, cancelable: true })
+  Object.defineProperty(event, 'pointerType', { value: 'touch' })
+  act(() => { el.dispatchEvent(event) })
 }
 
 function makeSend() {
@@ -205,12 +212,105 @@ describe('TriggerOrderDialog', () => {
     expect(row.textContent).toContain('Forest')
   })
 
-  it('shows the targets that distinguish duplicate triggers', () => {
+  it('PRM-14: shows the card each trigger points at, wherever it is now', () => {
     const p = prompt()
     p.cards = [{ ...(p.cards ?? [])[0], targets: ['perm-9'] }]
     p.options = [p.options[0]]
     const { container } = renderDialog(p)
-    expect(container.querySelector('.trigger-targets')?.textContent).toContain('Grizzly Bears')
+    const object = container.querySelector('.trigger-object')
+    expect(object?.textContent).toContain('Grizzly Bears')
+    expect(object?.textContent).toContain('Rival')
+    expect(container.querySelector('.trigger-object-art [data-card-name="Grizzly Bears"]')).not.toBeNull()
+  })
+
+  describe('PRM-14: Tergrid-like triggers of one source', () => {
+    const tergrid = (id: string, cardId: string, cardName: string) => ({
+      id,
+      name: 'Tergrid, God of Fright',
+      sourceCard: { id: 'perm-tergrid', name: 'Tergrid, God of Fright', manaValue: 5 },
+      rules: [
+        'Whenever an opponent sacrifices a nontoken permanent or discards a permanent card, you may put that card from a graveyard onto the battlefield under your control.',
+        `<i>Related objects: [${cardName}]</i>`,
+      ],
+      targets: [cardId],
+    })
+    const tergridPrompt = (): FeedbackPrompt => ({
+      ...prompt(),
+      cards: [tergrid(T1, 'grave-elves', 'Llanowar Elves'), tergrid(T2, 'grave-ring', 'Sol Ring')],
+    })
+
+    beforeEach(() => {
+      setState({
+        inspectedCard: null,
+        game: {
+          players: [
+            {
+              playerId: 'p-me', name: 'Me', controlled: true,
+              battlefield: { 'perm-tergrid': { id: 'perm-tergrid', name: 'Tergrid, God of Fright', power: '4', toughness: '5' } },
+            },
+            {
+              playerId: 'p-opp', name: 'Rival', battlefield: {},
+              graveyard: {
+                'grave-elves': { id: 'grave-elves', name: 'Llanowar Elves' },
+                'grave-ring': { id: 'grave-ring', name: 'Sol Ring' },
+              },
+            },
+          ],
+          stack: {},
+          myHand: {},
+          myHelperEmblems: {},
+        },
+      } as never)
+    })
+
+    it('PRM-14: rows of one source are told apart by the graveyard card each one points at', () => {
+      const { container } = renderDialog(tergridPrompt())
+      const rows = [...container.querySelectorAll('.trigger-row')]
+      expect(rows.every((row) => row.classList.contains('is-sibling'))).toBe(true)
+      expect(rows.map((row) => row.querySelector('.trigger-object-name')?.textContent)).toEqual(['Llanowar Elves', 'Sol Ring'])
+      expect(rows[0].querySelector('.trigger-object-zone')?.textContent).toContain('Rival')
+      // The object chips already name the card: the server's "Related objects" line is not repeated.
+      expect(container.querySelector('.trigger-related')).toBeNull()
+    })
+
+    it('PRM-14: the source thumbnail opens the live permanent in the inspector', () => {
+      const { container } = renderDialog(tergridPrompt())
+      const source = container.querySelector(`[data-testid="trigger-row-${T1}"] .trigger-art`) as Element
+      fireEvent.contextMenu(source)
+      expect((getState().inspectedCard as { power?: string } | null)?.power).toBe('4')
+    })
+
+    it('PRM-14: pointing at the object card previews it and a right click opens it in the inspector', () => {
+      const { container } = renderDialog(tergridPrompt())
+      const thumb = container.querySelector(`[data-testid="trigger-row-${T1}"] .trigger-object-art`) as Element
+      fireEvent.mouseEnter(thumb)
+      expect(thumb.classList.contains('is-previewing')).toBe(true)
+      fireEvent.mouseLeave(thumb)
+      expect(thumb.classList.contains('is-previewing')).toBe(false)
+      fireEvent.contextMenu(thumb)
+      expect((getState().inspectedCard as { id?: string } | null)?.id).toBe('grave-elves')
+      expect(sendPlayerUUID).not.toHaveBeenCalled()
+    })
+
+    it('PRM-14: a touch previews the card without choosing the trigger and stays until the next touch', () => {
+      const { container } = renderDialog(tergridPrompt())
+      const thumb = container.querySelector(`[data-testid="trigger-row-${T1}"] .trigger-object-art`) as Element
+      touchDown(thumb)
+      fireEvent.mouseLeave(thumb)
+      fireEvent.click(thumb)
+      expect(thumb.classList.contains('is-previewing')).toBe(true)
+      expect(sendPlayerUUID).not.toHaveBeenCalled()
+      touchDown(container.querySelector('.trigger-name') as Element)
+      expect(thumb.classList.contains('is-previewing')).toBe(false)
+    })
+
+    it('PRM-14: keeps the "Related objects" line when the object is not in the view', () => {
+      const p = tergridPrompt()
+      p.cards = [tergrid(T1, 'gone-card', 'Mox Opal')]
+      const { container } = renderDialog(p)
+      expect(container.querySelector('.trigger-related')?.textContent).toContain('Mox Opal')
+      expect(container.querySelector('.trigger-object-art')).toBeNull()
+    })
   })
 
   it('has no Cancel button (the server only re-asks)', () => {

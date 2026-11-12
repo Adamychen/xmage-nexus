@@ -71,6 +71,13 @@
   padding: var(--sp-0h) var(--sp-1h);
 }
 
+.trigger-cards {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+}
+
 .trigger-art {
   flex: 0 0 54px;
   width: 54px;
@@ -80,6 +87,21 @@
   width: 100%;
   height: auto;
   aspect-ratio: 63 / 88;
+}
+
+/* Keep the text column aligned when only some rows have an object thumbnail. */
+.trigger-list.has-object-art .trigger-cards {
+  min-width: calc(2 * 54px + 14px + 2 * var(--sp-1));
+}
+
+.trigger-arrow {
+  color: var(--fg-2);
+}
+
+/* The object a trigger points at is what tells sibling rows apart: it gets the accent ring. */
+.trigger-object-art {
+  border-radius: var(--r-sm);
+  box-shadow: 0 0 0 1px var(--brand-line);
 }
 
 .trigger-text {
@@ -111,9 +133,41 @@
   font-style: italic;
 }
 
-.trigger-targets {
-  font-size: var(--fs-xs);
+.trigger-objects {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-0h);
+}
+
+.trigger-object {
+  display: block;
+  min-width: 0;
+  font-size: var(--fs-sm);
   color: var(--brand-fg);
+}
+
+.trigger-object > svg {
+  margin-right: var(--sp-1);
+}
+
+.trigger-object-name {
+  font-weight: 700;
+}
+
+.trigger-object-name.is-previewable {
+  cursor: zoom-in;
+  text-decoration: underline dotted;
+  text-underline-offset: 2px;
+}
+
+.trigger-object-zone {
+  color: var(--fg-2);
+  font-size: var(--fs-xs);
+}
+
+/* Rows of the same source repeat the same rule: one line is enough, the object comes first. */
+.trigger-row.is-sibling .trigger-rule {
+  -webkit-line-clamp: 1;
 }
 
 .trigger-saved {
@@ -157,4 +211,46 @@
   justify-content: space-between;
   gap: var(--sp-2);
   margin-top: var(--sp-3h);
+}
+
+.prompt-card-thumb {
+  display: block;
+  cursor: zoom-in;
+  border-radius: var(--r-sm);
+  touch-action: manipulation;
+  -webkit-touch-callout: none;
+}
+
+.prompt-card-thumb:focus-visible,
+.prompt-card-thumb.is-previewing {
+  outline: 2px solid var(--brand-line);
+  outline-offset: 2px;
+}
+
+/* Phone width: the actions move under the cards and text instead of squeezing them. */
+@media (max-width: 560px) {
+  .trigger-row {
+    flex-wrap: wrap;
+    gap: var(--sp-2);
+  }
+
+  .trigger-art {
+    flex-basis: 46px;
+    width: 46px;
+  }
+
+  .trigger-list.has-object-art .trigger-cards {
+    min-width: calc(2 * 46px + 14px + 2 * var(--sp-1));
+  }
+
+  .trigger-text {
+    flex-basis: calc(100% - 26px - 2 * 46px - 3 * var(--sp-2) - 20px);
+  }
+
+  .trigger-actions {
+    flex: 1 1 100%;
+    flex-direction: row;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+  }
 }

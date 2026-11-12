@@ -1,5 +1,6 @@
 import type { FeedbackCard, FeedbackItem, FeedbackOption, JsonRecord } from './types'
 import { METADATA_OPTION_KEYS } from './types'
+import type { CardView } from '../../net/types'
 
 export function asRecord(value: unknown): JsonRecord {
   return value && typeof value === 'object' && !Array.isArray(value) ? value as JsonRecord : {}
@@ -235,6 +236,7 @@ export function feedbackCardsFrom(view: unknown): FeedbackCard[] | undefined {
         : null,
       rules: Array.isArray(c.rules) ? c.rules.map((r) => String(r)) : undefined,
       targets: stringList(c.targets).length ? stringList(c.targets) : undefined,
+      ...(isAbility && stringValue(source.id) ? { sourceCard: source as unknown as CardView } : {}),
       faceDown: c.faceDown === true,
     }
   })
