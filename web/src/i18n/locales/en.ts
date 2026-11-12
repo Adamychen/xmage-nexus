@@ -1711,6 +1711,7 @@ export const en = {
     cardgrid_only_valid: 'Only valid ({count})',
     cardgrid_peek_hint: 'Hold Alt to view the board',
     cardgrid_peek_release: 'Release Alt to return to your cards',
+    card_zoom: 'Zoom {name}',
     cardgrid_done: 'Done ({count})',
     card_printings_title: 'Select Edition & Art',
     card_inspect_no_translation: 'No text in the selected card language — showing the original (English).',

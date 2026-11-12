@@ -1,8 +1,6 @@
-import { useState } from 'react'
 import CardSlot from '../../board/CardSlot'
-import FloatingCardPreview from '../../board/FloatingCardPreview'
 import { useTranslation } from '../../i18n'
-import type { CardView, PermanentView } from '../../net/types'
+import { PromptCardThumb, PromptCardZoomable, usePromptCardPreview } from '../promptCardPreview'
 import { infoWindowTitle, useClaimedInfoWindows } from '../infoWindowState'
 import './ClaimedInfoCards.css'
 
@@ -20,7 +18,7 @@ interface ClaimedInfoCardsProps {
 export default function ClaimedInfoCards({ playableIds, onPlayCard, targetIds, onTargetClick }: ClaimedInfoCardsProps) {
   const { t } = useTranslation()
   const windows = useClaimedInfoWindows()
-  const [hover, setHover] = useState<{ card: CardView | PermanentView; rect: DOMRect | null } | null>(null)
+  const cardPreview = usePromptCardPreview()
 
   if (windows.length === 0) return null
   return (
@@ -37,23 +35,26 @@ export default function ClaimedInfoCards({ playableIds, onPlayCard, targetIds, o
                 : isTarget && onTargetClick
                   ? () => onTargetClick(id)
                   : undefined
-              return (
-                <CardSlot
-                  key={id}
-                  cardId={id}
-                  card={card}
-                  className="feedback-info-card"
-                  isPlayable={isPlayable}
-                  isTarget={isTarget}
-                  onClick={onClick}
-                  onHover={(c, rect) => setHover(c ? { card: c, rect: rect ?? null } : null)}
-                />
+              // A card that plays or targets keeps its click and gets a zoom button; any other card
+              // shows its preview wherever it is pointed at or touched.
+              return onClick ? (
+                <PromptCardZoomable key={id} preview={cardPreview} previewKey={`${w.key}:${id}`} card={card} className="feedback-info-card">
+                  <CardSlot
+                    cardId={id}
+                    card={card}
+                    isPlayable={isPlayable}
+                    isTarget={isTarget}
+                    onClick={onClick}
+                  />
+                </PromptCardZoomable>
+              ) : (
+                <PromptCardThumb key={id} preview={cardPreview} previewKey={`${w.key}:${id}`} card={card} className="feedback-info-card" />
               )
             })}
           </div>
         </section>
       ))}
-      <FloatingCardPreview card={hover?.card ?? null} anchorRect={hover?.rect ?? null} inModal />
+      {cardPreview.preview}
     </div>
   )
 }

@@ -1,10 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import type { FocusEvent, KeyboardEvent, MouseEvent, PointerEvent, ReactNode } from 'react'
+import type { CSSProperties, FocusEvent, KeyboardEvent, MouseEvent, PointerEvent, ReactNode } from 'react'
 import type { CardView, PermanentView } from '../net/types'
 import CardSlot from '../board/CardSlot'
 import FloatingCardPreview from '../board/FloatingCardPreview'
 import { hiddenFaceDownName } from '../cards/cardImages'
 import { setState } from '../state/store'
+import IconButton from '../ui/IconButton'
+import { useTranslation } from '../i18n'
+import './promptCardPreview.css'
 
 type PreviewCard = CardView | PermanentView
 
@@ -30,21 +33,52 @@ export interface PromptCardPreviewBindings {
   onKeyDown: (e: KeyboardEvent<HTMLElement>) => void
 }
 
+export interface PromptCardHoverBindings {
+  onPointerEnter: (e: PointerEvent<HTMLElement>) => void
+  onPointerLeave: (e: PointerEvent<HTMLElement>) => void
+  onFocus: (e: FocusEvent<HTMLElement>) => void
+  onBlur: (e: FocusEvent<HTMLElement>) => void
+}
+
+export interface PromptCardZoomBindings {
+  [PREVIEW_ATTR]: string
+  onPointerDown: (e: PointerEvent<HTMLElement>) => void
+  onClick: () => void
+  onContextMenu: (e: MouseEvent<HTMLElement>) => void
+}
+
 export interface PromptCardPreview {
   /** Spread on the element that shows `card`; `key` must be unique among the bound elements. */
   bind: (key: string, card: PreviewCard) => PromptCardPreviewBindings
+  /**
+   * For a card that answers the prompt when clicked: spread on the element wrapping it. A mouse
+   * pointing at it, or keyboard focus inside it, shows the preview; a touch does not, so a tap
+   * keeps choosing the card. Pair it with a `PromptCardZoomButton` inside the same wrapper.
+   */
+  hover: (key: string, card: PreviewCard) => PromptCardHoverBindings
+  /** For the zoom button inside a `hover` wrapper; see `PromptCardZoomButton`. */
+  zoom: (key: string, card: PreviewCard) => PromptCardZoomBindings
   /** The floating preview: render it once inside the dialog (e.g. `DialogShell`'s `trailing`). */
   preview: ReactNode
   /** Key of the element whose preview is open, if any. */
   openKey: string | null
 }
 
-function inspectable(card: PreviewCard): boolean {
+export function inspectable(card: PreviewCard): boolean {
   return !card.faceDown || Boolean(hiddenFaceDownName(card as CardView))
 }
 
 export function openCardInspector(card: PreviewCard): void {
   if (inspectable(card)) setState({ inspectedCard: card })
+}
+
+/** A focus that came from the keyboard; a tap or click on a button focuses it too, without the ring. */
+function keyboardFocus(target: EventTarget): boolean {
+  try {
+    return (target as Element).matches(':focus-visible')
+  } catch {
+    return true
+  }
 }
 
 /**
@@ -54,7 +88,7 @@ export function openCardInspector(card: PreviewCard): void {
  * Enter opens the card inspector. The element bound to a card must not answer the prompt itself,
  * so looking at a card never chooses it.
  */
-export function usePromptCardPreview(): PromptCardPreview {
+export function usePromptCardPreview(options: { fixedSide?: 'left' | 'right' | 'auto' } = {}): PromptCardPreview {
   const [state, setPreview] = useState<PreviewState | null>(null)
   const stateRef = useRef<PreviewState | null>(null)
   stateRef.current = state
@@ -116,10 +150,88 @@ export function usePromptCardPreview(): PromptCardPreview {
     },
   }), [])
 
+  const hover = useCallback((key: string, card: PreviewCard): PromptCardHoverBindings => ({
+    onPointerEnter: (e) => {
+      if (e.pointerType === 'touch' || stateRef.current?.pinned) return
+      setPreview({ key, card, rect: e.currentTarget.getBoundingClientRect(), pinned: false })
+    },
+    onPointerLeave: (e) => {
+      if (e.pointerType === 'touch' || stateRef.current?.pinned) return
+      setPreview((current) => (current?.key === key ? null : current))
+    },
+    onFocus: (e) => {
+      if (stateRef.current?.pinned || !keyboardFocus(e.target)) return
+      setPreview({ key, card, rect: e.currentTarget.getBoundingClientRect(), pinned: false })
+    },
+    onBlur: (e) => {
+      if (stateRef.current?.pinned) return
+      // Focus moving between the card and its zoom button stays on the same card.
+      if (e.relatedTarget instanceof Node && e.currentTarget.contains(e.relatedTarget)) return
+      setPreview((current) => (current?.key === key ? null : current))
+    },
+  }), [])
+
+  // A touch press on a zoom button is followed by a click; that click must not open the inspector.
+  const touchPressRef = useRef(false)
+  const zoom = useCallback((key: string, card: PreviewCard): PromptCardZoomBindings => ({
+    [PREVIEW_ATTR]: key,
+    onPointerDown: (e) => {
+      touchPressRef.current = e.pointerType === 'touch'
+      if (!touchPressRef.current) return
+      const anchor = e.currentTarget.parentElement ?? e.currentTarget
+      const rect = anchor.getBoundingClientRect()
+      setPreview((current) => (current?.key === key && current.pinned ? null : { key, card, rect, pinned: true }))
+    },
+    onClick: () => {
+      if (touchPressRef.current) {
+        touchPressRef.current = false
+        return
+      }
+      setPreview(null)
+      openCardInspector(card)
+    },
+    onContextMenu: (e) => {
+      e.preventDefault()
+      e.stopPropagation()
+      setPreview(null)
+      openCardInspector(card)
+    },
+  }), [])
+
   const preview = (
-    <FloatingCardPreview card={state?.card ?? null} anchorRect={state?.rect ?? null} boardRect={null} inModal />
+    <FloatingCardPreview card={state?.card ?? null} anchorRect={state?.rect ?? null} boardRect={null} fixedSide={options.fixedSide} inModal />
   )
-  return { bind, preview, openKey: state?.key ?? null }
+  return { bind, hover, zoom, preview, openKey: state?.key ?? null }
+}
+
+interface PromptCardZoomButtonProps {
+  preview: PromptCardPreview
+  /** Same key as the `hover` wrapper it sits in. */
+  previewKey: string
+  card: PreviewCard
+  className?: string
+}
+
+/**
+ * The way to look at a card that answers the prompt when clicked, without choosing it. It sits
+ * inside the card's `hover` wrapper, which is its anchor: a touch shows the preview and keeps it
+ * until the next touch, a click, Enter or Space opens the card inspector. It is a sibling of the
+ * element that chooses the card, never inside it.
+ */
+export function PromptCardZoomButton({ preview, previewKey, card, className }: PromptCardZoomButtonProps) {
+  const { t } = useTranslation()
+  const name = card.displayName ?? card.name
+  return (
+    <IconButton
+      icon="zoomIn"
+      size="sm"
+      variant="ghost"
+      round
+      label={t('dialogs', 'card_zoom', { name })}
+      className={['prompt-card-zoom', className ?? ''].filter(Boolean).join(' ')}
+      {...preview.zoom(previewKey, card)}
+    />
+  )
 }
 
 interface PromptCardThumbProps {
@@ -131,6 +243,8 @@ interface PromptCardThumbProps {
   label?: string
   title?: string
   className?: string
+  /** Class of the card slot inside the thumb. */
+  slotClassName?: string
 }
 
 /**
@@ -138,7 +252,7 @@ interface PromptCardThumbProps {
  * inspector (right click, long press, Enter); it never answers the prompt. The slot gets its own
  * id so the board's flight registry never mistakes the thumbnail for the card's last position.
  */
-export function PromptCardThumb({ preview, previewKey, card, label, title, className }: PromptCardThumbProps) {
+export function PromptCardThumb({ preview, previewKey, card, label, title, className, slotClassName }: PromptCardThumbProps) {
   const name = label ?? card.displayName ?? card.name
   return (
     <span
@@ -149,7 +263,37 @@ export function PromptCardThumb({ preview, previewKey, card, label, title, class
       className={['prompt-card-thumb', preview.openKey === previewKey ? 'is-previewing' : '', className ?? ''].filter(Boolean).join(' ')}
       {...preview.bind(previewKey, card)}
     >
-      <CardSlot card={card} cardId={`prompt-thumb:${previewKey}`} />
+      <CardSlot card={card} cardId={`prompt-thumb:${previewKey}`} className={slotClassName} />
     </span>
+  )
+}
+
+interface PromptCardZoomableProps {
+  preview: PromptCardPreview
+  /** Unique among the cards bound to the same preview. */
+  previewKey: string
+  card: PreviewCard
+  className?: string
+  style?: CSSProperties
+  /** The element that chooses or plays the card; it keeps its own click. */
+  children: ReactNode
+}
+
+/**
+ * Wraps a card that answers the prompt when clicked: pointing at it or focusing it with the keyboard
+ * shows the preview, and a zoom button in its corner shows it on a touch screen or opens the
+ * inspector, so looking at the card never chooses it. A card nobody can look at (face down and
+ * unknown) gets no zoom button.
+ */
+export function PromptCardZoomable({ preview, previewKey, card, className, style, children }: PromptCardZoomableProps) {
+  return (
+    <div
+      className={['prompt-card-zoomable', preview.openKey === previewKey ? 'is-previewing' : '', className ?? ''].filter(Boolean).join(' ')}
+      style={style}
+      {...preview.hover(previewKey, card)}
+    >
+      {children}
+      {inspectable(card) && <PromptCardZoomButton preview={preview} previewKey={previewKey} card={card} />}
+    </div>
   )
 }

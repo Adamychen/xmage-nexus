@@ -1713,6 +1713,7 @@ export const ja: TranslationSchema = {
     cardgrid_only_valid: '有効なカードのみ（{count}）',
     cardgrid_peek_hint: 'Altを押している間は盤面を表示',
     cardgrid_peek_release: 'Altを離すとカードに戻ります',
+    card_zoom: '{name}を拡大',
     cardgrid_done: '完了（{count}）',
     card_printings_title: 'エディションとアートを選択',
     card_inspect_no_translation: '選択したカード言語のテキストがないため、原文（英語）を表示しています。',

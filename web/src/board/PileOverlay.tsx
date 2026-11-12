@@ -1,12 +1,12 @@
 import CloseButton from '../ui/CloseButton'
 import { useEscape } from '../ui/useEscape'
 import EmptyState from '../ui/EmptyState'
-import { useMemo, useState, type CSSProperties } from 'react'
+import { useMemo, type CSSProperties } from 'react'
 import { createPortal } from 'react-dom'
-import type { CardView, PermanentView } from '../net/types'
+import type { CardView } from '../net/types'
 import CardSlot from './CardSlot'
 import Icon from '../ui/Icon'
-import FloatingCardPreview from './FloatingCardPreview'
+import { PromptCardZoomable, usePromptCardPreview } from '../game/promptCardPreview'
 import { overlayRoot } from './overlayRoot'
 import { useTranslation, plural } from '../i18n'
 import './PileOverlay.css'
@@ -39,20 +39,9 @@ export default function PileOverlay({
   const entries = Object.entries(cards)
   const playableSet = useMemo(() => playableIds ?? new Set<string>(), [playableIds])
   const targetSet = useMemo(() => targetIds ?? new Set<string>(), [targetIds])
-  const [hoverCard, setHoverCard] = useState<CardView | null>(null)
-  const [hoverRect, setHoverRect] = useState<DOMRect | null>(null)
+  const cardPreview = usePromptCardPreview({ fixedSide: 'left' })
 
   useEscape(onClose)
-
-  const handleCardHover = (card: CardView | PermanentView | null, rect?: DOMRect) => {
-    if (card?.faceDown) {
-      setHoverCard(null)
-      setHoverRect(null)
-      return
-    }
-    setHoverCard(card ?? null)
-    setHoverRect(rect ?? null)
-  }
 
   const knownCount = entries.filter(([, c]) => !c.faceDown).length
 
@@ -89,8 +78,6 @@ export default function PileOverlay({
                 key={id}
                 className={`pile-card-wrapper ${isTop ? 'is-top-card' : ''} ${isRevealed ? 'is-revealed' : ''}${flipIn ? ' is-flip-in' : ''}`}
                 style={flipIn ? ({ '--flip-i': Math.min(index, 12) } as CSSProperties) : undefined}
-                onFocus={(e) => handleCardHover(card, (e.target as HTMLElement).getBoundingClientRect())}
-                onBlur={() => handleCardHover(null)}
               >
                 {isLibrary && (
                   <div className={`pile-position-badge ${isTop ? 'top-badge' : ''} ${isRevealed ? 'revealed-badge' : ''}`}>
@@ -98,16 +85,17 @@ export default function PileOverlay({
                     {isRevealed && <span className="revealed-icon"><Icon name="eye" size={10} /></span>}
                   </div>
                 )}
-                <CardSlot
-                  cardId={id}
-                  card={card}
-                  faceDown={card.faceDown === true}
-                  className="pile-card"
-                  isPlayable={isPlayableCard}
-                  isTarget={isTargetCard}
-                  onClick={cardOnClick}
-                  onHover={handleCardHover}
-                />
+                <PromptCardZoomable preview={cardPreview} previewKey={id} card={card}>
+                  <CardSlot
+                    cardId={id}
+                    card={card}
+                    faceDown={card.faceDown === true}
+                    className="pile-card"
+                    isPlayable={isPlayableCard}
+                    isTarget={isTargetCard}
+                    onClick={cardOnClick}
+                  />
+                </PromptCardZoomable>
               </div>
             )
           })}
@@ -117,12 +105,7 @@ export default function PileOverlay({
         </div>
       </div>
 
-      <FloatingCardPreview
-        card={hoverCard}
-        anchorRect={hoverRect}
-        fixedSide="left"
-        inModal
-      />
+      {cardPreview.preview}
     </div>,
     overlayRoot()
   )

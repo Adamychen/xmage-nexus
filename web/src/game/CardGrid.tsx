@@ -10,6 +10,7 @@ import DialogShell from '../ui/DialogShell'
 import { stripTargetProgress, targetProgressLabel, type FeedbackPrompt } from './feedback'
 import { useTranslation, dynamicT } from '../i18n'
 import { localizeServerMessage } from './serverMessageTranslation'
+import { PromptCardZoomable, usePromptCardPreview } from './promptCardPreview'
 import './CardGrid.css'
 import Button from '../ui/Button'
 
@@ -25,6 +26,7 @@ export default function CardGrid({ prompt, selected, setSelected, send, busy }: 
   const { t } = useTranslation()
   const [filter, setFilter] = useState('')
   const [showAll, setShowAll] = useState(false)
+  const cardPreview = usePromptCardPreview()
   const cards = prompt.cards ?? []
   const serverDriven = prompt.method === 'GAME_TARGET'
   const isMulti = !serverDriven && prompt.max > 1
@@ -91,7 +93,7 @@ export default function CardGrid({ prompt, selected, setSelected, send, busy }: 
       legacyBackdropClass="feedback-backdrop"
       legacyPanelClass="feedback-dialog card-grid-dialog"
       onEscape={prompt.cancelable && !busy ? () => void send(() => sendSingle(prompt, ''), t('errors','send_failed')) : undefined}
-      trailing={<PeekHint />}
+      trailing={<><PeekHint />{cardPreview.preview}</>}
       kickerIcon={kickerIcon}
       kickerLabel={prompt.method === 'GAME_TARGET' ? t('dialogs','cardgrid_select_targets') : t('dialogs','cardgrid_select_cards')}
       title={<>{cardGridTitle} <Chip tone="brand" size="md">
@@ -136,21 +138,22 @@ export default function CardGrid({ prompt, selected, setSelected, send, busy }: 
         <div className="card-grid-scroll-area">
           <div className="card-grid">
             {filtered.map((card) => (
-              <button type="button"
-                key={card.id}
-                className={`card-grid-cell ${chosen.includes(card.id) ? 'selected' : ''}`}
-                disabled={busy || (serverDriven && selectable.size > 0 && !selectable.has(card.id) && !chosen.includes(card.id))}
-                aria-pressed={serverDriven || isMulti ? chosen.includes(card.id) : undefined}
-                onClick={() => toggle(card.id)}
-                title={`${card.displayName ?? card.name}${card.power && card.toughness ? ` (${card.power}/${card.toughness})` : ''}`}
-              >
-                <CardSlot
-                  card={card as never}
-                  cardId={card.id}
-                  isChosen={chosen.includes(card.id)}
-                />
-                <span className="card-grid-label">{card.displayName ?? card.name}</span>
-              </button>
+              <PromptCardZoomable key={card.id} preview={cardPreview} previewKey={card.id} card={card as never} className="card-grid-item">
+                <button type="button"
+                  className={`card-grid-cell ${chosen.includes(card.id) ? 'selected' : ''}`}
+                  disabled={busy || (serverDriven && selectable.size > 0 && !selectable.has(card.id) && !chosen.includes(card.id))}
+                  aria-pressed={serverDriven || isMulti ? chosen.includes(card.id) : undefined}
+                  onClick={() => toggle(card.id)}
+                  title={`${card.displayName ?? card.name}${card.power && card.toughness ? ` (${card.power}/${card.toughness})` : ''}`}
+                >
+                  <CardSlot
+                    card={card as never}
+                    cardId={card.id}
+                    isChosen={chosen.includes(card.id)}
+                  />
+                  <span className="card-grid-label">{card.displayName ?? card.name}</span>
+                </button>
+              </PromptCardZoomable>
             ))}
           </div>
 
