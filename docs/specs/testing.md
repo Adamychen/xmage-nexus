@@ -84,3 +84,19 @@ usernames are deterministically known (`multi-tenant-test.mjs`).
   channel and make verify/self-test flaky; the Phase 0 baseline (fresh stack) verified 10/10
   verify scripts in 83 s with zero residue. Default behaviour stays unchanged when isolation is off.
 - Guard: `scripts/verify-isolate.test.mjs`
+
+### TST-8 · Dev builds carry real Commander decks and a showcase table built from them
+The dev deck list includes four real Commander precons, each a 100-card singleton deck with its
+commander and real printings: Breed Lethality (Atraxa), Exquisite Invention (Saheeli), Vampiric
+Bloodlust (Edgar Markov) and Plunder the Graves (Meren). The gallery entry "Commander showcase" and
+the FakeServer scenario `showcase` (`SCENARIO=showcase npm run play:fake`) show the same
+four-player table on turn 11, built only from cards of those decks: your main phase with priority,
+crowded boards with counters, tokens and equipment, a commander in the command zone and a full
+graveyard. The table keeps the viewer's layout settings, so Arena, Table and Standard can be
+compared on it.
+
+- Why: the dev decks were land-only or built for one deterministic test, so manual checks and
+  screenshots of the board showed nearly empty tables; the board rework needed a real, advanced
+  Commander game to judge layouts (12-nov-2026). Every card was checked against the XMage 1.4.63
+  set classes, so the decks also work against a local server.
+- Guard: `fixtures/commanderShowcase.test.ts` · `e2e/commander-showcase.spec.ts`

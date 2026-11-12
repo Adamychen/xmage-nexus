@@ -35,6 +35,7 @@ import { handleChatMessage } from '../state/events/chat'
 import { STEPS } from '../game/phaseSteps'
 import { observeTurnRecap, resetTurnRecap, type TurnRecap } from '../game/turnRecap'
 import { CAST_FLIGHT_MS } from '../board/flightManager'
+import { commanderShowcaseGameView, commanderShowcasePlayableIds, SHOWCASE_GAME_ID } from '../__fixtures__/commanderShowcase'
 
 interface FrameModule {
   default: { gameId: string; gameView: GameView }
@@ -5706,6 +5707,17 @@ export function buildGalleryEntries(): GalleryEntry[] {
     game: KIND_COLUMNS_GAME,
     gameId: GANG_BLOCK_FRAME?.gameId ?? null,
     boardLayout: 'arena',
+  })
+  const showcase = commanderShowcaseGameView()
+  entries.push({
+    id: 'board:commander-showcase',
+    group: 'Tablero',
+    label: 'Commander showcase: four real precons on turn 11',
+    description: "Four-player Commander built only from the dev Commander precons: Atraxa (you, main phase with priority and six cards in hand), Saheeli with artifacts and a crowd of Thopter, Servo and Myr tokens, Edgar Markov with vampires, and Meren after a board wipe with the commander back in the command zone and sixteen cards in the graveyard. It keeps the viewer's board layout and side panel setting, so the same table can be compared across Arena, Table and Standard.",
+    phase: 'game',
+    game: showcase,
+    gameId: SHOWCASE_GAME_ID,
+    playableIds: commanderShowcasePlayableIds(showcase),
   })
   entries.push({
     id: 'board:pod-commander',

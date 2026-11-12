@@ -1,5 +1,5 @@
 // Manual play against the FixtureServer: starts Vite (5173) plus a fake proxy
-// on 8789 running the Commander playground (SCENARIO=manaStack|abilityCancel|tergrid for others;
+// on 8789 running the Commander playground (SCENARIO=manaStack|abilityCancel|tergrid|showcase for others;
 // PORT/FAKE_PORT move the two ports). No Java, proxy or XMage server.
 // Usage: npm run play:fake  (from web/)
 import { createServer } from 'vite'
@@ -14,6 +14,7 @@ const SCENARIOS = {
   manaStack: ['/fixtures/scenarios/manaStack.ts', 'manaStackScenario', 'mana-stack-test'],
   abilityCancel: ['/fixtures/scenarios/abilityCancel.ts', 'abilityCancelScenario', 'ability-cancel-test'],
   tergrid: ['/fixtures/scenarios/triggerOrder.ts', 'triggerOrderTergridScenario', 'trigger-order-test'],
+  showcase: ['/fixtures/scenarios/commanderShowcase.ts', 'commanderShowcaseScenario', 'Commander showcase'],
 }
 const [scenarioFile, scenarioExport, scenarioTable] = SCENARIOS[process.env.SCENARIO || 'commander']
 const scenario = (await vite.ssrLoadModule(scenarioFile))[scenarioExport]

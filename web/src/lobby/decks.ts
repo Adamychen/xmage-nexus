@@ -1,4 +1,5 @@
 import type { DeckStackPiles } from '../decks/stackPiles'
+import { COMMANDER_DECKS } from './commanderDecks'
 
 export interface DeckCard {
   cardName: string
@@ -161,7 +162,7 @@ export const MUTATE_DECK: Deck = {
   sideboard: [],
 }
 
-export const DECKS = [DEFAULT_DECK, ADVANCED_DECK, STABLE_DECK, AI_OPPONENT_DECK, COMBAT_OPPONENT_DECK, COMBAT_HUMAN_DECK, COMBAT_BLOCK_SIM_DECK, LANDS_DECK, MUTATE_DECK]
+export const DECKS = [DEFAULT_DECK, ADVANCED_DECK, STABLE_DECK, AI_OPPONENT_DECK, COMBAT_OPPONENT_DECK, COMBAT_HUMAN_DECK, COMBAT_BLOCK_SIM_DECK, LANDS_DECK, MUTATE_DECK, ...COMMANDER_DECKS]
 
 /**
  * Mazos fijos de desarrollo/pruebas: visibles solo en builds dev. En prod
