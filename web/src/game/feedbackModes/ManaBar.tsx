@@ -11,6 +11,7 @@ import type { FeedbackPrompt } from '../feedback'
 import { nextSmartManaAction, parseRemainingManaCost } from '../smartManaPayment'
 import Button from '../../ui/Button'
 import { DockPrompt } from '../GameDock'
+import { usePromptCancelKey } from '../usePromptCancelKey'
 import './promptBars.css'
 
 const POOL_COLORS: ManaPoolKey[] = ['white', 'blue', 'black', 'red', 'green', 'colorless']
@@ -35,6 +36,7 @@ export default function ManaBar({ form }: { form: UseFeedbackForm }) {
   const givenUpRef = useRef(false)
   const inFlightRef = useRef(false)
   const [autoTick, setAutoTick] = useState(0)
+  usePromptCancelKey(prompt && !busy ? cancel : null)
 
   useEffect(() => {
     if (!prompt || prompt.mode !== 'mana') {
@@ -107,7 +109,7 @@ export default function ManaBar({ form }: { form: UseFeedbackForm }) {
           <Button disabled={busy} onClick={() => void send(() => cmds.sendPlayerString('special', prompt.gameId), t('errors', 'send_failed_special'))}>
             {t('game', 'mana_special')}
           </Button>
-          <Button variant="subtle" disabled={busy} onClick={cancel} className="cancel-btn">
+          <Button variant="subtle" disabled={busy} onClick={cancel} className="cancel-btn" aria-keyshortcuts="Escape">
             {t('game', 'targeting_cancel')}
           </Button>
         </div>

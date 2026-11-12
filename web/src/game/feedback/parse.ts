@@ -7,7 +7,7 @@ import type {
   FeedbackTextFn,
   JsonRecord,
 } from './types'
-import { METADATA_OPTION_KEYS } from './types'
+import { CHOOSE_OPTION_CANCEL_ID, METADATA_OPTION_KEYS } from './types'
 import {
   booleanValueOf,
   detectPlaneswalkerChoice,
@@ -172,6 +172,7 @@ export function parseFeedback(
       if (progress) fp.progress = progress
       const targetZone = targetZoneOf(data)
       if (targetZone) fp.targetZone = targetZone
+      if (fp.required === false && !stringValue(asRecord(data.options)['UI.right.btn.text'])) fp.cancelable = true
       return fp
     }
     case 'GAME_SELECT_CARDS':
@@ -188,7 +189,9 @@ export function parseFeedback(
       const opts = optionEntries(abilities.choices)
       const { isPW, deltas } = detectPlaneswalkerChoice(opts, message)
       const { message: abilityMessage, sourceName } = messageWithSource(stringValue(abilities.message) ?? message, abilities)
-      return prompt(method, gameId, isPW ? t('dialogs', 'planeswalker_title') : t('game', 'choose_ability'), abilityMessage, 'uuid', opts, bounds, undefined, undefined, true, sourceName, undefined, undefined, undefined, undefined, undefined, undefined, isPW ? undefined : undefined, deltas, isPW ? true : undefined)
+      const picker = prompt(method, gameId, isPW ? t('dialogs', 'planeswalker_title') : t('game', 'choose_ability'), abilityMessage, 'uuid', opts, bounds, undefined, undefined, true, sourceName, undefined, undefined, undefined, undefined, undefined, undefined, isPW ? undefined : undefined, deltas, isPW ? true : undefined)
+      if (!opts.some((opt) => opt.id === CHOOSE_OPTION_CANCEL_ID)) picker.cancelable = true
+      return picker
     }
     case 'GAME_CHOOSE_CHOICE': {
       const choice = asRecord(data.choice)
@@ -224,7 +227,7 @@ export function parseFeedback(
       // El servidor NO manda los colores de maná: options solo trae {queryType: "PLAY_MANA"}.
       // El pago real se hace clicando las fuentes de maná en el tablero
       // (canPlayObjects del gameView incrustado), igual que el cliente oficial.
-      return prompt(method, gameId, t('game', 'pay_mana'), message, 'mana', [], bounds, undefined, controlledPlayerId(data.gameView))
+      return { ...prompt(method, gameId, t('game', 'pay_mana'), message, 'mana', [], bounds, undefined, controlledPlayerId(data.gameView)), cancelable: true }
     case 'GAME_PLAY_XMANA': {
       const { message: xMessage, sourceName } = messageWithSource(message, data)
       return prompt(method, gameId, t('game', 'pay_mana'), xMessage, 'boolean', [

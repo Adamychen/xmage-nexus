@@ -6,6 +6,10 @@ export function isTopLayer(layer: object): boolean {
   return layers[layers.length - 1] === layer
 }
 
+export function anyLayerOpen(): boolean {
+  return layers.length > 0
+}
+
 export function useLayer(enabled = true): object {
   const [layer] = useState(() => ({}))
   useEffect(() => {

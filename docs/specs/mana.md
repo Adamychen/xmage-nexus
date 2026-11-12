@@ -65,7 +65,7 @@ goes straight through.
 ### MNA-6 · Special and Cancel are always on the mana bar
 The bar always offers *Special Action* (asks the server for a special payment such as Convoke,
 Improvise or Delve) and *Cancel*, which abandons the payment: the engine stops the payment loop
-on any yes/no answer and the spell or ability is not cast.
+on any yes/no answer and the spell or ability is not cast. Escape does the same (PRM-13).
 
 - Why: special payments are not mana abilities, so the server only offers them on request
   (`sendPlayerString('special')`); without a cancel a player who started a cast they cannot

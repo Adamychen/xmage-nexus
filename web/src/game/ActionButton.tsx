@@ -90,6 +90,7 @@ export default function ActionButton({
     }
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
+        e.preventDefault()
         setMenuOpen(false)
         toggleRef.current?.focus()
       }
