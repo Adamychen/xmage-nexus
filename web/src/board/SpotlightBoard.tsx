@@ -282,6 +282,12 @@ export default function SpotlightBoard({
     return targetIdSet.has(id) || Object.keys(player.battlefield ?? {}).some((cardId) => targetIdSet.has(cardId))
   }
 
+  // BRD-8: while the prompt asks for this player, the copy and its head pick them instead of swapping.
+  const pickOrSwap = (id: string) => {
+    if (targetIdSet.has(id) && onTargetClick) onTargetClick(id)
+    else onSelectSeat(id)
+  }
+
   const seatBoard = (id: string) => {
     const player: PlayerView | undefined = playerById.get(id)
     if (!player) return null
@@ -416,7 +422,7 @@ export default function SpotlightBoard({
               return (
                 <div key={id} className="spotlight-copy-item">
                   {player && (
-                    <CopyHead player={player} players={players} active={game?.activePlayerId === id} onSelect={() => onSelectSeat(id)} />
+                    <CopyHead player={player} players={players} active={game?.activePlayerId === id} onSelect={() => pickOrSwap(id)} />
                   )}
                   <ScaledCopy
                     className={`spotlight-copy-slot${copyTargeted(id) ? ' target-zone' : ''}`}
@@ -425,7 +431,7 @@ export default function SpotlightBoard({
                     refWidth={mainBox.w}
                     refHeight={mainBox.h}
                     onClick={(e) => {
-                      if (!pickedInside(e.target, pickable, targetIdSet)) onSelectSeat(id)
+                      if (!pickedInside(e.target, pickable, targetIdSet)) pickOrSwap(id)
                     }}
                     overlay={<CopyPulse player={player} />}
                   >

@@ -255,9 +255,7 @@ export class HumanHelper {
     // OJO: los selects de PRIORIDAD en pasos de combate (sin criaturas que
     // declarar, "Play instants...") SÍ se pasan — son ventanas de instant.
     const options = (data.options ?? {}) as { possibleAttackers?: unknown; possibleBlockers?: unknown }
-    const hasCombatSelect =
-      (Array.isArray(options.possibleAttackers) && options.possibleAttackers.length > 0) ||
-      (Array.isArray(options.possibleBlockers) && options.possibleBlockers.length > 0)
+    const hasCombatSelect = Array.isArray(options.possibleAttackers) || Array.isArray(options.possibleBlockers)
     if (hasCombatSelect) {
       // el test ejerce la ventana de combate por la UI: invalida la ventana main
       // armada para que el fallback pendiente (1.5s) no dispare un

@@ -99,11 +99,10 @@ export function combatChosenFrom(game: GameView | null, mode?: 'attack' | 'block
 export function combatFromSelect(data: unknown, currentGame: GameView | null): CombatState | null {
   const record = (data ?? {}) as Record<string, unknown>
   const options = (record.options ?? {}) as Record<string, unknown>
-  const attackers = stringList(options.possibleAttackers)
-  const blockers = stringList(options.possibleBlockers)
-  if (attackers.length === 0 && blockers.length === 0) return null
-  const mode: 'attack' | 'block' = attackers.length > 0 ? 'attack' : 'block'
-  const selectable = mode === 'attack' ? attackers : blockers
+  const declaringAttackers = 'possibleAttackers' in options
+  if (!declaringAttackers && !('possibleBlockers' in options)) return null
+  const mode: 'attack' | 'block' = declaringAttackers ? 'attack' : 'block'
+  const selectable = stringList(mode === 'attack' ? options.possibleAttackers : options.possibleBlockers)
   const chosenFromGame = combatChosenFrom(currentGame, mode)
   const chosenFromOptions = stringList(options.chosen ?? options.chosenTargets ?? options.attackers)
   const chosen = Array.from(new Set([...chosenFromGame, ...chosenFromOptions]))

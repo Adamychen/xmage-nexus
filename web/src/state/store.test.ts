@@ -542,6 +542,19 @@ describe('maybeAutoPass with smart stops', () => {
     expect(sendPlayerBoolean).not.toHaveBeenCalled()
   })
 
+  it.each([
+    { kind: 'attackers', step: 'DECLARE_ATTACKERS', active: true, options: { possibleAttackers: [], queryType: 'SELECT' }, group: { attackers: { gob: {} } } },
+    { kind: 'blockers', step: 'DECLARE_BLOCKERS', active: false, options: { possibleBlockers: [], queryType: 'SELECT' }, group: { attackers: { foe: {} }, blockers: { gob: {} } } },
+  ])('CMB-12: a declaration of $kind with nobody left to pick stays open for the player to confirm', ({ step, active, options, group }) => {
+    setState({ combat: null })
+    const view = makeGameView({ step, players: [me(active)], combat: [group] as unknown as ReturnType<typeof makeGameView>['combat'] })
+    handleMessage({ type: 'event', method: 'GAME_SELECT', messageId: 2, objectId: 'g-1', data: { gameView: view, message: 'Select', options } })
+    expect(getState().feedback?.mode).toBe('combat')
+    expect(getState().combat?.chosen).toEqual(['gob'])
+    maybeAutoPass(getState().game!)
+    expect(sendPlayerBoolean).not.toHaveBeenCalled()
+  })
+
   it('does nothing when the controlled player has no priority', () => {
     const game = select(makeGameView({
       players: [makePlayer({ playerId: 'p1', name: 'Alice', controlled: true, hasPriority: false })],

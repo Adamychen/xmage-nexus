@@ -617,11 +617,17 @@ export class HumanGame {
     this.emitAttackSelect()
   }
 
+  private myCreatures(): PermanentView[] {
+    return this.myBattle.filter((p) => !/^(Plains|Island|Swamp|Mountain|Forest)$/.test(p.name ?? ''))
+  }
+
   private emitAttackSelect(): void {
-    const ids = this.myBattle.map((p) => p.parentId ?? p.name)
+    // HumanPlayer.selectAttackers lists only creatures that canAttack: a declared attacker is
+    // tapped, so the server drops it from possibleAttackers while it stays clickable to remove.
+    const ids = this.myCreatures().filter((p) => p.tapped !== true).map((p) => p.parentId ?? p.name)
     this.emit('GAME_SELECT', {
       message: 'Select attackers',
-      options: { possibleAttackers: ids, specialButton: 'All attack' },
+      options: ids.length > 0 ? { possibleAttackers: ids, specialButton: 'All attack' } : { possibleAttackers: ids },
       gameView: this.view(),
     })
   }
@@ -639,7 +645,9 @@ export class HumanGame {
       const perm = this.myBattle.find((p) => (p.parentId ?? p.name) === id)
       if (perm) perm.tapped = false
     } else {
-      this.combat = [{ attackers: { [id]: {} } }]
+      this.combat = groups.length > 0
+        ? groups.map((g, i) => (i === 0 ? { ...g, attackers: { ...g.attackers, [id]: {} } } : g))
+        : [{ attackers: { [id]: {} } }]
       const perm = this.myBattle.find((p) => (p.parentId ?? p.name) === id)
       if (perm) perm.tapped = true
     }
@@ -672,8 +680,14 @@ export class HumanGame {
     this.emitBlockSelect()
   }
 
+  private blockerIds(): string[] {
+    return this.combat.flatMap((g) => Object.keys((g as Record<string, Record<string, unknown>>).blockers ?? {}))
+  }
+
   private emitBlockSelect(): void {
-    const ids = this.myBattle.map((p) => p.parentId ?? p.name)
+    // FilterCreatureForCombatBlock excludes a creature already blocking, as the real server does.
+    const blocking = new Set(this.blockerIds())
+    const ids = this.myCreatures().map((p) => p.parentId ?? p.name).filter((id) => !blocking.has(id))
     this.emit('GAME_SELECT', {
       message: 'Select blockers',
       options: { possibleBlockers: ids },
@@ -684,7 +698,18 @@ export class HumanGame {
   private onBlockUUID(value: string): void {
     const perm = this.myBattle.find((p) => (p.parentId ?? p.name) === value)
     if (!perm) return
-    this.blockingId = perm.parentId ?? perm.name
+    const id = perm.parentId ?? perm.name
+    if (this.blockerIds().includes(id)) {
+      this.combat = this.combat.map((g) => {
+        const blockers = { ...((g as Record<string, Record<string, unknown>>).blockers ?? {}) }
+        delete blockers[id]
+        return { ...(g as Record<string, unknown>), blockers }
+      })
+      this.emitUpdate()
+      this.emitBlockSelect()
+      return
+    }
+    this.blockingId = id
     const attackerIds = Object.keys((this.combat[0] as Record<string, Record<string, unknown>> | undefined)?.attackers ?? {})
     if (attackerIds.length === 1) { this.assignBlocker(attackerIds[0]); return }
     this.emit('GAME_TARGET', {
@@ -702,7 +727,7 @@ export class HumanGame {
   private assignBlocker(_attackerId: string): void {
     if (!this.blockingId) return
     const group = this.combat[0] as Record<string, Record<string, unknown>>
-    if (group) group.blockers = { [this.blockingId]: {} }
+    if (group) group.blockers = { ...(group.blockers ?? {}), [this.blockingId]: {} }
     this.blockingId = null
     this.emitUpdate()
     this.emitBlockSelect()
