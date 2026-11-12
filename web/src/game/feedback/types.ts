@@ -50,6 +50,9 @@ export interface FeedbackPrompt {
   items?: FeedbackItem[]
   playerId?: string
   required?: boolean
+  /** The server reads `sendPlayerBoolean(false)` here as backing out of the spell or ability
+   *  being played (the desktop client's Cancel), so the prompt offers Cancel and Escape (PRM-13). */
+  cancelable?: boolean
   sourceName?: string
   chosenTargets?: string[]
   /** Zone declared by the server for the target (`options.targetZone` from
@@ -86,6 +89,9 @@ export interface FeedbackPrompt {
 }
 
 export type JsonRecord = Record<string, unknown>
+
+/** `Modes.CHOOSE_OPTION_CANCEL_ID`: the Cancel entry the server adds itself to a mode picker. */
+export const CHOOSE_OPTION_CANCEL_ID = '0125bd0c-5610-4eba-bc80-fc6d0a7b9de6'
 
 export const METADATA_OPTION_KEYS = new Set([
   'queryType',

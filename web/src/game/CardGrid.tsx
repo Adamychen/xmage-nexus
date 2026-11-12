@@ -90,6 +90,7 @@ export default function CardGrid({ prompt, selected, setSelected, send, busy }: 
       size="lg"
       legacyBackdropClass="feedback-backdrop"
       legacyPanelClass="feedback-dialog card-grid-dialog"
+      onEscape={prompt.cancelable && !busy ? () => void send(() => sendSingle(prompt, ''), t('errors','send_failed')) : undefined}
       trailing={<PeekHint />}
       kickerIcon={kickerIcon}
       kickerLabel={prompt.method === 'GAME_TARGET' ? t('dialogs','cardgrid_select_targets') : t('dialogs','cardgrid_select_cards')}
@@ -174,7 +175,9 @@ export default function CardGrid({ prompt, selected, setSelected, send, busy }: 
             <Button disabled={busy} onClick={() => {
               void send(() => sendSingle(prompt, ''), t('errors','send_failed'))
             }}>
-              {serverDriven && chosen.length > 0 ? t('dialogs','cardgrid_done', { count: chosen.length }) : t('dialogs','cardgrid_finish')}
+              {serverDriven && chosen.length > 0
+                ? t('dialogs','cardgrid_done', { count: chosen.length })
+                : prompt.cancelable ? t('game', 'targeting_cancel') : t('dialogs','cardgrid_finish')}
             </Button>
           )}
         </footer>

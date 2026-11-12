@@ -21,7 +21,6 @@ vi.mock('../../net/commands', () => ({
   sendPlayerBoolean: vi.fn().mockResolvedValue(null),
   sendPlayerUUID: vi.fn().mockResolvedValue(null),
   sendManaPaymentMode: vi.fn().mockResolvedValue(null),
-  updateManaConfirmPreference: vi.fn().mockResolvedValue(null),
   updatePreferences: vi.fn().mockResolvedValue(null),
   watchGame: vi.fn().mockResolvedValue(null),
   getRoomChatId: vi.fn().mockResolvedValue(null),

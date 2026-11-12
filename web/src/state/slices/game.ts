@@ -1,7 +1,5 @@
 import type { CardView, DeckCardEntry, DeckJson, GameEndInfo, GameView, PermanentView } from '../../net/types'
 import type { FeedbackPrompt, FeedbackCard } from '../../game/feedback'
-import type { PhaseStops } from '../../net/commands'
-import { DEFAULT_PHASE_STOPS, clonePhaseStops } from '../../game/phaseStops'
 import { loadActiveDeck } from '../persistence'
 import type { TurnRecap } from '../../game/turnRecap'
 import type { RollbackVote } from '../rollbackVote'
@@ -101,7 +99,6 @@ export interface GameSlice {
   viewer: CardViewerState | null
   playerMenu: PlayerMenuState | null
   inspectedCard: CardView | PermanentView | null
-  phaseStops: PhaseStops
   /** Dungeon room progress by `dungeonProgressKey(gameId, dungeon)` (visit order). */
   dungeonProgress: Record<string, string[]>
   /** Speed level 1-4 by `speedLevelKey(gameId, player)` (chat sniff, engine field not in DTO). */
@@ -147,5 +144,4 @@ export const initialGame: GameSlice = {
   priorityRequest: null,
   waitingFor: null,
   elimination: null,
-  phaseStops: clonePhaseStops(DEFAULT_PHASE_STOPS),
 }

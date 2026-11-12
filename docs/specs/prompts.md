@@ -63,7 +63,8 @@ as chosen. The grid never collects several targets behind a Confirm button.
 
 ### PRM-7 · A required prompt has no cancel
 A required prompt shows no cancel button, in a card grid or on the targeting bar; an optional one
-shows a finish button instead of cancel.
+shows a finish button instead of cancel, unless declining it backs out of the spell or ability being
+played, where the same button says Cancel (PRM-13).
 
 - Why: answering a required prompt with "cancel" makes the server ask again, so the button looked
   broken.
@@ -116,6 +117,26 @@ inside the dialog box: a long list of lands (30 cards) scrolls the list, never t
   panel and the player had to scroll the dialog to find "Finish selection", which read as a forced
   pick of two lands (reported 2026-10-30, on the "up to two" land prompt).
 - Guard: `e2e/card-grid-footer.spec.ts`
+
+### PRM-13 · A spell or ability being played can always be backed out of
+While the player is playing a spell or an activated ability, every step the server lets them back
+out of offers Cancel, and Escape does the same: the ability picker ("Choose spell or ability to
+play", including the planeswalker one), an activation's target, a cost picked on the board or in a
+card grid, and the mana payment. Cancel answers `sendPlayerBoolean(false)`, which the engine reads as
+abandoning the activation and rolls the game back to the state before it (nothing tapped, nothing
+paid, priority back). A target says Cancel while the server sends it optional with no "Done" label
+(`options['UI.right.btn.text']`) and Finish once it sends one, as the desktop client labels its
+button. A mode picker that already lists the server's own Cancel entry gets no second one; Escape
+picks that entry. Escape never cancels while another layer is open, while typing in a text field, or
+when another handler (rewind, a menu) already used the key.
+
+- Why: the engine never suppresses the ability picker for a non-mana activated ability
+  (`HumanPlayer.suppressAbilityPicker`), and the web sent it as a required choice with no way out, so
+  a player who clicked a permanent by mistake was stuck in the dialog; the activation's target said
+  "Finish" where the desktop client says "Cancel", and Escape did nothing on any of these steps. The
+  desktop client always adds Cancel to its ability picker and cancels it with the keyboard
+  (`AbilityPicker.show`, `tryChoiceCancel`).
+- Guard: `src/game/promptCancel.test.tsx` · `e2e/activated-ability-cancel.spec.ts`
 
 ### PRM-14 · Every trigger to order shows its source and the card it points at
 In the trigger order dialog each row shows the card the trigger comes from and, when the trigger

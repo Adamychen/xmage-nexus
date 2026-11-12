@@ -28,7 +28,13 @@
 
 .big-action-toggle {
   flex-shrink: 0;
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 30px;
+  padding: 0;
+  line-height: 1;
   border-radius: var(--r-base);
   border: 1.5px solid var(--veil-3);
   background: var(--ink-3);
@@ -76,22 +82,54 @@
   z-index: 1;
 }
 
+.action-button-container:not(.action-button-container--dial) .big-action-toggle {
+  min-height: 42px;
+}
+
+.action-button-container:not(.action-button-container--dial) .action-btn-content {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  align-items: center;
+  column-gap: var(--sp-1h);
+  flex: 1 1 auto;
+}
+
+.action-button-container:not(.action-button-container--dial) .action-btn-content > :not(.action-btn-icon) {
+  grid-column: 2;
+  min-width: 0;
+}
+
 .action-btn-label {
+  display: block;
   font-size: var(--fs-md);
   font-weight: 800;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--fg-hi);
-  line-height: 1.1;
-  display: flex;
-  align-items: center;
+  line-height: 1.15;
+  overflow-wrap: normal;
+  word-break: normal;
 }
 
-.action-btn-icon {
+.big-action-btn .action-btn-name {
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: bottom;
+}
+
+.big-action-btn .action-btn-icon {
+  grid-column: 1;
+  grid-row: 1 / -1;
   display: inline-flex;
   align-items: center;
-  margin-right: var(--sp-1h);
+  justify-content: center;
+  margin: 0;
   font-size: var(--fs-sm);
+  line-height: 0;
 }
 
 .action-btn-sublabel {
@@ -198,4 +236,23 @@
   display: inline-flex;
   align-items: center;
   gap: var(--sp-0h);
+}
+
+.action-button-container:not(.action-button-container--dial) .big-action-btn.action-waiting .action-waiting-clock {
+  flex-wrap: wrap;
+  column-gap: var(--sp-1h);
+}
+
+.action-button-container:not(.action-button-container--dial) .big-action-btn.action-waiting .action-btn-label {
+  font-size: var(--fs-sm);
+  letter-spacing: 0.02em;
+}
+
+.action-button-container:not(.action-button-container--dial) .action-waiting-sep {
+  display: none;
+}
+
+.action-waiting-thinking,
+.action-waiting-left {
+  white-space: nowrap;
 }

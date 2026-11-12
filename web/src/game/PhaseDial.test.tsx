@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import PhaseDial, { DIAL_CORE, dialPipPoint, dialSatPoint } from './PhaseDial'
 import ActionButton from './ActionButton'
 import { DIAL_COMBAT_STEPS, DIAL_PHASES } from './phaseSteps'
-import { setState } from '../state/state'
+import { getState, setState } from '../state/state'
 import { setLanguage } from '../i18n'
 import { makeGameView, makePlayer } from '../__fixtures__/gameViews'
 
@@ -14,13 +14,19 @@ const dialCss = readFileSync(join(process.cwd(), 'src/game/PhaseDial.css'), 'utf
 const updatePreferences = vi.fn().mockResolvedValue({ ok: true })
 vi.mock('../net/commands', async (importOriginal) => ({
   ...(await importOriginal<typeof import('../net/commands')>()),
-  updatePreferences: (...args: unknown[]) => updatePreferences(...args),
+  // only the stops matter here; the whole preferences object is covered by SET-11
+  updatePreferences: (prefs: { phases: unknown }) => updatePreferences(prefs.phases),
 }))
 
 describe('PhaseDial', () => {
   beforeEach(() => {
     updatePreferences.mockClear()
-    setState({ phaseStops: { yourTurn: { main1: true }, opponentTurn: {} } })
+    // a running game, so a toggle reaches the server (SET-11)
+    setState({
+      gameId: 'g-dial',
+      game: makeGameView({ players: [makePlayer({ playerId: 'p-me', name: 'Me', controlled: true })] }),
+      settings: { ...getState().settings, smartStops: false, phaseStops: { yourTurn: { main1: true }, opponentTurn: {} } },
+    })
   })
   afterEach(cleanup)
 
