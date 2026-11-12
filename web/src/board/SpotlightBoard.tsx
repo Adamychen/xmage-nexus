@@ -360,7 +360,9 @@ export default function SpotlightBoard({
               refWidth={mainBox.w}
               refHeight={mainBox.h}
               onClick={(e) => {
-                if (!pickedInside(e.target, pickable, targetIdSet)) onSelectSeat(id)
+                if (pickedInside(e.target, pickable, targetIdSet)) return
+                if (targetIdSet.has(id) && onTargetClick) onTargetClick(id)
+                else onSelectSeat(id)
               }}
               overlay={<CopyPulse player={playerById.get(id)} />}
             >

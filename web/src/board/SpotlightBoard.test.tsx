@@ -122,6 +122,27 @@ describe('SpotlightBoard', () => {
     expect(picked).toEqual([])
   })
 
+  it('BRD-8: while the prompt asks for a player, a click anywhere on that player\'s copy picks them and does not swap', () => {
+    const picked: string[] = []
+    const targeted: string[] = []
+    const { container } = render(
+      <SpotlightBoard
+        game={fourPlayerGame()}
+        homeId="p1"
+        mainId="p1"
+        targetIds={['p3', 'p4']}
+        onTargetClick={(id) => targeted.push(id)}
+        onSelectSeat={(id) => picked.push(id)}
+      />,
+    )
+    fireEvent.click(container.querySelector('[data-testid="spotlight-copy-p4"]') as HTMLElement)
+    expect(targeted).toEqual(['p4'])
+    expect(picked).toEqual([])
+    fireEvent.click(container.querySelector('[data-testid="spotlight-copy-p2"]') as HTMLElement)
+    expect(picked).toEqual(['p2'])
+    expect(targeted).toEqual(['p4'])
+  })
+
   it('BRD-7: the main board mode has no focus buttons', () => {
     const { container } = render(<SpotlightBoard game={fourPlayerGame()} homeId="p1" mainId="p2" onSelectSeat={() => {}} />)
     expect(container.querySelectorAll('[data-testid^="seat-focus-"]').length).toBe(0)

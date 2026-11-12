@@ -20,7 +20,7 @@ wins over any other use of the same click (TGT-4).
 - Why: interactive combat landed in `aa0b97479f` (click the creature, then confirm); `03b44adda5`
   kept a chosen creature clickable, because the server may drop it from `possibleAttackers` once
   it is chosen and the player could no longer undeclare it.
-- Guard: `e2e/combat-human.spec.ts` (clicking a chosen creature again is not asserted)
+- Guard: `e2e/combat-human.spec.ts` · `e2e/combat-undeclare.spec.ts`
 
 ### CMB-2 · The combat bar finishes the declaration; "Attack all" only when the server offers it
 The declaration window is a bar in the dock that says whether attackers or blockers are being
@@ -131,3 +131,19 @@ and block windows blocker labels in every locale.
   sets with `t()`, so fr/de/it/ru/ja/zhs rendered the blocker label in the attack window
   (ROADMAP §4.3 finding; `CombatBar.tsx`, `GenericDialog.tsx`, `ActionButton.tsx`).
 - Guard: `src/game/feedback.test.ts` · `src/game/feedbackModes/CombatBar.test.tsx` · `src/game/feedbackModes/GenericDialog.test.tsx` · `src/game/ActionButton.control.test.tsx`
+
+### CMB-12 · A declaration ends only when the player confirms it
+An attack or block declaration stays open, with its bar and its confirm button, until the player
+confirms it, also once no creature is left to pick: after declaring your only attacker or blocker
+the window is still the declaration, so clicking that creature takes it out and the main button
+reads "Confirm attackers", never "Pass priority". Smart stops never answer a declaration window,
+as in MTG Arena, where attacks and blocks are always confirmed by hand.
+
+- Why: the server keeps the declaration open after each pick and sends the window again with
+  `possibleAttackers` (or `possibleBlockers`) listing only the creatures still free to pick, so
+  the list is empty once the only one is chosen. The client read an empty list as a priority
+  window: the bar went away, the main button turned into "Pass priority" and the smart stops could
+  answer it, which confirmed the attack with no way back. A player with one creature in a
+  multiplayer game reported they could not take it out of the attack (2026-11-12). The server
+  only sends the empty list when a declaration is already under way, so this adds no stop.
+- Guard: `src/game/feedback.test.ts` · `src/state/store.test.ts` · `e2e/combat-undeclare.spec.ts`

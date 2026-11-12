@@ -141,14 +141,18 @@ area, and the focus buttons of BRD-3 are not shown (the copy is the button).
 Hovering a card in a copy shows the same floating preview as on the main board. A card or player in
 a copy that the current prompt can pick (a target, a playable card, a creature the combat
 declaration lists) is highlighted as on the main board, and clicking it acts on it exactly as on
-the main board (TGT-5, CMB-1) without swapping. A copy whose seat holds something the prompt can
+the main board (TGT-5, CMB-1) without swapping. While the prompt asks for a player and that
+player's seat is a copy (choosing whom an attacker attacks, CMB-10), a click anywhere on that copy
+picks the player, not only on their portrait, and does not swap. A copy whose seat holds something the prompt can
 target rings like a target zone, and a copy pulses once when a permanent enters or leaves its
 battlefield; the pulse obeys the effects and reduced-motion settings (FX-1, FX-2) and has a gallery
 entry (FX-12).
 
 - Why: the copies are an overview, not for reading (the issue: "the hover preview covers the text
   and a click brings the board to full size"), but a board on screen must never be one the player
-  has to swap in just to answer a prompt.
+  has to swap in just to answer a prompt. Choosing a defender by clicking the opponent's copy only
+  swapped it into the main area and left the prompt open, and the swapped-in player's portrait sat
+  under the own hand, so a player could not pick or change whom they attacked (2026-11-12).
 - Guard: `src/board/SpotlightBoard.test.tsx` · `e2e/animations-play.spec.ts` · `e2e/spotlight.spec.ts`
 
 ### BRD-9 · Declaring attackers or blockers brings the own board to the main area

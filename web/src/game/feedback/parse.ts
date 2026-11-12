@@ -33,7 +33,6 @@ import {
   optionEntries,
   secondMessageOf,
   splitSourceSuffix,
-  stringList,
   stringValue,
   subMessageOf,
   targetOptions,
@@ -64,10 +63,9 @@ export function parseFeedback(
       // o options.possibleBlockers: aquí las criaturas se clican en el tablero y
       // "Confirmar" (o "Atacar con todos") responde el paso de combate.
       const options = asRecord(data.options)
-      const attackers = stringList(options.possibleAttackers)
-      const blockers = stringList(options.possibleBlockers)
-      if (attackers.length > 0 || blockers.length > 0) {
-        const attacking = attackers.length > 0
+      const declaringAttackers = 'possibleAttackers' in options
+      if (declaringAttackers || 'possibleBlockers' in options) {
+        const attacking = declaringAttackers
         const fp = prompt(
           method,
           gameId,
