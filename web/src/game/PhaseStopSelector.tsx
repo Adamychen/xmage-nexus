@@ -1,10 +1,8 @@
 import { useCallback } from 'react'
-import * as cmds from '../net/commands'
 import type { PhaseStops } from '../net/commands'
-import { useStore } from '../state/store'
-import { getState, setState } from '../state/state'
+import { setSetting, useStore } from '../state/store'
 import { useTranslation } from '../i18n'
-import { PHASES, serverPhaseStops, togglePhaseStop } from './phaseStops'
+import { PHASES, togglePhaseStop } from './phaseStops'
 import type { PhaseTurn } from './phaseStops'
 import './PhaseStopSelector.css'
 
@@ -58,12 +56,10 @@ export function PhaseStopGrid({ value, onToggle, idPrefix, showStepNames = false
 
 export default function PhaseStopSelector() {
   const { t } = useTranslation()
-  const phaseStops = useStore((s) => s.phaseStops)
+  const phaseStops = useStore((s) => s.settings.phaseStops)
 
   const toggle = useCallback((turn: PhaseTurn, key: string) => {
-    const next = togglePhaseStop(phaseStops, turn, key)
-    setState({ phaseStops: next })
-    void cmds.updatePreferences(serverPhaseStops(getState().settings.smartStops, next))
+    setSetting('phaseStops', togglePhaseStop(phaseStops, turn, key))
   }, [phaseStops])
 
   return (

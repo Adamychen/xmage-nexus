@@ -3,7 +3,7 @@ import type { GameEndInfo, GameView } from '../../net/types'
 import { parseFeedback } from '../../game/feedback'
 import { manaPaymentActions } from '../../game/manaPayment'
 import { serverAutoAnswerActions } from '../../game/autoAnswers'
-import { clonePhaseStops, serverPhaseStops } from '../../game/phaseStops'
+import { pushServerPreferences } from '../serverPreferences'
 import { getState, setState, addLog } from '../state'
 import { sniffDungeonEntry, sniffSpeedLevel, sniffRoomDoor, enterTableChat, exitTableChat, armRollbackPending, disarmRollbackPending, sniffElimination } from '../actions'
 import { ingestRollbackServerMessage } from '../rollbackVote'
@@ -138,14 +138,11 @@ export function handleGameUpdate(method: string, objectId: string | null, data: 
         for (const action of manaPaymentActions(getState().settings.manaPayment)) {
           void cmds.sendManaPaymentMode(action, objectId)
         }
-        void cmds.updateManaConfirmPreference(getState().settings.manaPayment.confirmEmptyPool)
         // respuestas Sí/No recordadas: las aplica el HumanPlayer de XMage
         for (const { action, data } of serverAutoAnswerActions(getState().settings.autoAnswers ?? [])) {
           void cmds.sendPlayerAction(action, objectId, data)
         }
-        const sessionStops = clonePhaseStops(getState().settings.phaseStops)
-        patch.phaseStops = sessionStops
-        void cmds.updatePreferences(serverPhaseStops(getState().settings.smartStops, sessionStops))
+        pushServerPreferences()
       }
     }
     if (method === 'GAME_SELECT') {

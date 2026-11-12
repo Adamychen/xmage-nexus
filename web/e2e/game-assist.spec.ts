@@ -266,7 +266,7 @@ test('smart stops: passes mana-only windows and stops when a spell is castable @
 
     await page.evaluate(() => {
       const none = () => ({ upkeep: false, draw: false, main1: false, beginCombat: false, endCombat: false, main2: false, endStep: false })
-      ;(window as unknown as { __mageStore: { setState: (p: unknown) => void } }).__mageStore.setState({ phaseStops: { yourTurn: none(), opponentTurn: none() } })
+      ;(window as unknown as { __mageStore: { setSetting: (k: string, v: unknown) => void } }).__mageStore.setSetting('phaseStops', { yourTurn: none(), opponentTurn: none() })
     })
 
     const passes = () => parseSent(sentOf(page)).filter((f) => f.action === 'sendPlayerBoolean' && f.args?.value === false).length

@@ -1,10 +1,7 @@
 import { useCallback } from 'react'
 import type { MouseEvent } from 'react'
-import * as cmds from '../net/commands'
-import { useStore } from '../state/store'
-import { getState, setState } from '../state/state'
+import { setSetting, useStore } from '../state/store'
 import type { TranslationSchema } from '../i18n/types'
-import { serverPhaseStops } from './phaseStops'
 
 export interface StepDef {
   key: string
@@ -89,8 +86,9 @@ export function activeStepIndex(step: string): number {
   return idx >= 0 ? idx : 0
 }
 
+/** The board edits the same stops as Settings (STP-1): one store field, persisted and pushed by `setSetting`. */
 export function usePhaseStopToggles() {
-  const phaseStops = useStore((s) => s.phaseStops)
+  const phaseStops = useStore((s) => s.settings.phaseStops)
 
   const toggleStop = useCallback((stopKey?: string | string[], e?: MouseEvent) => {
     const keys = Array.isArray(stopKey) ? stopKey : stopKey ? [stopKey] : []
@@ -110,9 +108,7 @@ export function usePhaseStopToggles() {
       yourTurn[k] = nextYour
       opponentTurn[k] = nextOpp
     }
-    const next = { yourTurn, opponentTurn }
-    setState({ phaseStops: next })
-    void cmds.updatePreferences(serverPhaseStops(getState().settings.smartStops, next))
+    setSetting('phaseStops', { yourTurn, opponentTurn })
   }, [phaseStops])
 
   const toggleOpponentStop = useCallback((stopKey?: string | string[]) => {
@@ -121,9 +117,7 @@ export function usePhaseStopToggles() {
     const cur = keys.some((k) => !!phaseStops.opponentTurn?.[k])
     const opponentTurn = { ...(phaseStops.opponentTurn ?? {}) }
     for (const k of keys) opponentTurn[k] = !cur
-    const next = { ...phaseStops, opponentTurn }
-    setState({ phaseStops: next })
-    void cmds.updatePreferences(serverPhaseStops(getState().settings.smartStops, next))
+    setSetting('phaseStops', { ...phaseStops, opponentTurn })
   }, [phaseStops])
 
   return { phaseStops, toggleStop, toggleOpponentStop }
