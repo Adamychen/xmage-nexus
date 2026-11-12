@@ -76,6 +76,31 @@ test.describe('capas sobre la carta @board', () => {
     })
   })
 
+  test('HND-6: each cost sits in the strip of its own card, not over the next one @board', async ({ page }) => {
+    await withFakeServer(() => allInteractionsScenario(), async () => {
+      const { pageErrors } = await quickStartGame(page, {
+        prefix: 'ovl',
+        skipAsks: true,
+      })
+      const slots = page.locator('.hand-bar .hand-card-slot')
+      await expect(slots).toHaveCount(2, { timeout: 30_000 })
+      await expect(slots.nth(0).locator('.hand-card-cost img').first()).toBeVisible()
+      const geometry = await slots.evaluateAll((els) =>
+        els.map((slot) => ({
+          card: slot.querySelector('.hand-card')!.getBoundingClientRect().left,
+          pips: Array.from(slot.querySelectorAll('.hand-card-cost img')).map((img) => {
+            const r = img.getBoundingClientRect()
+            return r.left + r.width / 2
+          }),
+        })),
+      )
+      const [first, next] = geometry
+      expect(first.pips.length).toBeGreaterThan(0)
+      for (const centre of first.pips) expect(centre).toBeLessThan(next.card)
+      expect(pageErrors).toEqual([])
+    })
+  })
+
   test('the default draws the P/T badge on every creature @board', async ({ page }) => {
     const { pageErrors } = await openOverlayBoard(page)
     await expect(card(page, OV_BASE_BEARS).locator('.pt-badge')).toBeVisible()
