@@ -1046,6 +1046,8 @@ export const fr: TranslationSchema = {
     preset_manual_desc: 'Aucune automatisation : engagez et payez tout vous-même, avec tous les arrêts de phase.',
     player_left: 'a quitté la partie',
     player_defeated: 'a été vaincu',
+    player_died: 'est mort',
+    player_conceded: 'a concédé',
     player_left_desc: 'Le joueur s’est déconnecté ou a concédé',
     life_zero_desc: 'Points de vie réduits à 0',
     status_left: 'Parti',

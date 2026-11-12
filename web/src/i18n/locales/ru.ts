@@ -1046,6 +1046,8 @@ export const ru: TranslationSchema = {
     preset_manual_desc: 'Без автоматизации: поворачивайте и платите всё сами, все остановки фаз включены.',
     player_left: 'покинул игру',
     player_defeated: 'потерпел поражение',
+    player_died: 'погиб',
+    player_conceded: 'сдался',
     player_left_desc: 'Игрок отключился или сдался',
     life_zero_desc: 'Жизни снижены до 0',
     status_left: 'Вышел',

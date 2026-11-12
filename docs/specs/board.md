@@ -93,24 +93,28 @@ had chosen, unless the player picked another seat during combat.
 
 ### BRD-6 · The main board setting: one board at full size, the others in a side panel
 Settings → Board has a **Main board with side panel** switch (`boardSpotlight`, off by default).
-With it on, in the Arena and Table layouts, a player (not a spectator) with two or more opponents
-still in the game sees one board at full size in the main area — their own when the game starts —
+With it on, in the Arena and Table layouts, a player (not a spectator) with at least one opponent
+still in the game — a duel, a game that started as one, or a pod down to two — sees one board at
+full size in the main area — their own when the game starts —
 and every other seat in a panel on the right edge of the board, one copy per seat, top to bottom
 in turn order starting after the player. A copy is the whole board of that seat (status row,
 battlefield bands, command zone, piles) laid out at the size of the main area and scaled down as
 one piece, so it keeps the main area's proportions and its cards never wrap or clip differently
-from the same board in the main area. Every board, main or copy, is laid out the way the own board
+from the same board in the main area. Every copy spans the panel's width and takes the main area's
+proportions, its height following from that width, so its box never stretches past the board drawn
+in it; when the copies do not fit the panel's height the panel scrolls vertically, never sideways. Every board, main or copy, is laid out the way the own board
 is (status row at the bottom, creatures above lands), so each kind of permanent sits in the same
 place on every board. An opponent's hand, in the main area or a copy, is a stack of backs with its
 count beside their portrait (a click opens the known cards), so it never sits under the own hand. A
-seat that has left or lost keeps its place in the panel as a defeated seat.
-A spectator gets the same mode when three or more players are still in the game: the main area
+seat that has left or lost stays in the panel folded to its head (BRD-30).
+A spectator gets the same mode when two or more players are still in the game: the main area
 starts on the seat the column view draws at the bottom for a spectator (the last in turn order),
 the panel holds every other seat in turn order after it, and a seat whose hand the spectator may
-see shows it in the main area as the column view does. With the switch off, in Standard or Pod, or
-with fewer than three players left (a player with fewer than two opponents),
-the board is drawn as BRD-3…BRD-5 describe; turning the switch on or off mid-game takes effect at
-once and never drops an open prompt.
+see shows it in the main area as the column view does. In a duel the Arena preference keeps the
+Arena layout while the switch is on (with it off a duel is drawn on the Standard board, as before),
+so the mode stays when a pod is down to two and in games that start with two players. With the
+switch off or in Standard or Pod, the board is drawn as BRD-3…BRD-5 describe (or as the duel board);
+turning the switch on or off mid-game takes effect at once and never drops an open prompt.
 
 - Why: issue #23 asked for one board on the whole screen; a full point-of-view switch was held back
   (BRD-3) because it hid the blockers, targets and triggers the player must answer. With every other
@@ -119,6 +123,12 @@ once and never drops an open prompt.
   of squeezing permanents into a narrow column do not come back. It is a single switch, not one per
   part, because the layouts already multiply with the interfaces. Spectators were left out at first
   and asked for it at once: watching a pod has the same crowded columns, and nothing to answer.
+  The mode used to switch off below two live opponents, so a Commander game that came down to two
+  jumped mid-game to the split duel view, which looked like a broken table (user report,
+  2026-11-11); the player who turned the switch on wants the same view to the end and in duels.
+  With one copy in a duel its box used to stretch to the panel's whole height around a much smaller
+  board; the user asked for each box to keep the table's proportions at the panel's width, and for
+  the panel to scroll when the copies do not fit (user report, 2026-11-12).
 - Guard: `src/board/ScaledCopy.test.tsx` · `src/board/SpotlightBoard.test.tsx` · `src/board/cardOverlays.test.ts` · `src/board/spotlight.test.ts` · `src/game/GameScreen.test.tsx` · `src/state/persistence.test.ts` · `e2e/spotlight.spec.ts`
 
 ### BRD-7 · A click on a copy brings that board to the main area
@@ -198,10 +208,9 @@ revealed top of the library) or a card in it the current prompt can target.
 ### BRD-13 · The panel can be resized
 The panel's left edge can be dragged to change its width between 15% and 35% of the board width
 (22% by default). The width is a player setting (`boardSpotlightPanel`), kept across games, and the
-copies rescale while dragging: a wider panel never makes a copy smaller, and a copy grows until it
-fills its slot's height — with three copies stacked that happens a little past the default width, so
-more width only adds room around them, which matters more in a three-player game (two copies). A
-copy never scrolls sideways.
+copies rescale while dragging: a copy spans the panel's width (BRD-6), so a wider panel makes every
+copy larger, and the panel scrolls vertically once they no longer fit its height. A copy never
+scrolls sideways.
 
 - Why: in a pod the squeeze is horizontal, and how much room the overview deserves depends on the
   screen; the issue asked for a resizable panel.
@@ -441,3 +450,43 @@ under it aligned with the label.
   ("ESPERANDO / A"), the name had no room to shrink and was clipped, and the clock started under the
   hourglass instead of under the text (user report with a production screenshot, 2026-11-11).
 - Guard: `e2e/action-bar-waiting.spec.ts`
+
+### BRD-30 · A seat out of the game folds to its head in the side panel
+In the main board mode (BRD-6) an opponent who is out of the game (`hasLeft` in the current game
+view: they conceded, lost on life, poison or an effect, or quit the match) keeps its turn-order place
+in the panel folded to its head (BRD-31): the seat colour, the name and why they are out, greyed
+out, with no copy of their board under it. The reason comes from the game log, since the view only
+says `hasLeft`: a skull and "has died" for a loss (0 life, poison, an effect), a white flag and "has
+conceded" for a concession, and a door and "has left the game" for a player who quit the match or ran
+out of time. A concession or a quit is logged next to the loss it causes, so the more specific
+reason wins, and a player already out keeps the reason they had (a dead player who then closes the
+table stays dead). Without a log line (the game was opened after they left), 0 life reads as a death
+and anything else as leaving. It folds as soon as a game view marks the player out. The folded head is not a
+button: it never brings the seat to the main area. The copies of the players still in the game keep
+the size they had (it follows the panel's width). The player's own seat is never folded. A player
+who only lost the connection is still in the game for the server until it drops them
+(`PlayerView` carries no connection state), so the seat stays a copy until then.
+
+- Why: the panel drew an out seat as a full-size copy holding the board's narrow strip scaled down
+  to a few pixels, so a player who had conceded, died or quit looked like a player with an empty
+  board still in the game (user report, 2026-11-11; reproduced in a four-player game against a
+  local server, where the out seat kept the same 178 px slot as the live copies and stayed
+  clickable). Removing the seat altogether lost track of who had been at the table, so the user
+  asked for it to stay folded, saying whether they died, conceded or left (2026-11-12). There is
+  nothing to unfold: when a player leaves, the
+  server empties their hand, library and graveyard and removes what they own from the battlefield
+  (CR 800.4a).
+- Guard: `src/board/SpotlightBoard.test.tsx` · `src/board/outReason.test.ts`
+
+### BRD-31 · Each copy in the side panel shows its player's name and life
+In the main board mode (BRD-6) every copy in the panel has a head above it, drawn at full size and
+not scaled with the board: the seat colour, the player's name (cut with an ellipsis when it does not
+fit) and their life with a heart, updated with every game view. The head of the player whose turn
+it is carries a turn badge and a gold edge. A click on the head brings that seat to the main area,
+as a click on the copy does (BRD-7). The board in the main area has no head: its own status row is
+already readable.
+
+- Why: a scaled copy is a few hundred pixels wide, so its own status row is too small to tell whose
+  board it is or how much life they have; the user asked for the name and life on each box, as
+  EDHPlay shows them (user report, 2026-11-12). The look follows the panel, not EDHPlay's.
+- Guard: `src/board/SpotlightBoard.test.tsx`

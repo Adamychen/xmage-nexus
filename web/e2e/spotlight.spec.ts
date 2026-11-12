@@ -234,6 +234,27 @@ for (const vp of VIEWPORTS) {
       expect(Math.abs(copyRatio - mainRatio) / mainRatio).toBeLessThanOrEqual(0.01)
     })
 
+    test('BRD-6: every copy spans the panel width and the panel scrolls, never sideways, when the copies do not fit @spotlight', async ({ page }) => {
+      await loadSpotlight(page)
+      await page.evaluate(() => {
+        const store = (globalThis as unknown as { __mageStore?: { getState: () => Record<string, any>; setState: (s: unknown) => void } }).__mageStore
+        const st = store?.getState() as { settings: Record<string, unknown> }
+        store?.setState({ settings: { ...st.settings, boardSpotlightPanel: 35 } })
+      })
+      const list = page.getByTestId('spotlight-panel-list')
+      const box = () => list.evaluate((el) => ({ cw: el.clientWidth, ch: el.clientHeight, sw: el.scrollWidth, sh: el.scrollHeight }))
+      await expect.poll(async () => { const b = await box(); return b.sh > b.ch + 1 }).toBe(true)
+      const inner = await box()
+      expect(inner.sw).toBeLessThanOrEqual(inner.cw)
+      for (const id of ['p2', 'p3', 'p4']) {
+        const slot = await rect(page, `[data-testid="spotlight-copy-${id}"]`)
+        const frame = await rect(page, `[data-testid="spotlight-copy-${id}"] .spotlight-copy-frame`)
+        expect(Math.abs(slot.width - inner.cw)).toBeLessThanOrEqual(2)
+        expect(frame.width).toBeGreaterThanOrEqual(slot.width - 4)
+        expect(frame.bottom).toBeLessThanOrEqual(slot.bottom + 1)
+      }
+    })
+
     test('BRD-6: with the switch off the opponents row is drawn @spotlight', async ({ page }) => {
       await loadSpotlight(page, { spotlight: false })
       await expect(page.getByTestId('arena-board')).toBeVisible()

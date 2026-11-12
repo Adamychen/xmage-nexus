@@ -5,7 +5,7 @@ import { manaPaymentActions } from '../../game/manaPayment'
 import { serverAutoAnswerActions } from '../../game/autoAnswers'
 import { pushServerPreferences } from '../serverPreferences'
 import { getState, setState, addLog } from '../state'
-import { sniffDungeonEntry, sniffSpeedLevel, sniffRoomDoor, enterTableChat, exitTableChat, armRollbackPending, disarmRollbackPending, sniffElimination } from '../actions'
+import { sniffDungeonEntry, sniffSpeedLevel, sniffRoomDoor, enterTableChat, exitTableChat, armRollbackPending, disarmRollbackPending, sniffElimination, sniffOutReason } from '../actions'
 import { ingestRollbackServerMessage } from '../rollbackVote'
 import { t as tStatic } from '../../i18n'
 import { saveActiveGame, clearActiveGame, loadActiveGame } from '../persistence'
@@ -112,6 +112,7 @@ export function handleGameUpdate(method: string, objectId: string | null, data: 
     sniffSpeedLevel(informMessage, objectId ?? s.gameId)
     sniffRoomDoor(informMessage, objectId ?? s.gameId)
     sniffElimination(informMessage, objectId ?? s.gameId)
+    sniffOutReason(informMessage, objectId ?? s.gameId)
     sniffRollbackAnnounce(informMessage, objectId ?? s.gameId)
     sniffShuffle(informMessage, objectId ?? s.gameId)
   }
@@ -203,6 +204,7 @@ export function handleGameInform(data: unknown, objectId: string | null): void {
     sniffSpeedLevel(msg, objectId ?? getState().gameId)
     sniffRoomDoor(msg, objectId ?? getState().gameId)
     sniffElimination(msg, objectId ?? getState().gameId)
+    sniffOutReason(msg, objectId ?? getState().gameId)
     sniffRollbackAnnounce(msg, objectId ?? getState().gameId)
     addLog('partida', msg, objectId ?? undefined)
   }

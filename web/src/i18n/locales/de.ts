@@ -1046,6 +1046,8 @@ export const de: TranslationSchema = {
     preset_manual_desc: 'Keine Automatik: tippe und bezahle alles selbst, mit allen Phasenstopps.',
     player_left: 'hat das Spiel verlassen',
     player_defeated: 'wurde besiegt',
+    player_died: 'ist gestorben',
+    player_conceded: 'hat aufgegeben',
     player_left_desc: 'Spieler hat die Verbindung getrennt oder aufgegeben',
     life_zero_desc: 'Lebenspunkte auf 0 reduziert',
     status_left: 'Verlassen',

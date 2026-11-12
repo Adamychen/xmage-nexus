@@ -100,6 +100,43 @@ describe('GameScreen', () => {
     expect(container.querySelector('[data-testid="hand-bar"]')).toBeNull()
   })
 
+  function duel(): GameView {
+    return { ...fourPlayerArena(), players: fourPlayerArena().players!.slice(0, 2) }
+  }
+
+  const spotlightSettings = (gameUi: 'v1' | 'v2', boardSpotlight = true) =>
+    ({ ...initialState.settings, gameUi, boardLayout: 'arena', boardSpotlight }) as typeof initialState.settings
+
+  it.each(['v1', 'v2'] as const)('BRD-6: in a duel the switch on keeps the main board with the opponent in the panel (%s)', (gameUi) => {
+    const { container } = show({ game: duel(), myPlayerId: 'p1', settings: spotlightSettings(gameUi) })
+    expect(container.querySelector('[data-testid="spotlight-main"]')?.getAttribute('data-main-seat')).toBe('p1')
+    expect(container.querySelector('[data-testid="spotlight-copy-p2"]')).not.toBeNull()
+  })
+
+  it('BRD-6: in a duel with the switch off the Arena preference stays the Standard duel board', () => {
+    const { container } = show({ game: duel(), myPlayerId: 'p1', settings: spotlightSettings('v1', false) })
+    expect(container.querySelector('[data-testid="spotlight-board"]')).toBeNull()
+    expect(container.querySelector('[data-testid="game-board"]')).not.toBeNull()
+  })
+
+  it('BRD-6: a spectator watching a duel with the switch on gets the main board', () => {
+    const watched = { ...duel(), myPlayerId: null, players: duel().players!.map((p) => ({ ...p, controlled: false })) } as GameView
+    const { container } = show({ game: watched, myPlayerId: null, settings: spotlightSettings('v1') })
+    expect(container.querySelector('[data-testid="spotlight-main"]')?.getAttribute('data-main-seat')).toBe('p2')
+    expect(container.querySelector('[data-testid="spotlight-copy-p1"]')).not.toBeNull()
+  })
+
+  it('BRD-6: when two players are left in a pod the main board stays, with the live opponent as a copy and the others folded', () => {
+    const game = fourPlayerArena()
+    const twoLeft = { ...game, players: game.players!.map((p) => (p.playerId === 'p3' || p.playerId === 'p4' ? { ...p, hasLeft: true, life: 0 } : p)) }
+    const { container } = show({ game: twoLeft, myPlayerId: 'p1', settings: spotlightSettings('v2') })
+    expect(container.querySelector('[data-testid="spotlight-copy-p2"]')).not.toBeNull()
+    expect(container.querySelector('[data-testid="spotlight-copy-p3"]')).toBeNull()
+    expect(container.querySelector('[data-testid="spotlight-copy-p4"]')).toBeNull()
+    expect(container.querySelector('[data-testid="spotlight-head-p3"]')?.classList.contains('is-out')).toBe(true)
+    expect(container.querySelector('[data-testid="spotlight-head-p4"]')?.classList.contains('is-out')).toBe(true)
+  })
+
   it('BRD-6: with the switch off the opponents\' row stays', () => {
     const { container } = show({
       game: fourPlayerArena(),

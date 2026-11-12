@@ -1046,6 +1046,8 @@ export const es: TranslationSchema = {
     preset_manual_desc: 'Sin automatismos: gira y paga todo tú, con todas las paradas de fase activas.',
     player_left: 'ha abandonado la partida',
     player_defeated: 'ha sido derrotado',
+    player_died: 'ha muerto',
+    player_conceded: 'ha concedido',
     player_left_desc: 'El jugador se ha desconectado o concedido',
     life_zero_desc: 'Vida reducida a 0',
     status_left: 'Fuera',

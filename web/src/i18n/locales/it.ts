@@ -1046,6 +1046,8 @@ export const it: TranslationSchema = {
     preset_manual_desc: 'Nessuna automazione: gira e paga tutto da solo, con tutti gli stop di fase attivi.',
     player_left: 'ha lasciato la partita',
     player_defeated: 'è stato sconfitto',
+    player_died: 'è morto',
+    player_conceded: 'ha concesso',
     player_left_desc: 'Il giocatore si è disconnesso o ha concesso',
     life_zero_desc: 'Punti vita azzerati',
     status_left: 'Uscito',
