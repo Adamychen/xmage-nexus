@@ -282,7 +282,7 @@ game per test. Common libraries in `web/e2e/support/`
 `web/fixtures/scenarios/` (mini-engine `humanGame.ts`). Tags by
 domain: `@spells`, `@targeting`, `@combat`, `@fullflow`, `@board`, `@site` (scripts
 `test:e2e:spells|targeting|combat|fullflow|board|site`). Every spec runs in fake
-(no stack; ~440 tests, ~12 min locally with 4 workers, 6 shards in CI) and can run in real; the
+(no stack; ~440 tests, ~12 min locally with 4 workers, 6 shards in CI plus 2 for the heavy lane) and can run in real; the
 nightly real-mode job covers the eleven protocol-sensitive specs (`deckvalidation`, `multi-user`,
 `priority-stop-real`, `skips`, `full-flow`, `reconnect-real`, `smart-mana-real`, `smart-stops-real`,
 `xmage-catalog-real`, `learn-real`, `draft-real-reload`) plus the `verify` layer, not all of them
@@ -297,7 +297,11 @@ createTable (draft, tournament). **Specs whose verdict depends on wall-clock tim
 ordering carry the `@timing` tag** and `retryTimingSpecInCi()`: CI runs them in their own
 `e2e-timing` job and the shards run `--grep-invert @timing`. **Keep single tests short**: the
 suite is `fullyParallel`, so one 4-minute test (the old one-test gallery sweep) sets the floor of
-the whole run; split loops into blocks generated at describe level.
+the whole run; split loops into blocks generated at describe level. **A whole spec file can pin a
+shard the same way**: Playwright balances shards by test count, so the costliest files per test
+(`HEAVY_SPECS` in `web/playwright.config.ts`) run in their own `e2e-heavy` lane via `E2E_LANE`,
+and `e2e-fake` takes the rest. `scripts/workflows.test.mjs` checks the two lanes stay the
+complement of each other; a local run with no `E2E_LANE` is the whole suite as always.
 **The helper does NOT answer the mulligan** (the web's auto-keep already does it;
 a second false breaks the test window).
 

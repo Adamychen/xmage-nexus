@@ -30,8 +30,22 @@ function parseViewport(): { width: number; height: number } {
   return { width: 1600, height: 900 }
 }
 
+// CI runs the fake suite in two lanes. Playwright balances shards by TEST COUNT, and these two
+// specs are alphabetical neighbours that cost far more per test than anything else: measured on
+// run 43450704089, board-settle is 23.4 min of work over 48 tests and band-fit-classic 12.9 over
+// 8, so the shard holding both carried 50.3 min against 20-23 for the other five and took 17.6
+// minutes of wall clock against 7.4-9.1. Both files already split their sweeps into blocks at
+// describe level; the problem is which shard they land in, not their size.
+// E2E_LANE=light ignores them, E2E_LANE=heavy runs only them, and the two lanes together are the
+// whole suite (scripts/workflows.test.mjs checks that). Unset, which is every local run and the
+// default, means the whole suite exactly as before.
+const HEAVY_SPECS = ['**/board-settle.spec.ts', '**/band-fit-classic.spec.ts']
+const LANE = process.env.E2E_LANE
+
 export default defineConfig({
   testDir: './e2e',
+  testIgnore: LANE === 'light' ? HEAVY_SPECS : undefined,
+  testMatch: LANE === 'heavy' ? HEAVY_SPECS : undefined,
   timeout: 120_000,
   fullyParallel: FAKE_MODE,
   workers: FAKE_MODE ? E2E_WORKERS : 1,

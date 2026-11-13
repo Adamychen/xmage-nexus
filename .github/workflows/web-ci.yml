@@ -221,12 +221,75 @@ jobs:
         run: npx playwright install-deps chromium
       - name: Browser E2E (fake, FixtureServer, no Java/stack), shard ${{ matrix.shard }}/6
         working-directory: web
+        env:
+          E2E_LANE: light
         run: npx playwright test --shard=${{ matrix.shard }}/6 --grep-invert @timing
       - name: Upload fake-e2e results on failure
         if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: mage-fake-e2e-results-shard-${{ matrix.shard }}
+          path: |
+            web/test-results/**
+            web/playwright-report/**
+          if-no-files-found: ignore
+
+  # The heavy half of the fake suite (HEAVY_SPECS in web/playwright.config.ts). Playwright balances
+  # shards by test count, so board-settle and band-fit-classic, alphabetical neighbours that cost
+  # far more per test than the rest, kept landing on the same shard: 50.3 min of work against
+  # 20-23 for the other five, and 17.6 min of wall clock against 7.4-9.1. They get their own two
+  # shards instead, and e2e-fake runs the rest.
+  e2e-heavy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2]
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 26
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - name: npm ci
+        working-directory: web
+        run: npm ci
+      - name: Read the installed Playwright version
+        id: pw
+        working-directory: web
+        run: echo "version=$(node -p "require('@playwright/test/package.json').version")" >> "$GITHUB_OUTPUT"
+      - name: Cache Playwright browsers
+        id: pw-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-chromium-${{ runner.os }}-${{ steps.pw.outputs.version }}
+      - name: Install Playwright chromium (cache miss)
+        if: steps.pw-cache.outputs.cache-hit != 'true'
+        working-directory: web
+        run: |
+          for attempt in 1 2 3; do
+            npx playwright install --with-deps chromium && exit 0
+            echo "::warning::Playwright browser download failed (attempt $attempt), retrying"
+            sleep 20
+          done
+          exit 1
+      - name: Install Playwright system dependencies (cache hit)
+        if: steps.pw-cache.outputs.cache-hit == 'true'
+        working-directory: web
+        run: npx playwright install-deps chromium
+      - name: Browser E2E (fake, the heavy specs), shard ${{ matrix.shard }}/2
+        working-directory: web
+        env:
+          E2E_LANE: heavy
+        run: npx playwright test --shard=${{ matrix.shard }}/2 --grep-invert @timing
+      - name: Upload heavy-e2e results on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mage-heavy-e2e-results-shard-${{ matrix.shard }}
           path: |
             web/test-results/**
             web/playwright-report/**
