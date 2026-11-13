@@ -562,11 +562,11 @@ export function GameplaySection() {
           hint={t('game', 'smart_stops_hint')}
         />
         <SwitchRow
-          id="auto-mulligan"
-          checked={settings.autoKeepMulligan}
-          onChange={(v) => setSetting('autoKeepMulligan', v)}
-          label={t('game', 'auto_mulligan')}
-          hint={t('lobby', 'settings_auto_mulligan_hint')}
+          id="auto-starting-player"
+          checked={settings.autoStartingPlayer}
+          onChange={(v) => setSetting('autoStartingPlayer', v)}
+          label={t('game', 'auto_starting_player')}
+          hint={t('lobby', 'settings_auto_starting_player_hint')}
         />
       </SettingsGroup>
       <SettingsGroup title={t('lobby', 'settings_group_history')}>
@@ -700,11 +700,11 @@ export function GameplayQuickSection() {
           hint={t('game', 'smart_stops_hint')}
         />
         <SwitchRow
-          id="auto-mulligan"
-          checked={settings.autoKeepMulligan}
-          onChange={(v) => setSetting('autoKeepMulligan', v)}
-          label={t('game', 'auto_mulligan')}
-          hint={t('lobby', 'settings_auto_mulligan_hint')}
+          id="auto-starting-player"
+          checked={settings.autoStartingPlayer}
+          onChange={(v) => setSetting('autoStartingPlayer', v)}
+          label={t('game', 'auto_starting_player')}
+          hint={t('lobby', 'settings_auto_starting_player_hint')}
         />
         <SwitchRow
           id="mana-auto"

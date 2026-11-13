@@ -25,7 +25,7 @@ test('mulligan: la ventana aparece y "Keep hand" arranca la partida', { tag: '@f
   await withFakeServer(() => mulliganScenario(), async () => {
     const { pageErrors } = await quickStartGame(page, {
       prefix: 'mull',
-      autoKeepMulligan: false,
+      autoStartingPlayer: false,
     })
 
     // la barra de mano inicial (GAME_ASK) debe pintarse sobre la mano elevada
@@ -70,7 +70,7 @@ test('mulligan: "Mulligan" abre el target de London (poner carta al fondo)', { t
   await withFakeServer(() => mulliganScenario(), async () => {
     const { pageErrors } = await quickStartGame(page, {
       prefix: 'mull2',
-      autoKeepMulligan: false,
+      autoStartingPlayer: false,
     })
 
     const dialog = page.getByTestId('mulligan-bar')
@@ -105,7 +105,7 @@ test('mulligan: la ventana ofrece "Conceder" y confirma el envío de CONCEDE', {
   await withFakeServer(() => mulliganScenario(), async () => {
     const { pageErrors } = await quickStartGame(page, {
       prefix: 'mull3',
-      autoKeepMulligan: false,
+      autoStartingPlayer: false,
     })
 
     const dialog = page.getByTestId('mulligan-bar')

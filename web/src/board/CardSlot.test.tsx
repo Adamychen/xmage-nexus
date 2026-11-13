@@ -3,10 +3,10 @@ import { act, StrictMode } from 'react'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import CardSlot from './CardSlot'
 import type { PermanentView } from '../net/types'
+import { normalizeKeywordIconSet, type KeywordIconSet } from './cardOverlays'
 import type { FeedbackPrompt } from '../game/feedback'
 import { getState, setState, setSetting } from '../state/store'
 import { perfClear, perfEntries } from '../system/perfProbe'
-import { MTG_KEYWORDS } from '../data/mtgKeywords'
 
 vi.mock('./cardPositionRegistry', () => ({
   getPreviousCardPosition: vi.fn(() => undefined),
@@ -844,7 +844,7 @@ describe('CardSlot keywordIcons', () => {
   const beast = (rules: string[]) =>
     ({ id: 'kw1', name: 'Keyword Beast', cardTypes: ['Creature'], power: '4', toughness: '4', rules }) as unknown as PermanentView
 
-  const withSet = (set: 'coins' | 'outline' | 'emoji', card: PermanentView) => {
+  const withSet = (set: KeywordIconSet, card: PermanentView) => {
     setSetting('keywordIcons', set)
     try {
       return render(<CardSlot card={card} showPt />)
@@ -881,18 +881,20 @@ describe('CardSlot keywordIcons', () => {
     }
   })
 
-  it('emoji: shows the keyword emoji instead of a glyph', () => {
-    const { container } = withSet('emoji', beast(['Flying, menace']))
-    const badges = [...container.querySelectorAll('.keyword-badge')]
-    expect(badges).toHaveLength(2)
-    for (const b of badges) {
-      expect(b.classList.contains('icons-emoji')).toBe(true)
-      expect(b.querySelector('svg')).toBeNull()
-      expect(b.querySelector('.kw-coin-emoji')).not.toBeNull()
+  it('BRD-47: a retired icon set stored by a player draws the coins, never an emoji', () => {
+    setSetting('keywordIcons', normalizeKeywordIconSet('emoji'))
+    try {
+      const { container } = render(<CardSlot card={beast(['Flying, menace'])} showPt />)
+      const badges = [...container.querySelectorAll('.keyword-badge')]
+      expect(badges).toHaveLength(2)
+      for (const b of badges) {
+        expect(b.classList.contains('icons-coins')).toBe(true)
+        expect(b.querySelector('svg')).not.toBeNull()
+      }
+      expect(container.querySelector('.kw-coin-emoji')).toBeNull()
+    } finally {
+      setSetting('keywordIcons', 'coins')
     }
-    const flyingEmoji = MTG_KEYWORDS.find((k) => k.id === 'flying')?.icon
-    expect(flyingEmoji).toBeTruthy()
-    expect(container.querySelector('.keyword-badge.kw-flying .kw-coin-emoji')?.textContent).toBe(flyingEmoji)
   })
 
   it('shows one badge when the server icon and the rules both say Flying', () => {

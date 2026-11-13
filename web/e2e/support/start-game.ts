@@ -282,8 +282,8 @@ export interface StartGameOptions extends CreateTableOptions {
   /** El helper no toca las ventanas de combate (el humano las ejerce por la UI). */
   skipCombat?: boolean
   skipAsks?: boolean
-  /** Desactiva el auto-keep del mulligan para ejercitar la ventana de mulligan en E2E. */
-  autoKeepMulligan?: boolean
+  /** `false` deja la ventana de mulligan y la del jugador inicial al test (para ejercitarlas). */
+  autoStartingPlayer?: boolean
 }
 
 interface SessionStart {
@@ -291,8 +291,30 @@ interface SessionStart {
   buffers: CaptureBuffers
 }
 
-/** Login and session settings (frame capture, mulligan auto-keep). Shared by `startGame`
- *  and `quickStartGame`; only the way the game is reached differs. */
+/** Keeps the opening hand for the page under test. The client only answers the starting
+ *  player question on its own (PRM-16), so a test that is not about the mulligan has to
+ *  click "keep" itself, every time the bar comes up. The poll outlives the ask on purpose:
+ *  a match is several games and each one opens its own mulligan. */
+async function autoKeepOpeningHand(page: Page): Promise<void> {
+  await page.evaluate(() => {
+    interface StoreBridge {
+      getState: () => { feedback?: { isMulligan?: boolean; isMulliganLondon?: boolean } | null }
+    }
+    const store = (globalThis as unknown as { __mageStore?: StoreBridge }).__mageStore
+    if (!store) return
+    // The bar is painted a frame after the store changes, so this polls instead of
+    // reacting to the store: by the time the button exists the subscriber is long gone.
+    setInterval(() => {
+      const feedback = store.getState().feedback
+      if (!feedback?.isMulligan || feedback.isMulliganLondon) return
+      const keep = document.querySelector('.mulligan-bar-keep') as HTMLButtonElement | null
+      if (keep && !keep.disabled) keep.click()
+    }, 100)
+  })
+}
+
+/** Login and session settings (frame capture, opening hand, starting player). Shared by
+ *  `startGame` and `quickStartGame`; only the way the game is reached differs. */
 async function beginSession(page: Page, opts: StartGameOptions): Promise<SessionStart> {
   const prefix = opts.prefix ?? 'e2e'
   // El servidor limita el username a 14 chars y el login lo recorta (maxLength):
@@ -302,16 +324,17 @@ async function beginSession(page: Page, opts: StartGameOptions): Promise<Session
   const buffers: CaptureBuffers = { frames: [], sent: [], pageErrors: [] }
   installCapture(page, buffers, opts.maxFrames)
   await login(page, username, { retryLobby: true })
-  if (opts.autoKeepMulligan !== false) {
+  if (opts.autoStartingPlayer !== false) {
     await page.evaluate(() => {
       const store = (globalThis as unknown as { __mageStore?: { setSetting?: (k: string, v: unknown) => void } }).__mageStore
-      store?.setSetting?.('autoKeepMulligan', true)
+      store?.setSetting?.('autoStartingPlayer', true)
       store?.setSetting?.('autoSubmitSideboard', true)
     })
+    await autoKeepOpeningHand(page)
   } else {
     await page.evaluate(() => {
       const store = (globalThis as unknown as { __mageStore?: { setSetting?: (k: string, v: unknown) => void } }).__mageStore
-      store?.setSetting?.('autoKeepMulligan', false)
+      store?.setSetting?.('autoStartingPlayer', false)
       store?.setSetting?.('autoSubmitSideboard', true)
     })
   }

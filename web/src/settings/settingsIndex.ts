@@ -49,7 +49,7 @@ export const SETTINGS_INDEX: SettingEntry[] = [
   { id: 'gameplay-preset', section: 'gameplay', group: (t) => t('game', 'presets_title'), label: (t) => t('game', 'presets_title'), hint: (t) => t('game', 'presets_hint') },
   { id: 'hold-priority', section: 'gameplay', group: automation, label: (t) => t('game', 'hold_priority'), hint: (t) => t('game', 'hold_priority_title') },
   { id: 'smart-stops', section: 'gameplay', group: automation, label: (t) => t('game', 'smart_stops'), hint: (t) => t('game', 'smart_stops_hint') },
-  { id: 'auto-mulligan', section: 'gameplay', group: automation, label: (t) => t('game', 'auto_mulligan'), hint: (t) => t('lobby', 'settings_auto_mulligan_hint') },
+  { id: 'auto-starting-player', section: 'gameplay', group: automation, label: (t) => t('game', 'auto_starting_player'), hint: (t) => t('lobby', 'settings_auto_starting_player_hint') },
   { id: 'log-autosave', section: 'gameplay', group: history, label: (t) => t('system', 'log_autosave'), hint: (t) => t('system', 'log_autosave_hint') },
   { id: 'board-rewind', section: 'gameplay', group: history, label: (t) => t('game', 'rewind_setting'), hint: (t) => t('game', 'rewind_setting_hint') },
   { id: 'turn-recap', section: 'gameplay', group: history, label: (t) => t('game', 'recap_setting'), hint: (t) => t('game', 'recap_setting_hint') },

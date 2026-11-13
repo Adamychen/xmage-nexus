@@ -18,7 +18,7 @@ export function handleGameTarget(method: string, data: unknown, objectId: string
   const question = d?.message ?? ''
   const currentGameId = objectId ?? d?.gameId ?? s.gameId
   const isSpectator = !((s.game?.players ?? []) as { controlled?: boolean }[]).some((p) => p.controlled)
-  if ((s.settings.autoKeepMulligan || isSpectator) && /starting player/i.test(question) && currentGameId) {
+  if ((s.settings.autoStartingPlayer || isSpectator) && /starting player/i.test(question) && currentGameId) {
     const first = targetFirstId(data)
     if (first) {
       void cmds.sendPlayerUUID(first, currentGameId)
@@ -40,10 +40,10 @@ export function handleGameAsk(method: string, data: unknown, objectId: string | 
   const autoAnswerKey = typeof opts?.autoAnswerMessage === 'string' ? opts.autoAnswerMessage : undefined
   const currentGameId = objectId ?? d?.gameId ?? s.gameId
   const isSpectator = !((s.game?.players ?? []) as { controlled?: boolean }[]).some((p) => p.controlled)
-  if ((s.settings.autoKeepMulligan || isSpectator) && /mulligan|keep your hand|keep hand/i.test(question)) {
+  if (isSpectator && /mulligan|keep your hand|keep hand/i.test(question)) {
     if (currentGameId) void cmds.sendPlayerBoolean(false, currentGameId)
     setState({ feedback: null })
-    addLog('tú', 'mulligan: mantener (auto)')
+    addLog('tú', 'mulligan: mantener (espectador)')
   } else if (
     method === 'GAME_ASK' &&
     currentGameId &&

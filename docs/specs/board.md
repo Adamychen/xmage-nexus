@@ -761,3 +761,14 @@ it, and the power and toughness badge keeps showing what the creature ends up wi
   from the Mana icon set, sign included, so the number sits beside it instead of over it, and the
   user asked for the count first and for the gold of the rest of the badges.
 - Guard: `src/board/CardSlot.compact.test.tsx`
+### BRD-47 · Keyword badges come in two icon sets, and the coins are the fallback
+The keyword badges a card carries (`KeywordGlyph`, picked in Settings › Board › Overlays) are drawn
+either as coins, solid symbols on a coloured circle, or as outlines, thin line icons. There is no
+third set: every keyword resolves to a glyph, never to an emoji, in both sets. A stored choice the
+client no longer knows, the retired `emoji` set included, reads back as coins
+(`normalizeKeywordIconSet`), so the board keeps drawing badges and the picker keeps a row marked.
+
+- Why: the emoji set depended on the font the system happened to have, so the same board looked
+  different on each machine and the badges did not match the rest of the interface; the user asked
+  for it to go (2026-11-13). The badges themselves stay: only the third way of drawing them goes.
+- Guard: `src/board/CardSlot.test.tsx` · `src/state/persistence.test.ts` · `src/settings/BoardDemo.test.tsx`
