@@ -33,6 +33,7 @@ export function isCommanderFormat(deckType?: string, gameType?: string): boolean
 
 export function prepareDeckForXMage(
   deck: {
+    id?: string
     name: string
     cards: DeckCard[]
     sideboard: DeckCard[]
@@ -41,7 +42,7 @@ export function prepareDeckForXMage(
   },
   deckType?: string,
   gameType?: string,
-): { name: string; cards: DeckCard[]; sideboard: DeckCard[]; commanders?: DeckCard[] } {
+): { id?: string; name: string; cards: DeckCard[]; sideboard: DeckCard[]; commanders?: DeckCard[] } {
   // Transformación invisible: el usuario ve los comandantes en el main,
   // XMage los exige en el banquillo (99 + comandantes). El proxy hace la
   // normalización autoritativa con CardRepository (DeckValidation.normalizeForXMage)
@@ -53,6 +54,9 @@ export function prepareDeckForXMage(
   // asiento SIM): rellena impresiones de básicas ausentes (setCode/cardNumber
   // vacíos) para mazos ya guardados desde antes de este fix, sin depender de
   // volver a pasar por el importador de texto.
+  //
+  // El id del mazo viaja con él: el diálogo de problemas lo necesita para
+  // escribir la reparación en el mazo guardado del jugador (DCK-30).
   const normalized = {
     ...deck,
     cards: normalizeDeckCards(deck.cards),

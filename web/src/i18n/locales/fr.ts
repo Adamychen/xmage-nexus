@@ -2060,6 +2060,7 @@ export const fr: TranslationSchema = {
     issues_accept_and_play: 'Accepter et jouer',
     issues_auto_resolve: 'Résoudre auto ({count})',
     issues_auto_resolve_hint: 'Appliquer toutes les impressions suggérées d\'un coup',
+    issues_repair_saved: 'Les corrections sont enregistrées dans ce deck.',
     issues_accept: 'Compris',
     issues_accept_hint: 'Accepter cette substitution et masquer l\'avertissement',
     issues_cancel: 'Annuler',

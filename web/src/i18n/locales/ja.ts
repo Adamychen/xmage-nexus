@@ -2060,6 +2060,7 @@ export const ja: TranslationSchema = {
     issues_accept_and_play: '了承してプレイ',
     issues_auto_resolve: '自動解決 ({count})',
     issues_auto_resolve_hint: '提案された版をすべて一度に適用',
+    issues_repair_saved: '修正はこのデッキに保存されます。',
     issues_accept: '了解',
     issues_accept_hint: 'この置き換えを了承して警告を隠す',
     issues_cancel: 'キャンセル',

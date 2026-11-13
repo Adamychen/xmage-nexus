@@ -2060,6 +2060,7 @@ export const de: TranslationSchema = {
     issues_accept_and_play: 'Akzeptieren und spielen',
     issues_auto_resolve: 'Automatisch lösen ({count})',
     issues_auto_resolve_hint: 'Alle vorgeschlagenen Drucke auf einmal anwenden',
+    issues_repair_saved: 'Korrekturen werden in diesem Deck gespeichert.',
     issues_accept: 'Verstanden',
     issues_accept_hint: 'Diese Ersetzung akzeptieren und die Warnung ausblenden',
     issues_cancel: 'Abbrechen',

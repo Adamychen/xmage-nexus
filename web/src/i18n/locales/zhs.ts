@@ -2060,6 +2060,7 @@ export const zhs: TranslationSchema = {
     issues_accept_and_play: '接受并开始',
     issues_auto_resolve: '自动解决 ({count})',
     issues_auto_resolve_hint: '一次性应用所有建议的版本',
+    issues_repair_saved: '修复会保存到此套牌。',
     issues_accept: '知道了',
     issues_accept_hint: '接受此替换并隐藏警告',
     issues_cancel: '取消',

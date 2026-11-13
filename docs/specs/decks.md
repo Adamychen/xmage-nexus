@@ -448,6 +448,28 @@ entry added or edited without refreshing the table fails as unverified.
   28 such entries across 14 catalogue decks.
 - Guard: `scripts/check-deck-catalog.test.mjs`
 
+### DCK-30 · Repairing a deck before a table saves the repair
+When the pre-join issues dialog (`web/src/lobby/DeckIssuesDialog.tsx`) repairs a deck, with
+"Auto-resolve" or with one row's suggestion, the repair is written back to the player's stored deck,
+not only to the copy sent to that table. It is the same repair the editor's issues banner already
+persists (`DeckServerIssues` → `DeckBuilder.handleRepairIssue`): `applySuggestions(deck, fixes)` over
+the stored deck, saved through `getDeckStorage().put`. So the player who auto-resolves once leaves
+and joins again without the dialog, and the gallery already shows the corrected printings. The
+dialog says so before the player presses, a line under the card list; it never asks and never
+interrupts afterwards.
+
+A deck that is not in the player's storage is left alone: the bundled precons and any deck without a
+stable id keep today's behaviour, repaired for that table and nothing saved, and no copy of them is
+created. The starter decks are not that case: adopting them clones them into storage
+(`addStarterDecks` → `cloneDeckForEdit`), so they are the player's own decks and save in place.
+Writes run one after another, so a second repair reads what the first one saved, and a failed write
+never blocks the join.
+
+- Why: the dialog applied the fixes to the deck it was about to send and dropped them, so a deck with
+  outdated printings showed the same warning on every single join and the player had to auto-resolve
+  again each time (left out of the catalogue fix of 2026-11-13, DCK-29, to have its own change).
+- Guard: `src/decks/deckRepair.test.ts` · `src/lobby/DeckIssuesDialog.test.tsx` · `e2e/deckvalidation.spec.ts`
+
 ### DCK-31 · Importing from the join dialog leaves a deck of the gallery
 The quick importer of the join dialog (`web/src/lobby/JoinTableDialog.tsx`) saves what it imports
 the same way the deck editor does: `loadDeckFromOnlineSource` builds the deck, with its own id, its

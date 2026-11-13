@@ -2060,6 +2060,7 @@ export const pt: TranslationSchema = {
     issues_accept_and_play: 'Aceitar e jogar',
     issues_auto_resolve: 'Resolver auto ({count})',
     issues_auto_resolve_hint: 'Aplicar todas as impressões sugeridas de uma vez',
+    issues_repair_saved: 'As correções ficam guardadas neste baralho.',
     issues_accept: 'Entendi',
     issues_accept_hint: 'Aceitar esta substituição e ocultar o aviso',
     issues_cancel: 'Cancelar',
