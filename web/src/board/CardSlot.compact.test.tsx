@@ -72,7 +72,7 @@ describe('CardSlot compact tile', () => {
     expect(container.querySelector('[data-testid="compact-tap-badge"]')).toBeNull()
   })
 
-  it('does not repeat the loyalty counter next to the loyalty badge', async () => {
+  it('BRD-42: does not repeat the loyalty counter next to the loyalty badge, compact or not', async () => {
     const walker = perm({
       name: 'Tibalt, Rakish Instigator',
       cardTypes: ['PLANESWALKER'],
@@ -81,11 +81,54 @@ describe('CardSlot compact tile', () => {
       loyalty: '3',
       counters: [{ name: 'loyalty', count: 3 }, { name: 'shield', count: 1 }],
     })
-    const { container } = render(<CardSlot card={walker} compact showCounters />)
+    const { container, rerender } = render(<CardSlot card={walker} compact showCounters />)
     await act(async () => {})
     expect(container.querySelector('.loyalty-val')?.textContent).toBe('3')
-    const badges = [...container.querySelectorAll('.counter-badge')].map((b) => b.getAttribute('aria-label'))
-    expect(badges).toEqual(['shield: 1'])
+    const badges = () => [...container.querySelectorAll('.counter-badge')].map((b) => b.getAttribute('aria-label'))
+    expect(badges()).toEqual(['shield: 1'])
+    rerender(<CardSlot card={walker} showCounters />)
+    await act(async () => {})
+    expect(container.querySelector('.loyalty-val')?.textContent).toBe('3')
+    expect(badges()).toEqual(['shield: 1'])
+  })
+
+  it('BRD-43: a battle draws its defense on its shield, with the number on it', async () => {
+    const battle = perm({
+      name: 'Invasion of Zendikar',
+      cardTypes: ['BATTLE'],
+      subTypes: ['SIEGE'],
+      rules: [],
+      defense: '3',
+      counters: [],
+    })
+    const { container, rerender } = render(<CardSlot card={battle} showCounters />)
+    await act(async () => {})
+    const badge = container.querySelector('.defense-badge')!
+    expect(badge.querySelector('.defense-plate path')).not.toBeNull()
+    expect(badge.querySelector('.defense-val')?.textContent).toBe('3')
+    expect(badge.getAttribute('data-digits')).toBe('1')
+    rerender(<CardSlot card={{ ...battle, defense: '12' }} showCounters />)
+    await act(async () => {})
+    expect(container.querySelector('.defense-badge')?.getAttribute('data-digits')).toBe('2')
+  })
+
+  it('BRD-42: does not repeat the defense counter next to the defense badge of a battle', async () => {
+    const battle = perm({
+      name: 'Invasion of Zendikar',
+      cardTypes: ['BATTLE'],
+      subTypes: ['SIEGE'],
+      rules: [],
+      defense: '3',
+      counters: [{ name: 'defense', count: 3 }, { name: 'charge', count: 2 }],
+    })
+    const { container, rerender } = render(<CardSlot card={battle} showCounters />)
+    await act(async () => {})
+    expect(container.querySelector('.defense-val')?.textContent).toBe('3')
+    const badges = () => [...container.querySelectorAll('.counter-badge')].map((b) => b.getAttribute('aria-label'))
+    expect(badges()).toEqual(['charge: 2'])
+    rerender(<CardSlot card={battle} compact showCounters />)
+    await act(async () => {})
+    expect(badges()).toEqual(['charge: 2'])
   })
 
   it('renders the classic card when compact is off', async () => {

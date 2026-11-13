@@ -688,3 +688,36 @@ a click still picks that card, not its host.
   preview, for four more pixels and no coloured edge around it: a drawn border
   between two cards says what the two arts already say (2026-11-13).
 - Guard: `src/board/OpponentZone.test.tsx` · `e2e/mechanics.spec.ts`
+
+### BRD-42 · A card on the battlefield never shows the same number twice
+These are rules about the card itself, so they hold in every layout (Arena, Table and Standard,
+with the side panel and without it) and in both card styles, not only on the Arena board.
+
+A planeswalker's loyalty and a battle's defense have their own badge in the corner, so the counter
+the server sends for them ("loyalty 7", "defense 3") is left out of the counter badges, whatever
+the card style is. Every other counter (+1/+1, charge, poison, oil, stun…) keeps its badge.
+
+- Why: the board drew "+7" beside the loyalty shield and "3" beside the defense, the same number
+  twice, on a card that has little room for badges. The filter existed for the compact tiles only,
+  so the full board, which is where the player looks, was the one place that showed the pair
+  (13-nov-2026).
+- Guard: `src/board/CardSlot.compact.test.tsx`
+
+### BRD-43 · Loyalty and defense are printed on their own plates
+Like BRD-42, this is the card and not the board: it holds in every layout and card style.
+
+A planeswalker on the battlefield carries its loyalty on the shape the card prints it on, and a
+battle its defense on its shield: a vector with a light rim and the number inside it, sized from the
+card's width, instead of a rounded pill with an icon beside the number. The number is sized from the
+plate and not from the card, so the two always scale together, and a longer number takes a smaller
+size rather than a wider box: it never reaches the edge of the shape, at any card size, in any
+layout and in either card style.
+
+- Why: the badges were generic pills, a shield icon for loyalty and crossed swords for defense,
+  which said "some stat" and not which one, and the user wants the counters drawn as the game draws
+  them, one kind at a time (13-nov-2026). The number first scaled from the card width while the
+  plate scaled from its own clamp, so at 1366 it reached past the plate's bottom point.
+  The outline comes from the Mana icon set (font under SIL OFL 1.1, styles under MIT; the symbol
+  itself is Wizards of the Coast's, like the mana symbols already served from `public/symbols`),
+  drawn inline so the colours come from the theme and the plate can be animated with the number.
+- Guard: `src/board/CardSlot.test.tsx` · `src/board/CardSlot.compact.test.tsx`
