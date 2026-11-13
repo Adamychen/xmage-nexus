@@ -35,7 +35,12 @@ export default defineConfig({
   timeout: 120_000,
   fullyParallel: FAKE_MODE,
   workers: FAKE_MODE ? E2E_WORKERS : 1,
-  retries: 0,
+  // One retry in CI for the whole fake suite. A flake used to cost a re-push and another full
+  // run, because `gh run rerun` needs admin on this repo; 24 of the 35 CI runs that went red on
+  // e2e alone were followed by another run on the same branch within six hours. Retried tests are
+  // reported as flaky, which is where an intermittent bug stays visible. The @timing lane
+  // overrides this with TIMING_RETRIES_IN_CI (e2e/support/timing.ts).
+  retries: process.env.CI ? 1 : 0,
   // en modo fake (por defecto) el e2e no depende del stack: vite se levanta solo
   webServer: FAKE_MODE
     ? {

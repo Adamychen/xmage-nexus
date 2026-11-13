@@ -282,7 +282,7 @@ game per test. Common libraries in `web/e2e/support/`
 `web/fixtures/scenarios/` (mini-engine `humanGame.ts`). Tags by
 domain: `@spells`, `@targeting`, `@combat`, `@fullflow`, `@board`, `@site` (scripts
 `test:e2e:spells|targeting|combat|fullflow|board|site`). Every spec runs in fake
-(no stack; ~440 tests, ~12 min locally with 4 workers, 4 shards in CI) and can run in real; the
+(no stack; ~440 tests, ~12 min locally with 4 workers, 6 shards in CI) and can run in real; the
 nightly real-mode job covers the eleven protocol-sensitive specs (`deckvalidation`, `multi-user`,
 `priority-stop-real`, `skips`, `full-flow`, `reconnect-real`, `smart-mana-real`, `smart-stops-real`,
 `xmage-catalog-real`, `learn-real`, `draft-real-reload`) plus the `verify` layer, not all of them
@@ -332,7 +332,7 @@ for `mechanics.spec.ts`, so a fixture change must be checked against every spec 
   (`npx playwright test e2e/<spec>.spec.ts`); the full fake e2e (`node scripts/test.mjs e2e`) when touching `e2e/support/`, `fixtures/`
   or the FakeServer; the stack layers (`self-test`, `human-test`, `verify`) with the stack up when the proxy
   or the protocol changed — **and the remote CI green afterwards** (`gh run list -R Adamychen/xmage-nexus -L 5`),
-  which runs the whole fake e2e sharded on every push. `Web client CI` once sat red on
+  which runs the whole fake e2e sharded on every PR and on every push to `master`. `Web client CI` once sat red on
   `master` for a week while the local suite was 9/9, because CI's Maven cache held old `org.mage` artifacts.
   If the fork is touched, publish `origin/nexus` first: CI and `release.yml` build from there.
 - **Restart the stack right before** (`node scripts/ctl.mjs restart all`): a server that accumulated orphan

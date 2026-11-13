@@ -25,7 +25,7 @@ building its card database fails every script with `Proxy is still loading card 
 the stack has been up for over an hour — a stale stack degrades the server's callback channel, which reads
 exactly like a broken test. Restart with `node scripts/ctl.mjs restart all` before debugging.
 
-Rules: after touching `web/`, run `unit` + `typecheck` (`build` if the build changed). After touching proxy Java, run `java` + rebuild the jar (`node scripts/build.mjs proxy`) + restart the proxy. Before declaring anything done, run the layers the change touches (for `web/`: `npm --prefix web run test:e2e:changed` runs only the specs the diff reaches; the full fake e2e when touching `e2e/support/`, `fixtures/` or the FakeServer; the stack layers when the proxy or the protocol changed) and check the remote CI, which runs the whole fake e2e in 4 shards plus a separate `@timing` job on every push.
+Rules: after touching `web/`, run `unit` + `typecheck` (`build` if the build changed). After touching proxy Java, run `java` + rebuild the jar (`node scripts/build.mjs proxy`) + restart the proxy. Before declaring anything done, run the layers the change touches (for `web/`: `npm --prefix web run test:e2e:changed` runs only the specs the diff reaches; the full fake e2e when touching `e2e/support/`, `fixtures/` or the FakeServer; the stack layers when the proxy or the protocol changed) and check the remote CI, which runs the whole fake e2e in 6 shards plus a separate `@timing` job on every PR and on every push to `master`.
 
 ## E2E: same specs, two backends
 

@@ -1,7 +1,15 @@
 name: Web client CI (web)
 
 on:
+  # master only. A push to a branch that has a PR used to start a second, parallel run of this
+  # whole workflow: push and pull_request land in different concurrency groups (refs/heads/x vs
+  # refs/pull/N/merge), so neither cancelled the other and both ran to the end. The pull_request
+  # run covers the same branch, and it tests the merge. A branch with no PR yet gets no run until
+  # the PR is opened, which is also how upstream-upgrade's upgrade/xmage_* branch is covered (the
+  # draft PR it opens triggers this workflow, and the fork-ref step reads GITHUB_HEAD_REF there).
+  # Tags stop triggering it too: a release tag points at a master commit that already ran this.
   push:
+    branches: [master]
     paths:
       - 'web/**'
       - 'mcp/**'
@@ -24,6 +32,7 @@ concurrency:
 jobs:
   web:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     env:
       NEXUS_FORK_DIR: ${{ github.workspace }}/xmage-fork
     steps:
@@ -81,6 +90,9 @@ jobs:
 
   audit:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      CARGO_AUDIT_VERSION: 0.23.0
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v5
@@ -92,14 +104,24 @@ jobs:
       - name: npm audit (mcp, shipped dependencies)
         working-directory: mcp
         run: npm audit --omit=dev --audit-level=high
+      # cargo-audit used to be compiled from source on every run (~2.6 min of the job's 2.9).
+      # The binary is cached per version; the advisory database is still fetched fresh by `cargo audit`.
+      - name: Cache the cargo-audit binary
+        id: cargo-audit-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/bin/cargo-audit
+          key: cargo-audit-${{ runner.os }}-${{ env.CARGO_AUDIT_VERSION }}
+      - name: Install cargo-audit (cache miss)
+        if: steps.cargo-audit-cache.outputs.cache-hit != 'true'
+        run: cargo install cargo-audit --locked --version ${{ env.CARGO_AUDIT_VERSION }}
       - name: cargo audit (launcher)
         working-directory: launcher
-        run: |
-          cargo install cargo-audit --locked
-          cargo audit
+        run: cargo audit
 
   mcp:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v5
@@ -124,6 +146,7 @@ jobs:
 
   proxy:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     env:
       NEXUS_FORK_DIR: ${{ github.workspace }}/xmage-fork
     steps:
@@ -161,7 +184,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3, 4]
+        shard: [1, 2, 3, 4, 5, 6]
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v5
@@ -196,9 +219,9 @@ jobs:
         if: steps.pw-cache.outputs.cache-hit == 'true'
         working-directory: web
         run: npx playwright install-deps chromium
-      - name: Browser E2E (fake, FixtureServer, no Java/stack), shard ${{ matrix.shard }}/4
+      - name: Browser E2E (fake, FixtureServer, no Java/stack), shard ${{ matrix.shard }}/6
         working-directory: web
-        run: npx playwright test --shard=${{ matrix.shard }}/4 --grep-invert @timing
+        run: npx playwright test --shard=${{ matrix.shard }}/6 --grep-invert @timing
       - name: Upload fake-e2e results on failure
         if: failure()
         uses: actions/upload-artifact@v4
@@ -261,6 +284,8 @@ jobs:
 
   integration:
     runs-on: ubuntu-latest
+    # generous: a cold cache makes the proxy's card scan take ~15 min and NEXUS_PROXY_WARMUP_MS waits 20
+    timeout-minutes: 45
     needs: [web, proxy]
     env:
       NEXUS_FORK_DIR: ${{ github.workspace }}/xmage-fork
