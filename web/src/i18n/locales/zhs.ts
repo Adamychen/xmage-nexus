@@ -2156,6 +2156,7 @@ export const zhs: TranslationSchema = {
     draft_create_failed: '创建轮抽赛失败',
     deck_parse_failed: '无法解析卡牌。格式示例："4 Lightning Bolt"',
     deck_read_failed: '无法读取套牌文件',
+    deck_save_failed: '无法保存导入的套牌',
     generic_error: '发生意外错误',
     crash_title: '出现错误',
     crash_desc: '发生了意外错误。请重新加载应用。',

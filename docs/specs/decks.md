@@ -447,3 +447,23 @@ entry added or edited without refreshing the table fails as unverified.
   two cards outside a mono-red Commander deck's colour identity (report of 2026-11-13). The audit found
   28 such entries across 14 catalogue decks.
 - Guard: `scripts/check-deck-catalog.test.mjs`
+
+### DCK-31 · Importing from the join dialog leaves a deck of the gallery
+The quick importer of the join dialog (`web/src/lobby/JoinTableDialog.tsx`) saves what it imports
+the same way the deck editor does: `loadDeckFromOnlineSource` builds the deck, with its own id, its
+format and the commander the list designates, and it is written to the player's storage
+(`getDeckStorage().put`). So a deck imported on the way into a table is a deck like any other,
+listed in the gallery, editable, and one whose repairs are saved (DCK-30). It also accepts a
+Moxfield or Archidekt link, which is what that loader does for the editor; a list with no cards is
+refused and nothing is saved.
+
+It used to call `saveCustomDecks`, which writes the old `mage_custom_decks` list. That deck was then
+read with the id `legacy:<name>`, never reached the gallery and could not be repaired. The one-off
+migration of those decks (`migrateIfNeeded`) had already run for most players, so decks imported
+here afterwards stayed out of reach for good: the migration now runs whenever anything is left in
+that list, moves it into storage and empties it, and it keeps the list untouched when the write
+fails.
+
+- Why: the player who imported a deck from the join dialog could not find it among their decks, and
+  from DCK-30 its repair could not be saved either, because its id resolves to nothing in storage.
+- Guard: `src/lobby/JoinTableDialog.test.tsx` · `src/decks/storage.idb.test.ts`

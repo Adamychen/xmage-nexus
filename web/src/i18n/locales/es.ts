@@ -2156,6 +2156,7 @@ export const es: TranslationSchema = {
     draft_create_failed: 'No se pudo crear el torneo draft',
     deck_parse_failed: 'No se pudieron reconocer cartas. Formato esperado: "4 Lightning Bolt"',
     deck_read_failed: 'No se pudo leer el archivo de mazo',
+    deck_save_failed: 'No se pudo guardar el mazo importado',
     generic_error: 'Ocurrió un error inesperado',
     crash_title: 'Algo salió mal',
     crash_desc: 'Ocurrió un error inesperado. Por favor recarga la aplicación.',

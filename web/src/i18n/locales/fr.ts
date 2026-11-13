@@ -2156,6 +2156,7 @@ export const fr: TranslationSchema = {
     draft_create_failed: 'Impossible de créer le tournoi draft',
     deck_parse_failed: 'Aucune carte reconnue. Format : "4 Lightning Bolt"',
     deck_read_failed: 'Impossible de lire le fichier de deck',
+    deck_save_failed: 'Impossible d\'enregistrer le deck importé',
     generic_error: 'Une erreur inattendue est survenue',
     crash_title: 'Une erreur est survenue',
     crash_desc: 'Une erreur inattendue s’est produite. Veuillez recharger l’application.',

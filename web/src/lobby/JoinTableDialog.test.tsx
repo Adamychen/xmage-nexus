@@ -149,7 +149,7 @@ describe('JoinTableDialog', () => {
     fireEvent.click(saveBtn)
 
     // Now Red Burn should be selected and reflected in submit button
-    expect(getByText(/Unirse con "My Red Burn"/i)).not.toBeNull()
+    await waitFor(() => expect(getByText(/Unirse con "My Red Burn"/i)).not.toBeNull())
 
     const submitBtn = getByRole('button', { name: /Unirse con "My Red Burn"/i })
     fireEvent.click(submitBtn)
@@ -161,6 +161,41 @@ describe('JoinTableDialog', () => {
         undefined
       )
     })
+  })
+
+  it('DCK-31: the quick import leaves a deck of the gallery, not a legacy one', async () => {
+    const { getByText, getByPlaceholderText } = render(
+      <JoinTableDialog table={MOCK_TABLE} onClose={vi.fn()} onJoin={vi.fn().mockResolvedValue(undefined)} />
+    )
+
+    fireEvent.click(getByText('Pegar mazo nuevo…'))
+    fireEvent.change(getByPlaceholderText(/Mazo Importado|Imported Deck/), { target: { value: 'My Red Burn' } })
+    fireEvent.change(getByPlaceholderText(/Pega aquí la lista de cartas/i), {
+      target: { value: '4 Lightning Bolt (M10) 146\n20 Mountain (LEA) 292' },
+    })
+    fireEvent.click(getByText('Guardar y Seleccionar'))
+
+    await waitFor(() => expect(getByText(/Unirse con "My Red Burn"/i)).not.toBeNull())
+    const stored = JSON.parse(localStorage.getItem('mage_decks_v2') ?? '[]')
+    expect(stored).toHaveLength(1)
+    expect(stored[0]).toMatchObject({ name: 'My Red Burn', format: 'Standard', source: 'imported' })
+    expect(stored[0].id).toBeTruthy()
+    expect(stored[0].cards).toHaveLength(2)
+    // nada va ya a la lista legacy
+    expect(localStorage.getItem('mage_custom_decks')).toBeNull()
+  })
+
+  it('DCK-31: a list with no cards is refused and nothing is saved', async () => {
+    const { getByText, getByPlaceholderText, findByText } = render(
+      <JoinTableDialog table={MOCK_TABLE} onClose={vi.fn()} onJoin={vi.fn().mockResolvedValue(undefined)} />
+    )
+
+    fireEvent.click(getByText('Pegar mazo nuevo…'))
+    fireEvent.change(getByPlaceholderText(/Pega aquí la lista de cartas/i), { target: { value: 'no cards here' } })
+    fireEvent.click(getByText('Guardar y Seleccionar'))
+
+    await findByText(/No se pudieron reconocer cartas|No cards could be parsed/i)
+    expect(localStorage.getItem('mage_decks_v2')).toBeNull()
   })
 })
 

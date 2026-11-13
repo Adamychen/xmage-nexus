@@ -160,8 +160,38 @@ function normalizeDeckV2(deck: DeckV2): DeckV2 {
   return changed ? { ...deck, cards, sideboard, coverCard, commanderCard, partnerCard } : deck
 }
 
+/**
+ * Pasa los mazos de la lista legacy (`mage_custom_decks`) al almacenamiento v2
+ * y vacía esa lista. Corre siempre que quede algo ahí, no una sola vez: hasta
+ * DCK-31 el importador del diálogo de unirse seguía escribiendo en la lista
+ * legacy, así que un mazo importado después de la migración inicial se quedaba
+ * fuera de la galería para siempre.
+ *
+ * Devuelve false si la escritura falló (cuota): la lista legacy se conserva
+ * intacta para volver a intentarlo.
+ */
+async function migrateLegacyDecks(): Promise<boolean> {
+  const legacy = loadSavedCustomDecks()
+  if (legacy.length === 0) return true
+  const v2 = legacyToV2(legacy).map(normalizeDeckV2)
+  if (isIdbAvailable()) {
+    for (const d of v2) await idbPut(d)
+  } else {
+    try {
+      lsSaveAll([...lsList(), ...v2])
+    } catch {
+      return false
+    }
+  }
+  try {
+    localStorage.removeItem(CUSTOM_DECKS_STORAGE_KEY)
+  } catch {}
+  return true
+}
+
 async function migrateIfNeeded(): Promise<void> {
   try {
+    const migrated = await migrateLegacyDecks()
     if (localStorage.getItem(LS_KEY_MIGRATED) === '1') {
       const fixKey = 'mage_decks_robust_fixed_v2'
       if (localStorage.getItem(fixKey) !== '1') {
@@ -180,28 +210,7 @@ async function migrateIfNeeded(): Promise<void> {
       }
       return
     }
-    const legacy = loadSavedCustomDecks()
-    if (legacy.length === 0) {
-      localStorage.setItem(LS_KEY_MIGRATED, '1')
-      return
-    }
-    const v2 = legacyToV2(legacy).map(normalizeDeckV2)
-    if (isIdbAvailable()) {
-      for (const d of v2) await idbPut(d)
-      localStorage.setItem(LS_KEY_MIGRATED, '1')
-      try {
-        localStorage.removeItem(CUSTOM_DECKS_STORAGE_KEY)
-      } catch {}
-    } else {
-      const existing = lsList()
-      try {
-        lsSaveAll([...existing, ...v2])
-      } catch {
-        return
-      }
-      localStorage.setItem(LS_KEY_MIGRATED, '1')
-      try { localStorage.removeItem(CUSTOM_DECKS_STORAGE_KEY) } catch {}
-    }
+    if (migrated) localStorage.setItem(LS_KEY_MIGRATED, '1')
   } catch {}
 }
 

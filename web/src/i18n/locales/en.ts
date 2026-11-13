@@ -2154,6 +2154,7 @@ export const en = {
     draft_create_failed: 'Could not create draft tournament',
     deck_parse_failed: 'No cards could be parsed. Expected format: "4 Lightning Bolt"',
     deck_read_failed: 'Could not read deck file',
+    deck_save_failed: 'Could not save the imported deck',
     generic_error: 'An unexpected error occurred',
     crash_title: 'Something went wrong',
     crash_desc: 'An unexpected error occurred. Please reload the application.',

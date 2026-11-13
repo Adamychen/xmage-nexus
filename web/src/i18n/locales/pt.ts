@@ -2156,6 +2156,7 @@ export const pt: TranslationSchema = {
     draft_create_failed: 'Não foi possível criar o torneio de draft',
     deck_parse_failed: 'Nenhum card reconhecido. Formato: "4 Lightning Bolt"',
     deck_read_failed: 'Não foi possível ler o arquivo de deck',
+    deck_save_failed: 'Não foi possível guardar o baralho importado',
     generic_error: 'Ocorreu um erro inesperado',
     crash_title: 'Algo deu errado',
     crash_desc: 'Ocorreu um erro inesperado. Por favor, recarregue a aplicação.',
