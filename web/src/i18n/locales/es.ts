@@ -509,6 +509,7 @@ export const es: TranslationSchema = {
     create_seat_deck_label: 'Mazo plaza {num}',
     create_seat_bot_internal: 'Bot {type} — usa mazo interno del servidor',
     create_seats_apply_all_shortcut: 'Atajo: aplicar a todas las plazas',
+    create_seats_no_server_ai: 'Este servidor no ofrece IA para partidas: solo puedes jugar contra personas.',
     create_seat_human_short: 'Humano',
     create_seat_human_waiting_label: 'Humano — espera rival',
     create_seat_sim: 'SIM',

@@ -509,6 +509,7 @@ export const de: TranslationSchema = {
     create_seat_deck_label: 'Deck für Platz {num}',
     create_seat_bot_internal: 'Bot {type} — nutzt internes Server-Deck',
     create_seats_apply_all_shortcut: 'Schnellwahl: Auf alle Plätze anwenden',
+    create_seats_no_server_ai: 'Dieser Server bietet keine KI für Partien: Du kannst nur gegen Menschen spielen.',
     create_seat_human_short: 'Mensch',
     create_seat_human_waiting_label: 'Mensch — wartet auf Gegner',
     create_seat_sim: 'SIM',

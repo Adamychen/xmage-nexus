@@ -127,11 +127,13 @@ export const DEFAULT_DECK_TYPES: string[] = [
 export const DEFAULT_PLAYER_TYPES: string[] = [
   'COMPUTER_MAD',
   'COMPUTER_MONTE_CARLO',
-  'COMPUTER_DRAFT_BOT',
 ]
 
 export const HUMAN_SEAT = 'HUMAN'
 export const SIM_SEAT = 'SIM'
+// The draft bot only picks cards in a draft: the server refuses it on any table
+// (`PlayerType.isWorkablePlayer` is false), so it is never a seat here.
+export const DRAFT_BOT_SEAT = 'COMPUTER_DRAFT_BOT'
 
 const SEAT_TYPE_ALIASES: Record<string, string> = {
   HUMAN: HUMAN_SEAT,
@@ -169,11 +171,16 @@ export function isNativeAiSeatType(t: string): boolean {
   return k !== HUMAN_SEAT && k !== SIM_SEAT
 }
 
+/** The draft bot drafts and nothing else: a table that seats it is refused by the server. */
+export function isDraftBotSeatType(t: string): boolean {
+  return normalizeSeatType(t) === DRAFT_BOT_SEAT
+}
+
 export function aiSeatTypes(playerTypes: string[]): string[] {
   const out: string[] = []
   for (const pt of playerTypes) {
     const n = normalizeSeatType(pt)
-    if (isHumanSeatType(n) || isSimSeatType(n)) continue
+    if (isHumanSeatType(n) || isSimSeatType(n) || isDraftBotSeatType(n)) continue
     if (!out.includes(n)) out.push(n)
   }
   return out
