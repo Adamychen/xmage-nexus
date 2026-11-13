@@ -36,6 +36,7 @@ import { artCropUrl, landTapColor, manaSourceSymbols, primaryCardType } from './
 import type { KeywordAuraMode, KeywordIconSet, PtBadgeMode, SicknessStyle } from './cardOverlays'
 import KeywordGlyph from './KeywordGlyph'
 import { dominantAuraKeyword, gainedKeywordIds } from './keywordAura'
+import { DefensePlate, LoyaltyPlate } from './StatPlate'
 import { manaPoolElement, spawnManaParticle, type ManaSide } from './manaParticle'
 import './CardSlot.css'
 import './KeywordAura.css'
@@ -398,14 +399,14 @@ const showPtBadge =
     && (ptBadgeMode === 'always' || !ptBaseKnown || pt.power !== 'same' || pt.toughness !== 'same')
   const hasCornerStat = showPtBadge || (isPlaneswalker && loyaltyVal > 0) || (isBattle && defenseVal > 0)
   const tileArt = cropUrl && cropFailed !== cropUrl ? cropUrl : null
-  const visibleCounters = compact
-    ? counters.filter((c) => {
-      const n = c.name.toLowerCase()
-      if (n === 'loyalty') return !(isPlaneswalker && loyaltyVal > 0)
-      if (n === 'defense') return !(isBattle && defenseVal > 0)
-      return true
-    })
-    : counters
+  // BRD-42: the loyalty and the defense already have their own badge, so the
+  // counter the server sends for them is dropped instead of drawn twice.
+  const visibleCounters = counters.filter((c) => {
+    const n = c.name.toLowerCase()
+    if (n === 'loyalty') return !(isPlaneswalker && loyaltyVal > 0)
+    if (n === 'defense') return !(isBattle && defenseVal > 0)
+    return true
+  })
 
   const handleClick = onClick ? () => {
     if (isPlayable && fxMotionAllowed()) setCastPhase('press')
@@ -585,9 +586,11 @@ const showPtBadge =
       )}
 
       {isPlaneswalker && loyaltyVal > 0 && !renderedFace && (
-        <BadgeTip className={`loyalty-badge${pulseClass(loyaltyPulse)}`} data-badge-zone="stats" tip={{ title: `${t('game', 'ability_loyalty')}: ${perm.loyalty}` }}>
-          <span className="loyalty-icon"><Icon name="shield" size={11} /></span>
-          <span className={`loyalty-val${loyaltyPulse?.tick ? ` counter-tick is-${loyaltyPulse.direction}` : ''}`}>{perm.loyalty}</span>
+        <BadgeTip className={`loyalty-badge${pulseClass(loyaltyPulse)}`} data-badge-zone="stats" data-digits={String(perm.loyalty ?? '').length} tip={{ title: `${t('game', 'ability_loyalty')}: ${perm.loyalty}` }}>
+          <LoyaltyPlate
+            value={String(perm.loyalty)}
+            valueClass={loyaltyPulse?.tick ? `counter-tick is-${loyaltyPulse.direction}` : ''}
+          />
           {loyaltyPulse?.scale && <span key={`ring-${loyaltyPulse.seq}`} className="counter-change-ring" aria-hidden="true" />}
           {loyaltyPulse?.label && (
             <span
@@ -602,9 +605,8 @@ const showPtBadge =
       )}
 
       {isBattle && defenseVal > 0 && !renderedFace && (
-        <BadgeTip className="defense-badge" data-badge-zone="stats" tip={{ title: `${t('game', 'damage')}: ${perm.defense}` }}>
-          <span className="defense-icon"><Icon name="swords" size={11} /></span>
-          <span className="defense-val">{perm.defense}</span>
+        <BadgeTip className="defense-badge" data-badge-zone="stats" data-digits={String(perm.defense ?? '').length} tip={{ title: `${t('game', 'damage')}: ${perm.defense}` }}>
+          <DefensePlate value={String(perm.defense)} />
         </BadgeTip>
       )}
 

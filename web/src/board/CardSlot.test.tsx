@@ -60,7 +60,7 @@ describe('CardSlot face-down permanents', () => {
 })
 
 describe('CardSlot', () => {
-  it('renders loyalty badge for planeswalker with loyalty', () => {
+  it('BRD-43: renders the loyalty on its own plate for a planeswalker', () => {
     const card = {
       id: 'pw1',
       name: 'Jace, the Mind Sculptor',
@@ -70,6 +70,9 @@ describe('CardSlot', () => {
     const { container } = render(<CardSlot card={card} />)
     expect(container.querySelector('.loyalty-badge')).not.toBeNull()
     expect(container.querySelector('.loyalty-badge')?.textContent).toContain('3')
+    // BRD-43: the number sits on the card's loyalty plate, not on a pill with an icon.
+    expect(container.querySelector('.loyalty-badge .loyalty-plate path')).not.toBeNull()
+    expect(container.querySelector('.loyalty-badge .lucide, .loyalty-badge .icon')).toBeNull()
   })
 
   it('renders keyword badges for Flying/Deathtouch/Trample/Haste', () => {

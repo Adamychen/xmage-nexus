@@ -763,25 +763,78 @@ html.fx-off .card-slot.casting-pop {
   box-shadow: 0 2px 6px var(--shade-3);
 }
 
+/* BRD-43: the loyalty is printed on its own plate, the shape of the card's
+   loyalty symbol, with the number inside it instead of a pill with an icon. */
 .loyalty-badge {
-  background: rgb(var(--ink-2-rgb) / 0.95);
-  border: 1.5px solid var(--purple);
-  color: var(--purple-fg);
-  box-shadow: 0 2px 6px var(--shade-3);
-  display: flex;
-  align-items: center;
-  gap: var(--sp-1);
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  color: var(--fg-hi);
+  display: grid;
+  place-items: center;
+  --plate-w: clamp(17px, calc(var(--card-w, 100px) * 0.26), 40px);
+  width: var(--plate-w);
+  aspect-ratio: 35.2 / 21.8;
+  filter: drop-shadow(0 2px 4px var(--shade-4));
 }
 
-.defense-badge {
-  background: var(--err-surface);
-  border: 1.5px solid var(--warn);
-  color: var(--warn);
-  box-shadow: 0 2px 6px var(--shade-3);
-  display: flex;
-  align-items: center;
-  gap: var(--sp-1);
+.loyalty-plate,
+.defense-plate {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
 }
+
+/* Opaque: the number has to read over whatever art is under the badge. The
+   stroke of each plate is in the units of its own drawing. */
+.loyalty-plate path,
+.defense-plate path {
+  fill: var(--ink-2);
+  stroke: var(--fg-2);
+  stroke-linejoin: round;
+}
+
+.loyalty-plate path {
+  stroke-width: 2.4;
+}
+
+.defense-plate path {
+  stroke-width: 64;
+}
+
+/* BRD-43: the number is drawn inside the plate, placed from the shape's centre
+   and the cap height of the digits (StatPlate), so the badge needs no font
+   metrics of its own. */
+.loyalty-val,
+.defense-val {
+  fill: var(--fg-hi);
+  font-family: var(--font-display);
+  font-weight: 800;
+}
+
+
+
+/* BRD-43: a battle's defense sits on its shield, the same treatment the
+   loyalty gets on its plate, so both read as the card prints them. */
+.defense-badge {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  color: var(--fg-hi);
+  display: grid;
+  place-items: center;
+  --plate-w: clamp(16px, calc(var(--card-w, 100px) * 0.24), 36px);
+  width: var(--plate-w);
+  aspect-ratio: 822.35 / 858.84;
+  filter: drop-shadow(0 2px 4px var(--shade-4));
+}
+
+
 
 .card-counters-wrap {
   position: absolute;
