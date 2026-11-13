@@ -509,6 +509,7 @@ export const pt: TranslationSchema = {
     create_seat_deck_label: 'Deck da vaga {num}',
     create_seat_bot_internal: 'Bot {type} — usa deck interno do servidor',
     create_seats_apply_all_shortcut: 'Atalho: aplicar a todas as vagas',
+    create_seats_no_server_ai: 'Este servidor não oferece IA para partidas: só dá para jogar contra pessoas.',
     create_seat_human_short: 'Humano',
     create_seat_human_waiting_label: 'Humano — aguardando oponente',
     create_seat_sim: 'SIM',

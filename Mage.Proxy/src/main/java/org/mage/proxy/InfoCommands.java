@@ -1,9 +1,12 @@
 package org.mage.proxy;
 
 import com.google.gson.JsonObject;
+import mage.players.PlayerType;
 import org.java_websocket.WebSocket;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
 
 /** Comandos de lectura: info del servidor, tipos, mesas, usuarios y chat. */
@@ -65,7 +68,7 @@ final class InfoCommands {
                 return true;
             }
             case "getPlayerTypes": {
-                ctx.gateway().send(conn, ProxyProtocol.resultJson(action, requestId, true, null, Arrays.asList(ctx.session().getPlayerTypes())));
+                ctx.gateway().send(conn, ProxyProtocol.resultJson(action, requestId, true, null, playableTypes(ctx.session().getPlayerTypes())));
                 return true;
             }
             case "getTables": {
@@ -126,5 +129,24 @@ final class InfoCommands {
             default:
                 return false;
         }
+    }
+
+    /**
+     * Seat types a table can really use. The server also publishes the draft bot
+     * ({@link PlayerType#isWorkablePlayer()} is false for it), which plays no match:
+     * {@code TableController.joinTable} rejects it with "player can't join this table",
+     * and the client would offer a seat the server always refuses.
+     */
+    static List<PlayerType> playableTypes(PlayerType[] types) {
+        List<PlayerType> playable = new ArrayList<>();
+        if (types == null) {
+            return playable;
+        }
+        for (PlayerType type : types) {
+            if (type != null && type.isWorkablePlayer()) {
+                playable.add(type);
+            }
+        }
+        return playable;
     }
 }

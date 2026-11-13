@@ -509,6 +509,7 @@ export const fr: TranslationSchema = {
     create_seat_deck_label: 'Deck de la place {num}',
     create_seat_bot_internal: 'Bot {type} — utilise le deck interne du serveur',
     create_seats_apply_all_shortcut: 'Raccourci : appliquer à toutes les places',
+    create_seats_no_server_ai: 'Ce serveur ne propose pas d’IA pour les parties : vous ne pouvez jouer que contre des personnes.',
     create_seat_human_short: 'Humain',
     create_seat_human_waiting_label: 'Humain — en attente d\'un adversaire',
     create_seat_sim: 'SIM',

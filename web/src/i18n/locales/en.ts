@@ -507,6 +507,7 @@ export const en = {
     create_seat_deck_label: 'Seat {num} deck',
     create_seat_bot_internal: 'Bot {type} — uses server built-in deck',
     create_seats_apply_all_shortcut: 'Shortcut: apply to all seats',
+    create_seats_no_server_ai: 'This server has no AI for matches: you can only play against people.',
     create_seat_human_short: 'Human',
     create_seat_human_waiting_label: 'Human — waiting for opponent',
     create_seat_sim: 'SIM',
