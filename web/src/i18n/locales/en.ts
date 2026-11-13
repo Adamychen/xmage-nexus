@@ -2058,6 +2058,7 @@ export const en = {
     issues_accept_and_play: 'Accept and play',
     issues_auto_resolve: 'Auto-resolve ({count})',
     issues_auto_resolve_hint: 'Apply every suggested printing at once',
+    issues_repair_saved: 'Repairs are saved to this deck.',
     issues_accept: 'Got it',
     issues_accept_hint: 'Accept this substitution and hide the warning',
     issues_cancel: 'Cancel',

@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from 'react'
 import type { Deck } from './decks'
-import { applySuggestions, autoResolveFixes, fetchDeckIssues, fixesForIssue } from '../decks/deckIssues'
+import { applySuggestions, autoResolveFixes, fetchDeckIssues, fixesForIssue, type DeckFix } from '../decks/deckIssues'
+import { isRepairPersistable, persistDeckRepair } from '../decks/deckRepair'
 import type { DeckMismatchCard, DeckMissingCard, DeckValidationResult } from '../net/types'
 import DialogShell from '../ui/DialogShell'
 import { useTranslation } from '../i18n'
@@ -14,11 +15,17 @@ import Button from '../ui/Button'
  *
  * API por promesas: `requestDeckValidation(deck)` devuelve el mazo final
  * (posiblemente corregido) o null si el usuario cancela.
+ *
+ * Reparar guarda: cada arreglo se escribe también en el mazo del jugador
+ * (`persistDeckRepair`, DCK-30), igual que el banner del editor, así que el
+ * aviso no vuelve a salir en la siguiente entrada a mesa.
  */
 
 interface ActiveRequest {
   deck: Deck
   report: DeckValidationResult
+  /** El mazo está en el almacenamiento del jugador: la reparación se guardará. */
+  savable: boolean
   resolve: (deck: Deck | null) => void
 }
 
@@ -51,8 +58,9 @@ export function requestDeckValidation(deck: Deck): Promise<Deck | null> {
     if (!hasMissing && !hasMismatches) {
       return deck
     }
+    const savable = await isRepairPersistable(deck.id)
     return new Promise<Deck | null>((resolve) => {
-      active = { deck, report, resolve }
+      active = { deck, report, savable, resolve }
       notify()
     })
   })()
@@ -70,18 +78,26 @@ export default function DeckIssuesDialog() {
   if (!req) {
     return null
   }
-  const { deck, report } = req
+  const { deck, report, savable } = req
   const missing: DeckMissingCard[] = report.missing
   const mismatches: DeckMismatchCard[] = report.mismatches
   const removable = missing.reduce((acc, c) => acc + c.amount, 0)
   const autoFixes = autoResolveFixes(report)
   const autoFixable = [...missing, ...mismatches].filter((c) => (c.suggestions?.length ?? 0) > 0).length
 
-  const retryWith = (next: Deck) => {
+  /**
+   * Repara el mazo con `fixes`: lo guarda (si es del jugador) y revalida el
+   * resultado, resolviendo la petición original con el mazo ya corregido.
+   */
+  const repairWith = (fixes: DeckFix[]) => {
+    const next = applySuggestions(deck, fixes)
     // resolver la petición original con el resultado de la re-validación
     const originalResolve = active?.resolve
     active = null
     notify()
+    void persistDeckRepair(deck.id, fixes).catch((e) => {
+      console.warn('[deckIssues] no se pudo guardar la reparación:', e instanceof Error ? e.message : e)
+    })
     void requestDeckValidation(next).then((result) => {
       originalResolve?.(result)
     })
@@ -126,7 +142,7 @@ export default function DeckIssuesDialog() {
                           <Button variant="subtle" size="sm"
                             key={`${s.setCode}:${s.cardNumber}`}
                             data-testid="deck-issue-suggestion"
-                            onClick={() => retryWith(applySuggestions(deck, fixesForIssue(c, s)))}>
+                            onClick={() => repairWith(fixesForIssue(c, s))}>
                             {t('decks', 'issues_use_suggestion', { set: s.setCode, num: s.cardNumber })}
                           </Button>
                         ))}
@@ -155,7 +171,7 @@ export default function DeckIssuesDialog() {
                           <Button variant="subtle" size="sm"
                             key={`${s.setCode}:${s.cardNumber}`}
                             data-testid="deck-issue-suggestion"
-                            onClick={() => retryWith(applySuggestions(deck, fixesForIssue(c, s)))}>
+                            onClick={() => repairWith(fixesForIssue(c, s))}>
                             {t('decks', 'issues_use_suggestion', { set: s.setCode, num: s.cardNumber })}
                           </Button>
                         ))}
@@ -165,6 +181,11 @@ export default function DeckIssuesDialog() {
                 ))}
               </ul>
             </section>
+          )}
+          {savable && autoFixes.length > 0 && (
+            <p className="deck-issues-saved-note" data-testid="deck-issues-saved-note">
+              {t('decks', 'issues_repair_saved')}
+            </p>
           )}
         </div>
 
@@ -177,7 +198,7 @@ export default function DeckIssuesDialog() {
               type="button"
               data-testid="deck-issues-auto-resolve"
               title={t('decks', 'issues_auto_resolve_hint')}
-              onClick={() => retryWith(applySuggestions(deck, autoFixes))}
+              onClick={() => repairWith(autoFixes)}
             >
               {t('decks', 'issues_auto_resolve', { count: autoFixable })}
             </Button>
