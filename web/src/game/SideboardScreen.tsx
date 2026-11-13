@@ -306,6 +306,10 @@ export default function SideboardScreen() {
       const found = tables.find((t) => t.tableId === tableId)
       const deckType = found?.deckType ?? ''
       const norm = String(deckType).toLowerCase()
+      // Freeform Commander antes que la regla general, y también por tipo de
+      // partida: valida como Commander dejaría fuera cartas aún no publicadas,
+      // que ese formato sí admite.
+      if (norm.includes('freeform commander') || String(found?.gameType ?? '').toLowerCase().includes('freeform commander')) return 'FreeformCommander'
       if (norm.includes('commander') || norm.includes('brawl')) return 'Commander'
       if (norm.includes('standard')) return 'Standard'
       if (norm.includes('modern')) return 'Modern'

@@ -406,3 +406,28 @@ is still unknown.
   inside the block, and every card that lost its lookup was shown as "No encontradas" although it exists
   (report of 2026-11-10).
 - Guard: `src/cards/scryfallClient.test.ts` · `src/cards/scryfallCards.test.ts` · `src/decks/importResolve.scryfall.test.ts` · `src/decks/ImportDeckDialog.test.tsx`
+
+### DCK-27 · Freeform Commander judges a deck by size, singleton and colour identity alone
+The deck editor offers Freeform Commander as a format of its own. It asks for 100 cards with a
+commander, no two alike, and every card inside the commander's colour identity, the same as Commander,
+but it checks no ban list and no set legality: XMage's `mage.deck.FreeformCommander` allows every set
+and clears its banned list, so a card whose set is not out yet is playable and is never reported. The
+XMage DeckValidator behind the proxy (DCK-19) still has the last word, under the deck type
+`Variant Magic - Freeform Commander`.
+
+- Why: the format exists to play with cards that are not legal anywhere else, so the local check against
+  Scryfall's legalities, which marks every card of an unreleased set as not legal, would report as
+  illegal the very decks the format is for.
+- Guard: `src/decks/formatRules.test.ts`
+
+### DCK-28 · In Freeform Commander any legendary card or any creature leads the deck
+In Freeform Commander the commander may be any legendary card, an artifact, an enchantment or a
+planeswalker included, or any creature, legendary or not, which is what
+`mage.deck.FreeformCommander.checkCommander` asks for. That rule is local and overrides the proxy's
+answer, which reports eligibility under Commander's narrower rule (`AbstractCommander.checkCommander`)
+and would refuse commanders this format takes. Everything else about a commander stays as it is in
+Commander: a pair still needs a legal Partner or Background.
+
+- Why: the proxy answers one eligibility per card name for every format at once, so without the override
+  the editor would grey out the commander icon on cards that the server then accepts at the table.
+- Guard: `src/decks/deckUtils.test.ts` · `src/decks/formatRules.test.ts` · `src/decks/useDeckMutations.test.ts`

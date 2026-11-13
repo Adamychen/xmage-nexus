@@ -462,3 +462,70 @@ describe('copy limits and color identity across name variants', () => {
     expect(report.issues.filter((i) => i.type === 'color_identity').map((i) => i.cardName)).toEqual(['Lightning Bolt'])
   })
 })
+
+describe('Freeform Commander', () => {
+  const lands = (n: number) => ({ cardName: 'Forest', setCode: 'LEA', cardNumber: '294', amount: n })
+  const henge = { cardName: 'The Great Henge', setCode: 'ELD', cardNumber: '161', amount: 1 }
+
+  function freeformDeck(over: Partial<DeckV2> = {}): DeckV2 {
+    return {
+      id: 'ffc',
+      name: 'Freeform EDH',
+      format: 'FreeformCommander',
+      cards: [henge, lands(99)],
+      sideboard: [],
+      colors: ['G'],
+      commanderCard: henge,
+      createdAt: 0,
+      updatedAt: 0,
+      source: 'custom',
+      ...over,
+    }
+  }
+
+  it('DCK-27: takes 100 singleton cards with a commander, as Commander does', () => {
+    expect(FORMAT_CONFIGS.FreeformCommander).toMatchObject({
+      minMain: 100, maxMain: 100, maxCopies: 1, isSingleton: true, hasCommander: true,
+    })
+    expect(ALL_FORMATS).toContain('FreeformCommander')
+    const report = validateDeckForFormat(freeformDeck(), new Map())
+    expect(report.isValid).toBe(true)
+
+    const short = validateDeckForFormat(freeformDeck({ cards: [henge, lands(50)] }), new Map())
+    expect(short.issues.some((i) => i.type === 'deck_size')).toBe(true)
+  })
+
+  it('DCK-27: reports no ban list and no set legality, so an unreleased card is legal', () => {
+    // Scryfall marks every card of a set that is not out yet as not legal everywhere.
+    const unreleased: CardStripMeta = { colorIdentity: ['G'], legalities: { commander: 'not_legal', vintage: 'banned' } }
+    const metaMap = new Map<string, CardStripMeta>([
+      ['ELD/161', { colorIdentity: ['G'], legalities: { commander: 'legal' } }],
+      ['LEA/294', unreleased],
+    ])
+    const report = validateDeckForFormat(freeformDeck(), metaMap)
+    expect(report.issues.filter((i) => i.type === 'not_legal' || i.type === 'banned')).toEqual([])
+    expect(report.isValid).toBe(true)
+
+    // Lo que sí sigue valiendo: la identidad de color del comandante.
+    const offColor = new Map<string, CardStripMeta>([
+      ['ELD/161', { colorIdentity: ['G'], legalities: { commander: 'legal' } }],
+      ['M10/146', { colorIdentity: ['R'] }],
+    ])
+    const deck = freeformDeck({ cards: [henge, lands(98), { cardName: 'Lightning Bolt', setCode: 'M10', cardNumber: '146', amount: 1 }] })
+    const report2 = validateDeckForFormat(deck, offColor)
+    expect(report2.issues.filter((i) => i.type === 'color_identity').map((i) => i.cardName)).toEqual(['Lightning Bolt'])
+  })
+
+  it('DCK-28: accepts a legendary non-creature as commander, where Commander does not', () => {
+    const metaMap = new Map<string, CardStripMeta>([
+      ['ELD/161', { typeLine: 'Legendary Artifact', colorIdentity: ['G'] }],
+    ])
+    // El proxy responde con la regla de Commander: en este formato no manda.
+    const proxySaysNo = new Map([['the great henge', false]])
+    const report = validateDeckForFormat(freeformDeck(), metaMap, proxySaysNo)
+    expect(report.issues.filter((i) => i.type === 'commander')).toEqual([])
+
+    const asCommander = validateDeckForFormat(freeformDeck({ format: 'Commander' }), metaMap, proxySaysNo)
+    expect(asCommander.issues.some((i) => i.type === 'commander')).toBe(true)
+  })
+})

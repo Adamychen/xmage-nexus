@@ -112,3 +112,24 @@ describe('deck presentation helpers', () => {
     expect(deckCoverCard(deck('Cover', 60, { coverCard: card('Goblin Guide') }))?.cardName).toBe('Goblin Guide')
   })
 })
+
+describe('Freeform Commander tables', () => {
+  const ffc = tableFormatProfile('Variant Magic - Freeform Commander', 'Freeform Commander Free For All')
+
+  it('LBY-30: reads the table as Freeform Commander, by deck type or by game type alone', () => {
+    expect(ffc).toMatchObject({ key: 'FreeformCommander', family: 'commander', format: 'FreeformCommander', minMain: 100, icon: 'crown' })
+    // Una mesa creada antes de que se guardara el tipo de mazo llega sin él.
+    expect(tableFormatProfile('<deck type missing>', 'Freeform Commander Two Player Duel')).toMatchObject({ format: 'FreeformCommander', minMain: 100 })
+    // Freeform Unlimited Commander es otro formato y sigue siendo limitado.
+    expect(tableFormatProfile('Variant Magic - Freeform Unlimited Commander', 'Freeform Unlimited Commander')).toMatchObject({ family: 'limited' })
+  })
+
+  it('LBY-30: matches a Freeform Commander deck and ranks it over a plain Commander deck', () => {
+    const freeform = deck('FFC', 100, { format: 'FreeformCommander' })
+    const edh = deck('EDH', 100, { format: 'Commander' })
+    expect(deckFitForTable(freeform, ffc).level).toBe('match')
+    expect(deckFitForTable(edh, ffc).level).toBe('ok')
+    expect(deckFitForTable(deck('Short', 60, { format: 'FreeformCommander' }), ffc).level).toBe('short')
+    expect(rankDecksForTable([edh, freeform], ffc).map(({ deck: d }) => d.name)).toEqual(['FFC', 'EDH'])
+  })
+})

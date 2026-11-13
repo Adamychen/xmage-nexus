@@ -636,7 +636,7 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
       isCommanderFormat={isCommanderFormat}
       isCommander={designated(commanderCard)}
       isPartner={designated(partnerCard)}
-      canBeCommander={commanderEligibleFor(commanderEligibilityMap, focus.card.cardName, focusMeta) !== false}
+      canBeCommander={commanderEligibleFor(commanderEligibilityMap, focus.card.cardName, focusMeta, format) !== false}
       isCover={designated(coverCard)}
       piles={focusZone === 'main' && group === 'free' ? (piles?.piles ?? []) : undefined}
       currentPileIds={focusZone === 'main' && piles && focusCard ? pilesHolding(piles, focusBare, focusCard.amount) : undefined}
