@@ -2060,6 +2060,7 @@ export const ru: TranslationSchema = {
     issues_accept_and_play: 'Принять и играть',
     issues_auto_resolve: 'Исправить всё ({count})',
     issues_auto_resolve_hint: 'Применить все предложенные издания сразу',
+    issues_repair_saved: 'Исправления сохраняются в этой колоде.',
     issues_accept: 'Понятно',
     issues_accept_hint: 'Принять замену и скрыть предупреждение',
     issues_cancel: 'Отмена',
