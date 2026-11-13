@@ -1,7 +1,8 @@
 .setup-wizard {
+  --dlg-max-h: 86vh;
   max-width: 640px;
   width: min(640px, 94vw);
-  max-height: 70vh;
+  max-height: var(--dlg-max-h);
   display: flex;
   flex-direction: column;
 }
@@ -12,7 +13,10 @@
   white-space: nowrap;
 }
 
+/* SET-13: the settings sections reused here adapt to this box like they do in the settings dialog. */
 .setup-body {
+  container: settings / inline-size;
+  min-height: 0;
   overflow-y: auto;
   scrollbar-gutter: stable;
   padding: var(--sp-1) var(--sp-0h);
@@ -107,6 +111,9 @@
 .setup-network-row .setup-field-port {
   flex: 0 0 90px;
 }
+
+/* The wizard is always narrower than the side-by-side board layout: the choice first, its preview under it. */
+.setup-body .settings-board-body { flex-direction: column; }
 
 .setup-summary {
   list-style: none;

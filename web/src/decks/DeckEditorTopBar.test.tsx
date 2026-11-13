@@ -34,10 +34,8 @@ function props(overrides: Partial<DeckEditorTopBarProps> = {}): DeckEditorTopBar
     onRetrySave: vi.fn(),
     onBack: vi.fn(),
     deck,
-    isEquipped: false,
     onImport: vi.fn(),
     onSample: vi.fn(),
-    onEquip: vi.fn(),
     onDone: vi.fn(),
     ...overrides,
   }
@@ -137,15 +135,9 @@ describe('DeckEditorTopBar', () => {
     expect(p.onDone).toHaveBeenCalledTimes(1)
   })
 
-  it('DCK-5: equip calls back, and once equipped it shows the state and is disabled', () => {
-    const onEquip = vi.fn()
-    const { rerender } = render(<DeckEditorTopBar {...props({ onEquip })} />)
-    fireEvent.click(screen.getByRole('button', { name: t('decks', 'builder_equip') }))
-    expect(onEquip).toHaveBeenCalledTimes(1)
-
-    rerender(<DeckEditorTopBar {...props({ onEquip, isEquipped: true })} />)
-    const equipped = screen.getByRole('button', { name: `✓ ${t('decks', 'builder_equipped')}` }) as HTMLButtonElement
-    expect(equipped.disabled).toBe(true)
+  it('DCK-23: the editor top bar has no equip action', () => {
+    render(<DeckEditorTopBar {...props()} />)
+    expect(screen.queryByRole('button', { name: /equip/i })).toBeNull()
   })
 
   it('DCK-5: the export menu writes the deck in the chosen format', () => {

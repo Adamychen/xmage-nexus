@@ -27,7 +27,7 @@ export function BasicLandAdder({
   onApplySuggestedLands: (suggested: { name: string; setCode: string; cardNumber: string; amount: number }[]) => void
 }) {
   const { t, lang } = useTranslation()
-  const isCommander = format === 'Commander'
+  const isCommander = format === 'Commander' || format === 'FreeformCommander'
   const defaultTarget = isCommander ? 36 : (format === 'Limited' ? 17 : 24)
   const [targetCount, setTargetCount] = useState<number>(defaultTarget)
   // El objetivo depende del formato: al cambiarlo se resetea la sugerencia.

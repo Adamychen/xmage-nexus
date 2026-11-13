@@ -8,6 +8,7 @@ import {
   isManaSourceCard,
   isPartnerCard,
   isCommanderEligible,
+  isFreeformCommanderEligible,
   canPairCommanders,
   commanderCardsFor,
   derivePartnerCard,
@@ -249,5 +250,27 @@ describe('basic land sets (U15 G15-7)', () => {
 
   it('defaults to DMU without stored preference', () => {
     expect(loadBasicLandSet()).toBe(DEFAULT_BASIC_LAND_SET)
+  })
+})
+
+describe('Freeform Commander eligibility', () => {
+  it('DCK-28: takes any legendary card or any creature', () => {
+    // Lo que Commander rechaza y este formato admite.
+    expect(isFreeformCommanderEligible({ typeLine: 'Legendary Artifact' })).toBe(true)
+    expect(isFreeformCommanderEligible({ typeLine: 'Legendary Enchantment' })).toBe(true)
+    expect(isFreeformCommanderEligible({ typeLine: 'Legendary Planeswalker — Jace', oracleText: 'Flying' })).toBe(true)
+    expect(isFreeformCommanderEligible({ typeLine: 'Creature — Human' })).toBe(true)
+    expect(isCommanderEligible({ typeLine: 'Legendary Artifact' })).toBe(false)
+    expect(isCommanderEligible({ typeLine: 'Creature — Human' })).toBe(false)
+
+    expect(isFreeformCommanderEligible({ typeLine: 'Legendary Creature — Elf' })).toBe(true)
+    expect(isFreeformCommanderEligible({ typeLine: 'Instant' })).toBe(false)
+    expect(isFreeformCommanderEligible({ typeLine: 'Basic Land — Mountain' })).toBe(false)
+    expect(isFreeformCommanderEligible(undefined)).toBe(false)
+  })
+
+  it('DCK-28: still takes a Grist-style creature off the battlefield', () => {
+    const grist = "As long as Grist isn't on the battlefield, it's a 1/1 Insect creature in addition to its other types."
+    expect(isFreeformCommanderEligible({ typeLine: 'Enchantment', oracleText: grist })).toBe(true)
   })
 })

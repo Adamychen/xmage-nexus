@@ -5,7 +5,7 @@ import type { Deck } from '../decks'
 import { setState } from '../../state/state'
 
 const DECK = { id: 'deck-red', name: 'Mono Red', cards: [{ amount: 60 }], sideboard: [] } as unknown as Deck
-const BOT_TYPES = ['COMPUTER_MAD', 'COMPUTER_MONTE_CARLO', 'COMPUTER_DRAFT_BOT']
+const BOT_TYPES = ['COMPUTER_MAD', 'COMPUTER_MONTE_CARLO']
 const HUMAN = { type: 'HUMAN', deckName: '', skill: 2 }
 const BOT = { type: 'COMPUTER_MAD', deckName: 'deck-red', skill: 4 }
 
@@ -83,6 +83,13 @@ describe('TourneySeatsStep: the seats as a list (TRN-6)', () => {
     expect(form.applySeatTypeToAll).toHaveBeenLastCalledWith('HUMAN')
     fireEvent.click(screen.getByRole('button', { name: 'Llenar con bots' }))
     expect(form.applySeatTypeToAll).toHaveBeenLastCalledWith('COMPUTER_MAD')
+  })
+
+  it('LBY-30: with no AI on the server the bot seats are off and the reason is shown', () => {
+    renderSeats({ playerTypes: [] })
+    expect(screen.getByTestId('seats-no-server-ai')).toBeDefined()
+    expect((screen.getByRole('button', { name: 'Llenar con bots' }) as HTMLButtonElement).disabled).toBe(true)
+    expect(kindRadio(2, /^IA$/).disabled).toBe(true)
   })
 
   it('TRN-6: a seat becomes a bot from its row', () => {

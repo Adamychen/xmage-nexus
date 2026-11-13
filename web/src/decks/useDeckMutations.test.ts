@@ -11,11 +11,13 @@ const tana: DeckCard = { cardName: 'Tana, the Bloodsower', setCode: 'C16', cardN
 const chooser: DeckCard = { cardName: 'Acolyte of Bahamut', setCode: 'CLB', cardNumber: '2', amount: 1 }
 const background: DeckCard = { cardName: 'Raised by Giants', setCode: 'CLB', cardNumber: '3', amount: 1 }
 const bolt: DeckCard = { cardName: 'Lightning Bolt', setCode: 'M10', cardNumber: '146', amount: 1 }
+const henge: DeckCard = { cardName: 'The Great Henge', setCode: 'ELD', cardNumber: '161', amount: 1 }
 
 const partnerMeta: CardStripMeta = { keywords: ['Partner'], typeLine: 'Legendary Creature — Human' }
 const chooserMeta: CardStripMeta = { oracleText: 'Choose a Background', typeLine: 'Legendary Creature — Dragon' }
 const backgroundMeta: CardStripMeta = { typeLine: 'Legendary Enchantment — Background' }
 const boltMeta: CardStripMeta = { typeLine: 'Instant', oracleText: 'Lightning Bolt deals 3 damage.' }
+const hengeMeta: CardStripMeta = { typeLine: 'Legendary Artifact' }
 
 function makeDeck(over: Partial<DeckV2> = {}): DeckV2 {
   return {
@@ -45,6 +47,8 @@ function renderMutations(deck: DeckV2, printingTargetCard: DeckCard | null = nul
     ['raised by giants', backgroundMeta],
     ['M10/146', boltMeta],
     ['lightning bolt', boltMeta],
+    ['ELD/161', hengeMeta],
+    ['the great henge', hengeMeta],
   ])
   const hook = renderHook(() => useDeckMutations({
     deck,
@@ -328,5 +332,23 @@ describe('useDeckMutations Free piles (DCK-7)', () => {
     const next = lastPersisted(schedulePersist)
     expect(next.cards[0].amount).toBe(3)
     expect(next.stackPiles?.assign[boltKey]).toEqual({ p1: 2, p2: 1 })
+  })
+})
+
+describe('useDeckMutations commander drops in Freeform Commander', () => {
+  it('DCK-28: takes a legendary non-creature the proxy reports as ineligible', () => {
+    const deck = makeDeck({ format: 'FreeformCommander', cards: [henge] })
+    const { result, schedulePersist } = renderMutations(deck)
+    let accepted: boolean | void = undefined
+    act(() => { accepted = result.current.handleDropCardOnDeck({ ...henge, source: 'main' }, 'commander') })
+    expect(accepted).toBe(true)
+    expect(schedulePersist.mock.calls[0][0]).toMatchObject({ commanderCard: henge })
+  })
+
+  it('DCK-28: the same card is refused in Commander', () => {
+    const { result } = renderMutations(makeDeck({ cards: [henge] }))
+    let accepted: boolean | void = undefined
+    act(() => { accepted = result.current.handleDropCardOnDeck({ ...henge, source: 'main' }, 'commander') })
+    expect(accepted).toBe(false)
   })
 })

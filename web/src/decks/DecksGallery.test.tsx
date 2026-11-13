@@ -371,17 +371,8 @@ describe('DecksGallery · why a deck is not legal', () => {
     expect(issue.getAttribute('title')).toContain(t('decks', 'commander_hint'))
   })
 
-  it('DCK-23: My decks equips the selected deck and marks it on its tile', async () => {
-    const values = new Map<string, string>()
-    vi.stubGlobal('localStorage', {
-      get length() { return values.size },
-      clear: () => values.clear(),
-      getItem: (k: string) => values.get(k) ?? null,
-      key: (i: number) => [...values.keys()][i] ?? null,
-      removeItem: (k: string) => { values.delete(k) },
-      setItem: (k: string, v: string) => { values.set(k, String(v)) },
-    })
-    setState({ ...initialState } as never)
+  it('DCK-23: My decks has no equip action, and selecting a deck leaves the deck in play alone', async () => {
+    setState({ ...initialState, myDeck: null } as never)
     storeState.decks = [customDeck({ id: 'burn', name: 'Mi Burn' }), customDeck({ id: 'krenko', name: 'Krenko' })]
     render(<DecksGallery onEdit={() => {}} />)
     const box = await waitFor(() => {
@@ -389,18 +380,14 @@ describe('DecksGallery · why a deck is not legal', () => {
       expect(el).not.toBeNull()
       return el as HTMLElement
     })
-    expect(screen.queryByTestId('deckbox-equipped')).toBeNull()
 
     fireEvent.click(box)
-    const equip = await screen.findByTestId('decks-equip')
-    expect(equip.textContent).toBe(t('decks', 'builder_equip'))
-    fireEvent.click(equip)
+    await waitFor(() => expect(box.getAttribute('aria-selected')).toBe('true'))
 
-    expect((getState().myDeck as { id?: string } | null)?.id).toBe('krenko')
-    expect(equip.textContent).toBe(`✓ ${t('decks', 'builder_equipped')}`)
-    expect((equip as HTMLButtonElement).disabled).toBe(true)
-    expect(box.querySelector('[data-testid="deckbox-equipped"]')).not.toBeNull()
-    expect(screen.getAllByTestId('deckbox-equipped')).toHaveLength(1)
+    expect(screen.queryByTestId('decks-equip')).toBeNull()
+    expect(screen.queryByTestId('deckbox-equipped')).toBeNull()
+    expect(screen.queryByRole('button', { name: /equip/i })).toBeNull()
+    expect(getState().myDeck).toBeNull()
     setState({ ...initialState } as never)
   })
 

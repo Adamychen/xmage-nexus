@@ -27,7 +27,7 @@ After touching proxy Java: run `java` + `node scripts/build.mjs proxy` +
 layers your change touches (for `web/`: `unit`, `typecheck` and
 `npm --prefix web run test:e2e:changed`; the stack layers when the proxy or the
 protocol changed) and check that the remote CI is green: it runs the whole fake
-e2e sharded on every push. See `docs/testing.md`.
+e2e sharded on every PR and on every push to `master`. See `docs/testing.md`.
 
 ## Recipes
 

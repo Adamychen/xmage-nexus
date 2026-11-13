@@ -233,23 +233,6 @@ button.deck-editor-legality:focus-visible {
   margin-inline-start: auto;
 }
 
-.deck-editor-equip:not(:disabled) {
-  color: var(--gold-300);
-  border-color: var(--gold-500);
-  background: linear-gradient(180deg, rgb(var(--gold-rgb) / 0.28) 0%, rgb(var(--gold-rgb) / 0.12) 100%);
-}
-
-.deck-editor-equip:not(:disabled):hover {
-  color: var(--fg-hi);
-  border-color: var(--gold-300);
-}
-
-.deck-editor-equip.is-equipped {
-  opacity: 1;
-  color: var(--ok);
-  border-color: var(--ok-line);
-}
-
 @media (max-width: 700px) {
   .deck-editor-identity {
     flex-basis: 100%;

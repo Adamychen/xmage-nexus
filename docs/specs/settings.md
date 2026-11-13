@@ -157,3 +157,16 @@ two switches are independent.
   out its controls, and there was no way to play with music and without effects (report of
   2026-11-11).
 - Guard: `src/settings/SoundFxControls.test.tsx` · `src/audio/soundManager.test.ts` · `src/state/persistence.test.ts`
+
+### SET-13 · The setup wizard lays out the settings it borrows so they fit
+The setup wizard reuses the settings sections, and they adapt to the wizard's box the same way they
+adapt to the settings dialog: below 820 px of width the board preview leaves the side and, in the
+wizard, goes under the options; below 640 px a picker with four or more options that pair up shows
+two per row; below 520 px the narrow rules of the dialog apply. Every step opens at its top, not at
+the scroll the previous step was left at.
+
+- Why: the wizard did not declare itself a settings container, so none of those rules applied in a
+  640 px wizard: the four layout cards were 53 px columns (22 px on a phone) with their text one word
+  per line, the 300 px preview took half the width and overflowed on a phone, and the Sound and
+  gameplay step opened scrolled to the middle (report of 2026-11-13).
+- Guard: `src/setup/SetupWizard.test.tsx` · `src/settings/settingsUi.test.tsx` · `e2e/setup-wizard.spec.ts`

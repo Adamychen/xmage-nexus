@@ -71,13 +71,40 @@ jobs:
         working-directory: mcp
         run: npm ci
 
-      - name: Install Playwright browsers
+      # Same cache as web-ci.yml: the uncached download is usually under a minute, but it is the
+      # step that hung for 89 min on 2026-10-31 and blocked the pages-* queue (cancel-in-progress
+      # is false here).
+      - name: Read the installed Playwright version
+        id: pw
         working-directory: web
-        run: npx playwright install --with-deps chromium
+        run: echo "version=$(node -p "require('@playwright/test/package.json').version")" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Playwright browsers
+        id: pw-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-chromium-${{ runner.os }}-${{ steps.pw.outputs.version }}
+
+      - name: Install Playwright chromium (cache miss)
+        if: steps.pw-cache.outputs.cache-hit != 'true'
+        working-directory: web
+        run: |
+          for attempt in 1 2 3; do
+            npx playwright install --with-deps chromium && exit 0
+            echo "::warning::Playwright browser download failed (attempt $attempt), retrying"
+            sleep 20
+          done
+          exit 1
+
+      - name: Install Playwright system dependencies (cache hit)
+        if: steps.pw-cache.outputs.cache-hit == 'true'
+        working-directory: web
+        run: npx playwright install-deps chromium
 
       - name: Generate dashboard (lightweight layers)
         env:
-          # On push the fake e2e is skipped here: web-ci.yml runs the same suite sharded on every push,
+          # On push the fake e2e is skipped here: web-ci.yml runs the same suite sharded on master,
           # and this workflow runs it nightly / on demand. The layer is reported as pending, not failed.
           DASHBOARD_SKIP_E2E: ${{ github.event_name == 'push' && '1' || '' }}
           # The runner is much slower than a dev machine, so the fake e2e takes several times longer there;
@@ -95,6 +122,9 @@ jobs:
         if: github.event_name == 'schedule'
         run: node scripts/dev.mjs start
 
+      # No continue-on-error here: TST-4 says a failed integration layer is a red run, and
+      # scripts/workflows.test.mjs guards it. What changes is downstream: the publishing steps
+      # below carry !cancelled(), so a red layer no longer takes the deploy down with it.
       - name: Integration (real stack, nightly only)
         if: github.event_name == 'schedule'
         run: node scripts/integration-report.mjs
@@ -114,7 +144,7 @@ jobs:
         run: node scripts/dev.mjs stop
 
       - name: Upload nightly integration report (nightly only)
-        if: github.event_name == 'schedule'
+        if: ${{ !cancelled() && github.event_name == 'schedule' }}
         uses: actions/upload-artifact@v4
         with:
           name: nightly-integration-report
@@ -126,22 +156,29 @@ jobs:
           if-no-files-found: warn
 
       - name: Regenerate with integration results (nightly only)
-        if: github.event_name == 'schedule'
+        if: ${{ !cancelled() && github.event_name == 'schedule' }}
         env:
           GITHUB_SHA: ${{ github.sha }}
           GITHUB_RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: node scripts/gen-dashboard.mjs
 
+      # !cancelled(), so a failed nightly step still publishes what the dashboard has. Publishing
+      # the truth is the point and the run stays red either way (the failed step is still a
+      # failure, and check-status.mjs fails on red layers). Before this, a red integration skipped
+      # the deploy with it: 27 of the last 31 nightlies published no dashboard at all.
       - name: Upload Pages artifact
+        if: ${{ !cancelled() }}
         uses: actions/upload-pages-artifact@v3
         with:
           path: site
 
       - name: Deploy to GitHub Pages
         id: deploy
+        if: ${{ !cancelled() }}
         uses: actions/deploy-pages@v4
 
       # After the deploy, on purpose: the status page must publish the truth (red layers and all)
       # and the run must be red with it. See scripts/check-status.mjs.
       - name: Fail the run on red layers
+        if: ${{ !cancelled() }}
         run: node scripts/check-status.mjs

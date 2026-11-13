@@ -81,9 +81,11 @@ export const DEFAULT_RESULTS: Record<string, unknown> = {
     { name: 'Two Player Duel', minPlayers: 2, maxPlayers: 2 },
     { name: 'Free For All', minPlayers: 3, maxPlayers: 10 },
     { name: 'Commander Free For All', minPlayers: 3, maxPlayers: 10 },
+    { name: 'Freeform Commander Two Player Duel', minPlayers: 2, maxPlayers: 2 },
+    { name: 'Freeform Commander Free For All', minPlayers: 3, maxPlayers: 10 },
   ],
   getPlayerTypes: ['HUMAN', 'SIM', 'COMPUTER_MAD', 'COMPUTER_DRAFT_BOT'],
-  getDeckTypes: ['Constructed - Modern', 'Limited'],
+  getDeckTypes: ['Constructed - Modern', 'Variant Magic - Commander', 'Variant Magic - Freeform Commander', 'Limited'],
   getTournamentTypes: DEFAULT_TOURNAMENT_TYPES.map(tournamentTypeView),
 }
 

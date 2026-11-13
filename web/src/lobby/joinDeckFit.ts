@@ -41,7 +41,7 @@ const CONSTRUCTED_FORMATS: Array<[RegExp, DeckFormat]> = [
   [/\bfreeform\b/, 'Freeform'],
 ]
 
-const COMMANDER_FORMATS = new Set<DeckFormat>(['Commander', 'Brawl', 'Oathbreaker', 'PennyDreadfulCommander'])
+const COMMANDER_FORMATS = new Set<DeckFormat>(['Commander', 'FreeformCommander', 'Brawl', 'Oathbreaker', 'PennyDreadfulCommander'])
 
 function shortLabel(deckType: string): string {
   return deckType.replace(/^(Block Constructed|Constructed|Variant Magic) - /, '').trim()
@@ -59,6 +59,13 @@ export function tableFormatProfile(deckType?: string, gameType?: string): TableF
   if (dt.includes('tiny leaders')) return { key: raw, family: 'commander', format: null, label, icon: 'crown', minMain: 50 }
   if (dt.includes('oathbreaker')) return { key: 'Oathbreaker', family: 'commander', format: 'Oathbreaker', label, icon: 'crown', minMain: 60 }
   if (dt.includes('brawl')) return { key: 'Brawl', family: 'commander', format: 'Brawl', label, icon: 'crown', minMain: 60 }
+  // Antes de la regla general de commander, y también por tipo de partida: una
+  // mesa sin tipo de mazo ("<deck type missing>") solo se reconoce por ahí.
+  // "Freeform Unlimited Commander" no contiene esta subcadena, y además ya ha
+  // salido arriba como limitado.
+  if (dt.includes('freeform commander') || gt.includes('freeform commander')) {
+    return { key: 'FreeformCommander', family: 'commander', format: 'FreeformCommander', label: label || 'Freeform Commander', icon: 'crown', minMain: 100 }
+  }
   if (dt.includes('penny dreadful commander')) {
     return { key: 'PennyDreadfulCommander', family: 'commander', format: 'PennyDreadfulCommander', label, icon: 'crown', minMain: 100 }
   }

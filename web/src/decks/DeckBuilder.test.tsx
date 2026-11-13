@@ -719,16 +719,17 @@ describe('DeckBuilder · the editor on a phone', () => {
     expect(within(screen.getByRole('menu')).queryByRole('menuitemcheckbox', { name: t('decks', 'toggle_separate_creatures') })).toBeNull()
   })
 
-  it('DCK-14: the more menu holds Import, Export, Sample hand, Equip and the card language', async () => {
+  it('DCK-14: the more menu holds Import, Export, Sample hand and the card language', async () => {
     render(<DeckBuilder deckId="d1" onClose={vi.fn()} />)
     await screen.findByTestId('deck-editor-piles')
     expect(screen.queryByRole('menu')).toBeNull()
 
     fireEvent.click(screen.getByRole('button', { name: t('decks', 'editor_more') }))
     const menu = screen.getByRole('menu')
-    for (const label of [t('decks', 'import_deck'), t('decks', 'builder_sample'), t('decks', 'builder_equip')]) {
+    for (const label of [t('decks', 'import_deck'), t('decks', 'builder_sample')]) {
       expect(within(menu).getByRole('menuitem', { name: label })).toBeTruthy()
     }
+    expect(within(menu).queryByRole('menuitem', { name: /equip/i })).toBeNull()
     for (const label of ['.dck', 'Arena', 'Plain', '.dek']) {
       expect(within(menu).getByRole('menuitem', { name: label })).toBeTruthy()
     }

@@ -65,10 +65,10 @@ on screen; the rest of the filters sit behind "Filters", whose badge counts only
 
 ### LBY-5 · New seats wait for humans; bots are the server's own AI, never SIM
 In the create-table wizard every seat beyond the host's is an open human seat by default. A bot
-is an explicit choice among the server's native AI types (`COMPUTER_MAD`,
-`COMPUTER_MONTE_CARLO`, `COMPUTER_DRAFT_BOT`), and the client joins each bot seat with a checked
-deck after creating the table. The proxy's `SIM` seat is never offered or sent, and a form saved
-by an older client turns its SIM seats into open human seats.
+is an explicit choice among the server's native AI types that can play a game (`COMPUTER_MAD`,
+`COMPUTER_MONTE_CARLO`; see LBY-30 for the draft bot), and the client joins each bot seat with a
+checked deck after creating the table. The proxy's `SIM` seat is never offered or sent, and a form
+saved by an older client turns its SIM seats into open human seats.
 
 - Why: `4fe0f8ab8a` (design `docs/plans/2026-10-10-sim-dev-only-design.md`): SIM is a test
   harness, release proxies reject it, and the native AI runs on any stock server including beta.
@@ -282,7 +282,7 @@ readable and nothing spills out of the card. Two or more open seats share one ro
 ### LBY-24 · The header navigates; creating starts from the "Create" menu beside the search
 The lobby header holds the brand, the tabs (Tables with its count, Decks, History, Ranking, underlined
 when active), the active-table shortcut and the player's controls. Creating a match or a tournament is a
-"Create" menu at the end of the search row, next to the active deck. The header is one row from 901 px up
+"Create" menu at the end of the search row. The header is one row from 901 px up
 (the user chip keeps only its avatar below 1180 px) and on a phone, where the tabs live in the bottom bar.
 
 - Why: the lobby review of 2026-10-27: "New table" and "New tournament" sat among the tabs, the active
@@ -344,3 +344,29 @@ versions never count as newer.
 - Why: 0.8.0 was deployed and released on 2026-11-11, but a player who had opened the web that morning
   kept seeing 0.8.0 in the header and 0.7.1 as the latest news until the next day.
 - Guard: `src/system/news.test.ts`
+
+### LBY-30 · The draft bot is never a seat, and a server without AI says so
+A seat only ever offers player types that can play a game. The draft bot (`COMPUTER_DRAFT_BOT`)
+drafts cards and nothing else, so the proxy keeps it out of `getPlayerTypes` (the enum's
+`isWorkablePlayer` decides) and the client drops it from the types it is given and from its own
+fallback list. The lobby still labels it where another client's table shows it. When no playable AI
+is left, the seats step says the server has no AI for matches and offers no bot seat, instead of a
+bot the server will refuse.
+
+- Why: on beta.xmage.today the only AI published is the draft bot, so the wizard's single bot
+  choice produced "A COMPUTER_DRAFT_BOT player can't join this table" and the table was deleted
+  right after being created (LBY-6), leaving no game at all (report of 2026-11-13).
+- Guard: `src/lobby/CreateTable/constants.test.ts` · `src/lobby/CreateTable/TourneySeatsStep.test.tsx` · `src/lobby/CreateTableDialog.test.tsx`
+  (the proxy-side filter is guarded in Mage.Proxy, by PlayerTypesCommandTest)
+
+### LBY-31 · A Freeform Commander table asks for a Freeform Commander deck
+A table whose deck type or game type is Freeform Commander takes Freeform Commander decks as an exact
+match, the way a Commander table takes Commander decks, and asks for 100 cards. The game type alone is
+enough to recognise it, because a table created before its deck type was recorded arrives with
+`<deck type missing>`. "Freeform Unlimited Commander" is a different format and is still read as a
+limited table.
+
+- Why: XMage pairs each commander variant with its own deck type, and a Freeform Commander table refuses
+  a plain Commander deck, so offering one as the best match would send the player to a seat the server
+  turns down.
+- Guard: `src/lobby/joinDeckFit.test.ts`

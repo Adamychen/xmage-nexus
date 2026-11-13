@@ -27,9 +27,6 @@ import { ManaPip } from './ArenaManaSymbols'
 import { useTranslation } from '../i18n'
 import { alertDialog, confirmDialog } from '../ui/confirmDialog'
 import { downloadBlob } from '../utils/download'
-import { setMyDeck } from '../state/store'
-import { equippedDeckId } from '../state/persistence'
-import { withCommanderFirst } from './deckUtils'
 import './DecksGallery.css'
 
 function inferDeckColors(cards: DeckCard[]): ('W' | 'U' | 'B' | 'R' | 'G')[] {
@@ -105,7 +102,6 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
   const [formatFilter, setFormatFilter] = useState<string>('All Decks')
   const [sortBy, setSortBy] = useState<'updated' | 'name' | 'size'>('updated')
   const [selectedId, setSelectedId] = useState<string | null>(null)
-  const [equippedId, setEquippedId] = useState<string | null>(() => equippedDeckId())
   const [inspectingDeck, setInspectingDeck] = useState<DeckV2 | null>(null)
   const [showImportDialog, setShowImportDialog] = useState(false)
   const [importPrefill, setImportPrefill] = useState<{ text: string; name: string } | null>(null)
@@ -268,11 +264,6 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
     await load()
     setSelectedId(deck.id)
     setMainView('my-decks')
-  }
-
-  const equipDeck = (deck: DeckV2) => {
-    setMyDeck({ ...deck, cards: withCommanderFirst(deck.cards, deck.commanderCard, deck.partnerCard) })
-    setEquippedId(deck.id)
   }
 
   const handleDelete = async () => {
@@ -504,7 +495,6 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
                 key={d.id}
                 deck={d}
                 selected={selectedId === d.id}
-                equipped={equippedId === d.id}
                 onSelect={() => setSelectedId(d.id)}
                 onDoubleClick={() => setInspectingDeck(d)}
                 onEdit={() => void openForEdit(d)}
@@ -566,16 +556,6 @@ export default function DecksGallery({ onEdit }: { onEdit: (id: string) => void 
                 <MenuItem role="menuitem" icon="file" onClick={() => setExportKind('dek')}>.dek</MenuItem>
               </DropdownMenu>
               <Button variant="soft-danger" size="sm" className="decks-footer-btn" icon="trash" disabled={!selected || selected?.source === 'precon'} title={selected?.source === 'precon' ? t('decks', 'browser_filter_precon') : undefined} onClick={handleDelete}>{t('common', 'delete')}</Button>
-              <Button
-                variant={selected && equippedId === selected.id ? 'success' : 'secondary'}
-                size="sm"
-                className="decks-footer-btn decks-equip-btn"
-                data-testid="decks-equip"
-                disabled={!selected || equippedId === selected.id}
-                onClick={() => selected && equipDeck(selected)}
-              >
-                {selected && equippedId === selected.id ? `✓ ${t('decks', 'builder_equipped')}` : t('decks', 'builder_equip')}
-              </Button>
               <Button variant="primary" className="decks-edit-btn" icon="pencil" disabled={!selected} onClick={() => selected && void openForEdit(selected)}>{t('decks', 'editor_open')}</Button>
             </div>
             <input ref={restoreInputRef} type="file" accept=".json" hidden onChange={async (e) => {

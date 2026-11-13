@@ -32,7 +32,7 @@ export interface ResolveResult {
 
 type DeckLike = Pick<Deck, 'cards' | 'sideboard' | 'commanders'> & Pick<DeckV2, 'commanderCard' | 'partnerCard'>
 
-const COMMANDER_FORMATS: DeckFormat[] = ['Commander', 'Brawl', 'Oathbreaker', 'PennyDreadfulCommander']
+const COMMANDER_FORMATS: DeckFormat[] = ['Commander', 'FreeformCommander', 'Brawl', 'Oathbreaker', 'PennyDreadfulCommander']
 
 export function suggestFormat(deck: DeckLike): DeckFormat {
   const main = deck.cards.reduce((s, c) => s + c.amount, 0)

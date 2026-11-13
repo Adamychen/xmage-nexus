@@ -45,10 +45,8 @@ export interface DeckEditorPhoneTopBarProps {
   onRetrySave: () => void
   onBack: () => void
   deck: DeckV2
-  isEquipped: boolean
   onImport: () => void
   onSample: () => void
-  onEquip: () => void
   view: DeckEditorView
   onViewChange: (view: DeckEditorView) => void
   copies: DeckStacksCopies
@@ -78,10 +76,8 @@ export function DeckEditorPhoneTopBar({
   onRetrySave,
   onBack,
   deck,
-  isEquipped,
   onImport,
   onSample,
-  onEquip,
   view,
   onViewChange,
   copies,
@@ -135,9 +131,6 @@ export function DeckEditorPhoneTopBar({
             </MenuItem>
           ))}
           <MenuItem role="menuitem" icon="hand" onClick={onSample}>{t('decks', 'builder_sample')}</MenuItem>
-          <MenuItem role="menuitem" icon="crown" disabled={isEquipped} onClick={onEquip}>
-            {isEquipped ? `✓ ${t('decks', 'builder_equipped')}` : t('decks', 'builder_equip')}
-          </MenuItem>
           <MenuItem role="menuitem" icon="layers" onClick={() => onViewChange(piles ? 'list' : 'piles')}>
             {`${t('decks', 'editor_view')}: ${piles ? t('decks', 'editor_view_piles') : t('decks', 'editor_view_list')}`}
           </MenuItem>

@@ -53,7 +53,6 @@ export default function LobbyScreen() {
   const browserNotifications = useStore((s) => s.settings.browserNotifications)
   useNotificationPermissionAsk(browserNotifications && !!stagingTableId)
   const spectateTournament = useStore((s) => s.spectateTournament)
-  const myDeck = useStore((s) => s.myDeck)
   const error = useStore((s) => s.error)
   const events = useStore((s) => s.events)
   const [unreadChat, setUnreadChat] = useState(0)
@@ -219,23 +218,6 @@ export default function LobbyScreen() {
                     onReset={() => { setFilters(INITIAL_TABLE_FILTERS); try { localStorage.removeItem('lobby_filters') } catch {} }}
                     trailing={
                       <div className="tables-header-actions">
-                        <button
-                          type="button"
-                          className={`hero-deck-badge${myDeck ? '' : ' is-empty'}`}
-                          onClick={() => setActiveTab('decks')}
-                          title={`${t('lobby.active_deck')} ${myDeck?.name ?? '—'}`}
-                          data-testid="active-deck-pill"
-                        >
-                          <Icon name="layers" size={14} />
-                          {myDeck ? (
-                            <>
-                              <span className="hero-deck-label">{t('lobby', 'playing_with')}</span>
-                              <span className="hero-deck-name">{myDeck.name}</span>
-                            </>
-                          ) : (
-                            <span className="hero-deck-name">{t('lobby', 'pick_deck')}</span>
-                          )}
-                        </button>
                         <DropdownMenu
                           variant="primary"
                           size="md"

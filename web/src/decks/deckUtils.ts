@@ -165,6 +165,20 @@ export function isCommanderEligible(meta: PartnerMeta | undefined | null): boole
 }
 
 /**
+ * Elegibilidad en Freeform Commander, más amplia que la de Commander:
+ * `mage.deck.FreeformCommander.checkCommander` solo exige que la carta sea
+ * criatura o legendaria, así que valen un artefacto legendario, un
+ * encantamiento legendario o un planeswalker legendario, y también una
+ * criatura que no sea legendaria.
+ */
+export function isFreeformCommanderEligible(meta: PartnerMeta | undefined | null): boolean {
+  if (!meta) return false
+  const typeLine = (meta.typeLine ?? '').toLowerCase()
+  if (typeLine.includes('legendary') || typeLine.includes('creature')) return true
+  return isCreatureOffBattlefield(meta.oracleText)
+}
+
+/**
  * CR 903.5a (actualización de reglas de nov. 2024): una carta que es criatura
  * en zonas distintas del campo de batalla por una habilidad estática cuenta
  * como carta de criatura para ser comandante. Wizards dejó de escribir "can be

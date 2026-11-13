@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
-import type { DeckV2 } from './types'
+import type { DeckFormat, DeckV2 } from './types'
 import { commanderEligibility } from '../net/commands'
-import { isCommanderEligible } from './deckUtils'
+import { isCommanderEligible, isFreeformCommanderEligible } from './deckUtils'
 
 /**
  * Elegibilidad de comandante según las clases reales de XMage (acción
@@ -71,12 +71,21 @@ export function useCommanderEligibility(deck: DeckV2 | null, enabled: boolean) {
   return map
 }
 
-/** Elegibilidad de una carta: proxy primero, heurística local como fallback. */
+/**
+ * Elegibilidad de una carta: proxy primero, heurística local como fallback.
+ *
+ * En Freeform Commander manda la regla local: el proxy responde con la
+ * elegibilidad de Commander (`AbstractCommander.checkCommander`), que es más
+ * estrecha que la de `mage.deck.FreeformCommander`, así que su `false` dejaría
+ * fuera comandantes que ese formato sí admite.
+ */
 export function commanderEligibleFor(
   eligibilityMap: Map<string, boolean> | null | undefined,
   cardName: string,
   meta: { oracleText?: string; typeLine?: string } | undefined | null,
+  format?: DeckFormat,
 ): boolean | undefined {
+  if (format === 'FreeformCommander') return meta ? isFreeformCommanderEligible(meta) : undefined
   const fromProxy = eligibilityMap?.get(commanderEligibilityKey(cardName))
   if (fromProxy !== undefined) return fromProxy
   // Igual que los consumidores originales: sin meta no se puede validar.

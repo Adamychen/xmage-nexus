@@ -59,6 +59,18 @@ describe('SetupWizard', () => {
     expect(screen.getByTestId('setup-counter').textContent).toContain('6')
   })
 
+  it('SET-13: every step opens at its top, not where the previous step was scrolled', () => {
+    render(<SetupWizard onClose={() => {}} />)
+    next(3)
+    const boardBody = screen.getByTestId('setup-body')
+    boardBody.scrollTop = 900
+    next()
+    expect(screen.getByTestId('settings-sound-card')).toBeTruthy()
+    const soundBody = screen.getByTestId('setup-body')
+    expect(soundBody).not.toBe(boardBody)
+    expect(soundBody.scrollTop).toBe(0)
+  })
+
   it('skip marks setup done and leaves the login connection intact', () => {
     const onClose = vi.fn()
     const seen: Event[] = []

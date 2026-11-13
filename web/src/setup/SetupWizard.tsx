@@ -158,7 +158,8 @@ export default function SetupWizard({ onClose }: { onClose: () => void }) {
       topRight={<span className="setup-counter" data-testid="setup-counter">{t('setup', 'step_of', { current: step + 1, total: STEPS.length })}</span>}
       closeInCorner
     >
-      <div className="setup-body">
+      {/* Keyed by step so every step opens at its top, not at the previous step's scroll. */}
+      <div className="setup-body" key={stepId} data-testid="setup-body">
         {stepId === 'language' && (
           <>
             <p className="setup-lead">{t('setup', 'welcome_desc')}</p>

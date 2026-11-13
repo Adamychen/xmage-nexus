@@ -15,7 +15,7 @@ import {
 import { applyPrintingsByName, countUnresolved, resolveDeckPrintings, type PrintingStrategy } from './importResolve'
 import { normalizeDeckCard } from './deckNormalize'
 import { setCardArtPreference } from '../cards/artPreferences'
-import { canPairCommanders, isCommanderEligible } from './deckUtils'
+import { canPairCommanders, isCommanderEligible, isFreeformCommanderEligible } from './deckUtils'
 import { commanderEligibilityKey } from './useCommanderEligibility'
 import { setStoreError } from '../state/store'
 import { t as tStatic } from '../i18n'
@@ -196,8 +196,11 @@ export function useDeckMutations(deps: Deps) {
       const droppedMeta = metaOf(cardName, setCode, cardNumber, cardData)
       // Proxy primero (clases reales de xmage, p.ej. Grist); fallback: la
       // heurística del oráculo, permitiendo soltar si no hay meta que validar.
-      const fromProxy = commanderEligibilityMap?.get(commanderEligibilityKey(cardName))
-      const droppedEligible = fromProxy ?? (!droppedMeta || isCommanderEligible(droppedMeta))
+      // En Freeform Commander manda la regla local, más amplia que la del proxy.
+      const freeformCommander = deck.format === 'FreeformCommander'
+      const fromProxy = freeformCommander ? undefined : commanderEligibilityMap?.get(commanderEligibilityKey(cardName))
+      const localEligible = freeformCommander ? isFreeformCommanderEligible(droppedMeta) : isCommanderEligible(droppedMeta)
+      const droppedEligible = fromProxy ?? (!droppedMeta || localEligible)
       const commander = deck.commanderCard ?? null
       const partner = deck.partnerCard ?? null
 

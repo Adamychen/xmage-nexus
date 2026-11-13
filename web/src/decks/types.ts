@@ -1,6 +1,6 @@
 import type { Deck, DeckCard } from '../lobby/decks'
 
-export type DeckFormat = 'Standard' | 'Modern' | 'Commander' | 'Freeform' | 'Brawl' | 'Historic' | 'Pioneer' | 'Legacy' | 'Vintage' | 'Pauper' | 'Timeless' | 'Oathbreaker' | 'PennyDreadfulCommander' | 'EuropeanHighlander' | 'CanadianHighlander'
+export type DeckFormat = 'Standard' | 'Modern' | 'Commander' | 'Freeform' | 'FreeformCommander' | 'Brawl' | 'Historic' | 'Pioneer' | 'Legacy' | 'Vintage' | 'Pauper' | 'Timeless' | 'Oathbreaker' | 'PennyDreadfulCommander' | 'EuropeanHighlander' | 'CanadianHighlander'
 
 export interface DeckV2 extends Deck {
   id: string

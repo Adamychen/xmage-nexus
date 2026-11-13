@@ -126,7 +126,16 @@ export function Segmented<T extends string>({ value, options, onChange, labelled
   )
 }
 
-/** Grid style for a picker: one column per option, and on a narrow screen two only when they pair up, so no row is left with a hole (SET-7). */
+/**
+ * Grid style for a picker: one column per option. In a medium container four or more options that
+ * pair up go two per row, and on a narrow screen two only when they pair up, so no row is left with
+ * a hole (SET-7, SET-13).
+ */
 export function pickerColumns(count: number): CSSProperties {
-  return { '--cols': count, '--cols-narrow': count % 2 === 0 ? 2 : 1 } as CSSProperties
+  const pairs = count % 2 === 0
+  return {
+    '--cols': count,
+    '--cols-mid': pairs && count >= 4 ? 2 : count,
+    '--cols-narrow': pairs ? 2 : 1,
+  } as CSSProperties
 }
