@@ -644,6 +644,24 @@ describe('CreateTableDialog', () => {
     })
   })
 
+  it('LBY-30: a server whose only AI is the draft bot offers no bot seat and says why', async () => {
+    vi.mocked(cmds.getPlayerTypes).mockResolvedValueOnce(['Human', 'Computer - draftbot'])
+    await renderDialog()
+
+    for (let i = 0; i < 3; i++) {
+      const nextBtn = screen.queryByRole('button', { name: /Siguiente/ })
+      if (nextBtn) fireEvent.click(nextBtn)
+    }
+
+    expect(await screen.findByTestId('seats-no-server-ai')).toBeDefined()
+    expect(screen.queryByRole('radio', { name: /Draftbot/i })).toBeNull()
+    expect(screen.queryByRole('button', { name: /Draftbot/i })).toBeNull()
+
+    fireEvent.click(await screen.findByTestId('seat-node-1'))
+    const seatTypes = await screen.findByTestId('seat-type-0')
+    expect(within(seatTypes).queryByRole('radio', { name: /IA/ })).toBeNull()
+  })
+
   it('LM1: match Limited muestra resumen honesto y no ofrece draft', async () => {
     const { container } = await renderDialog()
     const reviewText = () => container.querySelector('.create-review')?.textContent ?? ''

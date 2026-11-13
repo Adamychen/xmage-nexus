@@ -4,8 +4,10 @@ import {
   aiSeatTypes,
   DEFAULT_DRAFT_TOURNAMENT_TYPE,
   DEFAULT_GAME_TYPES,
+  DEFAULT_PLAYER_TYPES,
   defaultTournamentType,
   formatStartLife,
+  isDraftBotSeatType,
   isHumanSeatType,
   isNativeAiSeatType,
   isSimSeatType,
@@ -45,10 +47,19 @@ describe('seat types (U3 plazas HUMAN)', () => {
   })
 
   it('LBY-5: aiSeatTypes excludes HUMAN and SIM without duplicates', () => {
-    expect(aiSeatTypes(['HUMAN', 'SIM', 'COMPUTER_MAD', 'Human', 'COMPUTER_DRAFT'])).toEqual([
+    expect(aiSeatTypes(['HUMAN', 'SIM', 'COMPUTER_MAD', 'Human', 'COMPUTER_MONTE_CARLO'])).toEqual([
       'COMPUTER_MAD',
-      'COMPUTER_DRAFT_BOT',
+      'COMPUTER_MONTE_CARLO',
     ])
+  })
+
+  it('LBY-30: the draft bot is not a seat, whatever name the server gives it', () => {
+    expect(isDraftBotSeatType('COMPUTER_DRAFT_BOT')).toBe(true)
+    expect(isDraftBotSeatType('Computer - draftbot')).toBe(true)
+    expect(isDraftBotSeatType('COMPUTER_MAD')).toBe(false)
+    expect(aiSeatTypes(['HUMAN', 'COMPUTER_DRAFT_BOT', 'COMPUTER_MAD'])).toEqual(['COMPUTER_MAD'])
+    expect(aiSeatTypes(['Human', 'Computer - draftbot'])).toEqual([])
+    expect(DEFAULT_PLAYER_TYPES).not.toContain('COMPUTER_DRAFT_BOT')
   })
 
   it('labels seats for the dropdown', () => {

@@ -116,7 +116,7 @@ describe('deck presentation helpers', () => {
 describe('Freeform Commander tables', () => {
   const ffc = tableFormatProfile('Variant Magic - Freeform Commander', 'Freeform Commander Free For All')
 
-  it('LBY-30: reads the table as Freeform Commander, by deck type or by game type alone', () => {
+  it('LBY-31: reads the table as Freeform Commander, by deck type or by game type alone', () => {
     expect(ffc).toMatchObject({ key: 'FreeformCommander', family: 'commander', format: 'FreeformCommander', minMain: 100, icon: 'crown' })
     // Una mesa creada antes de que se guardara el tipo de mazo llega sin él.
     expect(tableFormatProfile('<deck type missing>', 'Freeform Commander Two Player Duel')).toMatchObject({ format: 'FreeformCommander', minMain: 100 })
@@ -124,7 +124,7 @@ describe('Freeform Commander tables', () => {
     expect(tableFormatProfile('Variant Magic - Freeform Unlimited Commander', 'Freeform Unlimited Commander')).toMatchObject({ family: 'limited' })
   })
 
-  it('LBY-30: matches a Freeform Commander deck and ranks it over a plain Commander deck', () => {
+  it('LBY-31: matches a Freeform Commander deck and ranks it over a plain Commander deck', () => {
     const freeform = deck('FFC', 100, { format: 'FreeformCommander' })
     const edh = deck('EDH', 100, { format: 'Commander' })
     expect(deckFitForTable(freeform, ffc).level).toBe('match')

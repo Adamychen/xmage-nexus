@@ -509,6 +509,7 @@ export const ru: TranslationSchema = {
     create_seat_deck_label: 'Колода для места {num}',
     create_seat_bot_internal: 'Бот {type} — использует встроенную колоду сервера',
     create_seats_apply_all_shortcut: 'Применить ко всем местам',
+    create_seats_no_server_ai: 'На этом сервере нет ИИ для партий: играть можно только против людей.',
     create_seat_human_short: 'Игрок',
     create_seat_human_waiting_label: 'Игрок — ожидание соперника',
     create_seat_sim: 'SIM',
