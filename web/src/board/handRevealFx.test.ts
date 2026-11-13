@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { handReveals, knownHandCards } from './handRevealFx'
+import { handReveals } from './handRevealFx'
+import { knownHandCards } from './revealedCards'
 import { makeGameView, makePlayer } from '../__fixtures__/gameViews'
 import type { GameView } from '../net/types'
 
