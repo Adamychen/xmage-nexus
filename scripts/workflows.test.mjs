@@ -104,3 +104,44 @@ test("web-ci runs both lanes", () => {
   assert.match(heavy, /E2E_LANE: heavy/, "e2e-fake-heavy runs the heavy lane");
   assert.doesNotMatch(heavy, /E2E_LANE: light/, "e2e-fake-heavy does not also run the light lane");
 });
+
+// ci-ok is the single check meant to be required in branch protection and in the merge queue.
+// Two ways it could go wrong silently, both guarded here: a new job that nobody adds to its
+// needs (ci-ok goes green without ever waiting for it), and losing the merge_group trigger
+// (the queue waits for a check nobody reports and the merge fails).
+function jobNames(yml) {
+  const body = yml.slice(yml.indexOf("\njobs:") + 1);
+  return body.split(/\r?\n/).flatMap((l) => {
+    const m = /^ {2}([a-z0-9][a-z0-9-]*):\s*$/.exec(l);
+    return m ? [m[1]] : [];
+  });
+}
+
+test("ci-ok waits for every other job in web-ci", () => {
+  const jobs = jobNames(webCi);
+  assert.ok(jobs.includes("ci-ok"), "web-ci has a ci-ok job");
+  const needs = needsOf(webCi, "ci-ok");
+  const missing = jobs.filter((j) => j !== "ci-ok" && !needs.includes(j));
+  assert.deepEqual(missing, [], `ci-ok must list every other job in needs; missing: ${missing.join(", ")}`);
+  const unknown = needs.filter((n) => !jobs.includes(n));
+  assert.deepEqual(unknown, [], `ci-ok needs a job that does not exist: ${unknown.join(", ")}`);
+});
+
+test("ci-ok reports even when a job it waits for fails", () => {
+  const block = jobBlock(webCi, "ci-ok");
+  assert.ok(block !== null, "job ci-ok exists");
+  assert.match(block, /if:\s*\$\{\{\s*always\(\)\s*\}\}/,
+    "without always() the gate is skipped with the job that failed and the check never reports");
+});
+
+test("web-ci answers the merge queue", () => {
+  const on = webCi.slice(0, webCi.indexOf("\njobs:"));
+  assert.match(on, /^ {2}merge_group:/m,
+    "a merge queue dispatches merge_group, not pull_request: without it the merge fails");
+});
+
+test("web-ci has no paths filter, so its required check cannot be left pending", () => {
+  const on = webCi.slice(0, webCi.indexOf("\njobs:"));
+  assert.doesNotMatch(on, /^ {4}paths(-ignore)?:/m,
+    "a workflow skipped by path filtering leaves a required check pending and blocks merging");
+});
