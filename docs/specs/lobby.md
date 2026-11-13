@@ -282,7 +282,7 @@ readable and nothing spills out of the card. Two or more open seats share one ro
 ### LBY-24 · The header navigates; creating starts from the "Create" menu beside the search
 The lobby header holds the brand, the tabs (Tables with its count, Decks, History, Ranking, underlined
 when active), the active-table shortcut and the player's controls. Creating a match or a tournament is a
-"Create" menu at the end of the search row, next to the active deck. The header is one row from 901 px up
+"Create" menu at the end of the search row. The header is one row from 901 px up
 (the user chip keeps only its avatar below 1180 px) and on a phone, where the tabs live in the bottom bar.
 
 - Why: the lobby review of 2026-10-27: "New table" and "New tournament" sat among the tabs, the active

@@ -65,7 +65,7 @@ stacks screen is gone. The editor has a top bar and a toolbar. The top bar holds
 to My decks, the cover thumbnail, the editable name, and under it the format selector, the legality
 chip ("Legal in <format>" or what is wrong; clicking it opens today's issue list), the main and
 sideboard counts and the save state (saving, saved, failed with retry); then Import, Export, Sample
-hand, Equip and Done. The toolbar holds the catalogue toggle (DCK-12), View (Piles | List), Group and
+hand and Done. The toolbar holds the catalogue toggle (DCK-12), View (Piles | List), Group and
 Sort (List view groups too, DCK-25), and in Piles view Copies and Card size (DCK-1, DCK-6, DCK-8). List
 view is today's strip list with every strip action; Piles view is DCK-6 to DCK-11. Everything the old
 builder offered stays reachable in both views: server and XMage format issue banners with repair,
@@ -213,7 +213,7 @@ Cards are dragged in and out of it (DCK-9).
 
 ### DCK-14 · On a phone the editor shows the deck first
 Below 700 px of width the editor stacks: a top bar with back, the name, the format with counts and
-legality, and a "⋯" menu (Import, Export, Sample hand, Equip, card language); a Main | Sideboard
+legality, and a "⋯" menu (Import, Export, Sample hand, card language); a Main | Sideboard
 switch; the Group choices as a row of chips that scrolls sideways; the piles, which scroll
 sideways; and a bottom bar with "+ Add cards", which opens the catalogue as a full-screen sheet, and
 "Curve", which opens the numbers. Tapping a card opens an action sheet with the card, its counts and
@@ -340,16 +340,20 @@ dropdown that filters is highlighted and names what it filters by ("Creature +1"
   custom ones (reports of 2026-11-01 and 2026-11-06).
 - Guard: `src/decks/ArenaFilterBar.test.tsx` · `src/decks/filterQuery.test.ts`
 
-### DCK-23 · My decks equips a deck without opening it, and the label stays clear of the buttons
-The bottom bar of My decks has an Equip button for the selected deck, next to Open. It does what the
-editor's Equip does: the deck becomes the one used to join tables, the button turns into "✓ Equipped"
-and stays disabled, and the deck's tile says "✓ Equipped" under its name. Only one tile carries the mark.
-On a tile, the format label moves below the quick actions whenever they show (hover, focus, the selected
-tile, and always on touch screens), so the buttons never cover it.
+### DCK-23 · There is no equipped deck, and the tile label stays clear of the buttons
+Neither My decks nor the editor has an Equip button, and no tile carries an "Equipped" mark: the deck
+you play is the one you pick when you create a table, join one or change deck in the waiting room, and
+the lobby shows no "Playing with" badge. Selecting a deck in My decks only selects it. The last deck
+sent to a table is still kept as the deck in play, for the deck tracker, the mulligan help and the
+match history, and as the dialogs' starting suggestion. On a tile, the format label moves below the
+quick actions whenever they show (hover, focus, the selected tile, and always on touch screens), so
+the buttons never cover it.
 
-- Why: equipping meant opening the editor just to press one button, and the quick actions sat on top of
-  the format label on narrow tiles (report of 2026-11-06).
-- Guard: `src/decks/DecksGallery.test.tsx` · `e2e/decks-gallery.spec.ts`
+- Why: the server never reads an equipped deck (every join carries the deck picked in its dialog), so
+  equipping only changed which deck the dialogs preselected, and players who equipped one deck and
+  picked another believed they had played the wrong one (report of 2026-11-12). The quick actions sat
+  on top of the format label on narrow tiles (report of 2026-11-06).
+- Guard: `src/decks/DecksGallery.test.tsx` · `src/decks/DeckEditorTopBar.test.tsx` · `e2e/decks-gallery.spec.ts`
 
 ### DCK-24 · The editor's search can look for words in the rules text
 The advanced filters of the editor's search have a "Rules text" field. Each word typed there must appear
