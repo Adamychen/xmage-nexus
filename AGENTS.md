@@ -299,7 +299,7 @@ ordering carry the `@timing` tag** and `retryTimingSpecInCi()`: CI runs them in 
 suite is `fullyParallel`, so one 4-minute test (the old one-test gallery sweep) sets the floor of
 the whole run; split loops into blocks generated at describe level. **A whole spec file can pin a
 shard the same way**: Playwright balances shards by test count, so the costliest files per test
-(`HEAVY_SPECS` in `web/playwright.config.ts`) run in their own `e2e-heavy` lane via `E2E_LANE`,
+(`HEAVY_SPECS` in `web/playwright.config.ts`) run in their own `e2e-fake-heavy` lane via `E2E_LANE`,
 and `e2e-fake` takes the rest. `scripts/workflows.test.mjs` checks the two lanes stay the
 complement of each other; a local run with no `E2E_LANE` is the whole suite as always.
 **The helper does NOT answer the mulligan** (the web's auto-keep already does it;
