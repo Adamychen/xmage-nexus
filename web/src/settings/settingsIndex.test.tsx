@@ -37,6 +37,14 @@ describe('settings search index', () => {
     expect(unindexed).toEqual([])
   })
 
+  it('PRM-16: the starting player automation is indexed under the name of what it does', () => {
+    const entry = SETTINGS_INDEX.find((e) => e.id === 'auto-starting-player')
+    expect(entry, 'auto-starting-player should be in the search index').toBeTruthy()
+    expect(SETTINGS_INDEX.some((e) => e.id === 'auto-mulligan')).toBe(false)
+    expect(searchSettings(t('game', 'auto_starting_player'), t).map((h) => h.entry.id)).toContain('auto-starting-player')
+    expect(entry!.hint!(t)).not.toMatch(/mulligan/i)
+  })
+
   it('SET-6: matching ignores case and accents, and an empty query finds nothing', () => {
     expect(normalizeSearch('  Enfermedad DE Invocación ')).toBe('enfermedad de invocacion')
     expect(searchSettings('   ', t)).toEqual([])

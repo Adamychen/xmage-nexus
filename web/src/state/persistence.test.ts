@@ -536,6 +536,19 @@ describe('persistence', () => {
       expect(loaded.keywordIcons).toBe('coins')
       expect(loaded.keywordAura).toBe('subtle')
     })
+
+    it('BRD-32: a player who had chosen the retired emoji icon set gets the coins back', () => {
+      mockStorage['mage-web-appearance'] = JSON.stringify({
+        sleeveId: 'classic', boardLayout: 'standard', uiScale: 1, cjkBoost: true,
+        ptBadgeMode: 'changed', sicknessStyle: 'veil', keywordIcons: 'emoji', keywordAura: 'vivid',
+      })
+      const loaded = loadAppearanceSettings()
+      expect(loaded.keywordIcons).toBe('coins')
+      // the rest of the blob is untouched: only the retired value is replaced
+      expect(loaded.ptBadgeMode).toBe('changed')
+      expect(loaded.sicknessStyle).toBe('veil')
+      expect(loaded.keywordAura).toBe('vivid')
+    })
   })
 
   describe('card preview size persistence', () => {

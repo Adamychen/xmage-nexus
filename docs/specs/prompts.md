@@ -175,3 +175,15 @@ accept (the full list of a grid) can still be looked at. A face-down card nobody
   (reported 2026-11-12). A tap on a grid card already answers the prompt, so on a touch screen the preview
   needs its own control; the mouse and the keyboard reach the preview without one, as on the board.
 - Guard: `src/game/promptCardZoom.test.tsx`
+
+### PRM-16 · The only decision the client answers for you at the start of a game is who plays first
+The "Auto starting player" setting (`autoStartingPlayer`, Gameplay › Automation) answers the
+starting player prompt by sending the first option the server offers, and nothing else: the opening
+hand is always asked, so keeping it or taking a mulligan is the player's decision whatever the
+setting says. A spectator is a separate path, not a setting: having no seat, they cannot answer, so
+both prompts are answered for them and never shown.
+
+- Why: one setting did two unrelated things and its text said so ("keeps your opening hand and
+  picks who plays first"); a player who wanted the coin toss out of the way lost the mulligan with
+  it (2026-11-13).
+- Guard: `src/state/store.test.ts` · `src/settings/settingsIndex.test.tsx`
