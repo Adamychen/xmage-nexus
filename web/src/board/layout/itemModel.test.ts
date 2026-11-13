@@ -47,18 +47,18 @@ describe('itemModel: single cards (CardSlot.css)', () => {
     expectLinear(card({ tapped: true }), COMPACT_TILTED, 0.75, 0)
   })
 
-  it('BRD-28: a card with one attachment is c + 24px wide (.card-attachment-group, --attach-step), tapped or not', () => {
-    expectLinear(card({ attachments: 1 }), CLASSIC, 1, 24)
-    expectLinear(card({ attachments: 1, tapped: true }), CLASSIC, 1, 24)
-    expectLinear(card({ attachments: 1 }), COMPACT_TILTED, 1, 24)
+  it('BRD-28: a card with one attachment is c + 28px wide (.card-attachment-group, --attach-step), tapped or not', () => {
+    expectLinear(card({ attachments: 1 }), CLASSIC, 1, 28)
+    expectLinear(card({ attachments: 1, tapped: true }), CLASSIC, 1, 28)
+    expectLinear(card({ attachments: 1 }), COMPACT_TILTED, 1, 28)
   })
 
-  it('BRD-28: a card with two attachments is c + 48px wide', () => {
-    expectLinear(card({ attachments: 2 }), CLASSIC, 1, 48)
+  it('BRD-28: a card with two attachments is c + 56px wide', () => {
+    expectLinear(card({ attachments: 2 }), CLASSIC, 1, 56)
   })
 
-  it('BRD-28: a mutated card with two parts and one attachment is c + 2 x 14px + 24px wide (.card-mutate-pile)', () => {
-    expectLinear(card({ mutateParts: 2, attachments: 1 }), CLASSIC, 1, 52)
+  it('BRD-28: a mutated card with two parts and one attachment is c + 2 x 14px + 28px wide (.card-mutate-pile)', () => {
+    expectLinear(card({ mutateParts: 2, attachments: 1 }), CLASSIC, 1, 56)
   })
 })
 

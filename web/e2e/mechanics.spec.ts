@@ -36,6 +36,41 @@ test.describe('Mechanics & Reminder Tray Widget', { tag: '@mechanics' }, () => {
     })
   })
 
+  test('BRD-41: an attached card peeks as itself, and its preview opens from that strip @mechanics', async ({ page }) => {
+    await withFakeServer(mechanicsScenario, async () => {
+      await blockLocalizedEnrich(page)
+      const { pageErrors } = await quickStartGame(page, { prefix: 'mechat' })
+      await dismissInfoWindows(page)
+
+      const rancor = page.locator('.attachment-subcard[data-card-id="aura1"]')
+      await expect(rancor).toBeVisible({ timeout: 30_000 })
+
+      // The strip is the card itself, never a tab with its name written sideways.
+      const tab = await rancor.evaluate((el) => getComputedStyle(el, '::after').content)
+      expect(tab, 'the strip draws no text of its own').not.toContain('Rancor')
+
+      // A whole card behind its host, pushed out by the one step the row reserves.
+      const geom = await rancor.evaluate((el) => {
+        const group = el.closest('.card-attachment-group') as HTMLElement
+        const style = getComputedStyle(group)
+        return {
+          left: parseFloat(getComputedStyle(el).left),
+          width: el.getBoundingClientRect().width,
+          step: parseFloat(style.getPropertyValue('--attach-step')),
+          cardW: parseFloat(style.getPropertyValue('--card-w')),
+        }
+      })
+      expect(Math.abs(geom.left - geom.step), `pushed out ${geom.left} of ${geom.step}`).toBeLessThanOrEqual(1)
+      expect(Math.abs(geom.width - geom.cardW), `a whole card wide: ${geom.width} of ${geom.cardW}`).toBeLessThanOrEqual(1)
+
+      // Only that strip answers the pointer: the host covers the rest of the card.
+      await rancor.hover({ position: { x: geom.width - geom.step / 2, y: 20 } })
+      await expect(page.locator('.floating-card-preview')).toBeVisible({ timeout: 10_000 })
+
+      expect(pageErrors, `pageerrors: ${pageErrors.map(String).join(' | ')}`).toEqual([])
+    })
+  })
+
   test('mana pool is inline (never a dropdown) and hides the zero colours @mechanics', async ({ page }) => {
     await withFakeServer(mechanicsScenario, async () => {
       const { pageErrors } = await quickStartGame(page, {

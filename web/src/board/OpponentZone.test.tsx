@@ -133,7 +133,7 @@ describe('OpponentZone', () => {
     expect(permBand?.querySelectorAll('.card-slot').length).toBe(0)
   })
 
-  it('varios anexos van detrás del anfitrión: el primero encima, cada uno con su desplazamiento', () => {
+  it('BRD-41: varios anexos van detrás del anfitrión, cada uno con su desplazamiento y su propia carta', () => {
     const oppPlayer: Partial<PlayerView> = {
       playerId: 'p-opp',
       name: 'Computer',
@@ -164,6 +164,11 @@ describe('OpponentZone', () => {
     expect(subs[0].getAttribute('style')).toContain('1 * var(--attach-step)')
     expect(subs[1].getAttribute('style')).toContain('2 * var(--attach-step)')
     expect(subs.map((el) => el.getAttribute('data-card-name'))).toEqual(['Rancor', 'Bonesplitter'])
+    // BRD-41: what peeks is the card itself, so each anexo renders its own slot
+    // (art when the image is there, the name as the fallback), never a label
+    // drawn by the host.
+    for (const el of subs) expect(el.classList.contains('card-slot')).toBe(true)
+    expect(group.querySelectorAll('.card-slot').length).toBe(subs.length + 1)
 
     const host = group.querySelector('.card-slot[data-card-id="creature-1"]') as HTMLElement
     expect(host.classList.contains('attachment-subcard')).toBe(false)
