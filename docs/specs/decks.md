@@ -431,3 +431,19 @@ Commander: a pair still needs a legal Partner or Background.
 - Why: the proxy answers one eligibility per card name for every format at once, so without the override
   the editor would grey out the commander icon on cards that the server then accepts at the table.
 - Guard: `src/decks/deckUtils.test.ts` · `src/decks/formatRules.test.ts` · `src/decks/useDeckMutations.test.ts`
+
+### DCK-29 · A catalogue deck names the cards the server will actually load
+Every entry of the deck catalogue (`web/src/decks/metaDeckCatalog.ts`), the starter decks among them,
+names the card the target server loads for that `(setCode, cardNumber)` pair. The pair is what counts:
+XMage resolves a deck entry strictly by set and collector number and ignores the name, so an entry
+with the wrong number is not a cosmetic slip, it puts another card in the deck. The pairs are checked
+against Scryfall by `scripts/check-deck-catalog.mjs`, which keeps the answers in
+`scripts/deck-catalog-printings.json`; the guard reads that table, so it needs no network, and an
+entry added or edited without refreshing the table fails as unverified.
+
+- Why: the three starter decks shipped with numbers that belong to other cards, so every member who
+  used them got the deck issues dialog on every join and played with Pacifism instead of Rest in Peace,
+  Kitesail Apprentice instead of Kor Firewalker, and, in Krenko, Orzhov Signet and Xathrid Necromancer,
+  two cards outside a mono-red Commander deck's colour identity (report of 2026-11-13). The audit found
+  28 such entries across 14 catalogue decks.
+- Guard: `scripts/check-deck-catalog.test.mjs`
