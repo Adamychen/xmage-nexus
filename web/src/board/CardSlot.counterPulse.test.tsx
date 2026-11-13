@@ -59,7 +59,9 @@ describe('CardSlot counter change pulse', () => {
     rerender(<CardSlot card={bear(2)} showCounters />)
     const after = badge(container)
     expect(after).toBe(first)
-    expect(after?.textContent).toContain('+2')
+    // BRD-46: the sign is the symbol, the text is the count.
+    expect(after?.querySelector('.counter-text-val')?.textContent).toBe('2')
+    expect(after?.querySelector('.counter-mark.is-plus')).not.toBeNull()
     expect(after?.classList.contains('counter-badge-changed')).toBe(true)
     expect(after?.classList.contains('counter-badge-up')).toBe(true)
     expect(after?.classList.contains('counter-badge-pulse')).toBe(true)

@@ -1025,16 +1025,53 @@ html.fx-off .loyalty-badge .counter-tick {
   animation: none !important;
 }
 
-.counter-badge.p1p1 {
-  background: rgb(var(--ok-rgb) / 0.95);
+/* BRD-46: the +1/+1 and the -1/-1 counters carry their own symbol, with the
+   sign cut into it, on the dark plate the other badges of the card use: the
+   colour and the symbol say which counter it is, the number how many. */
+.counter-badge.p1p1,
+.counter-badge.m1m1 {
+  background: var(--ink-1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-0h);
+  padding: var(--sp-0h) var(--sp-1);
   color: var(--fg-hi);
-  border-color: var(--ok);
+}
+
+.counter-badge.p1p1 {
+  border-color: var(--gold-300);
+}
+
+.counter-badge.p1p1 .counter-mark {
+  fill: var(--gold-300);
 }
 
 .counter-badge.m1m1 {
-  background: rgb(var(--err-rgb) / 0.95);
-  color: var(--fg-hi);
   border-color: var(--err);
+}
+
+.counter-badge.m1m1 .counter-mark {
+  fill: var(--err);
+}
+
+.counter-mark {
+  width: 1.05em;
+  height: 1.3em;
+  flex: 0 0 auto;
+  fill: currentColor;
+}
+
+/* The ink of a digit sits above the middle of its line box (see StatPlate), so
+   the count is nudged down to sit level with the symbol beside it. */
+.counter-badge.p1p1 .counter-text-val,
+.counter-badge.m1m1 .counter-text-val {
+  translate: 0 0.05em;
+}
+
+.counter-badge .counter-icon-symbol:has(.counter-mark) {
+  display: inline-flex;
+  align-items: center;
 }
 
 .counter-badge.shield {
