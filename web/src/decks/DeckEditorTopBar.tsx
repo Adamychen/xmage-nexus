@@ -26,10 +26,8 @@ export interface DeckEditorTopBarProps {
   onRetrySave: () => void
   onBack: () => void
   deck: DeckV2
-  isEquipped: boolean
   onImport: () => void
   onSample: () => void
-  onEquip: () => void
   onDone: () => void
 }
 
@@ -61,10 +59,8 @@ export function DeckEditorTopBar({
   onRetrySave,
   onBack,
   deck,
-  isEquipped,
   onImport,
   onSample,
-  onEquip,
   onDone,
 }: DeckEditorTopBarProps) {
   const { t } = useTranslation()
@@ -207,16 +203,6 @@ export function DeckEditorTopBar({
         </Button>
         <Button variant="subtle" size="sm" icon="hand" onClick={onSample} title={t('decks', 'sample_london')}>
           {t('decks', 'builder_sample')}
-        </Button>
-        <Button
-          variant={isEquipped ? 'success' : 'secondary'}
-          size="sm"
-          className={`deck-editor-equip${isEquipped ? ' is-equipped' : ''}`}
-          onClick={onEquip}
-          disabled={isEquipped}
-          title={isEquipped ? t('decks', 'builder_equipped') : t('decks', 'builder_equip')}
-        >
-          {isEquipped ? `✓ ${t('decks', 'builder_equipped')}` : t('decks', 'builder_equip')}
         </Button>
         <Button variant="primary" size="sm" className="deck-editor-done" data-testid="builder-done" onClick={onDone}>
           {t('common', 'done')}

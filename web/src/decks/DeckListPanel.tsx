@@ -239,7 +239,7 @@ export default function DeckListPanel({
         onRemove={onRemove}
         onSetCover={onSetCover}
         onSetCommander={onSetCommander}
-        commanderEligible={commanderEligibleFor(commanderEligibilityMap, card.cardName, meta)}
+        commanderEligible={commanderEligibleFor(commanderEligibilityMap, card.cardName, meta, format)}
         onHover={onHover}
         onLeave={onLeave}
         onChangePrinting={onChangePrinting}

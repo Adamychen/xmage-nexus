@@ -24,7 +24,10 @@ export default function TourneySeatsStep({ form, onEditDeck }: { form: CreateTab
   const { t } = useTranslation()
   const username = useStore((s) => s.conn?.username ?? '')
   const limited = form.isDraftLimited
-  const botType = form.playerTypes.find((pt) => normalizeSeatType(pt) === DEFAULT_BOT_TYPE) ?? DEFAULT_BOT_TYPE
+  // No AI on this server (beta publishes only the draft bot, which plays nothing): bot seats would be refused
+  const noServerAi = form.playerTypes.length === 0
+  const botsBlocked = limited || noServerAi
+  const botType = form.playerTypes.find((pt) => normalizeSeatType(pt) === DEFAULT_BOT_TYPE) ?? form.playerTypes[0] ?? DEFAULT_BOT_TYPE
   const bots = form.seatConfigs.filter((s) => !isHumanSeatType(s.type)).length
   const open = form.seatConfigs.length - bots
 
@@ -63,15 +66,15 @@ export default function TourneySeatsStep({ form, onEditDeck }: { form: CreateTab
           size="sm"
           variant="secondary"
           icon="bot"
-          disabled={limited}
-          aria-describedby={limited ? BOTS_REASON_ID : undefined}
+          disabled={botsBlocked}
+          aria-describedby={botsBlocked ? BOTS_REASON_ID : undefined}
           onClick={() => form.applySeatTypeToAll(botType)}
         >
           {t('lobby', 'trn_d_fill_bots')}
         </Button>
-        {limited && (
-          <p className="trn-seats-reason" id={BOTS_REASON_ID}>
-            <Icon name="alert" size={13} /> {t('lobby', 'trn_d_bots_limited')}
+        {botsBlocked && (
+          <p className="trn-seats-reason" id={BOTS_REASON_ID} data-testid={limited ? 'trn-bots-limited' : 'seats-no-server-ai'}>
+            <Icon name="alert" size={13} /> {t('lobby', limited ? 'trn_d_bots_limited' : 'create_seats_no_server_ai')}
           </p>
         )}
       </div>
@@ -98,6 +101,7 @@ export default function TourneySeatsStep({ form, onEditDeck }: { form: CreateTab
               seatIdx={idx}
               cfg={cfg}
               limited={limited}
+              botsBlocked={botsBlocked}
               form={form}
               botType={botType}
               deck={findSeatDeck(cfg.deckName)}
@@ -167,11 +171,12 @@ export default function TourneySeatsStep({ form, onEditDeck }: { form: CreateTab
   )
 }
 
-function SeatRowItem({ seatNumber, seatIdx, cfg, limited, form, botType, deck }: {
+function SeatRowItem({ seatNumber, seatIdx, cfg, limited, botsBlocked, form, botType, deck }: {
   seatNumber: number
   seatIdx: number
   cfg: SeatConfig
   limited: boolean
+  botsBlocked: boolean
   form: CreateTableForm
   botType: string
   deck: Deck | undefined
@@ -203,7 +208,7 @@ function SeatRowItem({ seatNumber, seatIdx, cfg, limited, form, botType, deck }:
           className="trn-seat-kind"
           role="radiogroup"
           aria-label={t('lobby', 'create_seat_type_label')}
-          aria-describedby={limited ? BOTS_REASON_ID : undefined}
+          aria-describedby={botsBlocked ? BOTS_REASON_ID : undefined}
           onKeyDown={onKindKeyDown}
         >
           <ChipButton
@@ -225,7 +230,7 @@ function SeatRowItem({ seatNumber, seatIdx, cfg, limited, form, botType, deck }:
             aria-pressed={undefined}
             active={!human}
             tabIndex={human ? -1 : 0}
-            disabled={limited}
+            disabled={botsBlocked}
             className="trn-seat-kind-option"
             onClick={() => form.setSeatType(seatIdx, botType)}
           >

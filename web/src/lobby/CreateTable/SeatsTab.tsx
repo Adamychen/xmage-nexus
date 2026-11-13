@@ -123,6 +123,11 @@ export default function SeatsTab({ form, onEditDeck }: { form: CreateTableForm; 
 
         <div className="create-seats-shortcuts">
           <Field group label={t('lobby','create_seats_apply_all_shortcut')}>
+            {form.playerTypes.length === 0 && (
+              <p className="create-seats-no-ai" data-testid="seats-no-server-ai">
+                <Icon name="alert" size={13} /> {t('lobby','create_seats_no_server_ai')}
+              </p>
+            )}
             <div className="chip-row">
               <ChipButton
                 pill

@@ -31,3 +31,31 @@ test('setup wizard: omitir deja el login intacto', async ({ page }) => {
   await expect(wizard).toBeHidden({ timeout: 5_000 })
   await expect(page.getByRole('button', { name: /Conectar|Connect/i })).toBeVisible()
 })
+
+for (const viewport of [{ width: 1366, height: 768 }, { width: 375, height: 812 }]) {
+  test(`SET-13: the board step fits the wizard at ${viewport.width}x${viewport.height}`, async ({ page }) => {
+    await page.setViewportSize(viewport)
+    await page.goto('/')
+    await expect(page.getByTestId('setup-wizard')).toBeVisible({ timeout: 10_000 })
+    for (let i = 0; i < 3; i++) await page.getByTestId('setup-next').click()
+    await expect(page.getByTestId('settings-layout-arena')).toBeVisible()
+
+    const box = await page.getByTestId('setup-body').evaluate((body) => {
+      const rect = (el: Element | null) => el!.getBoundingClientRect()
+      const cards = [...body.querySelectorAll('[data-testid^="settings-layout-"]')].map((c) => rect(c))
+      return {
+        body: rect(body),
+        cards: cards.map((c) => ({ width: c.width, top: c.top, bottom: c.bottom })),
+        preview: rect(body.querySelector('[data-testid="board-layout-preview"]')),
+      }
+    })
+    // Two cards per row, each wide enough to read its description.
+    expect(box.cards).toHaveLength(4)
+    for (const card of box.cards) expect(card.width).toBeGreaterThan(box.body.width / 2 - 40)
+    expect(box.cards[0].top).toBe(box.cards[1].top)
+    expect(box.cards[2].top).toBeGreaterThan(box.cards[0].bottom)
+    // The preview sits under the options and inside the wizard.
+    expect(box.preview.top).toBeGreaterThan(Math.max(...box.cards.map((c) => c.bottom)))
+    expect(box.preview.right).toBeLessThanOrEqual(box.body.right + 1)
+  })
+}
