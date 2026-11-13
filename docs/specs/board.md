@@ -747,3 +747,17 @@ and the defense use, instead of a generic crown on a gold disc. A companion keep
   as "someone's crown" and not as "this is the commander"; and a gold disc with a dark glyph was
   the one badge of the board painted the other way round (13-nov-2026).
 - Guard: `src/board/CommandZone.test.tsx`
+
+### BRD-46 · The +1/+1 and the -1/-1 counters carry their own symbol
+A card with +1/+1 or -1/-1 counters shows the count and then the symbol of that counter, the banner
+with the sign cut into it, centred together on the dark plate the other badges of the card use: the
+count in white, the symbol in gold for +1/+1 and in red for -1/-1, and the plate ringed in the same
+colour. The number is the count alone, with no sign of its own, because the symbol already carries
+it, and the power and toughness badge keeps showing what the creature ends up with.
+
+- Why: the badge was a solid green or red pill reading "+2", so two counters of three looked like a
+  value of +2 and nothing said which counter it was; the user asked for the symbols of the game,
+  one kind of counter at a time, starting with these two (13-nov-2026). The symbol is taken whole
+  from the Mana icon set, sign included, so the number sits beside it instead of over it, and the
+  user asked for the count first and for the gold of the rest of the badges.
+- Guard: `src/board/CardSlot.compact.test.tsx`

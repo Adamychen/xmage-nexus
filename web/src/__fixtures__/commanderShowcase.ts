@@ -138,6 +138,28 @@ const META: Meta[] = [
   ['Kessig Cagebreakers', 'C15', '187', ['CREATURE'], '{4}{G}', '3/4', '', [], ['HUMAN','ROGUE']],
 ]
 
+/**
+ * TST-8: the printed text of the cards whose keywords the board draws as chips
+ * (flying, deathtouch, trample…). Only the ones on the table need it; a card
+ * without an entry keeps the commander line or none.
+ */
+const RULES = new Map<string, string[]>([
+  ["Atraxa, Praetors' Voice", ["Flying, vigilance, deathtouch, lifelink","At the beginning of your end step, proliferate. (Choose any number of permanents and/or players, then give each another counter of each kind already there.)"]],
+  ["Kalonian Hydra", ["Trample","This creature enters with four +1/+1 counters on it.","Whenever this creature attacks, double the number of +1/+1 counters on each creature you control."]],
+  ["Juniper Order Ranger", ["Whenever another creature you control enters, put a +1/+1 counter on that creature and a +1/+1 counter on this creature."]],
+  ["Vampire Nighthawk", ["Flying","Deathtouch (Any amount of damage this deals to a creature is enough to destroy it.)","Lifelink (Damage dealt by this creature also causes you to gain that much life.)"]],
+  ["Stromkirk Captain", ["First strike","Other Vampire creatures you control get +1/+1 and have first strike."]],
+  ["Drana, Kalastria Bloodchief", ["Flying","{X}{B}{B}: Target creature gets -0/-X until end of turn and Drana gets +X/+0 until end of turn."]],
+  ["Myr Battlesphere", ["When this creature enters, create four 1/1 colorless Myr artifact creature tokens.","Whenever this creature attacks, you may tap X untapped Myr you control. If you do, this creature gets +X/+0 until end of turn and deals X damage to the player or planeswalker it's attacking."]],
+  ["Whirler Rogue", ["When this creature enters, create two 1/1 colorless Thopter artifact creature tokens with flying.","Tap two untapped artifacts you control: Target creature can't be blocked this turn."]],
+  ["Sakura-Tribe Elder", ["Sacrifice this creature: Search your library for a basic land card, put that card onto the battlefield tapped, then shuffle."]],
+  ["Eternal Witness", ["When this creature enters, you may return target card from your graveyard to your hand."]],
+  ["Champion of Lambholt", ["Creatures with power less than this creature's power can't block creatures you control.","Whenever another creature you control enters, put a +1/+1 counter on this creature."]],
+  ["Master Biomancer", ["Each other creature you control enters with a number of additional +1/+1 counters on it equal to this creature's power and as a Mutant in addition to its other types."]],
+  ["Corpsejack Menace", ["If one or more +1/+1 counters would be put on a creature you control, twice that many +1/+1 counters are put on it instead."]],
+  ["Deepglow Skate", ["When this creature enters, double the number of each kind of counter on any number of target permanents."]],
+])
+
 const BY_KEY = new Map(META.map((m) => [`${m[1]}|${m[0]}`, m]))
 
 function meta(set: string, name: string): Meta {
@@ -214,7 +236,10 @@ function perm(seat: Seat, name: string, opts: PermOpts = {}): PermanentView {
     loyalty: opts.loyalty != null ? String(opts.loyalty) : fields.loyalty,
     defense: opts.defense != null ? String(opts.defense) : undefined,
     counters: opts.counters ?? (opts.loyalty != null ? [{ name: 'loyalty', count: opts.loyalty }] : []),
-    rules: opts.rules ?? (opts.commander != null ? [commanderInfoRule(opts.commander)] : []),
+    rules: opts.rules ?? [
+      ...(RULES.get(name) ?? []),
+      ...(opts.commander != null ? [commanderInfoRule(opts.commander)] : []),
+    ],
     tapped: !!opts.tapped,
     summoningSickness: !!opts.sick,
     controlled: seat.me,

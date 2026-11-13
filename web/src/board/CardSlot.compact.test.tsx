@@ -92,6 +92,27 @@ describe('CardSlot compact tile', () => {
     expect(badges()).toEqual(['shield: 1'])
   })
 
+  it('BRD-46: a +1/+1 and a -1/-1 counter carry their own symbol, with the count beside it', async () => {
+    const buffed = perm({
+      name: 'Grizzly Bears',
+      cardTypes: ['CREATURE'],
+      power: '4',
+      toughness: '4',
+      counters: [{ name: '+1/+1', count: 2 }],
+    })
+    const { container, rerender } = render(<CardSlot card={buffed} showCounters />)
+    await act(async () => {})
+    const plus = container.querySelector('.counter-badge.p1p1')!
+    expect(plus.querySelector('.counter-mark.is-plus path')).not.toBeNull()
+    expect(plus.querySelector('.counter-text-val')?.textContent).toBe('2')
+
+    rerender(<CardSlot card={{ ...buffed, counters: [{ name: '-1/-1', count: 3 }] }} showCounters />)
+    await act(async () => {})
+    const minus = container.querySelector('.counter-badge.m1m1')!
+    expect(minus.querySelector('.counter-mark.is-minus path')).not.toBeNull()
+    expect(minus.querySelector('.counter-text-val')?.textContent).toBe('3')
+  })
+
   it('BRD-44: a saga draws a hexagon per chapter, the current one marked, and no lore counter beside it', async () => {
     const saga = perm({
       name: 'The Eldest Reborn',

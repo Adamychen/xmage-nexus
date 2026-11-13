@@ -36,6 +36,7 @@ import { artCropUrl, landTapColor, manaSourceSymbols, primaryCardType } from './
 import type { KeywordAuraMode, KeywordIconSet, PtBadgeMode, SicknessStyle } from './cardOverlays'
 import KeywordGlyph from './KeywordGlyph'
 import { dominantAuraKeyword, gainedKeywordIds } from './keywordAura'
+import CounterMark from './CounterMark'
 import { isSaga, sagaChapter, sagaChapters } from './saga'
 import SagaTrack from './SagaTrack'
 import { DefensePlate, LoyaltyPlate } from './StatPlate'
@@ -634,11 +635,14 @@ const showPtBadge =
             let customClass = ''
             let label = ''
 
+            // BRD-46: the symbol carries the sign, the chip only the count.
             if (n.includes('+1/+1') || n === 'p1p1') {
-              label = `+${c.count}`
+              iconElement = <CounterMark kind="plus" />
+              label = `${c.count}`
               customClass = 'p1p1'
             } else if (n.includes('-1/-1') || n === 'm1m1') {
-              label = `-${c.count}`
+              iconElement = <CounterMark kind="minus" />
+              label = `${c.count}`
               customClass = 'm1m1'
             } else if (n.includes('shield')) {
               iconElement = <Icon name="shield" size={10} />
@@ -670,8 +674,8 @@ const showPtBadge =
                 className={`counter-badge ${customClass}${pulseClass(pulse)}`}
                 tip={{ title: `${c.name}: ${c.count}` }}
               >
-                {iconElement && <span className="counter-icon-symbol">{iconElement}</span>}
                 {label && <span className={`counter-text-val${pulse?.tick ? ` counter-tick is-${pulse.direction}` : ''}`}>{label}</span>}
+                {iconElement && <span className="counter-icon-symbol">{iconElement}</span>}
                 {pulse?.scale && <span key={`ring-${pulse.seq}`} className="counter-change-ring" aria-hidden="true" />}
                 {pulse?.label && (
                   <span
