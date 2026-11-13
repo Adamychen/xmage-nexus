@@ -44,6 +44,18 @@ describe('Commander showcase table', () => {
     expect(gameViewFromAndValidate({ gameView: game }).errors ?? []).toEqual([])
   })
 
+  // The one card from outside the precons: none of those years has a battle,
+  // and the table has to show every permanent type the board can draw.
+  const OUTSIDE_THE_PRECONS = new Set(['Invasion of Zendikar'])
+
+  it('TST-8: the table shows a battle, the one permanent type the precons have none of', () => {
+    const battles = (game.players ?? [])
+      .flatMap((p) => Object.values(p.battlefield ?? {}))
+      .filter((c) => (c.cardTypes ?? []).some((t) => String(t).toLowerCase() === 'battle'))
+    expect(battles.map((c) => c.name)).toEqual(['Invasion of Zendikar'])
+    expect(battles[0].defense).toBe('3')
+  })
+
   it('TST-8: every non-token card on the table comes from its owner\'s precon, with the same printing', () => {
     for (const player of game.players ?? []) {
       const deck = decks[player.playerId]
@@ -56,7 +68,10 @@ describe('Commander showcase table', () => {
         ...(player.controlled ? Object.values(game.myHand ?? {}) : []),
       ]
       expect(cards.length).toBeGreaterThan(10)
-      const strangers = cards.filter((c) => !printings.has(`${c.name}|${c.expansionSetCode}|${c.cardNumber}`)).map((c) => c.name)
+      const strangers = cards
+        .filter((c) => !OUTSIDE_THE_PRECONS.has(c.name))
+        .filter((c) => !printings.has(`${c.name}|${c.expansionSetCode}|${c.cardNumber}`))
+        .map((c) => c.name)
       expect(strangers, player.name).toEqual([])
     }
   })

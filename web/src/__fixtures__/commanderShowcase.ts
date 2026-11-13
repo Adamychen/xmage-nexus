@@ -25,6 +25,7 @@ const META: Meta[] = [
   ['Island', 'C16', '340', ['LAND'], '', '', '', ['BASIC'], ['ISLAND']],
   ['Swamp', 'C16', '343', ['LAND'], '', '', '', ['BASIC'], ['SWAMP']],
   ['Forest', 'C16', '349', ['LAND'], '', '', '', ['BASIC'], ['FOREST']],
+  ['Invasion of Zendikar', 'MOM', '194', ['BATTLE'], '{3}{G}', '', '', [], ['SIEGE']],
   ['Sol Ring', 'C16', '272', ['ARTIFACT'], '{1}', '', '', [], []],
   ['Fellwar Stone', 'C16', '254', ['ARTIFACT'], '{2}', '', '', [], []],
   ['Simic Signet', 'C16', '270', ['ARTIFACT'], '{2}', '', '', [], []],
@@ -191,11 +192,15 @@ interface PermOpts {
   pt?: string
   loyalty?: number
   commander?: number
+  /** Defense, for a battle (TST-8: the one permanent type the precons have none of). */
+  defense?: number
+  /** The set to take the printing from, when it is not the seat's own precon. */
+  set?: string
 }
 
 function perm(seat: Seat, name: string, opts: PermOpts = {}): PermanentView {
   const id = `${seat.id}-p${++seat.next}`
-  const fields = cardFields(meta(seat.set, name))
+  const fields = cardFields(meta(opts.set ?? seat.set, name))
   const [power, toughness] = opts.pt ? opts.pt.split('/') : [fields.power, fields.toughness]
   return makePermanent({
     ...fields,
@@ -204,6 +209,7 @@ function perm(seat: Seat, name: string, opts: PermOpts = {}): PermanentView {
     power,
     toughness,
     loyalty: opts.loyalty != null ? String(opts.loyalty) : fields.loyalty,
+    defense: opts.defense != null ? String(opts.defense) : undefined,
     counters: opts.counters ?? (opts.loyalty != null ? [{ name: 'loyalty', count: opts.loyalty }] : []),
     rules: opts.commander != null ? [commanderInfoRule(opts.commander)] : [],
     tapped: !!opts.tapped,
@@ -279,6 +285,7 @@ export function commanderShowcaseGameView(myName = 'You'): GameView {
     perm(me, 'Sol Ring', { tapped: true }), perm(me, 'Fellwar Stone'), perm(me, 'Simic Signet'),
     perm(me, "Commander's Sphere"), perm(me, 'Darksteel Ingot'),
     perm(me, 'Hardened Scales'), perm(me, "Cathars' Crusade"), perm(me, 'Bred for the Hunt'),
+    perm(me, 'Invasion of Zendikar', { set: 'MOM', defense: 3 }),
     perm(me, "Atraxa, Praetors' Voice", { counters: P1P1(2), pt: '6/6', commander: 1 }),
     perm(me, 'Master Biomancer', { counters: P1P1(1), pt: '3/5' }),
     perm(me, 'Corpsejack Menace', { counters: P1P1(2), pt: '6/6' }),
