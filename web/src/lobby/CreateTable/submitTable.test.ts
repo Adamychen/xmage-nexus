@@ -204,3 +204,44 @@ describe('submitCreateTable — saving the deck used to join', () => {
     expect(vi.mocked(setMyDeck).mock.calls[0][0]).toEqual(expect.objectContaining({ name: 'validated' }))
   })
 })
+
+const OTHER_DECK = { name: 'other', cards: [{ cardName: 'Island', setCode: 'LEA', cardNumber: '288', amount: 1 }], sideboard: [] } as unknown as Deck
+
+describe('LBY-32: one deck issues dialog per deck of a create', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('LBY-32: a bot seat that reuses my deck asks nothing and joins with the deck I accepted', async () => {
+    vi.mocked(cmds.createTable).mockResolvedValueOnce({ ok: true, data: { tableId: 't1' } } as never)
+    vi.mocked(cmds.joinTable).mockResolvedValue({ ok: true } as never)
+    await submitCreateTable(form({ numPlayers: 2, seatConfigs: [{ type: 'COMPUTER_MAD', skill: 2 }] as never }), io())
+    expect(requestDeckValidation).toHaveBeenCalledTimes(1)
+    const decks = vi.mocked(cmds.joinTable).mock.calls.map((c) => (c[0] as { deck?: Deck }).deck?.name)
+    expect(decks).toEqual(['validated', 'validated'])
+  })
+
+  it('LBY-32: a bot seat with a deck of its own is still asked about', async () => {
+    vi.mocked(cmds.createTable).mockResolvedValueOnce({ ok: true, data: { tableId: 't1' } } as never)
+    vi.mocked(cmds.joinTable).mockResolvedValue({ ok: true } as never)
+    await submitCreateTable(
+      form({ numPlayers: 2, simDeck: OTHER_DECK, seatConfigs: [{ type: 'COMPUTER_MAD', skill: 2 }] as never }),
+      io(),
+    )
+    expect(requestDeckValidation).toHaveBeenCalledTimes(2)
+  })
+
+  it('LBY-32: two bot seats on the same deck are asked about once', async () => {
+    vi.mocked(cmds.createTable).mockResolvedValueOnce({ ok: true, data: { tableId: 't1' } } as never)
+    vi.mocked(cmds.joinTable).mockResolvedValue({ ok: true } as never)
+    await submitCreateTable(
+      form({
+        numPlayers: 3,
+        simDeck: OTHER_DECK,
+        seatConfigs: [{ type: 'COMPUTER_MAD', skill: 2 }, { type: 'COMPUTER_MAD', skill: 2 }] as never,
+      }),
+      io(),
+    )
+    expect(requestDeckValidation).toHaveBeenCalledTimes(2)
+  })
+})
