@@ -490,6 +490,11 @@
   .settings-board-preview { position: static; width: auto; }
 }
 
+/* SET-13: four options at a quarter of a medium container each are too narrow to read. */
+@container settings (max-width: 640px) {
+  .settings-cards { grid-template-columns: repeat(var(--cols-mid, var(--cols, 3)), minmax(0, 1fr)); }
+}
+
 @container settings (max-width: 520px) {
   .settings-cards { grid-template-columns: repeat(var(--cols-narrow, 1), minmax(0, 1fr)); }
   .settings-board-tabs { overflow-x: auto; scrollbar-width: none; }
