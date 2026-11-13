@@ -358,3 +358,15 @@ bot the server will refuse.
   right after being created (LBY-6), leaving no game at all (report of 2026-11-13).
 - Guard: `src/lobby/CreateTable/constants.test.ts` · `src/lobby/CreateTable/TourneySeatsStep.test.tsx` · `src/lobby/CreateTableDialog.test.tsx`
   (the proxy-side filter is guarded in Mage.Proxy, by PlayerTypesCommandTest)
+
+### LBY-31 · A Freeform Commander table asks for a Freeform Commander deck
+A table whose deck type or game type is Freeform Commander takes Freeform Commander decks as an exact
+match, the way a Commander table takes Commander decks, and asks for 100 cards. The game type alone is
+enough to recognise it, because a table created before its deck type was recorded arrives with
+`<deck type missing>`. "Freeform Unlimited Commander" is a different format and is still read as a
+limited table.
+
+- Why: XMage pairs each commander variant with its own deck type, and a Freeform Commander table refuses
+  a plain Commander deck, so offering one as the best match would send the player to a seat the server
+  turns down.
+- Guard: `src/lobby/joinDeckFit.test.ts`

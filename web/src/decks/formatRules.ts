@@ -1,6 +1,6 @@
 import type { DeckFormat, DeckV2 } from './types'
 import type { CardStripMeta } from './ArenaCardStrip'
-import { commanderCardsFor, isCommanderEligible, isBackgroundCard, canPairCommanders } from './deckUtils'
+import { commanderCardsFor, isCommanderEligible, isFreeformCommanderEligible, isBackgroundCard, canPairCommanders } from './deckUtils'
 import { commanderEligibilityKey } from './useCommanderEligibility'
 import { t } from '../i18n'
 
@@ -33,6 +33,7 @@ export const ALL_FORMATS: DeckFormat[] = [
   'Historic',
   'Timeless',
   'Freeform',
+  'FreeformCommander',
 ]
 
 export const FORMAT_CONFIGS: Record<DeckFormat, FormatRuleConfig> = {
@@ -195,6 +196,22 @@ export const FORMAT_CONFIGS: Record<DeckFormat, FormatRuleConfig> = {
     hasCommander: false,
     scryfallKey: 'timeless',
     description: 'Formato eterno de MTG Arena con cartas restringidas',
+  },
+  FreeformCommander: {
+    name: 'FreeformCommander',
+    displayName: 'Freeform Commander',
+    minMain: 100,
+    maxMain: 100,
+    maxSideboard: 0,
+    maxCopies: 1,
+    isSingleton: true,
+    hasCommander: true,
+    // Sin clave de Scryfall a propósito: Freeform Commander no tiene lista de
+    // prohibidas ni restricción de ediciones (mage.deck.FreeformCommander
+    // admite todos los sets), así que una carta que Scryfall aún no da por
+    // legal, por no haber salido su colección, es jugable aquí.
+    scryfallKey: '',
+    description: '100 cartas singleton con Comandante, sin prohibidas ni restricción de ediciones',
   },
   Freeform: {
     name: 'Freeform',
@@ -502,11 +519,17 @@ export function validateDeckForFormat(
         for (const c of identityOf(meta)) commanderColors.add(c.toUpperCase())
         // Proxy primero (clases reales de xmage, p.ej. Grist); fallback a la
         // heurística del oráculo con el comportamiento original (sin typeLine
-        // no se valida).
-        const fromProxy = commanderEligibilityMap?.get(commanderEligibilityKey(commanders[ci].cardName))
+        // no se valida). En Freeform Commander manda la regla local: el proxy
+        // responde con la elegibilidad de Commander, más estrecha que la que
+        // aplica ese formato.
+        const freeformCommander = config.name === 'FreeformCommander'
+        const fromProxy = freeformCommander
+          ? undefined
+          : commanderEligibilityMap?.get(commanderEligibilityKey(commanders[ci].cardName))
+        const localEligible = freeformCommander ? isFreeformCommanderEligible(meta) : isCommanderEligible(meta)
         const notEligible = fromProxy !== undefined
           ? !fromProxy
-          : !!meta?.typeLine && !isCommanderEligible(meta)
+          : !!meta?.typeLine && !localEligible
         if (notEligible) {
           issues.push({
             type: 'commander',

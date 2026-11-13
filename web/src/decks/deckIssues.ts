@@ -69,6 +69,7 @@ export function xmageDeckTypeFor(format: DeckFormat): string | null {
     case 'Historic': return 'Constructed - Historic'
     case 'Freeform': return 'Constructed - Freeform'
     case 'Commander': return 'Variant Magic - Commander'
+    case 'FreeformCommander': return 'Variant Magic - Freeform Commander'
     case 'Brawl': return 'Variant Magic - Brawl'
     case 'Oathbreaker': return 'Variant Magic - Oathbreaker'
     case 'PennyDreadfulCommander': return 'Variant Magic - Penny Dreadful Commander'
