@@ -5,6 +5,7 @@ import { requestDeckValidation } from '../DeckIssuesDialog'
 import { useCreateTableForm } from './useCreateTableForm'
 import { getState, setState } from '../../state/store'
 import { STORAGE_KEY } from './constants'
+import { deckRef } from '../decks'
 
 vi.mock('../../net/commands', () => ({
   getGameTypes: vi.fn(),
@@ -77,6 +78,14 @@ async function constructedTourneyWithBots(bots: number) {
   expect(m.form().isConstructedTournament).toBe(true)
   expect(m.form().seatConfigs.map((s) => s.type)).toEqual(Array(bots).fill('COMPUTER_MAD'))
   return m
+}
+
+/** Gives seat `idx` a deck that is not mine, so its check is its own (LBY-32). */
+function giveSeatItsOwnDeck(m: Awaited<ReturnType<typeof mount>>, idx: number): void {
+  const mine = m.form().myDeck
+  const other = m.form().availableDecks.find((d) => d.name !== mine?.name)
+  expect(other, 'the test needs a second bundled deck').toBeDefined()
+  act(() => m.form().setSeatDeck(idx, deckRef(other!)))
 }
 
 describe('defaults match the official client', () => {
@@ -157,8 +166,8 @@ describe('submit: constructed tournament with native AI', () => {
       expect(a).toMatchObject({ tableId: 'tour', deckType: 'Constructed - Modern' })
       expect(a.deck).toBeDefined()
     }
-    // human + one deck per bot
-    expect(requestDeckValidation).toHaveBeenCalledTimes(3)
+    // every seat plays my deck, so it is checked once for all of them (LBY-32)
+    expect(requestDeckValidation).toHaveBeenCalledTimes(1)
     expect(m.onClose).toHaveBeenCalled()
     expect(cmds.removeTable).not.toHaveBeenCalled()
   })
@@ -182,6 +191,7 @@ describe('submit: constructed tournament with native AI', () => {
 
   it('LBY-6: cancelling the deck check of a bot removes the table', async () => {
     const m = await constructedTourneyWithBots(1)
+    giveSeatItsOwnDeck(m, 0)
     vi.mocked(requestDeckValidation)
       .mockImplementationOnce(async (deck) => deck) // human
       .mockResolvedValueOnce(null) // bot
@@ -243,6 +253,7 @@ describe('submit: match with native AI', () => {
 
   it('LBY-6: cancelling the bot deck check does not create the table', async () => {
     const m = await duelVsBot()
+    giveSeatItsOwnDeck(m, 0)
     vi.mocked(requestDeckValidation)
       .mockImplementationOnce(async (deck) => deck)
       .mockResolvedValueOnce(null)

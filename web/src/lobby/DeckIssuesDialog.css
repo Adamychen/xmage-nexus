@@ -67,3 +67,9 @@
   font-size: var(--fs-xs);
   color: var(--ok);
 }
+
+.deck-issues-saved-note {
+  margin: 0;
+  font-size: var(--fs-xs);
+  color: var(--text-dim);
+}

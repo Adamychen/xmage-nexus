@@ -4,13 +4,12 @@ import { useState, useMemo, useEffect, useRef, type CSSProperties } from 'react'
 import type { TableView } from '../net/types'
 import {
   getAllAvailableDecks,
-  saveCustomDecks,
-  loadSavedCustomDecks,
   deckRef,
   sameDeck,
   type Deck,
 } from './decks'
-import { parseAnyDeck } from '../decks/parseDck'
+import { loadDeckFromOnlineSource } from '../decks/onlineDeckService'
+import { getDeckStorage } from '../decks/storage'
 import { setMyDeck, useStore } from '../state/store'
 import { requestDeckValidation } from './DeckIssuesDialog'
 import Icon from '../ui/Icon'
@@ -173,6 +172,7 @@ export default function JoinTableDialog({
   const [importText, setImportText] = useState('')
   const [importName, setImportName] = useState('')
   const [importError, setImportError] = useState<string | null>(null)
+  const [importing, setImporting] = useState(false)
   const [joinError, setJoinError] = useState<string | null>(null)
 
   const startersFit = useMemo(
@@ -209,21 +209,34 @@ export default function JoinTableDialog({
   const filledSeats = seats.filter((s) => s.playerName).length
   const host = table.controllerName?.split(',')[0]?.trim() || table.controllerName
 
-  const handleImportSubmit = (e: React.FormEvent) => {
+  /**
+   * Importar aquí deja un mazo normal de la galería, el mismo camino que el
+   * importador del editor: `loadDeckFromOnlineSource` construye el DeckV2 (id,
+   * formato, comandante designado) y se guarda en el almacenamiento (DCK-31).
+   */
+  const handleImportSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setImportError(null)
-    const name = importName.trim() || t('decks', 'import_placeholder')
-    const parsed = parseAnyDeck(importText, name)
-    if (!parsed) {
-      setImportError(t('errors', 'deck_parse_failed'))
-      return
+    setImporting(true)
+    try {
+      const name = importName.trim() || t('decks', 'import_placeholder')
+      const imported = await loadDeckFromOnlineSource(importText, name)
+      if (!imported) {
+        setImportError(t('errors', 'deck_parse_failed'))
+        return
+      }
+      await getDeckStorage().put(imported)
+      setAllDecks((prev) => [...prev.filter((d) => !sameDeck(d, imported)), imported])
+      pick(imported)
+      setShowImport(false)
+      setImportText('')
+      setImportName('')
+    } catch (err) {
+      console.warn('[join] no se pudo guardar el mazo importado:', err instanceof Error ? err.message : err)
+      setImportError(t('errors', 'deck_save_failed'))
+    } finally {
+      setImporting(false)
     }
-    saveCustomDecks([...loadSavedCustomDecks(), parsed])
-    setAllDecks((prev) => [...prev.filter((d) => !sameDeck(d, parsed)), parsed])
-    pick(parsed)
-    setShowImport(false)
-    setImportText('')
-    setImportName('')
   }
 
   const handleConfirm = async (e: React.FormEvent) => {
@@ -362,8 +375,8 @@ export default function JoinTableDialog({
                 type="button"
                 className="import-submit-btn"
                 data-testid="import-submit-btn"
-                onClick={handleImportSubmit}
-                disabled={!importText.trim()}
+                onClick={(e) => { void handleImportSubmit(e) }}
+                disabled={!importText.trim() || importing}
               >
                 {t('lobby', 'join_save_select')}
               </Button>

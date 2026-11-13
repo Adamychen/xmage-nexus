@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from 'react'
-import type { CardView, GameView, PlayerView } from '../net/types'
+import type { CardView, GameView } from '../net/types'
+import { knownHandCards } from './revealedCards'
 import { fxDuration, fxMotionAllowed } from './fx'
 import { soundManager } from '../audio/soundManager'
 
@@ -8,37 +9,6 @@ export const HAND_REVEAL_MS = 1900
 /** The gap between one card of the fan turning face up and the next. */
 export const HAND_REVEAL_STAGGER_MS = 90
 const MAX_CARDS = 10
-
-type HandMap = Record<string, Record<string, unknown>> | undefined
-
-function handOf(hands: HandMap, player: PlayerView): Record<string, unknown> | undefined {
-  return hands?.[player.name] ?? hands?.[player.playerId]
-}
-
-/** A revealed hand card as the server sends it (a `SimpleCardView`: a printing, no name), shaped for drawing. */
-function revealedCard(id: string, raw: unknown): CardView {
-  const c = (raw ?? {}) as Partial<CardView>
-  return { ...c, id, name: c.name ?? '', manaValue: c.manaValue ?? 0, expansionSetCode: c.expansionSetCode ?? '', cardNumber: c.cardNumber ?? '' } as CardView
-}
-
-/**
- * The cards of an opponent's hand this client can see: the hand of a player it controls
- * (`opponentHands`, Mindslaver), one it was allowed to watch (`watchedHands`), and a hand revealed
- * to everyone (Telepathy shows it as a revealed group "Cards in <name>'s hand").
- */
-export function knownHandCards(game: GameView | null | undefined, player: PlayerView): Map<string, CardView> {
-  const out = new Map<string, CardView>()
-  if (!game) return out
-  for (const hand of [handOf(game.opponentHands as HandMap, player), handOf(game.watchedHands as HandMap, player)]) {
-    for (const [id, raw] of Object.entries(hand ?? {})) if (!out.has(id)) out.set(id, revealedCard(id, raw))
-  }
-  const handName = `${player.name}'s hand`.toLowerCase()
-  for (const group of game.revealed ?? []) {
-    if (!String(group?.name ?? '').toLowerCase().includes(handName)) continue
-    for (const [id, card] of Object.entries(group.cards ?? {})) if (!out.has(id)) out.set(id, revealedCard(id, card))
-  }
-  return out
-}
 
 export interface HandReveal {
   playerId: string

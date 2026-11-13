@@ -7,8 +7,9 @@ import { GAME_ID, HUMAN_NAME, HUMAN_PLAYER_ID, SIM_NAME, SIM_PLAYER_ID, TABLE_ID
 /**
  * Escenario del FixtureServer para el descarte interactivo desde una mano
  * revelada (p.ej. Thoughtseize):
- *   - El oponente (SIM) tiene una mano conocida que se revela al humano
- *     (`revealed` + `opponentHands`).
+ *   - El oponente (SIM) tiene una mano conocida que se revela al humano. Lo que la pinta boca
+ *     arriba en su zona es `opponentHands`: la ventana de `revealed` que lleva su nombre no
+ *     alimenta ninguna mano, solo su propia ventana de reveladas (HND-13).
  *   - El humano (controlador) recibe `GAME_CHOOSE_CARDS` con `cardsView1` = esa
  *     mano y elige UNA carta para que el oponente descarte.
  *   - Al enviar `sendPlayerUUID`, el escenario quita la carta de la mano

@@ -97,10 +97,10 @@ the side panel is open, and comes back when it closes.
 - Guard: `src/board/HandRail.test.tsx` · `src/board/HandRow.test.tsx` · `e2e/game-ui-v2.spec.ts`
 
 ### HND-8 · An opponent's hand shows its size face down and what you know of it face up
-An opponent's hand row shows one back per card in hand. Cards this client knows (revealed by an
-effect, watched with permission, or in a hand you control) show face up in it, the backs after
-them. In a pod the backs collapse into one ×N stack as soon as there are two, with the known cards
-kept face up beside it; a hand that is entirely face up never collapses. In the Table layout the row
+An opponent's hand row shows one back per card in hand. Cards this client knows (revealed from
+that hand by an effect, watched with permission, or in a hand you control; HND-13) show face up in
+it, the backs after them. In a pod the backs collapse into one ×N stack as soon as there are two,
+with the known cards kept face up beside it; a hand that is entirely face up never collapses. In the Table layout the row
 is replaced by the hand badge of HND-9 and the stack only appears while the hand is the target of
 an effect, because it carries the target highlight.
 
@@ -146,3 +146,19 @@ hand (PRM-4).
   (`web/src/state/engineViewRegistry.ts`, `35995d0a63`).
 - Guard: none yet (nothing asserts that no limit is shown; the gap itself is held by the
   `engineViewCoverage.test.ts` baseline)
+
+### HND-13 · Only a revealed window named for a hand puts cards in that hand
+A card from `GameView.revealed` shows face up in an opponent's hand only when its window is named
+for that player's hand (`Cards in <name>'s hand`, what Telepathy and the other
+play-with-hand-revealed effects open). Every other window is named after the effect that opened it,
+carries no owner and holds cards that are not in anyone's hand: the top of a library, the piles of
+a Fact or Fiction, a hand a Duress already read into its own window. Those stay out of every hand
+row and show in the revealed window of their own (`src/game/infoWindowState.ts`), as they do in the
+desktop client. A hand you control and a hand you watch are unaffected: they arrive keyed by
+player.
+
+- Why: `revealed` is the whole game's list, the same for every player
+  (`GameView`/`GameState.getRevealed()`), so copying it into each opponent's hand painted the same
+  cards face up in several hands at once in a pod; one function now answers "what do I know of this
+  hand", for the hand row and for the reveal animation alike.
+- Guard: `src/board/revealedCards.test.ts` · `e2e/pod-bands.spec.ts`

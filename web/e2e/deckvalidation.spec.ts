@@ -2,9 +2,9 @@ import { expect } from './fixtures'
 import { test } from './fixtures'
 import { withFakeServer } from './support/fake-backend'
 import { proxyPort, FAKE_MODE } from './dual'
-import { deckIssuesScenario } from '../fixtures/scenarios/deckIssues'
+import { deckIssuesScenario, MISMATCH_CARD } from '../fixtures/scenarios/deckIssues'
 import { TABLE } from '../fixtures/table-names'
-import { dismissSetupWizard, installCapture, type CaptureBuffers } from './support/start-game'
+import { dismissSetupWizard, installCapture, openCreateDialog, pickFormatOption, type CaptureBuffers } from './support/start-game'
 import { showDeckListView } from './support/deck-editor'
 
 /**
@@ -35,6 +35,51 @@ async function openJoinDialogWithBadDeck(page: import('@playwright/test').Page):
   await page.locator('.import-textarea').fill(`1 [CY:77] Rhystic Tutor\n20 [LEA:288] Island`)
   await page.locator('[data-testid="import-submit-btn"]').click()
   await expect(page.locator('.join-deck-card.selected', { hasText: /Rhystic Tutor/i })).toBeVisible()
+  await page.locator('.join-submit-btn').click()
+  return buffers
+}
+
+/** Un mazo de la galería (storage v2) con la impresión que el servidor rechaza. */
+const STORED_BAD_DECK = {
+  id: 'dv-stored-1',
+  name: 'DV Stored',
+  format: 'Freeform',
+  colors: ['U'],
+  createdAt: 1,
+  updatedAt: 1,
+  source: 'custom',
+  cards: [
+    { cardName: 'Rhystic Tutor', setCode: 'CY', cardNumber: '77', amount: 1 },
+    { cardName: 'Island', setCode: 'LEA', cardNumber: '288', amount: 20 },
+  ],
+  sideboard: [],
+}
+
+/** Entra a la mesa con problemas eligiendo el mazo ya guardado (no importando uno). */
+async function openJoinDialogWithStoredDeck(page: import('@playwright/test').Page): Promise<CaptureBuffers> {
+  const buffers: CaptureBuffers = { frames: [], sent: [], pageErrors: [] }
+  installCapture(page, buffers)
+  await page.goto(`/?proxyPort=${proxyPort()}`)
+  await dismissSetupWizard(page)
+  // la segunda entrada parte de una sesión ya conectada: el formulario de
+  // login no está, el lobby sale solo
+  const userField = page.getByPlaceholder(/Usuario|Username/i)
+  const lobby = page.getByRole('button', { name: /Mesas/ })
+  await expect(userField.or(lobby).first()).toBeVisible({ timeout: 20_000 })
+  if (await userField.isVisible()) {
+    await userField.fill(`dv_${Date.now()}`.slice(0, 13))
+    await page.getByPlaceholder(/Contraseña|Password/i).fill('pass')
+    await page.getByRole('button', { name: /Conectar/i }).click()
+  }
+  await expect(lobby).toBeVisible({ timeout: 15000 })
+
+  const row = page.locator('.table-row', { hasText: TABLE.deckIssues }).first()
+  await expect(row).toBeVisible({ timeout: 10_000 })
+  await row.getByRole('button', { name: /^(Unirse|Join)$/ }).click()
+  await expect(page.getByTestId('join-table-dialog')).toBeVisible()
+
+  await page.locator('.join-deck-card', { hasText: STORED_BAD_DECK.name }).first().click()
+  await expect(page.locator('.join-deck-card.selected', { hasText: STORED_BAD_DECK.name })).toBeVisible()
   await page.locator('.join-submit-btn').click()
   return buffers
 }
@@ -89,6 +134,37 @@ test.describe('Deck validation pre-join @deckvalidation @real', () => {
       const deck = (joinSent.args as { deck?: { cards: Array<{ cardName: string; setCode: string }> } }).deck!
       expect(deck.cards.some((c) => c.setCode === 'CY')).toBe(false)
       expect(deck.cards.some((c) => c.setCode === 'PCY' && c.cardName === 'Rhystic Tutor')).toBe(true)
+    })
+  })
+
+  test('DCK-30: auto-resolve saves the repair, so the dialog does not come back', async ({ page }) => {
+    test.skip(!FAKE_MODE, 'requiere una mesa ajena con asiento libre (solo el escenario fake la provee)')
+    await withFakeServer(deckIssuesScenario, async () => {
+      // un mazo de la galería (storage v2) con la impresión vieja; se siembra
+      // una sola vez, para que la recarga lea lo que guardó la reparación
+      await page.addInitScript((deck) => {
+        if (!localStorage.getItem('mage_decks_v2')) {
+          localStorage.setItem('mage_decks_v2', JSON.stringify([deck]))
+        }
+      }, STORED_BAD_DECK)
+
+      const buffers = await openJoinDialogWithStoredDeck(page)
+      await expect(page.getByTestId('deck-issues-dialog')).toBeVisible({ timeout: 10_000 })
+      await expect(page.getByTestId('deck-issues-saved-note')).toBeVisible()
+      await page.getByTestId('deck-issues-auto-resolve').click()
+      await expect(page.getByTestId('deck-issues-dialog')).toBeHidden({ timeout: 10_000 })
+
+      const joinSent = await waitJoinSent(buffers)
+      const sent = (joinSent.args as { deck?: { cards: Array<{ cardName: string; setCode: string }> } }).deck!
+      expect(sent.cards.some((c) => c.setCode === 'PCY' && c.cardName === 'Rhystic Tutor')).toBe(true)
+
+      // volver a entrar con el mismo mazo: ya no hay nada que reparar
+      const second = await openJoinDialogWithStoredDeck(page)
+      const rejoinSent = await waitJoinSent(second)
+      await expect(page.getByTestId('deck-issues-dialog')).toBeHidden()
+      const rejoined = (rejoinSent.args as { deck?: { cards: Array<{ cardName: string; setCode: string }> } }).deck!
+      expect(rejoined.cards.some((c) => c.setCode === 'CY')).toBe(false)
+      expect(rejoined.cards.some((c) => c.setCode === 'PCY' && c.cardName === 'Rhystic Tutor')).toBe(true)
     })
   })
 
@@ -230,6 +306,57 @@ test.describe('Deck validation pre-join @deckvalidation @real', () => {
       await banner.getByTestId('builder-issue-repair').click()
       await expect(banner).not.toBeVisible({ timeout: 8000 })
       await expect(page.locator('.arena-card-strip.has-issue')).toHaveCount(0)
+    })
+  })
+})
+
+const SHARED_DECK = {
+  name: 'Mismatch deck',
+  cards: [
+    { cardName: MISMATCH_CARD.cardName, setCode: MISMATCH_CARD.setCode, cardNumber: MISMATCH_CARD.cardNumber, amount: 1 },
+    { cardName: 'Island', setCode: 'LEA', cardNumber: '288', amount: 39 },
+  ],
+  sideboard: [],
+}
+
+test.describe('Deck validation on create @deckvalidation', () => {
+  test('LBY-32: a deck seated twice opens the dialog once and both seats join with it', async ({ page }) => {
+    test.skip(!FAKE_MODE, 'requiere el informe declarativo del escenario fake')
+    await withFakeServer(deckIssuesScenario, async () => {
+      const buffers: CaptureBuffers = { frames: [], sent: [], pageErrors: [] }
+      installCapture(page, buffers)
+      await page.addInitScript((deck) => {
+        localStorage.setItem('mage_custom_decks', JSON.stringify([deck]))
+      }, SHARED_DECK)
+      await page.goto(`/?proxyPort=${proxyPort()}`)
+      await dismissSetupWizard(page)
+      await page.getByPlaceholder(/Usuario|Username/i).fill(`dv_${Date.now()}`.slice(0, 13))
+      await page.getByPlaceholder(/Contraseña|Password/i).fill('pass')
+      await page.getByRole('button', { name: /Conectar/i }).click()
+      await expect(page.getByRole('button', { name: /Mesas/ })).toBeVisible({ timeout: 15000 })
+
+      // mesa contra la IA con MI mazo también en la plaza del bot
+      await openCreateDialog(page)
+      await expect(page.getByRole('heading', { name: /Nueva mesa|Crear Mesa/i })).toBeVisible()
+      await page.getByLabel(/Nombre/i).fill(`dv_${Date.now()}`.slice(0, 13))
+      await pickFormatOption(page, 'format-deck-type', 'Constructed - Modern')
+      await page.locator('button.wizard-step', { hasText: /Multijugador/i }).click()
+      await page.getByRole('radiogroup', { name: /Mazo activo|Active deck/i }).getByRole('radio', { name: SHARED_DECK.name }).click()
+      await page.getByTestId('seat-node-1').click()
+      await page.getByRole('radio', { name: /Mad/ }).click()
+      await page.getByRole('radiogroup', { name: /Mazo plaza 2|Seat 2 deck/i }).getByRole('radio', { name: SHARED_DECK.name }).click()
+      await page.locator('.create-submit-btn').click()
+
+      const dialog = page.getByTestId('deck-issues-dialog')
+      await expect(dialog).toBeVisible({ timeout: 15_000 })
+      await page.getByTestId('deck-issues-accept-and-play').click()
+
+      // sin un segundo diálogo idéntico encima, la mesa se crea con ese clic
+      await expect(async () => {
+        expect(buffers.sent.filter((f) => f?.action === 'joinTable')).toHaveLength(2)
+      }).toPass({ timeout: 15_000 })
+      await expect(dialog).toBeHidden()
+      expect(buffers.sent.filter((f) => f?.action === 'validateDeck')).toHaveLength(1)
     })
   })
 })

@@ -182,9 +182,11 @@ export function mechanicsScenario(): Scenario {
     // `revealed` is load-bearing for this scenario: mechanics.spec.ts asserts the Shock shows up
     // as a known card in the opponent's zone. It also opens its viewer as a modal the first time
     // it appears, so specs that are about hovers must dismiss it (dismissInfoWindows in support/).
+    // The window is named as the engine names a hand revealed to everyone (Telepathy), the only
+    // kind of revealed window that belongs in a hand row (HND-13).
     revealed: [
       {
-        name: 'Bob',
+        name: `Cards in ${SIM_NAME}'s hand`,
         cards: {
           'rev-1': makeCard({ name: 'Shock', cardTypes: ['Instant'], manaValue: 1, expansionSetCode: 'TST', cardNumber: '1' }),
         },
