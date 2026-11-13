@@ -7,6 +7,9 @@ import { extractOwnedKeywords } from '../data/keywordExtractor'
 import { keywordDisplayName, keywordSummary } from '../data/keywordI18n'
 import FormattedText from '../game/FormattedText'
 import { ManaCost } from '../decks/ArenaManaSymbols'
+import { isSaga, sagaChapter, sagaChapters } from './saga'
+import SagaTrack from './SagaTrack'
+import { DefensePlate, LoyaltyPlate } from './StatPlate'
 import { useTranslation } from '../i18n'
 import { useStore, useSettings, isBlockingModal } from '../state/store'
 import RenderedCard from '../cards/rendered/RenderedCard'
@@ -206,6 +209,12 @@ export default function FloatingCardPreview({
   const manaCost = (activeCard.manaCostLeftStr ?? []).join('')
   const rules = activeCard.rules ?? []
 
+  // BRD-42: the loyalty, the defense and the chapter have their own plate, so
+  // they are not counted again in the "+N counters" summary.
+  const otherCounters = (activeCard.counters ?? [])
+    .filter((c) => !/^(loyalty|defense)$/i.test(c.name) && !/lore/i.test(c.name))
+    .reduce((sum, c) => sum + c.count, 0)
+
   const isNearRightEdge = style.left ? parseInt(String(style.left), 10) + (PREVIEW_BASE_WIDTH + KEYWORDS_BASE_WIDTH) * scale > (boardRect?.width ?? window.innerWidth) - 20 : false
 
   return (
@@ -258,15 +267,29 @@ export default function FloatingCardPreview({
             </div>
           )}
 
+          {/* BRD-43, BRD-44: the same plates the board draws, so a card under
+              the pointer reads the way it does on the battlefield. */}
           {cardRender !== 'rendered' && activeCard.cardTypes?.some((t) => String(t).toLowerCase() === 'planeswalker') && perm.loyalty && (
-            <div className="floating-card-loyalty" title={`${t('game', 'ability_loyalty')}: ${perm.loyalty}`}>
-              <Icon name="shield" size={12} /> {perm.loyalty}
+            <div className="loyalty-badge" title={`${t('game', 'ability_loyalty')}: ${perm.loyalty}`}>
+              <LoyaltyPlate value={String(perm.loyalty)} />
             </div>
           )}
 
-          {cardRender !== 'rendered' && activeCard.counters && activeCard.counters.length > 0 && (
+          {cardRender !== 'rendered' && activeCard.cardTypes?.some((t) => String(t).toLowerCase() === 'battle') && perm.defense && (
+            <div className="defense-badge" title={`${t('game', 'damage')}: ${perm.defense}`}>
+              <DefensePlate value={String(perm.defense)} />
+            </div>
+          )}
+
+          {cardRender !== 'rendered' && isSaga(activeCard) && (
+            <div className="saga-badge" title={`${t('game', 'ability_chapter')}: ${sagaChapter(perm)}/${sagaChapters(activeCard)}`}>
+              <SagaTrack chapters={sagaChapters(activeCard)} current={sagaChapter(perm)} />
+            </div>
+          )}
+
+          {cardRender !== 'rendered' && otherCounters > 0 && (
             <div className="floating-card-counters">
-              +{activeCard.counters.reduce((sum, c) => sum + c.count, 0)} {t('wiki', 'cat_counters').toLowerCase()}
+              +{otherCounters} {t('wiki', 'cat_counters').toLowerCase()}
             </div>
           )}
 

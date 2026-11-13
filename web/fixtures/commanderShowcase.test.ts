@@ -46,7 +46,16 @@ describe('Commander showcase table', () => {
 
   // The one card from outside the precons: none of those years has a battle,
   // and the table has to show every permanent type the board can draw.
-  const OUTSIDE_THE_PRECONS = new Set(['Invasion of Zendikar'])
+  const OUTSIDE_THE_PRECONS = new Set(['Invasion of Zendikar', 'History of Benalia'])
+
+  it('TST-8: the table shows a saga, on a chapter, so its chapters can be read', () => {
+    const sagas = (game.players ?? [])
+      .flatMap((p) => Object.values(p.battlefield ?? {}))
+      .filter((c) => (c.subTypes ?? []).some((t) => String(t).toUpperCase() === 'SAGA'))
+    expect(sagas.map((c) => c.name)).toEqual(['History of Benalia'])
+    expect(sagas[0].counters).toEqual([{ name: 'lore', count: 2 }])
+    expect(sagas[0].rules?.some((r) => /III/.test(r))).toBe(true)
+  })
 
   it('TST-8: the table shows a battle, the one permanent type the precons have none of', () => {
     const battles = (game.players ?? [])

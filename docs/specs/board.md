@@ -693,9 +693,10 @@ a click still picks that card, not its host.
 These are rules about the card itself, so they hold in every layout (Arena, Table and Standard,
 with the side panel and without it) and in both card styles, not only on the Arena board.
 
-A planeswalker's loyalty and a battle's defense have their own badge in the corner, so the counter
-the server sends for them ("loyalty 7", "defense 3") is left out of the counter badges, whatever
-the card style is. Every other counter (+1/+1, charge, poison, oil, stun…) keeps its badge.
+A planeswalker's loyalty, a battle's defense and a saga's chapter have their own badge, so the
+counter the server sends for them ("loyalty 7", "defense 3", "lore 2") is left out of the counter
+badges, whatever the card style is. Every other counter (+1/+1, charge, poison, oil, stun…) keeps
+its badge.
 
 - Why: the board drew "+7" beside the loyalty shield and "3" beside the defense, the same number
   twice, on a card that has little room for badges. The filter existed for the compact tiles only,
@@ -704,7 +705,8 @@ the card style is. Every other counter (+1/+1, charge, poison, oil, stun…) kee
 - Guard: `src/board/CardSlot.compact.test.tsx`
 
 ### BRD-43 · Loyalty and defense are printed on their own plates
-Like BRD-42, this is the card and not the board: it holds in every layout and card style.
+Like BRD-42, this is the card and not the board: it holds in every layout and card style, and in the
+preview that opens under the pointer, which draws the same plates over the same corner.
 
 A planeswalker on the battlefield carries its loyalty on the shape the card prints it on, and a
 battle its defense on its shield: a vector with a light rim and the number inside it, sized from the
@@ -720,4 +722,28 @@ layout and in either card style.
   The outline comes from the Mana icon set (font under SIL OFL 1.1, styles under MIT; the symbol
   itself is Wizards of the Coast's, like the mana symbols already served from `public/symbols`),
   drawn inline so the colours come from the theme and the plate can be animated with the number.
-- Guard: `src/board/CardSlot.test.tsx` · `src/board/CardSlot.compact.test.tsx`
+- Guard: `src/board/CardSlot.test.tsx` · `src/board/CardSlot.compact.test.tsx` · `src/board/FloatingCardPreview.test.tsx`
+
+### BRD-44 · A saga shows its chapters, however many it has
+A saga on the battlefield carries a row of hexagons along its bottom edge, one per chapter, each
+with its roman numeral: the chapters already read and the one it is on are gold, the one it is on
+brighter and ringed, and the ones to come stay in the dark of the board. The count comes from the
+card, not from a constant: the highest numeral of its chapter rows, its reminder text ("Sacrifice
+after IV") as a fallback, and three when the rules say nothing, so a saga of four or five chapters
+gets four or five hexagons. The chapter it is on is its lore counter, which is therefore not drawn
+again as a counter badge (BRD-42), on the board or in the preview under the pointer, which carries
+the same track.
+
+- Why: the chapter was a counter badge with a book icon and a number, which said how many counters
+  were on it but not how far along the saga was or how much was left. The user asked for the
+  hexagons of the card (13-nov-2026).
+- Guard: `src/board/saga.test.ts` · `src/board/CardSlot.compact.test.tsx` · `src/board/FloatingCardPreview.test.tsx`
+
+### BRD-45 · A commander carries the Commander symbol, in gold
+The badge on a commander is the Commander symbol itself, in gold on the same dark plate the loyalty
+and the defense use, instead of a generic crown on a gold disc. A companion keeps its star.
+
+- Why: the crown was a lucide icon, the same glyph the monarch designation uses, so the badge read
+  as "someone's crown" and not as "this is the commander"; and a gold disc with a dark glyph was
+  the one badge of the board painted the other way round (13-nov-2026).
+- Guard: `src/board/CommandZone.test.tsx`

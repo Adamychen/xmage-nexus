@@ -288,18 +288,20 @@ html.fx-off .floating-card-foil {
   box-shadow: 0 4px 12px var(--shade-3);
 }
 
-.floating-card-loyalty {
-  position: absolute;
+/* BRD-43, BRD-44: the plates of the board, sized from the preview instead of
+   from a battlefield card. */
+.floating-card-inner {
+  --card-w: var(--preview-card-w, 220px);
+}
+
+.floating-card-inner > .loyalty-badge,
+.floating-card-inner > .defense-badge {
   bottom: 8px;
   right: 8px;
-  background: rgb(var(--ink-2-rgb) / 0.95);
-  border: 1.5px solid var(--purple);
-  color: var(--purple-fg);
-  font-weight: 700;
-  font-size: var(--fs-sm);
-  padding: var(--sp-0h) var(--sp-2);
-  border-radius: var(--r-sm);
-  box-shadow: 0 4px 12px var(--shade-3);
+}
+
+.floating-card-inner > .saga-badge {
+  bottom: 8px;
 }
 
 .floating-card-counters {

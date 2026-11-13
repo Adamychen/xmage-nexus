@@ -1061,6 +1061,7 @@ export const ja: TranslationSchema = {
     ability_activated: '起動型',
     ability_static: '常在型',
     ability_loyalty: '忠誠度',
+    ability_chapter: '章',
     ability_general: '能力',
     type_instant: 'インスタント',
     type_sorcery: 'ソーサリー',

@@ -36,6 +36,8 @@ import { artCropUrl, landTapColor, manaSourceSymbols, primaryCardType } from './
 import type { KeywordAuraMode, KeywordIconSet, PtBadgeMode, SicknessStyle } from './cardOverlays'
 import KeywordGlyph from './KeywordGlyph'
 import { dominantAuraKeyword, gainedKeywordIds } from './keywordAura'
+import { isSaga, sagaChapter, sagaChapters } from './saga'
+import SagaTrack from './SagaTrack'
 import { DefensePlate, LoyaltyPlate } from './StatPlate'
 import { manaPoolElement, spawnManaParticle, type ManaSide } from './manaParticle'
 import './CardSlot.css'
@@ -309,6 +311,8 @@ export default function CardSlot({
   const isBattle = types.includes('battle') || String(card.mageObjectType ?? '').toUpperCase().includes('BATTLE')
   const isFlipped = perm.flipped === true
 
+  const saga = isSaga(card)
+  const sagaNow = saga ? sagaChapter(perm) : 0
   const loyaltyVal = perm.loyalty ? parseInt(String(perm.loyalty), 10) : 0
   const loyaltySamples = useMemo(
     () => (Number.isFinite(loyaltyVal) && loyaltyVal > 0 ? [{ name: 'loyalty', count: loyaltyVal }] : []),
@@ -399,12 +403,14 @@ const showPtBadge =
     && (ptBadgeMode === 'always' || !ptBaseKnown || pt.power !== 'same' || pt.toughness !== 'same')
   const hasCornerStat = showPtBadge || (isPlaneswalker && loyaltyVal > 0) || (isBattle && defenseVal > 0)
   const tileArt = cropUrl && cropFailed !== cropUrl ? cropUrl : null
-  // BRD-42: the loyalty and the defense already have their own badge, so the
-  // counter the server sends for them is dropped instead of drawn twice.
+  // BRD-42: the loyalty, the defense and the chapter already have their own
+  // badge, so the counter the server sends for them is dropped instead of
+  // drawn twice.
   const visibleCounters = counters.filter((c) => {
     const n = c.name.toLowerCase()
     if (n === 'loyalty') return !(isPlaneswalker && loyaltyVal > 0)
     if (n === 'defense') return !(isBattle && defenseVal > 0)
+    if (n.includes('lore')) return !saga
     return true
   })
 
@@ -601,6 +607,16 @@ const showPtBadge =
               {loyaltyPulse.delta > 0 ? `+${loyaltyPulse.delta}` : `${loyaltyPulse.delta}`}
             </span>
           )}
+        </BadgeTip>
+      )}
+
+      {saga && !renderedFace && (
+        <BadgeTip
+          className="saga-badge"
+          data-badge-zone="stats"
+          tip={{ title: `${t('game', 'ability_chapter')}: ${sagaNow}/${sagaChapters(card)}` }}
+        >
+          <SagaTrack chapters={sagaChapters(card)} current={sagaNow} />
         </BadgeTip>
       )}
 

@@ -1059,6 +1059,7 @@ export const en = {
     ability_activated: 'Activated',
     ability_static: 'Static',
     ability_loyalty: 'Loyalty',
+    ability_chapter: 'Chapter',
     ability_general: 'Ability',
     type_instant: 'Instant',
     type_sorcery: 'Sorcery',

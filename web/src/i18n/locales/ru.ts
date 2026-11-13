@@ -1061,6 +1061,7 @@ export const ru: TranslationSchema = {
     ability_activated: 'Активируемая',
     ability_static: 'Статическая',
     ability_loyalty: 'Верность',
+    ability_chapter: 'Глава',
     ability_general: 'Способность',
     type_instant: 'Мгновенное заклинание',
     type_sorcery: 'Волшебство',

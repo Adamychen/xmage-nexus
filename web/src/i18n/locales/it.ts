@@ -1061,6 +1061,7 @@ export const it: TranslationSchema = {
     ability_activated: 'Attivata',
     ability_static: 'Statica',
     ability_loyalty: 'Fedeltà',
+    ability_chapter: 'Capitolo',
     ability_general: 'Abilità',
     type_instant: 'Istantaneo',
     type_sorcery: 'Stregoneria',

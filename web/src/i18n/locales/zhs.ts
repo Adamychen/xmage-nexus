@@ -1061,6 +1061,7 @@ export const zhs: TranslationSchema = {
     ability_activated: '启动式',
     ability_static: '静止式',
     ability_loyalty: '忠诚度',
+    ability_chapter: '章节',
     ability_general: '异能',
     type_instant: '瞬间',
     type_sorcery: '法术',
