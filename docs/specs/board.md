@@ -672,3 +672,19 @@ holds its command zone in its bottom row (BRD-39), and the own board puts the co
   in the status row it made the row taller and pushed the opponent's lands down, so it is drawn
   like the hand beside it.
 - Guard: `src/board/BoardZone.arenaOwn.test.tsx`
+
+### BRD-41 · An attached card shows itself, not a tab with its name
+A permanent that carries auras or equipment keeps them behind it, each one
+peeking 28 px to the right, which is what the row reserves for it (BRD-28).
+What shows in that strip is the card: its edge, its mana cost and a slice of
+its art, and nothing else, because the art of each card is what tells one
+attachment from the next. Pointing at a strip slides that card a little further
+out and opens the usual preview, which is where the name and the text are read;
+a click still picks that card, not its host.
+
+- Why: the strip used to be a dark tab with the name written sideways, which
+  named the card but hid it, and made a board of equipped creatures a column of
+  labels. The user asked to see the card instead and to leave the name to the
+  preview, for four more pixels and no coloured edge around it: a drawn border
+  between two cards says what the two arts already say (2026-11-13).
+- Guard: `src/board/OpponentZone.test.tsx` · `e2e/mechanics.spec.ts`
