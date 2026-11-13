@@ -238,6 +238,15 @@ describe('migration from the legacy decks (mage_custom_decks)', () => {
     expect(ls.get(MIGRATED)).toBe('1')
   })
 
+  it('DCK-31: migrates legacy decks that turn up after the first migration', async () => {
+    settled()
+    ls.set(LEGACY, JSON.stringify(legacy))
+    const s = await freshStorage()
+
+    expect((await s.list()).map((d) => d.name).sort()).toEqual(['Burn', 'Edh'])
+    expect(ls.has(LEGACY)).toBe(false)
+  })
+
   it('without legacy decks it only marks the migration', async () => {
     const s = await freshStorage()
     expect(await s.list()).toEqual([])

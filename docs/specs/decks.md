@@ -469,3 +469,23 @@ never blocks the join.
   outdated printings showed the same warning on every single join and the player had to auto-resolve
   again each time (left out of the catalogue fix of 2026-11-13, DCK-29, to have its own change).
 - Guard: `src/decks/deckRepair.test.ts` · `src/lobby/DeckIssuesDialog.test.tsx` · `e2e/deckvalidation.spec.ts`
+
+### DCK-31 · Importing from the join dialog leaves a deck of the gallery
+The quick importer of the join dialog (`web/src/lobby/JoinTableDialog.tsx`) saves what it imports
+the same way the deck editor does: `loadDeckFromOnlineSource` builds the deck, with its own id, its
+format and the commander the list designates, and it is written to the player's storage
+(`getDeckStorage().put`). So a deck imported on the way into a table is a deck like any other,
+listed in the gallery, editable, and one whose repairs are saved (DCK-30). It also accepts a
+Moxfield or Archidekt link, which is what that loader does for the editor; a list with no cards is
+refused and nothing is saved.
+
+It used to call `saveCustomDecks`, which writes the old `mage_custom_decks` list. That deck was then
+read with the id `legacy:<name>`, never reached the gallery and could not be repaired. The one-off
+migration of those decks (`migrateIfNeeded`) had already run for most players, so decks imported
+here afterwards stayed out of reach for good: the migration now runs whenever anything is left in
+that list, moves it into storage and empties it, and it keeps the list untouched when the write
+fails.
+
+- Why: the player who imported a deck from the join dialog could not find it among their decks, and
+  from DCK-30 its repair could not be saved either, because its id resolves to nothing in storage.
+- Guard: `src/lobby/JoinTableDialog.test.tsx` · `src/decks/storage.idb.test.ts`

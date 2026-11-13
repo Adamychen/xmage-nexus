@@ -2157,6 +2157,7 @@ export const ru: TranslationSchema = {
     draft_create_failed: 'Не удалось создать драфт-турнир',
     deck_parse_failed: 'Карты не распознаны. Формат: "4 Lightning Bolt"',
     deck_read_failed: 'Не удалось прочитать файл колоды',
+    deck_save_failed: 'Не удалось сохранить импортированную колоду',
     generic_error: 'Произошла непредвиденная ошибка',
     crash_title: 'Что-то пошло не так',
     crash_desc: 'Произошла непредвиденная ошибка. Пожалуйста, перезагрузите приложение.',

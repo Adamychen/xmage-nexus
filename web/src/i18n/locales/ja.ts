@@ -2157,6 +2157,7 @@ export const ja: TranslationSchema = {
     draft_create_failed: 'ドラフトを作成できませんでした',
     deck_parse_failed: 'カードを認識できませんでした。形式例: "4 Lightning Bolt"',
     deck_read_failed: 'デッキファイルを読み込めませんでした',
+    deck_save_failed: 'インポートしたデッキを保存できませんでした',
     generic_error: '予期せぬエラーが発生しました',
     crash_title: '問題が発生しました',
     crash_desc: '予期せぬエラーが発生しました。アプリを再読み込みしてください。',
