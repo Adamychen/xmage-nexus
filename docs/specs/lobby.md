@@ -370,3 +370,18 @@ limited table.
   a plain Commander deck, so offering one as the best match would send the player to a seat the server
   turns down.
 - Guard: `src/lobby/joinDeckFit.test.ts`
+
+### LBY-32 · Creating a table asks about each deck once, however many seats use it
+Creating a match or a tournament validates my deck and the deck of every native AI seat, but it asks
+about each deck once: a deck seated more than once, mine reused by a bot seat or one deck shared by
+several bots, opens the deck issues dialog a single time and every seat joins with the deck I accepted
+there, repaired entries included. Cancelling that dialog cancels the whole create, and a bot seat whose
+deck is a different one is still asked about on its own.
+
+- Why: a bot seat takes my own deck when it has no deck of its own (`resolveSimDeck`), so creating a
+  table against the AI opened the same dialog twice on the same spot, with the same deck name, the same
+  rows and the same buttons. The second one landed under the cursor as the first closed, which reads as
+  a click the dialog swallowed (report of 2026-11-13, "Accept and play needed two clicks in 2 of 4
+  attempts"). Asking twice about one deck is also a question the player has already answered.
+- Guard: `e2e/deckvalidation.spec.ts` · `src/lobby/CreateTable/submitTable.test.ts`
+
