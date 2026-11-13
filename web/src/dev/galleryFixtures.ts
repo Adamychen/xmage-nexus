@@ -5713,7 +5713,7 @@ export function buildGalleryEntries(): GalleryEntry[] {
     id: 'board:commander-showcase',
     group: 'Tablero',
     label: 'Commander showcase: four real precons on turn 11',
-    description: "Four-player Commander built only from the dev Commander precons: Atraxa (you, main phase with priority and six cards in hand), Saheeli with artifacts and a crowd of Thopter, Servo and Myr tokens, Edgar Markov with vampires, and Meren after a board wipe with the commander back in the command zone and sixteen cards in the graveyard. It keeps the viewer's board layout and side panel setting, so the same table can be compared across Arena, Table and Standard.",
+    description: "Four-player Commander built from the dev Commander precons: Atraxa (you, main phase with priority and six cards in hand), Saheeli with artifacts and a crowd of Thopter, Servo and Myr tokens, Edgar Markov with vampires, and Meren after a board wipe with the commander back in the command zone and sixteen cards in the graveyard. Your board also holds Invasion of Zendikar, the one card from outside the precons: no precon of those years has a battle, and the layout needs one to show the permanent type. It keeps the viewer's board layout and side panel setting, so the same table can be compared across Arena, Table and Standard.",
     phase: 'game',
     game: showcase,
     gameId: SHOWCASE_GAME_ID,

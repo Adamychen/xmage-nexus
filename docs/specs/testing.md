@@ -90,13 +90,15 @@ The dev deck list includes four real Commander precons, each a 100-card singleto
 commander and real printings: Breed Lethality (Atraxa), Exquisite Invention (Saheeli), Vampiric
 Bloodlust (Edgar Markov) and Plunder the Graves (Meren). The gallery entry "Commander showcase" and
 the FakeServer scenario `showcase` (`SCENARIO=showcase npm run play:fake`) show the same
-four-player table on turn 11, built only from cards of those decks: your main phase with priority,
+four-player table on turn 11, built from cards of those decks: your main phase with priority,
 crowded boards with counters, tokens and equipment, a commander in the command zone and a full
-graveyard. The table keeps the viewer's layout settings, so Arena, Table and Standard can be
-compared on it.
+graveyard. One card comes from outside them, a battle on your board, because no precon of those
+years has one and a table that leaves a permanent type out cannot show how that type is drawn. The
+table keeps the viewer's layout settings, so Arena, Table and Standard can be compared on it.
 
 - Why: the dev decks were land-only or built for one deterministic test, so manual checks and
   screenshots of the board showed nearly empty tables; the board rework needed a real, advanced
   Commander game to judge layouts (12-nov-2026). Every card was checked against the XMage 1.4.63
-  set classes, so the decks also work against a local server.
+  set classes, so the decks also work against a local server. The battle was added on 13-nov-2026,
+  when the card UI was next in the rework and it was the one permanent type the table never showed.
 - Guard: `fixtures/commanderShowcase.test.ts` · `e2e/commander-showcase.spec.ts`
