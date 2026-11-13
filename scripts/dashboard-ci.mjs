@@ -4,7 +4,7 @@
 // Layers: unit+coverage (vitest), typecheck, build, fake-e2e, mcp, proxy java.
 // Raw results are left in web/ so gen-dashboard.mjs can consume them.
 // DASHBOARD_SKIP_E2E=1 skips the fake e2e (set by pages.yml on push: web-ci.yml runs the suite
-// sharded on every push, and the nightly/dispatch Pages run executes it here).
+// sharded on master, and the nightly/dispatch Pages run executes it here).
 
 import fs from "node:fs";
 import path from "node:path";
