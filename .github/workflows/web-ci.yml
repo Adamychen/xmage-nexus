@@ -1,7 +1,15 @@
 name: Web client CI (web)
 
 on:
+  # master only. A push to a branch that has a PR used to start a second, parallel run of this
+  # whole workflow: push and pull_request land in different concurrency groups (refs/heads/x vs
+  # refs/pull/N/merge), so neither cancelled the other and both ran to the end. The pull_request
+  # run covers the same branch, and it tests the merge. A branch with no PR yet gets no run until
+  # the PR is opened, which is also how upstream-upgrade's upgrade/xmage_* branch is covered (the
+  # draft PR it opens triggers this workflow, and the fork-ref step reads GITHUB_HEAD_REF there).
+  # Tags stop triggering it too: a release tag points at a master commit that already ran this.
   push:
+    branches: [master]
     paths:
       - 'web/**'
       - 'mcp/**'
@@ -24,6 +32,7 @@ concurrency:
 jobs:
   web:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     env:
       NEXUS_FORK_DIR: ${{ github.workspace }}/xmage-fork
     steps:
@@ -81,6 +90,9 @@ jobs:
 
   audit:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      CARGO_AUDIT_VERSION: 0.23.0
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v5
@@ -92,14 +104,24 @@ jobs:
       - name: npm audit (mcp, shipped dependencies)
         working-directory: mcp
         run: npm audit --omit=dev --audit-level=high
+      # cargo-audit used to be compiled from source on every run (~2.6 min of the job's 2.9).
+      # The binary is cached per version; the advisory database is still fetched fresh by `cargo audit`.
+      - name: Cache the cargo-audit binary
+        id: cargo-audit-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/bin/cargo-audit
+          key: cargo-audit-${{ runner.os }}-${{ env.CARGO_AUDIT_VERSION }}
+      - name: Install cargo-audit (cache miss)
+        if: steps.cargo-audit-cache.outputs.cache-hit != 'true'
+        run: cargo install cargo-audit --locked --version ${{ env.CARGO_AUDIT_VERSION }}
       - name: cargo audit (launcher)
         working-directory: launcher
-        run: |
-          cargo install cargo-audit --locked
-          cargo audit
+        run: cargo audit
 
   mcp:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v5
@@ -124,6 +146,7 @@ jobs:
 
   proxy:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     env:
       NEXUS_FORK_DIR: ${{ github.workspace }}/xmage-fork
     steps:
@@ -161,7 +184,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3, 4]
+        shard: [1, 2, 3, 4, 5, 6]
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v5
@@ -196,14 +219,77 @@ jobs:
         if: steps.pw-cache.outputs.cache-hit == 'true'
         working-directory: web
         run: npx playwright install-deps chromium
-      - name: Browser E2E (fake, FixtureServer, no Java/stack), shard ${{ matrix.shard }}/4
+      - name: Browser E2E (fake, FixtureServer, no Java/stack), shard ${{ matrix.shard }}/6
         working-directory: web
-        run: npx playwright test --shard=${{ matrix.shard }}/4 --grep-invert @timing
+        env:
+          E2E_LANE: light
+        run: npx playwright test --shard=${{ matrix.shard }}/6 --grep-invert @timing
       - name: Upload fake-e2e results on failure
         if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: mage-fake-e2e-results-shard-${{ matrix.shard }}
+          path: |
+            web/test-results/**
+            web/playwright-report/**
+          if-no-files-found: ignore
+
+  # The heavy half of the fake suite (HEAVY_SPECS in web/playwright.config.ts). Playwright balances
+  # shards by test count, so board-settle and band-fit-classic, alphabetical neighbours that cost
+  # far more per test than the rest, kept landing on the same shard: 50.3 min of work against
+  # 20-23 for the other five, and 17.6 min of wall clock against 7.4-9.1. They get their own two
+  # shards instead, and e2e-fake runs the rest.
+  e2e-fake-heavy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2]
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 26
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - name: npm ci
+        working-directory: web
+        run: npm ci
+      - name: Read the installed Playwright version
+        id: pw
+        working-directory: web
+        run: echo "version=$(node -p "require('@playwright/test/package.json').version")" >> "$GITHUB_OUTPUT"
+      - name: Cache Playwright browsers
+        id: pw-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-chromium-${{ runner.os }}-${{ steps.pw.outputs.version }}
+      - name: Install Playwright chromium (cache miss)
+        if: steps.pw-cache.outputs.cache-hit != 'true'
+        working-directory: web
+        run: |
+          for attempt in 1 2 3; do
+            npx playwright install --with-deps chromium && exit 0
+            echo "::warning::Playwright browser download failed (attempt $attempt), retrying"
+            sleep 20
+          done
+          exit 1
+      - name: Install Playwright system dependencies (cache hit)
+        if: steps.pw-cache.outputs.cache-hit == 'true'
+        working-directory: web
+        run: npx playwright install-deps chromium
+      - name: Browser E2E (fake, the heavy specs), shard ${{ matrix.shard }}/2
+        working-directory: web
+        env:
+          E2E_LANE: heavy
+        run: npx playwright test --shard=${{ matrix.shard }}/2 --grep-invert @timing
+      - name: Upload heavy-e2e results on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mage-fake-heavy-e2e-results-shard-${{ matrix.shard }}
           path: |
             web/test-results/**
             web/playwright-report/**
@@ -261,7 +347,15 @@ jobs:
 
   integration:
     runs-on: ubuntu-latest
-    needs: [web, proxy]
+    # generous: a cold cache makes the proxy's card scan take ~15 min and NEXUS_PROXY_WARMUP_MS waits 20
+    timeout-minutes: 45
+    # No needs. This job checks out the fork itself, builds the engine and the proxy with
+    # scripts/build.mjs (ensureMageArtifacts installs org.mage from the fork checkout when ~/.m2
+    # is missing them or stamped at another commit) and reads nothing from web or proxy, so the
+    # wait bought nothing but a cheaper red: it skipped this job when the basics failed. On run
+    # 43455026794 it took 8.0 min of work and finished at 12.4 min because it waited 4.5 for web,
+    # which made it the critical path of a run whose e2e was done at 9.4. Runner minutes are free
+    # on a public repo and web or proxy fail in about one run of ten, so the trade is backwards.
     env:
       NEXUS_FORK_DIR: ${{ github.workspace }}/xmage-fork
       # first run with a cold cache: the proxy's card scan can take
