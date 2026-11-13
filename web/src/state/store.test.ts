@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { joinGame, sendManaPaymentMode, sendPlayerAction, sendPlayerBoolean, sendPlayerUUID, updatePreferences } from '../net/commands'
-import { makeCard, makeGameView, makePermanent, makePlayer, minimalGameView } from '../__fixtures__/gameViews'
+import { makeCard, makeGameView, makePermanent, makePlayer, minimalGameView, playerGameView } from '../__fixtures__/gameViews'
 import { DEFAULT_PHASE_STOPS, clonePhaseStops, togglePhaseStop } from '../game/phaseStops'
 import { getState, setState, addLog } from './state'
 import { applyGameplayPreset, handleMessage, maybeAutoPass, reset, setSetting, returnToLobby, enterTableChat, exitTableChat, openStagingTable, leaveStagingTable, enterTournamentChat, exitTournamentChat } from './store'
@@ -363,7 +363,7 @@ describe('handleMessage', () => {
     expect(lastLog.text).toBe('hi there')
   })
 
-  it('GAME_ASK with a mulligan question auto-keeps the hand via sendPlayerBoolean(false)', () => {
+  it('PRM-16: a spectator, who has no seat to answer with, gets the mulligan kept for them', () => {
     handleMessage({
       type: 'event',
       method: 'GAME_ASK',
@@ -372,6 +372,47 @@ describe('handleMessage', () => {
       data: { question: 'Do you want to keep your hand? (Mulligan)', options: ['Keep hand', 'Mulligan'], gameId: 'g-1' },
     })
     expect(sendPlayerBoolean).toHaveBeenCalledWith(false, 'g-1')
+    expect(getState().feedback).toBeNull()
+  })
+
+  it('PRM-16: the opening hand is asked to the player who sits at the table, whatever the automation says', () => {
+    setSetting('autoStartingPlayer', true)
+    handleMessage({ type: 'event', method: 'GAME_UPDATE', messageId: 1, objectId: 'g-1', data: playerGameView })
+    handleMessage({
+      type: 'event',
+      method: 'GAME_ASK',
+      messageId: 2,
+      objectId: 'g-1',
+      data: { question: 'Do you want to keep your hand? (Mulligan)', options: ['Keep hand', 'Mulligan'], gameId: 'g-1' },
+    })
+    expect(sendPlayerBoolean).not.toHaveBeenCalled()
+    expect(getState().feedback?.method).toBe('GAME_ASK')
+  })
+
+  it('PRM-16: with the setting on, the starting player prompt is answered with the first option the server offers', () => {
+    setSetting('autoStartingPlayer', true)
+    handleMessage({ type: 'event', method: 'GAME_UPDATE', messageId: 1, objectId: 'g-1', data: playerGameView })
+    handleMessage({
+      type: 'event',
+      method: 'GAME_TARGET',
+      messageId: 2,
+      objectId: 'g-1',
+      data: { message: 'Select a starting player', targets: ['p1', 'p2'] },
+    })
+    expect(sendPlayerUUID).toHaveBeenCalledWith('p1', 'g-1')
+  })
+
+  it('PRM-16: with the setting off, the player at the table answers the starting player prompt themselves', () => {
+    handleMessage({ type: 'event', method: 'GAME_UPDATE', messageId: 1, objectId: 'g-1', data: playerGameView })
+    handleMessage({
+      type: 'event',
+      method: 'GAME_TARGET',
+      messageId: 2,
+      objectId: 'g-1',
+      data: { message: 'Select a starting player', targets: ['p1', 'p2'] },
+    })
+    expect(sendPlayerUUID).not.toHaveBeenCalled()
+    expect(getState().feedback?.method).toBe('GAME_TARGET')
   })
 
   it('GAME_ASK with a non-mulligan question does not auto-answer', () => {
@@ -397,7 +438,7 @@ describe('handleMessage', () => {
     // booleanos en la ventana del sorteo (respuesta inválida para un ask de
     // target → el servidor re-dispara y acaba la partida)
     expect(getState().feedback?.method).toBe('GAME_TARGET')
-    // el ask del mulligan (auto-keep) cierra el prompt
+    // el ask del mulligan (espectador) cierra el prompt
     handleMessage({
       type: 'event',
       method: 'GAME_ASK',
@@ -408,8 +449,7 @@ describe('handleMessage', () => {
     expect(getState().feedback).toBeNull()
   })
 
-  it('GAME_ASK respects the autoKeepMulligan setting', () => {
-    setSetting('autoKeepMulligan', false)
+  it('an ask with no game to answer in sends nothing', () => {
     handleMessage({
       type: 'event',
       method: 'GAME_ASK',
@@ -1633,9 +1673,9 @@ describe('applyGameplayPreset', () => {
     expect(getState().settings.smartStops).toBe(false)
   })
 
-  it('never touches the auto-keep mulligan preference', () => {
-    setSetting('autoKeepMulligan', true)
+  it('never touches the starting player preference', () => {
+    setSetting('autoStartingPlayer', true)
     applyGameplayPreset('simple')
-    expect(getState().settings.autoKeepMulligan).toBe(true)
+    expect(getState().settings.autoStartingPlayer).toBe(true)
   })
 })

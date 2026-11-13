@@ -42,9 +42,9 @@ describe('gameplay presets', () => {
   })
 
   it('no preset owns auto-keep, so it never changes the mulligan preference', () => {
-    expect(PRESET_OWNED_KEYS.has('autoKeepMulligan')).toBe(false)
+    expect(PRESET_OWNED_KEYS.has('autoStartingPlayer')).toBe(false)
     for (const preset of GAMEPLAY_PRESETS) {
-      expect(preset.bundle).not.toHaveProperty('autoKeepMulligan')
+      expect(preset.bundle).not.toHaveProperty('autoStartingPlayer')
     }
   })
 
