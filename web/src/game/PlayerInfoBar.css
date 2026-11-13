@@ -1271,3 +1271,38 @@ html.fx-off .badge-dungeon.fx-dungeon-complete {
     animation: none;
   }
 }
+
+.player-info-bar.is-bare {
+  backdrop-filter: none;
+}
+
+/* BRD-32: the frameless chip keeps the priority clock on its own line under the photo and life. */
+.player-info-bar.is-bare {
+  flex-wrap: wrap;
+  row-gap: var(--sp-1);
+}
+
+.player-info-bar.is-bare > .bare-timer {
+  flex-basis: 100%;
+  display: flex;
+}
+
+/* BRD-32: the frameless chip has no turn bar or tint (the strip and the board frame mark the
+   turn), and its counters fill a column down beside the life, opening a new column only when
+   three are stacked. */
+.player-info-bar.is-bare.is-turn {
+  background: transparent;
+}
+
+.player-info-bar.is-bare::before {
+  display: none;
+}
+
+.player-info-bar.is-bare > .bare-counters {
+  display: grid;
+  grid-auto-flow: column;
+  grid-template-rows: repeat(3, auto);
+  gap: var(--sp-1) var(--sp-1h);
+  align-self: flex-start;
+  justify-items: start;
+}

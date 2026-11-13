@@ -51,6 +51,32 @@
   cursor: pointer;
 }
 
+/* BRD-37: the icon stands for "show this board". It is there from the start,
+   dim enough to stay out of the way, and lights up with the pill it belongs
+   to, so the click is offered without a button on every column. */
+.tor-seat-focus {
+  display: inline-flex;
+  align-items: center;
+  color: var(--fg-3);
+  opacity: 0.55;
+  transition: color 0.15s ease, opacity 0.15s ease;
+}
+
+.tor-seat.is-clickable:hover .tor-seat-focus,
+.tor-seat.is-clickable.is-peek .tor-seat-focus,
+.tor-seat.is-clickable:focus-visible .tor-seat-focus,
+.tor-seat.is-clickable.is-focused .tor-seat-focus {
+  color: var(--gold-300);
+  opacity: 1;
+}
+
+/* BRD-37: pointing at a pill lights its board, and pointing at a board lights
+   its pill, which is what tells the player the two are the same thing. */
+.tor-seat.is-clickable.is-peek {
+  background: var(--veil-2);
+  border-color: rgb(var(--gold-rgb) / 0.45);
+}
+
 .tor-seat.is-clickable.is-focused {
   border-color: var(--gold-300);
 }

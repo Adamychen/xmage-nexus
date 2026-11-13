@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import type { CardView, PermanentView, PlayerView } from '../net/types'
 import PileOverlay from '../board/PileOverlay'
 import CrossZoneOverlay from '../board/CrossZoneOverlay'
@@ -30,6 +30,8 @@ interface ResourceBarProps {
   stats?: boolean
   poolOnly?: boolean
   pileCards?: boolean
+  pileLabels?: boolean
+  poolSize?: number
   noPiles?: boolean
   crossZonePlayables?: CrossZonePlayable[]
   onPlayCrossZone?: (id: string) => void
@@ -64,6 +66,8 @@ export default function ResourceBar({
   stats = false,
   poolOnly = false,
   pileCards = false,
+  pileLabels = false,
+  poolSize = 14,
   noPiles = false,
   crossZonePlayables,
   onPlayCrossZone,
@@ -273,17 +277,28 @@ export default function ResourceBar({
   if (poolOnly) {
     return (
       <div className="resource-bar-pool" data-side={side} data-testid="resource-pool">
-        <ManaPoolView pool={pool} canPay={canPayMana} onPay={payMana} showAll={manaPromptOpen && side === 'my'} size={14} />
+        <ManaPoolView pool={pool} canPay={canPayMana} onPay={payMana} showAll={manaPromptOpen && side === 'my'} size={poolSize} />
         {Object.values(pool).every((n) => !n) && !manaPromptOpen && <em className="resource-pool-label">{t('game', 'mana_pool_label')}</em>}
       </div>
     )
   }
 
+  const labeled = (key: 'pile_library' | 'pile_graveyard' | 'pile_exile' | 'pile_playable', count: number, node: ReactNode) =>
+    pileLabels ? (
+      <div className="pile-slot" data-testid="pile-slot">
+        <span className="pile-card-caption" data-testid="pile-caption">
+          <span className="pile-caption-long">{t('game', key)}</span>
+          {key !== 'pile_playable' && <span className="pile-caption-short">{t('game', `${key}_short` as 'pile_library_short' | 'pile_graveyard_short' | 'pile_exile_short')}</span>} <b>{count}</b>
+        </span>
+        {node}
+      </div>
+    ) : node
+
   if (pileCards) {
     return (
       <>
-        <div className="resource-pile-cards" data-testid="pile-cards">
-          <Button
+        <div className={`resource-pile-cards${pileLabels ? ' has-labels' : ''}`} data-testid="pile-cards">
+          {labeled('pile_library', libraryCount, <Button
             variant="link"
             type="button"
             data-testid="pile-card-library"
@@ -309,9 +324,9 @@ export default function ResourceBar({
             ) : (
               <span className="pile-card-label">{t('game', 'pile_library')}</span>
             )}
-          </Button>
+          </Button>)}
 
-          <Button
+          {labeled('pile_graveyard', graveyardCount, <Button
             variant="link"
             type="button"
             data-testid="pile-card-graveyard"
@@ -333,9 +348,9 @@ export default function ResourceBar({
             ) : (
               <span className="pile-card-label">{t('game', 'pile_graveyard')}</span>
             )}
-          </Button>
+          </Button>)}
 
-          <Button
+          {labeled('pile_exile', exileCount, <Button
             variant="link"
             type="button"
             data-testid="pile-card-exile"
@@ -357,7 +372,24 @@ export default function ResourceBar({
             ) : (
               <span className="pile-card-label">{t('game', 'pile_exile')}</span>
             )}
-          </Button>
+          </Button>)}
+
+          {pileLabels && side === 'my' && crossZone.length > 0 && labeled('pile_playable', crossZone.length, <Button
+            variant="link"
+            type="button"
+            data-testid="pile-card-playable"
+            data-count={crossZone.length}
+            className="pile-card pile-card--playable has-playable"
+            title={`${t('game', 'cross_zone_title')}: ${crossZone.length}`}
+            aria-label={`${t('game', 'cross_zone_title')}: ${crossZone.length}`}
+            onClick={() => setOpenPile('crosszone')}
+            onMouseEnter={(e) =>
+              topCrossZoneCard && onCardHover?.(topCrossZoneCard, e.currentTarget.getBoundingClientRect())
+            }
+            onMouseLeave={() => onCardHover?.(null)}
+          >
+            {topCrossZoneCard ? <CardSlot card={topCrossZoneCard} className="pile-card-face" /> : <Icon name="bolt" size={18} />}
+          </Button>)}
         </div>
         {renderPileOverlays()}
       </>

@@ -409,11 +409,26 @@ describe('SpotlightBoard', () => {
   })
 
   it('BRD-12: every board in the main board mode shows its piles as cards in its corner and no pile chips', () => {
+    setSetting('gameUi', 'v2')
+    try {
+      const { container } = render(<SpotlightBoard game={fourPlayerGame()} homeId="p1" mainId="p2" onSelectSeat={() => {}} />)
+      const corners = container.querySelectorAll('[data-testid="pile-corner"]')
+      expect(corners.length).toBe(4)
+      corners.forEach((corner) => expect(corner.querySelectorAll('[data-testid^="pile-card-"]').length).toBe(3))
+      expect(container.querySelectorAll('.library-chip, .graveyard-chip, .exile-chip, .library-stack, .graveyard-stack, .exile-stack').length).toBe(0)
+    } finally {
+      setSetting('gameUi', 'v1')
+    }
+  })
+
+  it('BRD-39: with the v1 chrome every board, main and copies, gets the Arena frame with captioned piles', () => {
+    setSetting('gameUi', 'v1')
     const { container } = render(<SpotlightBoard game={fourPlayerGame()} homeId="p1" mainId="p2" onSelectSeat={() => {}} />)
-    const corners = container.querySelectorAll('[data-testid="pile-corner"]')
-    expect(corners.length).toBe(4)
-    corners.forEach((corner) => expect(corner.querySelectorAll('[data-testid^="pile-card-"]').length).toBe(3))
-    expect(container.querySelectorAll('.library-chip, .graveyard-chip, .exile-chip, .library-stack, .graveyard-stack, .exile-stack').length).toBe(0)
+    const rows = container.querySelectorAll('[data-testid="arena-own-row"]')
+    expect(rows.length).toBe(4)
+    rows.forEach((row) => expect(row.querySelectorAll('[data-testid="pile-caption"]').length).toBe(3))
+    expect(container.querySelectorAll('[data-testid="pile-corner"]').length).toBe(0)
+    expect(container.querySelectorAll('[data-testid="arena-own-chip"] .player-info-bar.is-bare').length).toBe(4)
   })
 })
 

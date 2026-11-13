@@ -1432,6 +1432,7 @@ export const zhs: TranslationSchema = {
     pile_library_short: '牌库',
     pile_graveyard_short: '墓地',
     pile_exile_short: '放逐',
+    pile_playable: '可使用',
     pile_hand: '手牌',
     pile_stack: '堆叠',
     no_target: '无目标',

@@ -2,6 +2,7 @@ import { createContext, useContext } from 'react'
 import type { CSSProperties, ReactNode } from 'react'
 import type { CardView } from '../net/types'
 import HandBar from './HandBar'
+import type { HandTrailingCard } from './handCommander'
 import HandRail from './HandRail'
 import HandRow from './HandRow'
 import FloatingCardPreview from './FloatingCardPreview'
@@ -25,6 +26,9 @@ export interface BoardShellProps {
     onHover?: (card: CardView | null, rect?: DOMRect) => void
     playableIds?: Set<string>
     targetIds?: Set<string>
+    /** BRD-32: cards drawn apart at the end of the fan (the own commander). */
+    trailing?: HandTrailingCard[]
+    onTrailingClick?: (id: string) => void
   } | null
   style?: CSSProperties
   layout?: BoardLayoutKind
@@ -86,6 +90,8 @@ export default function BoardShell({ className, testId, presenter, handBar = nul
           onHover={handBar.onHover}
           playableIds={handBar.playableIds}
           targetIds={handBar.targetIds}
+          trailing={handBar.trailing}
+          onTrailingClick={handBar.onTrailingClick}
           raised={raised}
           promptSlotRef={setHandPromptSlot ?? undefined}
         />

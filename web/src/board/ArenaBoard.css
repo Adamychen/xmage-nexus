@@ -20,6 +20,19 @@
   display: flex;
 }
 
+/* BRD-37: pointing at a seat's pill lights its board, and pointing at the
+   board lights the pill, so the strip reads as the control of these columns
+   and no column needs a button of its own. */
+.arena-opp-cell {
+  border-radius: var(--r-md, 8px);
+  transition: box-shadow 0.15s ease, background-color 0.15s ease;
+}
+
+.arena-opp-cell.seat-peek-on {
+  box-shadow: inset 0 0 0 1.5px rgb(var(--gold-rgb) / 0.45);
+  background: rgb(var(--gold-rgb) / 0.05);
+}
+
 .arena-opp-cell > * {
   flex: 1;
   min-width: 0;
@@ -153,4 +166,550 @@
   pointer-events: none;
   z-index: 5;
   animation: targetZoneRing 1.2s ease-in-out infinite;
+}
+
+/* ── BRD-32: the own Arena board framed around the hand ──────────────────
+   The chip sits at the top-left of the creatures row, the piles at the
+   bottom-left, the uncast commander at the right of the hand and the action
+   button in the bottom-right corner. The bottom row is as tall as the resting
+   hand, so nothing of the battlefield goes under it, with or without the
+   side panel. */
+.board-zone.arena-own {
+  padding-bottom: 0 !important;
+}
+
+.board-zone.arena-own > .arena-own-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-start;
+  gap: var(--sp-3);
+  min-height: var(--hand-reserve, 120px);
+  padding: 0 calc(var(--arena-dock-w) + var(--arena-edge) * 2) var(--arena-edge) var(--arena-edge);
+  box-sizing: border-box;
+}
+
+.arena-own-row > .arena-own-commander {
+  margin-left: auto;
+  align-self: flex-end;
+}
+
+.arena-own-row > .arena-own-piles {
+  --pile-card-w: clamp(64px, var(--zone-card-w, 96px), 118px);
+  align-self: flex-end;
+}
+
+.resource-pile-cards.has-labels {
+  align-items: flex-end;
+  gap: var(--sp-2);
+}
+
+.resource-pile-cards.has-labels .pile-card {
+  aspect-ratio: auto;
+  height: calc(var(--pile-card-w) * 88 / 63 * 0.5);
+  overflow: visible;
+  border-radius: var(--r-card, 6px) var(--r-card, 6px) 0 0;
+}
+
+.resource-pile-cards.has-labels .pile-card > .stack-back-img,
+.resource-pile-cards.has-labels .pile-card > .pile-card-face {
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: calc(var(--pile-card-w) * 88 / 63) !important;
+  clip-path: inset(0 0 50% 0 round var(--r-card, 6px) var(--r-card, 6px) 0 0);
+}
+
+.resource-pile-cards.has-labels .pile-card-count {
+  display: none;
+}
+
+.resource-pile-cards.has-labels .pile-card-label {
+  display: none;
+}
+
+.resource-pile-cards.has-labels > .pile-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-0h);
+  min-width: 0;
+}
+
+.pile-card-caption {
+  white-space: nowrap;
+  font-family: var(--font-display);
+  font-size: var(--fs-3xs);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--fg-2);
+  text-shadow: 0 1px 3px var(--shade-4);
+  pointer-events: none;
+}
+
+.pile-card-caption b {
+  color: var(--fg-hi);
+  font-weight: 800;
+}
+
+.board-zone.arena-own {
+  position: relative;
+}
+
+.board-zone.arena-own .arena-own-chip {
+  position: absolute;
+  top: var(--arena-edge);
+  left: var(--arena-edge);
+  display: flex;
+  z-index: 12;
+}
+
+.board-zone.arena-own[data-chip-reserve] > .bz-creatures-row {
+  padding-left: calc(var(--arena-chip-w) + var(--arena-edge));
+  box-sizing: border-box;
+}
+
+.player-info-bar.is-bare .bare-pool .mana-inline.is-empty {
+  display: none;
+}
+
+.player-info-bar.is-bare {
+  min-width: 0;
+  padding: 0;
+  gap: var(--sp-2);
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+
+.player-info-bar.is-bare.has-priority {
+  box-shadow: none;
+}
+
+.player-info-bar.is-bare .player-avatar .avatar-image {
+  width: 48px;
+  height: 48px;
+}
+
+.player-info-bar.is-bare .player-details {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-0h);
+}
+
+.player-info-bar.is-bare .player-name {
+  font-size: var(--fs-sm);
+  text-shadow: 0 1px 3px var(--shade-4);
+}
+
+.player-info-bar.is-bare .life-counter {
+  font-size: calc(var(--fs-2xl) * 1.15);
+  text-shadow: 0 2px 6px var(--shade-4);
+}
+
+.player-info-bar.is-bare .bare-pool .resource-bar-pool {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  padding: 0;
+}
+
+.player-info-bar.is-bare .bare-pool .resource-pool-label {
+  display: none;
+}
+
+.board-wrap:has(.board-zone.arena-own) .game-dock {
+  right: var(--arena-edge);
+  bottom: var(--arena-edge);
+}
+
+.board-wrap:has(.board-zone.arena-own) {
+  --arena-edge: var(--sp-4h);
+}
+
+/* BRD-32 to BRD-35: what the own Arena board measures itself against. The
+   board carries its own defaults so a rule never needs to repeat them, and
+   BoardZone writes the measured ones (chip, marquee, span) on this element. */
+.board-zone.arena-own {
+  --arena-edge: var(--sp-4h);
+  --arena-dock-w: 250px;
+  --arena-chip-w: 0px;
+  --arena-marquee-w: 0px;
+  --arena-perm-span: 0px;
+  /* BRD-33: the gap that tells artifacts and enchantments apart from the
+     creatures beside them, wide enough to read as a different zone. */
+  --arena-perm-gap: 48px;
+}
+
+.player-info-bar.is-bare.compact .player-avatar .avatar-image {
+  width: 36px;
+  height: 36px;
+}
+
+.player-info-bar.is-bare.compact .life-counter {
+  font-size: var(--fs-2xl);
+}
+
+/* BRD-32: Arena groups its zones by place, not by frames: no border or tint
+   around the planeswalker zone, lands from the bottom-left, the other
+   non-creature permanents flush with the right edge. */
+.board-wrap:not([data-ui='v2']) .arena-board .bz-band.bz-marquee-band,
+.board-wrap:not([data-ui='v2']) .spotlight-board .bz-band.bz-marquee-band {
+  border: 0;
+  background: none;
+  box-shadow: none;
+}
+
+.board-zone.arena-own .bz-band.bz-lands-band {
+  justify-content: flex-start;
+  align-content: flex-end;
+  align-items: flex-end;
+}
+
+.board-zone.arena-own .bz-band.bz-others-band {
+  justify-content: flex-end;
+  align-content: flex-end;
+  align-items: flex-end;
+}
+
+.board-zone.arena-own .bz-band.bz-marquee-band[data-band-lines] {
+  justify-content: flex-end;
+  align-content: flex-start;
+}
+
+.board-zone.arena-own > .bz-permanents-row {
+  padding-inline: var(--arena-edge);
+  box-sizing: border-box;
+}
+
+.board-zone.arena-own > .bz-creatures-row {
+  padding-inline: var(--arena-edge);
+  box-sizing: border-box;
+}
+
+.arena-own-row > .arena-own-commander {
+  --card-w: clamp(64px, calc((var(--hand-reserve, 160px) - var(--arena-edge) - 8px) / 1.4), 132px);
+}
+
+.player-info-bar.is-bare .bare-pool .mana-inline {
+  border: 0;
+  background: none;
+  padding: 0;
+  box-shadow: none;
+}
+
+.board-wrap:not([data-ui='v2']) .arena-board .bz-permanents-row::before,
+.board-wrap:not([data-ui='v2']) .spotlight-board .bz-permanents-row::before {
+  display: none;
+}
+
+.board-zone.arena-own > .bz-permanents-row {
+  column-gap: var(--arena-perm-gap);
+}
+
+.arena-own-row > .arena-own-pool {
+  align-self: flex-start;
+  padding-top: var(--sp-1);
+}
+
+.arena-own-row > .arena-own-pool .resource-bar-pool {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  padding: 0;
+}
+
+.arena-own-row > .arena-own-pool .mana-inline {
+  border: 0;
+  background: none;
+  padding: 0;
+  box-shadow: none;
+}
+
+.arena-own-row > .arena-own-pool:not(:has(.mana-inline:not(.is-empty))) {
+  display: none;
+}
+
+/* BRD-32: like MTG Arena, planeswalkers, sagas and battles take a zone on the right edge that
+   runs from the creatures down to the lands; the lands row leaves it that width. */
+.board-zone.arena-own > .bz-creatures-row {
+  overflow: visible;
+}
+
+.board-zone.arena-own .bz-band.bz-marquee-band {
+  align-self: flex-start;
+  height: calc(100% + var(--arena-perm-span));
+  align-content: flex-start;
+  align-items: flex-start;
+  position: relative;
+  z-index: 2;
+}
+
+.board-zone.arena-own:has(.bz-marquee-band) > .bz-permanents-row {
+  padding-right: calc(var(--arena-edge) + var(--arena-marquee-w) + var(--arena-perm-gap));
+}
+
+/* BRD-35: a wrapped band of the own Arena board holds the same count on every line (10 land
+   piles in two lines are 5 and 5, not 8 and 2): the layout engine measures the widest balanced line
+   and the band gives the rest of its width to the side it is not aligned to, so lines break there. */
+.board-zone.arena-own .bz-band.bz-lands-band[data-band-cols],
+.board-zone.arena-own .bz-band.creatures-band[data-band-cols] {
+  border-right: var(--band-spare, 0px) solid transparent;
+}
+
+.board-zone.arena-own .bz-band.bz-others-band[data-band-cols] {
+  border-left: var(--band-spare, 0px) solid transparent;
+}
+
+/* BRD-36: each opponent column of the Arena layout shows its library, graveyard and exile as
+   small half cards with a caption, at the right end of its status row, instead of chips. */
+.arena-opp-cell .bz-status-row > .arena-opp-piles {
+  --pile-card-w: clamp(34px, calc(var(--zone-card-w, 60px) * 0.62), 52px);
+  flex: 0 0 auto;
+  margin-left: auto;
+  align-self: flex-start;
+}
+
+.arena-opp-cell .arena-opp-piles .pile-card-caption {
+  font-size: var(--fs-3xs);
+  letter-spacing: 0.03em;
+}
+
+.arena-opp-cell .arena-opp-piles .resource-pile-cards.has-labels {
+  gap: var(--sp-1h);
+}
+
+.arena-opp-cell .bz-status-row .player-info-bar.is-bare ~ .resource-bar .mana-inline.is-empty {
+  display: none;
+}
+
+.pile-caption-short {
+  display: none;
+}
+
+.arena-opp-cell {
+  container-type: inline-size;
+}
+
+.arena-opp-cell .bz-status-row {
+  flex-wrap: nowrap;
+}
+
+.arena-opp-cell .bz-status-row > .arena-opp-piles {
+  min-width: 0;
+  flex-shrink: 1;
+}
+
+@container (max-width: 520px) {
+  .arena-opp-cell .bz-status-row > .arena-opp-piles {
+    --pile-card-w: clamp(30px, calc(var(--zone-card-w, 50px) * 0.55), 40px);
+  }
+}
+
+/* BRD-36: an opponent's board is mirrored vertically, so its piles hang from the top edge with
+   the caption under them (the own piles rise from the bottom edge with the caption above). */
+.arena-opp-piles .resource-pile-cards.has-labels {
+  align-items: flex-start;
+}
+
+.arena-opp-piles .resource-pile-cards.has-labels > .pile-slot {
+  flex-direction: column-reverse;
+}
+
+.arena-opp-piles .resource-pile-cards.has-labels .pile-card {
+  border-radius: 0 0 var(--r-card, 6px) var(--r-card, 6px);
+}
+
+/* BRD-35: the band is as wide as its longest line, so centring the lines leaves the full ones in
+   place and puts a short last line in the middle (5 piles above, 2 centred below). */
+.board-zone.arena-own .bz-band.bz-lands-band[data-band-cols],
+.board-zone.arena-own .bz-band.bz-others-band[data-band-cols],
+.board-zone.arena-own .bz-band.creatures-band[data-band-cols] {
+  justify-content: center;
+}
+
+/* BRD-36: the opponent's pile cards are turned round, as the rest of their mirrored board would be,
+   so the half hanging from the top edge is the top of the card (name and art), upside down. */
+.arena-opp-piles .resource-pile-cards.has-labels .pile-card > .stack-back-img,
+.arena-opp-piles .resource-pile-cards.has-labels .pile-card > .pile-card-face {
+  inset: auto 0 0 0;
+  transform: rotate(180deg);
+}
+
+/* BRD-32: on smaller screens (1366 px wide and the like) the own piles shrink to three quarters
+   of a board card, leaving the hand more room. */
+@media (max-width: 1500px) {
+  .arena-own-row > .arena-own-piles {
+    --pile-card-w: clamp(52px, calc(var(--zone-card-w, 90px) * 0.72), 84px);
+  }
+}
+
+/* BRD-39: an opponent's board drawn in the Arena frame (the side panel mode) keeps its hand as a
+   fan in the bottom row, between the piles and the command zone. */
+.arena-own-row > .arena-opp-hand {
+  flex: 0 0 auto;
+  order: 1;
+  align-self: flex-end;
+}
+
+.arena-own-row > .arena-opp-hand .hand-zone {
+  --card-w: clamp(44px, calc(var(--zone-card-w, 90px) * 0.6), 72px) !important;
+}
+
+.arena-own-row > .arena-own-pool {
+  order: 2;
+}
+
+.arena-own-row > .arena-own-commander {
+  order: 3;
+}
+
+/* BRD-38: in the bottom row the opponent's fan shows only its top half, like the own resting
+   hand, so it covers nothing. */
+.arena-own-row > .arena-opp-hand .hand-back-stack.is-fan {
+  height: calc(var(--card-w, 60px) * 0.7);
+  overflow: hidden;
+}
+
+.arena-own-row > .arena-opp-hand .hand-back-stack.is-fan .hand-back-fan {
+  inset: 0 0 auto 0;
+  height: calc(var(--card-w, 60px) * 1.4);
+}
+
+/* BRD-40: an Arena opponent's uncast commander is drawn like one more card of its hand: half a
+   card hanging from the top edge of its status row, turned round, with the crown and the tax on the
+   half that shows. It takes no board space and no more height than the hand beside it. */
+/* The hand sizes itself from the row's height, which grows with the chip's counters, so one
+   opponent's backs came out much larger than another's: in a column it takes the size of its
+   piles, like the commander beside it. */
+.arena-opp-cell .bz-status-row > .hand-zone {
+  --card-w: clamp(34px, calc(var(--zone-card-w, 60px) * 0.62), 52px) !important;
+  flex: 0 0 auto;
+  margin-left: var(--sp-2);
+}
+
+.arena-opp-cell .bz-status-row > .arena-opp-commander {
+  --card-w: clamp(34px, calc(var(--zone-card-w, 60px) * 0.62), 52px);
+  flex: 0 0 auto;
+  align-self: flex-start;
+  margin-left: var(--sp-2);
+  height: calc(var(--card-w) * 0.7);
+  overflow: hidden;
+  transform: rotate(180deg);
+}
+
+.arena-opp-cell .arena-opp-commander .command-zone {
+  padding: 0;
+  max-height: none;
+  align-items: flex-start;
+  background: none;
+  border: 0;
+}
+
+/* The crown and the tax ride at the card's top edge, so they stay inside the visible half, and
+   they turn back so their icon and number read upright. */
+.arena-opp-cell .arena-opp-commander .commander-badge {
+  top: 1px;
+  left: 1px;
+  transform: rotate(180deg);
+}
+
+.arena-opp-cell .arena-opp-commander .commander-tax-badge {
+  top: 1px;
+  bottom: auto;
+  left: auto;
+  right: 1px;
+  transform: rotate(180deg);
+}
+
+/* A narrow column shrinks the hand, the commander and the piles together; this block comes last so
+   it wins over the sizes above. */
+@container (max-width: 520px) {
+  .arena-opp-cell .bz-status-row > .hand-zone,
+  .arena-opp-cell .bz-status-row > .arena-opp-commander {
+    --card-w: clamp(30px, calc(var(--zone-card-w, 50px) * 0.55), 42px) !important;
+    margin-left: var(--sp-1h);
+  }
+}
+
+/* BRD-32: the counters go down the side of the own chip, which has the height for it; in an
+   opponent's column they stay on one line, so its status row is no taller than the others'. */
+.arena-opp-cell .player-info-bar.is-bare > .bare-counters {
+  display: flex;
+  flex-wrap: nowrap;
+}
+
+/* An opponent's chip never breaks into two lines: a second line would make its status row twice as
+   tall and drop that seat's board. It keeps one line, the name truncating if need be. */
+.arena-opp-cell .bz-status-row > .player-info-bar.is-bare {
+  flex-wrap: nowrap;
+  min-width: 0;
+}
+
+.arena-opp-cell .bz-status-row > .player-info-bar.is-bare .player-details {
+  min-width: 0;
+}
+
+.arena-opp-cell .bz-status-row > .player-info-bar.is-bare .player-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@container (max-width: 520px) {
+  .arena-opp-cell .bz-status-row {
+    column-gap: var(--sp-1);
+  }
+}
+
+/* A narrow column fits chip, hand, commander and piles on one line by trimming the chip itself. */
+@container (max-width: 520px) {
+  .arena-opp-cell .bz-status-row > .player-info-bar.is-bare {
+    gap: var(--sp-1h);
+  }
+
+  .arena-opp-cell .player-info-bar.is-bare .player-avatar .avatar-image {
+    width: 30px;
+    height: 30px;
+  }
+
+  .arena-opp-cell .player-info-bar.is-bare .life-counter {
+    font-size: var(--fs-xl);
+  }
+
+  .arena-opp-cell .player-info-bar.is-bare .bare-counters {
+    gap: var(--sp-0h);
+  }
+
+  .arena-opp-cell .player-info-bar.is-bare .player-counter-badge {
+    font-size: var(--fs-3xs);
+    padding: 0 var(--sp-0h);
+    gap: 1px;
+  }
+}
+
+/* BRD-3: in a narrow column the focus button shrinks to its icon. The row has to hold the chip,
+   the hand, the commander and the piles as well, and the button is the one part of it that keeps
+   working at any size. */
+@container (max-width: 520px) {
+  .arena-opp-cell .bz-status-row > .seat-focus-btn {
+    height: 18px;
+    min-width: 18px;
+    padding: 0 var(--sp-0h);
+  }
+
+  /* Every pixel of that row is spoken for, so the empty mana pool gives up its padding too. */
+  .arena-opp-cell .bz-status-row > .resource-bar:not(.arena-opp-piles):has(.mana-inline.is-empty) {
+    display: none;
+  }
+}
+
+/* An opponent's column always names its piles short ("MAZO 58"): three long captions are wider
+   than the rest of its status row put together, and the column has to hold the chip, the hand,
+   the commander and the piles on one line. */
+.arena-opp-piles .pile-caption-long {
+  display: none;
+}
+
+.arena-opp-piles .pile-caption-short {
+  display: inline;
 }

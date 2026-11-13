@@ -257,3 +257,14 @@
     box-shadow: 0 0 0 3px var(--gold-300), 0 0 24px rgb(var(--gold-rgb) / 0.8);
   }
 }
+
+/* BRD-32: the own commander rides at the end of the fan, apart from the hand,
+   with a gold edge; its cost bubbles already include the commander tax. */
+.hand-bar .hand-card-slot.hand-trailing.is-first {
+  margin-left: calc(var(--card-w) * 0.4) !important;
+}
+
+.hand-bar .hand-card-slot.hand-trailing .hand-trailing-card {
+  box-shadow: 0 0 0 2px var(--gold-300), 0 0 18px rgb(var(--gold-rgb) / 0.45);
+}
+

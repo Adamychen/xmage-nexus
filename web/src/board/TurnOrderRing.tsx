@@ -3,7 +3,7 @@ import { useTranslation } from '../i18n'
 import { isPlayerOut, MAX_BOARD_PLAYERS } from './boardShared'
 import { useLaneFit } from './useLaneFit'
 import Icon from '../ui/Icon'
-import { useSettings } from '../state/store'
+import { setSeatPeek, useSettings, useStore } from '../state/store'
 import { seatColorVar, seatIndexOf } from './seatColor'
 import './TurnOrderRing.css'
 
@@ -22,6 +22,8 @@ export interface TurnOrderRingProps {
   /** Lets the own pill take `onSeatClick` too (the main board mode, BRD-7). */
   selfClickable?: boolean
   focusedId?: string | null
+  /** BRD-37: no life on the pills (the Arena layout shows it on every board). */
+  noLife?: boolean
 }
 
 export function turnOrderSeats(players: PlayerView[] | undefined, lane = false): PlayerView[] {
@@ -33,9 +35,10 @@ export function turnOrderSeats(players: PlayerView[] | undefined, lane = false):
   return [...clamped].reverse()
 }
 
-export default function TurnOrderRing({ players, activePlayerId, lane = false, onSeatClick, selfClickable = false, focusedId = null }: TurnOrderRingProps) {
+export default function TurnOrderRing({ players, activePlayerId, lane = false, onSeatClick, selfClickable = false, focusedId = null, noLife = false }: TurnOrderRingProps) {
   const { t } = useTranslation()
   const portrait = useSettings().gameUi === 'v2' && !lane
+  const peekId = useStore((s) => s.seatPeek)
   const ordered = turnOrderSeats(players, lane)
   const count = ordered.length
   const fitKey = `${ordered.map((p) => `${p.playerId}:${p.name}`).join('|')}|${activePlayerId}`
@@ -56,7 +59,7 @@ export default function TurnOrderRing({ players, activePlayerId, lane = false, o
         {isActive ? <Icon name="play" size={9} /> : <Icon name="circle" size={7} />}
       </span>
       {withName && <span className="tor-seat-name">{p.name}</span>}
-      {!lane && <span className="tor-seat-life">{isPlayerOut(p) ? <Icon name="skull" size={11} /> : p.life}</span>}
+      {!lane && !noLife && <span className="tor-seat-life">{isPlayerOut(p) ? <Icon name="skull" size={11} /> : p.life}</span>}
       {isActive && (
         <span className="tor-active-badge" data-testid={withBadgeId ? 'tor-active-badge' : undefined}>
           {p.controlled ? t('game', 'your_turn') : t('board', 'turn_active_badge')}
@@ -80,21 +83,29 @@ export default function TurnOrderRing({ players, activePlayerId, lane = false, o
       const isPriority = !!p.hasPriority
       const isDefeated = isPlayerOut(p)
       const nextPlayer = ordered[(idx + 1) % count]
-      const clickable = !!onSeatClick && !measure && (!p.controlled || selfClickable) && !isDefeated
+      // The hidden ruler keeps the icon (it is part of the width it measures)
+      // but takes no handlers, so it can neither be clicked nor light a board.
+      const actionable = !!onSeatClick && (!p.controlled || selfClickable) && !isDefeated
+      const clickable = actionable && !measure
       const focused = focusedId === p.playerId
+      const peek = !measure && peekId === p.playerId
 
       return (
         <div key={p.playerId} className="tor-seat-group" data-active-group={isActive || undefined}>
           <div
-            className={`tor-seat ${isActive ? 'is-active' : ''} ${isPriority ? 'has-priority' : ''} ${isDefeated ? 'is-defeated' : ''} ${p.controlled ? 'is-controlled' : ''}${clickable ? ' is-clickable' : ''}${focused ? ' is-focused' : ''}`}
+            className={`tor-seat ${isActive ? 'is-active' : ''} ${isPriority ? 'has-priority' : ''} ${isDefeated ? 'is-defeated' : ''} ${p.controlled ? 'is-controlled' : ''}${clickable ? ' is-clickable' : ''}${focused ? ' is-focused' : ''}${peek ? ' is-peek' : ''}`}
             data-testid={measure ? undefined : `tor-seat-${p.playerId}`}
             data-active={isActive ? 'true' : undefined}
             data-priority={isPriority ? 'true' : undefined}
-            title={`${p.name}${isActive ? t('board', 'turn_active_suffix') : ''}${isPriority ? t('board', 'turn_priority_suffix') : ''} · ${t('board', 'turn_life_label')}: ${p.life}`}
+            title={`${p.name}${isActive ? t('board', 'turn_active_suffix') : ''}${isPriority ? t('board', 'turn_priority_suffix') : ''} · ${t('board', 'turn_life_label')}: ${p.life}${actionable ? ` · ${t('board', focused ? 'seat_focus_all' : 'seat_focus')}` : ''}`}
             role={clickable ? 'button' : undefined}
             tabIndex={clickable ? 0 : undefined}
             aria-pressed={clickable ? focused : undefined}
             onClick={clickable ? () => onSeatClick?.(p.playerId) : undefined}
+            onMouseEnter={clickable ? () => setSeatPeek(p.playerId) : undefined}
+            onMouseLeave={clickable ? () => setSeatPeek(null) : undefined}
+            onFocus={clickable ? () => setSeatPeek(p.playerId) : undefined}
+            onBlur={clickable ? () => setSeatPeek(null) : undefined}
             onKeyDown={clickable ? (e) => {
               if (e.key !== 'Enter' && e.key !== ' ') return
               e.preventDefault()
@@ -102,6 +113,13 @@ export default function TurnOrderRing({ players, activePlayerId, lane = false, o
             } : undefined}
           >
             {seatBody(p, isActive, true, !measure)}
+            {/* BRD-37: the pill carries the board icon itself, so the click is
+                offered before anyone hovers it and no board needs a button. */}
+            {actionable && (
+              <span className="tor-seat-focus" data-testid={measure ? undefined : `tor-focus-${p.playerId}`} aria-hidden>
+                <Icon name={focused ? 'minimize' : 'maximize'} size={11} />
+              </span>
+            )}
           </div>
           {/* In the walkway the chain stops at the last seat: a trailing
               arrow would point at nobody (it is the ring wrapping around). */}

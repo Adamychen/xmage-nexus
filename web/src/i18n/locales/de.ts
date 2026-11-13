@@ -1432,6 +1432,7 @@ export const de: TranslationSchema = {
     pile_library_short: 'Bib.',
     pile_graveyard_short: 'Fh.',
     pile_exile_short: 'Exil',
+    pile_playable: 'Spielbar',
     pile_hand: 'Hand',
     pile_stack: 'Stapel',
     no_target: 'Kein Ziel',

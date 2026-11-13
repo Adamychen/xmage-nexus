@@ -19,6 +19,8 @@ interface CommandZoneProps {
   compact?: boolean
   /** Card style "compact": commanders and emblems render as art-crop tiles like the battlefield. */
   compactCards?: boolean
+  /** BRD-32: only the commanders (drawn in the hand) or only the rest (emblems, planes). */
+  only?: 'commanders' | 'others'
 }
 
 /** A command-zone entry as it arrives: a card view, plus flags only some objects carry. */
@@ -189,6 +191,7 @@ export default function CommandZone({
   helperEmblems,
   compact = false,
   compactCards = false,
+  only,
 }: CommandZoneProps) {
   const { t } = useTranslation()
   const hoverHandler = onHover ?? onCardHover
@@ -204,9 +207,9 @@ export default function CommandZone({
     return null
   }
 
-  const commanders = items.filter((item) => item.isCommander || item.isCompanion)
-  const emblems = items.filter((item) => item.isEmblem)
-  const planes = items.filter((item) => item.isPlane)
+  const commanders = only === 'others' ? [] : items.filter((item) => item.isCommander || item.isCompanion)
+  const emblems = only === 'commanders' ? [] : items.filter((item) => item.isEmblem)
+  const planes = only === 'commanders' ? [] : items.filter((item) => item.isPlane)
   const isMulti = commanders.length > 1
 
   return (

@@ -13,6 +13,8 @@ import { pileCornerLift } from './pileCorner'
 import { turnOrderSeats } from './TurnOrderRing'
 import { EMPTY_TARGET_ZONES } from './targetZones'
 import DefeatedSeat from './DefeatedSeat'
+import { useHandCommander } from './handCommander'
+import { useNarrowScreen } from '../game/useNarrowScreen'
 import ScaledCopy, { useLayoutBox } from './ScaledCopy'
 import { seatColorVar, seatIndexOf } from './seatColor'
 import Icon from '../ui/Icon'
@@ -251,6 +253,9 @@ export default function SpotlightBoard({
     onCardHover,
   })
   const { handleCardHover, handleCardClick, targetIdSet, playableIdSet } = presenter
+  const ownSeat = game?.players?.find((p) => p.controlled)
+  const narrow = useNarrowScreen()
+  const handCommander = useHandCommander(ownSeat, !narrow && !isSpectator && !!ownSeat, game?.myHelperEmblems)
   const switchedHand = useSwitchedHand(game)
   const { seatState, toggleSeat } = useSeatStates()
   const { boardSpotlightPanel: panelPercent, gameUi } = useSettings()
@@ -315,6 +320,7 @@ export default function SpotlightBoard({
             helperEmblems={game?.myHelperEmblems}
             showHand={false}
             kindColumns
+            arenaOwn={!narrow}
           />
         </div>
       )
@@ -362,6 +368,7 @@ export default function SpotlightBoard({
             targetZones={targetZones}
             revealedCards={opponentRevealedCards(game, player)}
             stackHand
+            arenaOwn={!narrow && gameUi !== 'v2'}
             playableIds={playableIdSet}
             combatSelectable={combatSelectable}
             combatMode={combatMode}
@@ -396,6 +403,8 @@ export default function SpotlightBoard({
         onHover: (card, rect) => handleCardHover(card, rect, { fromHand: true }),
         playableIds: playableIdSet,
         targetIds: targetIdSet,
+        trailing: handCommander,
+        onTrailingClick: handleCardClick,
       } : null}
     >
       {stripInDivider && <BoardDivider />}

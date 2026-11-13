@@ -28,7 +28,13 @@ interface HandZoneProps {
   viewable?: boolean
   viewKnownCount?: number
   onViewHand?: () => void
+  /** BRD-38: how the collapsed backs are drawn: one card (default), half a card turned round
+   *  hanging from the top edge (an Arena opponent facing the player), or a small fan. */
+  backsStyle?: 'stack' | 'half' | 'fan' | 'half-fan'
 }
+
+const FAN_MAX = 10
+const FAN_STEP_DEG = 5
 
 export default function HandZone({
   cards,
@@ -44,6 +50,7 @@ export default function HandZone({
   viewable = false,
   viewKnownCount = 0,
   onViewHand,
+  backsStyle = 'stack',
 }: HandZoneProps) {
   const { t } = useTranslation()
   const entries = Object.entries(cards)
@@ -130,9 +137,10 @@ export default function HandZone({
       })}
       {collapseBacks && (
         <div
-          className={`hand-back-stack ${viewable ? 'is-viewable' : ''} ${onViewHand ? 'is-clickable' : ''}`}
+          className={`hand-back-stack ${viewable ? 'is-viewable' : ''} ${onViewHand ? 'is-clickable' : ''}${backsStyle !== 'stack' ? ` is-${backsStyle}` : ''}`}
           data-testid="opp-hand-stack"
           data-count={faceDownEntries.length}
+          style={{ '--fan-n': Math.min(faceDownEntries.length, FAN_MAX) } as React.CSSProperties}
           title={
             viewable
               ? t('game', 'opp_hand_view', { known: viewKnownCount, count: entries.length })
@@ -141,11 +149,25 @@ export default function HandZone({
           onClick={onViewHand}
           {...clickableProps(onViewHand)}
         >
-          <CardSlot
-            card={faceDownEntries[0][1]}
-            faceDown
-            className="hand-card"
-          />
+          {backsStyle === 'fan' || backsStyle === 'half-fan' ? (
+            <span className="hand-back-fan">
+              {faceDownEntries.slice(0, FAN_MAX).map(([id, card], i, shown) => (
+                <span
+                  key={id}
+                  className="hand-back-fan-card"
+                  style={{ '--fan-i': i, '--fan-rot': `${(i - (shown.length - 1) / 2) * FAN_STEP_DEG}deg` } as React.CSSProperties}
+                >
+                  <CardSlot card={card} faceDown className="hand-card" />
+                </span>
+              ))}
+            </span>
+          ) : (
+            <CardSlot
+              card={faceDownEntries[0][1]}
+              faceDown
+              className="hand-card"
+            />
+          )}
           <span className="hand-stack-badge">×{faceDownEntries.length}</span>
           {viewable && (
             <span className="hand-view-badge" aria-hidden="true"><Icon name="eye" size={13} /></span>

@@ -1,7 +1,8 @@
-import { cleanup, fireEvent, render } from '@testing-library/react'
+import { act, cleanup, fireEvent, render } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
 import TurnOrderRing, { turnOrderSeats } from './TurnOrderRing'
 import { makePlayer } from '../__fixtures__/gameViews'
+import { setSeatPeek, setSetting } from '../state/store'
 import type { PlayerView } from '../net/types'
 
 const me = makePlayer({ playerId: 'me', name: 'Adamysz', controlled: true })
@@ -13,7 +14,10 @@ function withFlags(p: PlayerView, flags: Partial<PlayerView>): PlayerView {
 }
 
 describe('TurnOrderRing', () => {
-  afterEach(() => cleanup())
+  afterEach(() => {
+    setSeatPeek(null)
+    cleanup()
+  })
 
   it('BRD-7: the own pill is clickable only in the main board mode', () => {
     const picked: string[] = []
@@ -131,5 +135,66 @@ describe('TurnOrderRing', () => {
     )
     expect(getByTestId('tor-seat-rival').getAttribute('aria-pressed')).toBe('true')
     expect(getByTestId('tor-seat-third').getAttribute('aria-pressed')).toBe('false')
+  })
+
+  it('BRD-37: a pill that focuses a board carries the board icon, and the focused one the way back', () => {
+    const { getByTestId, queryByTestId, rerender } = render(
+      <TurnOrderRing players={[me, rival, third]} activePlayerId="me" onSeatClick={() => {}} />,
+    )
+    expect(getByTestId('tor-focus-rival')).not.toBeNull()
+    expect(getByTestId('tor-focus-rival').querySelector('svg')).not.toBeNull()
+    expect(queryByTestId('tor-focus-me')).toBeNull()
+    const icon = () => getByTestId('tor-focus-rival').innerHTML
+    const unfocused = icon()
+    rerender(<TurnOrderRing players={[me, rival, third]} activePlayerId="me" onSeatClick={() => {}} focusedId="rival" />)
+    expect(icon()).not.toBe(unfocused)
+  })
+
+  it('BRD-37: a pill with nothing to do carries no icon', () => {
+    const dead = withFlags(third, { hasLeft: true, life: 0 })
+    const { queryByTestId } = render(<TurnOrderRing players={[me, rival, dead]} activePlayerId="me" />)
+    expect(queryByTestId('tor-focus-rival')).toBeNull()
+    cleanup()
+    const { queryByTestId: withClick } = render(
+      <TurnOrderRing players={[me, rival, dead]} activePlayerId="me" onSeatClick={() => {}} />,
+    )
+    expect(withClick('tor-focus-third')).toBeNull()
+  })
+
+  it('BRD-37: the pill names what the click does, after the player and the life', () => {
+    const { getByTestId, rerender } = render(
+      <TurnOrderRing players={[me, rival, third]} activePlayerId="me" onSeatClick={() => {}} />,
+    )
+    const title = () => getByTestId('tor-seat-rival').getAttribute('title') ?? ''
+    expect(title()).toContain('Ver este tablero')
+    expect(title().indexOf('Rivalmuygrande')).toBeLessThan(title().indexOf('Ver este tablero'))
+    expect(getByTestId('tor-seat-me').getAttribute('title')).not.toContain('Ver este tablero')
+    rerender(<TurnOrderRing players={[me, rival, third]} activePlayerId="me" onSeatClick={() => {}} focusedId="rival" />)
+    expect(title()).toContain('Todos los tableros')
+  })
+
+  it('BRD-37: pointing at a pill marks it, and a seat peeked from its board marks the pill too', () => {
+    const { getByTestId } = render(
+      <TurnOrderRing players={[me, rival, third]} activePlayerId="me" onSeatClick={() => {}} />,
+    )
+    const pill = getByTestId('tor-seat-rival')
+    expect(pill.classList.contains('is-peek')).toBe(false)
+    fireEvent.mouseEnter(pill)
+    expect(getByTestId('tor-seat-rival').classList.contains('is-peek')).toBe(true)
+    fireEvent.mouseLeave(pill)
+    expect(getByTestId('tor-seat-rival').classList.contains('is-peek')).toBe(false)
+    act(() => setSeatPeek('third'))
+    expect(getByTestId('tor-seat-third').classList.contains('is-peek')).toBe(true)
+    expect(getByTestId('tor-seat-rival').classList.contains('is-peek')).toBe(false)
+  })
+
+  it('BRD-37: noLife leaves the life out of every pill', () => {
+    setSetting('gameUi', 'v1')
+    const { container, rerender } = render(<TurnOrderRing players={[me, rival, third]} activePlayerId="me" />)
+    expect(container.querySelectorAll('.tor-seat-life').length).toBe(3)
+    rerender(<TurnOrderRing players={[me, rival, third]} activePlayerId="me" noLife />)
+    expect(container.querySelectorAll('.tor-seat-life').length).toBe(0)
+    expect(container.querySelector('[data-testid="tor-active-badge"]')).not.toBeNull()
+    setSetting('gameUi', 'v2')
   })
 })

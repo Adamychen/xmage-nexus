@@ -16,6 +16,8 @@ export interface StackGroup {
 
 export interface GroupStackablesOpts {
   excludeIds?: Set<string>
+  /** Smallest group that stacks (STACK_GROUP_MIN unless given). */
+  min?: number
 }
 
 function hasCounters(perm: PermanentView): boolean {
@@ -87,7 +89,7 @@ export function groupStackables(
     }
     group.items.push([id, perm])
   }
-  const groups = order.filter((g) => g.items.length >= STACK_GROUP_MIN).flatMap(chunkPile)
+  const groups = order.filter((g) => g.items.length >= (opts.min ?? STACK_GROUP_MIN)).flatMap(chunkPile)
   const groupedIds = new Set<string>()
   for (const g of groups) for (const [id] of g.items) groupedIds.add(id)
   return { groups, solos: entries.filter(([id]) => !groupedIds.has(id)) }

@@ -1432,6 +1432,7 @@ export const ja: TranslationSchema = {
     pile_library_short: '山札',
     pile_graveyard_short: '墓地',
     pile_exile_short: '追放',
+    pile_playable: 'プレイ可能',
     pile_hand: '手札',
     pile_stack: 'スタック',
     no_target: '対象なし',

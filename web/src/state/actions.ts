@@ -41,6 +41,11 @@ export function setSeatFocus(choice: { playerId: string; combatTurn: number | nu
   setState({ seatFocus: choice ? { gameId: getState().gameId, ...choice } : null })
 }
 
+/** BRD-37: the pointer moved onto a seat's pill or board (null when it left). */
+export function setSeatPeek(playerId: string | null) {
+  if (getState().seatPeek !== playerId) setState({ seatPeek: playerId })
+}
+
 export function setSpotlight(choice: { gameId: string; playerId: string; pickedIn: string | null } | null) {
   setState({ spotlight: choice })
 }

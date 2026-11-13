@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from 'vitest'
-import { BoardLayoutEngine, registrationSignature, type SeatRegistration } from './layoutEngine'
+import { BoardLayoutEngine, balancedLineWidth, bandColumns, registrationSignature, type SeatRegistration } from './layoutEngine'
 import type { ItemKind } from './itemModel'
 
 function sized(el: HTMLElement, width: number, height: number): HTMLElement {
@@ -109,5 +109,19 @@ describe('BoardLayoutEngine', () => {
     expect(registrationSignature(same)).toBe(registrationSignature(reg))
     const more = { ...reg, rows: { ...reg.rows, creatures: [{ ...reg.rows.creatures[0], items: [card(), card()] }] } }
     expect(registrationSignature(more)).not.toBe(registrationSignature(reg))
+  })
+})
+
+describe('BRD-35: even lines', () => {
+  it('BRD-35: a band in several lines holds the same count on each line', () => {
+    expect(bandColumns(10, 2)).toBe(5)
+    expect(bandColumns(10, 3)).toBe(4)
+    expect(bandColumns(7, 3)).toBe(3)
+    expect(bandColumns(8, 1)).toBe(0)
+  })
+
+  it('BRD-35: the line width is the widest even line, gaps included', () => {
+    expect(balancedLineWidth([100, 100, 100, 100], 2, 10)).toBe(210)
+    expect(balancedLineWidth([140, 100, 100, 100, 100], 3, 10)).toBe(360)
   })
 })

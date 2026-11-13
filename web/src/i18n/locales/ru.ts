@@ -1432,6 +1432,7 @@ export const ru: TranslationSchema = {
     pile_library_short: 'Кол.',
     pile_graveyard_short: 'Сбр.',
     pile_exile_short: 'Изг.',
+    pile_playable: 'Можно сыграть',
     pile_hand: 'Рука',
     pile_stack: 'Стек',
     no_target: 'Нет цели',

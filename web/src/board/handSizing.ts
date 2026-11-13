@@ -170,3 +170,13 @@ export function computeCostPipLayout(stripW: number, size: number, count: number
   const step = Math.max(size * HAND_COST_MIN_STEP_RATIO, Math.min(natural, fit))
   return { size, step: Math.round(step * 10) / 10 }
 }
+
+/** BRD-32: how far the outer card of a resting fan reaches past the bar's edge once rotated
+ *  (pivot at 50% 150% of the card), so a side panel keeps clear of it, not only of the bar box. */
+export function handFanSpill(count: number, cardW: number): number {
+  const arc = computeHandArc(count, cardW)
+  if (arc.length < 2) return 0
+  const rad = (Math.abs(arc[0].rot) * Math.PI) / 180
+  const cardH = cardW * HAND_CARD_ASPECT
+  return Math.max(0, Math.ceil((cardW / 2) * Math.cos(rad) + cardH * 1.5 * Math.sin(rad) - cardW / 2))
+}

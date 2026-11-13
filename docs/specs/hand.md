@@ -67,18 +67,21 @@ a card.
 - Guard: `src/board/HandBar.test.tsx` · `src/board/handOrder.test.ts`
 
 ### HND-6 · Printed costs float over the hand cards, unless the player turns them off
-Each card in the fan shows its printed mana cost as bubbles poking out above its top-left corner,
+Each card in the fan shows as bubbles above its top-left corner what casting it costs now,
 in the strip the next card leaves uncovered: one bubble per symbol, both halves for a split card,
 none for a land or a face-down card, and one bubble size for the whole hand, scaled to the cards. A
 cost too long for the strip stacks its bubbles until it fits, and spreads them again on the grown
-card. It is the printed cost, never a reduced one, because the server does not send that. The
+card. For the commander in the command zone that includes its tax (BRD-34); no other modifier is in
+it, because the server does not send a card's modified cost, and the printed cost stays on the card
+image. The
 *Cost symbols in hand* setting (`Settings → Board`, Card overlays) removes them, and the rendered
 card style never draws them.
 
 - Why: a packed cost (`{2}{G}`) drew one broken bubble (`4090bf3d4f`); and issue #12 asked for the
   bubbles to be optional, since the card image already shows the cost (`39f397d6f1`). At the
   printed top-right corner each cost was drawn over the next card in the fan, so Cultivate's
-  `{2}{G}` read as the cost of the card beside it.
+  `{2}{G}` read as the cost of the card beside it. The bubbles say what the card costs to cast,
+  since the printed cost is already on the card's own image (user decision, 2026-11-13).
 - Guard: `src/board/HandBar.test.tsx` · `src/board/handSizing.test.ts` · `e2e/board-overlays.spec.ts`
 
 ### HND-7 · Fan, column or row: the player picks the layout, the opening hand is always a fan

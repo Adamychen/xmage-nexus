@@ -3,6 +3,7 @@ import {
   commanderDamageDealt,
   commanderPlaysCount,
   commanderTax,
+  costWithCommanderTax,
   commandersOf,
   hasCommanders,
   resetCommanderMemory,
@@ -474,5 +475,18 @@ describe('double-faced commander (Slicer)', () => {
       expect(roster.map((c) => c.id)).toEqual(['cz-1'])
       expect(commanderDamageDealt(after, roster[0], (after.players ?? [])[1])).toBe(4)
     }
+  })
+})
+
+describe('BRD-34: the tax inside the cost', () => {
+  it('BRD-34: the tax adds to the generic pip, or becomes one when the cost has none', () => {
+    expect(costWithCommanderTax(['2', 'R', 'R'], 2)).toEqual(['4', 'R', 'R'])
+    expect(costWithCommanderTax(['G', 'W', 'U', 'B'], 2)).toEqual(['2', 'G', 'W', 'U', 'B'])
+    expect(costWithCommanderTax(['G', 'W', 'U', 'B'], 6)).toEqual(['6', 'G', 'W', 'U', 'B'])
+  })
+
+  it('BRD-34: a generic pip for the tax goes after {X}, and no tax leaves the cost alone', () => {
+    expect(costWithCommanderTax(['X', 'B', 'B'], 4)).toEqual(['X', '4', 'B', 'B'])
+    expect(costWithCommanderTax(['2', 'R'], 0)).toEqual(['2', 'R'])
   })
 })
