@@ -449,9 +449,7 @@ html:lang(zh) .table-state-badge {
   line-height: 1.45;
 }
 html:lang(ja) .conn-info,
-html:lang(zh) .conn-info,
-html:lang(ja) .hero-deck-label,
-html:lang(zh) .hero-deck-label {
+html:lang(zh) .conn-info {
   font-size: var(--fs-2xs);
 }
 
@@ -866,48 +864,6 @@ html:lang(zh) .hero-deck-label {
 .fmt-limited { --fam: var(--fmt-limited); }
 .fmt-casual { --fam: var(--fmt-casual); }
 
-.hero-deck-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--sp-2);
-  min-height: 36px;
-  min-width: 0;
-  max-width: 300px;
-  padding: 0 var(--sp-3);
-  font: inherit;
-  color: var(--gold-300);
-  background: rgb(var(--gold-rgb) / 0.08);
-  border: 1px solid var(--gold-line);
-  border-radius: var(--r-base);
-  cursor: pointer;
-  transition: background 0.15s ease, border-color 0.15s ease;
-}
-
-.hero-deck-badge:hover { background: rgb(var(--gold-rgb) / 0.15); }
-.hero-deck-badge:focus-visible { outline: none; box-shadow: var(--focus-ring); }
-
-.hero-deck-badge.is-empty {
-  color: var(--warn);
-  background: var(--warn-soft);
-  border-color: var(--warn-line);
-}
-
-.hero-deck-label {
-  font-size: var(--fs-2xs);
-  color: var(--fg-2);
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-.hero-deck-name {
-  font-size: var(--fs-sm);
-  font-weight: 700;
-  min-width: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
 /* Tables view: the toolbar and the sections sit on the page, no panel box, and
    use the whole width: a wider window shows more tables, not wider margins. */
 .tables-panel {
@@ -942,7 +898,6 @@ html:lang(zh) .hero-deck-label {
 }
 
 .in-panel .tfb-search-input { min-height: 44px; }
-.hero-deck-badge,
 .tables-create-menu > .ui-btn { min-height: 44px; }
 
 .tables-create-panel { min-width: 300px; }
@@ -969,7 +924,6 @@ html:lang(zh) .hero-deck-label {
 @media (max-width: 640px) {
   .tables-panel { padding: var(--sp-2) var(--sp-1) 0; }
   .tables-header-actions { flex: 1 1 100%; }
-  .hero-deck-badge { flex: 1 1 auto; max-width: none; }
 }
 
 /* The list holds one section per table state (LBY-22). */

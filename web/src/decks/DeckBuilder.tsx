@@ -22,11 +22,10 @@ import { exportTxt } from './parseDck'
 import type { CardStripMeta } from './ArenaCardStrip'
 import { applySuggestions, deckIssueKey, fetchDeckIssues, fetchFormatIssues, type DeckFix } from './deckIssues'
 import { aggregateCards, deckCardKey } from './deckCardOps'
-import { commanderCardsFor, derivePartnerCard, withCommanderFirst } from './deckUtils'
+import { commanderCardsFor, derivePartnerCard } from './deckUtils'
 import { FORMAT_CONFIGS } from './formatRules'
 import type { DeckFormatValidationResult, DeckValidationResult } from '../net/types'
-import { useStore, setMyDeck } from '../state/store'
-import { equippedDeckId } from '../state/persistence'
+import { useStore } from '../state/store'
 import { useSettings } from '../state/selectors'
 import { setSetting } from '../state/actions'
 import { deckRef as deckKeyOf, getAllAvailableDecks, type DeckCard } from '../lobby/decks'
@@ -161,7 +160,6 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
   const [phoneSheet, setPhoneSheet] = useState<'catalogue' | 'curve' | 'card' | null>(null)
 
   const storage = useMemo(() => getDeckStorage(), [])
-  const [equippedId, setEquippedId] = useState<string | null>(() => equippedDeckId())
   const wsAlive = useStore((s) => s.wsAlive)
   const debounceRef = useRef<number | null>(null)
   const savedTimerRef = useRef<number | null>(null)
@@ -623,10 +621,6 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
     if (phone) setPhoneSheet(null)
     setShowInspector(true)
   }
-  const equipDeck = () => {
-    setMyDeck({ ...deck, cards: withCommanderFirst(deck.cards, deck.commanderCard, deck.partnerCard) })
-    setEquippedId(deck.id)
-  }
   const zoneRegionDrop = phoneZone === 'main' ? mainRegionDrop : sideRegionDrop
   const sideEmpty = <div className="deck-editor-side-empty">{t('decks', 'builder_side_empty')}</div>
   const mainEmpty = <EmptyState boxed size="lg" icon="layers" iconSize={22} title={t('decks', 'deck_no_cards')} />
@@ -851,10 +845,8 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
           onRetrySave={() => { void persist(deck) }}
           onBack={handleClose}
           deck={deck}
-          isEquipped={equippedId === deck.id}
           onImport={() => setShowImportModal(true)}
           onSample={() => setShowSampleHand(true)}
-          onEquip={equipDeck}
           view={view}
           onViewChange={(next) => setSetting('deckEditorView', next)}
           copies={copies}
@@ -881,10 +873,8 @@ export default function DeckBuilder({ deckId, onClose }: { deckId: string; onClo
           onRetrySave={() => { void persist(deck) }}
           onBack={handleClose}
           deck={deck}
-          isEquipped={equippedId === deck.id}
           onImport={() => setShowImportModal(true)}
           onSample={() => setShowSampleHand(true)}
-          onEquip={equipDeck}
           onDone={handleClose}
         />
       )}
