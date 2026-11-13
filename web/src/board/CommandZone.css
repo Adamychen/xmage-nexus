@@ -42,14 +42,20 @@
   box-shadow: 0 0 12px rgb(var(--gold-rgb) / 0.3);
 }
 
+/* BRD-45: one chip for the commander: the symbol in gold, the tax beside it
+   when it has one, on the dark plate the loyalty and the defense use, ringed
+   in the gold of the symbol itself. */
 .commander-badge {
   position: absolute;
   top: -4px;
   left: -4px;
-  width: 20px;
+  min-width: 20px;
   height: 20px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--gold-300), var(--warn));
+  padding: 0 var(--sp-0h);
+  gap: var(--sp-0h);
+  border-radius: var(--r-pill);
+  background: var(--ink-1);
+  border: 1.5px solid var(--gold-300);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -57,6 +63,14 @@
   box-shadow: 0 2px 6px var(--shade-3);
   z-index: 10;
   pointer-events: none;
+}
+
+.commander-tax {
+  color: var(--gold-300);
+  font-family: var(--font-display);
+  font-weight: 800;
+  line-height: 1;
+  padding-right: 1px;
 }
 
 .companion-badge {
@@ -74,34 +88,6 @@
   box-shadow: 0 2px 6px var(--shade-3);
   z-index: 10;
   pointer-events: none;
-}
-
-.commander-tax-badge {
-  position: absolute;
-  bottom: 2px;
-  left: 2px;
-  display: inline-flex;
-  align-items: center;
-  gap: var(--sp-0h);
-  padding: var(--sp-0h) var(--sp-0h) var(--sp-0h) var(--sp-1);
-  border-radius: var(--r-pill);
-  line-height: 1;
-  background: rgb(var(--err-rgb) / 0.9);
-  border: 1px solid var(--veil-6);
-  color: var(--fg-hi);
-  font-size: var(--fs-2xs);
-  font-weight: 800;
-  font-family: var(--font-display);
-  box-shadow: 0 2px 6px var(--shade-4);
-  z-index: 10;
-  pointer-events: none;
-}
-
-.command-zone.art-tiles .commander-tax-badge {
-  top: -4px;
-  bottom: auto;
-  left: 18px;
-  right: auto;
 }
 
 /* Emblems Stack */
@@ -139,12 +125,16 @@
   z-index: 20;
 }
 
-.commander-tax-badge .commander-tax-pip {
-  filter: drop-shadow(0 0 1px var(--shade-4));
-}
-
 .plane-slot {
   flex-shrink: 0;
   border-color: rgb(var(--mana-u-rgb) / 0.6);
   box-shadow: 0 0 12px rgb(var(--mana-u-rgb) / 0.4);
+}
+
+
+.commander-mark {
+  width: 13px;
+  height: 13px;
+  flex: 0 0 auto;
+  fill: var(--gold-300);
 }

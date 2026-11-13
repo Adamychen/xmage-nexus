@@ -605,19 +605,11 @@
   border: 0;
 }
 
-/* The crown and the tax ride at the card's top edge, so they stay inside the visible half, and
-   they turn back so their icon and number read upright. */
+/* The commander chip rides at the card's top edge, so it stays inside the visible half, and it
+   turns back so its symbol and its tax read upright. */
 .arena-opp-cell .arena-opp-commander .commander-badge {
   top: 1px;
   left: 1px;
-  transform: rotate(180deg);
-}
-
-.arena-opp-cell .arena-opp-commander .commander-tax-badge {
-  top: 1px;
-  bottom: auto;
-  left: auto;
-  right: 1px;
   transform: rotate(180deg);
 }
 

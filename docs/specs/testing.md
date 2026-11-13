@@ -92,13 +92,16 @@ Bloodlust (Edgar Markov) and Plunder the Graves (Meren). The gallery entry "Comm
 the FakeServer scenario `showcase` (`SCENARIO=showcase npm run play:fake`) show the same
 four-player table on turn 11, built from cards of those decks: your main phase with priority,
 crowded boards with counters, tokens and equipment, a commander in the command zone and a full
-graveyard. One card comes from outside them, a battle on your board, because no precon of those
-years has one and a table that leaves a permanent type out cannot show how that type is drawn. The
-table keeps the viewer's layout settings, so Arena, Table and Standard can be compared on it.
+graveyard. Two cards come from outside them, a battle and a saga on your board, because no precon
+of those years has either and a table that leaves a permanent type or a chapter track out cannot
+show how they are drawn. The table keeps the viewer's layout settings, so Arena, Table and Standard
+can be compared on it.
 
 - Why: the dev decks were land-only or built for one deterministic test, so manual checks and
   screenshots of the board showed nearly empty tables; the board rework needed a real, advanced
   Commander game to judge layouts (12-nov-2026). Every card was checked against the XMage 1.4.63
   set classes, so the decks also work against a local server. The battle was added on 13-nov-2026,
-  when the card UI was next in the rework and it was the one permanent type the table never showed.
+  when the card UI was next in the rework and it was the one permanent type the table never showed,
+  and the saga with it once the chapters got their own badge (BRD-44), on chapter II of three so the
+  three states of the track can be seen at once.
 - Guard: `fixtures/commanderShowcase.test.ts` · `e2e/commander-showcase.spec.ts`

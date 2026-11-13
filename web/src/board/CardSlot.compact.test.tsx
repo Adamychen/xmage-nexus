@@ -92,6 +92,32 @@ describe('CardSlot compact tile', () => {
     expect(badges()).toEqual(['shield: 1'])
   })
 
+  it('BRD-44: a saga draws a hexagon per chapter, the current one marked, and no lore counter beside it', async () => {
+    const saga = perm({
+      name: 'The Eldest Reborn',
+      cardTypes: ['ENCHANTMENT'],
+      subTypes: ['SAGA'],
+      rules: [
+        'I - Each opponent sacrifices a creature or planeswalker.',
+        'II - Each opponent discards a card.',
+        'III - Return target creature card from your graveyard to the battlefield.',
+        'IV - You draw a card.',
+      ],
+      counters: [{ name: 'lore', count: 3 }, { name: 'charge', count: 1 }],
+    })
+    const { container } = render(<CardSlot card={saga} showCounters />)
+    await act(async () => {})
+    const track = container.querySelector('.saga-badge .saga-track')!
+    expect(track.getAttribute('data-chapters')).toBe('4')
+    expect(track.getAttribute('data-current')).toBe('3')
+    expect([...track.querySelectorAll('polygon')].length).toBe(4)
+    expect([...track.querySelectorAll('text')].map((t) => t.textContent)).toEqual(['I', 'II', 'III', 'IV'])
+    expect([...track.querySelectorAll('[data-chapter-state]')].map((g) => g.getAttribute('data-chapter-state')))
+      .toEqual(['read', 'read', 'now', 'next'])
+    const badges = [...container.querySelectorAll('.counter-badge')].map((b) => b.getAttribute('aria-label'))
+    expect(badges).toEqual(['charge: 1'])
+  })
+
   it('BRD-43: a battle draws its defense on its shield, with the number on it', async () => {
     const battle = perm({
       name: 'Invasion of Zendikar',

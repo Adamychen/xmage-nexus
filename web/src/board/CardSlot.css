@@ -1822,4 +1822,50 @@ html.fx-off .card-slot.fx-behold {
   .card-slot.fx-behold {
     animation: none;
   }
+}
+
+/* BRD-44: the chapters of a saga, one hexagon each along the bottom edge: read
+   and current in gold, the ones to come in the dark of the board. */
+.saga-badge {
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  translate: -50% 0;
+  width: clamp(42px, calc(var(--card-w, 100px) * 0.8), 124px);
+  pointer-events: none;
+  z-index: 5;
+  filter: drop-shadow(0 2px 4px var(--shade-4));
+}
+
+.saga-track {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.saga-track polygon {
+  fill: var(--ink-2);
+  stroke: var(--ink-0);
+  stroke-width: 3;
+  stroke-linejoin: round;
+}
+
+.saga-track [data-chapter-state='read'] polygon {
+  fill: var(--gold-500);
+}
+
+.saga-track [data-chapter-state='now'] polygon {
+  fill: var(--gold-300);
+  stroke: var(--fg-hi);
+}
+
+.saga-track text {
+  fill: var(--gold-line);
+  font-family: var(--font-display);
+  font-weight: 800;
+}
+
+.saga-track [data-chapter-state='read'] text,
+.saga-track [data-chapter-state='now'] text {
+  fill: var(--ink-0);
 }

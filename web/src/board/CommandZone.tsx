@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import type { CardView, PermanentView, PlayerView } from '../net/types'
 import CardSlot from './CardSlot'
 import { commanderPlaysCount, commanderTax } from './commanders'
-import { ManaPip } from '../decks/ArenaManaSymbols'
+import CommanderMark from './CommanderMark'
 import Icon from '../ui/Icon'
 import { useTranslation } from '../i18n'
 import './CommandZone.css'
@@ -236,19 +236,15 @@ export default function CommandZone({
                 <Icon name="star" size={13} />
               </div>
             ) : (
-              <div className="commander-badge" title={t('board', 'zone_command')}>
-                <Icon name="crown" size={13} />
-              </div>
-            )}
-            {tax > 0 && (
               <div
-                className="commander-tax-badge"
-                data-testid="commander-tax"
-                data-tax={tax}
-                aria-label={t('board', 'commander_tax', { tax, count: item.castCount })}
+                className="commander-badge"
+                title={tax > 0 ? t('board', 'commander_tax', { tax, count: item.castCount }) : t('board', 'zone_command')}
+                data-testid={tax > 0 ? 'commander-tax' : undefined}
+                data-tax={tax > 0 ? tax : undefined}
+                aria-label={tax > 0 ? t('board', 'commander_tax', { tax, count: item.castCount }) : undefined}
               >
-                <span className="commander-tax-plus">+</span>
-                <ManaPip symbol={String(tax)} size={14} className="commander-tax-pip" />
+                <CommanderMark />
+                {tax > 0 && <span className="commander-tax">{`+${tax}`}</span>}
               </div>
             )}
           </div>

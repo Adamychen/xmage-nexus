@@ -26,6 +26,7 @@ const META: Meta[] = [
   ['Swamp', 'C16', '343', ['LAND'], '', '', '', ['BASIC'], ['SWAMP']],
   ['Forest', 'C16', '349', ['LAND'], '', '', '', ['BASIC'], ['FOREST']],
   ['Invasion of Zendikar', 'MOM', '194', ['BATTLE'], '{3}{G}', '', '', [], ['SIEGE']],
+  ['History of Benalia', 'DOM', '21', ['ENCHANTMENT'], '{1}{W}{W}', '', '', ['LEGENDARY'], ['SAGA']],
   ['Sol Ring', 'C16', '272', ['ARTIFACT'], '{1}', '', '', [], []],
   ['Fellwar Stone', 'C16', '254', ['ARTIFACT'], '{2}', '', '', [], []],
   ['Simic Signet', 'C16', '270', ['ARTIFACT'], '{2}', '', '', [], []],
@@ -192,8 +193,10 @@ interface PermOpts {
   pt?: string
   loyalty?: number
   commander?: number
-  /** Defense, for a battle (TST-8: the one permanent type the precons have none of). */
+  /** Defense, for a battle (TST-8: a type the precons have none of). */
   defense?: number
+  /** Rules text, for the cards whose shape the board reads (a saga's chapters). */
+  rules?: string[]
   /** The set to take the printing from, when it is not the seat's own precon. */
   set?: string
 }
@@ -211,7 +214,7 @@ function perm(seat: Seat, name: string, opts: PermOpts = {}): PermanentView {
     loyalty: opts.loyalty != null ? String(opts.loyalty) : fields.loyalty,
     defense: opts.defense != null ? String(opts.defense) : undefined,
     counters: opts.counters ?? (opts.loyalty != null ? [{ name: 'loyalty', count: opts.loyalty }] : []),
-    rules: opts.commander != null ? [commanderInfoRule(opts.commander)] : [],
+    rules: opts.rules ?? (opts.commander != null ? [commanderInfoRule(opts.commander)] : []),
     tapped: !!opts.tapped,
     summoningSickness: !!opts.sick,
     controlled: seat.me,
@@ -286,6 +289,15 @@ export function commanderShowcaseGameView(myName = 'You'): GameView {
     perm(me, "Commander's Sphere"), perm(me, 'Darksteel Ingot'),
     perm(me, 'Hardened Scales'), perm(me, "Cathars' Crusade"), perm(me, 'Bred for the Hunt'),
     perm(me, 'Invasion of Zendikar', { set: 'MOM', defense: 3 }),
+    perm(me, 'History of Benalia', {
+      set: 'DOM',
+      counters: [{ name: 'lore', count: 2 }],
+      rules: [
+        '<i>(As this Saga enters and after your draw step, add a lore counter. Sacrifice after III.)</i>',
+        'I, II — Create a 2/2 white Knight creature token with vigilance.',
+        'III — Knights you control get +2/+1 until end of turn.',
+      ],
+    }),
     perm(me, "Atraxa, Praetors' Voice", { counters: P1P1(2), pt: '6/6', commander: 1 }),
     perm(me, 'Master Biomancer', { counters: P1P1(1), pt: '3/5' }),
     perm(me, 'Corpsejack Menace', { counters: P1P1(2), pt: '6/6' }),

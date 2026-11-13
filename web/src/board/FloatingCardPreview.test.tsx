@@ -199,8 +199,44 @@ describe('FloatingCardPreview', () => {
     const { container: pwContainer } = render(
       <FloatingCardPreview card={pwCard} anchorRect={kwAnchor} boardRect={dummyBoardRect} />,
     )
-    expect(pwContainer.querySelector('.floating-card-loyalty')).not.toBeNull()
-    expect(pwContainer.textContent).toContain('3')
+    // BRD-43: the preview draws the loyalty on the same plate the board does.
+    expect(pwContainer.querySelector('.loyalty-badge .loyalty-plate path')).not.toBeNull()
+    expect(pwContainer.querySelector('.loyalty-val')?.textContent).toBe('3')
+  })
+
+  it('BRD-43, BRD-44: the preview draws the defense and the chapters on their plates, and leaves them out of the counter count', () => {
+    const anchor = { left: 200, top: 200, right: 290, bottom: 326, width: 90, height: 126 } as DOMRect
+    const battle: PermanentView = {
+      name: 'Invasion of Zendikar',
+      manaValue: 4,
+      cardTypes: ['Battle'],
+      subTypes: ['Siege'],
+      defense: '3',
+      counters: [{ name: 'defense', count: 3 }],
+    } as unknown as PermanentView
+    const { container: battleBox, unmount } = render(
+      <FloatingCardPreview card={battle} anchorRect={anchor} boardRect={dummyBoardRect} />,
+    )
+    expect(battleBox.querySelector('.defense-badge .defense-plate path')).not.toBeNull()
+    expect(battleBox.querySelector('.defense-val')?.textContent).toBe('3')
+    expect(battleBox.querySelector('.floating-card-counters')).toBeNull()
+    unmount()
+
+    const saga: PermanentView = {
+      name: 'History of Benalia',
+      manaValue: 3,
+      cardTypes: ['Enchantment'],
+      subTypes: ['Saga'],
+      rules: ['I, II — Create a 2/2 white Knight creature token with vigilance.', 'III — Knights you control get +2/+1 until end of turn.'],
+      counters: [{ name: 'lore', count: 2 }, { name: 'charge', count: 1 }],
+    } as unknown as PermanentView
+    const { container: sagaBox } = render(
+      <FloatingCardPreview card={saga} anchorRect={anchor} boardRect={dummyBoardRect} />,
+    )
+    const track = sagaBox.querySelector('.saga-badge .saga-track')!
+    expect(track.getAttribute('data-chapters')).toBe('3')
+    expect(track.getAttribute('data-current')).toBe('2')
+    expect(sagaBox.querySelector('.floating-card-counters')?.textContent).toContain('1')
   })
 
   it('KEY-9: renders flip badge for double-faced cards and toggles face on Shift key', async () => {

@@ -18,7 +18,7 @@ describe('CommandZone', () => {
     expect(container.firstChild).toBeNull()
   })
 
-  it('renders 1 commander with crown and tax badge, and handles click to cast', () => {
+  it('BRD-45: renders 1 commander with the Commander symbol and the tax badge, and handles click to cast', () => {
     const onCardClick = vi.fn()
     const fakePlayer: Partial<PlayerView> = {
       name: 'Player1',
@@ -44,6 +44,9 @@ describe('CommandZone', () => {
 
     expect(container.querySelector('.command-zone')).not.toBeNull()
     expect(container.querySelector('.commander-badge')).not.toBeNull()
+    // BRD-45: the symbol itself, not a generic crown glyph.
+    expect(container.querySelector('.commander-badge .commander-mark path')).not.toBeNull()
+    expect(container.querySelector('.commander-badge .lucide')).toBeNull()
     expect(container.querySelector('[data-testid="commander-tax"]')?.getAttribute('data-tax')).toBe('4') // 2 casts * 2 tax = +4
 
     const slot = container.querySelector('[data-card-id="cmd-atrata"]')
@@ -155,11 +158,12 @@ describe('CommandZone', () => {
       <CommandZone player={fakePlayer as PlayerView} side="my" />
     )
 
-    const crowns = container.querySelectorAll('.commander-badge')
+    const marks = container.querySelectorAll('.commander-badge')
     const companions = container.querySelectorAll('.companion-badge')
 
-    expect(crowns.length).toBe(2) // 2 Partner commanders
-    expect(companions.length).toBe(1) // 1 Companion
+    expect(marks.length).toBe(2) // 2 Partner commanders
+    expect(companions.length).toBe(1) // 1 Companion, which keeps its star (BRD-45)
+    expect(container.querySelectorAll('.commander-badge .commander-mark').length).toBe(2)
   })
 
   it('renders emblems stack when helperCards has emblems', () => {
@@ -258,7 +262,9 @@ describe('CommandZone commander tax pip (real server shape)', () => {
     const { container } = render(<CommandZone player={player} side="opp" />)
     const badge = container.querySelector('[data-testid="commander-tax"]')
     expect(badge?.getAttribute('data-tax')).toBe('4')
-    expect(badge?.querySelector('.commander-tax-pip img')?.getAttribute('alt')).toBe('{4}')
+    // BRD-45: the tax lives in the commander chip, beside the symbol.
+    expect(badge?.querySelector('.commander-tax')?.textContent).toBe('+4')
+    expect(badge?.querySelector('.commander-mark')).not.toBeNull()
   })
 
   it('shows no pip before the first cast', () => {
