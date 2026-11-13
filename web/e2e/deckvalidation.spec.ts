@@ -2,9 +2,9 @@ import { expect } from './fixtures'
 import { test } from './fixtures'
 import { withFakeServer } from './support/fake-backend'
 import { proxyPort, FAKE_MODE } from './dual'
-import { deckIssuesScenario } from '../fixtures/scenarios/deckIssues'
+import { deckIssuesScenario, MISMATCH_CARD } from '../fixtures/scenarios/deckIssues'
 import { TABLE } from '../fixtures/table-names'
-import { dismissSetupWizard, installCapture, type CaptureBuffers } from './support/start-game'
+import { dismissSetupWizard, installCapture, openCreateDialog, pickFormatOption, type CaptureBuffers } from './support/start-game'
 import { showDeckListView } from './support/deck-editor'
 
 /**
@@ -306,6 +306,57 @@ test.describe('Deck validation pre-join @deckvalidation @real', () => {
       await banner.getByTestId('builder-issue-repair').click()
       await expect(banner).not.toBeVisible({ timeout: 8000 })
       await expect(page.locator('.arena-card-strip.has-issue')).toHaveCount(0)
+    })
+  })
+})
+
+const SHARED_DECK = {
+  name: 'Mismatch deck',
+  cards: [
+    { cardName: MISMATCH_CARD.cardName, setCode: MISMATCH_CARD.setCode, cardNumber: MISMATCH_CARD.cardNumber, amount: 1 },
+    { cardName: 'Island', setCode: 'LEA', cardNumber: '288', amount: 39 },
+  ],
+  sideboard: [],
+}
+
+test.describe('Deck validation on create @deckvalidation', () => {
+  test('LBY-32: a deck seated twice opens the dialog once and both seats join with it', async ({ page }) => {
+    test.skip(!FAKE_MODE, 'requiere el informe declarativo del escenario fake')
+    await withFakeServer(deckIssuesScenario, async () => {
+      const buffers: CaptureBuffers = { frames: [], sent: [], pageErrors: [] }
+      installCapture(page, buffers)
+      await page.addInitScript((deck) => {
+        localStorage.setItem('mage_custom_decks', JSON.stringify([deck]))
+      }, SHARED_DECK)
+      await page.goto(`/?proxyPort=${proxyPort()}`)
+      await dismissSetupWizard(page)
+      await page.getByPlaceholder(/Usuario|Username/i).fill(`dv_${Date.now()}`.slice(0, 13))
+      await page.getByPlaceholder(/Contraseña|Password/i).fill('pass')
+      await page.getByRole('button', { name: /Conectar/i }).click()
+      await expect(page.getByRole('button', { name: /Mesas/ })).toBeVisible({ timeout: 15000 })
+
+      // mesa contra la IA con MI mazo también en la plaza del bot
+      await openCreateDialog(page)
+      await expect(page.getByRole('heading', { name: /Nueva mesa|Crear Mesa/i })).toBeVisible()
+      await page.getByLabel(/Nombre/i).fill(`dv_${Date.now()}`.slice(0, 13))
+      await pickFormatOption(page, 'format-deck-type', 'Constructed - Modern')
+      await page.locator('button.wizard-step', { hasText: /Multijugador/i }).click()
+      await page.getByRole('radiogroup', { name: /Mazo activo|Active deck/i }).getByRole('radio', { name: SHARED_DECK.name }).click()
+      await page.getByTestId('seat-node-1').click()
+      await page.getByRole('radio', { name: /Mad/ }).click()
+      await page.getByRole('radiogroup', { name: /Mazo plaza 2|Seat 2 deck/i }).getByRole('radio', { name: SHARED_DECK.name }).click()
+      await page.locator('.create-submit-btn').click()
+
+      const dialog = page.getByTestId('deck-issues-dialog')
+      await expect(dialog).toBeVisible({ timeout: 15_000 })
+      await page.getByTestId('deck-issues-accept-and-play').click()
+
+      // sin un segundo diálogo idéntico encima, la mesa se crea con ese clic
+      await expect(async () => {
+        expect(buffers.sent.filter((f) => f?.action === 'joinTable')).toHaveLength(2)
+      }).toPass({ timeout: 15_000 })
+      await expect(dialog).toBeHidden()
+      expect(buffers.sent.filter((f) => f?.action === 'validateDeck')).toHaveLength(1)
     })
   })
 })

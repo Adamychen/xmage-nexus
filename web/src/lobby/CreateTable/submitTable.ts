@@ -73,6 +73,36 @@ function botName(counter: number, total: number) {
   return counter === 1 && total === 1 ? 'Computer' : `Computer ${counter}`
 }
 
+type DeckEntry = { cardName: string; setCode: string; cardNumber: string; amount: number }
+
+/** Identity of a deck as the server would read it: name plus every printing it seats. */
+function deckKey(deck: Deck): string {
+  const list = (cards?: DeckEntry[]) =>
+    (cards ?? [])
+      .map((c) => `${c.cardName}|${c.setCode}|${c.cardNumber}|${c.amount}`)
+      .sort()
+      .join(';')
+  const d = deck as Deck & { commanders?: DeckEntry[] }
+  return [deck.name, list(deck.cards), list(deck.sideboard), list(d.commanders)].join('#')
+}
+
+/**
+ * One deck issues dialog per distinct deck in a create: a deck seated more than
+ * once (mine reused by a bot seat, or two bots sharing it) is asked about once
+ * and every seat takes the answer the player gave. Without this the same dialog
+ * reopens identical on the same spot, which reads as a swallowed click.
+ */
+function validateDecksOnce(): (deck: Deck) => Promise<Deck | null> {
+  const decided = new Map<string, Deck | null>()
+  return async (deck: Deck) => {
+    const key = deckKey(deck)
+    if (decided.has(key)) return decided.get(key) ?? null
+    const fixed = await requestDeckValidation(deck)
+    decided.set(key, fixed)
+    return fixed
+  }
+}
+
 /** Validates the form, creates the table or tournament, seats the bots and then me. */
 export async function submitCreateTable(f: SubmitTableForm, io: SubmitTableIO): Promise<void> {
   const { t, setError, setBusy } = io
@@ -100,6 +130,7 @@ export async function submitCreateTable(f: SubmitTableForm, io: SubmitTableIO): 
 
 async function submitTournament(f: SubmitTableForm, io: SubmitTableIO): Promise<void> {
   const { t, tError, setError, setBusy } = io
+  const validateDeck = validateDecksOnce()
   const { tableResolution, isDraftLimited, deckType, gameType, seatConfigs, password } = f
   const normalizedTournamentType = tableResolution.normalizedTournamentType
   if (tableResolution.kind === 'invalid') {
@@ -151,7 +182,7 @@ async function submitTournament(f: SubmitTableForm, io: SubmitTableIO): Promise<
 
   let finalMyDeck: Deck | null = null
   if (!isDraftLimited && f.humanSeat && f.myDeck) {
-    const fixed = await requestDeckValidation(prepareDeckForXMage(f.myDeck, deckType, gameType))
+    const fixed = await validateDeck(prepareDeckForXMage(f.myDeck, deckType, gameType))
     if (!fixed) {
       setBusy(false)
       return
@@ -203,7 +234,7 @@ async function submitTournament(f: SubmitTableForm, io: SubmitTableIO): Promise<
       if (!isDraftLimited) {
         const base = resolveSimDeck(f, bot.cfg?.deckName)
         if (base) {
-          const fixed = await requestDeckValidation(prepareDeckForXMage(base, deckType, gameType))
+          const fixed = await validateDeck(prepareDeckForXMage(base, deckType, gameType))
           botDeck = fixed ?? undefined
         }
         if (!botDeck) {
@@ -254,6 +285,7 @@ async function submitTournament(f: SubmitTableForm, io: SubmitTableIO): Promise<
 
 async function submitMatch(f: SubmitTableForm, io: SubmitTableIO): Promise<void> {
   const { t, tError, setError, setBusy } = io
+  const validateDeck = validateDecksOnce()
   const { deckType, gameType, seatConfigs, password, humanSeat, myDeck } = f
   const { playerTypesFinal, effectiveSeatTypes } = computeMatchSeats({
     seatConfigs,
@@ -269,7 +301,7 @@ async function submitMatch(f: SubmitTableForm, io: SubmitTableIO): Promise<void>
   // Transformación invisible para Commander: XMage espera comandante en banquillo
   let finalMyDeck: Deck | null = null
   if (humanSeat && myDeck) {
-    const fixed = await requestDeckValidation(prepareDeckForXMage(myDeck, deckType, gameType))
+    const fixed = await validateDeck(prepareDeckForXMage(myDeck, deckType, gameType))
     if (!fixed) {
       setBusy(false)
       return
@@ -286,7 +318,7 @@ async function submitMatch(f: SubmitTableForm, io: SubmitTableIO): Promise<void>
         setBusy(false)
         return
       }
-      const fixed = await requestDeckValidation(prepareDeckForXMage(base, deckType, gameType))
+      const fixed = await validateDeck(prepareDeckForXMage(base, deckType, gameType))
       if (!fixed) {
         setBusy(false)
         return
