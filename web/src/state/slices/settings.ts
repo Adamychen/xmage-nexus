@@ -13,7 +13,7 @@ import { normalizeCardPreviewScale } from '../../board/cardPreviewScale'
 import { gameplayPreset, isGameplayPresetId, type GameplayPresetId } from '../../settings/gameplayPresets'
 
 export interface SettingsState {
-  autoKeepMulligan: boolean
+  autoStartingPlayer: boolean
   appearance: AppearanceChoice
   smartStops: boolean
   deckStacksScale: number
@@ -109,7 +109,7 @@ const storedPreset = isGameplayPresetId(storedPresetId) ? gameplayPreset(storedP
 
 export const initialSettings: SettingsSlice = {
   settings: {
-    autoKeepMulligan: false,
+    autoStartingPlayer: false,
     smartStops: loadSmartStops(),
     deckStacksScale: loadDeckStacksScale(),
     deckEditorView: loadDeckEditorView(),

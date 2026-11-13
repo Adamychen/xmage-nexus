@@ -36,7 +36,6 @@ const WHITELIST = new Set([
   'game.arena_view_active',
   'game.pod_view',
   'game.pod_view_active',
-  'game.auto_mulligan',
   'game.auto_pass',
   'game.category_planeswalkers',
   'game.type_planeswalker',

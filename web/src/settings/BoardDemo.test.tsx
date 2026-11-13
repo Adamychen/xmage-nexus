@@ -1,14 +1,15 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import { cleanup, render } from '@testing-library/react'
 import BoardDemo from './BoardDemo'
+import { KEYWORD_ICON_SETS } from '../board/cardOverlays'
 
 afterEach(() => {
   cleanup()
 })
 
 describe('BoardDemo keywordIcons', () => {
-  it('previews all seven keyword icons, at most two per card, with no P/T badge to collide with', () => {
-    for (const set of ['coins', 'outline'] as const) {
+  it('BRD-32: previews all seven keyword icons in both sets, at most two per card, with no P/T badge to collide with', () => {
+    for (const set of KEYWORD_ICON_SETS) {
       const { container, unmount } = render(<BoardDemo spec={{ kind: 'keywordIcons', value: set }} />)
       const slots = [...container.querySelectorAll('.card-slot')]
       expect(slots.length).toBeGreaterThan(0)
