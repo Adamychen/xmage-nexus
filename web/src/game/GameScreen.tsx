@@ -408,7 +408,7 @@ export default function GameScreen() {
   const isPodLayout = effectiveLayout === 'pod'
   const seatLiveIds = liveOpponentIds(game?.players)
   const seatFocus = useSeatFocus(seatLiveIds, game)
-  const seatPillsClickable = v2 && isArenaLayout && !isSpectator && seatLiveIds.length >= 2
+  const seatPillsClickable = isArenaLayout && !isSpectator && seatLiveIds.length >= 2
   const homeId = me?.playerId ?? spectatorHomeSeat(opps)?.playerId
   const spotlight = useSpotlight(game, homeId, seatLiveIds, isSpectator ? null : combat?.mode ?? null)
   const spotlightOn = spotlightActive({
@@ -433,13 +433,14 @@ export default function GameScreen() {
   useOverlayGutters(boardWrapRef, v2 && isArenaLayout, `${isSpectator}|${!!game}|${chromeLeft}|${chromeRight}`)
 
   const stripCenter = (
-        isPodLayout || (v2 && isArenaLayout) || spotlightOn ? (
+        isPodLayout || isArenaLayout || spotlightOn ? (
           <TurnOrderRing
             players={game?.players ?? []}
             activePlayerId={game?.activePlayerId ?? ''}
             onSeatClick={spotlightOn ? spotlight.select : seatPillsClickable ? seatFocus.select : undefined}
             selfClickable={spotlightOn}
             focusedId={spotlightOn ? spotlight.mainId : seatPillsClickable ? seatFocus.focusId : null}
+            noLife={!v2 && isArenaLayout}
           />
         ) : topOpps.length > 1 ? (
           <OpponentSwitcherBar

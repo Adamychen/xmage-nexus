@@ -108,3 +108,68 @@
     transition: none;
   }
 }
+
+/* BRD-38: an Arena opponent faces the player, so the backs of its hand hang half a card from the
+   top edge, turned round. */
+.hand-back-stack.is-half {
+  height: calc(var(--card-w, 100px) * 0.7);
+  overflow: hidden;
+  border-radius: 0 0 var(--r-base) var(--r-base);
+  align-self: flex-start;
+}
+
+.hand-back-stack.is-half .hand-card {
+  transform: rotate(180deg);
+  margin-top: calc(var(--card-w) * -0.7);
+}
+
+/* BRD-38: in the side panel mode the backs of an opponent's hand open as a small fan. */
+.hand-back-stack.is-fan {
+  --fan-step: calc(var(--card-w, 100px) * 0.28);
+  width: calc(var(--card-w, 100px) + (var(--fan-n, 1) - 1) * var(--fan-step));
+  height: calc(var(--card-w, 100px) * 1.4);
+}
+
+.hand-back-fan {
+  position: absolute;
+  inset: 0;
+}
+
+.hand-back-fan-card {
+  position: absolute;
+  left: calc(var(--fan-i) * var(--fan-step));
+  bottom: calc(var(--card-w, 100px) * 0.12);
+  transform: rotate(var(--fan-rot));
+  transform-origin: 50% 100%;
+}
+
+/* BRD-38: an Arena opponent's hand, facing the player: the same fan as in the side panel, cut
+   to its top half (only below, never at the sides or with round corners), then turned round as a
+   whole so it hangs from the top edge. A narrow column closes it to almost one card. */
+.hand-back-stack.is-half-fan {
+  --fan-step: calc(var(--card-w, 100px) * 0.28);
+  width: calc(var(--card-w, 100px) + (var(--fan-n, 1) - 1) * var(--fan-step));
+  height: calc(var(--card-w, 100px) * 0.7);
+  border-radius: 0;
+  clip-path: inset(0 -100px 0 -100px);
+  transform: rotate(180deg);
+  align-self: flex-start;
+}
+
+.hand-back-stack.is-half-fan .hand-back-fan {
+  inset: 0 0 auto 0;
+  height: calc(var(--card-w, 100px) * 1.4);
+}
+
+.hand-back-stack.is-half-fan .hand-stack-badge {
+  top: 2px;
+  bottom: auto;
+  transform: rotate(180deg);
+  z-index: 2;
+}
+
+@container (max-width: 520px) {
+  .hand-back-stack.is-half-fan {
+    --fan-step: calc(var(--card-w, 100px) * 0.08);
+  }
+}

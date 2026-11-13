@@ -1,7 +1,7 @@
-import { cleanup, fireEvent, render } from '@testing-library/react'
+import { act, cleanup, fireEvent, render } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import ArenaBoard from './ArenaBoard'
-import { setSeatFocus, setSetting } from '../state/store'
+import { setSeatFocus, setSeatPeek, setSetting } from '../state/store'
 import { makeCard, makeGameView, makePlayer } from '../__fixtures__/gameViews'
 import type { CardView, GameView } from '../net/types'
 
@@ -147,8 +147,20 @@ describe('ArenaBoard', () => {
   describe('seat focus', () => {
     beforeEach(() => {
       setSeatFocus(null)
+      setSeatPeek(null)
       setSetting('effects', true)
     })
+
+    /** BRD-37: the click lives on the strip's pill now, so the board tests set the focus. */
+    function focusSeat(playerId: string | null) {
+      act(() => setSeatFocus(playerId ? { playerId, combatTurn: null } : null))
+    }
+
+    function expectFocus(container: HTMLElement, playerId: string, focused: boolean) {
+      const cell = container.querySelector(`.arena-opp-cell.seat-focus-on [data-player-id="${playerId}"]`)
+      if (focused) expect(cell).not.toBeNull()
+      else expect(cell).toBeNull()
+    }
 
     function withBattlefield(game: GameView, playerId: string, cards: Record<string, CardView>): GameView {
       return {
@@ -161,13 +173,28 @@ describe('ArenaBoard', () => {
       return makeCard({ id, name: 'Forest', parentId: id, cardTypes: ['Land'] } as Partial<CardView> & { name: string })
     }
 
-    it('BRD-3: each live opponent status row has a focus button, and a lone opponent has none', () => {
-      const { getByTestId, queryByTestId } = render(<ArenaBoard game={multiplayerGame()} />)
-      expect(getByTestId('seat-focus-p2')).not.toBeNull()
-      expect(getByTestId('seat-focus-p3')).not.toBeNull()
-      expect(getByTestId('seat-focus-p2').getAttribute('aria-pressed')).toBe('false')
+    it('BRD-37: no opponent board draws a focus button, the strip pill owns it', () => {
+      const { container, queryByTestId } = render(<ArenaBoard game={multiplayerGame()} />)
+      expect(queryByTestId('seat-focus-p2')).toBeNull()
+      expect(queryByTestId('seat-focus-p3')).toBeNull()
       expect(queryByTestId('seat-focus-all')).toBeNull()
-      cleanup()
+      expect(container.querySelector('.seat-focus-btn')).toBeNull()
+    })
+
+    it('BRD-37: a column lights up with its pill, from either side', () => {
+      const { getByTestId } = render(<ArenaBoard game={multiplayerGame()} />)
+      const cell = getByTestId('arena-opp-cell-p2')
+      expect(cell.classList.contains('seat-peek-on')).toBe(false)
+      fireEvent.mouseEnter(cell)
+      expect(getByTestId('arena-opp-cell-p2').classList.contains('seat-peek-on')).toBe(true)
+      fireEvent.mouseLeave(cell)
+      expect(getByTestId('arena-opp-cell-p2').classList.contains('seat-peek-on')).toBe(false)
+      act(() => setSeatPeek('p3'))
+      expect(getByTestId('arena-opp-cell-p3').classList.contains('seat-peek-on')).toBe(true)
+      expect(getByTestId('arena-opp-cell-p2').classList.contains('seat-peek-on')).toBe(false)
+    })
+
+    it('BRD-3: a lone opponent is never focused', () => {
       const oneLeft = multiplayerGame({
         players: [
           makePlayer({ playerId: 'p1', name: 'Alice', controlled: true }),
@@ -175,15 +202,16 @@ describe('ArenaBoard', () => {
           makePlayer({ playerId: 'p3', name: 'Carol' }),
         ],
       })
-      const { queryByTestId: queryOne } = render(<ArenaBoard game={oneLeft} />)
-      expect(queryOne('seat-focus-p3')).toBeNull()
+      focusSeat('p3')
+      const { container } = render(<ArenaBoard game={oneLeft} />)
+      expect(container.querySelector('.arena-opp-cell.seat-focus-on')).toBeNull()
+      expect(container.querySelector('[data-seat-mode="status"]')).toBeNull()
     })
 
     it('BRD-3: focusing a seat gives it the opponents row and shrinks the others to status strips', () => {
       const game = withBattlefield(multiplayerGame(), 'p2', { 'b-1': landOf('b-1') })
+      focusSeat('p2')
       const { container, getByTestId } = render(<ArenaBoard game={game} />)
-      fireEvent.click(getByTestId('seat-focus-p2'))
-      expect(getByTestId('seat-focus-p2').getAttribute('aria-pressed')).toBe('true')
       const focusedCell = container.querySelector('.arena-opp-cell.seat-focus-on')
       expect(focusedCell?.querySelector('[data-player-id="p2"]')).not.toBeNull()
       expect(focusedCell?.querySelector('[data-seat-mode="status"]')).toBeNull()
@@ -198,8 +226,8 @@ describe('ArenaBoard', () => {
     it('BRD-3: shrunk seats never show their hand or battlefield cards', () => {
       const game = withBattlefield(multiplayerGame(), 'p3', { 'b-9': landOf('b-9') })
       const withHidden = { ...game, opponentHands: { Carol: { 'oh-9': { id: 'oh-9', name: 'Secret', faceDown: true } } } } as GameView
-      const { container, getByTestId } = render(<ArenaBoard game={withHidden} />)
-      fireEvent.click(getByTestId('seat-focus-p2'))
+      focusSeat('p2')
+      const { container } = render(<ArenaBoard game={withHidden} />)
       const strip = container.querySelector('[data-seat-mode="status"][data-player-id="p3"]')
       expect(strip?.querySelector('.hand-card-slot')).toBeNull()
       expect(strip?.querySelector('.card-slot')).toBeNull()
@@ -207,24 +235,22 @@ describe('ArenaBoard', () => {
       expect(strip?.querySelector('[data-testid="pp-hand-count"]')).not.toBeNull()
     })
 
-    it('BRD-3: the focused seat button and All boards restore equal columns', () => {
+    it('BRD-3: All boards restores the equal columns from the focused board', () => {
+      focusSeat('p2')
       const { container, getByTestId, queryByTestId } = render(<ArenaBoard game={multiplayerGame()} />)
-      fireEvent.click(getByTestId('seat-focus-p3'))
-      expect(container.querySelector('[data-seat-mode="status"][data-player-id="p2"]')).not.toBeNull()
-      fireEvent.click(getByTestId('seat-focus-p3'))
-      expect(container.querySelector('[data-seat-mode="status"]')).toBeNull()
-      expect(container.querySelectorAll('.arena-opp-cell.seat-focus-on, .arena-opp-cell.seat-focus-shrunk').length).toBe(0)
-      fireEvent.click(getByTestId('seat-focus-p2'))
+      expect(container.querySelector('[data-seat-mode="status"][data-player-id="p3"]')).not.toBeNull()
       fireEvent.click(getByTestId('seat-focus-all'))
       expect(container.querySelector('[data-seat-mode="status"]')).toBeNull()
+      expect(container.querySelectorAll('.arena-opp-cell.seat-focus-on, .arena-opp-cell.seat-focus-shrunk').length).toBe(0)
       expect(queryByTestId('seat-focus-all')).toBeNull()
     })
 
     it('BRD-3: focusing a shrunk seat moves the focus there', () => {
-      const { container, getByTestId } = render(<ArenaBoard game={multiplayerGame()} />)
-      fireEvent.click(getByTestId('seat-focus-p2'))
-      fireEvent.click(getByTestId('seat-focus-p3'))
-      expect(getByTestId('seat-focus-p3').getAttribute('aria-pressed')).toBe('true')
+      focusSeat('p2')
+      const { container, rerender } = render(<ArenaBoard game={multiplayerGame()} />)
+      expect(container.querySelector('.arena-opp-cell.seat-focus-on [data-player-id="p2"]')).not.toBeNull()
+      focusSeat('p3')
+      rerender(<ArenaBoard game={multiplayerGame()} />)
       expect(container.querySelector('.arena-opp-cell.seat-focus-on [data-player-id="p3"]')).not.toBeNull()
       expect(container.querySelector('[data-seat-mode="status"][data-player-id="p2"]')).not.toBeNull()
     })
@@ -232,34 +258,34 @@ describe('ArenaBoard', () => {
     it('BRD-3: a click on the portrait of a shrunk seat still targets the player and keeps the focus', () => {
       const targets: string[] = []
       const game = multiplayerGame({ activePlayerId: 'p1' })
-      const { container, getByTestId } = render(
+      const { container } = render(
         <ArenaBoard game={game} targetIds={['p3']} onTargetClick={(id) => targets.push(id)} />,
       )
-      fireEvent.click(getByTestId('seat-focus-p2'))
+      focusSeat('p2')
       const portrait = container.querySelector('[data-seat-mode="status"][data-player-id="p3"] .player-avatar') as HTMLElement
       fireEvent.click(portrait)
       expect(targets).toEqual(['p3'])
-      expect(getByTestId('seat-focus-p2').getAttribute('aria-pressed')).toBe('true')
+      expectFocus(container, 'p2', true)
     })
 
     it('BRD-4: a shrunk seat rings like a target zone when the prompt can target its battlefield', () => {
       const game = withBattlefield(multiplayerGame(), 'p3', { 'b-1': landOf('b-1') })
-      const { container, getByTestId } = render(<ArenaBoard game={game} targetIds={['b-1']} />)
-      fireEvent.click(getByTestId('seat-focus-p2'))
+      const { container } = render(<ArenaBoard game={game} targetIds={['b-1']} />)
+      focusSeat('p2')
       expect(container.querySelector('[data-seat-mode="status"][data-player-id="p3"]')?.classList.contains('target-zone')).toBe(true)
       expect(container.querySelector('[data-seat-mode="status"][data-player-id="p2"]')).toBeNull()
     })
 
     it('BRD-4: a shrunk seat is not ringed when the prompt targets nothing on it', () => {
       const game = withBattlefield(multiplayerGame(), 'p3', { 'b-1': landOf('b-1') })
-      const { container, getByTestId } = render(<ArenaBoard game={game} targetIds={['b-other']} />)
-      fireEvent.click(getByTestId('seat-focus-p2'))
+      const { container } = render(<ArenaBoard game={game} targetIds={['b-other']} />)
+      focusSeat('p2')
       expect(container.querySelector('[data-seat-mode="status"][data-player-id="p3"]')?.classList.contains('target-zone')).toBe(false)
     })
 
     it('BRD-4: a shrunk seat pulses once when a permanent enters its battlefield', () => {
-      const { container, getByTestId, rerender } = render(<ArenaBoard game={multiplayerGame()} />)
-      fireEvent.click(getByTestId('seat-focus-p2'))
+      const { container, rerender } = render(<ArenaBoard game={multiplayerGame()} />)
+      focusSeat('p2')
       expect(container.querySelector('[data-seat-mode="status"][data-player-id="p3"] .seat-strip-pulse')).toBeNull()
       const entered = withBattlefield(multiplayerGame(), 'p3', { 'b-1': landOf('b-1') })
       rerender(<ArenaBoard game={entered} />)
@@ -268,45 +294,45 @@ describe('ArenaBoard', () => {
 
     it('BRD-4: a shrunk seat pulses when a permanent leaves its battlefield', () => {
       const before = withBattlefield(multiplayerGame(), 'p3', { 'b-1': landOf('b-1') })
-      const { container, getByTestId, rerender } = render(<ArenaBoard game={before} />)
-      fireEvent.click(getByTestId('seat-focus-p2'))
+      const { container, rerender } = render(<ArenaBoard game={before} />)
+      focusSeat('p2')
       rerender(<ArenaBoard game={multiplayerGame()} />)
       expect(container.querySelector('[data-seat-mode="status"][data-player-id="p3"] .seat-strip-pulse')).not.toBeNull()
     })
 
     it('BRD-4: a change made while the seat was whole does not pulse it when it shrinks', () => {
       const before = withBattlefield(multiplayerGame(), 'p3', { 'b-1': landOf('b-1') })
-      const { container, getByTestId, rerender } = render(<ArenaBoard game={before} />)
+      const { container, rerender } = render(<ArenaBoard game={before} />)
       rerender(<ArenaBoard game={multiplayerGame()} />)
-      fireEvent.click(getByTestId('seat-focus-p2'))
+      focusSeat('p2')
       expect(container.querySelector('.seat-strip-pulse')).toBeNull()
     })
 
     it('BRD-4: a click on the info bar of a targetable shrunk seat picks the target and keeps the focus', () => {
       const targets: string[] = []
-      const { container, getByTestId } = render(
+      const { container } = render(
         <ArenaBoard game={multiplayerGame()} targetIds={['p3']} onTargetClick={(id) => targets.push(id)} />,
       )
-      fireEvent.click(getByTestId('seat-focus-p2'))
+      focusSeat('p2')
       const name = container.querySelector('[data-seat-mode="status"][data-player-id="p3"] .player-name') as HTMLElement
       fireEvent.click(name)
       expect(targets).toEqual(['p3'])
-      expect(getByTestId('seat-focus-p2').getAttribute('aria-pressed')).toBe('true')
-      expect(getByTestId('seat-focus-p3').getAttribute('aria-pressed')).toBe('false')
+      expectFocus(container, 'p2', true)
+      expectFocus(container, 'p3', false)
     })
 
     it('BRD-4: a click on the info bar of a shrunk seat that is not a target focuses it', () => {
-      const { container, getByTestId } = render(<ArenaBoard game={multiplayerGame()} targetIds={[]} />)
-      fireEvent.click(getByTestId('seat-focus-p2'))
+      const { container } = render(<ArenaBoard game={multiplayerGame()} targetIds={[]} />)
+      focusSeat('p2')
       const name = container.querySelector('[data-seat-mode="status"][data-player-id="p3"] .player-name') as HTMLElement
       fireEvent.click(name)
-      expect(getByTestId('seat-focus-p3').getAttribute('aria-pressed')).toBe('true')
+      expectFocus(container, 'p3', true)
     })
 
     it('BRD-4: the pulse is off with effects turned off', () => {
       setSetting('effects', false)
-      const { container, getByTestId, rerender } = render(<ArenaBoard game={multiplayerGame()} />)
-      fireEvent.click(getByTestId('seat-focus-p2'))
+      const { container, rerender } = render(<ArenaBoard game={multiplayerGame()} />)
+      focusSeat('p2')
       rerender(<ArenaBoard game={withBattlefield(multiplayerGame(), 'p3', { 'b-1': landOf('b-1') })} />)
       expect(container.querySelector('.seat-strip-pulse')).toBeNull()
       setSetting('effects', true)
@@ -325,8 +351,8 @@ describe('ArenaBoard', () => {
         dispatchEvent: () => false,
       })) as unknown as typeof window.matchMedia
       try {
-        const { container, getByTestId, rerender } = render(<ArenaBoard game={multiplayerGame()} />)
-        fireEvent.click(getByTestId('seat-focus-p2'))
+        const { container, rerender } = render(<ArenaBoard game={multiplayerGame()} />)
+        focusSeat('p2')
         rerender(<ArenaBoard game={withBattlefield(multiplayerGame(), 'p3', { 'b-1': landOf('b-1') })} />)
         expect(container.querySelector('.seat-strip-pulse')).toBeNull()
       } finally {
@@ -335,11 +361,11 @@ describe('ArenaBoard', () => {
     })
 
     it('BRD-4: clicking a shrunk strip outside its portrait focuses that seat', () => {
-      const { container, getByTestId } = render(<ArenaBoard game={multiplayerGame()} />)
-      fireEvent.click(getByTestId('seat-focus-p2'))
+      const { container } = render(<ArenaBoard game={multiplayerGame()} />)
+      focusSeat('p2')
       const strip = container.querySelector('[data-seat-mode="status"][data-player-id="p3"]') as HTMLElement
       fireEvent.click(strip)
-      expect(getByTestId('seat-focus-p3').getAttribute('aria-pressed')).toBe('true')
+      expectFocus(container, 'p3', true)
     })
   })
 })

@@ -385,6 +385,7 @@ for (const vp of VIEWPORTS) {
 
     for (const gameUi of ['v2', 'v1'] as const) {
       for (const main of ['own', 'opponent'] as const) {
+        if (gameUi === 'v1') continue
         test(`BRD-12: the pile corner overlaps no card, no status row and no hand (${gameUi}, ${main} board main) @spotlight`, async ({ page }) => {
           await loadSpotlight(page, { gameUi })
           if (main === 'opponent') await clickCopy(page, 'p2')
@@ -393,6 +394,27 @@ for (const vp of VIEWPORTS) {
         })
       }
     }
+
+    for (const main of ['own', 'opponent'] as const) test(`BRD-32, BRD-39: on a v1 board in the main area the bottom row overlaps no card and no hand, and the chip no card (${main} board main) @spotlight`, async ({ page }) => {
+      await loadSpotlight(page, { gameUi: 'v1' })
+      if (main === 'opponent') await clickCopy(page, 'p2')
+      await expect(page.getByTestId('spotlight-main')).toHaveAttribute('data-main-seat', main === 'own' ? 'p1' : 'p2')
+      await expect(page.locator('[data-testid="spotlight-main"] [data-testid="arena-own-row"] [data-testid="pile-caption"]')).toHaveCount(3)
+      await expect.poll(() => page.evaluate(() => {
+        const box = (el: Element) => el.getBoundingClientRect()
+        const hit = (a: DOMRect, b: DOMRect) => a.left < b.right - 1 && b.left < a.right - 1 && a.top < b.bottom - 1 && b.top < a.bottom - 1
+        const main = document.querySelector('[data-testid="spotlight-main"]')!
+        const panels = Array.from(main.querySelectorAll('.arena-own-row > *, [data-testid="arena-own-chip"]')).filter((el) => box(el).width > 0)
+        const cards = Array.from(main.querySelectorAll('.bz-creatures-row .card-slot, .bz-permanents-row .card-slot')).filter((el) => box(el).width > 0)
+        const hand = Array.from(document.querySelectorAll('[data-testid="hand-bar"] .hand-card-slot')).filter((el) => box(el).width > 0)
+        const out: string[] = []
+        for (const p of panels) {
+          for (const c of cards) if (hit(box(p), box(c))) out.push(`${p.className} x card`)
+          if (!p.matches('[data-testid="arena-own-chip"]')) for (const h of hand) if (hit(box(p), box(h))) out.push(`${p.className} x hand`)
+        }
+        return out
+      })).toEqual([])
+    })
 
     for (const board of ['own main', 'opponent main', 'spectator main', 'copy'] as const) {
       test(`BRD-12: the piles sit flush with the bottom edge of their board, beside the status row (${board}) @spotlight`, async ({ page }) => {

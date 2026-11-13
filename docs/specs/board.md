@@ -40,7 +40,8 @@ never wider than its cards need (the width left over goes to the creatures). The
 the board's single layout function (BRD-25), so no band reads a size another band chose. They never stack with each other, each shows
 its own loyalty, lore or defense, and a seat without any has no marquee band, so the creatures
 band keeps the whole row. A seat with only marquee permanents (no creatures, no commander) still
-has a creatures row: it is the row that holds them.
+has a creatures row: it is the row that holds them. The own board of the Arena layout (v1 chrome)
+gives this zone the right edge of both rows instead (BRD-33).
 
 - Why: the column at the right edge (issue #23, part 3) copied the smallest card size of the
   bands beside it, and the bands measured their room after the column: each one resized the
@@ -63,7 +64,11 @@ focus to it. Your own board and hand never move or shrink. Focus is local to thi
 saved, and is dropped when the focused player leaves or loses. Focusing changes only sizes, never
 what is visible: a hidden card stays hidden on a focused board. A click on the portrait itself
 still targets the player (TGT-8) and never changes the focus. In these layouts no opponent's
-cards, focused or not, are ever larger than the largest cards of your own board.
+cards, focused or not, are ever larger than the largest cards of your own board. On the Arena
+layout no opponent's board draws that button: the seat's pill in the turn strip carries the icon
+and takes the click (BRD-37), which leaves the status row for the chip, the hand, the commander and
+the piles. The focused board still offers "All boards". A spectator keeps the button, because the
+pills do nothing for them.
 
 - Why: in a four-player Commander game every opponent column is a third of the screen and cards
   shrink until they are unreadable; issue #23 (part 2) asked for one board on the whole screen.
@@ -203,7 +208,9 @@ row (never stacked above it, the status row leaves them the room), instead of ch
 face-down back with its count (its top card face up while that card is revealed, as on the chip), the graveyard and exile with their top card face up and a count, and
 an empty pile as an outlined slot. A click opens the same viewer the chips open, and a pile glows in
 the same cases the chip does: a card in it the player can play (flashback, play from exile, the
-revealed top of the library) or a card in it the current prompt can target.
+revealed top of the library) or a card in it the current prompt can target. The own board of the
+Arena layout draws its piles at the bottom-left with a caption instead (BRD-32), and an opponent's
+column draws them at the right of its status row (BRD-36).
 
 - Why: players coming from MTG Arena, EDHPlay or paper look for the piles next to the board (issue
   #23); the chips stay in the column mode, where the Table layout chose them.
@@ -259,7 +266,9 @@ playable lift and the lift of its rotated top corner) plus a gap of 1.5% of the 
 between 6 and 16 px. The reserve is computed by `HandBar` from the card size it actually renders
 and follows it on every resize. The lands row sits above the reserve, and when the zone has no
 room left its cards shrink instead of sliding under the hand. Hovering a hand card lifts it with
-a transform only: it is drawn above the battlefield, and the battlefield does not move.
+a transform only: it is drawn above the battlefield, and the battlefield does not move. The own
+board of the Arena layout (v1 chrome, with or without the side panel) reserves the same height as
+its bottom row (BRD-32).
 
 - Why: the resting fan sat on top of the lands row, and a hovered card covered it even more
   (user report with screenshot, 2026-10-24).
@@ -295,7 +304,8 @@ wraps inside the seat instead of losing its counts. From 601 px up the seat keep
 - Guard: `e2e/phone-fit.spec.ts`
 
 ### BRD-20 · Piles hold five; token piles open after a second of hover
-Three or more identical permanents pile up, five to a pile at most: twelve Treasures are piles of five, five
+Three or more identical permanents pile up (two lands are enough on the own board of the Arena layout, as
+in MTG Arena, BRD-32), five to a pile at most: twelve Treasures are piles of five, five
 and two, and a sixth token left alone stays a single card. Lands follow the same five-card limit. A pile is
 drawn as its top card with each other copy a dim edge just behind it, and the count badge in the corner.
 With a mouse, a token pile fans out only after the pointer has rested on it for one second, and only that
@@ -494,3 +504,171 @@ already readable.
   board it is or how much life they have; the user asked for the name and life on each box, as
   EDHPlay shows them (user report, 2026-11-12). The look follows the panel, not EDHPlay's.
 - Guard: `src/board/SpotlightBoard.test.tsx`
+
+### BRD-32 · The own Arena board is framed around the hand
+On the Arena layout with the v1 chrome, the own board, with or without the side panel (BRD-6),
+keeps the battlefield clear of everything around it. The player chip sits at the top-left corner
+with no frame: the photo, the name and a large life total. The creatures only leave it room when
+they would actually reach it in height. The bottom row is as tall as the resting hand (BRD-16) and
+holds, from left to right, the library, graveyard and exile and, when the player can play
+something from another zone, a fourth "Playable" pile. Each pile is drawn as the top half of a
+card the size of the board's cards (three quarters of it on screens up to 1500 px wide, so the
+hand keeps more room), under a caption with its name and count, and opens the same
+viewer as before. Next comes the floating mana: its symbols with their counts, no box, right
+under the lands and only while there is mana. The hand fans between them. The action button sits
+in the bottom-right corner. The chip, the piles and the button stay 20 px inside the board's gold
+edge. Nothing draws a line between the creatures and the other permanents. Lands start at the
+bottom-left and two identical lands already pile up, the other non-creature permanents sit flush
+with the right edge, and the two zones keep 48 px between them. The creatures stay on one line
+while that keeps their cards at least 75% of the size more lines would give, and only then wrap
+to two or three. The chip has no turn bar or tint (the strip and the board frame mark the turn).
+Its counters (poison, experience, energy) fill a column beside the photo and the life, three high,
+and only then open a column to the side (in an opponent's column they stay on one line, so every
+seat's status row is the same height); the priority clock sits on its own line under the photo
+and the life. On the same layout every opponent's chip also has no frame. At phone width
+(600 px or less) the own board keeps the previous arrangement, and so do BRD-33 and BRD-34: the
+bottom row and the planeswalker zone do not fit there.
+
+- Why: the user's rework of the Arena layout (2026-11-12), after comparing it with MTG Arena and
+  EDHPlay. Before, the action button covered enchantments, the chips sat in boxes, the hand covered
+  the bottom of the board with the side panel open (its reserve did not reach `.spotlight-seat`) and
+  hid the floating mana there.
+- Guard: `src/board/BoardZone.arenaOwn.test.tsx` · `src/board/layout/solveRow.test.ts` · `src/board/stackGroups.test.ts` · `e2e/spotlight.spec.ts`
+
+### BRD-33 · The own planeswalkers take the right edge of both rows, as in MTG Arena
+On the own board of the Arena layout (BRD-32) planeswalkers, sagas and battles (BRD-2) take a zone
+at the right edge that runs from the top of the creatures row down to the bottom of the lands row,
+starting at the top, and the lands row leaves that width free. One card stands alone; two or more
+take at least two lines, filled from left to right with the same count on each line. Among the
+line counts the height holds with cards of at least 75% of the creatures' size, the zone takes the
+one that needs the least width, so the room it frees goes to the lands and the other permanents:
+without the side panel two stand one above the other, three or four make a 2×2 square and five or
+six three columns of two; with the side panel's extra height four stand in one column. The zone's
+cards are as large as that height allows for its lines, never larger than the creatures', and the
+creatures keep their own size.
+
+- Why: in the creatures row two stacked planeswalkers only had half its height, and making them
+  larger shrank every creature to half (tried and dropped, 2026-11-12). The user looked up MTG Arena,
+  whose screenshots show the same zone on the right of both rows growing sideways in two lines
+  (three cards as 2 + 1, five as 3 + 2). With the side panel two lines left most of the height
+  empty, and the user asked for the zone to use it (2026-11-12); a 2×2 square of four still left
+  a column's width unused below it (2026-11-13).
+- Guard: `src/board/layout/solveRow.test.ts`
+
+### BRD-34 · The uncast own commander is the last card of the hand
+On the own board of the Arena layout (BRD-32) with the fanned hand, the commander and the companion
+in the command zone are drawn as the last cards of the hand fan, apart from it by a gap of 0.4 of
+a card and with a gold edge. Their cost bubbles (HND-6) already include the commander tax: the tax
+is generic mana, so it adds to the cost's generic pip (`{2}{R}{R}` with a tax of 2 reads
+`{4}{R}{R}`) or becomes one in front of the coloured pips (`{G}{W}{U}{B}` reads
+`{2}{G}{W}{U}{B}`), after `{X}` when the cost has one, and it grows with every cast. A first cast
+and a companion show the printed cost. A click casts them as a click on the command zone does. Emblems and planes stay in the
+bottom row of the board, at the right of the hand. With the hand as a column or a row, the
+command zone stays on the board as before.
+
+- Why: in the middle of the board the uncast commander took room from the creatures; the user
+  asked for MTG Arena's Brawl arrangement, the commander as a hand card set apart (2026-11-12). The
+  tax drawn in the card's corner sat below the board edge in the hand, a "+" drawn next to a pip did
+  not read against the gold edge, and a separate "+N" still had to be added up by eye.
+- Guard: `src/board/HandBar.test.tsx` · `src/board/commanders.test.ts` · `src/board/BoardZone.arenaOwn.test.tsx`
+
+### BRD-35 · A band in several lines holds the same count on each line
+On the own board of the Arena layout (BRD-32), a band of lands, of other non-creature permanents or
+of creatures that wraps into several lines puts the same number of items on each line, or fewer on
+the last: ten land piles in two lines are five and five, not eight and two. The board's layout
+function (BRD-25) chooses the card size for those even lines, so when wide tapped cards would not
+fit four to a line the cards shrink a little instead of breaking the count. The layout engine then
+measures the items as drawn (a tapped card with its margins) and narrows the band's line to the
+widest even line, on the side the band is not aligned to, so the browser breaks the lines there.
+The lines are centred in that width, so the full lines stay in place and a short last line sits in
+the middle: five land piles above and two centred below, not two at the left and three gaps.
+
+- Why: lines filled to the edge and a short last one made the board look like a grid of leftovers;
+  even lines read cleaner (user request, 2026-11-12).
+- Guard: `src/board/layout/layoutEngine.test.ts` · `src/board/layout/solveRow.test.ts`
+
+### BRD-36 · Each opponent column of the Arena layout shows its piles, mirrored
+On the Arena layout with the v1 chrome and no side panel, every opponent column keeps its place
+facing the own board and shows its library, graveyard and exile as small piles at the right end of
+its status row, instead of chips: each one half a card, smaller than the own piles, with a caption
+with its name and count. The opponent's board is mirrored vertically, so the piles hang from the
+top edge with the caption under them, and the cards are turned round: the half that shows is the
+top of the card, upside down, as the rest of a mirrored board would be. The captions always use the
+short names ("Lib", "GY"): the same row also holds the chip, the hand and the commander (BRD-40),
+and three long captions push the piles onto a second line that eats the battlefield. A click opens the same
+viewer, and a pile glows in the same cases as the own (BRD-12). At phone width the columns keep
+their chips.
+
+- Why: the own board got its piles with captions (BRD-32); the user wanted the opponents to show
+  theirs the same way, smaller, as long as they fit (2026-11-12, checked at 1920, 1366 and 390 px
+  with three opponents). At 1366 a column with counters on the chip wrapped its status row and the
+  piles landed on the lands, hence the short names and no wrapping.
+- Guard: `src/board/BoardZone.arenaOwn.test.tsx`
+
+### BRD-37 · The Arena layout shows the same turn order strip with and without the side panel
+On the Arena layout with the v1 chrome, the strip in the divider (or in the top bar with the side
+panel) always shows the turn order ring: every player in turn order, with arrows, the active one
+marked and "Your turn" on the own pill. The pills carry no life: every board of the layout shows
+it already. A click on an opponent's pill brings that board to the main area with the side panel
+(BRD-7) and focuses it without (BRD-3).
+
+Every pill whose click does something carries the board icon, dim at rest and lit when that pill is
+pointed at, focused by the keyboard or already focused, where it turns into the icon that brings
+all the boards back; its tooltip names the action after the player and the life. Pointing at a pill
+lights its opponent's column, and pointing at that column lights the pill, so the strip reads as
+the control of the boards above it. The pill is the only way in: those boards draw no focus button
+of their own (a spectator, whose pills do nothing, keeps it).
+
+- Why: without the side panel the strip was the opponent switcher of the Standard layout (with
+  life and paging arrows) and with it the turn order ring, so the same layout read two ways; the
+  user asked for one, without life (2026-11-13). A button on every column said what a click does
+  but took the width the status row needed, while the pill said nothing at all, so the icon and the
+  lit pair moved that offer to the strip, where there is room for it (2026-11-13).
+- Guard: `src/board/TurnOrderRing.test.tsx` · `src/board/ArenaBoard.test.tsx` · `e2e/seat-focus.spec.ts`
+
+### BRD-38 · Opponents' hands: half a card facing the player, a fan in the side panel mode
+On the Arena layout with the v1 chrome, an opponent's hidden hand is one pile of backs with its
+count, drawn as a small fan of up to ten backs, each turned a little, with the count on it.
+Without the side panel the opponent faces the player, so the fan is turned round and only its top
+half shows, hanging from the top edge of the column, at the size of that seat's piles (a narrow
+column closes it to almost one card). It never takes its size from the status row's height, which
+grows with the chip's counters and would leave one seat's hand much larger than another's.
+With the side panel (BRD-6) the fan sits upright in the bottom row of that board (BRD-39), on the
+board in the main area and on the copies, showing only its top half like the own resting hand, so it
+covers nothing. A known card still shows face up and the pile
+still opens the hand viewer.
+
+- Why: a whole card back took a column's height for a number, and a stacked pile read less like a
+  hand than a fan (user request, 2026-11-13).
+- Guard: `src/board/HandZone.test.tsx`
+
+### BRD-39 · With the side panel every board is drawn like the own Arena board
+On the Arena layout with the v1 chrome and the side panel on (BRD-6), every player's board, the one
+in the main area and every copy in the panel, the own and the opponents', uses the arrangement of
+the own Arena board: the frameless chip at the top-left (BRD-32), the bottom row with the piles
+and their captions, the floating mana and the command zone, the planeswalker zone on the right
+edge (BRD-33), lands from the bottom-left piling from two, no line across the board and even lines
+(BRD-35). An opponent's bottom row also holds its hand as a fan (BRD-38). The own commander is
+always the last card of the own hand (BRD-34), whichever board is in the main area.
+
+- Why: the side panel looked like another layout, with framed chips and the old arrangement on the
+  opponents' boards; the user asked for the panel to be the same as the own full view (2026-11-13).
+- Guard: `src/board/BoardZone.arenaOwn.test.tsx` · `src/board/SpotlightBoard.test.tsx` · `e2e/spotlight.spec.ts`
+
+### BRD-40 · An Arena opponent's uncast commander sits beside its hand, not on its board
+On the Arena layout with the v1 chrome and no side panel, an opponent's command zone is drawn in
+its status row, right after its hand and before its piles, instead of in its creatures row, and
+drawn like one more card of that hand (BRD-38): half a card hanging from the top edge, turned
+round, with the crown and the commander tax on the half that shows, both of them turned back so
+they read. It takes no more height than the hand beside it, and a click and a hover do what they do
+anywhere else. A narrow column (520 px or less) shrinks it with the piles. The creatures row keeps
+that slot for creatures. With the side panel every board already
+holds its command zone in its bottom row (BRD-39), and the own board puts the commander in the hand
+(BRD-34).
+
+- Why: a commander waiting in the command zone took a full card slot of the opponent's creatures
+  row all game, which in a four-player pod is board space for a card nobody can play yet; the user
+  asked for it to be drawn like the own one, out of the battlefield (2026-11-13). Upright and whole
+  in the status row it made the row taller and pushed the opponent's lands down, so it is drawn
+  like the hand beside it.
+- Guard: `src/board/BoardZone.arenaOwn.test.tsx`

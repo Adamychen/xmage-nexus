@@ -2,7 +2,7 @@ import React from 'react'
 import {
   ArrowLeftRight, Armchair, ChevronLeft, ChevronRight, Volume2, AtSign, Award, Ban, Bell, BookOpen, Bug, ChevronDown, ChevronUp, ChevronsDown, ChevronsUp,
   Circle, CircleAlert, Castle, Clock, Clipboard, ChartColumn, Copy, Download, Dices, Eye, EyeOff, Flame, Funnel,
-  Gamepad2, Gauge, Gem, File, Folder, Globe, Hand, Hourglass, House, Inbox, Info, Key, Keyboard, Landmark, Layers, LayoutGrid, List, Lock, LockOpen, LogOut, Map, Maximize, Medal, MessageCircle,
+  Gamepad2, Gauge, Gem, File, Folder, Globe, Hand, Hourglass, House, Inbox, Info, Key, Keyboard, Landmark, Layers, LayoutGrid, List, Lock, LockOpen, LogOut, Map, Maximize, Medal, Minimize, MessageCircle,
   Ellipsis, Minus, MapPin, Mountain, Package, Palette, Pause, Pencil, Play, Plus, RefreshCw, RotateCcw, RotateCw, Save, Scale, ScrollText, Search, Send, Settings,
   Star, Smile, Square, Tag, Hash, Trash, TriangleAlert, TreePine, Trophy, Undo2, Upload, UserCheck, Users, UserX, VolumeX, Wand, Wind, X, Zap, ZoomIn,
   type LucideIcon,
@@ -116,6 +116,7 @@ export type IconName =
   | 'folder'
   | 'wand'
   | 'maximize'
+  | 'minimize'
   | 'zoomIn'
   | 'undo'
   | 'keyboard'
@@ -211,6 +212,7 @@ const LUCIDE_ICONS: Record<string, LucideIcon> = {
   folder: Folder,
   wand: Wand,
   maximize: Maximize,
+  minimize: Minimize,
   zoomIn: ZoomIn,
   undo: Undo2,
   keyboard: Keyboard,

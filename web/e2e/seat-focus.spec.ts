@@ -97,6 +97,11 @@ async function loadArena(page: Page, options: { crowded?: boolean } = {}) {
   await expect(page.locator('.arena-opp-cell')).toHaveCount(3)
 }
 
+/** BRD-37: focusing a seat is a click on its pill in the turn strip. */
+async function focusSeat(page: Page, playerId: string) {
+  await page.getByTestId(`tor-seat-${playerId}`).click()
+}
+
 async function meWidth(page: Page): Promise<number> {
   return page.evaluate(() => {
     const zone = document.querySelector('.arena-board > .player-zone')
@@ -126,8 +131,8 @@ test('BRD-3: focusing an opponent gives their board the row and shrinks the othe
   const equal = await Promise.all(['p2', 'p3', 'p4'].map((id) => cellState(page, id)))
   expect(equal.every((c) => !c.focused && !c.shrunk)).toBe(true)
 
-  await page.getByTestId('seat-focus-p2').click()
-  await expect(page.getByTestId('seat-focus-p2')).toHaveAttribute('aria-pressed', 'true')
+  await focusSeat(page, 'p2')
+  await expect(page.getByTestId('tor-seat-p2')).toHaveAttribute('aria-pressed', 'true')
   const p2 = await cellState(page, 'p2')
   const p3 = await cellState(page, 'p3')
   const p4 = await cellState(page, 'p4')
@@ -143,11 +148,29 @@ test('BRD-3: focusing an opponent gives their board the row and shrinks the othe
   expect(await meWidth(page), 'my board keeps its width').toBeCloseTo(mine, 0)
 })
 
+test('BRD-37: the boards carry no focus button, the strip pill does, and the pair lights up together @seat-focus', async ({ page }) => {
+  await loadArena(page)
+  await expect(page.locator('.seat-focus-btn')).toHaveCount(0)
+  await expect(page.getByTestId('tor-focus-p2')).toBeVisible()
+  await expect(page.getByTestId('tor-focus-me')).toHaveCount(0)
+  await expect(page.getByTestId('tor-seat-p2')).toHaveAttribute('title', /Ver este tablero/)
+
+  const cell = page.locator('.arena-opp-cell', { has: page.locator('[data-player-id="p2"]') })
+  await page.getByTestId('tor-seat-p2').hover()
+  await expect(cell).toHaveClass(/seat-peek-on/)
+  await expect(page.getByTestId('tor-seat-p2')).toHaveClass(/is-peek/)
+  await page.getByTestId('tor-seat-p3').hover()
+  await expect(cell).not.toHaveClass(/seat-peek-on/)
+
+  await cell.hover()
+  await expect(page.getByTestId('tor-seat-p2')).toHaveClass(/is-peek/)
+})
+
 test('BRD-3: a shrunk seat takes the focus, and All boards restores the equal columns @seat-focus', async ({ page }) => {
   await loadArena(page)
-  await page.getByTestId('seat-focus-p2').click()
-  await page.getByTestId('seat-focus-p4').click()
-  await expect(page.getByTestId('seat-focus-p4')).toHaveAttribute('aria-pressed', 'true')
+  await focusSeat(page, 'p2')
+  await focusSeat(page, 'p4')
+  await expect(page.getByTestId('tor-seat-p4')).toHaveAttribute('aria-pressed', 'true')
   expect((await cellState(page, 'p4')).focused).toBe(true)
   expect((await cellState(page, 'p2')).shrunk).toBe(true)
 
@@ -161,11 +184,11 @@ test('BRD-3: a shrunk seat takes the focus, and All boards restores the equal co
 test('BRD-3: a hidden opponent card never shows up when its board is focused or shrunk @seat-focus', async ({ page }) => {
   await loadArena(page)
   await expect(page.getByText(HIDDEN_NAME)).toHaveCount(0)
-  await page.getByTestId('seat-focus-p2').click()
-  await expect(page.getByTestId('seat-focus-p2')).toHaveAttribute('aria-pressed', 'true')
+  await focusSeat(page, 'p2')
+  await expect(page.getByTestId('tor-seat-p2')).toHaveAttribute('aria-pressed', 'true')
   await expect(page.getByText(HIDDEN_NAME)).toHaveCount(0)
-  await page.getByTestId('seat-focus-p3').click()
-  await expect(page.getByTestId('seat-focus-p3')).toHaveAttribute('aria-pressed', 'true')
+  await focusSeat(page, 'p3')
+  await expect(page.getByTestId('tor-seat-p3')).toHaveAttribute('aria-pressed', 'true')
   await expect(page.getByText(HIDDEN_NAME)).toHaveCount(0)
 })
 
@@ -199,7 +222,7 @@ test('BRD-3: a crowded opponent board grows back when focused, and never past a 
   expect(before, 'the crowded column shrinks its cards below mine').toBeLessThan(mine)
   const myZoneW = await zoneCardW(page, null)
 
-  await page.getByTestId('seat-focus-p2').click()
+  await focusSeat(page, 'p2')
   await expect
     .poll(() => maxCardWidth(page, 'p2'), { message: 'focusing grows the crowded board back' })
     .toBeGreaterThan(before)
@@ -218,8 +241,8 @@ test('BRD-3: a shrunk strip shows the full name and the library, graveyard and e
   await page.addStyleTag({
     content: ':root { --font-ui: monospace !important } .arena-opp-cell .seat-strip .player-name { letter-spacing: 0.1em !important }',
   })
-  await page.getByTestId('seat-focus-p2').click()
-  await expect(page.getByTestId('seat-focus-p2')).toHaveAttribute('aria-pressed', 'true')
+  await focusSeat(page, 'p2')
+  await expect(page.getByTestId('tor-seat-p2')).toHaveAttribute('aria-pressed', 'true')
   const strip = page.locator('.arena-opp-cell [data-player-id="p3"].seat-strip')
   await expect(strip).toBeVisible()
 

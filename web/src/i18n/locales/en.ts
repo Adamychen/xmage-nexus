@@ -1430,6 +1430,7 @@ export const en = {
     pile_library_short: 'Lib',
     pile_graveyard_short: 'GY',
     pile_exile_short: 'Exile',
+    pile_playable: 'Playable',
     pile_hand: 'Hand',
     pile_stack: 'Stack',
     no_target: 'No target',

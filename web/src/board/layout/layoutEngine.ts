@@ -12,6 +12,10 @@ export interface BandRegistration {
   maxWidthNeed?: boolean
   frameW?: number
   maxLines?: number
+  fixedLines?: number
+  extraHeight?: number
+  preferOneLine?: boolean
+  evenLines?: boolean
 }
 
 export interface SeatRegistration {
@@ -45,7 +49,7 @@ function tokenOf(el: Element | null): number {
 }
 
 export function registrationSignature(reg: SeatRegistration): string {
-  const band = (b: BandRegistration) => [b.id, tokenOf(b.el), b.items, b.minWidthCards, b.maxWidthNeed, b.frameW, b.maxLines]
+  const band = (b: BandRegistration) => [b.id, tokenOf(b.el), b.items, b.minWidthCards, b.maxWidthNeed, b.frameW, b.maxLines, b.fixedLines, b.extraHeight, b.preferOneLine, b.evenLines]
   return JSON.stringify([
     tokenOf(reg.seat),
     tokenOf(reg.creaturesRow),
@@ -93,6 +97,10 @@ function rowSpec(bands: BandRegistration[], reg: SeatRegistration): RowSpec {
       padX: (num(styles[i].paddingLeft) + num(styles[i].paddingRight)) / 2,
       frameW: b.frameW,
       maxLines: b.maxLines,
+      fixedLines: b.fixedLines,
+      extraHeight: b.extraHeight,
+      preferOneLine: b.preferOneLine,
+      evenLines: b.evenLines,
     })),
     gap: Math.max(...styles.map((cs) => num(cs.columnGap))),
     padX: 0,
@@ -119,8 +127,43 @@ function setAttr(el: HTMLElement, name: string, value: string | null): boolean {
   return true
 }
 
-function writeBand(el: HTMLElement, band: BandOut): boolean {
+/** BRD-35: items per line of a wrapped band, so its lines hold the same count (10 in 2 lines: 5 and 5). */
+export function bandColumns(count: number, lines: number): number {
+  return lines > 1 && count > 0 ? Math.ceil(count / lines) : 0
+}
+
+/** BRD-35: width of the widest line when the items are cut into lines of `cols` (item widths at the band's card size). */
+export function balancedLineWidth(widths: number[], cols: number, gap: number): number {
+  let widest = 0
+  for (let i = 0; i < widths.length; i += cols) {
+    const line = widths.slice(i, i + cols)
+    widest = Math.max(widest, line.reduce((s, w) => s + w, 0) + Math.max(0, line.length - 1) * gap)
+  }
+  return widest
+}
+
+function writeBand(el: HTMLElement, band: BandOut, count: number): boolean {
   let changed = setVar(el, '--card-w', px(band.cardW))
+  const cols = bandColumns(count, band.lines)
+  changed = setAttr(el, 'data-band-cols', cols > 0 ? String(cols) : null) || changed
+  let spare = ''
+  if (cols > 0) {
+    const cs = getComputedStyle(el)
+    const gap = num(cs.columnGap)
+    const widths = Array.from(el.children, (child) => {
+      const box = child as HTMLElement
+      const ms = getComputedStyle(box)
+      return box.offsetWidth + num(ms.marginLeft) + num(ms.marginRight)
+    }).filter((w) => w > 0)
+    const lineW = balancedLineWidth(widths, cols, gap)
+    const room = band.width - num(cs.paddingLeft) - num(cs.paddingRight)
+    spare = px(Math.max(0, Math.floor(room - lineW - 2)))
+  }
+  if (spare) changed = setVar(el, '--band-spare', spare) || changed
+  else if (el.style.getPropertyValue('--band-spare') !== '') {
+    el.style.removeProperty('--band-spare')
+    changed = true
+  }
   if (el.style.flexBasis !== px(band.width) || el.style.flexGrow !== '0' || el.style.flexShrink !== '0') {
     el.style.flex = `0 0 ${band.width}px`
     changed = true
@@ -144,6 +187,7 @@ function clearBand(el: HTMLElement): boolean {
     changed = true
   }
   changed = setAttr(el, 'data-band-lines', null) || changed
+  changed = setAttr(el, 'data-band-cols', null) || changed
   changed = setAttr(el, 'data-band-overflow', null) || changed
   return changed
 }
@@ -159,7 +203,7 @@ function writeSeat(reg: SeatRegistration, out: SeatOut): boolean {
     const solved = new Map(outs.map((band) => [band.id, band]))
     for (const band of regs) {
       const result = solved.get(band.id)
-      changed = (result ? writeBand(band.el, result) : clearBand(band.el)) || changed
+      changed = (result ? writeBand(band.el, result, band.items.length) : clearBand(band.el)) || changed
     }
   }
   return changed

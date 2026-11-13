@@ -75,6 +75,9 @@ export interface GameSlice {
    *  Hands / Mindslaver); null = mano propia. */
   switchedHandKey: string | null
   seatFocus: { gameId: string | null; playerId: string; combatTurn: number | null } | null
+  /** BRD-37: seat the pointer (or the keyboard) is over in the turn strip or in
+   *  the opponents' row, so each one lights the other up. Never persisted. */
+  seatPeek: string | null
   spotlight: { gameId: string; playerId: string; pickedIn: string | null } | null
   playableIds: string[]
   playableWindow: { turn: number; phase: string | null } | null
@@ -121,6 +124,7 @@ export const initialGame: GameSlice = {
   gameChatId: null,
   switchedHandKey: null,
   seatFocus: null,
+  seatPeek: null,
   spotlight: null,
   playableIds: [],
   playableWindow: null,

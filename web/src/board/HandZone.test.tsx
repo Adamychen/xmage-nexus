@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import HandZone from './HandZone'
 import { setLanguage } from '../i18n'
 import type { CardView } from '../net/types'
+import { makeCard } from '../__fixtures__/gameViews'
 
 function back(id: string): [string, CardView] {
   return [id, { id, name: '?', manaValue: 0, expansionSetCode: '', cardNumber: '0', faceDown: true }]
@@ -180,5 +181,22 @@ describe('HandZone compact sizing (BRD-21)', () => {
       for (let i = 0; i < 5; i++) remeasure.forEach((measure) => measure())
     })
     expect(cardW()).toBe(first)
+  })
+
+  const backs = (n: number) => Object.fromEntries(Array.from({ length: n }, (_, i) => [`b-${i}`, makeCard({ id: `b-${i}`, name: '', faceDown: true })]))
+
+  it('BRD-38: an Arena opponent hand is half a card turned round', () => {
+    const { container } = render(<HandZone cards={backs(3)} stackBacks alwaysStack backsStyle="half" />)
+    const pile = container.querySelector('[data-testid="opp-hand-stack"]')!
+    expect(pile.classList.contains('is-half')).toBe(true)
+    expect(pile.querySelector('.hand-stack-badge')?.textContent).toBe('×3')
+  })
+
+  it('BRD-38: in the side panel mode the backs open as a fan of up to ten', () => {
+    const { container, rerender } = render(<HandZone cards={backs(4)} stackBacks alwaysStack backsStyle="fan" />)
+    expect(container.querySelectorAll('.hand-back-fan-card')).toHaveLength(4)
+    rerender(<HandZone cards={backs(14)} stackBacks alwaysStack backsStyle="fan" />)
+    expect(container.querySelectorAll('.hand-back-fan-card')).toHaveLength(10)
+    expect(container.querySelector('.hand-stack-badge')?.textContent).toBe('×14')
   })
 })

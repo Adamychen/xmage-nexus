@@ -25,6 +25,8 @@ export interface OpponentZoneProps {
   seatFocus?: SeatFocusControl
   pileCards?: boolean
   stackHand?: boolean
+  bareChip?: boolean
+  arenaOwn?: boolean
 }
 
 export default function OpponentZone(props: OpponentZoneProps) {

@@ -268,3 +268,14 @@ export function commanderPlaysCount(card: Pick<CardView, 'rules'>): number {
 export function commanderTax(castCount: number): number {
   return castCount > 0 ? castCount * 2 : 0
 }
+
+/** BRD-34: the cost of a commander waiting in the command zone, tax included: the tax is generic
+ *  mana, so it adds to the cost's generic pip, or becomes one (after {X}) when the cost has none.
+ *  Symbols come bare, as `parseManaSymbols` returns them ("2", "G", "X"). */
+export function costWithCommanderTax(symbols: string[], tax: number): string[] {
+  if (tax <= 0) return symbols
+  const generic = symbols.findIndex((s) => /^\d+$/.test(s))
+  if (generic >= 0) return symbols.map((s, i) => (i === generic ? String(Number(s) + tax) : s))
+  const afterX = symbols.findIndex((s) => /^X$/i.test(s)) + 1
+  return [...symbols.slice(0, afterX), String(tax), ...symbols.slice(afterX)]
+}

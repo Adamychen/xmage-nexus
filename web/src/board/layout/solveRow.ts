@@ -8,6 +8,14 @@ export interface BandInput {
   padX?: number
   frameW?: number
   maxLines?: number
+  /** BRD-33: at least these many lines, more while the cards keep the row's size; the band's own card width fits its height. */
+  fixedLines?: number
+  /** BRD-32: height the fixed lines may use below the row (the band reaches into the next row). */
+  extraHeight?: number
+  /** BRD-32: one line while that keeps the cards at least PREFER_ONE_LINE_RATIO of the multi-line size. */
+  preferOneLine?: boolean
+  /** BRD-35: lines hold the same count (the last one may hold fewer), so the card size is chosen for even lines. */
+  evenLines?: boolean
 }
 
 export interface RowInput {
@@ -39,6 +47,7 @@ export interface RowOut {
 }
 
 const DEFAULT_MAX_LINES = 3
+export const PREFER_ONE_LINE_RATIO = 0.75
 const EPS = 1e-6
 
 interface Prepared {
@@ -49,12 +58,16 @@ interface Prepared {
   maxLines: number
   minWidthCards: number
   maxWidthNeed: boolean
+  fixedLines: number
+  extraHeight: number
+  evenLines: boolean
 }
 
 interface Measure {
   need: number
   lines: number
   fitting: boolean
+  cardW?: number
 }
 
 function prepare(band: BandInput, row: RowInput, rowMaxLines: number): Prepared {
@@ -66,6 +79,9 @@ function prepare(band: BandInput, row: RowInput, rowMaxLines: number): Prepared 
     maxLines: Math.max(1, band.maxLines ?? rowMaxLines),
     minWidthCards: band.minWidthCards ?? 0,
     maxWidthNeed: band.maxWidthNeed ?? false,
+    fixedLines: band.fixedLines ?? 0,
+    extraHeight: band.extraHeight ?? 0,
+    evenLines: band.evenLines ?? false,
   }
 }
 
@@ -91,7 +107,45 @@ function minMaxByLines(weights: number[], maxL: number): number[] {
   return out
 }
 
+/** BRD-33: the zone takes at least `fixedLines` lines and, among the line counts its height holds
+ *  with cards of at least PREFER_ONE_LINE_RATIO of the row's size, the one that needs the least width. */
+function measureFixedLines(p: Prepared, c: number, row: RowInput): Measure {
+  const room = row.height + p.extraHeight - 2 * row.padY
+  const atLines = (lines: number): Measure => {
+    const byHeight = Math.floor((room - (lines - 1) * row.rowGap) / (lines * row.aspect) + EPS)
+    const cardW = Math.max(1, Math.min(c, byHeight))
+    const weights = p.items.map((item) => item.a * cardW + item.b + row.gap)
+    const sums = evenLineSums(weights, lines)
+    const natural = sums[lines] - row.gap + 2 * p.padX + p.frameW
+    const need = Math.ceil(Math.max(natural, p.minWidthCards * cardW + 2 * p.padX + p.frameW) - EPS)
+    return { need, lines, fitting: true, cardW }
+  }
+  const first = Math.max(1, Math.min(p.items.length, p.fixedLines))
+  let best = atLines(first)
+  const n = p.items.length
+  for (let lines = first + 1; lines <= n; lines++) {
+    if (Math.ceil(n / Math.ceil(n / lines)) !== lines) continue
+    const m = atLines(lines)
+    if (m.cardW! < c * PREFER_ONE_LINE_RATIO) break
+    if (m.need < best.need || (m.need === best.need && m.cardW! > best.cardW!)) best = m
+  }
+  return best
+}
+
+/** BRD-35: for each line count, the widest line when the items are cut into lines of equal count. */
+function evenLineSums(weights: number[], maxL: number): number[] {
+  const out = [0]
+  for (let L = 1; L <= maxL; L++) {
+    const cols = Math.ceil(weights.length / L)
+    let widest = 0
+    for (let i = 0; i < weights.length; i += cols) widest = Math.max(widest, weights.slice(i, i + cols).reduce((s, w) => s + w, 0))
+    out.push(widest)
+  }
+  return out
+}
+
 function measureBand(p: Prepared, c: number, row: RowInput): Measure {
+  if (p.fixedLines > 0) return measureFixedLines(p, c, row)
   const maxL = Math.min(p.maxLines, p.items.length)
   let feasible = 0
   for (let L = 1; L <= maxL; L++) {
@@ -100,7 +154,7 @@ function measureBand(p: Prepared, c: number, row: RowInput): Measure {
   }
   const upTo = Math.max(feasible, 1)
   const weights = p.items.map((item) => item.a * c + item.b + row.gap)
-  const sums = minMaxByLines(weights, upTo)
+  const sums = p.evenLines ? evenLineSums(weights, upTo) : minMaxByLines(weights, upTo)
   const floorW = p.minWidthCards * c + 2 * p.padX + p.frameW
   let best = { need: Infinity, lines: 1 }
   for (let L = 1; L <= upTo; L++) {
@@ -156,8 +210,18 @@ function waterFill(total: number, needs: number[]): number[] {
   return widths
 }
 
-/** The largest whole card width at which every band fits its lines in the row (BRD-25, BRD-26); the floor case overflows. */
+/** The largest whole card width at which every band fits its lines in the row (BRD-25, BRD-26); the floor case overflows.
+ *  A band that prefers one line keeps it while the cards stay close to the multi-line size (BRD-32). */
 export function solveRow(row: RowInput): RowOut {
+  const full = solveRowCore(row)
+  const prefer = new Set(row.bands.filter((b) => b.preferOneLine).map((b) => b.id))
+  if (prefer.size === 0 || !full.bands.some((b) => prefer.has(b.id) && b.lines > 1)) return full
+  const single = solveRowCore({ ...row, bands: row.bands.map((b) => (prefer.has(b.id) ? { ...b, maxLines: 1 } : b)) })
+  if (single.bands.some((b) => b.overflow)) return full
+  return single.cardW >= full.cardW * PREFER_ONE_LINE_RATIO ? single : full
+}
+
+function solveRowCore(row: RowInput): RowOut {
   const rowMaxLines = row.maxLines ?? DEFAULT_MAX_LINES
   const bands = row.bands.filter((b) => b.items.length > 0).map((b) => prepare(b, row, rowMaxLines))
   const gaps = Math.max(0, bands.length - 1) * row.bandGap
@@ -192,7 +256,7 @@ export function solveRow(row: RowInput): RowOut {
       bands: bands.map((p, i) => ({
         id: p.id,
         width: widths[i],
-        cardW: lo,
+        cardW: atLo[i].cardW ?? lo,
         lines: atLo[i].lines,
         overflow: needs[i] > widths[i],
       })),
@@ -230,7 +294,7 @@ export function solveRow(row: RowInput): RowOut {
     bands: bands.map((p, i) => ({
       id: p.id,
       width: needs[i] + extra[i],
-      cardW,
+      cardW: best[i].cardW ?? cardW,
       lines: best[i].lines,
       overflow: false,
     })),

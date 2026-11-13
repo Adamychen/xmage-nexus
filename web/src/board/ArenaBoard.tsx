@@ -6,8 +6,11 @@ import { useBoardPresenter, useBoardPlayers } from './useBoardPresenter'
 import { opponentRevealedCards } from './revealedCards'
 import { isPlayerOut, MAX_BOARD_PLAYERS, spectatorHomeSeat, useSeatStates, useSpectatorBottomHand, useSwitchedHand, type BoardProps } from './boardShared'
 import { liveOpponentIds, useSeatFocus } from './seatFocus'
+import { setSeatPeek, useStore } from '../state/store'
 import { EMPTY_TARGET_ZONES } from './targetZones'
 import DefeatedSeat from './DefeatedSeat'
+import { useHandCommander } from './handCommander'
+import { useNarrowScreen } from '../game/useNarrowScreen'
 import './ArenaBoard.css'
 
 export type { BoardProps as ArenaBoardProps }
@@ -68,6 +71,12 @@ export default function ArenaBoard({
   const liveIds = useMemo(() => liveOpponentIds(oppRow), [oppRow])
   const { focusId, select, showAll } = useSeatFocus(liveIds, game)
   const focusable = liveIds.length >= 2
+  const peekId = useStore((s) => s.seatPeek)
+  // BRD-37: the turn strip only takes the click when I am playing; a spectator
+  // still focuses a seat from the board itself.
+  const inStrip = !isSpectator
+  const narrow = useNarrowScreen()
+  const handCommander = useHandCommander(me, !isSpectator && !narrow, game?.myHelperEmblems)
 
   return (
     <BoardShell
@@ -82,6 +91,8 @@ export default function ArenaBoard({
         onHover: (card, rect) => handleCardHover(card, rect, { fromHand: true }),
         playableIds: playableIdSet,
         targetIds: targetIdSet,
+        trailing: handCommander,
+        onTrailingClick: handleCardClick,
       } : null}
     >
       <div className="arena-opp-row">
@@ -93,12 +104,18 @@ export default function ArenaBoard({
           const focused = !!opp && opp.playerId === focusId
           const shrunk = focusId != null && !!opp && !isPlayerOut(opp) && !focused
           const focusControl = focusable && !!opp && !isPlayerOut(opp)
-            ? { focused, onToggle: () => select(opp.playerId), showAll }
+            ? { focused, onToggle: () => select(opp.playerId), showAll, inStrip }
             : undefined
+          const peeked = focusable && inStrip && !!opp && peekId === opp.playerId
           return (
             <Fragment key={opp?.playerId ?? `arena-empty-${i}`}>
               {i > 0 && <BoardColDivider />}
-              <div className={`arena-opp-cell${state === 'collapsed' ? ' seat-cell--out' : state === 'open' ? ' seat-cell--open' : ''}${focused ? ' seat-focus-on' : ''}${shrunk ? ' seat-focus-shrunk' : ''}`}>
+              <div
+                className={`arena-opp-cell${state === 'collapsed' ? ' seat-cell--out' : state === 'open' ? ' seat-cell--open' : ''}${focused ? ' seat-focus-on' : ''}${shrunk ? ' seat-focus-shrunk' : ''}${peeked ? ' seat-peek-on' : ''}`}
+                data-testid={opp ? `arena-opp-cell-${opp.playerId}` : undefined}
+                onMouseEnter={opp && focusable && inStrip ? () => setSeatPeek(opp.playerId) : undefined}
+                onMouseLeave={opp && focusable && inStrip ? () => setSeatPeek(null) : undefined}
+              >
                 {seat}
                 {opp && state !== 'collapsed' && (
                   <OpponentZone
@@ -117,6 +134,7 @@ export default function ArenaBoard({
                     blockingIds={blockingIds}
                     compactPod
                     kindColumns
+                    bareChip={!narrow}
                     statusOnly={shrunk}
                     seatFocus={focusControl}
                   />
@@ -149,6 +167,7 @@ export default function ArenaBoard({
         helperEmblems={game?.myHelperEmblems}
         showHand={isSpectator}
         kindColumns
+        arenaOwn={!!me && !narrow}
       />
     </BoardShell>
   )

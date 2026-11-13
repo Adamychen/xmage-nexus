@@ -196,3 +196,14 @@ describe('groupStackables', () => {
     expect(solos.map(([, p]) => p.attachments)).toEqual([['sword']])
   })
 })
+
+describe('BRD-32: lands of the own Arena board pile from two', () => {
+  it('BRD-32: two identical lands pile up with min 2 and stay apart by default', () => {
+    const pair = entries([land('Forest'), land('Forest')])
+    expect(groupStackables(pair, 'lands').groups).toHaveLength(0)
+    const { groups, solos } = groupStackables(pair, 'lands', { min: 2 })
+    expect(groups).toHaveLength(1)
+    expect(groups[0].items).toHaveLength(2)
+    expect(solos).toHaveLength(0)
+  })
+})

@@ -190,4 +190,30 @@ describe('HandBar', () => {
     rerender(<HandBar cards={hand()} targetIds={new Set()} />)
     expect(getByTestId('hand-bar').classList.contains('target-zone')).toBe(false)
   })
+
+  const commander = (tax: number) => ({
+    id: 'cmd-1',
+    card: makeCard({ id: 'cmd-1', name: "Atraxa, Praetors' Voice", manaCostLeftStr: ['{G}', '{W}', '{U}', '{B}'] }),
+    tax,
+    companion: false,
+  })
+
+  it('BRD-34: the commander is the last card of the fan, apart, with its tax inside the cost', () => {
+    const onTrailingClick = vi.fn()
+    const { container } = render(<HandBar cards={hand()} trailing={[commander(2)]} onTrailingClick={onTrailingClick} />)
+    const slots = Array.from(container.querySelectorAll('.hand-bar .hand-card-slot'))
+    expect(slots).toHaveLength(4)
+    expect(slots[3].getAttribute('data-testid')).toBe('hand-trailing')
+    expect(slots[3].classList.contains('is-first')).toBe(true)
+    expect(slots[3].hasAttribute('data-hand-id')).toBe(false)
+    expect(Array.from(slots[3].querySelectorAll('.hand-card-cost img')).map((img) => img.getAttribute('alt'))).toEqual(['{2}', '{G}', '{W}', '{U}', '{B}'])
+    fireEvent.click(slots[3].querySelector('.hand-trailing-card')!)
+    expect(onTrailingClick).toHaveBeenCalledWith('cmd-1')
+  })
+
+  it('BRD-34: a first cast keeps the printed cost, and the commander shows even with an empty hand', () => {
+    const { container } = render(<HandBar cards={{}} trailing={[commander(0)]} />)
+    expect(container.querySelector('[data-testid="hand-trailing"]')).not.toBeNull()
+    expect(Array.from(container.querySelectorAll('.hand-card-cost img')).map((img) => img.getAttribute('alt'))).toEqual(['{G}', '{W}', '{U}', '{B}'])
+  })
 })

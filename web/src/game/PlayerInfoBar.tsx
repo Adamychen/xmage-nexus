@@ -43,6 +43,8 @@ interface PlayerInfoBarProps {
   pool?: ReactNode
   /** Cards of this player's hand the viewer can see, and how to open them. */
   handView?: { known: number; onOpen: () => void }
+  /** Arena's own chip: photo, name and life with no frame, the floating mana beside it. */
+  bare?: boolean
 }
 
 function renderCounterIcon(name: string): React.ReactNode {
@@ -252,6 +254,7 @@ export default function PlayerInfoBar({
   stats,
   pool,
   handView,
+  bare = false,
 }: PlayerInfoBarProps) {
   const myConn = useStore((s) => s.conn)
   const game = useStore((s) => s.game)
@@ -476,7 +479,23 @@ export default function PlayerInfoBar({
         </div>
       )
 
-  const countersEl = (
+  const bareChip = bare && !portrait
+  const timerEl = hasTimer ? (
+    <span
+      className={`player-timer-badge ${isTimeLow ? 'timer-low' : ''} ${timerTier} ${hasPriority ? 'timer-active' : ''}`}
+      title={t('game', 'priority_time_left')}
+    >
+      <span className="timer-icon"><Icon name="timer" size={12} /></span>
+      <span key={timeLeft} className="timer-value">{formatTimer(timeLeft)}</span>
+      {hasBuffer && (
+        <span className="timer-buffer" title={t('game', 'buffer_time_left')}>
+          +{formatTimer(bufferTimeLeft)}
+        </span>
+      )}
+    </span>
+  ) : null
+
+  const counterBadges = (
     <>
       {activeCounters.filter((c) => !(portrait && c.name.toLowerCase().includes('speed'))).map((c) => {
             const tokenCard = getCounterTokenCard(c.name, c.count)
@@ -499,20 +518,13 @@ export default function PlayerInfoBar({
             )
           })}
 
-          {hasTimer && (
-            <span
-              className={`player-timer-badge ${isTimeLow ? 'timer-low' : ''} ${timerTier} ${hasPriority ? 'timer-active' : ''}`}
-              title={t('game', 'priority_time_left')}
-            >
-              <span className="timer-icon"><Icon name="timer" size={12} /></span>
-              <span key={timeLeft} className="timer-value">{formatTimer(timeLeft)}</span>
-              {hasBuffer && (
-                <span className="timer-buffer" title={t('game', 'buffer_time_left')}>
-                  +{formatTimer(bufferTimeLeft)}
-                </span>
-              )}
-            </span>
-          )}
+    </>
+  )
+
+  const countersEl = (
+    <>
+      {!bareChip && counterBadges}
+      {!bareChip && timerEl}
     </>
   )
 
@@ -520,7 +532,7 @@ export default function PlayerInfoBar({
     <div
       data-player-id={player.playerId}
       data-life={player.life != null ? String(player.life) : undefined}
-      className={`player-info-bar ${side} ${compact ? 'compact' : ''} ${portrait ? 'is-portrait' : ''} ${isTarget ? 'targetable' : ''} ${hasPriority ? 'has-priority' : ''} ${showTurn ? 'is-turn' : ''} ${isDefeated ? 'player-defeated' : ''} ${turnGlow ? 'active-glow' : ''}`}
+      className={`player-info-bar ${side} ${compact ? 'compact' : ''} ${portrait ? 'is-portrait' : ''} ${bare && !portrait ? 'is-bare' : ''} ${isTarget ? 'targetable' : ''} ${hasPriority ? 'has-priority' : ''} ${showTurn ? 'is-turn' : ''} ${isDefeated ? 'player-defeated' : ''} ${turnGlow ? 'active-glow' : ''}`}
       style={portrait ? ({ '--seat': seatColor } as React.CSSProperties) : undefined}
       onClick={onClick}
       onContextMenu={onContextMenu}
@@ -645,6 +657,9 @@ export default function PlayerInfoBar({
       )}
 
       {portrait && pool && <div className="pp-pool" data-testid="pp-pool" onClick={(e) => e.stopPropagation()}>{pool}</div>}
+      {bare && !portrait && pool && <div className="bare-pool" data-testid="bare-pool" onClick={(e) => e.stopPropagation()}>{pool}</div>}
+      {bareChip && activeCounters.length > 0 && <div className="bare-counters" data-testid="bare-counters">{counterBadges}</div>}
+      {bareChip && timerEl && <div className="bare-timer" data-testid="bare-timer">{timerEl}</div>}
 
       {!portrait && badgesEl}
     </div>

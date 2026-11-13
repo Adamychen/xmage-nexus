@@ -1432,6 +1432,7 @@ export const es: TranslationSchema = {
     pile_library_short: 'Mazo',
     pile_graveyard_short: 'Cem.',
     pile_exile_short: 'Exilio',
+    pile_playable: 'Jugables',
     pile_hand: 'Mano',
     pile_stack: 'Pila',
     no_target: 'Sin objetivo',
