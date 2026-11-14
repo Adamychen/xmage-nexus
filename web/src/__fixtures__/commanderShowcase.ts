@@ -233,6 +233,10 @@ function perm(seat: Seat, name: string, opts: PermOpts = {}): PermanentView {
     parentId: id,
     power,
     toughness,
+    // What the card prints, the way the server sends it, so the board can tell a
+    // creature that grew from one that did not (BRD-49).
+    ...(fields.power != null ? { originalPower: fields.power } : null),
+    ...(fields.toughness != null ? { originalToughness: fields.toughness } : null),
     loyalty: opts.loyalty != null ? String(opts.loyalty) : fields.loyalty,
     defense: opts.defense != null ? String(opts.defense) : undefined,
     counters: opts.counters ?? (opts.loyalty != null ? [{ name: 'loyalty', count: opts.loyalty }] : []),

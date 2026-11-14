@@ -85,11 +85,11 @@ describe('CardSlot compact tile', () => {
     await act(async () => {})
     expect(container.querySelector('.loyalty-val')?.textContent).toBe('3')
     const badges = () => [...container.querySelectorAll('.counter-badge')].map((b) => b.getAttribute('aria-label'))
-    expect(badges()).toEqual(['shield: 1'])
+    expect(badges()).toEqual(['Shield: 1'])
     rerender(<CardSlot card={walker} showCounters />)
     await act(async () => {})
     expect(container.querySelector('.loyalty-val')?.textContent).toBe('3')
-    expect(badges()).toEqual(['shield: 1'])
+    expect(badges()).toEqual(['Shield: 1'])
   })
 
   it('BRD-46: a +1/+1 and a -1/-1 counter carry their own symbol, with the count beside it', async () => {
@@ -136,7 +136,7 @@ describe('CardSlot compact tile', () => {
     expect([...track.querySelectorAll('[data-chapter-state]')].map((g) => g.getAttribute('data-chapter-state')))
       .toEqual(['read', 'read', 'now', 'next'])
     const badges = [...container.querySelectorAll('.counter-badge')].map((b) => b.getAttribute('aria-label'))
-    expect(badges).toEqual(['charge: 1'])
+    expect(badges).toEqual(['Charge: 1'])
   })
 
   it('BRD-43: a battle draws its defense on its shield, with the number on it', async () => {
@@ -172,10 +172,10 @@ describe('CardSlot compact tile', () => {
     await act(async () => {})
     expect(container.querySelector('.defense-val')?.textContent).toBe('3')
     const badges = () => [...container.querySelectorAll('.counter-badge')].map((b) => b.getAttribute('aria-label'))
-    expect(badges()).toEqual(['charge: 2'])
+    expect(badges()).toEqual(['Charge: 2'])
     rerender(<CardSlot card={battle} compact showCounters />)
     await act(async () => {})
-    expect(badges()).toEqual(['charge: 2'])
+    expect(badges()).toEqual(['Charge: 2'])
   })
 
   it('renders the classic card when compact is off', async () => {

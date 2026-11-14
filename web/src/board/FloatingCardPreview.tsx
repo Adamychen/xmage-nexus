@@ -10,6 +10,7 @@ import { ManaCost } from '../decks/ArenaManaSymbols'
 import CounterMark from './CounterMark'
 import { isSaga, sagaChapter, sagaChapters } from './saga'
 import SagaTrack from './SagaTrack'
+import { counterTip } from './counterName'
 import { DefensePlate, LoyaltyPlate } from './StatPlate'
 import { useTranslation } from '../i18n'
 import { useStore, useSettings, isBlockingModal } from '../state/store'
@@ -296,7 +297,7 @@ export default function FloatingCardPreview({
               {plusMinus.map((c) => {
                 const plus = /\+1\/\+1|^p1p1$/i.test(c.name)
                 return (
-                  <span key={c.name} className={`counter-badge ${plus ? 'p1p1' : 'm1m1'}`} title={`${c.name}: ${c.count}`}>
+                  <span key={c.name} className={`counter-badge ${plus ? 'p1p1' : 'm1m1'}`} title={counterTip(c.name, c.count)}>
                     <span className="counter-text-val">{c.count}</span>
                     <span className="counter-icon-symbol"><CounterMark kind={plus ? 'plus' : 'minus'} /></span>
                   </span>
