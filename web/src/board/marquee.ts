@@ -14,5 +14,8 @@ export function isMarqueePermanent(perm: PermanentView): boolean {
   const types = perm.cardTypes ?? []
   if (types.some((t) => t === 'Creature' || String(t).toLowerCase() === 'creature')) return false
   if (hasMarqueeType(types)) return true
+  // A saga is an enchantment with SAGA among its subtypes, which is how the
+  // server sends it: without this it stayed in the row of other permanents.
+  if (hasMarqueeType(perm.subTypes)) return true
   return MARQUEE_TYPES.has(String(perm.mageObjectType ?? '').toLowerCase())
 }

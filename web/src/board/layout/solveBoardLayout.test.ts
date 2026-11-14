@@ -295,7 +295,7 @@ describe('BRD-26: bands that share a row share it by what they hold', () => {
     expect(creatures.overflow).toBe(false)
   })
 
-  it('BRD-26: lands with two piles and the others with one pile share one card width, the leftover in proportion to need', () => {
+  it('BRD-26: lands with two piles and the others with one pile share the row, the leftover in proportion to need', () => {
     const pile = (a: number, b: number): ItemModel => ({ a, b })
     const row: RowInput = {
       width: 500,
@@ -309,11 +309,14 @@ describe('BRD-26: bands that share a row share it by what they hold', () => {
     const out = solveRow(row)
     const [lands, others] = out.bands
     expect(out.cardW).toBe(105)
-    expect(lands.cardW).toBe(others.cardW)
+    expect(lands.cardW).toBe(105)
     expect(lands.lines).toBe(2)
     expect(others.lines).toBe(1)
+    // The others band takes one line, so it grows into the room that leaves, up to a third
+    // over the row's size (BRD-50), and the rest of the width is shared as before.
+    expect(others.cardW).toBe(141)
     const needLands = 180
-    const needOthers = 145
+    const needOthers = 181
     expect(lands.width + others.width).toBe(500 - 10)
     expect(Math.abs(lands.width - (490 * needLands) / (needLands + needOthers))).toBeLessThan(1)
     expect(Math.abs(others.width - (490 * needOthers) / (needLands + needOthers))).toBeLessThan(1)

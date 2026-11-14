@@ -48,6 +48,12 @@ export interface RowOut {
 
 const DEFAULT_MAX_LINES = 3
 export const PREFER_ONE_LINE_RATIO = 0.75
+/**
+ * BRD-50: how much bigger than the row's own card size a band may draw its cards when it grows
+ * into the room its lines leave. The height alone would let a band of one line be twice the size
+ * of a band of two beside it, which stops reading as one board, so the growth stays a third.
+ */
+export const BAND_GROWTH_LIMIT = 1.35
 const EPS = 1e-6
 
 interface Prepared {
@@ -144,8 +150,9 @@ function evenLineSums(weights: number[], maxL: number): number[] {
   return out
 }
 
-function measureBand(p: Prepared, c: number, row: RowInput): Measure {
-  if (p.fixedLines > 0) return measureFixedLines(p, c, row)
+/** The width the band needs at each line count, indexed by it: the row's height decides how
+ *  many lines it may take, and the entries above that are missing. */
+function lineNeeds(p: Prepared, c: number, row: RowInput): { needs: number[]; fitting: boolean } {
   const maxL = Math.min(p.maxLines, p.items.length)
   let feasible = 0
   for (let L = 1; L <= maxL; L++) {
@@ -156,13 +163,99 @@ function measureBand(p: Prepared, c: number, row: RowInput): Measure {
   const weights = p.items.map((item) => item.a * c + item.b + row.gap)
   const sums = p.evenLines ? evenLineSums(weights, upTo) : minMaxByLines(weights, upTo)
   const floorW = p.minWidthCards * c + 2 * p.padX + p.frameW
-  let best = { need: Infinity, lines: 1 }
+  const needs = [Infinity]
   for (let L = 1; L <= upTo; L++) {
     const natural = sums[L] - row.gap + 2 * p.padX + p.frameW
-    const need = Math.ceil(Math.max(natural, floorW) - EPS)
-    if (need < best.need) best = { need, lines: L }
+    needs.push(Math.ceil(Math.max(natural, floorW) - EPS))
   }
-  return { need: best.need, lines: best.lines, fitting: feasible > 0 }
+  return { needs, fitting: feasible > 0 }
+}
+
+function measureBand(p: Prepared, c: number, row: RowInput): Measure {
+  if (p.fixedLines > 0) return measureFixedLines(p, c, row)
+  const { needs, fitting } = lineNeeds(p, c, row)
+  let best = { need: Infinity, lines: 1 }
+  for (let L = 1; L < needs.length; L++) {
+    if (needs[L] < best.need) best = { need: needs[L], lines: L }
+  }
+  return { need: best.need, lines: best.lines, fitting }
+}
+
+/**
+ * BRD-48: a row with width to spare spends it on fewer lines rather than on empty space at its
+ * far side. The cards keep the width already solved, so a band only unwraps when the slack it
+ * finds pays for it; the cheapest unwrap goes first, so the slack frees as many bands as it can.
+ */
+function fewerLines(bands: Prepared[], best: Measure[], cardW: number, total: number, row: RowInput): Measure[] {
+  const tables = bands.map((p) => (p.fixedLines > 0 ? null : lineNeeds(p, cardW, row).needs))
+  const out = best.slice()
+  const fewest = (table: number[], lines: number): number => {
+    for (let L = 1; L < Math.min(lines, table.length); L++) {
+      if (Number.isFinite(table[L])) return L
+    }
+    return lines
+  }
+  const order = bands
+    .map((_, i) => i)
+    .filter((i) => tables[i] !== null && out[i].lines > 1)
+    .map((i) => ({ i, cost: tables[i]![fewest(tables[i]!, out[i].lines)] - out[i].need }))
+    .filter((x) => x.cost > 0)
+    .sort((a, b) => a.cost - b.cost || a.i - b.i)
+  for (const { i } of order) {
+    const table = tables[i]!
+    const others = out.reduce((sum, m, j) => (j === i ? sum : sum + m.need), 0)
+    for (let L = 1; L < Math.min(out[i].lines, table.length); L++) {
+      if (Number.isFinite(table[L]) && others + table[L] <= total) {
+        out[i] = { ...out[i], need: table[L], lines: L }
+        break
+      }
+    }
+  }
+  return out
+}
+
+/**
+ * BRD-50: a band that ends up with fewer lines than the row is tall for grows its own cards into
+ * the room it is leaving: the row's height decides how big a card may be at that many lines, the
+ * width still free decides how big it can afford to be, and the zone's card size caps both. The
+ * band with the fewest lines is served first, because it is the one sitting in the most air.
+ */
+function biggerCards(bands: Prepared[], spread: Measure[], cardW: number, total: number, row: RowInput): Measure[] {
+  const out = spread.slice()
+  let used = out.reduce((sum, m) => sum + m.need, 0)
+  // A couple of pixels per band stay unspent: a band drawn to the last pixel of its need starts
+  // scrolling on the first rounding of a card's margin (BRD-27).
+  const budget = total - 2 * bands.length
+  const order = bands
+    .map((_, i) => i)
+    .filter((i) => bands[i].fixedLines === 0 && !bands[i].maxWidthNeed)
+    .sort((a, b) => out[a].lines - out[b].lines || a - b)
+  for (const i of order) {
+    const p = bands[i]
+    const lines = out[i].lines
+    const own = out[i].cardW ?? cardW
+    const tall = row.height - (lines - 1) * row.rowGap - 2 * row.padY
+    const ceiling = Math.min(
+      Math.floor(row.maxW),
+      Math.floor(tall / (lines * row.aspect) + EPS),
+      Math.floor(cardW * BAND_GROWTH_LIMIT),
+    )
+    if (ceiling <= own) continue
+    const needAt = (c: number): number => lineNeeds(p, c, row).needs[lines] ?? Infinity
+    let good = own
+    let bad = ceiling + 1
+    while (bad - good > 1) {
+      const mid = Math.floor((good + bad) / 2)
+      const need = needAt(mid)
+      if (Number.isFinite(need) && used - out[i].need + need <= budget) good = mid
+      else bad = mid
+    }
+    if (good <= own) continue
+    const need = needAt(good)
+    used += need - out[i].need
+    out[i] = { ...out[i], need, cardW: good }
+  }
+  return out
 }
 
 function distribute(total: number, weights: number[]): number[] {
@@ -285,7 +378,8 @@ function solveRowCore(row: RowInput): RowOut {
     cardW = good
   }
 
-  const needs = best.map((m) => m.need)
+  const spread = biggerCards(bands, fewerLines(bands, best, cardW, total, row), cardW, total, row)
+  const needs = spread.map((m) => m.need)
   const leftover = total - needs.reduce((s, x) => s + x, 0)
   const eligible = bands.map((p, i) => (p.maxWidthNeed ? 0 : needs[i]))
   const extra = eligible.some((w) => w > 0) ? distribute(leftover, eligible) : bands.map(() => 0)
@@ -294,8 +388,8 @@ function solveRowCore(row: RowInput): RowOut {
     bands: bands.map((p, i) => ({
       id: p.id,
       width: needs[i] + extra[i],
-      cardW: best[i].cardW ?? cardW,
-      lines: best[i].lines,
+      cardW: spread[i].cardW ?? cardW,
+      lines: spread[i].lines,
       overflow: false,
     })),
   }

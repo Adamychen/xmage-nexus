@@ -152,3 +152,66 @@ describe('BRD-33: the zone takes the line count that needs the least width', () 
     expect(out.bands.find((b) => b.id === 'marquee')!.lines).toBe(2)
   })
 })
+
+describe('BRD-48: a row with width to spare takes fewer lines', () => {
+  const cards = (n: number) => Array.from({ length: n }, () => CARD)
+
+  it('BRD-48: a band drops a line when the row has the width for it, and the cards keep their size', () => {
+    const bands = [{ id: 'lands', items: cards(20) }, { id: 'others', items: cards(4) }]
+    const out = solveRow(row({ width: 1200, bands }))
+    const band = Object.fromEntries(out.bands.map((b) => [b.id, b]))
+    expect(out.cardW).toBe(69)
+    expect(band.lands.lines).toBe(2)
+    expect(band.others.lines).toBe(1)
+    expect(band.others.width).toBeGreaterThanOrEqual(4 * out.cardW + 3 * 10 + 16)
+  })
+
+  it('BRD-48: with no width to spare every band keeps the lines that fit', () => {
+    const bands = [{ id: 'lands', items: cards(20) }, { id: 'others', items: cards(4) }]
+    const out = solveRow(row({ width: 900, bands }))
+    const band = Object.fromEntries(out.bands.map((b) => [b.id, b]))
+    expect(band.lands.lines).toBe(2)
+    expect(band.others.lines).toBe(2)
+  })
+
+  it('BRD-48: the slack goes to the band it is enough for, and the one it is not enough for keeps its lines', () => {
+    const bands = [{ id: 'lands', items: cards(12) }, { id: 'others', items: cards(4) }]
+    const out = solveRow(row({ width: 820, bands }))
+    const band = Object.fromEntries(out.bands.map((b) => [b.id, b]))
+    expect(band.others.lines).toBe(1)
+    expect(band.lands.lines).toBe(2)
+  })
+})
+
+describe('BRD-50: a band with fewer lines grows into the room it leaves', () => {
+  const cards = (n: number) => Array.from({ length: n }, () => CARD)
+
+  it('BRD-50: the band on one line draws bigger cards than the band on two beside it', () => {
+    const bands = [{ id: 'lands', items: cards(20) }, { id: 'others', items: cards(4) }]
+    const out = solveRow(row({ width: 1200, bands }))
+    const band = Object.fromEntries(out.bands.map((b) => [b.id, b]))
+    expect(out.cardW).toBe(69)
+    expect(band.lands.cardW).toBe(69)
+    expect(band.others.lines).toBe(1)
+    expect(band.others.cardW).toBeGreaterThan(69)
+    // Its line still fits the width the row has left for it.
+    expect(band.lands.width + band.others.width).toBeLessThanOrEqual(1200 - 8)
+  })
+
+  it('BRD-50: the growth stops a third over the row, so one band never dwarfs the other', () => {
+    const bands = [{ id: 'lands', items: cards(20) }, { id: 'others', items: [CARD] }]
+    const out = solveRow(row({ width: 1600, bands }))
+    const band = Object.fromEntries(out.bands.map((b) => [b.id, b]))
+    expect(band.others.cardW).toBe(Math.floor(out.cardW * 1.35))
+  })
+
+  it('BRD-50: a band never grows past the height its lines have in the row, nor past the row width', () => {
+    const bands = [{ id: 'lands', items: cards(20) }, { id: 'others', items: cards(4) }]
+    const out = solveRow(row({ width: 900, bands }))
+    for (const b of out.bands) {
+      expect(b.cardW).toBeGreaterThanOrEqual(out.cardW)
+      expect(b.lines * b.cardW * 1.4 + (b.lines - 1) * 2 + 2 * 2).toBeLessThanOrEqual(200)
+    }
+    expect(out.bands.reduce((sum, b) => sum + b.width, 0)).toBeLessThanOrEqual(900 - 8)
+  })
+})

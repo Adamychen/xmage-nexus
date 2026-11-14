@@ -272,6 +272,18 @@
   overflow-x: hidden;
 }
 
+/* BRD-35: a band in several lines is as wide as its widest even line, so the browser breaks the
+   lines where the layout engine counted them (seven lands in two lines are four and three, not
+   five and two). The width its row gave it over that is kept outside the lines, half on each
+   side, so the lines stay centred in the band. */
+.bz-band[data-band-cols],
+.pz-band[data-band-cols],
+.oz-band[data-band-cols] {
+  border-left: calc(var(--band-spare, 0px) / 2) solid transparent;
+  border-right: calc(var(--band-spare, 0px) / 2) solid transparent;
+}
+
+
 /* ── Drag-to-Scroll (Hand tool ✋) ────────────────────────────────── */
 .bz-band.has-overflow {
   cursor: grab;

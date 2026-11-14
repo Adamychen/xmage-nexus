@@ -1000,11 +1000,11 @@ export default function BoardZone({
   })
   const permanentsBands: BandRegistration[] = kindColumns
     ? [
-        ...(landsBandEl ? [{ id: 'lands', el: landsBandEl, items: [...landGroups.map(pileItem), ...landSolos.map(([id, perm]) => cardItem(id, perm))], evenLines: arenaBottom }] : []),
-        ...(othersBandEl ? [{ id: 'others', el: othersBandEl, items: [...tokenGroups.map(pileItem), ...otherSolos.map(([id, perm]) => cardItem(id, perm))], evenLines: arenaBottom }] : []),
+        ...(landsBandEl ? [{ id: 'lands', el: landsBandEl, items: [...landGroups.map(pileItem), ...landSolos.map(([id, perm]) => cardItem(id, perm))], evenLines: true }] : []),
+        ...(othersBandEl ? [{ id: 'others', el: othersBandEl, items: [...tokenGroups.map(pileItem), ...otherSolos.map(([id, perm]) => cardItem(id, perm))], evenLines: true }] : []),
       ]
     : permanentsBandEl
-      ? [{ id: 'permanents', el: permanentsBandEl, items: [...landGroups.map(pileItem), ...tokenGroups.map(pileItem), ...landSolos.map(([id, perm]) => cardItem(id, perm)), ...otherSolos.map(([id, perm]) => cardItem(id, perm))] }]
+      ? [{ id: 'permanents', el: permanentsBandEl, items: [...landGroups.map(pileItem), ...tokenGroups.map(pileItem), ...landSolos.map(([id, perm]) => cardItem(id, perm)), ...otherSolos.map(([id, perm]) => cardItem(id, perm))], evenLines: true }]
       : []
   const creaturesBands: BandRegistration[] = []
   if (hasCommander && commanderEl) {
@@ -1020,7 +1020,8 @@ export default function BoardZone({
       id: 'creatures',
       el: creaturesBandEl,
       items: [...creatureTokenGroups.map(pileItem), ...creatureSolos.map(([id, perm]) => cardItem(id, perm))],
-      ...(arenaBottom ? { preferOneLine: true, evenLines: true } : null),
+      evenLines: true,
+      ...(arenaBottom ? { preferOneLine: true } : null),
     })
   }
   if (marqueeEl && marqueeEntries.length > 0) {

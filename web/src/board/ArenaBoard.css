@@ -451,13 +451,28 @@
 /* BRD-35: a wrapped band of the own Arena board holds the same count on every line (10 land
    piles in two lines are 5 and 5, not 8 and 2): the layout engine measures the widest balanced line
    and the band gives the rest of its width to the side it is not aligned to, so lines break there. */
-.board-zone.arena-own .bz-band.bz-lands-band[data-band-cols],
 .board-zone.arena-own .bz-band.creatures-band[data-band-cols] {
+  border-left: 0;
   border-right: var(--band-spare, 0px) solid transparent;
 }
 
+/* BRD-48: the lands and the other permanents are as wide as their own lines, so the row's
+   slack is not shared out between the bands: the lands start at the left edge and the others
+   end at the right one, with whatever is left over between the two groups. */
+.board-zone.arena-own .bz-band.bz-lands-band[data-band-cols],
 .board-zone.arena-own .bz-band.bz-others-band[data-band-cols] {
-  border-left: var(--band-spare, 0px) solid transparent;
+  flex: 0 0 var(--band-line, auto) !important;
+  /* The band is already its own line wide, so it keeps none of the row's slack. */
+  --band-spare: 0px !important;
+}
+
+.board-zone.arena-own .bz-band.bz-lands-band:not([data-band-cols]),
+.board-zone.arena-own .bz-band.bz-others-band:not([data-band-cols]) {
+  flex: 0 0 max-content !important;
+}
+
+.board-zone.arena-own .bz-band.bz-others-band {
+  margin-left: auto;
 }
 
 /* BRD-36: each opponent column of the Arena layout shows its library, graveyard and exile as

@@ -410,7 +410,8 @@ The bands of one row (creatures, marquee and commander in the creatures row; lan
 permanents in the other row in the Arena and Table layouts) use one card size: the largest, up to
 the seat's cap, at which every band of the row fits its cards in at most three lines inside the
 row's width and height. Each band is then as wide as its cards need at that size, and the width
-left over is shared in proportion to that need. So a band never shrinks to the floor or scrolls
+left over is shared in proportion to that need, unless a band takes fewer lines than the row is
+tall for and grows its own cards into the room it leaves (BRD-50). So a band never shrinks to the floor or scrolls
 while a band beside it in the same row keeps room it does not use. Only when not even the floor
 size fits does the row stay at the floor and the bands that overflow scroll (BRD-27). Rows of the
 same seat may use different sizes.
@@ -573,18 +574,21 @@ command zone stays on the board as before.
 - Guard: `src/board/HandBar.test.tsx` · `src/board/commanders.test.ts` · `src/board/BoardZone.arenaOwn.test.tsx`
 
 ### BRD-35 · A band in several lines holds the same count on each line
-On the own board of the Arena layout (BRD-32), a band of lands, of other non-creature permanents or
-of creatures that wraps into several lines puts the same number of items on each line, or fewer on
-the last: ten land piles in two lines are five and five, not eight and two. The board's layout
-function (BRD-25) chooses the card size for those even lines, so when wide tapped cards would not
-fit four to a line the cards shrink a little instead of breaking the count. The layout engine then
+A band that wraps into several lines puts the same number of items on each line, or fewer on the
+last, on every board and in every layout: ten land piles in two lines are five and five, not eight
+and two, and seven in two lines are four and three even when five would fit on the first. The
+board's layout function (BRD-25) chooses the card size for those even lines, so when wide tapped
+cards would not fit four to a line the cards shrink a little instead of breaking the count. The layout engine then
 measures the items as drawn (a tapped card with its margins) and narrows the band's line to the
-widest even line, on the side the band is not aligned to, so the browser breaks the lines there.
-The lines are centred in that width, so the full lines stay in place and a short last line sits in
-the middle: five land piles above and two centred below, not two at the left and three gaps.
+widest even line, so the browser breaks the lines there: the width the row gave the band over that
+line is kept half on each side, or, on the own board of the Arena layout (BRD-32), on the side the
+band is not aligned to. The lines are centred in that width, so the full lines stay in place and a
+short last line sits in the middle: five land piles above and two centred below, not two at the left and three gaps.
 
 - Why: lines filled to the edge and a short last one made the board look like a grid of leftovers;
-  even lines read cleaner (user request, 2026-11-12).
+  even lines read cleaner (user request, 2026-11-12). It held only on the own Arena board at first,
+  so a rival's seven lands still broke five and two; the user asked for the even split wherever a
+  band wraps (14-nov-2026).
 - Guard: `src/board/layout/layoutEngine.test.ts` · `src/board/layout/solveRow.test.ts`
 
 ### BRD-36 · Each opponent column of the Arena layout shows its piles, mirrored
@@ -784,3 +788,36 @@ emoji) is ignored, and the rest of the appearance blob is read as before.
   and the weight from a real render, because a path's bounding box counts geometry the fill rule
   leaves invisible (13-nov-2026).
 - Guard: `src/board/CardSlot.test.tsx` · `src/board/KeywordGlyph.test.tsx` · `src/state/persistence.test.ts` · `src/settings/BoardDemo.test.tsx`
+### BRD-48 · The width a row has to spare buys fewer lines, not empty space
+When the row's card size is settled (BRD-25) and the bands still leave width unused, a band takes
+fewer lines instead of leaving that width empty: the cards keep the size already solved, so a band
+only unwraps when the slack pays for its whole line, and the cheapest unwrap goes first so the
+slack frees as many bands as it can. Thirteen lands in two lines and eight artifacts in one, all at
+the same card size, is the answer when the row has room for the artifacts' line and not for the
+lands'. What is still left over stays at the far side of the row: on the own board of the Arena
+layout (BRD-32) the lands and the other permanents are each as wide as their own widest line
+(BRD-35), so the two groups sit side by side and the slack ends up past them, instead of being
+shared out between the bands and opening a hole in the middle of the board.
+
+- Why: on a four-player Commander board the lands and the artifacts sat in two lines each with a
+  third of the row empty, because the row's height caps the card size long before its width does;
+  the leftover first opened a gap between the two groups, and then, once the bands were tied to
+  their own lines, a gap before the planeswalker zone. Spending it on lines costs nothing, since
+  the cards do not shrink (user request, 14-nov-2026).
+- Guard: `src/board/layout/solveRow.test.ts` · `e2e/kind-bands.spec.ts`
+### BRD-50 · A band with fewer lines grows into the room it leaves
+A band that ends up with fewer lines than the row's tallest band draws its own cards bigger, so the
+air above a single line of artifacts becomes card instead of background: the row's height says how
+big a card may be at that many lines, the width still free says how big it can afford to be, the
+seat's card size caps it as it caps everything else, and the growth stops a third over the row's
+own size. That last bound is what keeps the row one board: the height alone would let a lone
+artifact on one line be drawn twice the size of the lands in two lines beside it. The bands with
+the fewest lines are served first, because they are the ones sitting in the most air, and a band
+that shares the tallest line count keeps the row's size exactly.
+
+- Why: with the lands wrapped into two lines and the other permanents on one (BRD-48), the row's
+  one card size left the others band floating at the bottom of its half of the row, with air above
+  it and width to its right; the user asked why the cards did not take that room, since they would
+  still fit (14-nov-2026). On the four-player Commander board at 1920 that takes the other
+  permanents from 80 px to 107 px, where the width runs out before the height does.
+- Guard: `src/board/layout/solveRow.test.ts`

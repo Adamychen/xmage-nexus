@@ -142,11 +142,13 @@ export function balancedLineWidth(widths: number[], cols: number, gap: number): 
   return widest
 }
 
-function writeBand(el: HTMLElement, band: BandOut, count: number): boolean {
+function writeBand(el: HTMLElement, band: BandOut, items: ItemKind[], shape: { compact: boolean; tilted: boolean }): boolean {
+  const count = items.length
   let changed = setVar(el, '--card-w', px(band.cardW))
   const cols = bandColumns(count, band.lines)
   changed = setAttr(el, 'data-band-cols', cols > 0 ? String(cols) : null) || changed
   let spare = ''
+  let line = ''
   if (cols > 0) {
     const cs = getComputedStyle(el)
     const gap = num(cs.columnGap)
@@ -155,13 +157,26 @@ function writeBand(el: HTMLElement, band: BandOut, count: number): boolean {
       const ms = getComputedStyle(box)
       return box.offsetWidth + num(ms.marginLeft) + num(ms.marginRight)
     }).filter((w) => w > 0)
-    const lineW = balancedLineWidth(widths, cols, gap)
+    // The cards of a band can reach their new size a render later than the engine writes it (a
+    // pile measures itself in React), so the line is also measured from the items as the solver
+    // modelled them and the wider of the two wins: a line read too narrow would cut the band.
+    const modelled = items.map((item) => {
+      const model = itemModel(item, shape)
+      return model.a * band.cardW + model.b
+    })
+    const lineW = Math.max(balancedLineWidth(widths, cols, gap), balancedLineWidth(modelled, cols, gap))
     const room = band.width - num(cs.paddingLeft) - num(cs.paddingRight)
     spare = px(Math.max(0, Math.floor(room - lineW - 2)))
+    line = px(Math.ceil(lineW) + num(cs.paddingLeft) + num(cs.paddingRight) + 1)
   }
   if (spare) changed = setVar(el, '--band-spare', spare) || changed
   else if (el.style.getPropertyValue('--band-spare') !== '') {
     el.style.removeProperty('--band-spare')
+    changed = true
+  }
+  if (line) changed = setVar(el, '--band-line', line) || changed
+  else if (el.style.getPropertyValue('--band-line') !== '') {
+    el.style.removeProperty('--band-line')
     changed = true
   }
   if (el.style.flexBasis !== px(band.width) || el.style.flexGrow !== '0' || el.style.flexShrink !== '0') {
@@ -203,7 +218,7 @@ function writeSeat(reg: SeatRegistration, out: SeatOut): boolean {
     const solved = new Map(outs.map((band) => [band.id, band]))
     for (const band of regs) {
       const result = solved.get(band.id)
-      changed = (result ? writeBand(band.el, result, band.items.length) : clearBand(band.el)) || changed
+      changed = (result ? writeBand(band.el, result, band.items, { compact: reg.compact, tilted: reg.tilted }) : clearBand(band.el)) || changed
     }
   }
   return changed

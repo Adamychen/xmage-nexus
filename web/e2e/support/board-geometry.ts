@@ -299,8 +299,23 @@ export function sharingViolations(info: BoardInfo): string[] {
   const out: string[] = []
   for (const [row, members] of rows) {
     const sized = members.filter((band) => band.cardW > 0)
-    if (new Set(sized.map((band) => band.cardW)).size > 1) {
-      out.push(`${row}: bands of one row show cards at different sizes (${sized.map((band) => `${band.id} ${band.cardW} px`).join(', ')})`)
+    // BRD-26 with BRD-50: one card size per row, except that a band in fewer lines grows into the
+    // room it leaves, up to a third over the row's size. Bands in the same number of lines match.
+    const base = Math.min(...sized.map((band) => band.cardW))
+    const byLines = new Map<string, number[]>()
+    for (const band of sized) byLines.set(band.lines, [...(byLines.get(band.lines) ?? []), band.cardW])
+    for (const [lines, sizes] of byLines) {
+      if (new Set(sizes).size > 1) {
+        out.push(`${row}: bands of ${lines || '1'} line(s) show cards at different sizes (${sized.map((band) => `${band.id} ${band.cardW} px`).join(', ')})`)
+      }
+    }
+    const tooBig = sized.filter((band) => band.cardW > Math.floor(base * 1.35) + 1)
+    if (tooBig.length > 0) {
+      out.push(`${row}: a band grew past a third over the row (${tooBig.map((band) => `${band.id} ${band.cardW} px vs ${base} px`).join(', ')})`)
+    }
+    const shrunk = sized.filter((band) => band.lines === (sized.find((b) => b.cardW === base)?.lines ?? band.lines) && band.cardW < base)
+    if (shrunk.length > 0) {
+      out.push(`${row}: a band draws cards smaller than the row's size (${shrunk.map((band) => band.id).join(', ')})`)
     }
     const atFloor = members.filter((band) => {
       const floor = zones.get(band.zone)?.compactPod ? FLOOR_W_COMPACT_POD : FLOOR_W
