@@ -1,11 +1,11 @@
 name: deploy
 
-# Despliega en el servidor propio (runner self-hosted) cuando master cambia.
-# SEGURIDAD: este runner ejecuta código en el servidor. Solo push a master y
-# disparo manual. NUNCA añadir pull_request / pull_request_target aquí.
+# Despliega en el servidor propio (runner self-hosted) SOLO cuando alguien con
+# permiso de escritura lo lanza a mano: Actions > deploy > Run workflow, o
+# `gh workflow run deploy.yml --ref master`.
+# SEGURIDAD: este runner ejecuta código en el servidor. Mantener solo
+# workflow_dispatch. NUNCA añadir push / pull_request / pull_request_target.
 on:
-  push:
-    branches: [master]
   workflow_dispatch:
 
 permissions:
