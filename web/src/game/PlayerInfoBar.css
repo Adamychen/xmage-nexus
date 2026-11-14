@@ -140,38 +140,6 @@
   box-shadow: 0 2px 4px var(--shade-2);
 }
 
-/* Glowing priority ring animation around avatar */
-.avatar-priority-ring {
-  position: absolute;
-  inset: -4px;
-  border-radius: 50%;
-  border: 2px solid var(--ok);
-  animation: priorityPulse 1.6s ease-in-out infinite;
-  pointer-events: none;
-}
-
-.opp .avatar-priority-ring {
-  border-color: var(--err);
-}
-
-@keyframes priorityPulse {
-  0% {
-    transform: scale(0.96);
-    opacity: 0.9;
-    box-shadow: 0 0 4px currentColor;
-  }
-  50% {
-    transform: scale(1.08);
-    opacity: 0.4;
-    box-shadow: 0 0 14px currentColor;
-  }
-  100% {
-    transform: scale(0.96);
-    opacity: 0.9;
-    box-shadow: 0 0 4px currentColor;
-  }
-}
-
 .player-details {
   display: flex;
   flex-direction: column;
@@ -631,7 +599,6 @@ html.fx-off .badge-dungeon.fx-dungeon-advance {
     border-color: var(--gold-300);
     box-shadow: 0 0 16px 2px rgb(var(--gold-rgb) / 0.5), 0 8px 24px var(--shade-3);
   }
-  .avatar-priority-ring,
   .life-counter.low-life,
   .life-counter.low-life.critical {
     animation: none;

@@ -48,7 +48,7 @@ gives this zone the right edge of both rows instead (BRD-33).
   other every frame, so a board with one planeswalker kept resizing forever (user report,
   2026-10-29; reproduced at 1366×900 with 6 creatures and 7 lands: about 180 style changes per
   second). A band of its own in the creatures row has no such dependency, and the user chose it.
-- Guard: `src/board/BoardZone.kindColumns.test.tsx` · `src/board/bandWeights.test.ts` · `src/board/layout/solveRow.test.ts` · `e2e/kind-bands.spec.ts`
+- Guard: `src/board/BoardZone.kindColumns.test.tsx` · `src/board/bandWeights.test.ts` · `src/board/layout/solveRow.test.ts` · `src/board/marquee.test.ts` · `e2e/kind-bands.spec.ts`
 
 ### BRD-3 · One opponent's board can take the whole opponents' row
 In the Arena and Table layouts with the main board setting off (BRD-6) and two or more opponents
@@ -757,14 +757,17 @@ A card with +1/+1 or -1/-1 counters shows the count and then the symbol of that 
 with the sign cut into it, centred together on the dark plate the other badges of the card use: the
 count in white, the symbol in gold for +1/+1 and in red for -1/-1, and the plate ringed in the same
 colour. The number is the count alone, with no sign of its own, because the symbol already carries
-it, and the power and toughness badge keeps showing what the creature ends up with.
+it, and the power and toughness badge keeps showing what the creature ends up with. Wherever a
+counter is named to the player, under the pointer on the board and in the preview, it is named the
+way the cards print it: the wire's "P1P1" reads +1/+1, and any other counter keeps its word.
 
 - Why: the badge was a solid green or red pill reading "+2", so two counters of three looked like a
   value of +2 and nothing said which counter it was; the user asked for the symbols of the game,
   one kind of counter at a time, starting with these two (13-nov-2026). The symbol is taken whole
   from the Mana icon set, sign included, so the number sits beside it instead of over it, and the
-  user asked for the count first and for the gold of the rest of the badges.
-- Guard: `src/board/CardSlot.compact.test.tsx`
+  user asked for the count first and for the gold of the rest of the badges. The tooltip still read
+  the engine's id, "P1P1: 2", which is not what a card says (14-nov-2026).
+- Guard: `src/board/CardSlot.compact.test.tsx` · `src/board/counterName.test.ts`
 ### BRD-47 · Keyword badges are drawn one way: the keyword's own symbol on a square
 The keyword badges a card carries (`KeywordGlyph`) are drawn one way and one way only: the symbol
 of that keyword, dark, on a square of the keyword's colour with the corner radius of the other
@@ -788,6 +791,7 @@ emoji) is ignored, and the rest of the appearance blob is read as before.
   and the weight from a real render, because a path's bounding box counts geometry the fill rule
   leaves invisible (13-nov-2026).
 - Guard: `src/board/CardSlot.test.tsx` · `src/board/KeywordGlyph.test.tsx` · `src/state/persistence.test.ts` · `src/settings/BoardDemo.test.tsx`
+
 ### BRD-48 · The width a row has to spare buys fewer lines, not empty space
 When the row's card size is settled (BRD-25) and the bands still leave width unused, a band takes
 fewer lines instead of leaving that width empty: the cards keep the size already solved, so a band
@@ -805,6 +809,22 @@ shared out between the bands and opening a hole in the middle of the board.
   their own lines, a gap before the planeswalker zone. Spending it on lines costs nothing, since
   the cards do not shrink (user request, 14-nov-2026).
 - Guard: `src/board/layout/solveRow.test.ts` · `e2e/kind-bands.spec.ts`
+
+### BRD-49 · A power or toughness that is not the printed one is coloured
+The power and toughness badge of a creature colours each half on its own: the number is white while
+it is what the card prints, green while it is above it and red while it is below, and the slash
+between them stays white whatever happens, so a creature with a +1/+0 until end of turn shows a
+green power beside a white toughness. The printed values are the ones the server sends with the
+card (`originalPower`, `originalToughness`), not a count of its +1/+1 counters, so an anthem, an
+aura or a pump spell colours the badge just as counters do, and the badge names the printed pair in
+its tooltip. A card the server sends no printed value for is left white.
+
+- Why: the badge showed what the creature ends up with and nothing said whether that was its own
+  size, so a 5/5 Champion of Lambholt read like a printed 5/5; the user asked for the changed half
+  to stand out and for the slash to stay out of it (14-nov-2026). The dev tables sent no printed
+  value, which is why the colours never showed there.
+- Guard: `src/board/ptTrend.test.tsx`
+
 ### BRD-50 · A band with fewer lines grows into the room it leaves
 A band that ends up with fewer lines than the row's tallest band draws its own cards bigger, so the
 air above a single line of artifacts becomes card instead of background: the row's height says how

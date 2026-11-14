@@ -13,7 +13,7 @@ describe('ptTrend', () => {
     setState({ enteredThisTurn: {} })
   })
 
-  it('reads the printed value from MageInt objects and plain strings', () => {
+  it('BRD-49: reads the printed value from MageInt objects and plain strings', () => {
     expect(basePtValue(mageInt('2', 2))).toBe(2)
     expect(basePtValue(mageInt('*', 0))).toBe(0)
     expect(basePtValue('3')).toBe(3)
@@ -21,7 +21,7 @@ describe('ptTrend', () => {
     expect(basePtValue('*')).toBeNull()
   })
 
-  it('compares current P/T with the printed one per component', () => {
+  it('BRD-49: compares current P/T with the printed one per component', () => {
     const card = (power: string, toughness: string) =>
       ({ power, toughness, originalPower: mageInt('2', 2), originalToughness: mageInt('2', 2) }) as never
     expect(ptTrend(card('4', '4'))).toEqual({ power: 'up', toughness: 'up' })
@@ -30,7 +30,7 @@ describe('ptTrend', () => {
     expect(ptTrend({ power: '2', toughness: '2' } as never)).toEqual({ power: 'same', toughness: 'same' })
   })
 
-  it('tints the badge values and exposes the base as a tooltip', () => {
+  it('BRD-49: tints the badge values and exposes the base as a tooltip', () => {
     const perm = makePermanent({
       id: 'c1', name: 'Grizzly Bears', cardTypes: ['CREATURE'], power: '3', toughness: '1',
       originalPower: mageInt('2', 2) as never, originalToughness: mageInt('2', 2) as never,
@@ -43,6 +43,20 @@ describe('ptTrend', () => {
     const [p, t] = [...badge.querySelectorAll('.pt-value')]
     expect(p.getAttribute('data-trend')).toBe('up')
     expect(t.getAttribute('data-trend')).toBe('down')
+  })
+
+  it('BRD-49: only the side that changed is tinted, and never the slash between them', () => {
+    const perm = makePermanent({
+      id: 'c4', name: 'Grizzly Bears', cardTypes: ['CREATURE'], power: '3', toughness: '2',
+      originalPower: mageInt('2', 2) as never, originalToughness: mageInt('2', 2) as never,
+    })
+    const { container } = render(<CardSlot card={perm} showPt />)
+    const badge = container.querySelector('.pt-badge')!
+    const [p, t] = [...badge.querySelectorAll('.pt-value')]
+    expect(p.getAttribute('data-trend')).toBe('up')
+    expect(t.getAttribute('data-trend')).toBe('same')
+    const slash = [...badge.childNodes].filter((n) => n.nodeType === Node.TEXT_NODE).map((n) => n.textContent).join('')
+    expect(slash).toBe('/')
   })
 
   it('marks permanents that entered this turn', () => {

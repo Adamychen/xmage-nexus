@@ -556,7 +556,6 @@ export default function PlayerInfoBar({
           />
         )}
         {flagName && <CountryFlag flagName={flagName} className="player-avatar-flag" />}
-        {hasPriority && <span className="avatar-priority-ring" />}
         {portrait && (
           handView ? (
             <Button

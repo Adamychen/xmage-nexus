@@ -48,19 +48,21 @@ describe('Commander showcase table', () => {
   // and the table has to show every permanent type the board can draw.
   const OUTSIDE_THE_PRECONS = new Set(['Invasion of Zendikar', 'History of Benalia'])
 
+  const onTheTable = (): CardView[] =>
+    (game.players ?? []).flatMap((p) => Object.values(p.battlefield ?? {}) as CardView[])
+
+  /** The wire sends a card's types as `unknown`, so read them as the board does. */
+  const typeList = (value: unknown): string[] => (Array.isArray(value) ? value.map((t) => String(t).toUpperCase()) : [])
+
   it('TST-8: the table shows a saga, on a chapter, so its chapters can be read', () => {
-    const sagas = (game.players ?? [])
-      .flatMap((p) => Object.values(p.battlefield ?? {}))
-      .filter((c) => (c.subTypes ?? []).some((t) => String(t).toUpperCase() === 'SAGA'))
+    const sagas = onTheTable().filter((c) => typeList(c.subTypes).includes('SAGA'))
     expect(sagas.map((c) => c.name)).toEqual(['History of Benalia'])
     expect(sagas[0].counters).toEqual([{ name: 'lore', count: 2 }])
     expect(sagas[0].rules?.some((r) => /III/.test(r))).toBe(true)
   })
 
   it('TST-8: the table shows a battle, the one permanent type the precons have none of', () => {
-    const battles = (game.players ?? [])
-      .flatMap((p) => Object.values(p.battlefield ?? {}))
-      .filter((c) => (c.cardTypes ?? []).some((t) => String(t).toLowerCase() === 'battle'))
+    const battles = onTheTable().filter((c) => typeList(c.cardTypes).includes('BATTLE'))
     expect(battles.map((c) => c.name)).toEqual(['Invasion of Zendikar'])
     expect(battles[0].defense).toBe('3')
   })

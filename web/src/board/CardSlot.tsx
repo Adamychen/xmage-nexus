@@ -13,6 +13,7 @@ import { DamageNumbers } from './DamageNumber'
 import { useCombatHeld } from './useCombatHeld'
 import { fxMotionAllowed, fxMotionDuration } from './fx'
 import { counterPulseClass as pulseClass, useCounterPulse } from './useCounterPulse'
+import { counterTip } from './counterName'
 import { extractOwnedKeywords } from '../data/keywordExtractor'
 import { keywordDisplayName, keywordSummary } from '../data/keywordI18n'
 import { cardDesignations, gainedDesignations, pairedPartnerName, classLevelOf, evidenceCounts, protectorName, type Designation } from './designations'
@@ -671,7 +672,7 @@ const showPtBadge =
               <BadgeTip
                 key={c.name}
                 className={`counter-badge ${customClass}${pulseClass(pulse)}`}
-                tip={{ title: `${c.name}: ${c.count}` }}
+                tip={{ title: counterTip(c.name, c.count) }}
               >
                 {label && <span className={`counter-text-val${pulse?.tick ? ` counter-tick is-${pulse.direction}` : ''}`}>{label}</span>}
                 {iconElement && <span className="counter-icon-symbol">{iconElement}</span>}

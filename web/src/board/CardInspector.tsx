@@ -24,6 +24,7 @@ import {
 import { KeywordCoin } from './KeywordGlyph'
 import FormattedText from '../game/FormattedText'
 import { ManaCost } from '../decks/ArenaManaSymbols'
+import { counterName } from './counterName'
 import { useTranslation } from '../i18n'
 import { setState, useStore } from '../state/store'
 import Button from '../ui/Button'
@@ -99,7 +100,7 @@ function StatePanel({ state, onOpen, t }: { state: InspectorState; onOpen: (id: 
         <div className="card-inspector-chips" aria-label={t('dialogs', 'card_inspect_counters')}>
           {state.counters.map((c) => (
             <span key={c.name} className="card-inspector-chip card-inspector-counter" data-counter={c.name}>
-              {c.name} <b>×{c.count}</b>
+              {counterName(c.name)} <b>×{c.count}</b>
             </span>
           ))}
         </div>
