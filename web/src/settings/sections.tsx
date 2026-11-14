@@ -16,7 +16,7 @@ import { ZOOM_PRESETS, isZoomPreset, stepZoom, zoomPercent } from '../appearance
 import SoundFxControls from './SoundFxControls'
 import PresetPicker from './PresetPicker'
 import { boardLayoutChoiceOf, chooseBoardLayout, type BoardLayoutChoice } from './boardLayoutChoice'
-import { HAND_RAIL_MAX_W, HAND_RAIL_MIN_W, KEYWORD_AURA_MODES, KEYWORD_ICON_SETS, PT_BADGE_MODES, SICKNESS_STYLES } from '../board/cardOverlays'
+import { HAND_RAIL_MAX_W, HAND_RAIL_MIN_W, KEYWORD_AURA_MODES, PT_BADGE_MODES, SICKNESS_STYLES } from '../board/cardOverlays'
 import Button from '../ui/Button'
 import Select from '../ui/Select'
 import { CARD_STYLES, TAP_STYLES } from '../board/compactCard'
@@ -395,20 +395,6 @@ function OverlaysTab() {
           desc: t('lobby', `sickness_style_${style}_desc`),
           demo: <BoardDemo spec={{ kind: 'sickness', value: style }} />,
           testId: `settings-sickness-style-${style}`,
-        }))}
-      />
-      <Picker
-        settingId="keyword-icons"
-        title={t('lobby', 'keyword_icons_title')}
-        hint={t('lobby', 'keyword_icons_hint')}
-        value={settings.keywordIcons}
-        onPick={(set) => setSetting('keywordIcons', set)}
-        options={KEYWORD_ICON_SETS.map((set) => ({
-          id: set,
-          label: t('lobby', `keyword_icons_${set}`),
-          desc: t('lobby', `keyword_icons_${set}_desc`),
-          demo: <BoardDemo spec={{ kind: 'keywordIcons', value: set }} />,
-          testId: `settings-keyword-icons-${set}`,
         }))}
       />
       <Picker

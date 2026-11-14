@@ -33,7 +33,7 @@ import { useSleeveFor } from '../appearance/useSleeve'
 import { perfMark } from '../system/perfProbe'
 import { ManaPip } from '../decks/ArenaManaSymbols'
 import { artCropUrl, landTapColor, manaSourceSymbols, primaryCardType } from './compactCard'
-import type { KeywordAuraMode, KeywordIconSet, PtBadgeMode, SicknessStyle } from './cardOverlays'
+import type { KeywordAuraMode, PtBadgeMode, SicknessStyle } from './cardOverlays'
 import KeywordGlyph from './KeywordGlyph'
 import { dominantAuraKeyword, gainedKeywordIds } from './keywordAura'
 import CounterMark from './CounterMark'
@@ -79,7 +79,7 @@ interface CardSlotProps {
   /** Battlefield permanents only: draw the looping aura of the card's main keyword. */
   keywordAura?: boolean
   /** Settings previews only: local art (never a network lookup) and per-option overrides of the global overlay settings. */
-  demo?: { artUrl: string | null; ptBadgeMode?: PtBadgeMode; sicknessStyle?: SicknessStyle; keywordIcons?: KeywordIconSet; keywordAura?: KeywordAuraMode }
+  demo?: { artUrl: string | null; ptBadgeMode?: PtBadgeMode; sicknessStyle?: SicknessStyle; keywordAura?: KeywordAuraMode }
 }
 
 export default function CardSlot({
@@ -109,7 +109,6 @@ export default function CardSlot({
   const settings = useSettings()
   const ptBadgeMode = demo?.ptBadgeMode ?? settings.ptBadgeMode
   const sicknessStyle = demo?.sicknessStyle ?? settings.sicknessStyle
-  const keywordIcons = demo?.keywordIcons ?? settings.keywordIcons
   const auraMode = demo?.keywordAura ?? settings.keywordAura
   const sleeve = useSleeveFor(card.controllerId)
   const resolvedImgUrl = useCardImageUrl(card, !faceDown && !demo)
@@ -784,13 +783,13 @@ const showPtBadge =
           {keywordBadges.slice(0, shownBadges).map((kw) => (
             <BadgeTip
               key={kw.id}
-              className={`keyword-badge kw-coin is-glyph cat-${kw.category} icons-${keywordIcons} kw-${kw.id}${kw.id === 'mutate' ? ' mutated-badge' : ''}${gainedKeywords.includes(kw.id) ? ' kw-gained' : ''}`}
+              className={`keyword-badge kw-coin is-glyph cat-${kw.category} kw-${kw.id}${kw.id === 'mutate' ? ' mutated-badge' : ''}${gainedKeywords.includes(kw.id) ? ' kw-gained' : ''}`}
               tip={{
                 title: keywordDisplayName(kw.id, kw.name, (k) => t('keywords', k), kw.parameter),
                 body: keywordSummary(kw.id, (k) => t('keywords', k), kw.parameter),
               }}
             >
-              <KeywordGlyph id={kw.id} category={kw.category} set={keywordIcons} />
+              <KeywordGlyph id={kw.id} category={kw.category} />
             </BadgeTip>
           ))}
           {hiddenBadges.length > 0 && (

@@ -1,5 +1,5 @@
 import CardSlot from '../board/CardSlot'
-import type { KeywordAuraMode, KeywordIconSet, PtBadgeMode, SicknessStyle } from '../board/cardOverlays'
+import type { KeywordAuraMode, PtBadgeMode, SicknessStyle } from '../board/cardOverlays'
 import type { CardStyle, TapStyle } from '../board/compactCard'
 import { showcaseArtUrl } from '../cards/showcaseArt'
 import type { PermanentView } from '../net/types'
@@ -11,7 +11,6 @@ export type BoardDemoSpec =
   | { kind: 'tapStyle'; value: TapStyle }
   | { kind: 'ptBadge'; value: PtBadgeMode }
   | { kind: 'sickness'; value: SicknessStyle }
-  | { kind: 'keywordIcons'; value: KeywordIconSet }
   | { kind: 'keywordAura'; value: KeywordAuraMode }
   | { kind: 'manaSource'; value: boolean }
 
@@ -58,13 +57,6 @@ function tilesFor(spec: BoardDemoSpec): Tile[] {
         { perm: creature('Shivan Dragon', { power: '5', toughness: '5', originalPower: '5', originalToughness: '5' }), showPt: true },
         { perm: creature('Sentinel Spider', { summoningSickness: true }), showPt: true },
       ]
-    case 'keywordIcons':
-      return [
-        { perm: creature('Shivan Dragon', { rules: ['Flying, haste'] }) },
-        { perm: creature('Sentinel Spider', { rules: ['Deathtouch, lifelink'] }) },
-        { perm: creature('Tarmogoyf', { rules: ['Trample, hexproof'] }) },
-        { perm: creature('Birds of Paradise', { rules: ['Indestructible'] }) },
-      ]
     case 'keywordAura':
       return [
         { perm: creature('Shivan Dragon', { power: '5', toughness: '5', originalPower: '5', originalToughness: '5', rules: ['Flying'] }), showPt: true },
@@ -94,7 +86,6 @@ export default function BoardDemo({ spec }: { spec: BoardDemoSpec }) {
     artUrl: showcaseArtUrl(name),
     ptBadgeMode: spec.kind === 'ptBadge' ? spec.value : undefined,
     sicknessStyle: spec.kind === 'sickness' ? spec.value : undefined,
-    keywordIcons: spec.kind === 'keywordIcons' ? spec.value : undefined,
     keywordAura: spec.kind === 'keywordAura' ? spec.value : undefined,
   })
   return (

@@ -3,7 +3,6 @@ import { act, StrictMode } from 'react'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import CardSlot from './CardSlot'
 import type { PermanentView } from '../net/types'
-import { normalizeKeywordIconSet, type KeywordIconSet } from './cardOverlays'
 import type { FeedbackPrompt } from '../game/feedback'
 import { getState, setState, setSetting } from '../state/store'
 import { perfClear, perfEntries } from '../system/perfProbe'
@@ -840,61 +839,30 @@ describe('CardSlot ptBadgeMode con base desconocida', () => {
   })
 })
 
-describe('CardSlot keywordIcons', () => {
+describe('CardSlot keyword badges', () => {
   const beast = (rules: string[]) =>
     ({ id: 'kw1', name: 'Keyword Beast', cardTypes: ['Creature'], power: '4', toughness: '4', rules }) as unknown as PermanentView
 
-  const withSet = (set: KeywordIconSet, card: PermanentView) => {
-    setSetting('keywordIcons', set)
-    try {
-      return render(<CardSlot card={card} showPt />)
-    } finally {
-      setSetting('keywordIcons', 'coins')
-    }
-  }
-
-  it('coins (default): draws the seven keywords as solid glyphs instead of emoji', () => {
-    const { container } = withSet('coins', beast(['Flying, deathtouch, lifelink, haste']))
+  it('BRD-47: draws every keyword on its own square, with no set to choose', () => {
+    const { container } = render(<CardSlot card={beast(['Flying, deathtouch, lifelink, haste'])} showPt />)
     const badges = [...container.querySelectorAll('.keyword-badge')]
     expect(badges).toHaveLength(4)
     for (const b of badges) {
-      expect(b.classList.contains('icons-coins')).toBe(true)
-      expect(b.querySelector('svg')).not.toBeNull()
+      expect(b.querySelector('.kw-art, svg[fill="currentColor"], svg[stroke="currentColor"]')).not.toBeNull()
+      expect(b.className).not.toMatch(/icons-/)
     }
-    expect(container.querySelector('.keyword-badge.kw-flying')).not.toBeNull()
+    expect(container.querySelector('.keyword-badge.kw-flying .kw-art')).not.toBeNull()
   })
 
-  it('outline: switches the same badges to the line set', () => {
-    const { container } = withSet('outline', beast(['Trample, hexproof, indestructible']))
-    const badges = [...container.querySelectorAll('.keyword-badge')]
-    expect(badges).toHaveLength(3)
-    for (const b of badges) expect(b.classList.contains('icons-outline')).toBe(true)
-  })
-
-  it('draws a glyph for every badge keyword and never an emoji', () => {
-    const { container } = withSet('outline', beast(['Menace, shadow, ward {2}']))
+  it('BRD-47: draws a glyph for the keywords of the registry too, never an emoji', () => {
+    const { container } = render(<CardSlot card={beast(['Menace, shadow, ward {2}'])} showPt />)
     const badges = [...container.querySelectorAll('.keyword-badge')]
     expect(badges.length).toBeGreaterThanOrEqual(2)
     for (const b of badges) {
       expect(b.classList.contains('is-glyph')).toBe(true)
-      expect(b.querySelector('svg')).not.toBeNull()
+      expect(b.querySelector('.kw-art, svg')).not.toBeNull()
     }
-  })
-
-  it('BRD-47: a retired icon set stored by a player draws the coins, never an emoji', () => {
-    setSetting('keywordIcons', normalizeKeywordIconSet('emoji'))
-    try {
-      const { container } = render(<CardSlot card={beast(['Flying, menace'])} showPt />)
-      const badges = [...container.querySelectorAll('.keyword-badge')]
-      expect(badges).toHaveLength(2)
-      for (const b of badges) {
-        expect(b.classList.contains('icons-coins')).toBe(true)
-        expect(b.querySelector('svg')).not.toBeNull()
-      }
-      expect(container.querySelector('.kw-coin-emoji')).toBeNull()
-    } finally {
-      setSetting('keywordIcons', 'coins')
-    }
+    expect(container.querySelector('.kw-coin-emoji')).toBeNull()
   })
 
   it('shows one badge when the server icon and the rules both say Flying', () => {
@@ -909,7 +877,7 @@ describe('CardSlot keywordIcons', () => {
     const { container } = render(<CardSlot card={card} showPt />)
     const badge = container.querySelector('.keyword-badge.mutated-badge') as HTMLElement
     expect(badge).not.toBeNull()
-    expect(badge.querySelector('svg')).not.toBeNull()
+    expect(badge.querySelector('.kw-art, svg')).not.toBeNull()
     expect(container.querySelectorAll('.mutated-badge')).toHaveLength(1)
     fireEvent.pointerEnter(badge)
     const title = document.querySelector('.badge-tip-title')?.textContent

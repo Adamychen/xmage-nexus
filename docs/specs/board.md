@@ -761,14 +761,26 @@ it, and the power and toughness badge keeps showing what the creature ends up wi
   from the Mana icon set, sign included, so the number sits beside it instead of over it, and the
   user asked for the count first and for the gold of the rest of the badges.
 - Guard: `src/board/CardSlot.compact.test.tsx`
-### BRD-47 · Keyword badges come in two icon sets, and the coins are the fallback
-The keyword badges a card carries (`KeywordGlyph`, picked in Settings › Board › Overlays) are drawn
-either as coins, solid symbols on a coloured circle, or as outlines, thin line icons. There is no
-third set: every keyword resolves to a glyph, never to an emoji, in both sets. A stored choice the
-client no longer knows, the retired `emoji` set included, reads back as coins
-(`normalizeKeywordIconSet`), so the board keeps drawing badges and the picker keeps a row marked.
+### BRD-47 · Keyword badges are drawn one way: the keyword's own symbol on a square
+The keyword badges a card carries (`KeywordGlyph`) are drawn one way and one way only: the symbol
+of that keyword, dark, on a square of the keyword's colour with the corner radius of the other
+badges of the card and no border, centred in it and the same visual weight as every other symbol:
+each file is framed on the ink it paints, not on its path's bounding box, and padded so the ink
+covers the same share of the square (`node scripts/ability-symbols.mjs` reports it, `--write`
+fixes it). The symbol is the published vector of the game wherever there is
+one (`public/symbols/abilities`, the ids listed in `glyphs/abilityArt.ts`), painted through a mask
+so the colour comes from the badge; a keyword with no published symbol keeps the glyph drawn in
+`glyphs/`, and none is ever an emoji. The same badge is used everywhere a keyword is named: on the
+board, in the preview under the pointer, in the card inspector and in the wiki's glossary. There is
+no setting to pick between sets: a stored choice from the versions that had one (coins, outline,
+emoji) is ignored, and the rest of the appearance blob is read as before.
 
 - Why: the emoji set depended on the font the system happened to have, so the same board looked
-  different on each machine and the badges did not match the rest of the interface; the user asked
-  for it to go (2026-11-13). The badges themselves stay: only the third way of drawing them goes.
-- Guard: `src/board/CardSlot.test.tsx` · `src/state/persistence.test.ts` · `src/settings/BoardDemo.test.tsx`
+  different on each machine (2026-11-13); the circles then went square with the rest of the card
+  badges, and with one way of drawing them left there was nothing to choose, so the picker went
+  too; the drawn glyphs then gave way to the published symbols, which are the ones a player already
+  knows from the cards. They arrived with the framing of the set, each with its own margin, so one
+  symbol filled its square while another floated in it; the script above measures both the centre
+  and the weight from a real render, because a path's bounding box counts geometry the fill rule
+  leaves invisible (13-nov-2026).
+- Guard: `src/board/CardSlot.test.tsx` · `src/board/KeywordGlyph.test.tsx` · `src/state/persistence.test.ts` · `src/settings/BoardDemo.test.tsx`

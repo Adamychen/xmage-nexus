@@ -9,8 +9,12 @@ export function useBadgeFit(ref: RefObject<HTMLElement | null>, count: number): 
     if (!el) return
     const measure = () => {
       const first = el.firstElementChild as HTMLElement | null
-      const gap = parseFloat(getComputedStyle(el).columnGap) || 0
-      setVisible(visibleBadges(count, el.clientWidth, first?.offsetWidth ?? 0, gap))
+      const style = getComputedStyle(el)
+      const column = style.flexDirection.startsWith('column')
+      const gap = parseFloat(column ? style.rowGap : style.columnGap) || 0
+      const room = column ? el.clientHeight : el.clientWidth
+      const size = (column ? first?.offsetHeight : first?.offsetWidth) ?? 0
+      setVisible(visibleBadges(count, room, size, gap))
     }
     measure()
     if (typeof ResizeObserver === 'undefined') return

@@ -341,7 +341,7 @@ function ImpactItem({ fx }: { fx: ImpactFx }) {
         <div className="fx-burst fx-deathtouch" data-testid="fx-deathtouch" style={{ ...at, '--rise': `${fx.h * 0.2}px` } as Vars}>
           <span className="fx-deathtouch-ring" />
           <span className="fx-deathtouch-skull">
-            <KeywordGlyph id="deathtouch" category="combat" set="outline" />
+            <KeywordGlyph id="deathtouch" category="combat" />
           </span>
           <Particles fx={fx} count={8} spread={Math.max(30, fx.w * 0.5)} rise={fx.h * 0.6} className="fx-deathtouch-mote" />
         </div>
