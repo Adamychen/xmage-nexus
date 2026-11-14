@@ -8,6 +8,7 @@ fakeOnly()
 type Rec = Record<string, unknown>
 
 const V2_ARENA = { gameUi: 'v2', boardLayout: 'arena', boardLayoutManual: true }
+const V1_ARENA = { gameUi: 'v1', boardLayout: 'arena', boardLayoutManual: true, boardSpotlight: false }
 
 function token(id: string, name: string, types: string[]): Rec {
   return { id, parentId: id, name, displayName: name, cardTypes: types, isToken: true, mageObjectType: 'TOKEN', manaValue: 0, expansionSetCode: '', cardNumber: '0' }
@@ -164,5 +165,41 @@ test('BRD-2: the marquee band sits at the right end of the creatures row on ever
         expect(intersects(card, other), `${seat.name}: two marquee cards overlap`).toBe(false)
       })
     })
+  }
+})
+
+test('BRD-48: a band of the own board wraps only when its line would not fit in the row', async ({ page }) => {
+  await showGame(page, withKinds(), V1_ARENA)
+  await expect(page.getByTestId('arena-board')).toBeVisible({ timeout: 10_000 })
+  await expect(page.locator('.arena-own [data-testid="lands-band"]').first()).toBeVisible({ timeout: 10_000 })
+  const rows = await page.evaluate(() => {
+    const own = document.querySelector<HTMLElement>('.arena-board .board-zone.arena-own')
+    if (!own) return []
+    const row = own.querySelector<HTMLElement>('.bz-permanents-row')
+    if (!row) return []
+    const rowCs = getComputedStyle(row)
+    const rowBox = row.getBoundingClientRect()
+    const content = rowBox.width - parseFloat(rowCs.paddingLeft) - parseFloat(rowCs.paddingRight)
+    const bands = Array.from(row.querySelectorAll<HTMLElement>('[data-testid="lands-band"], [data-testid="others-band"]'))
+    const used = bands.reduce((sum, el) => sum + el.getBoundingClientRect().width, 0) + Math.max(0, bands.length - 1) * parseFloat(rowCs.columnGap)
+    return bands.map((el) => {
+      const cs = getComputedStyle(el)
+      const slots = Array.from(el.querySelectorAll('.card-slot, .stack-group'))
+      const gap = parseFloat(cs.columnGap)
+      const oneLine = slots.reduce((sum, slot) => sum + slot.getBoundingClientRect().width + gap, 0) - gap
+        + parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight)
+      return {
+        id: el.dataset.testid ?? '',
+        lines: Number(el.dataset.bandLines ?? 1),
+        width: el.getBoundingClientRect().width,
+        oneLine,
+        free: content - used,
+      }
+    })
+  })
+  expect(rows.length, 'the own board has its lands and others bands').toBe(2)
+  for (const band of rows) {
+    if (band.lines <= 1) continue
+    expect(band.oneLine, `${band.id}: wrapped although its line fits in the row`).toBeGreaterThan(band.width + band.free + 1)
   }
 })
