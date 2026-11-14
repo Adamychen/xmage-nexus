@@ -62,7 +62,7 @@ export default function KeywordGlyph({ id, category }: { id: string; category: s
 export function KeywordCoin({ id, category, size, className }: { id: string; category: string; size?: number; className?: string }) {
   return (
     <span
-      className={`kw-coin cat-${category} kw-${id}${className ? ` ${className}` : ''}`}
+      className={`kw-coin kw-tone cat-${category} kw-${id}${className ? ` ${className}` : ''}`}
       style={size ? ({ '--kw-size': `${size}px` } as CSSProperties) : undefined}
       aria-hidden="true"
     >

@@ -1,5 +1,10 @@
-.kw-coin {
+/* BRD-51: the colour of a keyword lives on `.kw-tone`, so the chip on the card and the ficha
+   under the pointer take it from the same place. */
+.kw-tone {
   --kw-rgb: var(--brand-rgb);
+}
+
+.kw-coin {
   flex: none;
   display: inline-flex;
   align-items: center;
@@ -12,28 +17,28 @@
   line-height: 1;
 }
 
-.kw-coin.cat-combat { --kw-rgb: var(--err-rgb); }
-.kw-coin.cat-evasion { --kw-rgb: var(--brand-rgb); }
-.kw-coin.cat-protection { --kw-rgb: var(--ok-rgb); }
-.kw-coin.cat-counters { --kw-rgb: var(--mana-g-rgb); }
-.kw-coin.cat-mana { --kw-rgb: var(--gold-rgb); }
-.kw-coin.cat-graveyard { --kw-rgb: var(--purple-rgb); }
-.kw-coin.cat-cards { --kw-rgb: var(--mana-u-rgb); }
-.kw-coin.cat-mechanic { --kw-rgb: var(--brand-rgb); }
+.kw-tone.cat-combat { --kw-rgb: var(--err-rgb); }
+.kw-tone.cat-evasion { --kw-rgb: var(--brand-rgb); }
+.kw-tone.cat-protection { --kw-rgb: var(--ok-rgb); }
+.kw-tone.cat-counters { --kw-rgb: var(--mana-g-rgb); }
+.kw-tone.cat-mana { --kw-rgb: var(--gold-rgb); }
+.kw-tone.cat-graveyard { --kw-rgb: var(--purple-rgb); }
+.kw-tone.cat-cards { --kw-rgb: var(--mana-u-rgb); }
+.kw-tone.cat-mechanic { --kw-rgb: var(--brand-rgb); }
 
-.kw-coin.kw-haste { --kw-rgb: var(--ember-rgb); }
-.kw-coin.kw-deathtouch { --kw-rgb: var(--purple-rgb); }
-.kw-coin.kw-flying { --kw-rgb: var(--mana-u-rgb); }
-.kw-coin.kw-lifelink { --kw-rgb: var(--gold-rgb); }
-.kw-coin.kw-trample { --kw-rgb: var(--mana-g-rgb); }
-.kw-coin.kw-indestructible { --kw-rgb: var(--mana-c-rgb); }
-.kw-coin.kw-hexproof { --kw-rgb: var(--ok-rgb); }
-.kw-coin.kw-mutate { --kw-rgb: var(--ok-rgb); }
-.kw-coin.kw-plainswalk { --kw-rgb: var(--mana-w-rgb); }
-.kw-coin.kw-islandwalk { --kw-rgb: var(--mana-u-rgb); }
-.kw-coin.kw-swampwalk { --kw-rgb: var(--mana-b-rgb); }
-.kw-coin.kw-mountainwalk { --kw-rgb: var(--mana-r-rgb); }
-.kw-coin.kw-forestwalk { --kw-rgb: var(--mana-g-rgb); }
+.kw-tone.kw-haste { --kw-rgb: var(--ember-rgb); }
+.kw-tone.kw-deathtouch { --kw-rgb: var(--purple-rgb); }
+.kw-tone.kw-flying { --kw-rgb: var(--mana-u-rgb); }
+.kw-tone.kw-lifelink { --kw-rgb: var(--gold-rgb); }
+.kw-tone.kw-trample { --kw-rgb: var(--mana-g-rgb); }
+.kw-tone.kw-indestructible { --kw-rgb: var(--mana-c-rgb); }
+.kw-tone.kw-hexproof { --kw-rgb: var(--ok-rgb); }
+.kw-tone.kw-mutate { --kw-rgb: var(--ok-rgb); }
+.kw-tone.kw-plainswalk { --kw-rgb: var(--mana-w-rgb); }
+.kw-tone.kw-islandwalk { --kw-rgb: var(--mana-u-rgb); }
+.kw-tone.kw-swampwalk { --kw-rgb: var(--mana-b-rgb); }
+.kw-tone.kw-mountainwalk { --kw-rgb: var(--mana-r-rgb); }
+.kw-tone.kw-forestwalk { --kw-rgb: var(--mana-g-rgb); }
 
 .kw-coin svg,
 .kw-coin .kw-art {
@@ -66,12 +71,12 @@
 
 
 
-.kw-coin.kw-gained {
+.kw-tone.kw-gained {
   position: relative;
   animation: kwCoinGained calc(0.9s / var(--fx-speed, 1)) cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.kw-coin.kw-gained::after {
+.kw-tone.kw-gained::after {
   content: '';
   position: absolute;
   inset: -3px;

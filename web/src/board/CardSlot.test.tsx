@@ -843,6 +843,13 @@ describe('CardSlot keyword badges', () => {
   const beast = (rules: string[]) =>
     ({ id: 'kw1', name: 'Keyword Beast', cardTypes: ['Creature'], power: '4', toughness: '4', rules }) as unknown as PermanentView
 
+  it('BRD-52: shows every keyword the card has, with no cap of its own, and no "+N" while they fit', () => {
+    const nine = ['Flying, deathtouch, lifelink, haste, trample, vigilance, menace, reach, first strike']
+    const { container } = render(<CardSlot card={beast(nine)} showPt />)
+    expect(container.querySelectorAll('.keyword-badge.kw-coin')).toHaveLength(9)
+    expect(container.querySelector('.keyword-badge-more')).toBeNull()
+  })
+
   it('BRD-47: draws every keyword on its own square, with no set to choose', () => {
     const { container } = render(<CardSlot card={beast(['Flying, deathtouch, lifelink, haste'])} showPt />)
     const badges = [...container.querySelectorAll('.keyword-badge')]
@@ -872,7 +879,7 @@ describe('CardSlot keyword badges', () => {
     expect(container.querySelector('.card-icon.ability')).toBeNull()
   })
 
-  it('draws mutate as a glyph badge with its own tooltip instead of a separate mutated badge', () => {
+  it('BRD-51: draws mutate as a glyph badge with its own ficha instead of a separate mutated badge', () => {
     const card = { ...beast(['Flying']), mutated: true } as unknown as PermanentView
     const { container } = render(<CardSlot card={card} showPt />)
     const badge = container.querySelector('.keyword-badge.mutated-badge') as HTMLElement
@@ -880,18 +887,22 @@ describe('CardSlot keyword badges', () => {
     expect(badge.querySelector('.kw-art, svg')).not.toBeNull()
     expect(container.querySelectorAll('.mutated-badge')).toHaveLength(1)
     fireEvent.pointerEnter(badge)
-    const title = document.querySelector('.badge-tip-title')?.textContent
+    const title = document.querySelector('.ability-card-name')?.textContent
     fireEvent.pointerLeave(badge)
     expect(title).toMatch(/Mut/)
   })
 
-  it('shows a tooltip with the keyword name and rules summary on hover', () => {
+  it('BRD-51: the badge opens the keyword ficha, the same one the preview panel draws', () => {
     const { container } = render(<CardSlot card={beast(['Flying'])} showPt />)
     const badge = container.querySelector('.keyword-badge.kw-flying') as HTMLElement
     fireEvent.pointerEnter(badge)
     const tip = document.querySelector('.badge-tip')
     expect(tip).not.toBeNull()
-    expect(tip?.querySelector('.badge-tip-title')?.textContent).toBeTruthy()
+    const card = tip?.querySelector('.ability-card.kw-flying')
+    expect(card).not.toBeNull()
+    expect(card?.querySelector('.ability-card-name')?.textContent).toBeTruthy()
+    expect(card?.querySelector('.ability-card-text')?.textContent).toBeTruthy()
+    expect(badge.getAttribute('aria-label')).toContain(card?.querySelector('.ability-card-name')?.textContent ?? '')
     fireEvent.pointerLeave(badge)
     expect(document.querySelector('.badge-tip')).toBeNull()
   })
@@ -980,7 +991,7 @@ describe('CardSlot keyword aura', () => {
     expect(container.querySelector('[data-kw-aura]')?.getAttribute('data-kw-aura')).toBe('indestructible')
   })
 
-  it('draws the indestructible aura even when it is beyond the visible badge cap', () => {
+  it('BRD-52: draws the indestructible aura even when its badge is the last of many', () => {
     const icon = (cardIconType: string) => ({ cardIconType, text: '', hint: cardIconType })
     const card = creature({
       rules: ['Indestructible'],
@@ -993,8 +1004,8 @@ describe('CardSlot keyword aura', () => {
       ],
     })
     const { container } = render(<CardSlot card={card} keywordAura />)
-    expect(container.querySelectorAll('.keyword-badge:not(.keyword-badge-more)')).toHaveLength(5)
-    expect(container.querySelector('.keyword-badge-more')?.textContent).toBe('+1')
+    expect(container.querySelectorAll('.keyword-badge:not(.keyword-badge-more)')).toHaveLength(6)
+    expect(container.querySelector('.keyword-badge-more')).toBeNull()
     expect(container.querySelector('[data-kw-aura]')?.getAttribute('data-kw-aura')).toBe('indestructible')
   })
 
@@ -1019,7 +1030,7 @@ describe('CardSlot keyword aura', () => {
 })
 
 describe('CardSlot keyword overflow', () => {
-  it('counts every keyword past the five badges shown in the +N badge', () => {
+  it('BRD-52: a card with room for its columns shows every keyword, and the "+N" chip stays away', () => {
     const icons = ['ABILITY_FLYING', 'ABILITY_DEATHTOUCH', 'ABILITY_LIFELINK', 'ABILITY_DOUBLE_STRIKE', 'ABILITY_FIRST_STRIKE', 'ABILITY_TRAMPLE', 'ABILITY_HEXPROOF']
     const card = {
       id: 'k7',
@@ -1030,7 +1041,7 @@ describe('CardSlot keyword overflow', () => {
       cardIcons: icons.map((cardIconType) => ({ cardIconType, hint: cardIconType })),
     } as unknown as PermanentView
     const { container } = render(<CardSlot card={card} />)
-    expect(container.querySelectorAll('.keyword-badge:not(.keyword-badge-more)')).toHaveLength(5)
-    expect(container.querySelector('.keyword-badge-more')?.textContent).toBe('+2')
+    expect(container.querySelectorAll('.keyword-badge:not(.keyword-badge-more)')).toHaveLength(7)
+    expect(container.querySelector('.keyword-badge-more')).toBeNull()
   })
 })

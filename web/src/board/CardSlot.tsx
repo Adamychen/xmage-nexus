@@ -21,7 +21,7 @@ import { roomDoorKey, roomSidesLabel } from '../game/rooms'
 import { useChangeFlag } from '../game/useChangeFlag'
 import CardIcons from './CardIcons'
 import BadgeTip from '../ui/BadgeTip'
-import { MAX_BADGES, mergeBadgeKeywords } from './cardBadges'
+import { mergeBadgeKeywords } from './cardBadges'
 import { useBadgeFit } from './useBadgeFit'
 import { useBadgeLayout } from './useBadgeLayout'
 import { basePtValue, ptTrend } from './ptTrend'
@@ -38,6 +38,7 @@ import type { KeywordAuraMode, PtBadgeMode, SicknessStyle } from './cardOverlays
 import KeywordGlyph from './KeywordGlyph'
 import { dominantAuraKeyword, gainedKeywordIds } from './keywordAura'
 import CounterMark from './CounterMark'
+import AbilityCard from './AbilityCard'
 import { isSaga, sagaChapter, sagaChapters } from './saga'
 import SagaTrack from './SagaTrack'
 import { DefensePlate, LoyaltyPlate } from './StatPlate'
@@ -106,7 +107,7 @@ export default function CardSlot({
   keywordAura = false,
   demo,
 }: CardSlotProps) {
-  const { t } = useTranslation()
+  const { t, lang } = useTranslation()
   const settings = useSettings()
   const ptBadgeMode = demo?.ptBadgeMode ?? settings.ptBadgeMode
   const sicknessStyle = demo?.sicknessStyle ?? settings.sicknessStyle
@@ -336,7 +337,9 @@ export default function CardSlot({
     const merged = mergeBadgeKeywords(card.cardIcons, extractOwnedKeywords(card), Infinity)
     return perm.mutated === true ? [{ id: 'mutate', name: 'Mutate', icon: '', category: 'mechanic' as const }, ...merged] : merged
   }, [hideFaceDownKeywords, perm.mutated, card.rules, card.cardIcons, (card as unknown as { abilities?: unknown }).abilities, card.name])
-  const keywordBadges = useMemo(() => allKeywords.slice(0, MAX_BADGES), [allKeywords])
+  // BRD-52: no fixed cap on the badges a card shows; the columns the card has room for decide,
+  // and what is left over becomes the "+N" chip.
+  const keywordBadges = allKeywords
 
   const allKeywordIdsKey = allKeywords.map((kw) => kw.id).join('|')
   const [seenKeywordIds, setSeenKeywordIds] = useState(() => seenKeywordsByCard.get(String(effectiveId)) ?? allKeywordIdsKey)
@@ -781,18 +784,32 @@ const showPtBadge =
 
       {keywordBadges.length > 0 && (
         <div className="keyword-badges" data-badge-zone="keyword" ref={badgeRowRef} aria-label={t('wiki', 'tab_keywords')}>
-          {keywordBadges.slice(0, shownBadges).map((kw) => (
-            <BadgeTip
-              key={kw.id}
-              className={`keyword-badge kw-coin is-glyph cat-${kw.category} kw-${kw.id}${kw.id === 'mutate' ? ' mutated-badge' : ''}${gainedKeywords.includes(kw.id) ? ' kw-gained' : ''}`}
-              tip={{
-                title: keywordDisplayName(kw.id, kw.name, (k) => t('keywords', k), kw.parameter),
-                body: keywordSummary(kw.id, (k) => t('keywords', k), kw.parameter),
-              }}
-            >
-              <KeywordGlyph id={kw.id} category={kw.category} />
-            </BadgeTip>
-          ))}
+          {keywordBadges.slice(0, shownBadges).map((kw) => {
+            // BRD-51: the bubble of a badge is the same ficha the preview panel draws.
+            const name = keywordDisplayName(kw.id, kw.name, (k) => t('keywords', k), kw.parameter)
+            const summary = keywordSummary(kw.id, (k) => t('keywords', k), kw.parameter)
+            return (
+              <BadgeTip
+                key={kw.id}
+                className={`keyword-badge kw-coin kw-tone is-glyph cat-${kw.category} kw-${kw.id}${kw.id === 'mutate' ? ' mutated-badge' : ''}${gainedKeywords.includes(kw.id) ? ' kw-gained' : ''}`}
+                tip={{
+                  title: name,
+                  body: summary,
+                  card: (
+                    <AbilityCard
+                      id={kw.id}
+                      category={kw.category}
+                      name={name}
+                      secondary={lang !== 'en' && kw.name !== name ? kw.name : null}
+                      summary={summary}
+                    />
+                  ),
+                }}
+              >
+                <KeywordGlyph id={kw.id} category={kw.category} />
+              </BadgeTip>
+            )
+          })}
           {hiddenBadges.length > 0 && (
             <BadgeTip
               className="keyword-badge keyword-badge-more"

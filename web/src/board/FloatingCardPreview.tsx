@@ -10,13 +10,13 @@ import { ManaCost } from '../decks/ArenaManaSymbols'
 import CounterMark from './CounterMark'
 import { isSaga, sagaChapter, sagaChapters } from './saga'
 import SagaTrack from './SagaTrack'
+import AbilityCard from './AbilityCard'
 import { counterTip } from './counterName'
 import { DefensePlate, LoyaltyPlate } from './StatPlate'
 import { useTranslation } from '../i18n'
 import { useStore, useSettings, isBlockingModal } from '../state/store'
 import RenderedCard from '../cards/rendered/RenderedCard'
 import Icon from '../ui/Icon'
-import { KeywordCoin } from './KeywordGlyph'
 import { fxEnabled } from './fx'
 import { CARD_PREVIEW_SCALE_MIN, KEYWORDS_BASE_WIDTH, PREVIEW_BASE_HEIGHT, PREVIEW_BASE_WIDTH, fitPreviewScale, normalizeCardPreviewScale, previewWidthAt } from './cardPreviewScale'
 import './FloatingCardPreview.css'
@@ -325,16 +325,14 @@ export default function FloatingCardPreview({
             const secondaryName = lang !== 'en' && kw.name !== primaryName ? kw.name : null
 
             return (
-              <div key={kw.id} className={`floating-card-kw-box cat-${kw.category}`}>
-                <div className="kw-box-header">
-                  <KeywordCoin id={kw.id} category={kw.category} size={20} />
-                  <span className="kw-box-name">{primaryName}</span>
-                  {secondaryName && <span className="kw-box-es">({secondaryName})</span>}
-                </div>
-                <p className="kw-box-summary">
-                  <FormattedText text={keywordSummary(kw.id, (k) => t('keywords', k), kw.parameter)} />
-                </p>
-              </div>
+              <AbilityCard
+                key={kw.id}
+                id={kw.id}
+                category={kw.category}
+                name={primaryName}
+                secondary={secondaryName}
+                summary={keywordSummary(kw.id, (k) => t('keywords', k), kw.parameter)}
+              />
             )
           })}
         </aside>

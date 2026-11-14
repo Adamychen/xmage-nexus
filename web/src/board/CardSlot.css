@@ -1479,17 +1479,23 @@ html.fx-off .card-slot.fx-designation-swell {
 /* BRD-48: the keyword badges run down the right edge of the card, one under
    another, so they never cross the title and a card with four of them keeps
    them off the art's centre. */
+/* BRD-52: the keyword badges run down the right edge of the card, four to a column: five to eight
+   open a second column towards the middle of the card, nine a third, and so on, with the first
+   column always where it was. The group of four is what keeps a column clear of the type line, so
+   a card too short for it draws its badges smaller (`--kw-fit`) instead of breaking the group. */
 .keyword-badges {
-  --kw-size: var(--badge-size);
+  --badge-rows: 4;
+  --kw-size: var(--kw-fit, var(--badge-size));
   position: absolute;
   top: 22px;
   right: 4px;
   bottom: 22px;
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
+  flex-flow: column wrap-reverse;
+  align-items: center;
+  align-content: flex-start;
   justify-content: flex-start;
-  flex-wrap: nowrap;
+  max-height: calc(var(--badge-rows) * var(--kw-size) + (var(--badge-rows) - 1) * var(--sp-0h));
   overflow: hidden;
   gap: var(--sp-0h);
   z-index: 6;
@@ -1869,7 +1875,8 @@ html.fx-off .card-slot.fx-behold {
   .card-slot.fx-behold {
     animation: none;
   }
-}
+}
+
 
 /* BRD-44: the chapters of a saga, one hexagon each along the bottom edge: read
    and current in gold, the ones to come in the dark of the board. */

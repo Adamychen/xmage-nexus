@@ -1,0 +1,42 @@
+/* BRD-51: the ficha of a keyword, the same one under the pointer and in the panel. */
+.ability-card {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  padding: var(--sp-1h) var(--sp-2);
+  border-radius: var(--r-base);
+  border: 1px solid rgb(var(--kw-rgb) / 0.6);
+  background: rgb(var(--ink-2-rgb) / 0.97);
+  box-shadow: 0 4px 16px var(--shade-4);
+  color: var(--fg-1);
+  text-align: left;
+}
+
+.ability-card-head {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1h);
+  min-width: 0;
+}
+
+.ability-card-name {
+  font-family: var(--font-display, serif);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: rgb(var(--kw-rgb));
+}
+
+.ability-card-alt {
+  font-size: var(--fs-3xs);
+  color: var(--fg-2);
+}
+
+.ability-card-text {
+  margin: 0;
+  font-size: var(--fs-3xs);
+  line-height: 1.4;
+  color: var(--fg-1);
+}

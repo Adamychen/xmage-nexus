@@ -148,7 +148,7 @@ describe('FloatingCardPreview', () => {
     expect(container.querySelector('.floating-card-counters')).toBeNull()
   })
 
-  it('shows only the keywords the card has, not ones its rules merely name', () => {
+  it('BRD-51: shows only the keywords the card has, each on its own ficha', () => {
     const anchor = { left: 200, top: 200, right: 290, bottom: 326, width: 90, height: 126 } as DOMRect
     setLanguage('en')
     const lord: CardView = { name: 'Lord of Wings', manaValue: 3, rules: ['Creatures you control have flying.'] }
@@ -162,7 +162,7 @@ describe('FloatingCardPreview', () => {
       rules: ['Blitz {2}{R}{R} (You may cast this spell for its blitz cost. If you do, it gains haste and "When this creature dies, draw a card," and it\'s sacrificed at the beginning of the next end step.)'],
     }
     const blitzRender = render(<FloatingCardPreview card={blitzer} anchorRect={anchor} boardRect={dummyBoardRect} />)
-    const names = [...blitzRender.container.querySelectorAll('.kw-box-name')].map((el) => el.textContent)
+    const names = [...blitzRender.container.querySelectorAll('.ability-card-name')].map((el) => el.textContent)
     expect(names).toEqual(['Blitz'])
     blitzRender.unmount()
     setLanguage('es')

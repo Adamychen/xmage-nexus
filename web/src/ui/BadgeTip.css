@@ -29,3 +29,13 @@
 .badge-tip-body {
   color: var(--fg-2);
 }
+
+/* BRD-51: a bubble that holds a ficha of its own brings its plate with it, so the bubble is only
+   the place it sits in. */
+.badge-tip.is-card {
+  max-width: 300px;
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+}
