@@ -8,21 +8,22 @@ on:
   # the PR is opened, which is also how upstream-upgrade's upgrade/xmage_* branch is covered (the
   # draft PR it opens triggers this workflow, and the fork-ref step reads GITHUB_HEAD_REF there).
   # Tags stop triggering it too: a release tag points at a master commit that already ran this.
+  #
+  # No paths filter any more, on purpose. `ci-ok` below is meant to be the single required check
+  # of a merge queue, and GitHub's own troubleshooting page is explicit about the combination:
+  # a workflow skipped by path filtering leaves its checks "in a 'Pending' state and block
+  # merging", so a PR touching only docs would never be mergeable. Its advice is to "avoid
+  # requiring workflows that can be skipped". The filter used to spare the ~26% of master commits
+  # that touch none of those paths; on a public repo those runs cost nothing.
   push:
     branches: [master]
-    paths:
-      - 'web/**'
-      - 'mcp/**'
-      - 'Mage.Proxy/**'
-      - 'scripts/**'
-      - '.github/workflows/web-ci.yml'
   pull_request:
-    paths:
-      - 'web/**'
-      - 'mcp/**'
-      - 'Mage.Proxy/**'
-      - 'scripts/**'
-      - '.github/workflows/web-ci.yml'
+  # The merge queue tests a PR already merged into master on a temporary gh-readonly-queue/ branch,
+  # and dispatches merge_group, not pull_request. Without this the queue waits for a check nobody
+  # reports and the merge fails. merge_group takes no paths filter, only branches.
+  merge_group:
+    types: [checks_requested]
+    branches: [master]
   workflow_dispatch: {}
 
 concurrency:
@@ -426,3 +427,33 @@ jobs:
           if-no-files-found: ignore
           # .run/ is a hidden dir: upload-artifact@v4 skips it unless asked
           include-hidden-files: true
+
+  # The single check to mark as required, in branch protection and in the merge queue.
+  #
+  # Requiring the jobs themselves does not survive this workflow changing shape: the matrices
+  # publish one check name per shard (e2e-fake (1)…(6), e2e-fake-heavy (1)…(2)), the shard count
+  # has already changed twice, and a required check that stops being reported blocks merging
+  # forever. This name never changes, so the split inside can.
+  #
+  # always(), because a required check that depends on other jobs has to report even when one of
+  # them fails or is skipped; otherwise it is skipped with them and GitHub keeps waiting for it.
+  # scripts/workflows.test.mjs checks it needs every other job: one left out would be a green
+  # ci-ok that never waited for it.
+  ci-ok:
+    if: ${{ always() }}
+    needs: [web, audit, mcp, proxy, e2e-fake, e2e-fake-heavy, e2e-timing, integration]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Every job this one waits for succeeded
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "job results: $RESULTS"
+          for result in $RESULTS; do
+            if [ "$result" != 'success' ]; then
+              echo "::error::Web client CI did not pass: $RESULTS"
+              exit 1
+            fi
+          done
+          echo 'all green'

@@ -345,6 +345,11 @@ for `mechanics.spec.ts`, so a fixture change must be checked against every spec 
   which runs the whole fake e2e sharded on every PR and on every push to `master`. `Web client CI` once sat red on
   `master` for a week while the local suite was 9/9, because CI's Maven cache held old `org.mage` artifacts.
   If the fork is touched, publish `origin/nexus` first: CI and `release.yml` build from there.
+  The one check to mark as required (branch protection, merge queue) is **`ci-ok`**: it needs every
+  other job and reports with `always()`, so the shards can be resplit without touching the repo
+  settings. For the same reason `web-ci.yml` carries no `paths` filter: a workflow skipped by path
+  filtering leaves a required check pending and blocks merging. It also answers `merge_group`,
+  which is what a merge queue dispatches; without that trigger the queue waits forever.
 - **Restart the stack right before** (`node scripts/ctl.mjs restart all`): a server that accumulated orphan
   sessions and matches degrades the callback channel and makes `warmup`/`self-test`/`human-test` flaky
   (`WATCHGAME` never arrives, `GAME_PLAY_MANA` expires). On a freshly restarted, warm stack: self-test

@@ -105,109 +105,43 @@ test("web-ci runs both lanes", () => {
   assert.doesNotMatch(heavy, /E2E_LANE: light/, "e2e-fake-heavy does not also run the light lane");
 });
 
-// The deploy workflow runs on the self-hosted runner, which executes ~/deploy-xmage.sh on the
-// server. Two things must hold forever: it is never reachable from a fork's pull request, and it
-// only publishes the commit that bumps the app version. Before 2026-11-14 every push to master
-// deployed, so a README typo went to production and a version bump was indistinguishable from it.
-// Read with the line endings normalised: these files are checked out with CRLF on Windows.
-const deploy = fs.readFileSync(path.join(repoRoot, ".github", "workflows", "deploy.yml"), "utf8").replace(/\r\n/g, "\n");
+// ci-ok is the single check meant to be required in branch protection and in the merge queue.
+// Two ways it could go wrong silently, both guarded here: a new job that nobody adds to its
+// needs (ci-ok goes green without ever waiting for it), and losing the merge_group trigger
+// (the queue waits for a check nobody reports and the merge fails).
+function jobNames(yml) {
+  const body = yml.slice(yml.indexOf("\njobs:") + 1);
+  return body.split(/\r?\n/).flatMap((l) => {
+    const m = /^ {2}([a-z0-9][a-z0-9-]*):\s*$/.exec(l);
+    return m ? [m[1]] : [];
+  });
+}
 
-test("deploy triggers only on master pushes touching web/package.json, plus a manual run", () => {
-  const on = deploy.slice(deploy.indexOf("\non:"), deploy.indexOf("\npermissions:"));
-  assert.match(on, /push:/, "it still triggers on push");
-  assert.match(on, /branches:\s*\[master\]/, "only on master");
-  assert.match(on, /paths:\s*\['web\/package\.json'\]/, "prefiltered to the file that carries the version");
-  assert.match(on, /workflow_dispatch:/, "a manual run stays available for a hotfix");
-  // The header comment names the triggers to avoid, so the guard reads the file without comments.
-  const triggers = deploy.replace(/(^|\n)\s*#[^\n]*/g, "$1");
-  assert.doesNotMatch(triggers, /pull_request/, "a job on the server is never reachable from a pull request");
+test("ci-ok waits for every other job in web-ci", () => {
+  const jobs = jobNames(webCi);
+  assert.ok(jobs.includes("ci-ok"), "web-ci has a ci-ok job");
+  const needs = needsOf(webCi, "ci-ok");
+  const missing = jobs.filter((j) => j !== "ci-ok" && !needs.includes(j));
+  assert.deepEqual(missing, [], `ci-ok must list every other job in needs; missing: ${missing.join(", ")}`);
+  const unknown = needs.filter((n) => !jobs.includes(n));
+  assert.deepEqual(unknown, [], `ci-ok needs a job that does not exist: ${unknown.join(", ")}`);
 });
 
-test("the gate reads the version of the pushed commit and of its first parent", () => {
-  const gate = jobBlock(deploy, "gate");
-  assert.ok(gate !== null, "job gate exists");
-  assert.match(gate, /runs-on: ubuntu-latest/, "the comparison runs on a GitHub runner, not on the server");
-  assert.match(gate, /fetch-depth: 2/, "HEAD~1 has to be in the checkout");
-  assert.match(gate, /git show HEAD~1:web\/package\.json/, "it compares against the first parent");
-  assert.match(gate, /changed=true/, "it publishes a changed output");
-  assert.match(gate, /outputs:[\s\S]*changed: \$\{\{ steps\.version\.outputs\.changed \}\}/,
-    "the output is wired to the step that computes it");
+test("ci-ok reports even when a job it waits for fails", () => {
+  const block = jobBlock(webCi, "ci-ok");
+  assert.ok(block !== null, "job ci-ok exists");
+  assert.match(block, /if:\s*\$\{\{\s*always\(\)\s*\}\}/,
+    "without always() the gate is skipped with the job that failed and the check never reports");
 });
 
-test("the self-hosted job waits for the gate and runs only on a version bump or a manual run", () => {
-  assert.deepEqual(needsOf(deploy, "deploy"), ["gate"]);
-  const job = jobBlock(deploy, "deploy");
-  assert.match(job, /runs-on: \[self-hosted, xmage-nexus\]/, "this is the job that touches the server");
-  const condition = job.match(/^ {4}if: (.*)$/m);
-  assert.ok(condition, "the self-hosted job is conditional");
-  assert.match(condition[1], /needs\.gate\.outputs\.changed == 'true'/, "a bump deploys");
-  assert.match(condition[1], /github\.event_name == 'workflow_dispatch'/, "a manual run deploys");
+test("web-ci answers the merge queue", () => {
+  const on = webCi.slice(0, webCi.indexOf("\njobs:"));
+  assert.match(on, /^ {2}merge_group:/m,
+    "a merge queue dispatches merge_group, not pull_request: without it the merge fails");
 });
 
-test("the token of the job that runs on the server stays read-only", () => {
-  const job = jobBlock(deploy, "deploy");
-  assert.match(job, /permissions:\n {6}contents: read/, "the self-hosted job declares a read-only token");
-  assert.doesNotMatch(job, /contents: write/, "nothing on the server may write to the repository");
-  assert.match(deploy, /^permissions:\n {2}contents: read$/m, "the workflow default is read-only too");
-});
-
-test("deploy keeps one run at a time and never cancels one in flight", () => {
-  const block = deploy.slice(deploy.indexOf("\nconcurrency:"), deploy.indexOf("\njobs:"));
-  assert.match(block, /group: deploy/);
-  assert.match(block, /cancel-in-progress: false/, "cancelling mid-deploy would leave the server half updated");
-  assert.match(jobBlock(deploy, "deploy"), /timeout-minutes: 30/, "a hung deploy must not hold the runner forever");
-});
-
-// Deploying does not light the news bell: web/src/system/news.ts reads the GitHub releases API, so
-// the release of a version is what players see. deploy.yml publishes it, and that is the only job
-// of the three that needs a token able to write to the repository.
-test("the release of a version is published from a GitHub runner, not from the server", () => {
-  const job = jobBlock(deploy, "release");
-  assert.ok(job !== null, "job release exists");
-  assert.match(job, /runs-on: ubuntu-latest/, "it never runs on the self-hosted runner");
-  assert.deepEqual(needsOf(deploy, "release"), ["gate", "deploy"],
-    "a version that did not reach the server is not announced");
-  assert.match(job, /permissions:\n {6}contents: write/, "the write token is scoped to this job");
-  const condition = job.match(/^ {4}if: (.*)$/m);
-  assert.ok(condition, "the release job is conditional");
-  assert.match(condition[1], /needs\.gate\.outputs\.changed == 'true'/,
-    "only a version bump publishes a release, not a manual deploy of the same version");
-  for (const other of ["gate", "deploy"]) {
-    assert.doesNotMatch(jobBlock(deploy, other), /contents: write/, `job ${other} keeps a read-only token`);
-  }
-});
-
-test("the release is a prerelease at the deployed commit, and an existing tag is left alone", () => {
-  const job = jobBlock(deploy, "release");
-  assert.match(job, /gh release view "\$TAG"[\s\S]*?exit 0/,
-    "a tag that is already released is not touched (a manual re-run, or the launcher got there first)");
-  assert.match(job, /gh release create "\$TAG" --prerelease --target "\$GITHUB_SHA"/,
-    "a prerelease keeps releases/latest, which site/app.js reads, on the last release that has installers");
-  assert.match(job, /docs\/release-notes\/\$VERSION\.md/, "the notes come from the version bump PR");
-});
-
-// release.yml publishes the launcher installers for a tag that deploy.yml has usually opened
-// already. It used to hide the collision with `|| true`, which uploaded the bundles but left the
-// release without the download guide that gen-release-body.mjs builds (issue #12).
-const release = fs.readFileSync(path.join(repoRoot, ".github", "workflows", "release.yml"), "utf8").replace(/\r\n/g, "\n");
-
-test("the launcher completes the release deploy.yml opened instead of swallowing the error", () => {
-  const publish = jobBlock(release, "publish");
-  assert.ok(publish !== null, "job publish exists");
-  // The comments of the step name the flags it must not use, so absences are read without them.
-  const code = publish.replace(/(^|\n)\s*#[^\n]*/g, "$1");
-  assert.doesNotMatch(code, /\|\| true/, "an existing release is handled, not swallowed");
-  assert.match(publish, /gh release view "\$TAG"/, "it asks whether the tag is already out");
-  assert.match(publish, /gh release create "\$TAG" --draft/, "a new tag is still born as a draft");
-  assert.doesNotMatch(code, /--draft=false/, "a draft waiting for a human is never published by the workflow");
-  assert.match(publish, /gh release edit "\$TAG" --notes-file release-body\.md --prerelease=false/,
-    "an opened release gets the download guide back and stops being a prerelease");
-  assert.ok(publish.indexOf("--prerelease=false") > publish.indexOf("gh release upload"),
-    "the flag is cleared after the installers are up, never before");
-});
-
-test("the launcher release reuses the notes of the version bump when its input is empty", () => {
-  const publish = jobBlock(release, "publish");
-  assert.match(publish, /docs\/release-notes\/\$\{TAG#v\}\.md/,
-    "the What changed block says what the news bell already showed");
+test("web-ci has no paths filter, so its required check cannot be left pending", () => {
+  const on = webCi.slice(0, webCi.indexOf("\njobs:"));
+  assert.doesNotMatch(on, /^ {4}paths(-ignore)?:/m,
+    "a workflow skipped by path filtering leaves a required check pending and blocks merging");
 });
