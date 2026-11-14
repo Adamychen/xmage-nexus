@@ -26,3 +26,14 @@ describe('visibleBadges', () => {
     }
   })
 })
+
+describe('BRD-52: badges in several lanes', () => {
+  it('BRD-52: a strip in two lanes holds twice as many badges before it needs the "+N" chip', () => {
+    // Room for four in a lane: four fit in one lane, eight in two.
+    expect(visibleBadges(4, 70, 16, 2)).toBe(4)
+    expect(visibleBadges(5, 70, 16, 2)).toBe(3)
+    expect(visibleBadges(8, 70, 16, 2, 2)).toBe(8)
+    expect(visibleBadges(9, 70, 16, 2, 2)).toBe(7)
+    expect(visibleBadges(4, 70, 16, 2, 2)).toBe(4)
+  })
+})

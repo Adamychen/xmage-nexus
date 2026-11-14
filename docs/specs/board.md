@@ -841,3 +841,33 @@ that shares the tallest line count keeps the row's size exactly.
   still fit (14-nov-2026). On the four-player Commander board at 1920 that takes the other
   permanents from 80 px to 107 px, where the width runs out before the height does.
 - Guard: `src/board/layout/solveRow.test.ts`
+
+### BRD-51 · A keyword is explained on the same card wherever it is explained
+Pointing at a keyword badge and reading the panel beside a card give the same thing: a plate with
+the keyword's symbol on its square, the name in the keyword's own colour, the English name in grey
+beside it when the board is in another language, and what the keyword does underneath. The colour
+is the one the badge carries (`kw-tone`), so the chip, the rim of the plate and the name always
+agree. The bubble around the plate adds nothing of its own, and the badge still names the keyword
+and its summary for a reader that cannot see the plate.
+
+- Why: the badge showed a plain tooltip with the name in bold while the panel showed a boxed row
+  with a gold name, so the same keyword looked like two different things depending on where you
+  read it; the user asked for one ficha, and for the panel to take the colours of the keywords
+  (14-nov-2026).
+- Guard: `src/board/CardSlot.test.tsx` · `src/board/FloatingCardPreview.test.tsx`
+
+### BRD-52 · The keyword badges go in columns of four
+The badges of a card run down its right edge in columns of four, and the number of columns follows
+the number of badges, not the height of the card: one to four fill a single column, five to eight
+open a second one towards the middle of the card, nine a third, and so on, with the first column
+always where it was. Four is what keeps a column clear of the type line, so a card too short for
+four badges of the usual size draws them smaller instead of breaking the group. Nothing caps the
+badges a card may show other than the columns its width has room for; what does not fit becomes
+the "+N" chip, which counts those columns as well.
+
+- Why: the column grew with the card's keywords and a fifth badge would have crossed the type
+  line. The first answer broke the column wherever the card ran out of height, which put four
+  badges in two columns on a rival's short card; the user asked for the columns to follow the
+  count, four at a time (14-nov-2026). The five-badge cap that came before this went with it: the
+  room on the card is what decides.
+- Guard: `src/board/badgeFit.test.ts` · `src/board/CardSlot.test.tsx`

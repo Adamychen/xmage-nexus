@@ -5,6 +5,8 @@ import './BadgeTip.css'
 export interface BadgeTipContent {
   title: string
   body?: string
+  /** BRD-51: what the bubble draws instead of the title and the body; both still name it for a reader. */
+  card?: ReactNode
 }
 
 interface Props extends Omit<HTMLAttributes<HTMLSpanElement>, 'title' | 'role' | 'aria-label'> {
@@ -43,7 +45,7 @@ export default function BadgeTip({ tip, className, children, ...rest }: Props) {
     const above = a.top - h - GAP
     const top = above >= MARGIN ? above : a.bottom + GAP
     setPos({ left, top })
-  }, [open, tip.title, tip.body])
+  }, [open, tip.title, tip.body, tip.card])
 
   return (
     <span
@@ -66,12 +68,16 @@ export default function BadgeTip({ tip, className, children, ...rest }: Props) {
         createPortal(
           <div
             ref={bubbleRef}
-            className="badge-tip"
+            className={`badge-tip${tip.card ? ' is-card' : ''}`}
             role="tooltip"
             style={{ left: pos?.left ?? 0, top: pos?.top ?? 0, visibility: pos ? 'visible' : 'hidden' }}
           >
-            <strong className="badge-tip-title">{tip.title}</strong>
-            {tip.body && <span className="badge-tip-body">{tip.body}</span>}
+            {tip.card ?? (
+              <>
+                <strong className="badge-tip-title">{tip.title}</strong>
+                {tip.body && <span className="badge-tip-body">{tip.body}</span>}
+              </>
+            )}
           </div>,
           document.body,
         )}
