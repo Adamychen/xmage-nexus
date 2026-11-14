@@ -1,11 +1,16 @@
 name: deploy
 
-# Despliega en el servidor propio (runner self-hosted) cuando master cambia.
-# SEGURIDAD: este runner ejecuta código en el servidor. Solo push a master y
-# disparo manual. NUNCA añadir pull_request / pull_request_target aquí.
+# Publishes to the project's own server (self-hosted runner) when the app
+# VERSION in web/package.json goes up, not on every push to master.
+# SECURITY: this runner executes code on the server. Push to master and manual
+# dispatch only. NEVER add pull_request / pull_request_target here.
 on:
   push:
     branches: [master]
+    # Cheap prefilter: a push that does not touch this file cannot carry a
+    # version bump, so no runner minute is spent on it. It does not decide on
+    # its own (a dependency change touches the same file): the `gate` job does.
+    paths: ['web/package.json']
   workflow_dispatch:
 
 permissions:
@@ -16,9 +21,49 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # Version gate: compares web/package.json with the one in the first parent of
+  # the pushed commit. It runs on a GitHub runner, not on the server, so a push
+  # that only moved dependencies never wakes the self-hosted one.
+  gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    outputs:
+      changed: ${{ steps.version.outputs.changed }}
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 2
+      - name: Compare the app version with its first parent
+        id: version
+        run: |
+          NEW=$(node -p "require('./web/package.json').version")
+          if git show HEAD~1:web/package.json > "$RUNNER_TEMP/prev-package.json" 2>/dev/null; then
+            OLD=$(node -p "require('$RUNNER_TEMP/prev-package.json').version")
+          else
+            OLD=''
+          fi
+          echo "version=$NEW" >> "$GITHUB_OUTPUT"
+          if [ "$NEW" != "$OLD" ]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            echo "web/package.json: ${OLD:-(no parent)} -> $NEW"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "web/package.json stays at $NEW: nothing to deploy"
+          fi
+
   deploy:
+    needs: [gate]
+    # The commit that bumps the version, or a manual run (hotfix).
+    if: ${{ needs.gate.outputs.changed == 'true' || github.event_name == 'workflow_dispatch' }}
     runs-on: [self-hosted, xmage-nexus]
     timeout-minutes: 30
+    # Spelled out here on top of the workflow default: this is the job that runs
+    # on the server, and its token must never be able to write to the repository.
+    permissions:
+      contents: read
     steps:
       - name: Build (pull, proxy, web)
         run: ~/deploy-xmage.sh
@@ -28,3 +73,40 @@ jobs:
         run: |
           sleep 3
           systemctl is-active xmage-proxy.service
+
+  # Publishes the GitHub release of the version that just went out, which is what
+  # lights the news bell in the client: web/src/system/news.ts reads the releases
+  # API, not the server. It runs on a GitHub runner because it is the only job
+  # here that needs a token able to write to the repository.
+  release:
+    needs: [gate, deploy]
+    if: ${{ needs.gate.outputs.changed == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+      - name: Publish the release of this version
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.gate.outputs.version }}
+        run: |
+          TAG="v$VERSION"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "$TAG is already released; leaving it untouched"
+            exit 0
+          fi
+          NOTES="docs/release-notes/$VERSION.md"
+          if [ ! -f "$NOTES" ]; then
+            echo "::warning::no $NOTES in this commit; the release goes out without notes"
+            NOTES="$RUNNER_TEMP/notes.md"
+            printf 'XMage Nexus %s is live.\n' "$VERSION" > "$NOTES"
+          fi
+          # A prerelease on purpose: releases/latest skips prereleases, so the download
+          # page (site/app.js) keeps pointing at the last release that carries the
+          # launcher installers, while the releases list the bell reads does include
+          # this one. release.yml clears the flag when it uploads the bundles of this
+          # tag, and the version becomes the full release.
+          gh release create "$TAG" --prerelease --target "$GITHUB_SHA" \
+            --title "$TAG" --notes-file "$NOTES"
