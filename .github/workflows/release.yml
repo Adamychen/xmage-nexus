@@ -233,10 +233,10 @@ jobs:
           TAG: ${{ inputs.tag }}
           NOTES: ${{ inputs.notes }}
         run: |
-          # With the input left empty, the notes are the ones the version bump PR put in
-          # docs/release-notes/<version>.md, the same text the news bell already showed.
-          if [ -z "$NOTES" ] && [ -f "docs/release-notes/${TAG#v}.md" ]; then
-            NOTES=$(cat "docs/release-notes/${TAG#v}.md")
+          # With the input left empty, the notes are the "What's new in <version>" section of
+          # readme.md, the same text the news bell already showed for this version.
+          if [ -z "$NOTES" ]; then
+            NOTES=$(node scripts/release-notes.mjs --version "${TAG#v}" || true)
           fi
           node scripts/gen-release-body.mjs --assets-dir release-assets --tag "$TAG" --notes "$NOTES" --out release-body.md
       - name: Create or complete the release and upload assets

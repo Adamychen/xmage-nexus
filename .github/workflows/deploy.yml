@@ -97,10 +97,13 @@ jobs:
             echo "$TAG is already released; leaving it untouched"
             exit 0
           fi
-          NOTES="docs/release-notes/$VERSION.md"
-          if [ ! -f "$NOTES" ]; then
-            echo "::warning::no $NOTES in this commit; the release goes out without notes"
-            NOTES="$RUNNER_TEMP/notes.md"
+          # The body is the "What's new in <version>" section of readme.md, the one anyone
+          # landing on the repository reads. A bump that forgets it is caught by
+          # scripts/release-notes.test.mjs long before here, so this only has to avoid
+          # failing a deploy that has already happened.
+          NOTES="$RUNNER_TEMP/notes.md"
+          if ! node scripts/release-notes.mjs --version "$VERSION" --out "$NOTES"; then
+            echo "::warning::readme.md has no What's new section for $VERSION; the release goes out without notes"
             printf 'XMage Nexus %s is live.\n' "$VERSION" > "$NOTES"
           fi
           # A prerelease on purpose: releases/latest skips prereleases, so the download

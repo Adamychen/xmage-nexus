@@ -62,8 +62,9 @@ and then restarts `xmage-proxy.service`.
   so if a second bump lands while a deploy is running and a third follows it, GitHub cancels the one in the middle:
   its code still reaches the server with the next deploy, but its release is never created and the bell never shows
   that version. The deploy takes about half a minute, so it takes two bumps inside the same minute. The way back is
-  `gh release create v<version> --prerelease --notes-file docs/release-notes/<version>.md`; the `release` job
-  leaves a tag that already exists alone, so nothing collides afterwards.
+  to write the notes out with `node scripts/release-notes.mjs --version <version> --out notes.md` and open the
+  release by hand with `gh release create v<version> --prerelease --notes-file notes.md`. The `release` job leaves a
+  tag that already exists alone, so nothing collides afterwards.
 - **The job that runs on the server keeps a read-only token** (`contents: read`, spelled out in the job), and the
   workflow never gains a `pull_request` trigger: a pull request from a fork would otherwise run code on the host.
   `concurrency: deploy` with `cancel-in-progress: false` keeps two deploys from overlapping and never cuts one
@@ -72,8 +73,8 @@ and then restarts `xmage-proxy.service`.
 - **The deploy publishes the GitHub release of that version**, which is what lights the news bell in the client:
   `web/src/system/news.ts` reads the releases API, not what is running on the server. The `release` job runs on a
   GitHub runner, is the only one with a `contents: write` token, waits for the deploy (a version that never reached
-  the server is not announced), takes its body from `docs/release-notes/<version>.md` and leaves an existing tag
-  alone, so a re-run publishes nothing twice.
+  the server is not announced), takes its body from the `What's new in <version>` section of `readme.md`, and
+  leaves an existing tag alone, so a re-run publishes nothing twice.
 - **That release is born a prerelease.** `releases/latest`, which the download page reads (`site/app.js`), skips
   prereleases, so it keeps pointing at the last release that carries launcher installers; the releases list the bell
   reads does include it. When `release.yml` later uploads the installers for that tag it restores the body with the
