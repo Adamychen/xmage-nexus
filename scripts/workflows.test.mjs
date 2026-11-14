@@ -109,7 +109,8 @@ test("web-ci runs both lanes", () => {
 // server. Two things must hold forever: it is never reachable from a fork's pull request, and it
 // only publishes the commit that bumps the app version. Before 2026-11-14 every push to master
 // deployed, so a README typo went to production and a version bump was indistinguishable from it.
-const deploy = fs.readFileSync(path.join(repoRoot, ".github", "workflows", "deploy.yml"), "utf8");
+// Read with the line endings normalised: these files are checked out with CRLF on Windows.
+const deploy = fs.readFileSync(path.join(repoRoot, ".github", "workflows", "deploy.yml"), "utf8").replace(/\r\n/g, "\n");
 
 test("deploy triggers only on master pushes touching web/package.json, plus a manual run", () => {
   const on = deploy.slice(deploy.indexOf("\non:"), deploy.indexOf("\npermissions:"));
@@ -155,4 +156,58 @@ test("deploy keeps one run at a time and never cancels one in flight", () => {
   assert.match(block, /group: deploy/);
   assert.match(block, /cancel-in-progress: false/, "cancelling mid-deploy would leave the server half updated");
   assert.match(jobBlock(deploy, "deploy"), /timeout-minutes: 30/, "a hung deploy must not hold the runner forever");
+});
+
+// Deploying does not light the news bell: web/src/system/news.ts reads the GitHub releases API, so
+// the release of a version is what players see. deploy.yml publishes it, and that is the only job
+// of the three that needs a token able to write to the repository.
+test("the release of a version is published from a GitHub runner, not from the server", () => {
+  const job = jobBlock(deploy, "release");
+  assert.ok(job !== null, "job release exists");
+  assert.match(job, /runs-on: ubuntu-latest/, "it never runs on the self-hosted runner");
+  assert.deepEqual(needsOf(deploy, "release"), ["gate", "deploy"],
+    "a version that did not reach the server is not announced");
+  assert.match(job, /permissions:\n {6}contents: write/, "the write token is scoped to this job");
+  const condition = job.match(/^ {4}if: (.*)$/m);
+  assert.ok(condition, "the release job is conditional");
+  assert.match(condition[1], /needs\.gate\.outputs\.changed == 'true'/,
+    "only a version bump publishes a release, not a manual deploy of the same version");
+  for (const other of ["gate", "deploy"]) {
+    assert.doesNotMatch(jobBlock(deploy, other), /contents: write/, `job ${other} keeps a read-only token`);
+  }
+});
+
+test("the release is a prerelease at the deployed commit, and an existing tag is left alone", () => {
+  const job = jobBlock(deploy, "release");
+  assert.match(job, /gh release view "\$TAG"[\s\S]*?exit 0/,
+    "a tag that is already released is not touched (a manual re-run, or the launcher got there first)");
+  assert.match(job, /gh release create "\$TAG" --prerelease --target "\$GITHUB_SHA"/,
+    "a prerelease keeps releases/latest, which site/app.js reads, on the last release that has installers");
+  assert.match(job, /docs\/release-notes\/\$VERSION\.md/, "the notes come from the version bump PR");
+});
+
+// release.yml publishes the launcher installers for a tag that deploy.yml has usually opened
+// already. It used to hide the collision with `|| true`, which uploaded the bundles but left the
+// release without the download guide that gen-release-body.mjs builds (issue #12).
+const release = fs.readFileSync(path.join(repoRoot, ".github", "workflows", "release.yml"), "utf8").replace(/\r\n/g, "\n");
+
+test("the launcher completes the release deploy.yml opened instead of swallowing the error", () => {
+  const publish = jobBlock(release, "publish");
+  assert.ok(publish !== null, "job publish exists");
+  // The comments of the step name the flags it must not use, so absences are read without them.
+  const code = publish.replace(/(^|\n)\s*#[^\n]*/g, "$1");
+  assert.doesNotMatch(code, /\|\| true/, "an existing release is handled, not swallowed");
+  assert.match(publish, /gh release view "\$TAG"/, "it asks whether the tag is already out");
+  assert.match(publish, /gh release create "\$TAG" --draft/, "a new tag is still born as a draft");
+  assert.doesNotMatch(code, /--draft=false/, "a draft waiting for a human is never published by the workflow");
+  assert.match(publish, /gh release edit "\$TAG" --notes-file release-body\.md --prerelease=false/,
+    "an opened release gets the download guide back and stops being a prerelease");
+  assert.ok(publish.indexOf("--prerelease=false") > publish.indexOf("gh release upload"),
+    "the flag is cleared after the installers are up, never before");
+});
+
+test("the launcher release reuses the notes of the version bump when its input is empty", () => {
+  const publish = jobBlock(release, "publish");
+  assert.match(publish, /docs\/release-notes\/\$\{TAG#v\}\.md/,
+    "the What changed block says what the news bell already showed");
 });

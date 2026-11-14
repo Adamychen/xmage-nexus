@@ -233,12 +233,31 @@ jobs:
           TAG: ${{ inputs.tag }}
           NOTES: ${{ inputs.notes }}
         run: |
+          # With the input left empty, the notes are the ones the version bump PR put in
+          # docs/release-notes/<version>.md, the same text the news bell already showed.
+          if [ -z "$NOTES" ] && [ -f "docs/release-notes/${TAG#v}.md" ]; then
+            NOTES=$(cat "docs/release-notes/${TAG#v}.md")
+          fi
           node scripts/gen-release-body.mjs --assets-dir release-assets --tag "$TAG" --notes "$NOTES" --out release-body.md
-      - name: Create draft release and upload assets
+      - name: Create or complete the release and upload assets
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ inputs.tag }}
         run: |
           head -14 release-body.md
-          gh release create "$TAG" --draft --title "$TAG" --notes-file release-body.md || true
+          # deploy.yml may have opened this tag already, as a prerelease, when the version
+          # went out. Then the installers join it, the body goes back to the one with the
+          # download guide, and the prerelease flag is cleared: that is the moment the
+          # version becomes the release the download page picks. When the tag is new it is
+          # born as a draft, as always. --draft=false is never passed, so a draft that is
+          # waiting for a human stays a draft.
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            EXISTED=1
+          else
+            gh release create "$TAG" --draft --title "$TAG" --notes-file release-body.md
+            EXISTED=0
+          fi
           find release-assets -maxdepth 1 -type f -print0 | xargs -0 gh release upload "$TAG" --clobber
+          if [ "$EXISTED" = 1 ]; then
+            gh release edit "$TAG" --notes-file release-body.md --prerelease=false
+          fi

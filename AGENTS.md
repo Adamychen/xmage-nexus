@@ -324,8 +324,10 @@ for `mechanics.spec.ts`, so a fixture change must be checked against every spec 
   do unrelated mass rewrites.
 - **A push to `master` does not deploy**: production (`.github/workflows/deploy.yml`, self-hosted
   runner) goes out only on the commit that raises the version in `web/package.json`, or on a manual
-  `workflow_dispatch`. Work that should reach players carries the bump in its own PR
-  (`docs/deployment.md`, "Production deploy").
+  `workflow_dispatch`. Work that should reach players carries the bump in its own PR, together with
+  `docs/release-notes/<version>.md`: the deploy publishes those notes as the GitHub release of the
+  version, and that release is what the news bell shows (`docs/deployment.md`, "Production deploy";
+  the format is in `docs/release-notes/README.md`).
 - **Before changing how the client behaves**, read the spec of that area in
   `docs/specs/`. A change to a rule goes in the same commit as the code: edit
   the rule and its `Why:`, then the tests named after it. A new decision gets a

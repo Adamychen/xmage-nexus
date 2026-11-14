@@ -63,8 +63,16 @@ and then restarts `xmage-proxy.service`.
   `concurrency: deploy` with `cancel-in-progress: false` keeps two deploys from overlapping and never cuts one
   halfway through.
 - Guard: `scripts/workflows.test.mjs` (trigger, gate, condition, token and concurrency).
-- Deploying does not light the news bell in the client: `web/src/system/news.ts` reads the GitHub releases API,
-  not what is running on the server.
+- **The deploy publishes the GitHub release of that version**, which is what lights the news bell in the client:
+  `web/src/system/news.ts` reads the releases API, not what is running on the server. The `release` job runs on a
+  GitHub runner, is the only one with a `contents: write` token, waits for the deploy (a version that never reached
+  the server is not announced), takes its body from `docs/release-notes/<version>.md` and leaves an existing tag
+  alone, so a re-run publishes nothing twice.
+- **That release is born a prerelease.** `releases/latest`, which the download page reads (`site/app.js`), skips
+  prereleases, so it keeps pointing at the last release that carries launcher installers; the releases list the bell
+  reads does include it. When `release.yml` later uploads the installers for that tag it restores the body with the
+  download guide and clears the flag, and the version becomes the full release. A tag that `release.yml` opens by
+  itself is still born as a draft, as before.
 
 ## Host status dashboard (LAN only)
 
