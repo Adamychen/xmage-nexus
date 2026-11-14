@@ -224,7 +224,8 @@ test("the release is a prerelease at the deployed commit, and an existing tag is
     "a tag that is already released is not touched (a manual re-run, or the launcher got there first)");
   assert.match(job, /gh release create "\$TAG" --prerelease --target "\$GITHUB_SHA"/,
     "a prerelease keeps releases/latest, which site/app.js reads, on the last release that has installers");
-  assert.match(job, /docs\/release-notes\/\$VERSION\.md/, "the notes come from the version bump PR");
+  assert.match(job, /node scripts\/release-notes.mjs --version "\$VERSION"/,
+    "the body is the readme section of that version");
 });
 
 // release.yml publishes the launcher installers for a tag that deploy.yml has usually opened
@@ -237,7 +238,8 @@ test("the launcher completes the release deploy.yml opened instead of swallowing
   assert.ok(publish !== null, "job publish exists");
   // The comments of the step name the flags it must not use, so absences are read without them.
   const code = publish.replace(/(^|\n)\s*#[^\n]*/g, "$1");
-  assert.doesNotMatch(code, /\|\| true/, "an existing release is handled, not swallowed");
+  assert.doesNotMatch(code, /gh release create[^\n]*\|\| true/,
+    "an existing release is handled, not swallowed (the notes fallback may still use || true)");
   assert.match(publish, /gh release view "\$TAG"/, "it asks whether the tag is already out");
   assert.match(publish, /gh release create "\$TAG" --draft/, "a new tag is still born as a draft");
   assert.doesNotMatch(code, /--draft=false/, "a draft waiting for a human is never published by the workflow");
@@ -249,6 +251,6 @@ test("the launcher completes the release deploy.yml opened instead of swallowing
 
 test("the launcher release reuses the notes of the version bump when its input is empty", () => {
   const publish = jobBlock(release, "publish");
-  assert.match(publish, /docs\/release-notes\/\$\{TAG#v\}\.md/,
+  assert.match(publish, /node scripts\/release-notes.mjs --version "\$\{TAG#v\}"/,
     "the What changed block says what the news bell already showed");
 });
