@@ -840,7 +840,7 @@ import { normalizeAppearanceChoice, type AppearanceChoice } from '../appearance/
 import { normalizeCardStyle, normalizeTapStyle, type CardStyle, type TapStyle } from '../board/compactCard'
 import { normalizeGameUi, DEFAULT_GAME_UI, type GameUi } from '../game/gameUi'
 import { CARD_PREVIEW_SCALE_DEFAULT, normalizeCardPreviewScale } from '../board/cardPreviewScale'
-import { normalizeBoardSpotlight, normalizeBoardSpotlightPanel, normalizeBoardFill, normalizeStackCaption, normalizeCardRender, normalizeHandRail, normalizeHandRailWidth, normalizeHandRow, normalizePtBadgeMode, normalizeShowHandCost, normalizeShowManaSource, normalizeSicknessStyle, normalizeKeywordIconSet, normalizeKeywordAuraMode, type CardRender, type KeywordIconSet, type KeywordAuraMode, type PtBadgeMode, type SicknessStyle } from '../board/cardOverlays'
+import { normalizeBoardSpotlight, normalizeBoardSpotlightPanel, normalizeBoardFill, normalizeStackCaption, normalizeCardRender, normalizeHandRail, normalizeHandRailWidth, normalizeHandRow, normalizePtBadgeMode, normalizeShowHandCost, normalizeShowManaSource, normalizeSicknessStyle, normalizeKeywordAuraMode, type CardRender, type KeywordAuraMode, type PtBadgeMode, type SicknessStyle } from '../board/cardOverlays'
 
 export type BoardLayoutPref = 'standard' | 'pod' | 'arena'
 export type ZoomLevel = number
@@ -860,7 +860,6 @@ export interface AppearanceSettings {
   showManaSource?: boolean
   ptBadgeMode?: PtBadgeMode
   sicknessStyle?: SicknessStyle
-  keywordIcons?: KeywordIconSet
   keywordAura?: KeywordAuraMode
   cardRender?: CardRender
   handRail?: boolean
@@ -890,7 +889,7 @@ export function loadAppearanceSettings(): AppearanceSettings {
     const cjkBoost = typeof parsed.cjkBoost === 'boolean' ? parsed.cjkBoost : DEFAULT_APPEARANCE.cjkBoost
     const playmatId = typeof parsed.playmatId === 'string' ? parsed.playmatId : undefined
     const transparentDialogs = parsed.transparentDialogs === true
-    return { sleeveId: sid, appearance: normalizeAppearanceChoice(parsed.appearance), boardLayout: layout, uiScale: scale, cjkBoost, boardLayoutManual: parsed.boardLayoutManual === true, cardStyle: normalizeCardStyle(parsed.cardStyle), tapStyle: normalizeTapStyle(parsed.tapStyle), transparentDialogs, showHandCost: normalizeShowHandCost(parsed.showHandCost), showManaSource: normalizeShowManaSource(parsed.showManaSource), ptBadgeMode: normalizePtBadgeMode(parsed.ptBadgeMode), sicknessStyle: normalizeSicknessStyle(parsed.sicknessStyle), keywordIcons: normalizeKeywordIconSet(parsed.keywordIcons), keywordAura: normalizeKeywordAuraMode(parsed.keywordAura), cardRender: normalizeCardRender(parsed.cardRender), handRail: normalizeHandRail(parsed.handRail), handRailWidth: normalizeHandRailWidth(parsed.handRailWidth), handRow: normalizeHandRow(parsed.handRow), boardFill: normalizeBoardFill(parsed.boardFill), boardSpotlight: normalizeBoardSpotlight(parsed.boardSpotlight), boardSpotlightPanel: normalizeBoardSpotlightPanel(parsed.boardSpotlightPanel), stackCaption: normalizeStackCaption(parsed.stackCaption), gameUi: normalizeGameUi(parsed.gameUi), cardPreviewScale: normalizeCardPreviewScale(parsed.cardPreviewScale), ...(playmatId ? { playmatId } : null) }
+    return { sleeveId: sid, appearance: normalizeAppearanceChoice(parsed.appearance), boardLayout: layout, uiScale: scale, cjkBoost, boardLayoutManual: parsed.boardLayoutManual === true, cardStyle: normalizeCardStyle(parsed.cardStyle), tapStyle: normalizeTapStyle(parsed.tapStyle), transparentDialogs, showHandCost: normalizeShowHandCost(parsed.showHandCost), showManaSource: normalizeShowManaSource(parsed.showManaSource), ptBadgeMode: normalizePtBadgeMode(parsed.ptBadgeMode), sicknessStyle: normalizeSicknessStyle(parsed.sicknessStyle), keywordAura: normalizeKeywordAuraMode(parsed.keywordAura), cardRender: normalizeCardRender(parsed.cardRender), handRail: normalizeHandRail(parsed.handRail), handRailWidth: normalizeHandRailWidth(parsed.handRailWidth), handRow: normalizeHandRow(parsed.handRow), boardFill: normalizeBoardFill(parsed.boardFill), boardSpotlight: normalizeBoardSpotlight(parsed.boardSpotlight), boardSpotlightPanel: normalizeBoardSpotlightPanel(parsed.boardSpotlightPanel), stackCaption: normalizeStackCaption(parsed.stackCaption), gameUi: normalizeGameUi(parsed.gameUi), cardPreviewScale: normalizeCardPreviewScale(parsed.cardPreviewScale), ...(playmatId ? { playmatId } : null) }
   }
   return { ...DEFAULT_APPEARANCE }
 }

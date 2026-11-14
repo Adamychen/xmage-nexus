@@ -7,6 +7,7 @@ import { extractOwnedKeywords } from '../data/keywordExtractor'
 import { keywordDisplayName, keywordSummary } from '../data/keywordI18n'
 import FormattedText from '../game/FormattedText'
 import { ManaCost } from '../decks/ArenaManaSymbols'
+import CounterMark from './CounterMark'
 import { isSaga, sagaChapter, sagaChapters } from './saga'
 import SagaTrack from './SagaTrack'
 import { DefensePlate, LoyaltyPlate } from './StatPlate'
@@ -210,9 +211,12 @@ export default function FloatingCardPreview({
   const rules = activeCard.rules ?? []
 
   // BRD-42: the loyalty, the defense and the chapter have their own plate, so
-  // they are not counted again in the "+N counters" summary.
-  const otherCounters = (activeCard.counters ?? [])
-    .filter((c) => !/^(loyalty|defense)$/i.test(c.name) && !/lore/i.test(c.name))
+  // they are not counted again. BRD-46: the +1/+1 and the -1/-1 counters get
+  // their own chip here as well, and the rest stay as a count.
+  const previewCounters = (activeCard.counters ?? []).filter((c) => !/^(loyalty|defense)$/i.test(c.name) && !/lore/i.test(c.name))
+  const plusMinus = previewCounters.filter((c) => /\+1\/\+1|^p1p1$|-1\/-1|^m1m1$/i.test(c.name))
+  const otherCounters = previewCounters
+    .filter((c) => !plusMinus.includes(c))
     .reduce((sum, c) => sum + c.count, 0)
 
   const isNearRightEdge = style.left ? parseInt(String(style.left), 10) + (PREVIEW_BASE_WIDTH + KEYWORDS_BASE_WIDTH) * scale > (boardRect?.width ?? window.innerWidth) - 20 : false
@@ -284,6 +288,20 @@ export default function FloatingCardPreview({
           {cardRender !== 'rendered' && isSaga(activeCard) && (
             <div className="saga-badge" title={`${t('game', 'ability_chapter')}: ${sagaChapter(perm)}/${sagaChapters(activeCard)}`}>
               <SagaTrack chapters={sagaChapters(activeCard)} current={sagaChapter(perm)} />
+            </div>
+          )}
+
+          {cardRender !== 'rendered' && plusMinus.length > 0 && (
+            <div className="floating-card-plusminus">
+              {plusMinus.map((c) => {
+                const plus = /\+1\/\+1|^p1p1$/i.test(c.name)
+                return (
+                  <span key={c.name} className={`counter-badge ${plus ? 'p1p1' : 'm1m1'}`} title={`${c.name}: ${c.count}`}>
+                    <span className="counter-text-val">{c.count}</span>
+                    <span className="counter-icon-symbol"><CounterMark kind={plus ? 'plus' : 'minus'} /></span>
+                  </span>
+                )
+              })}
             </div>
           )}
 

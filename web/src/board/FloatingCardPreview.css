@@ -304,6 +304,20 @@ html.fx-off .floating-card-foil {
   bottom: 8px;
 }
 
+/* BRD-46: the counters with a symbol of their own, bottom-left as on the board. */
+.floating-card-plusminus {
+  position: absolute;
+  left: 8px;
+  bottom: 8px;
+  display: flex;
+  gap: var(--sp-1);
+  z-index: 6;
+}
+
+.floating-card-plusminus .counter-badge {
+  font-size: var(--fs-sm);
+}
+
 .floating-card-counters {
   position: absolute;
   top: 8px;

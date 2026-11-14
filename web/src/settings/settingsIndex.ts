@@ -74,7 +74,6 @@ export const SETTINGS_INDEX: SettingEntry[] = [
   { id: 'custom-card-art', section: 'board', tab: 'cards', group: (t) => t('lobby', 'custom_card_art_title'), label: (t) => t('lobby', 'custom_card_art_title'), hint: (t) => t('lobby', 'custom_card_art_hint') },
   { id: 'pt-badge', section: 'board', tab: 'overlays', group: (t) => t('lobby', 'pt_badge_title'), label: (t) => t('lobby', 'pt_badge_title'), hint: (t) => t('lobby', 'pt_badge_hint') },
   { id: 'sickness-style', section: 'board', tab: 'overlays', group: (t) => t('lobby', 'sickness_style_title'), label: (t) => t('lobby', 'sickness_style_title'), hint: (t) => t('lobby', 'sickness_style_hint') },
-  { id: 'keyword-icons', section: 'board', tab: 'overlays', group: (t) => t('lobby', 'keyword_icons_title'), label: (t) => t('lobby', 'keyword_icons_title'), hint: (t) => t('lobby', 'keyword_icons_hint') },
   { id: 'keyword-aura', section: 'board', tab: 'overlays', group: (t) => t('lobby', 'keyword_aura_title'), label: (t) => t('lobby', 'keyword_aura_title'), hint: (t) => t('lobby', 'keyword_aura_hint') },
   { id: 'hand-cost', section: 'board', tab: 'overlays', group: overlays, label: (t) => t('lobby', 'hand_cost_show'), hint: (t) => t('lobby', 'hand_cost_show_hint') },
   { id: 'mana-source', section: 'board', tab: 'overlays', group: overlays, label: (t) => t('lobby', 'mana_source_show'), hint: (t) => t('lobby', 'mana_source_show_hint') },

@@ -1,8 +1,7 @@
 import { createElement, type CSSProperties, type ReactNode } from 'react'
-import type { KeywordIconSet } from './cardOverlays'
 import { resolveKeywordGlyph, type SolidKeyword } from './glyphs'
+import { abilityArtUrl } from './glyphs/abilityArt'
 import type { GlyphNode } from './glyphs/types'
-import { useSettings } from '../state/store'
 import './KeywordCoin.css'
 
 const SOLID: Record<SolidKeyword, ReactNode> = {
@@ -33,52 +32,6 @@ const SOLID: Record<SolidKeyword, ReactNode> = {
   ),
 }
 
-const OUTLINE: Record<SolidKeyword, ReactNode> = {
-  haste: <path d="M13.5 2 4.5 13.5h6.5L10 22l9.5-12H13z" />,
-  deathtouch: (
-    <>
-      <path d="M7 16.6C5 15.4 3.7 13.3 3.7 10.5a8.3 8.3 0 0 1 16.6 0c0 2.8-1.3 4.9-3.3 6.1V20a1.2 1.2 0 0 1-1.2 1.2H8.2A1.2 1.2 0 0 1 7 20z" />
-      <circle cx="8.8" cy="11" r="1.7" />
-      <circle cx="15.2" cy="11" r="1.7" />
-      <path d="M10 21v-2.5M14 21v-2.5" />
-    </>
-  ),
-  flying: (
-    <>
-      <path d="M2.5 19C5 11 11 5.5 21.5 4c-.8 2.5-2.5 4.4-4.6 5.6 1.2.2 2.3.1 3.2-.2-1.5 2.7-4 4.4-6.9 5-2.7 3-6.5 4.6-10.7 4.6z" />
-      <path d="M8 14.5c2-1.8 4.6-3.3 7.5-4" />
-    </>
-  ),
-  lifelink: (
-    <>
-      <path d="M12 21 4 13.2A5.3 5.3 0 0 1 12 6.4a5.3 5.3 0 0 1 8 6.8z" />
-      <path d="M12 10v6M9 13h6" />
-    </>
-  ),
-  trample: (
-    <>
-      <path d="M12 11.5c3.3 0 6 2.8 6 5.9 0 2.3-1.8 3.6-3.8 3.6-.8 0-1.4-.4-2.2-.4s-1.4.4-2.2.4c-2 0-3.8-1.3-3.8-3.6 0-3.1 2.7-5.9 6-5.9z" />
-      <ellipse cx="4.8" cy="9.3" rx="1.7" ry="2.2" transform="rotate(-20 4.8 9.3)" />
-      <ellipse cx="9.1" cy="5.2" rx="1.7" ry="2.4" />
-      <ellipse cx="14.9" cy="5.2" rx="1.7" ry="2.4" />
-      <ellipse cx="19.2" cy="9.3" rx="1.7" ry="2.2" transform="rotate(20 19.2 9.3)" />
-    </>
-  ),
-  indestructible: (
-    <>
-      <path d="M12 2.2 4 5.2v6.4c0 5 3.4 8.6 8 10.1 4.6-1.5 8-5.1 8-10.1V5.2z" />
-      <path d="m12 7.2 3.9 4.8-3.9 4.8L8.1 12z" />
-    </>
-  ),
-  hexproof: (
-    <>
-      <path d="M2 12c1.2-2.6 5-6.5 10-6.5S20.8 9.4 22 12c-1.2 2.6-5 6.5-10 6.5S3.2 14.6 2 12z" />
-      <circle cx="12" cy="12" r="3" />
-      <path d="M4 3.5 20 20.5" />
-    </>
-  ),
-}
-
 function camelAttr(name: string): string {
   return name.replace(/-([a-z])/g, (_, c: string) => c.toUpperCase())
 }
@@ -91,29 +44,29 @@ function renderNode([tag, attrs]: GlyphNode, index: number) {
 
 const STROKE_PROPS = { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2.2, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true } as const
 
-export default function KeywordGlyph({ id, category, set }: { id: string; category: string; set: KeywordIconSet }) {
+export default function KeywordGlyph({ id, category }: { id: string; category: string }) {
+  // BRD-47: the official symbol of the keyword when there is one, painted
+  // through a mask so the chip decides its colour.
+  const art = abilityArtUrl(id)
+  if (art) return <span className="kw-art" style={{ '--kw-art': `url("${art}")` } as CSSProperties} aria-hidden="true" />
   const spec = resolveKeywordGlyph(id, category)
   if (spec.kind === 'abbr') return <span className="kw-coin-abbr" aria-hidden="true">{spec.text}</span>
   if (spec.kind === 'nodes' || spec.kind === 'fallback') return <svg {...STROKE_PROPS}>{spec.nodes.map(renderNode)}</svg>
-  return set === 'outline' ? (
-    <svg {...STROKE_PROPS}>{OUTLINE[spec.id]}</svg>
-  ) : (
+  return (
     <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
       {SOLID[spec.id]}
     </svg>
   )
 }
 
-export function KeywordCoin({ id, category, size, set, className }: { id: string; category: string; size?: number; set?: KeywordIconSet; className?: string }) {
-  const settings = useSettings()
-  const iconSet = set ?? settings.keywordIcons
+export function KeywordCoin({ id, category, size, className }: { id: string; category: string; size?: number; className?: string }) {
   return (
     <span
-      className={`kw-coin icons-${iconSet} cat-${category} kw-${id}${className ? ` ${className}` : ''}`}
+      className={`kw-coin cat-${category} kw-${id}${className ? ` ${className}` : ''}`}
       style={size ? ({ '--kw-size': `${size}px` } as CSSProperties) : undefined}
       aria-hidden="true"
     >
-      <KeywordGlyph id={id} category={category} set={iconSet} />
+      <KeywordGlyph id={id} category={category} />
     </span>
   )
 }

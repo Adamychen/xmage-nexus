@@ -6,7 +6,7 @@ import type { AutoAnswerRule } from '../../game/autoAnswers'
 import type { ChoiceMemoryRule } from '../../game/choiceMemory'
 import { normalizePlaymat, type PlaymatId } from '../../appearance/playmats'
 import { normalizeCardStyle, normalizeTapStyle, type CardStyle, type TapStyle } from '../../board/compactCard'
-import { normalizeBoardSpotlight, normalizeBoardSpotlightPanel, normalizeBoardFill, normalizeStackCaption, normalizeCardRender, normalizeHandRail, normalizeHandRailWidth, normalizeHandRow, normalizePtBadgeMode, normalizeShowHandCost, normalizeShowManaSource, normalizeSicknessStyle, normalizeKeywordIconSet, normalizeKeywordAuraMode, type CardRender, type KeywordIconSet, type KeywordAuraMode, type PtBadgeMode, type SicknessStyle } from '../../board/cardOverlays'
+import { normalizeBoardSpotlight, normalizeBoardSpotlightPanel, normalizeBoardFill, normalizeStackCaption, normalizeCardRender, normalizeHandRail, normalizeHandRailWidth, normalizeHandRow, normalizePtBadgeMode, normalizeShowHandCost, normalizeShowManaSource, normalizeSicknessStyle, normalizeKeywordAuraMode, type CardRender, type KeywordAuraMode, type PtBadgeMode, type SicknessStyle } from '../../board/cardOverlays'
 import { normalizeGameUi, type GameUi } from '../../game/gameUi'
 import { normalizeAppearanceChoice, type AppearanceChoice } from '../../appearance/appearanceChoice'
 import { normalizeCardPreviewScale } from '../../board/cardPreviewScale'
@@ -64,7 +64,6 @@ export interface SettingsState {
   gameUi: GameUi
   cardPreviewScale: number
   sicknessStyle: SicknessStyle
-  keywordIcons: KeywordIconSet
   keywordAura: KeywordAuraMode
   uiScale: ZoomLevel
   cjkBoost: boolean
@@ -99,7 +98,6 @@ export function loadAppearanceSlice() {
     gameUi: normalizeGameUi(appearance.gameUi),
     cardPreviewScale: normalizeCardPreviewScale(appearance.cardPreviewScale),
     sicknessStyle: normalizeSicknessStyle(appearance.sicknessStyle),
-    keywordIcons: normalizeKeywordIconSet(appearance.keywordIcons),
     keywordAura: normalizeKeywordAuraMode(appearance.keywordAura),
   }
 }

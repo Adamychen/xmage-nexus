@@ -47,7 +47,6 @@ export default function BoardLivePreview() {
     artUrl: showcaseArtUrl(name),
     ptBadgeMode: settings.ptBadgeMode,
     sicknessStyle: settings.sicknessStyle,
-    keywordIcons: settings.keywordIcons,
     keywordAura: settings.keywordAura,
   })
   return (

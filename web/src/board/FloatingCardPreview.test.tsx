@@ -141,7 +141,11 @@ describe('FloatingCardPreview', () => {
     )
 
     expect(container.textContent).toContain('TOKEN')
-    expect(container.textContent).toContain('+2 contadores')
+    // BRD-46: a +1/+1 counter is its own chip here too, not a line of text.
+    const chip = container.querySelector('.floating-card-plusminus .counter-badge.p1p1')!
+    expect(chip.querySelector('.counter-text-val')?.textContent).toBe('2')
+    expect(chip.querySelector('.counter-mark.is-plus')).not.toBeNull()
+    expect(container.querySelector('.floating-card-counters')).toBeNull()
   })
 
   it('shows only the keywords the card has, not ones its rules merely name', () => {

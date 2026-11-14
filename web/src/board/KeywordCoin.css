@@ -7,7 +7,7 @@
   box-sizing: border-box;
   width: var(--kw-size, 16px);
   height: var(--kw-size, 16px);
-  border: 1px solid var(--veil-5);
+  border: 0;
   border-radius: var(--r-xs);
   line-height: 1;
 }
@@ -35,10 +35,19 @@
 .kw-coin.kw-mountainwalk { --kw-rgb: var(--mana-r-rgb); }
 .kw-coin.kw-forestwalk { --kw-rgb: var(--mana-g-rgb); }
 
-.kw-coin svg {
+.kw-coin svg,
+.kw-coin .kw-art {
   display: block;
-  width: 72%;
-  height: 72%;
+  width: 80%;
+  height: 80%;
+}
+
+/* BRD-47: the official symbol is a file, painted with the chip's own colour
+   through a mask, so one art serves every colour the board gives a keyword. */
+.kw-coin .kw-art {
+  background: currentColor;
+  -webkit-mask: var(--kw-art) center / contain no-repeat;
+  mask: var(--kw-art) center / contain no-repeat;
 }
 
 .kw-coin-abbr {
@@ -48,23 +57,14 @@
   letter-spacing: -0.02em;
 }
 
-.kw-coin.icons-coins {
-  border-radius: 50%;
+/* BRD-47: one way of drawing them: the symbol solid on its own colour, in a
+   square with the corner radius of the other badges of the card. */
+.kw-coin {
   background: rgb(var(--kw-rgb));
-  border-color: rgb(var(--ink-rgb) / 0.8);
   color: rgb(var(--ink-rgb));
 }
 
-.kw-coin.icons-outline {
-  background: rgb(var(--ink-2-rgb) / 0.92);
-  border-color: rgb(var(--kw-rgb) / 0.65);
-  color: rgb(var(--kw-rgb));
-}
 
-.kw-coin.icons-outline svg {
-  width: 80%;
-  height: 80%;
-}
 
 .kw-coin.kw-gained {
   position: relative;

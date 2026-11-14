@@ -502,13 +502,12 @@ describe('persistence', () => {
     it('reads the three overlay flags a player turned off', () => {
       mockStorage['mage-web-appearance'] = JSON.stringify({
         sleeveId: 'classic', boardLayout: 'standard', uiScale: 1, cjkBoost: true,
-        showHandCost: false, ptBadgeMode: 'changed', sicknessStyle: 'veil', keywordIcons: 'outline', keywordAura: 'vivid',
+        showHandCost: false, ptBadgeMode: 'changed', sicknessStyle: 'veil', keywordAura: 'vivid',
       })
       const loaded = loadAppearanceSettings()
       expect(loaded.showHandCost).toBe(false)
       expect(loaded.ptBadgeMode).toBe('changed')
       expect(loaded.sicknessStyle).toBe('veil')
-      expect(loaded.keywordIcons).toBe('outline')
       expect(loaded.keywordAura).toBe('vivid')
     })
 
@@ -520,31 +519,29 @@ describe('persistence', () => {
       expect(loaded.showHandCost).toBe(true)
       expect(loaded.ptBadgeMode).toBe('always')
       expect(loaded.sicknessStyle).toBe('badge')
-      expect(loaded.keywordIcons).toBe('coins')
       expect(loaded.keywordAura).toBe('subtle')
     })
 
     it('normalizes a hand-edited or corrupt value instead of leaking it into the UI', () => {
       mockStorage['mage-web-appearance'] = JSON.stringify({
         sleeveId: 'classic', boardLayout: 'standard', uiScale: 1, cjkBoost: true,
-        showHandCost: 'false', ptBadgeMode: 'sometimes', sicknessStyle: 'hourglass', keywordIcons: 'sparkles', keywordAura: 'loud',
+        showHandCost: 'false', ptBadgeMode: 'sometimes', sicknessStyle: 'hourglass', keywordAura: 'loud',
       })
       const loaded = loadAppearanceSettings()
       expect(loaded.showHandCost).toBe(true)
       expect(loaded.ptBadgeMode).toBe('always')
       expect(loaded.sicknessStyle).toBe('badge')
-      expect(loaded.keywordIcons).toBe('coins')
       expect(loaded.keywordAura).toBe('subtle')
     })
 
-    it('BRD-47: a player who had chosen the retired emoji icon set gets the coins back', () => {
+    it('BRD-47: a stored icon set is ignored now that there is only one', () => {
       mockStorage['mage-web-appearance'] = JSON.stringify({
         sleeveId: 'classic', boardLayout: 'standard', uiScale: 1, cjkBoost: true,
         ptBadgeMode: 'changed', sicknessStyle: 'veil', keywordIcons: 'emoji', keywordAura: 'vivid',
       })
       const loaded = loadAppearanceSettings()
-      expect(loaded.keywordIcons).toBe('coins')
-      // the rest of the blob is untouched: only the retired value is replaced
+      expect('keywordIcons' in loaded).toBe(false)
+      // the rest of the blob is untouched: only the retired key is dropped
       expect(loaded.ptBadgeMode).toBe('changed')
       expect(loaded.sicknessStyle).toBe('veil')
       expect(loaded.keywordAura).toBe('vivid')

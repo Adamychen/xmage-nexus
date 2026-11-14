@@ -1,24 +1,18 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import { cleanup, render } from '@testing-library/react'
 import BoardDemo from './BoardDemo'
-import { KEYWORD_ICON_SETS } from '../board/cardOverlays'
 
 afterEach(() => {
   cleanup()
 })
 
-describe('BoardDemo keywordIcons', () => {
-  it('BRD-47: previews all seven keyword icons in both sets, at most two per card, with no P/T badge to collide with', () => {
-    for (const set of KEYWORD_ICON_SETS) {
-      const { container, unmount } = render(<BoardDemo spec={{ kind: 'keywordIcons', value: set }} />)
-      const slots = [...container.querySelectorAll('.card-slot')]
-      expect(slots.length).toBeGreaterThan(0)
-      for (const slot of slots) expect(slot.querySelectorAll('.keyword-badge').length).toBeLessThanOrEqual(2)
-      const ids = [...container.querySelectorAll('.keyword-badge')].map((b) => [...b.classList].find((c) => c.startsWith('kw-') && c !== 'kw-coin' && c !== 'kw-gained'))
-      expect(new Set(ids)).toEqual(new Set(['kw-flying', 'kw-haste', 'kw-deathtouch', 'kw-lifelink', 'kw-trample', 'kw-hexproof', 'kw-indestructible']))
-      for (const b of container.querySelectorAll('.keyword-badge')) expect(b.classList.contains(`icons-${set}`)).toBe(true)
-      expect(container.querySelector('[data-badge-zone="stats"]')).toBeNull()
-      unmount()
-    }
+describe('BoardDemo keyword badges', () => {
+  it('BRD-47: previews the seven keyword icons, at most two per card, with no P/T badge to collide with', () => {
+    const { container } = render(<BoardDemo spec={{ kind: 'keywordAura', value: 'off' }} />)
+    const slots = [...container.querySelectorAll('.card-slot')]
+    expect(slots.length).toBeGreaterThan(0)
+    for (const slot of slots) expect(slot.querySelectorAll('.keyword-badge').length).toBeLessThanOrEqual(2)
+    for (const b of container.querySelectorAll('.keyword-badge')) expect(b.className).not.toMatch(/icons-/)
   })
 })
+

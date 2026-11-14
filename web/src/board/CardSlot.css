@@ -1476,14 +1476,19 @@ html.fx-off .card-slot.fx-designation-swell {
   background: rgb(var(--ink-2-rgb) / 0.88);
 }
 
+/* BRD-48: the keyword badges run down the right edge of the card, one under
+   another, so they never cross the title and a card with four of them keeps
+   them off the art's centre. */
 .keyword-badges {
   --kw-size: var(--badge-size);
   position: absolute;
   top: 22px;
-  left: 4px;
   right: 4px;
-  justify-content: flex-end;
+  bottom: 22px;
   display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: flex-start;
   flex-wrap: nowrap;
   overflow: hidden;
   gap: var(--sp-0h);
@@ -1502,9 +1507,14 @@ html.fx-off .card-slot.fx-designation-swell {
   justify-content: center;
   font-size: var(--fs-2xs);
   line-height: 1;
-  background: rgb(var(--ink-2-rgb) / 0.92);
-  border: 1px solid var(--veil-5);
   box-shadow: 0 1px 4px var(--shade-3);
+}
+
+/* BRD-47: a keyword badge is painted by the chip (KeywordCoin.css), which gives
+   it the colour of its keyword and no border; the dark plate is for the
+   "+N more" badge. */
+.keyword-badge:not(.kw-coin) {
+  background: rgb(var(--ink-2-rgb) / 0.92);
 }
 
 .keyword-badge-more {
