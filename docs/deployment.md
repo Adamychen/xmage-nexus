@@ -45,6 +45,27 @@ TCP tunnels, and point it at `beta.xmage.today`. Bundle it with
 `node scripts/deploy-bundle.mjs`; start scripts live in `scripts/deploy/`
 (`start-proxy.sh` for Linux/macOS, `start-proxy.bat` for Windows).
 
+## Production deploy (`.github/workflows/deploy.yml`)
+
+The project's own server is updated by a self-hosted runner (labels `self-hosted, xmage-nexus`) that runs
+`~/deploy-xmage.sh` (it lives on the server, not in the repo: it pulls `master` and rebuilds proxy and web)
+and then restarts `xmage-proxy.service`.
+
+- **Only a version bump deploys.** The trigger is a push to `master` that touches `web/package.json`, and the
+  `gate` job then compares the version of the pushed commit with the one in its first parent (`fetch-depth: 2`,
+  `git show HEAD~1:web/package.json`). The path filter alone would not do: a dependency change touches the same
+  file and must not reach players. A `workflow_dispatch` run deploys without the gate, for a hotfix.
+- **The gate reads the head commit against `HEAD~1`**, so a bump that lands on `master` as a merge commit or as
+  a squash is seen. The one case it misses is a direct push of several commits with the bump in the middle: the
+  head commit and its parent already carry the new version, so nothing deploys. Run the workflow by hand then.
+- **The job that runs on the server keeps a read-only token** (`contents: read`, spelled out in the job), and the
+  workflow never gains a `pull_request` trigger: a pull request from a fork would otherwise run code on the host.
+  `concurrency: deploy` with `cancel-in-progress: false` keeps two deploys from overlapping and never cuts one
+  halfway through.
+- Guard: `scripts/workflows.test.mjs` (trigger, gate, condition, token and concurrency).
+- Deploying does not light the news bell in the client: `web/src/system/news.ts` reads the GitHub releases API,
+  not what is running on the server.
+
 ## Host status dashboard (LAN only)
 
 `ops/status/` is a dependency-free Node service (`xmage-status.service`) that runs next to the proxy on the

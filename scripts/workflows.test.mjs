@@ -104,3 +104,55 @@ test("web-ci runs both lanes", () => {
   assert.match(heavy, /E2E_LANE: heavy/, "e2e-fake-heavy runs the heavy lane");
   assert.doesNotMatch(heavy, /E2E_LANE: light/, "e2e-fake-heavy does not also run the light lane");
 });
+
+// The deploy workflow runs on the self-hosted runner, which executes ~/deploy-xmage.sh on the
+// server. Two things must hold forever: it is never reachable from a fork's pull request, and it
+// only publishes the commit that bumps the app version. Before 2026-11-14 every push to master
+// deployed, so a README typo went to production and a version bump was indistinguishable from it.
+const deploy = fs.readFileSync(path.join(repoRoot, ".github", "workflows", "deploy.yml"), "utf8");
+
+test("deploy triggers only on master pushes touching web/package.json, plus a manual run", () => {
+  const on = deploy.slice(deploy.indexOf("\non:"), deploy.indexOf("\npermissions:"));
+  assert.match(on, /push:/, "it still triggers on push");
+  assert.match(on, /branches:\s*\[master\]/, "only on master");
+  assert.match(on, /paths:\s*\['web\/package\.json'\]/, "prefiltered to the file that carries the version");
+  assert.match(on, /workflow_dispatch:/, "a manual run stays available for a hotfix");
+  // The header comment names the triggers to avoid, so the guard reads the file without comments.
+  const triggers = deploy.replace(/(^|\n)\s*#[^\n]*/g, "$1");
+  assert.doesNotMatch(triggers, /pull_request/, "a job on the server is never reachable from a pull request");
+});
+
+test("the gate reads the version of the pushed commit and of its first parent", () => {
+  const gate = jobBlock(deploy, "gate");
+  assert.ok(gate !== null, "job gate exists");
+  assert.match(gate, /runs-on: ubuntu-latest/, "the comparison runs on a GitHub runner, not on the server");
+  assert.match(gate, /fetch-depth: 2/, "HEAD~1 has to be in the checkout");
+  assert.match(gate, /git show HEAD~1:web\/package\.json/, "it compares against the first parent");
+  assert.match(gate, /changed=true/, "it publishes a changed output");
+  assert.match(gate, /outputs:[\s\S]*changed: \$\{\{ steps\.version\.outputs\.changed \}\}/,
+    "the output is wired to the step that computes it");
+});
+
+test("the self-hosted job waits for the gate and runs only on a version bump or a manual run", () => {
+  assert.deepEqual(needsOf(deploy, "deploy"), ["gate"]);
+  const job = jobBlock(deploy, "deploy");
+  assert.match(job, /runs-on: \[self-hosted, xmage-nexus\]/, "this is the job that touches the server");
+  const condition = job.match(/^ {4}if: (.*)$/m);
+  assert.ok(condition, "the self-hosted job is conditional");
+  assert.match(condition[1], /needs\.gate\.outputs\.changed == 'true'/, "a bump deploys");
+  assert.match(condition[1], /github\.event_name == 'workflow_dispatch'/, "a manual run deploys");
+});
+
+test("the token of the job that runs on the server stays read-only", () => {
+  const job = jobBlock(deploy, "deploy");
+  assert.match(job, /permissions:\n {6}contents: read/, "the self-hosted job declares a read-only token");
+  assert.doesNotMatch(job, /contents: write/, "nothing on the server may write to the repository");
+  assert.match(deploy, /^permissions:\n {2}contents: read$/m, "the workflow default is read-only too");
+});
+
+test("deploy keeps one run at a time and never cancels one in flight", () => {
+  const block = deploy.slice(deploy.indexOf("\nconcurrency:"), deploy.indexOf("\njobs:"));
+  assert.match(block, /group: deploy/);
+  assert.match(block, /cancel-in-progress: false/, "cancelling mid-deploy would leave the server half updated");
+  assert.match(jobBlock(deploy, "deploy"), /timeout-minutes: 30/, "a hung deploy must not hold the runner forever");
+});

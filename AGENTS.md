@@ -322,6 +322,10 @@ for `mechanics.spec.ts`, so a fixture change must be checked against every spec 
   the translation locales (`web/src/i18n/locales/*`) and quoted server output.
   Existing Spanish prose is migrated to English as its file is touched; do not
   do unrelated mass rewrites.
+- **A push to `master` does not deploy**: production (`.github/workflows/deploy.yml`, self-hosted
+  runner) goes out only on the commit that raises the version in `web/package.json`, or on a manual
+  `workflow_dispatch`. Work that should reach players carries the bump in its own PR
+  (`docs/deployment.md`, "Production deploy").
 - **Before changing how the client behaves**, read the spec of that area in
   `docs/specs/`. A change to a rule goes in the same commit as the code: edit
   the rule and its `Why:`, then the tests named after it. A new decision gets a
