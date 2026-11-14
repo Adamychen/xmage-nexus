@@ -19,6 +19,14 @@
   </tr>
 </table>
 
+## What's new in 0.9.0
+
+- **Freeform Commander**: the format is there from the deck editor to the table, with real Commander precons to start from. The draft bot is never seated in a match it cannot play.
+- **Decks**: the deck you play is the one you pick, and equipping is gone. Creating a table asks about each deck once, a repair made before the table is kept, a deck imported from the join dialog stays in the gallery, and the catalogue's printings name the card the server loads.
+- **Playing**: a spell or ability being played can be cancelled, the combat declaration stays open until you confirm it, every card in a card prompt can be looked at without choosing it, and ordering triggers shows each trigger's source and target.
+- **Board**: each hand cost sits on its own card, an opponent's floating mana shows in the side panel, only a window that names a hand fills an opponent's hand, and the panel stays readable when players leave or a duel is all that is left. The waiting pill breaks on whole words.
+- **Settings**: sound effects and music have their own switches, the phase stops it shows are the ones the game applies, and the borrowed sections fit inside the setup wizard. The news bell finds a new release soon after a deploy instead of a day later.
+
 ## What's new in 0.8.0
 
 - **Search by rules text**: type part of a card's text in the deck editor and the results narrow to the cards that say it. The search waits for a name or a filter before loading cards.
