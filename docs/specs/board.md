@@ -774,7 +774,9 @@ of that keyword, dark, on a square of the keyword's colour with the corner radiu
 badges of the card and no border, centred in it and the same visual weight as every other symbol:
 each file is framed on the ink it paints, not on its path's bounding box, and padded so the ink
 covers the same share of the square (`node scripts/ability-symbols.mjs` reports it, `--write`
-fixes it). The symbol is the published vector of the game wherever there is
+fixes it: it first widens a file's viewBox to hold its whole drawing, so a symbol whose art pokes
+outside it is not measured on the part that happened to fit, then centres the frame on the ink's
+own box and leaves a sliver of air, so a sharp tip never lands on the edge and reads as cut). The symbol is the published vector of the game wherever there is
 one (`public/symbols/abilities`, the ids listed in `glyphs/abilityArt.ts`), painted through a mask
 so the colour comes from the badge; a keyword with no published symbol keeps the glyph drawn in
 `glyphs/`, and none is ever an emoji. The same badge is used everywhere a keyword is named: on the
@@ -871,3 +873,36 @@ the "+N" chip, which counts those columns as well.
   count, four at a time (14-nov-2026). The five-badge cap that came before this went with it: the
   room on the card is what decides.
 - Guard: `src/board/badgeFit.test.ts` · `src/board/CardSlot.test.tsx`
+
+### BRD-53 · A player's counters carry the symbol of the game
+The counters a player holds are drawn with the symbol the game prints for each one: poison, energy,
+experience, radiation, ticket and acorn, each on the badge's own colour, painted through a mask so
+the symbol takes that colour (`public/symbols/counters`, listed in `glyphs/counterArt.ts`). A
+counter the game has no symbol for keeps the glyph it had, and the badge still names the counter
+and its count for a reader. The files are framed by `node scripts/ability-symbols.mjs counters
+--write`, the same tool that frames the keyword symbols (BRD-47), which first widens each file's
+viewBox to hold its whole drawing and then centres it on the ink it paints.
+
+- Why: every counter but poison and energy showed the same sparkles, so experience, radiation,
+  tickets and acorns were indistinguishable on the bar (user request, 16-nov-2026). Poison, energy,
+  the ticket and the acorn come from the Mana icon set; experience and radiation have no vector in
+  it and come from mtg.wiki (`Exp.svg`, `Rad.svg`), whose radiation file carries its own yellow
+  disc, dropped here so the trefoil can take the badge's colour.
+- Guard: `src/game/PlayerInfoBar.counters.test.tsx`
+
+### BRD-54 · A player's counters stack beside the chip, with no box around them
+The counters of a player are drawn beside the photo, the name and the life as their symbol and
+their number in the counter's own colour (BRD-53), with no plate, border or background: the symbol
+sits right against its number and the counters sit apart from one another, which is what tells one
+from the next. They stack downwards and open another column when they run out of room, and how
+many fit in a column is measured from what the rest of the chip is tall (`useStackRows`), never a
+number written down, so the stack never makes the chip taller: a seat's status row keeps the height
+of its photo whatever counters it holds, on the own board and on an opponent's.
+
+- Why: the counters ran along the top of the chip in one line, which on a rival's column pushed
+  them clear of the photo and the name; the user asked for them to stack like the keyword badges of
+  a card (BRD-52), bounded by the chip's own height, and for the boxes to go, since the colour and
+  the spacing already separate them (16-nov-2026). Measured at 1920 on the four-player board: the
+  chip holds three to a column, and the rival chips, four pixels shorter, hold three as well once
+  the rows sit flush.
+- Guard: `src/game/PlayerInfoBar.counters.test.tsx`

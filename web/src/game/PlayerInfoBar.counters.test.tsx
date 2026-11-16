@@ -54,3 +54,57 @@ describe('PlayerInfoBar player counters', () => {
     expect(badge(view.container, 'poison')?.className).toContain('is-lethal')
   })
 })
+
+describe('BRD-53: the symbol of a player counter', () => {
+  afterEach(() => {
+    cleanup()
+    setState({ game: null })
+  })
+
+  const art = (container: HTMLElement, kind: string): string =>
+    badge(container, kind)?.querySelector<HTMLElement>('.counter-art')?.style.getPropertyValue('--counter-art') ?? ''
+
+  it('BRD-53: poison, energy, experience, rad, ticket and acorn carry the symbol of the game', () => {
+    const counters = [
+      { name: 'poison', count: 3 },
+      { name: 'energy', count: 2 },
+      { name: 'experience', count: 1 },
+      { name: 'rad', count: 4 },
+      { name: 'ticket', count: 5 },
+      { name: 'acorn', count: 6 },
+    ]
+    setState({ game: makeGameView({ players: [withCounters(counters)] }) })
+    const { container } = render(<PlayerInfoBar player={withCounters(counters)} side="opp" />)
+    for (const { name } of counters) {
+      expect(art(container, name), `${name} draws its own symbol`).toContain(`symbols/counters/${name}.svg`)
+    }
+  })
+
+  it('BRD-53: a counter the game has no symbol for keeps a glyph', () => {
+    const counters = [{ name: 'muster', count: 2 }]
+    setState({ game: makeGameView({ players: [withCounters(counters)] }) })
+    const { container } = render(<PlayerInfoBar player={withCounters(counters)} side="opp" />)
+    expect(badge(container, 'muster')?.querySelector('.counter-art')).toBeNull()
+    expect(badge(container, 'muster')?.querySelector('svg')).not.toBeNull()
+  })
+})
+
+describe('BRD-54: the stack of counters beside the chip', () => {
+  afterEach(() => {
+    cleanup()
+    setState({ game: null })
+  })
+
+  it('BRD-54: the stack says how many counters a column holds, and never fewer than one', () => {
+    const counters = [{ name: 'poison', count: 1 }, { name: 'energy', count: 2 }, { name: 'rad', count: 3 }]
+    const player = { ...withCounters(counters), controlled: true }
+    setState({ game: makeGameView({ players: [player] }) })
+    const { container } = render(<PlayerInfoBar player={player} side="my" bare />)
+    const stack = container.querySelector<HTMLElement>('[data-testid="bare-counters"]')
+    expect(stack).not.toBeNull()
+    expect(Number(stack!.style.getPropertyValue('--counter-rows'))).toBeGreaterThanOrEqual(1)
+    // No plate of its own: the colour and the spacing are what separate one counter from the next.
+    const badge = stack!.querySelector<HTMLElement>('.player-counter-badge')!
+    expect(badge.className).toContain('counter-poison')
+  })
+})

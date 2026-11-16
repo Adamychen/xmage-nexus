@@ -4,8 +4,9 @@
 // the ink it actually paints, and all of them with the same visual weight, so
 // no symbol looks bigger than the rest in a 14px badge.
 //
-//   node scripts/ability-symbols.mjs          # report
-//   node scripts/ability-symbols.mjs --write  # recentre and rebalance
+//   node scripts/ability-symbols.mjs                   # report on the keywords
+//   node scripts/ability-symbols.mjs --write           # recentre and rebalance them
+//   node scripts/ability-symbols.mjs counters --write  # the same for another folder
 //
 // The measurement is a real render: the browser rasterises each file the way
 // the badge does (contain, centred in a square) and the ink is read from the
@@ -17,7 +18,10 @@ import { fileURLToPath } from 'node:url'
 import { createRequire } from 'node:module'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
-const DIR = join(HERE, '..', 'web', 'public', 'symbols', 'abilities')
+// The folder of symbols to measure: the keyword badges by default, any other
+// set of symbols (the player counters, say) when one is named.
+const FOLDER = process.argv.find((a) => !a.startsWith('-') && a !== process.argv[0] && a !== process.argv[1]) ?? 'abilities'
+const DIR = join(HERE, '..', 'web', 'public', 'symbols', FOLDER)
 const require = createRequire(join(HERE, '..', 'web', 'package.json'))
 const { chromium } = require('playwright')
 
@@ -36,6 +40,12 @@ const WEIGHT_TOLERANCE = 1.3
 const BALANCE = 0.75
 /** The most a symbol may be padded, as a share of its own frame. */
 const MAX_PAD = 1.2
+/**
+ * A sliver of air around every symbol. Framed exactly on its ink, a sharp point (the tip of the
+ * experience crest, a wing) sits on the edge of the frame and the renderer eats its last row of
+ * pixels, which reads as a cut.
+ */
+const MARGIN = 1.03
 
 const files = readdirSync(DIR).filter((f) => f.endsWith('.svg')).sort()
 if (files.length === 0) {
@@ -102,6 +112,56 @@ async function measure(file) {
   }, svg)
 }
 
+/**
+ * The box a file's drawing really takes, in its own units. The ink pass below reads a render,
+ * which can only show what the file's viewBox lets through, so a symbol whose art pokes outside it
+ * (the tip of the experience crest, the blades of the radiation trefoil) would be measured, and
+ * framed, on the part that happened to fit. This reads the geometry itself.
+ */
+async function geometry(file) {
+  const svg = readFileSync(join(DIR, file), 'utf8')
+  await page.setContent(`<body style="margin:0;padding:200px">${svg}</body>`)
+  return page.evaluate(() => {
+    const svg = document.querySelector('svg')
+    if (!svg || !svg.viewBox?.baseVal?.width) return null
+    svg.style.overflow = 'visible'
+    const root = svg.getScreenCTM()?.inverse()
+    if (!root) return null
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity
+    for (const el of svg.querySelectorAll('path, circle, rect, polygon, ellipse, use')) {
+      const bb = el.getBBox()
+      if (!bb.width && !bb.height) continue
+      const m = root.multiply(el.getScreenCTM())
+      for (const [cx, cy] of [[bb.x, bb.y], [bb.x + bb.width, bb.y], [bb.x, bb.y + bb.height], [bb.x + bb.width, bb.y + bb.height]]) {
+        const p = svg.createSVGPoint()
+        p.x = cx
+        p.y = cy
+        const q = p.matrixTransform(m)
+        x0 = Math.min(x0, q.x)
+        y0 = Math.min(y0, q.y)
+        x1 = Math.max(x1, q.x)
+        y1 = Math.max(y1, q.y)
+      }
+    }
+    return Number.isFinite(x0) ? { x0, y0, x1, y1 } : null
+  })
+}
+
+if (WRITE) {
+  // Give every file a viewBox that holds its whole drawing, so the ink pass sees all of it.
+  for (const file of files) {
+    const g = await geometry(file)
+    if (!g) continue
+    const src = readFileSync(join(DIR, file), 'utf8')
+    const w = g.x1 - g.x0
+    const h = g.y1 - g.y0
+    const side = Math.max(w, h) * 1.08
+    const nx = +(g.x0 + w / 2 - side / 2).toFixed(3)
+    const ny = +(g.y0 + h / 2 - side / 2).toFixed(3)
+    writeFileSync(join(DIR, file), src.replace(/viewBox="[^"]+"/, `viewBox="${nx} ${ny} ${side.toFixed(3)} ${side.toFixed(3)}"`))
+  }
+}
+
 const rows = []
 for (const file of files) {
   const m = await measure(file)
@@ -126,10 +186,15 @@ if (WRITE) {
     // and then give the heavier ones some air, half way towards equal ink.
     const inkSide = Math.max((row.box.x1 - row.box.x0) * squareW, (row.box.y1 - row.box.y0) * squareH)
     const pad = Math.min(MAX_PAD, Math.max(1, (row.cover / target) ** (BALANCE / 2)))
-    const nw = +(inkSide * pad).toFixed(3)
+    const nw = +(inkSide * pad * MARGIN).toFixed(3)
     const nh = nw
-    const nx = +(squareX + row.cx * squareW - nw / 2).toFixed(3)
-    const ny = +(squareY + row.cy * squareH - nh / 2).toFixed(3)
+    // Centred on the ink itself, not on its centre of mass: a shape with its weight to one side
+    // (the crest of experience, the head of a droplet) would otherwise be framed off its own
+    // outline and lose the far end of it.
+    const inkX = squareX + ((row.box.x0 + row.box.x1) / 2) * squareW
+    const inkY = squareY + ((row.box.y0 + row.box.y1) / 2) * squareH
+    const nx = +(inkX - nw / 2).toFixed(3)
+    const ny = +(inkY - nh / 2).toFixed(3)
     writeFileSync(join(DIR, row.file), src.replace(/viewBox="[^"]+"/, `viewBox="${nx} ${ny} ${nw} ${nh}"`))
   }
   rows.length = 0
@@ -140,14 +205,17 @@ if (WRITE) {
 }
 
 const after = median(rows.map((r) => r.cover))
-const offCentre = rows.filter((r) => Math.abs(r.cx - 0.5) > CENTRE_TOLERANCE || Math.abs(r.cy - 0.5) > CENTRE_TOLERANCE)
+// Measured on the ink's own box, which is what the frame is built on: the centre of mass of a
+// lopsided symbol sits elsewhere and would report every one of them as off centre.
+const middle = (r) => ({ x: (r.box.x0 + r.box.x1) / 2, y: (r.box.y0 + r.box.y1) / 2 })
+const offCentre = rows.filter((r) => Math.abs(middle(r).x - 0.5) > CENTRE_TOLERANCE || Math.abs(middle(r).y - 0.5) > CENTRE_TOLERANCE)
 const heavy = rows.filter((r) => r.cover > after * WEIGHT_TOLERANCE)
 
 console.log(`${rows.length} symbols in ${DIR}`)
 console.log(`ink: median ${(after * 100).toFixed(1)}%, range ${(Math.min(...rows.map((r) => r.cover)) * 100).toFixed(1)}% to ${(Math.max(...rows.map((r) => r.cover)) * 100).toFixed(1)}%`)
 console.log(offCentre.length === 0
   ? `centred: every symbol within ${CENTRE_TOLERANCE * 100}% of the middle`
-  : `off centre: ${offCentre.map((r) => `${r.file} (${((r.cx - 0.5) * 100).toFixed(1)}%, ${((r.cy - 0.5) * 100).toFixed(1)}%)`).join(', ')}`)
+  : `off centre: ${offCentre.map((r) => `${r.file} (${((middle(r).x - 0.5) * 100).toFixed(1)}%, ${((middle(r).y - 0.5) * 100).toFixed(1)}%)`).join(', ')}`)
 console.log(heavy.length === 0
   ? 'weight: no symbol stands out'
   : `too heavy: ${heavy.map((r) => `${r.file} ${(r.cover * 100).toFixed(1)}%`).join(', ')}`)
