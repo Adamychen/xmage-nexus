@@ -232,22 +232,31 @@ html.fx-off .life-value {
   50% { scale: 1.16; }
 }
 
+/* BRD-54: a player's counter is its symbol and its number in the counter's own colour, with no
+   box around them: the symbol sits right beside its number and the counters sit apart from each
+   other, which is what tells one from the next. */
 .player-counter-badge {
   display: inline-flex;
   align-items: center;
-  gap: var(--sp-1);
+  gap: var(--sp-0h);
   font-size: var(--fs-2xs);
   font-weight: 800;
-  padding: 1px var(--sp-1h);
-  border-radius: var(--r-xs);
-  background: var(--ink-4);
-  border: 1px solid var(--veil-4);
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
   color: var(--fg-1);
+  text-shadow: 0 1px 2px var(--shade-5);
+}
+
+/* BRD-53: the symbol of a counter sits in the badge at the size of its text, and takes the
+   badge's colour. */
+.player-counter-badge .counter-emoji {
+  display: inline-flex;
+  --counter-art-size: 1.15em;
 }
 
 .counter-poison {
-  background: rgb(var(--toxic-rgb) / 0.14);
-  border-color: rgb(var(--toxic-rgb) / 0.4);
   color: var(--toxic);
 }
 
@@ -258,15 +267,24 @@ html.fx-off .life-value {
 }
 
 .counter-energy {
-  background: rgb(var(--brand-rgb) / 0.25);
-  border-color: rgb(var(--brand-rgb) / 0.6);
   color: var(--brand-fg);
 }
 
+/* BRD-53: radiation is the yellow trefoil the game prints, not another green chip. */
 .counter-rad {
-  background: rgb(var(--ok-rgb) / 0.25);
-  border-color: rgb(var(--ok-rgb) / 0.6);
-  color: var(--ok);
+  color: var(--warn);
+}
+
+.counter-experience {
+  color: var(--purple-300, var(--purple));
+}
+
+.counter-ticket {
+  color: var(--brand-fg);
+}
+
+.counter-acorn {
+  color: var(--gold-300);
 }
 
 /* A player counter whose count changed (useCounterPulse via usePlayerCounters): the badge pops,
@@ -281,9 +299,10 @@ html.fx-off .life-value {
 
 .player-counter-badge.counter-poison { --pulse-rgb: var(--toxic-rgb); }
 .player-counter-badge.counter-energy { --pulse-rgb: var(--volt-rgb); }
-.player-counter-badge.counter-rad { --pulse-rgb: var(--ok-rgb); }
+.player-counter-badge.counter-rad { --pulse-rgb: var(--warn-rgb); }
 .player-counter-badge.counter-experience { --pulse-rgb: var(--purple-rgb); }
 .player-counter-badge.counter-ticket { --pulse-rgb: var(--brand-rgb); }
+.player-counter-badge.counter-acorn { --pulse-rgb: var(--gold-rgb); }
 .player-counter-badge.counter-speed,
 .player-badges .badge-speed { --pulse-rgb: var(--ember-rgb); }
 
@@ -419,29 +438,28 @@ html.fx-off .player-badges .badge-speed * {
 }
 
 /* Priority Timer Clock */
+/* BRD-54: the clock carries no box either; its own colour says what it has to say, and the
+   urgency tiers below paint the number instead of a border. */
 .player-timer-badge {
   display: inline-flex;
   align-items: center;
-  gap: var(--sp-1);
+  gap: var(--sp-0h);
   font-size: var(--fs-2xs);
   font-weight: 800;
-  padding: 1px var(--sp-1h);
-  border-radius: var(--r-xs);
-  background: rgb(var(--ink-2-rgb) / 0.9);
-  border: 1px solid var(--veil-5);
+  padding: 0;
+  border: 0;
+  background: none;
   color: var(--fg-2);
+  text-shadow: 0 1px 2px var(--shade-5);
   font-family: var(--font-mono, monospace);
-  transition: color 200ms cubic-bezier(0.16, 1, 0.3, 1), border-color 200ms cubic-bezier(0.16, 1, 0.3, 1), transform 200ms cubic-bezier(0.16, 1, 0.3, 1);
+  transition: color 200ms cubic-bezier(0.16, 1, 0.3, 1), transform 200ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .player-timer-badge.timer-active {
-  border-color: var(--ok);
   color: var(--ok);
-  box-shadow: 0 0 8px rgb(var(--ok-rgb) / 0.3);
 }
 
 .player-timer-badge.timer-low {
-  border-color: var(--err);
   color: var(--err);
 }
 
@@ -450,13 +468,11 @@ html.fx-off .player-badges .badge-speed * {
    once per second instead of free-running. */
 .player-timer-badge.warn {
   color: var(--warn);
-  border-color: var(--warn);
   transform: scale(1.02);
 }
 
 .player-timer-badge.urgent {
   color: var(--err);
-  border-color: var(--err);
 }
 
 .player-timer-badge.urgent .timer-value {
@@ -471,7 +487,6 @@ html.fx-off .player-badges .badge-speed * {
 
 .player-timer-badge.critical {
   color: var(--err);
-  border-color: var(--err);
   transform: scale(1.1);
 }
 
@@ -1265,11 +1280,16 @@ html.fx-off .badge-dungeon.fx-dungeon-complete {
   display: none;
 }
 
+/* BRD-54: the counters stack down beside the chip and open another column when they run out of
+   room, so they never make the chip taller. How many fit in a column is measured, not assumed
+   (`useStackRows`), and the stack is centred against the photo, the name and the life. */
 .player-info-bar.is-bare > .bare-counters {
   display: grid;
   grid-auto-flow: column;
-  grid-template-rows: repeat(3, auto);
-  gap: var(--sp-1) var(--sp-1h);
-  align-self: flex-start;
+  grid-auto-columns: max-content;
+  grid-template-rows: repeat(var(--counter-rows, 1), auto);
+  gap: 0 var(--sp-2);
+  align-self: center;
+  align-content: center;
   justify-items: start;
 }

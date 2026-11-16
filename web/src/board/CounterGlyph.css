@@ -1,0 +1,10 @@
+/* BRD-53: the counter's own symbol, painted with the badge's colour through a mask, so one file
+   serves every badge it appears in. */
+.counter-art {
+  display: block;
+  width: var(--counter-art-size, 1em);
+  height: var(--counter-art-size, 1em);
+  background: currentColor;
+  -webkit-mask: var(--counter-art) center / contain no-repeat;
+  mask: var(--counter-art) center / contain no-repeat;
+}

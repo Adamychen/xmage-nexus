@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="-299.139 -315.39 519.078 519.078">
+<circle
+     cx="-39.999992"
+     cy="-39.999996"
+     r="50"
+     id="circle6" />
+<path
+     d="m -114.99969,-38.506523 a 75,75 0 0 0 37.5,64.952003 l -87.5,151.554 a 250,250 0 0 1 -125,-216.506003 z"
+     id="bld-7" />
+<use
+     transform="rotate(120,-39.999689,-38.506523)"
+     id="use9-5"
+     x="0"
+     y="0"
+     width="600"
+     height="600"
+     xlink:href="#bld-7" />
+<use
+     transform="rotate(-120,-39.999689,-38.506523)"
+     id="use11-9"
+     x="0"
+     y="0"
+     width="600"
+     height="600"
+     xlink:href="#bld-7" />
+</svg>

@@ -1,3 +1,4 @@
+import { useRef } from 'react'
 import type { ReactNode } from 'react'
 import type { CardView, GameView, PlayerView } from '../net/types'
 import { seatColorVar, seatIndexOf, useSeatColor } from '../board/seatColor'
@@ -23,6 +24,9 @@ import { dungeonStateOf, hasCityBlessing, speedOf } from './mechanicsState'
 import RankBadge from '../lobby/RankBadge'
 import { playerRankRating } from '../lobby/ranking'
 import { speedLevelKey } from './speed'
+import { useStackRows } from './useStackRows'
+import CounterGlyph from '../board/CounterGlyph'
+import { counterArtUrl } from '../board/glyphs/counterArt'
 import { useChangeFlag } from './useChangeFlag'
 import { DamageNumbers } from '../board/DamageNumber'
 import { counterPulseClass } from '../board/useCounterPulse'
@@ -48,9 +52,9 @@ interface PlayerInfoBarProps {
 }
 
 function renderCounterIcon(name: string): React.ReactNode {
+  // BRD-53: the counter's own symbol where the game has one; the rest keep a glyph.
+  if (counterArtUrl(name)) return <CounterGlyph name={name} />
   const n = name.toLowerCase()
-  if (n.includes('poison')) return <Icon name="skull" size={13} />
-  if (n.includes('energy')) return <Icon name="bolt" size={13} />
   if (n.includes('commander')) return <Icon name="crown" size={13} />
   return <Icon name="sparkles" size={12} />
 }
@@ -302,6 +306,8 @@ export default function PlayerInfoBar({
   const life = useTweenNumber(shownLife)
 
   const { counters: activeCounters, pulses: counterPulses } = usePlayerCounters(player)
+  const bareCountersRef = useRef<HTMLDivElement>(null)
+  const counterRows = useStackRows(bareCountersRef, activeCounters.length)
   const speedPulse = Object.entries(counterPulses).find(([name]) => name.toLowerCase().includes('speed'))?.[1]
   const isDefeated = isPlayerOut(player)
   const wasDefeated = isPlayerDefeated(player)
@@ -657,7 +663,16 @@ export default function PlayerInfoBar({
 
       {portrait && pool && <div className="pp-pool" data-testid="pp-pool" onClick={(e) => e.stopPropagation()}>{pool}</div>}
       {bare && !portrait && pool && <div className="bare-pool" data-testid="bare-pool" onClick={(e) => e.stopPropagation()}>{pool}</div>}
-      {bareChip && activeCounters.length > 0 && <div className="bare-counters" data-testid="bare-counters">{counterBadges}</div>}
+      {bareChip && activeCounters.length > 0 && (
+        <div
+          className="bare-counters"
+          data-testid="bare-counters"
+          ref={bareCountersRef}
+          style={{ '--counter-rows': counterRows } as React.CSSProperties}
+        >
+          {counterBadges}
+        </div>
+      )}
       {bareChip && timerEl && <div className="bare-timer" data-testid="bare-timer">{timerEl}</div>}
 
       {!portrait && badgesEl}

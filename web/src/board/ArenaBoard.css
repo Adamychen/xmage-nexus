@@ -638,12 +638,8 @@
   }
 }
 
-/* BRD-32: the counters go down the side of the own chip, which has the height for it; in an
-   opponent's column they stay on one line, so its status row is no taller than the others'. */
-.arena-opp-cell .player-info-bar.is-bare > .bare-counters {
-  display: flex;
-  flex-wrap: nowrap;
-}
+/* BRD-54: the counters stack down the side of the chip, own or opponent's, in columns of what the
+   chip's height holds (`useStackRows`), so a rival's status row is never taller than the others'. */
 
 /* An opponent's chip never breaks into two lines: a second line would make its status row twice as
    tall and drop that seat's board. It keeps one line, the name truncating if need be. */
