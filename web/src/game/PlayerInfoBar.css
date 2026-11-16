@@ -192,9 +192,18 @@
   color: var(--gold-300);
 }
 
+/* BRD-54: the heart reads with the number, not under it: it takes the life's own size, a touch
+   under it so its round shape does not outweigh the digits. */
 .life-counter .counter-icon {
   color: var(--err);
-  font-size: var(--fs-md);
+  display: inline-flex;
+  align-items: center;
+  font-size: inherit;
+}
+
+.life-counter .counter-icon > svg {
+  width: 0.78em;
+  height: 0.78em;
 }
 
 .life-counter.low-life {
