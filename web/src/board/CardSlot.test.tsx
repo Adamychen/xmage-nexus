@@ -1045,3 +1045,26 @@ describe('CardSlot keyword overflow', () => {
     expect(container.querySelector('.keyword-badge-more')).toBeNull()
   })
 })
+
+describe('BRD-53: the symbol of a counter on a card', () => {
+  const landWith = (counters: { name: string; count: number }[]) =>
+    ({ id: 'cc1', name: 'Command Tower', cardTypes: ['Land'], counters }) as unknown as PermanentView
+
+  it('BRD-53: a counter the game has a symbol for carries it, with its count beside it', () => {
+    const { container } = render(<CardSlot card={landWith([{ name: 'charge', count: 3 }])} showCounters />)
+    const badge = container.querySelector('.counter-badge.charge')
+    expect(badge).not.toBeNull()
+    expect(badge?.querySelector('.counter-art')?.getAttribute('style')).toContain('symbols/counters/charge.svg')
+    expect(badge?.textContent).toBe('3')
+    expect(badge?.getAttribute('aria-label')).toBe('Charge: 3')
+  })
+
+  it('BRD-53: a counter with no symbol shows a plain mark and says its name under the pointer', () => {
+    const { container } = render(<CardSlot card={landWith([{ name: 'blood', count: 2 }])} showCounters />)
+    const badge = container.querySelector('.counter-badge.plain')
+    expect(badge).not.toBeNull()
+    expect(badge?.querySelector('.counter-art')).toBeNull()
+    expect(badge?.querySelector('svg')).not.toBeNull()
+    expect(badge?.getAttribute('aria-label')).toBe('Blood: 2')
+  })
+})
