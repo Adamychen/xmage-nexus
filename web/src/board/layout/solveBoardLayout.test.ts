@@ -405,3 +405,30 @@ describe('BRD-3: opponents never outgrow your own cards', () => {
     }
   })
 })
+
+describe('BRD-56: a board is not a card viewer', () => {
+  const seatOf = (own: boolean, height: number): SeatInput => ({
+    id: own ? 'me' : 'rival',
+    own,
+    rowBoxes: { creatures: { width: 1400, height }, permanents: { width: 1400, height } },
+    rows: {
+      creatures: { bands: [{ id: 'creatures', items: [{ a: 1, b: 0 }] }], gap: 10, padX: 8, padY: 2, rowGap: 2, bandGap: 8 },
+      permanents: { bands: [], gap: 10, padX: 8, padY: 2, rowGap: 2, bandGap: 8 },
+    },
+    capW: Infinity,
+    compactPod: false,
+  })
+
+  it('BRD-56: one card on a tall board stops at the seat cap instead of filling the row', () => {
+    const out = solveBoardLayout({ layout: 'arena', seats: [seatOf(true, 900)], aspect: 1.4, opponentsCappedByOwn: false }).seats[0]
+    expect(out.zoneCardW).toBe(180)
+    expect(out.rows.creatures.cardW).toBeLessThanOrEqual(180)
+  })
+
+  it('BRD-56: a rival stops lower than the player, and a short seat is still ruled by its height', () => {
+    const rival = solveBoardLayout({ layout: 'arena', seats: [seatOf(false, 900)], aspect: 1.4, opponentsCappedByOwn: false }).seats[0]
+    expect(rival.zoneCardW).toBe(160)
+    const short = solveBoardLayout({ layout: 'arena', seats: [seatOf(true, 220)], aspect: 1.4, opponentsCappedByOwn: false }).seats[0]
+    expect(short.zoneCardW).toBeLessThan(180)
+  })
+})

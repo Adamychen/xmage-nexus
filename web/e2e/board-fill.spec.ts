@@ -1,4 +1,5 @@
 import type { Page } from '@playwright/test'
+import { maxCardW } from '../src/board/layout/solveBoardLayout'
 import { test, expect } from './fixtures'
 import { fakeOnly } from './support/fake-mode'
 import { dismissSetupWizard } from './support/start-game'
@@ -50,7 +51,7 @@ interface SeatFill {
 }
 
 async function measure(page: Page, cappedByOwn: boolean): Promise<SeatFill[]> {
-  return page.evaluate((opts: { cappedByOwn: boolean; edge: number }) => {
+  return page.evaluate((opts: { cappedByOwn: boolean; edge: number; caps: Record<string, number> }) => {
     const num = (value: string) => parseFloat(value) || 0
     const innerW = (el: HTMLElement) => {
       const cs = getComputedStyle(el)
@@ -135,7 +136,8 @@ async function measure(page: Page, cappedByOwn: boolean): Promise<SeatFill[]> {
         }),
       )
       const aspect = s.compact ? 0.75 : 1.4
-      const maxConst = s.compact ? (s.own ? 230 : 190) : s.own ? 280 : 240
+      // BRD-56: the same cap the solver uses, passed in rather than written down twice.
+      const maxConst = opts.caps[`${s.own ? 'own' : 'opp'}-${s.compact ? 'compact' : 'classic'}`]
       const heightCap = Math.floor(Math.max(28, tallest - (s.compactPod ? 2 : 4)) / aspect)
       const oppCap = !s.own && opts.cappedByOwn && ownLargest > 0 ? ownLargest : Infinity
       return {
@@ -147,7 +149,16 @@ async function measure(page: Page, cappedByOwn: boolean): Promise<SeatFill[]> {
         rows: s.rows,
       }
     })
-  }, { cappedByOwn, edge: SCROLLABLE_EDGE_PX })
+  }, {
+    cappedByOwn,
+    edge: SCROLLABLE_EDGE_PX,
+    caps: {
+      'own-classic': maxCardW(true, false),
+      'own-compact': maxCardW(true, true),
+      'opp-classic': maxCardW(false, false),
+      'opp-compact': maxCardW(false, true),
+    },
+  })
 }
 
 function violations(seats: SeatFill[], layout: Layout): string[] {

@@ -934,3 +934,18 @@ life total.
   which in both faces leaves more room above the digits than below (measured at 100 px: the
   interface face reports an ascent of 108 and a descent of 25 for an ink that reaches 71).
 - Guard: `src/ui/digitShift.test.ts`
+
+### BRD-56 · A board is not a card viewer
+The cards of a seat never grow past a size of their own, whatever room the seat has: 180 px wide
+for the player and 160 for an opponent with the classic card, 150 and 130 with the compact one. A
+seat's card size comes from the height of its rows (BRD-25), so a board holding one land has
+nothing pulling the size down and the card grows until it meets that cap; past it the row simply
+keeps the space. A crowded board never reaches the cap and is left exactly as it was. The tool
+that checks the board fills its rooms reads the cap from the solver instead of carrying its own
+copy of the numbers.
+
+- Why: with a single land on the table the card came out 280 px wide with the side panel open and
+  260 without it, at 1920, which is larger than the preview the pointer opens and reads as a card
+  viewer rather than a board (user request, 17-nov-2026). Measured on the four-player showcase, a
+  full board draws its creatures at 162 px and its lands at 80, so nothing there moves.
+- Guard: `src/board/layout/solveBoardLayout.test.ts`
