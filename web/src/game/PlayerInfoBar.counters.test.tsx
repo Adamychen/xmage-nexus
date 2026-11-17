@@ -81,11 +81,12 @@ describe('BRD-53: the symbol of a player counter', () => {
   })
 
   it('BRD-53: a counter the game has no symbol for keeps a glyph', () => {
-    const counters = [{ name: 'muster', count: 2 }]
+    const counters = [{ name: 'blood', count: 2 }]
     setState({ game: makeGameView({ players: [withCounters(counters)] }) })
     const { container } = render(<PlayerInfoBar player={withCounters(counters)} side="opp" />)
-    expect(badge(container, 'muster')?.querySelector('.counter-art')).toBeNull()
-    expect(badge(container, 'muster')?.querySelector('svg')).not.toBeNull()
+    expect(badge(container, 'blood')?.querySelector('.counter-art')).toBeNull()
+    expect(badge(container, 'blood')?.querySelector('svg')).not.toBeNull()
+    expect(badge(container, 'blood')?.getAttribute('title')).toBe('Blood: 2')
   })
 })
 

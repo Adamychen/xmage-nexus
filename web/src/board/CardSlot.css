@@ -859,10 +859,13 @@ html.fx-off .card-slot.casting-pop {
   font-weight: 800;
   font-family: var(--font-display);
   line-height: 1.1;
-  background: rgb(var(--gold-rgb) / 0.95);
-  color: var(--ink-0);
-  border: 1px solid rgb(var(--gold-rgb) / 0.8);
-  box-shadow: 0 2px 4px var(--shade-3);
+  /* BRD-53: one family with the rest of the card's badges: a dark plate, the number in white and
+     the counter's own colour on the rim and the symbol. */
+  --counter-rgb: var(--gold-rgb);
+  background: var(--ink-1);
+  color: var(--fg-hi);
+  border: 1px solid rgb(var(--counter-rgb) / 0.75);
+  box-shadow: 0 2px 4px var(--shade-4);
   display: inline-flex;
   align-items: center;
   gap: var(--sp-0h);
@@ -1069,34 +1072,38 @@ html.fx-off .loyalty-badge .counter-tick {
   translate: 0 0.05em;
 }
 
+/* BRD-53: a counter's published symbol inside the chip of a card, at the size the drawn icons
+   used to be and in the chip's own colour. */
+.counter-badge .counter-icon-symbol {
+  display: inline-flex;
+  align-items: center;
+  --counter-art-size: 1.05em;
+}
+
 .counter-badge .counter-icon-symbol:has(.counter-mark) {
   display: inline-flex;
   align-items: center;
 }
 
-.counter-badge.shield {
-  background: rgb(var(--brand-rgb) / 0.95);
-  color: var(--fg-hi);
-  border-color: var(--brand);
+.counter-badge .counter-icon-symbol {
+  color: rgb(var(--counter-rgb));
 }
 
-.counter-badge.stun {
-  background: rgb(var(--warn-rgb) / 0.95);
-  color: var(--ink-0);
-  border-color: var(--warn);
-}
-
-.counter-badge.oil {
-  background: rgb(var(--purple-rgb) / 0.95);
-  color: var(--fg-hi);
-  border-color: var(--purple);
-}
-
-.counter-badge.finality {
-  background: var(--ink-4);
-  color: var(--fg-1);
-  border-color: var(--line-3);
-}
+/* The counters whose colour says something keep it; the rest wear the gold of the card's badges. */
+.counter-badge.shield { --counter-rgb: var(--brand-rgb); }
+.counter-badge.stun { --counter-rgb: var(--warn-rgb); }
+.counter-badge.oil { --counter-rgb: var(--purple-rgb); }
+.counter-badge.finality { --counter-rgb: var(--err-rgb); }
+.counter-badge.flame { --counter-rgb: var(--ember-rgb); }
+.counter-badge.flood { --counter-rgb: var(--mana-u-rgb); }
+.counter-badge.fungus { --counter-rgb: var(--mana-g-rgb); }
+.counter-badge.slime { --counter-rgb: var(--mana-g-rgb); }
+.counter-badge.time { --counter-rgb: var(--mana-u-rgb); }
+.counter-badge.charge { --counter-rgb: var(--volt-rgb); }
+.counter-badge.doom { --counter-rgb: var(--err-rgb); }
+.counter-badge.skull { --counter-rgb: var(--err-rgb); }
+.counter-badge.devotion { --counter-rgb: var(--purple-rgb); }
+.counter-badge.plain { --counter-rgb: var(--line-3-rgb, var(--gold-rgb)); }
 
 /* Card restriction / ability icons (Goad, combat restrictions, keywords) */
 .card-icons {

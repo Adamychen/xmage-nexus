@@ -39,6 +39,8 @@ import KeywordGlyph from './KeywordGlyph'
 import { dominantAuraKeyword, gainedKeywordIds } from './keywordAura'
 import CounterMark from './CounterMark'
 import AbilityCard from './AbilityCard'
+import CounterGlyph from './CounterGlyph'
+import { counterArtId } from './glyphs/counterArt'
 import { isSaga, sagaChapter, sagaChapters } from './saga'
 import SagaTrack from './SagaTrack'
 import { DefensePlate, LoyaltyPlate } from './StatPlate'
@@ -647,14 +649,11 @@ const showPtBadge =
               iconElement = <CounterMark kind="minus" />
               label = `${c.count}`
               customClass = 'm1m1'
-            } else if (n.includes('shield')) {
-              iconElement = <Icon name="shield" size={10} />
-              label = c.count > 1 ? `${c.count}` : ''
-              customClass = 'shield'
-            } else if (n.includes('stun')) {
-              iconElement = <Icon name="bolt" size={10} />
-              label = c.count > 1 ? `${c.count}` : ''
-              customClass = 'stun'
+            } else if (counterArtId(c.name)) {
+              // BRD-53: the counter's own symbol, for every one the game has published.
+              iconElement = <CounterGlyph name={c.name} />
+              label = `${c.count}`
+              customClass = counterArtId(c.name) ?? ''
             } else if (n.includes('oil')) {
               iconElement = <Icon name="drop" size={10} />
               label = `${c.count}`
@@ -667,7 +666,11 @@ const showPtBadge =
               label = `${c.count}`
               customClass = 'lore'
             } else {
-              label = `+${c.count}`
+              // BRD-53: a counter with no symbol of its own keeps a mark that says there is one,
+              // and the badge names it under the pointer.
+              iconElement = <Icon name="sparkles" size={10} />
+              label = `${c.count}`
+              customClass = 'plain'
             }
 
             const pulse = counterPulses[c.name]

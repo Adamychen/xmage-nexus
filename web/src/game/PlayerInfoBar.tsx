@@ -26,6 +26,7 @@ import { playerRankRating } from '../lobby/ranking'
 import { speedLevelKey } from './speed'
 import { useStackRows } from './useStackRows'
 import CounterGlyph from '../board/CounterGlyph'
+import { counterTip } from '../board/counterName'
 import { counterArtUrl } from '../board/glyphs/counterArt'
 import { useChangeFlag } from './useChangeFlag'
 import { DamageNumbers } from '../board/DamageNumber'
@@ -513,7 +514,7 @@ export default function PlayerInfoBar({
                 key={c.name}
                 className={`counter player-counter-badge counter-${kind} interactive-badge${counterPulseClass(pulse)}${lethal ? ' is-lethal' : ''}`}
                 data-counter={kind}
-                title={`${c.name}: ${c.count}${kind === 'poison' ? '/10' : ''}`}
+                title={`${counterTip(c.name, c.count)}${kind === 'poison' ? '/10' : ''}`}
                 onMouseEnter={(e) => handleMouseEnter(tokenCard, e)}
                 onMouseLeave={handleMouseLeave}
               >

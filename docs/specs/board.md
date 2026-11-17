@@ -874,21 +874,33 @@ the "+N" chip, which counts those columns as well.
   room on the card is what decides.
 - Guard: `src/board/badgeFit.test.ts` · `src/board/CardSlot.test.tsx`
 
-### BRD-53 · A player's counters carry the symbol of the game
-The counters a player holds are drawn with the symbol the game prints for each one: poison, energy,
-experience, radiation, ticket and acorn, each on the badge's own colour, painted through a mask so
-the symbol takes that colour (`public/symbols/counters`, listed in `glyphs/counterArt.ts`). A
-counter the game has no symbol for keeps the glyph it had, and the badge still names the counter
-and its count for a reader. The files are framed by `node scripts/ability-symbols.mjs counters
+### BRD-53 · A counter carries the symbol of the game
+A counter is drawn with the symbol the game prints for it, on a player and on a card alike: poison,
+energy, experience, radiation, ticket and acorn on the player chip; charge, time, stun, shield,
+flame, gold, ki, verse and the rest of the published ones on a card. The symbol is painted through
+a mask so it takes the colour of the badge it sits in (`public/symbols/counters`, listed in
+`glyphs/counterArt.ts`), and the name is matched exactly, so a counter the game spells differently
+is left alone rather than drawn as something else. A counter with no published symbol shows a plain
+mark and its count, and every badge, symbol or not, names the counter and its count under the
+pointer. On a card the chip is of the same family as the rest of the card's badges: a dark plate
+with the number in white and the counter's colour on the rim and the symbol, the colour saying
+something where the counter has one (a blue shield, an amber stun, a red flame) and the gold of
+the other badges where it does not. The files are framed by `node scripts/ability-symbols.mjs counters
 --write`, the same tool that frames the keyword symbols (BRD-47), which first widens each file's
 viewBox to hold its whole drawing and then centres it on the ink it paints.
 
 - Why: every counter but poison and energy showed the same sparkles, so experience, radiation,
-  tickets and acorns were indistinguishable on the bar (user request, 16-nov-2026). Poison, energy,
+  tickets and acorns were indistinguishable on the bar (user request, 16-nov-2026). The cards had
+  the same problem, with shields and stuns drawn as a shield and a bolt of our own and everything
+  else as a "+N": 21 more symbols came from the set for them, and the ones the set has none for
+  (blood, quest, level and the long tail of the engine's 227 counter types) say their name under
+  the pointer instead (17-nov-2026). The gold chip those counters sat on came from before the
+  rework and clashed with the dark plates the board had grown into, so the chip follows the
+  loyalty, defense and +1/+1 badges now, with the colour moved to the rim and the symbol. Poison, energy,
   the ticket and the acorn come from the Mana icon set; experience and radiation have no vector in
   it and come from mtg.wiki (`Exp.svg`, `Rad.svg`), whose radiation file carries its own yellow
   disc, dropped here so the trefoil can take the badge's colour.
-- Guard: `src/game/PlayerInfoBar.counters.test.tsx`
+- Guard: `src/game/PlayerInfoBar.counters.test.tsx` · `src/board/CardSlot.test.tsx`
 
 ### BRD-54 · A player's counters stack beside the chip, with no box around them
 The counters of a player are drawn beside the photo, the name and the life as their symbol and
