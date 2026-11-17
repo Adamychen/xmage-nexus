@@ -79,6 +79,7 @@ export const ENGINE_VIEW_REGISTRY: EngineViewRegistryRow[] = [
   { id: 'PermanentView.topMutation', view: 'PermanentView', field: 'topMutation', impacto: 'nulo', decision: 'duplicado', causa: 'la carta superior de la pila mutate llega en PermanentView.mutateView' },
   { id: 'PermanentView.transformCount', view: 'PermanentView', field: 'transformCount', impacto: 'nulo', decision: 'bookkeeping', causa: 'contador interno de transformaciones' },
   { id: 'PermanentView.turnsOnBattlefield', view: 'PermanentView', field: 'turnsOnBattlefield', impacto: 'nulo', decision: 'bookkeeping', causa: 'contador interno de turnos en el campo de batalla' },
+  { id: 'PermanentView.zeroLoyaltyRuleApplies', view: 'PermanentView', field: 'zeroLoyaltyRuleApplies', impacto: 'bajo', decision: 'bookkeeping', causa: 'flag de la acción basada en estado de lealtad 0 (GameImpl.checkStateBasedActions, regla 704.5i); el efecto que la desactiva llega como texto en rules' },
   { id: 'PlayerView.abilities', view: 'PlayerView', field: 'abilities', impacto: 'medio', decision: 'accepted', causa: 'habilidades de jugador (emblemas/efectos); el DTO no tiene canal' },
   { id: 'PlayerView.abort', view: 'PlayerView', field: 'abort', impacto: 'nulo', decision: 'bookkeeping', causa: 'bandera de aborto del hilo de juego' },
   { id: 'PlayerView.alternativeSourceCosts', view: 'PlayerView', field: 'alternativeSourceCosts', impacto: 'bajo', decision: 'accepted', causa: 'la superficie jugable llega por canPlayObjects/GAME_CHOOSE_ABILITY' },

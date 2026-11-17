@@ -17,7 +17,7 @@ XMage `17171` (testMode) · proxy WS `8787` · proxy HTTP page `8788/index.html`
 - `node scripts/build.mjs` — full (server + plugins + proxy; copies plugins to `local-server/plugins/`).
 - `node scripts/install.mjs` — zero-setup from scratch (Maven build + plugins + npm install), then `ctl.mjs start` + `test.mjs`.
 - Requirements: JDK 17 (Homebrew `openjdk@17`; `/usr/bin/java` stub breaks daemons — `scripts/lib.mjs` resolves the real binary), Maven 3.9, Node 20+ for the web client and the scripts (**Node ≥24 for `mcp/`**, which runs TypeScript directly via native type stripping). Server and proxy must run with `--add-opens=java.base/java.io=ALL-UNNAMED` (jboss-serialization on JDK 17).
-- XMage version `1.4.63-V1` (upstream tag `xmage_1.4.63V1`). Release bumps are a one-line pom change + recompile, but strict version checks mean a mismatched server rejects the proxy. Default target server: `beta.xmage.today:17171`.
+- XMage version `1.4.63-V2` (upstream tag `xmage_1.4.63V2`). Release bumps are a one-line pom change + recompile, but strict version checks mean a mismatched server rejects the proxy. Default target server: `beta.xmage.today:17171`.
 
 ## Second flavor: XDHS (`mage.xdhs.net`)
 
