@@ -36,10 +36,22 @@ export interface BoardOut {
 }
 
 const MIN_CARD_W = 44
-const MAX_CARD_W = 240
-const MAX_PLAYER_CARD_W = 280
-const MAX_COMPACT_CARD_W = 190
-const MAX_COMPACT_PLAYER_CARD_W = 230
+/**
+ * BRD-56: the card a seat draws at its largest. The size of a seat's cards comes from the height
+ * of its rows, so a board with one land on it has nothing pulling the size down and the card grows
+ * until it hits these: measured at 1920, a lone land reached 280 px with the side panel open,
+ * taller than the preview the pointer opens. A board is a board, not a card viewer.
+ */
+const MAX_CARD_W = 160
+const MAX_PLAYER_CARD_W = 180
+const MAX_COMPACT_CARD_W = 130
+const MAX_COMPACT_PLAYER_CARD_W = 150
+
+/** BRD-56: the largest a seat's cards may be drawn, for whoever needs to check it. */
+export function maxCardW(own: boolean, compact: boolean): number {
+  if (compact) return own ? MAX_COMPACT_PLAYER_CARD_W : MAX_COMPACT_CARD_W
+  return own ? MAX_PLAYER_CARD_W : MAX_CARD_W
+}
 const ROW_FLOOR_W = 46
 const ROW_FLOOR_W_POD = 38
 
