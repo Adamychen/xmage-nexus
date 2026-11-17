@@ -411,6 +411,35 @@
   padding-top: var(--sp-1);
 }
 
+/* MNA-12: the floating mana of the own board rides the strip the board leaves between the lands
+   and the piles, in one line over them, instead of taking a place of its own in the bottom row. */
+.arena-own-row {
+  position: relative;
+}
+
+.arena-own-row > .arena-own-pool {
+  position: absolute;
+  left: var(--arena-edge);
+  top: 0;
+  padding: 0;
+  z-index: 6;
+}
+
+.arena-own-row > .arena-own-pool .mana-inline {
+  flex-wrap: nowrap;
+  /* The count belongs to the symbol on its left: less air inside a pair than between pairs. */
+  gap: 0 var(--sp-2);
+  padding: 0;
+  border: 0;
+  background: none;
+}
+
+.arena-own-row > .arena-own-pool .mana-inline-pip {
+  gap: var(--sp-0h);
+  font-size: var(--fs-2xs);
+  line-height: 1;
+}
+
 .arena-own-row > .arena-own-pool .resource-bar-pool {
   background: transparent;
   border: 0;

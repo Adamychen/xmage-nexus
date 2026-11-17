@@ -208,6 +208,39 @@
   font-weight: 700;
 }
 
+/* MNA-12: the floating mana of a seat in the panel is drawn over its copy, at its own size: the
+   copy is scaled to fit its slot and the pool inside it comes out a few pixels tall. It sits in
+   the corner of the copy, over the seat's own chip, and only while the pool holds something. */
+.spotlight-copy-pool {
+  position: absolute;
+  left: var(--sp-2);
+  bottom: var(--sp-2);
+  z-index: 3;
+  pointer-events: none;
+  padding: var(--sp-0h) var(--sp-1h);
+  border-radius: var(--r-sm);
+  background: rgb(var(--ink-0-rgb, var(--ink-2-rgb)) / 0.72);
+}
+
+.spotlight-copy-pool .mana-inline {
+  background: none;
+  border: 0;
+  padding: 0;
+  /* The count belongs to the symbol on its left: less air inside a pair than between pairs. */
+  gap: var(--sp-0h) var(--sp-2);
+  flex-wrap: nowrap;
+}
+
+.spotlight-copy-pool .mana-inline-pip {
+  gap: var(--sp-0h);
+}
+
+/* The same pool inside the scaled copy is a few pixels tall; the head is where it is read. */
+.spotlight-copy-slot .resource-bar-pool,
+.spotlight-copy-slot .arena-own-pool {
+  display: none;
+}
+
 .spotlight-copy-head-life {
   flex: 0 0 auto;
   display: inline-flex;

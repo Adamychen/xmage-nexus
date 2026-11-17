@@ -457,3 +457,37 @@ describe('pile corner geometry (BRD-12)', () => {
     expect(pileCornerReaches(box(900, 720, 1000, 800), row)).toBe(false)
   })
 })
+
+describe('MNA-12: an opponent\'s floating mana in the side panel', () => {
+  beforeEach(() => {
+    vi.stubGlobal('ResizeObserver', NoopResizeObserver)
+    setSetting('boardSpotlight', true)
+  })
+
+  afterEach(() => {
+    cleanup()
+    setState({ game: null })
+  })
+
+  const withPool = (game: GameView, playerId: string, pool: Record<string, number>): GameView => ({
+    ...game,
+    players: game.players!.map((p) => (p.playerId === playerId ? { ...p, manaPool: pool as never } : p)),
+  })
+
+  it('MNA-12: the head of a seat shows its pool while it holds mana', () => {
+    const game = withPool(fourPlayerGame(), 'p3', { blue: 2, red: 1 })
+    setState({ game })
+    const { container } = render(<SpotlightBoard game={game} homeId="p1" mainId="p2" onSelectSeat={() => {}} />)
+    const pool = container.querySelector('[data-testid="spotlight-pool-p3"]')
+    expect(pool).not.toBeNull()
+    expect(pool?.querySelectorAll('.mana-inline-pip').length).toBeGreaterThan(0)
+  })
+
+  it('MNA-12: a seat with an empty pool shows nothing in its head', () => {
+    const game = withPool(fourPlayerGame(), 'p3', { blue: 0, red: 0 })
+    setState({ game })
+    const { container } = render(<SpotlightBoard game={game} homeId="p1" mainId="p2" onSelectSeat={() => {}} />)
+    expect(container.querySelector('[data-testid="spotlight-pool-p2"]')).toBeNull()
+    expect(container.querySelector('[data-testid="spotlight-pool-p3"]')).toBeNull()
+  })
+})
