@@ -258,6 +258,16 @@ html.fx-off .life-value {
   text-shadow: 0 1px 2px var(--shade-5);
 }
 
+/* BRD-55: the numbers of the chip are written in the interface face, whose figures all stand on
+   the baseline, and lifted onto the middle of their row by the slack their line box leaves above
+   them (`--digit-shift-ui`, measured from the font). */
+.player-counter-badge .counter-val,
+.player-timer-badge .timer-value {
+  font-family: var(--font-ui);
+  font-variant-numeric: tabular-nums lining-nums;
+  transform: translateY(calc(var(--digit-shift-ui, 0em) * -1));
+}
+
 /* BRD-53: the symbol of a counter sits in the badge at the size of its text, and takes the
    badge's colour. */
 .player-counter-badge .counter-emoji {

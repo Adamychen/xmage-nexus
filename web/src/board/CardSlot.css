@@ -1089,6 +1089,19 @@ html.fx-off .loyalty-badge .counter-tick {
   color: rgb(var(--counter-rgb));
 }
 
+/* BRD-55: a number on a badge is written in the interface face, whose figures all stand on the
+   baseline and reach the same height; the display face of the board draws them old style, so a 3
+   dropped below a 2 and no two chips lined up. It is then lifted onto the middle of its plate by
+   `--digit-shift-ui`, the slack its line box leaves above the digits, measured from the font. */
+.counter-badge .counter-text-val,
+.pt-badge .pt-value,
+.damage-badge,
+.counter-badge .counter-change-label {
+  font-family: var(--font-ui);
+  font-variant-numeric: tabular-nums lining-nums;
+  transform: translateY(calc(var(--digit-shift-ui, 0em) * -1));
+}
+
 /* The counters whose colour says something keep it; the rest wear the gold of the card's badges. */
 .counter-badge.shield { --counter-rgb: var(--brand-rgb); }
 .counter-badge.stun { --counter-rgb: var(--warn-rgb); }
