@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent, type RefObject } from 'react'
+import ManaPoolView from '../game/ManaPoolView'
 import { useTranslation } from '../i18n'
 import type { PlayerView } from '../net/types'
 import OpponentZone from './OpponentZone'
@@ -96,6 +97,12 @@ const OUT_STATUS = { died: 'player_died', conceded: 'player_conceded', left: 'pl
 const OUT_ICON = { died: 'skull', conceded: 'flag', left: 'door' } as const
 
 /** A copy's name and life at full size above it (BRD-31): a scaled copy is too small to tell whose it is. */
+/** MNA-12: whether a pool holds anything worth drawing. */
+function poolHasMana(pool: PlayerView['manaPool'] | undefined): boolean {
+  if (!pool) return false
+  return Object.values(pool).some((v) => typeof v === 'number' && v > 0)
+}
+
 function CopyHead({ player, players, active, onSelect }: { player: PlayerView; players: PlayerView[]; active: boolean; onSelect: () => void }) {
   const { t } = useTranslation()
   const lifeLabel = t('board', 'turn_life_label')
@@ -442,7 +449,16 @@ export default function SpotlightBoard({
                     onClick={(e) => {
                       if (!pickedInside(e.target, pickable, targetIdSet)) pickOrSwap(id)
                     }}
-                    overlay={<CopyPulse player={player} />}
+                    overlay={
+                      <>
+                        <CopyPulse player={player} />
+                        {player && poolHasMana(player.manaPool) && (
+                          <span className="spotlight-copy-pool" data-testid={`spotlight-pool-${id}`}>
+                            <ManaPoolView pool={player.manaPool} size={14} />
+                          </span>
+                        )}
+                      </>
+                    }
                   >
                     {seatBoard(id)}
                   </ScaledCopy>

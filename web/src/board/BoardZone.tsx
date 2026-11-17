@@ -810,7 +810,7 @@ export default function BoardZone({
         />
       </div>
       <div className="arena-own-pool hand-side-panel" data-testid="arena-own-pool">
-        <ResourceBar player={player} side={statusSide} poolOnly poolSize={22} />
+        <ResourceBar player={player} side={statusSide} poolOnly poolSize={16} />
       </div>
       {!effectiveControlled && showHand && (
         <div className="arena-opp-hand hand-side-panel" data-testid="arena-opp-hand">

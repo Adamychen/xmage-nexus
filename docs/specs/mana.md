@@ -130,3 +130,26 @@ section is not drawn. The classic interface already shows every player's pool in
   panel only showed your own pool. Hiding it when empty keeps every opponent panel free of a
   permanent "—" for something that is empty almost all the time.
 - Guard: `src/board/BoardZone.oppPool.test.tsx`
+
+### MNA-12 · In the Arena panel, an opponent's floating mana is drawn over its copy
+With the side panel open, each seat's copy is scaled to fit its slot, which leaves the pool inside
+it a few pixels tall. The mana of that seat is therefore drawn over the copy, in its bottom corner
+and at the size the panel reads at, while the pool inside the scaled copy is not drawn at all. A
+seat with an empty pool shows nothing. The count of a colour sits against its own symbol, with more
+air between one colour and the next than inside the pair, so a number is never read as belonging to
+the symbol beside it.
+
+The own board draws its own pool in the strip it leaves between the lands and the piles, one line
+of pips over the pile captions, where it takes no room from anything: it is anchored to the top of
+the status row, so it rides that gap at any size.
+
+- Why: measured on the four-player board at 1920 and 1366 with the panel open, an opponent's pips
+  came out 6 px wide inside the copy, against 22 px for the player's own pool on the board
+  (17-nov-2026). It went in the head of the copy first, which the user did not want, so it moved
+  over the copy itself. The own pool needed nothing to be visible: the Arena board took it out of
+  the hand's way when its chip was rebuilt (BRD-32), and at 1920 and 1366, with and without the
+  panel, the topmost element over it is the pool itself; it was 362 px wide across the bottom of the board,
+  between the piles and the hand, and the user asked whether it fitted between the lands and the
+  piles: it does, in a line 292 px wide and 24 px tall, with the gap measuring 32 px at 1920 and
+  51 px at 1366.
+- Guard: `src/board/SpotlightBoard.test.tsx`
