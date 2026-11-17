@@ -64,12 +64,7 @@
       "path": "Mage/src/main/java/mage/game/permanent/PermanentImpl.java"
     },
     {
-      "template": "Must attack defender {object.getLogName()}{addSourceObjectName(game, ability)}",
-      "icon": "HINT_ICON_REQUIRE",
-      "path": "Mage/src/main/java/mage/game/permanent/PermanentImpl.java"
-    },
-    {
-      "template": "Must attack defender {player.getLogName()}{addSourceObjectName(game, ability)}",
+      "template": "Must attack defender {defendersInfo}{addSourceObjectName(game, ability)}",
       "icon": "HINT_ICON_REQUIRE",
       "path": "Mage/src/main/java/mage/game/permanent/PermanentImpl.java"
     },
@@ -433,7 +428,7 @@
       },
       {
         "path": "Mage/src/main/java/mage/abilities/keyword/ConvokeAbility.java",
-        "expression": "new ValueHint(\"Untapped creatures you control\", new PermanentsOnBattlefieldCount(filterUntapped))",
+        "expression": "new ValueHint(\"Untapped creatures you control\", new PermanentsOnBattlefieldCount(StaticFilters.FILTER_CONTROLLED_UNTAPPED_CREATURE))",
         "class": "ValueHint"
       },
       {

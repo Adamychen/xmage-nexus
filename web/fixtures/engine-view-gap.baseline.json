@@ -63,7 +63,8 @@
       "timesLoyaltyUsed",
       "topMutation",
       "transformCount",
-      "turnsOnBattlefield"
+      "turnsOnBattlefield",
+      "zeroLoyaltyRuleApplies"
     ]
   },
   "PlayerView": {
@@ -158,8 +159,8 @@
     ]
   },
   "meta": {
-    "gapHash": "66ac29563df971128ebf0587cad87792610c44e5ad9599ce6e0c5dbcaad49440",
-    "sourceCommit": "136699b8b45902b69ce56e3f5dd0979d3d7df1ad",
-    "generatedAt": "2026-10-31T15:04:10.700Z"
+    "gapHash": "cad9b25885b64762a5f7e297db4ff3d6f9e58f935c30f872def1ac4d85c42806",
+    "sourceCommit": "82a5d9a7f6ee202e5944d44ce30a4ffb5de170c5",
+    "generatedAt": "2026-11-17T18:50:39.141Z"
   }
 }
