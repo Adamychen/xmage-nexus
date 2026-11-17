@@ -918,3 +918,19 @@ of its photo whatever counters it holds, on the own board and on an opponent's.
   chip holds three to a column, and the rival chips, four pixels shorter, hold three as well once
   the rows sit flush.
 - Guard: `src/game/PlayerInfoBar.counters.test.tsx`
+
+### BRD-55 · The number on a badge stands level with its symbol
+Every number the board writes inside a badge, a counter, a power and toughness, a damage mark, the
+counters of a player chip and its clock, is written in the interface face, whose figures all stand
+on the baseline and reach the same height, and is lifted onto the middle of its plate by the slack
+its line box leaves above the digits (`--digit-shift-ui`, measured from the font at start-up and
+again once the web fonts land). The display face of the board keeps the titles, the names and the
+life total.
+
+- Why: the badges were written in the display face, which draws its figures old style: a 3, a 4, a
+  5, a 7 and a 9 hang below the baseline while a 6 and an 8 rise above the others, so "3" sat lower
+  than "2" in the same chip and no two chips lined up, which the user saw on the +1/+1 counters
+  first (17-nov-2026). Lining figures fix the dance between digits; the lift fixes the line box,
+  which in both faces leaves more room above the digits than below (measured at 100 px: the
+  interface face reports an ascent of 108 and a descent of 25 for an ink that reaches 71).
+- Guard: `src/ui/digitShift.test.ts`
