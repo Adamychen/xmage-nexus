@@ -14,7 +14,7 @@ import RewindBar from './RewindBar'
 import MobileSpectator from './MobileSpectator'
 import { useNarrowScreen } from './useNarrowScreen'
 import { useRewind, viewedSnapshot } from './rewind'
-import { clearFeedback, getState, isRollbackVoteBlocking, maybeAutoPass, setStoreError, useGame, useSettings, useStore } from '../state/store'
+import { isRollbackVoteBlocking, maybeAutoPass, setStoreError, useGame, useSettings, useStore } from '../state/store'
 import FeedbackDialog from './FeedbackDialog'
 import UserRequestDialog from './UserRequestDialog'
 import RollbackDialog from './RollbackDialog'
@@ -79,6 +79,7 @@ import { inverseZoom } from '../appearance/zoom'
 import { CANCEL_SKIP_ACTION, CANCEL_SKIP_SHORTCUT, skipForShortcut } from './skips'
 import { isControllingPriority } from '../state/control'
 import { perfMark } from '../system/perfProbe'
+import { useTargetPick } from './useTargetPick'
 import './GameScreen.css'
 import './TournamentPanel.css'
 import { activeMechanicsCount } from './mechanicsState'
@@ -221,13 +222,6 @@ export default function GameScreen() {
   const combatActors = useMemo(() => combatActorsFrom(game), [game])
   useAttentionAlerts(liveGame, gameId, feedback, combat, settings.browserNotifications)
 
-  // Anti doble-envío del mismo objetivo mientras no llega el eco: el CardSlot
-  // cubre las cartas; este ref cubre el resto de superficies (headers, pila...).
-  const pendingTargetsRef = useRef<Set<string>>(new Set())
-  useEffect(() => {
-    pendingTargetsRef.current.clear()
-  }, [game, feedback])
-
   const stackTargeted = targetsStackObject(displayStack, targetIds)
   useEffect(() => {
     if (!stackTargeted) return
@@ -235,22 +229,7 @@ export default function GameScreen() {
     else setDrawerTab('stack')
   }, [stackTargeted, v2])
 
-  const onTargetClick = async (id: string) => {
-    if (!gameId) return
-    if (pendingTargetsRef.current.has(id)) return
-    pendingTargetsRef.current.add(id)
-    perfMark('click', 'target', undefined, { id })
-    const answered = getState().feedback
-    const result = await cmds.sendPlayerUUID(id, gameId)
-    if (!result.ok) {
-      pendingTargetsRef.current.delete(id)
-      setStoreError(result.error ?? t('errors', 'send_failed_target'))
-      return
-    }
-    // PRM-9: the accepted pick clears the prompt it answered. A hand pick (a discard) has no
-    // other clearing event until the next priority pass, so the dialog stayed open meanwhile.
-    if (getState().feedback === answered) clearFeedback()
-  }
+  const onTargetClick = useTargetPick(gameId, (error) => setStoreError(error ?? t('errors', 'send_failed_target')))
 
   const onPlayableClick = async (id: string, e?: React.MouseEvent) => {
     if (!gameId) return
