@@ -19,6 +19,11 @@
   </tr>
 </table>
 
+## What's new in 0.9.1
+
+- **XMage 1.4.63-V2**: the server, the proxy and the desktop app's bundled engine move to the latest upstream XMage release.
+- **Discarding to hand size**: the discard prompt no longer stays on screen after you discard down to your maximum hand size. A target prompt takes one pick, so a quick double click cannot answer it twice.
+
 ## What's new in 0.9.0
 
 - **Freeform Commander**: the format is there from the deck editor to the table, with real Commander precons to start from. The draft bot is never seated in a match it cannot play.
