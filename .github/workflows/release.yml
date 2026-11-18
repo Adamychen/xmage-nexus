@@ -123,7 +123,7 @@ jobs:
           - os: windows-latest
             tag: win-x64
             updater_key: windows-x86_64
-          - os: macos-latest
+          - os: macos-15
             tag: mac-arm64
             updater_key: darwin-aarch64
     runs-on: ${{ matrix.os }}
