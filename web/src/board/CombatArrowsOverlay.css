@@ -1,22 +1,19 @@
+/* TGT-10: an arrow says who is attacking whom or what a spell is pointing at, so it is drawn over
+   the board's own chrome (the phase strip, the turn strip, a seat's chip) instead of sliding
+   under it. It still passes under what the player is reading or acting on: a card lifted out of
+   the hand (50), the menus and the dialogs (200 and up) and every overlay above them. */
 .combat-arrows-overlay {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   pointer-events: none;
-  z-index: 28;
+  z-index: 40;
   overflow: visible;
 }
 
 .game:has(.game-drawer[data-tab='stack']) .combat-arrows-overlay {
   z-index: 45;
-}
-
-/* Con el menú de partida (⋯) abierto las flechas no lo cruzan: es un popup
-   opaco de la franja de control y manda sobre el tablero (la regla del cajón
-   de pila solo manda mientras el menú está cerrado). */
-.game:has(.game-drawer[data-tab='stack']):has(.game-menu-panel) .combat-arrows-overlay {
-  z-index: 28;
 }
 
 .arrow-group {

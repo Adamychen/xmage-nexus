@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs'
 import { render } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import CombatArrowsOverlay, { liftedArcPath, rectEdgePoint } from './CombatArrowsOverlay'
@@ -314,5 +315,54 @@ describe('CombatArrowsOverlay', () => {
 
     unmount()
     boardDiv.remove()
+  })
+})
+
+describe('CombatArrowsOverlay — stacking', () => {
+  const css = (file: string) => readFileSync(new URL(file, import.meta.url), 'utf8')
+
+  /** Every numeric `z-index` a stylesheet declares, with the selector it belongs to. */
+  const layers = (file: string): { selector: string; z: number }[] => {
+    const out: { selector: string; z: number }[] = []
+    const blocks = css(file).replace(/\/\*[\s\S]*?\*\//g, '').matchAll(/([^{}]+)\{([^{}]*)\}/g)
+    for (const [, selector, body] of blocks) {
+      const z = body.match(/z-index:\s*(-?\d+)\s*;/)
+      if (z) out.push({ selector: selector.trim().replace(/\s+/g, ' '), z: Number(z[1]) })
+    }
+    return out
+  }
+
+  const arrowsZ = (): number => {
+    const found = layers('./CombatArrowsOverlay.css').filter((l) => l.selector === '.combat-arrows-overlay')
+    expect(found.length).toBe(1)
+    return found[0].z
+  }
+
+  it("TGT-10: an arrow is drawn over every layer of the board's own chrome", () => {
+    // The board's chrome: the zones and their piles, the seat strip, the phase strip, the player
+    // chips. A ghost or an overlay is not chrome, it is an effect painted over the board on
+    // purpose, and the arrows share that range with it.
+    const chrome = [
+      './BoardZone.css',
+      './ArenaBoard.css',
+      './BoardShell.css',
+      '../game/PhaseBar.css',
+      '../game/PhaseDial.css',
+      '../game/PlayerInfoBar.css',
+    ]
+      .flatMap(layers)
+      .filter((l) => !/ghost|overlay|preview/i.test(l.selector))
+
+    expect(chrome.length).toBeGreaterThan(5)
+    const highest = chrome.reduce((a, b) => (b.z > a.z ? b : a))
+    expect(`arrows ${arrowsZ()} over ${highest.selector} ${highest.z}`).toBe(
+      `arrows ${arrowsZ()} over ${highest.selector} ${Math.min(highest.z, arrowsZ() - 1)}`,
+    )
+  })
+
+  it('TGT-10: an arrow still passes under a card lifted out of the hand', () => {
+    const lifted = layers('./HandBar.css').filter((l) => /hand-card-slot:hover/.test(l.selector))
+    expect(lifted.length).toBe(1)
+    expect(arrowsZ()).toBeLessThan(lifted[0].z)
   })
 })

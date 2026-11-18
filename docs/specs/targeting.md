@@ -101,3 +101,13 @@ chosen.
   object (`ROADMAP.md` §4, "Stack tabs past the 7th and the arrow filter").
 - Guard: `src/board/CombatArrowsOverlay.test.tsx` · `src/board/StackDeck.test.tsx` (the
   source-to-chosen arrow during a choice is not asserted)
+
+### TGT-10 · An arrow is drawn over the board, not under it
+The arrow layer sits above everything the board itself paints: the phase strip, the player chips,
+the zone piles and the badges on a card. It still passes under what is deliberately in front of
+the board, a card lifted out of the hand, the menus and the dialogs.
+
+- Why: an arrow that disappears behind a strip of chrome does not say who is attacking whom, which
+  is its whole job; it was drawn at `z-index: 28`, under the phase strip and the piles, with an
+  exception that lifted it only while the stack drawer was open.
+- Guard: `src/board/CombatArrowsOverlay.test.tsx`
