@@ -182,7 +182,7 @@ describe('PRM-15: cards that only show (library order, piles)', () => {
 })
 
 describe('PRM-15: cards that are chosen or played by a click (London mulligan, revealed cards)', () => {
-  it('PRM-15: the London bottom pick keeps its click and zooms from its button', () => {
+  it('PRM-15, PRM-2: the London bottom pick keeps its click and zooms from its button', () => {
     const hand: Record<string, CardView> = {
       h1: { id: 'h1', name: 'Forest', manaValue: 0, expansionSetCode: 'M21', cardNumber: '1' } as CardView,
     }
@@ -198,13 +198,18 @@ describe('PRM-15: cards that are chosen or played by a click (London mulligan, r
       max: 1,
       isMulliganLondon: true,
     } as FeedbackPrompt
-    const { container } = render(<MulliganDialog prompt={p} send={send as never} cancel={vi.fn()} busy={false} />)
+    const { container } = render(
+      <MulliganDialog prompt={p} send={send as never} sendNow={send as never} cancel={vi.fn()} busy={false} />,
+    )
     const wrap = container.querySelector('.mulligan-card-wrap') as HTMLElement
     pointer(wrap.querySelector('.prompt-card-zoom') as Element, 'pointerdown', 'touch')
     expect(wrap.classList.contains('is-previewing')).toBe(true)
     expect(sendPlayerUUID).not.toHaveBeenCalled()
+    // The zoom does not swallow the tap: the card underneath still takes it (PRM-2 chooses it
+    // for the bottom; the send waits for the confirmation).
     fireEvent.click(wrap.querySelector('.card-slot') as Element)
-    expect(sendPlayerUUID).toHaveBeenCalledWith('h1', 'g-1')
+    expect(wrap.classList.contains('is-chosen')).toBe(true)
+    expect(sendPlayerUUID).not.toHaveBeenCalled()
     setState({ game: null })
   })
 

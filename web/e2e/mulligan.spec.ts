@@ -20,7 +20,7 @@ import { framesOf, parseFrames, parseSent, sentOf } from './support/frames'
 
 const SHOTS_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), 'shots')
 
-test('mulligan: la ventana aparece y "Keep hand" arranca la partida', { tag: '@fullflow' }, async ({ page }) => {
+test('PRM-2: la pantalla de mano inicial aparece y "Conservar mano" arranca la partida', { tag: '@fullflow' }, async ({ page }) => {
   fs.mkdirSync(SHOTS_DIR, { recursive: true })
   await withFakeServer(() => mulliganScenario(), async () => {
     const { pageErrors } = await quickStartGame(page, {
@@ -28,11 +28,11 @@ test('mulligan: la ventana aparece y "Keep hand" arranca la partida', { tag: '@f
       autoStartingPlayer: false,
     })
 
-    // la barra de mano inicial (GAME_ASK) debe pintarse sobre la mano elevada
+    // la mano inicial (GAME_ASK) se decide en una pantalla completa sobre el tablero
     const dialog = page.getByTestId('mulligan-bar')
     await expect(dialog).toBeVisible({ timeout: 15_000 })
     await expect(dialog).toContainText(/mulligan/i)
-    await expect(page.locator('[data-testid="hand-bar"]')).toHaveClass(/is-raised/)
+    await expect(page.getByTestId('mulligan-fan').locator('.card-slot')).toHaveCount(MULLIGAN_HAND_IDS.length)
 
     // screenshot de la ventana de mulligan
     const shot = await page.screenshot({ fullPage: true })
@@ -41,19 +41,27 @@ test('mulligan: la ventana aparece y "Keep hand" arranca la partida', { tag: '@f
     // el ask llegó al cliente (frame GAME_ASK)
     expect(parseFrames(framesOf(page)).some((f) => f.method === 'GAME_ASK' && /mulligan/i.test(String(f.data?.question ?? '')))).toBeTruthy()
 
-    // Regresión (pasada 3 en vivo): con la última carta en hover, la carta
-    // crecida tapaba el botón Conservar mano y el clic quedaba interceptado.
-    // El prompt de mano debe apilarse por encima de la carta crecida (z 50).
-    await page.locator('[data-testid="hand-bar"] .hand-card').last().hover()
-    const zRanks = await page.evaluate(() => {
-      const prompt = document.querySelector('.hand-bar-prompt')
-      const grown = document.querySelector('.hand-bar .hand-card-slot:hover')
-      return {
-        prompt: Number(getComputedStyle(prompt as Element).zIndex),
-        grown: Number(getComputedStyle(grown as Element).zIndex || 0),
-      }
+    // Regresión (pasada 3 en vivo): la mano de abajo tapaba el botón Conservar
+    // mano y el clic quedaba interceptado. Nada del tablero llega por delante
+    // de la pantalla: el punto donde está el botón es el botón.
+    const onTop = await page.evaluate(() => {
+      const btn = document.querySelector('[data-testid="mulligan-keep"]') as HTMLElement
+      const r = btn.getBoundingClientRect()
+      const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2)
+      return Boolean(hit && btn.contains(hit))
     })
-    expect(zRanks.prompt, 'el prompt de mano debe ir por encima de la carta crecida').toBeGreaterThan(zRanks.grown)
+    expect(onTop, 'el botón Conservar mano recibe el clic, nada lo tapa').toBeTruthy()
+
+    // Ver el tablero deja leerlo sin salir de la decisión.
+    await page.getByTestId('mulligan-peek-open').click()
+    await expect(page.getByTestId('mulligan-peek')).toBeVisible()
+    await expect(page.locator('.mulligan-backdrop')).toHaveClass(/is-peeking/)
+    await expect
+      .poll(() => page.locator('.mulligan-screen').evaluate((el) => getComputedStyle(el).opacity))
+      .toBe('0')
+    await page.getByTestId('mulligan-peek-back').click()
+    await expect(page.locator('.mulligan-backdrop')).not.toHaveClass(/is-peeking/)
+
     await dialog.getByRole('button', { name: /Conservar mano/ }).click()
 
     // el cliente envió sendPlayerBoolean(false) y la partida continúa (GAME_SELECT)
@@ -66,7 +74,7 @@ test('mulligan: la ventana aparece y "Keep hand" arranca la partida', { tag: '@f
   })
 })
 
-test('mulligan: "Mulligan" abre el target de London (poner carta al fondo)', { tag: '@fullflow' }, async ({ page }) => {
+test('PRM-2: "Mulligan" abre el reparto de London (poner carta al fondo)', { tag: '@fullflow' }, async ({ page }) => {
   await withFakeServer(() => mulliganScenario(), async () => {
     const { pageErrors } = await quickStartGame(page, {
       prefix: 'mull2',
@@ -79,17 +87,34 @@ test('mulligan: "Mulligan" abre el target de London (poner carta al fondo)', { t
     // elegir "Mulligan" (boolean=true)
     await dialog.getByRole('button', { name: /^Mulligan/ }).click()
 
-    const london = page.locator('.mulligan-dialog.mulligan-london')
-    const remaining = page.getByTestId('mulligan-london-remaining')
-    for (let left = MULLIGAN_BOTTOM_COUNT; left > 0; left -= 1) {
-      await expect(london).toBeVisible({ timeout: 10_000 })
-      await expect(remaining).toContainText(String(left))
-      const grid = page.getByTestId('mulligan-london-grid')
-      await expect(grid.locator('.card-slot')).toHaveCount(MULLIGAN_HAND_IDS.length - (MULLIGAN_BOTTOM_COUNT - left))
-      const targetId = MULLIGAN_HAND_IDS[MULLIGAN_BOTTOM_COUNT - left]
-      await grid.locator(`.card-slot[data-card-id="${targetId}"]`).first().click()
+    const london = page.getByTestId('mulligan-screen')
+    const grid = page.getByTestId('mulligan-london-grid')
+    const keep = page.getByTestId('mulligan-keep')
+    await expect(london).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByTestId('mulligan-title')).toContainText(String(MULLIGAN_BOTTOM_COUNT))
+    await expect(grid.locator('.card-slot')).toHaveCount(MULLIGAN_HAND_IDS.length)
+
+    // PRM-2: choosing is local and reversible, and nothing leaves the hand before the player
+    // keeps it. The button stays dead until every card is chosen.
+    const chosen = MULLIGAN_HAND_IDS.slice(0, MULLIGAN_BOTTOM_COUNT)
+    for (const [i, id] of chosen.entries()) {
+      await expect(keep).toBeDisabled()
+      await grid.locator(`.card-slot[data-card-id="${id}"]`).first().click()
+      await expect(page.getByTestId('mulligan-sub')).toContainText(`${i + 1}`)
+    }
+    await expect(keep).toBeEnabled()
+    expect(parseSent(sentOf(page)).filter((s) => s.action === 'sendPlayerUUID')).toHaveLength(0)
+
+    // Un-choosing the last one takes the button away again.
+    await grid.locator(`.card-slot[data-card-id="${chosen[chosen.length - 1]}"]`).first().click()
+    await expect(keep).toBeDisabled()
+    await grid.locator(`.card-slot[data-card-id="${chosen[chosen.length - 1]}"]`).first().click()
+    await expect(keep).toBeEnabled()
+
+    await keep.click()
+    for (const id of chosen) {
       await expect
-        .poll(() => parseSent(sentOf(page)).some((s) => s.action === 'sendPlayerUUID' && String(s.args?.value) === targetId), { timeout: 10_000 })
+        .poll(() => parseSent(sentOf(page)).some((s) => s.action === 'sendPlayerUUID' && String(s.args?.value) === id), { timeout: 10_000 })
         .toBeTruthy()
     }
 
@@ -101,7 +126,7 @@ test('mulligan: "Mulligan" abre el target de London (poner carta al fondo)', { t
   })
 })
 
-test('mulligan: la ventana ofrece "Conceder" y confirma el envío de CONCEDE', { tag: '@fullflow' }, async ({ page }) => {
+test('PRM-2: la pantalla ofrece "Conceder" y confirma el envío de CONCEDE', { tag: '@fullflow' }, async ({ page }) => {
   await withFakeServer(() => mulliganScenario(), async () => {
     const { pageErrors } = await quickStartGame(page, {
       prefix: 'mull3',
