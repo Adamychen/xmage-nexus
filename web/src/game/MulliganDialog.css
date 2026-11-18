@@ -1,142 +1,257 @@
-/* ── Full-size card grid ─────────────────────────────────────── */
-.mulligan-hand-grid {
+/* BRD-58: the opening hand gets the whole screen. The board dims behind it, the seven cards are
+   dealt as one fan at the size of a card, and the decision sits under them as a row of buttons. */
+
+.mulligan-backdrop {
+  position: fixed;
+  inset: 0;
   display: flex;
-  flex-wrap: wrap;
+  align-items: center;
   justify-content: center;
+  padding: var(--sp-4) var(--sp-5);
+  background:
+    radial-gradient(ellipse at 50% 42%, rgb(var(--brand-rgb) / 0.1), transparent 62%),
+    rgb(0 0 0 / 0.76);
+  backdrop-filter: blur(6px) saturate(0.85);
+  animation: mulliganScreenIn calc(0.2s / var(--fx-speed, 1)) ease-out;
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .mulligan-backdrop {
+    backdrop-filter: none;
+    background: rgb(0 0 0 / 0.9);
+  }
+}
+
+@keyframes mulliganScreenIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* A peek at the board: the screen goes transparent but stays in front, so the cursor still can't
+   reach the game underneath. Alt does the same thing through the shared modal (`data-peek`). */
+.mulligan-backdrop.is-peeking,
+.mulligan-backdrop[data-peek='1'] {
+  background: transparent;
+  backdrop-filter: none;
+}
+
+.mulligan-backdrop.is-peeking .mulligan-screen,
+.mulligan-backdrop[data-peek='1'] .mulligan-screen {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.mulligan-peek-bar {
+  position: absolute;
+  left: 50%;
+  bottom: var(--sp-5);
+  transform: translateX(-50%);
+}
+
+.mulligan-peek-bar .ui-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1h);
+  box-shadow: var(--shadow-2);
+}
+
+/* The hand is on the screen, dealt as a fan, so the strip at the bottom of the board would be
+   the same seven cards twice: once over the other during a peek. */
+.game:has(.mulligan-backdrop) .hand-bar {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ── The screen ──────────────────────────────────────────────── */
+.mulligan-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   gap: var(--sp-3);
-  padding: var(--sp-2) var(--sp-1) var(--sp-3);
+  width: 100%;
+  max-width: 1400px;
+  background: none;
+  border: 0;
+  color: var(--fg-hi);
+  transition: opacity 0.12s ease;
+}
+
+.mulligan-screen-head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-0h);
+  text-align: center;
+}
+
+.mulligan-screen-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(var(--fs-xl), 3.2vh, 34px);
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-shadow: 0 2px 18px rgb(0 0 0 / 0.75);
+}
+
+.mulligan-screen-sub {
+  margin: 0;
+  font-size: var(--fs-sm);
+  color: var(--fg-2);
+}
+
+.mulligan-screen-count {
+  margin-top: var(--sp-0h);
+  padding: var(--sp-0h) var(--sp-2);
+  border: 1px solid var(--veil-5);
+  border-radius: var(--r-pill);
+  background: rgb(var(--ink-2-rgb) / 0.7);
+  font-size: var(--fs-2xs);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--fg-1);
+}
+
+/* ── The fan ─────────────────────────────────────────────────── */
+.mulligan-fan {
+  --card-w: clamp(104px, min(12.5vw, 24vh), 200px);
+  --fan-overlap: calc(var(--card-w) * 0.14);
+  --fan-tilt: 2.6deg;
+  --fan-lift: 3px;
+  /* Room under the fan for a card chosen for the bottom to sink into, reserved whether or not one
+     is chosen, so choosing never pushes the rest of the screen around. */
+  --fan-sink: 34px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: var(--sp-4) 0 calc(var(--sp-3) + var(--fan-sink));
+}
+
+/* A hand of four or fewer has room to spare: no overlap and no tilt, just cards. */
+.mulligan-fan[data-count='1'],
+.mulligan-fan[data-count='2'],
+.mulligan-fan[data-count='3'],
+.mulligan-fan[data-count='4'] {
+  --fan-overlap: calc(var(--card-w) * -0.08);
+  --fan-tilt: 0deg;
+  --fan-lift: 0px;
 }
 
 .mulligan-card-wrap {
+  --fan-off: calc(var(--fan-i, 0) - var(--fan-mid, 0));
   position: relative;
-  cursor: pointer;
-  flex-shrink: 0;
-  --card-w: 120px;
+  flex: 0 0 auto;
+  margin-inline: calc(var(--fan-overlap) / -2);
+  transform-origin: 50% 118%;
+  transform:
+    rotate(calc(var(--fan-off) * var(--fan-tilt)))
+    translateY(calc(var(--fan-off) * var(--fan-off) * var(--fan-lift)));
+  transition: transform 0.16s cubic-bezier(0.34, 1.4, 0.64, 1), filter 0.16s ease;
   animation: mulliganCardIn calc(0.34s / var(--fx-speed, 1)) cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
+  animation-delay: calc(var(--fan-i, 0) * 0.045s / var(--fx-speed, 1));
+}
+
+.mulligan-card-wrap .card-slot {
+  width: var(--card-w);
+  height: calc(var(--card-w) * 1.4);
+  box-shadow: 0 10px 26px rgb(0 0 0 / 0.55);
+  border-radius: var(--r-md);
+}
+
+/* Only a keyboard focus lifts a card: the screen opens with the focus already inside the first
+   card's zoom button, and `:focus-within` would deal that card out of line before anyone touched
+   it. */
+.mulligan-card-wrap:hover,
+.mulligan-card-wrap:has(:focus-visible),
+.mulligan-card-wrap.is-previewing {
+  z-index: 5;
+  transform: translateY(-20px) scale(1.05);
+}
+
+.mulligan-fan.is-pickable .mulligan-card-wrap {
+  cursor: pointer;
+}
+
+.mulligan-fan.is-pickable .mulligan-card-wrap:hover .card-slot,
+.mulligan-fan.is-pickable .mulligan-card-wrap:has(:focus-visible) .card-slot {
+  outline: 2px solid var(--brand-fg);
+  outline-offset: 3px;
+}
+
+/* A card chosen for the bottom sinks out of the fan and greys out: it is leaving the hand, and
+   the choice can still be taken back until the hand is kept. */
+.mulligan-card-wrap.is-chosen {
+  transform:
+    rotate(calc(var(--fan-off) * var(--fan-tilt)))
+    translateY(calc(var(--fan-off) * var(--fan-off) * var(--fan-lift) + var(--fan-sink)));
+}
+
+.mulligan-card-wrap.is-chosen .card-slot {
+  filter: grayscale(0.7) brightness(0.62);
+  outline: 2px solid var(--fg-2);
+  outline-offset: 3px;
+}
+
+.mulligan-card-wrap.is-chosen:hover,
+.mulligan-card-wrap.is-chosen:has(:focus-visible) {
+  transform: translateY(14px) scale(1.05);
+}
+
+.mulligan-card-mark {
+  position: absolute;
+  top: var(--sp-1);
+  left: 50%;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  margin-left: -13px;
+  border-radius: var(--r-pill);
+  background: rgb(var(--ink-2-rgb) / 0.94);
+  border: 1px solid var(--veil-6);
+  color: var(--fg-hi);
+  pointer-events: none;
 }
 
 @keyframes mulliganCardIn {
   from {
     opacity: 0;
-    transform: translateY(16px) scale(0.85) rotate(-2deg);
-  }
-  to {
-    opacity: 1;
-    transform: none;
+    transform: translateY(26px) scale(0.86);
   }
 }
 
-html.fx-off .mulligan-card-wrap,
-html.fx-off .mulligan-bar {
-  animation: none !important;
-}
-
-/* Scale up for small hands (≤4 cards) */
-.mulligan-hand-grid:has(.mulligan-card-wrap:nth-child(n+1):nth-child(-n+4)) .mulligan-card-wrap {
-  --card-w: 140px;
-}
-
-.mulligan-card-wrap .card-slot {
-  width: var(--card-w, 120px);
-  height: calc(var(--card-w, 120px) * 1.4);
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
-}
-
-.mulligan-card-wrap:hover .card-slot {
-  transform: translateY(-10px) scale(1.04);
-  box-shadow: 0 18px 40px var(--shade-4);
-  z-index: 10;
-}
-
-/* ── Opening-hand bar (keep / mulligan over the raised hand) ─── */
-.mulligan-bar {
+/* ── Actions ─────────────────────────────────────────────────── */
+.mulligan-screen-actions {
   display: flex;
-  flex-direction: column;
-  gap: var(--sp-2);
-  padding: var(--sp-2h) var(--sp-3);
-  background: rgb(var(--ink-2-rgb) / 0.94);
-  border: 1px solid var(--brand-line);
-  border-radius: var(--r-xl);
-  box-shadow: var(--shadow-2), 0 0 28px rgb(var(--brand-rgb) / 0.22);
-  color: var(--fg-hi);
-  backdrop-filter: blur(12px);
-  animation: mulliganBarIn calc(0.22s / var(--fx-speed, 1)) cubic-bezier(0.16, 1, 0.3, 1);
+  flex-wrap: wrap;
+  align-items: stretch;
+  justify-content: center;
+  gap: var(--sp-2h);
 }
 
-@media (prefers-reduced-transparency: reduce) {
-  .mulligan-bar {
-    backdrop-filter: none;
-    background: rgb(var(--ink-2-rgb));
-  }
-}
-
-@keyframes mulliganBarIn {
-  from {
-    opacity: 0;
-    transform: translateY(12px) scale(0.97);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
-.mulligan-bar-row {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-3);
-}
-
-.mulligan-bar-info {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: var(--sp-0h);
-  padding-right: var(--sp-3);
-  border-right: 1px solid var(--veil-5);
-}
-
-.mulligan-bar-title {
-  font-size: var(--fs-lg);
-  font-weight: 700;
-  line-height: 1.2;
-}
-
-.mulligan-bar-count {
-  font-size: var(--fs-xs);
-  color: var(--fg-2);
-}
-
-.mulligan-bar-starter {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--sp-1);
-  margin-top: var(--sp-0h);
-  padding: var(--sp-0h) var(--sp-2);
-  border: 1px solid var(--veil-5);
-  border-radius: var(--r-pill);
-  font-size: var(--fs-2xs);
-  font-weight: 700;
-  color: var(--fg-1);
+.mulligan-screen-actions .ui-btn,
+.mulligan-bar-option {
+  min-height: 42px;
 }
 
 .mulligan-bar-option {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: var(--sp-0h);
-  padding: var(--sp-1h) var(--sp-4);
-  background: var(--brand-soft);
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  padding: var(--sp-1) var(--sp-5);
+  background: rgb(var(--ink-2-rgb) / 0.92);
   border: 1px solid var(--brand-line);
   border-radius: var(--r-md);
-  color: var(--brand-fg);
+  color: var(--fg-hi);
   font: inherit;
   cursor: pointer;
   transition: background 0.15s ease, transform 0.1s ease;
 }
 
 .mulligan-bar-option:hover:not(:disabled) {
-  background: rgb(var(--brand-rgb) / 0.24);
+  background: rgb(var(--brand-rgb) / 0.26);
   transform: translateY(-1px);
 }
 
@@ -151,8 +266,11 @@ html.fx-off .mulligan-bar {
 }
 
 .mulligan-bar-option-label {
+  font-family: var(--font-display);
   font-size: var(--fs-md);
   font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .mulligan-bar-option-hint {
@@ -160,34 +278,24 @@ html.fx-off .mulligan-bar {
   color: var(--fg-2);
 }
 
-.mulligan-bar-concede {
-  color: var(--err);
+.mulligan-screen-actions .mulligan-bar-keep {
+  padding-inline: var(--sp-6);
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  box-shadow: 0 0 20px rgb(var(--brand-rgb) / 0.4);
 }
 
-.mulligan-bar-keep {
+.mulligan-screen-actions .mulligan-bar-peek,
+.mulligan-screen-actions .mulligan-bar-concede {
   display: inline-flex;
   align-items: center;
   gap: var(--sp-1h);
-  font-weight: 700;
-  box-shadow: 0 0 18px rgb(var(--brand-rgb) / 0.35);
 }
 
-.mulligan-bar .mulligan-evaluator {
-  justify-content: flex-start;
-  margin: 0;
-  padding-top: var(--sp-2);
-  border-top: 1px solid var(--veil-5);
-}
-
-@media (max-width: 640px) {
-  .mulligan-bar-row {
-    flex-wrap: wrap;
-  }
-
-  .mulligan-bar-info {
-    border-right: 0;
-    padding-right: 0;
-  }
+.mulligan-screen-actions .mulligan-bar-concede {
+  color: var(--err);
 }
 
 /* ── Hand evaluator (land ratio, colors, 3rd-land odds) ──────── */
@@ -196,7 +304,7 @@ html.fx-off .mulligan-bar {
   flex-wrap: wrap;
   gap: var(--sp-2);
   justify-content: center;
-  margin: var(--sp-1) 0 var(--sp-4);
+  margin: 0;
 }
 
 .mulligan-evaluator .ui-chip {
@@ -209,60 +317,29 @@ html.fx-off .mulligan-bar {
   margin-left: var(--sp-0h);
 }
 
-/* ── Actions ─────────────────────────────────────────────────── */
-.mulligan-actions {
-  display: flex;
-  margin-top: var(--sp-4);
-  gap: var(--sp-3h);
-  justify-content: center;
-  flex-wrap: wrap;
+@media (max-height: 720px) {
+  .mulligan-fan {
+    --fan-sink: 24px;
+    padding: var(--sp-2) 0 calc(var(--sp-2) + var(--fan-sink));
+  }
+
+  .mulligan-evaluator {
+    font-size: var(--fs-2xs);
+  }
 }
 
-.mulligan-actions button {
-  font-size: var(--fs-lg);
-  font-weight: 700;
-  padding: var(--sp-3) var(--sp-6);
-  border-radius: var(--r-mid);
-  cursor: pointer;
-  transition: transform 0.1s ease, filter 0.1s ease, box-shadow 0.15s ease;
-  font-family: var(--font-display);
-  letter-spacing: 0.02em;
-}
-
-.mulligan-actions button:hover:not(:disabled) {
-  transform: translateY(-2px);
-  filter: brightness(1.1);
-  box-shadow: 0 8px 20px var(--shade-2);
-}
-
-.mulligan-actions button:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
-.mulligan-actions .mulligan-concede {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--sp-1h);
-  background: transparent;
-  border-color: var(--err);
-  color: var(--err);
-  box-shadow: none;
-}
-
-.mulligan-actions .mulligan-concede:hover:not(:disabled) {
-  border-color: var(--err);
-  color: var(--err);
+html.fx-off .mulligan-card-wrap,
+html.fx-off .mulligan-backdrop {
+  animation: none !important;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .mulligan-card-wrap,
-  .mulligan-bar {
-    animation: none;
+  .mulligan-backdrop {
+    animation: none !important;
   }
 
-  .mulligan-card-wrap .card-slot,
-  .mulligan-actions button {
+  .mulligan-card-wrap {
     transition: none;
   }
 }

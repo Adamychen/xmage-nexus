@@ -18,13 +18,30 @@ hand picks. While it is true, the board's hover preview and stack hover stand do
   player is reading the board to answer, and must not float above a dialog (`89746e1dff`).
 - Guard: `src/state/selectors.test.ts`
 
-### PRM-2 · Keep or mulligan is a bar over the hand; the London bottom pick is a dialog
-The opening-hand decision is a bar over the raised hand so the player sees the hand they are
-judging. Choosing which cards go to the bottom (London mulligan) is a card dialog.
+### PRM-2 · The opening hand takes the whole screen
+Both halves of the mulligan, keep-or-mulligan and the London bottom pick, are one full-screen
+decision: the board dims behind it, the hand is dealt as a fan of cards at the size of a card, and
+the title says who plays first (or, for the bottom pick, how many cards are still to go down). The
+decision sits under the fan as a row of buttons, and one of them, `View battlefield`, turns the
+screen transparent for as long as the player wants to read the board. That peek never lets a click
+through: the screen stays in front, so the board behind it can be read but not played.
 
-- Why: the player judges the hand they are looking at, so the decision sits over the raised hand
-  instead of covering it.
-- Guard: `src/state/selectors.test.ts`
+The bottom pick is a choice the player makes before anything is sent: clicking a card marks it for
+the bottom and clicking it again takes the mark off, the count under the title says how many of
+how many are chosen, and `Keep hand` cannot be pressed until exactly that many are. Confirming is
+what sends them, one card per server ask, from the plan the confirmation made
+(`mulliganBottomPlan.ts`).
+
+- Why: this is the one decision in a game of Magic that is only about the cards in hand, and the
+  hand is what the player must be able to read. A bar over the raised hand gave the cards the
+  width of the hand strip (`web/src/board/HandBar.css`), so seven cards came out as thumbnails
+  next to a wall of text. A full screen is also what every player already knows from Arena. The
+  board does not disappear, because the hand is judged against the table it will be played on:
+  it is one button away and the game cannot move while the ask is open. The bottom pick waits for
+  a confirmation because the server asks for the cards one at a time and each answer is final: a
+  player who clicked the wrong card had already lost it, with one card of information about what
+  they were choosing between.
+- Guard: `src/state/selectors.test.ts` · `src/game/MulliganDialog.test.tsx` · `src/game/promptCardZoom.test.tsx` · `e2e/mulligan.spec.ts`
 
 ### PRM-3 · A plain yes/no is a bar that names its source
 A `GAME_ASK` yes/no with no dedicated dialog (pay life, optional costs, ward, cascade) is a

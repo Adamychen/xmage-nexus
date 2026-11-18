@@ -30,8 +30,9 @@ export function useSettings() {
   return useStore((s) => s.settings)
 }
 
-/** Keep/mulligan decision on the opening hand: shown as a bar over the raised
- *  hand, not as a modal (the London bottom pick is a separate card dialog). */
+/** Keep/mulligan decision on the opening hand (the London bottom pick is the other half of
+ *  PRM-2). The hand behind the screen stays raised, so it is not dealt a second time when the
+ *  screen closes. */
 export function isMulliganDecision(f: FeedbackPrompt | null | undefined): boolean {
   return f?.isMulligan === true && f.isMulliganLondon !== true
 }
@@ -53,7 +54,7 @@ export function isBlockingModal(s: AppState): boolean {
   const f = s.feedback as FeedbackPrompt | null
   if (f) {
     if (f.mode === 'mana' || f.mode === 'combat') return false
-    if (isMulliganDecision(f)) return false
+    // PRM-2: the opening hand takes the whole screen, both halves of it.
     if (isPlainBooleanAsk(f)) return false
     if (f.method === 'GAME_TARGET' && f.cards && f.cards.length > 0 && s.game) {
       const hand = new Set(Object.keys(s.game.myHand ?? {}))

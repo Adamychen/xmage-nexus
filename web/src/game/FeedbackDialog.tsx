@@ -49,7 +49,7 @@ function renderPrompt(form: UseFeedbackForm, handPick: boolean, onExpandHandPick
 
   // ── Mulligan: diálogo dedicado (Keep/Mulligan y London-bottom)
   if (prompt.isMulligan || prompt.isMulliganLondon) {
-    return <MulliganDialog prompt={prompt} send={send} cancel={cancel} busy={busy} />
+    return <MulliganDialog prompt={prompt} send={send} sendNow={sendNow} cancel={cancel} busy={busy} />
   }
 
   // ── Voting: diálogo dedicado
