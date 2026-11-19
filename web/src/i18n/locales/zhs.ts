@@ -1089,6 +1089,8 @@ export const zhs: TranslationSchema = {
     enter_fullscreen: '全屏模式 (F11)',
     exit_fullscreen: '退出全屏 (F11)',
     stack_empty: '堆叠为空',
+    stack_push_aside: '把堆叠移到一边',
+    stack_bring_back: '把堆叠移回来',
     combat_damage_title: '战斗伤害',
     ledger_attacks: '{player} 发起攻击',
     stack_empty_desc: '施放的咒语和异能将在此处等待结算。',

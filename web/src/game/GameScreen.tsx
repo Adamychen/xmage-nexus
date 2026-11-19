@@ -38,8 +38,6 @@ import { ChromeActionsContext } from './chromeActions'
 import LogTicker from './LogTicker'
 import CombatLedger from './CombatLedger'
 import StackZone from '../board/StackZone'
-import StackDeck from '../board/StackDeck'
-import { targetsStackObject } from './stackTargeting'
 import CombatArrowsOverlay from '../board/CombatArrowsOverlay'
 import FeedbackOverlay from '../board/FeedbackOverlay'
 import ImpactOverlay from '../board/ImpactOverlay'
@@ -146,7 +144,6 @@ export default function GameScreen() {
   const v2 = settings.gameUi === 'v2'
   const [drawerTab, setDrawerTab] = useState<DrawerTab | null>(null)
   const [sidePanelTab, setSidePanelTab] = useState<SidePanelTab | null>(null)
-  const [deckOpen, setDeckOpen] = useState(false)
   const [stackFocus, setStackFocus] = useState<ReadonlySet<string> | null>(null)
   const [promptSlot, setPromptSlot] = useState<HTMLElement | null>(null)
   const [dividerSlot, setDividerSlot] = useState<HTMLElement | null>(null)
@@ -154,18 +151,6 @@ export default function GameScreen() {
   const [busy, setBusy] = useState(false)
   const displayStack = useDisplayedStack(game, gameId)
   const stackCount = Object.keys(displayStack).length
-  const prevStackCountRef = useRef(0)
-
-  useEffect(() => {
-    const prev = prevStackCountRef.current
-    prevStackCountRef.current = stackCount
-    if (v2) {
-      if (stackCount === 0 && prev > 0) setDeckOpen(false)
-      return
-    }
-    if (stackCount > 0 && prev === 0) setDrawerTab((cur) => cur ?? 'stack')
-    if (stackCount === 0 && prev > 0) setDrawerTab((cur) => (cur === 'stack' ? null : cur))
-  }, [stackCount, v2])
 
   useEffect(() => {
     if (liveGame) maybeAutoPass(liveGame)
@@ -227,13 +212,6 @@ export default function GameScreen() {
   useEffect(() => {
     pendingTargetsRef.current.clear()
   }, [game, feedback])
-
-  const stackTargeted = targetsStackObject(displayStack, targetIds)
-  useEffect(() => {
-    if (!stackTargeted) return
-    if (v2) setDeckOpen(true)
-    else setDrawerTab('stack')
-  }, [stackTargeted, v2])
 
   const onTargetClick = async (id: string) => {
     if (!gameId) return
@@ -422,14 +400,14 @@ export default function GameScreen() {
   const [turnGlow, clearTurnGlow] = useChangeFlag(game?.turn)
 
   const toggleDrawer = useCallback((tab: DrawerTab) => {
-    if (tab === 'stack') return
     setSidePanelTab((cur) => (cur === tab ? null : tab))
   }, [])
   const toggleLegacyDrawer = useCallback((tab: DrawerTab) => setDrawerTab((cur) => (cur === tab ? null : tab)), [])
   const activeDrawerTab = drawerTab === 'commander' && !hasCommanders ? null : drawerTab
   const activeSidePanelTab = sidePanelTab === 'commander' && !hasCommanders ? null : sidePanelTab
   const chromeLeft = v2 && activeSidePanelTab ? 372 : 0
-  const chromeRight = v2 && stackCount > 0 ? (deckOpen ? 372 : 284) : 0
+  // The stack floats over the board now, so no layout reserves a strip for it.
+  const chromeRight = 0
   useOverlayGutters(boardWrapRef, v2 && isArenaLayout, `${isSpectator}|${!!game}|${chromeLeft}|${chromeRight}`)
 
   const stripCenter = (
@@ -479,7 +457,6 @@ export default function GameScreen() {
         <>
           <DrawerToggles
             active={activeDrawerTab}
-            stackCount={stackCount}
             onToggle={toggleLegacyDrawer}
             hasCommanders={hasCommanders}
             hasActiveMechanics={hasActiveMechanics}
@@ -491,19 +468,7 @@ export default function GameScreen() {
         activeDrawerTab && (
           <GameDrawer
             tab={activeDrawerTab}
-            stackCount={stackCount}
             onClose={() => setDrawerTab(null)}
-            stack={
-              <StackZone
-                stack={displayStack}
-                onCardClick={onTargetClick}
-                targetIds={new Set(targetIds)}
-                onResolveClick={onResolveClick}
-                canResolve={canPass}
-                players={game?.players}
-                myPlayerId={me?.playerId}
-              />
-            }
           />
         )
       }
@@ -535,12 +500,10 @@ export default function GameScreen() {
       toggles={
         <DrawerToggles
           active={activeSidePanelTab}
-          stackCount={stackCount}
           onToggle={toggleDrawer}
           hasCommanders={hasCommanders}
           hasActiveMechanics={hasActiveMechanics}
           mechanicsCount={mechanicsCount}
-          exclude={['stack']}
         />
       }
     />
@@ -610,15 +573,13 @@ export default function GameScreen() {
               <DesignationOverlay />
               <ProjectileOverlay />
               <HandRevealOverlay />
-              {v2 && stackCount > 0 && (
-                <StackDeck
+              {/* STK-2: the stack is a layer over the board, never a panel in a menu, and it is the
+                  same stack in every layout. */}
+              {stackCount > 0 && (
+                <StackZone
                   stack={displayStack}
-                  open={deckOpen}
-                  onOpenChange={setDeckOpen}
                   onCardClick={onTargetClick}
                   targetIds={targetIdSet}
-                  onResolveClick={onResolveClick}
-                  canResolve={canPass}
                   players={game?.players}
                   myPlayerId={me?.playerId}
                   onFocusIds={setStackFocus}
@@ -644,7 +605,7 @@ export default function GameScreen() {
             </div>
             <CombatArrowsOverlay
               game={game}
-              stackFocusIds={v2 ? stackFocus : null}
+              stackFocusIds={stackFocus}
               variant={v2 ? 'v2' : 'v1'}
               boardRef={gameBodyRef}
               targetSourceId={targetSourceId}

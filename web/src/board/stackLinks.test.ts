@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { castCard, primeStackEntries, stackDepartures } from './stackLinks'
+import { castCard, clearStackArrivals, primeStackArrivals, primeStackEntries, stackArrivalPending, stackDepartures } from './stackLinks'
 import { clearCardPositionRegistry, getPreviousCardPosition, getPreviousCardZone } from './cardPositionRegistry'
 import { makeCard, makeGameView, makePermanent, makePlayer } from '../__fixtures__/gameViews'
 
@@ -91,5 +91,42 @@ describe('primeStackEntries', () => {
     primeStackEntries(prev, next)
     expect(getPreviousCardPosition(MYSTIC_CARD)?.left).toBe(900)
     expect(getPreviousCardZone(MYSTIC_CARD)).toBe('stack-zone')
+  })
+})
+
+describe('FX-14: a spell flying to the stack is handed over where it lands', () => {
+  afterEach(() => {
+    clearStackArrivals()
+  })
+
+  const me = () => makePlayer({ playerId: ME, name: 'A', controlled: true })
+  const view = (stack: Record<string, ReturnType<typeof bolt>>) => makeGameView({ players: [me()], stack })
+
+  it('FX-14: an object new to the stack is marked, because the engine is about to fly it there', () => {
+    primeStackArrivals(view({}), view({ [BOLT_SPELL]: bolt(BOLT_SPELL) }))
+    expect(stackArrivalPending(BOLT_SPELL)).toBe(true)
+  })
+
+  it('FX-14: an object that was already on the stack is not marked again', () => {
+    const stack = { [BOLT_SPELL]: bolt(BOLT_SPELL) }
+    primeStackArrivals(view(stack), view({ ...stack, [MYSTIC_SPELL]: mystic(MYSTIC_SPELL) }))
+    expect(stackArrivalPending(BOLT_SPELL)).toBe(false)
+    expect(stackArrivalPending(MYSTIC_SPELL)).toBe(true)
+  })
+
+  it('FX-14: a stack that was replaced wholesale flew nothing, so it marks nothing', () => {
+    primeStackArrivals(view({ [MYSTIC_SPELL]: mystic(MYSTIC_SPELL) }), view({ [BOLT_SPELL]: bolt(BOLT_SPELL) }))
+    expect(stackArrivalPending(BOLT_SPELL)).toBe(false)
+  })
+
+  it('FX-14: a mark goes stale, so a card drawn long after its update is not left waiting', () => {
+    vi.useFakeTimers()
+    try {
+      primeStackArrivals(view({}), view({ [BOLT_SPELL]: bolt(BOLT_SPELL) }))
+      vi.advanceTimersByTime(1000)
+      expect(stackArrivalPending(BOLT_SPELL)).toBe(false)
+    } finally {
+      vi.useRealTimers()
+    }
   })
 })

@@ -1089,6 +1089,8 @@ export const ru: TranslationSchema = {
     enter_fullscreen: 'Во весь экран (F11)',
     exit_fullscreen: 'Выйти из полноэкранного режима (F11)',
     stack_empty: 'Стек пуст',
+    stack_push_aside: 'Отодвинуть стек',
+    stack_bring_back: 'Вернуть стек',
     combat_damage_title: 'Боевой урон',
     ledger_attacks: '{player} атакует',
     stack_empty_desc: 'Разыгранные заклинания и способности появятся здесь.',

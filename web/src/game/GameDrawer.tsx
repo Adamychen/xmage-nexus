@@ -15,7 +15,7 @@ import CommanderSeatMatrix from './CommanderSeatMatrix'
 import { DrawerHeadSlotContext } from './drawerHeadSlot'
 import './GameDrawer.css'
 
-export type DrawerTab = 'stack' | 'log' | 'chat' | 'tracker' | 'commander' | 'mechanics'
+export type DrawerTab = 'log' | 'chat' | 'tracker' | 'commander' | 'mechanics'
 
 interface DrawerTabDef {
   id: DrawerTab
@@ -35,17 +35,10 @@ function useChatUnread(chatOpen: boolean): number {
   return chatOpen ? 0 : Math.max(0, total - seen)
 }
 
-export function useDrawerTabs(active: DrawerTab | null, stackCount: number, hasCommanders: boolean, hasActiveMechanics: boolean, mechanicsCount?: number): DrawerTabDef[] {
+export function useDrawerTabs(active: DrawerTab | null, hasCommanders: boolean, hasActiveMechanics: boolean, mechanicsCount?: number): DrawerTabDef[] {
   const { t } = useTranslation()
   const unread = useChatUnread(active === 'chat')
   return [
-    {
-      id: 'stack',
-      icon: 'wand',
-      label: t('game', 'tab_stack'),
-      title: t('game', 'tab_stack'),
-      badge: stackCount > 0 && <span className="right-tab-badge active-stack" data-testid="stack-count">{stackCount}</span>,
-    },
     { id: 'log', icon: 'history', label: t('game', 'tab_log'), title: t('game', 'tab_log') },
     {
       id: 'chat',
@@ -70,7 +63,6 @@ export function useDrawerTabs(active: DrawerTab | null, stackCount: number, hasC
 
 interface DrawerTogglesProps {
   active: DrawerTab | null
-  stackCount: number
   onToggle: (tab: DrawerTab) => void
   hasCommanders: boolean
   hasActiveMechanics: boolean
@@ -78,8 +70,8 @@ interface DrawerTogglesProps {
   mechanicsCount?: number
 }
 
-export function DrawerToggles({ active, stackCount, onToggle, hasCommanders, hasActiveMechanics, exclude = [], mechanicsCount }: DrawerTogglesProps) {
-  const tabs = useDrawerTabs(active, stackCount, hasCommanders, hasActiveMechanics, mechanicsCount).filter((tab) => !exclude.includes(tab.id))
+export function DrawerToggles({ active, onToggle, hasCommanders, hasActiveMechanics, exclude = [], mechanicsCount }: DrawerTogglesProps) {
+  const tabs = useDrawerTabs(active, hasCommanders, hasActiveMechanics, mechanicsCount).filter((tab) => !exclude.includes(tab.id))
   return (
     <div className="drawer-toggles" role="toolbar">
       {tabs.filter((tab) => !tab.hidden).map((tab) => (
@@ -101,14 +93,12 @@ export function DrawerToggles({ active, stackCount, onToggle, hasCommanders, has
   )
 }
 
-export function DrawerBody({ tab, stack = null }: { tab: DrawerTab; stack?: ReactNode }) {
+export function DrawerBody({ tab }: { tab: DrawerTab }) {
   const game = useGame()
   const v2 = useSettings().gameUi === 'v2'
   return (
     <>
-      {tab === 'stack' ? (
-        stack
-      ) : tab === 'log' ? (
+      {tab === 'log' ? (
         <ActionFeed />
       ) : tab === 'chat' ? (
         <GameChat />
@@ -127,11 +117,10 @@ export function DrawerBody({ tab, stack = null }: { tab: DrawerTab; stack?: Reac
   )
 }
 
-export default function GameDrawer({ tab, stackCount, stack, onClose }: { tab: DrawerTab; stackCount: number; stack: ReactNode; onClose: () => void }) {
+export default function GameDrawer({ tab, onClose }: { tab: DrawerTab; onClose: () => void }) {
   const { t } = useTranslation()
   const [headSlot, setHeadSlot] = useState<HTMLElement | null>(null)
   const titles: Record<DrawerTab, string> = {
-    stack: `${t('game', 'stack')} (${stackCount})`,
     log: t('game', 'tab_log'),
     chat: t('game', 'tab_chat'),
     tracker: t('game', 'tab_tracker'),
@@ -147,7 +136,7 @@ export default function GameDrawer({ tab, stackCount, stack, onClose }: { tab: D
       </header>
       <DrawerHeadSlotContext.Provider value={headSlot}>
       <div className="game-drawer-content">
-        <DrawerBody tab={tab} stack={stack} />
+        <DrawerBody tab={tab} />
       </div>
       </DrawerHeadSlotContext.Provider>
     </aside>

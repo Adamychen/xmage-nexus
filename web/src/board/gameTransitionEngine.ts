@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useRef } from 'react'
 import type { CardView, GameView, PlayerView } from '../net/types'
-import { startCardFlight, noteFlightEvent, CAST_FLIGHT_MS, ENTER_FLIGHT_MS, ENTER_LAND_AT, type FlightTrail, type FlightVariant } from './flightManager'
-import { enqueueStackResolve } from './stackHold'
+import { startCardFlight, clearFlights, noteFlightEvent, CAST_FLIGHT_MS, ENTER_FLIGHT_MS, ENTER_LAND_AT, type FlightTrail, type FlightVariant } from './flightManager'
+import { enqueueStackResolve, forgetStackHold } from './stackHold'
 import { releaseHeldHit } from './damageHold'
-import { getPreviousCardPosition, getPreviousCardSize, clearCardPositionRegistry, type CardSourceSize } from './cardPositionRegistry'
+import { blindCardPositions, getPreviousCardPosition, getPreviousCardSize, clearCardPositionRegistry, type CardSourceSize } from './cardPositionRegistry'
 import { announceBanner, spawnFloater } from './feedbackFx'
 import { t } from '../i18n'
 import { isAbilityCard } from '../cards/cardImages'
@@ -26,11 +26,38 @@ import { boardWipeDelay, clearBoardWipe, primeBoardWipe, wipeBoardRect } from '.
 import { CONTROL_FLIGHT_MS, clearControlChanges, controlChanges, controlTintOf, primeControlChanges, type ControlChange } from './controlFx'
 import { COMMAND_FLIGHT_MS, castFromCommand, clearCommandReturns, commandReturnSource, commanderReturns, primeCommandReturns, type CommandReturn } from './commandFx'
 import { commandZoneCommanders } from './commanders'
-import { castCard, departureIds, primeStackEntries, stackDepartures, stackSpellSource, type StackDeparture } from './stackLinks'
+import { castCard, clearStackArrivals, departureIds, primeStackArrivals, primeStackEntries, stackDepartures, stackSpellSource, type StackDeparture } from './stackLinks'
 import { ANIMATE_FLIGHT_MS, SETTLE_FLIGHT_MS, animateColor, clearCreatureShifts, creatureShifts, primeCreatureShifts, type CreatureShift } from './creatureShiftFx'
 import { commandArrivals } from './commandObjectsFx'
 import { handReveals, spawnHandReveal } from './handRevealFx'
 import { flySpentMana, manaSpends } from './manaSpentFx'
+
+/** How long the card positions of the view being left behind stay invisible (two frames and some). */
+const FORGET_BLIND_MS = 160
+
+let forgetPrevious = false
+
+/**
+ * FX-15: the view coming next belongs to a different game than the one on screen, although the
+ * store's game id says otherwise (the state gallery hands the screen one fixture after another,
+ * and two fixtures share the ids of the cards they are built from). Nothing about the two may be
+ * diffed, so this forgets the one on screen: every animation in the air is dropped, the card
+ * positions go blind for a moment, and the next view is recorded without animating anything.
+ */
+export function forgetPreviousView(): void {
+  forgetPrevious = true
+  cancelPendingTransitions()
+  clearPendingSlams()
+  clearCombatSnapshots()
+  clearBoardWipe()
+  clearControlChanges()
+  clearCommandReturns()
+  clearCreatureShifts()
+  clearStackArrivals()
+  forgetStackHold()
+  clearFlights()
+  blindCardPositions(FORGET_BLIND_MS)
+}
 
 const pendingSlams = new Map<string, CardView>()
 const DAMAGE_TEXT = /\bdamage\b/i
@@ -83,8 +110,12 @@ function getRect(selector: string): DOMRect | null {
 }
 
 const STACK_SELECTOR = '.stack-zone, .stack-deck, .stack-list'
-const GRAVE_PILE = ':is(.graveyard-stack, .graveyard-chip)'
-const EXILE_PILE = ':is(.exile-stack, .exile-chip)'
+/* Every layout's spelling of each pile: the table draws a stack or a chip, the Arena strip draws
+   a pile card (`ResourceBar`). A flight whose destination only knows one of them has no landing
+   place in the other, and the card it is carrying simply vanishes in mid-air. */
+const GRAVE_PILE = ':is(.graveyard-stack, .graveyard-chip, .pile-card--graveyard)'
+const EXILE_PILE = ':is(.exile-stack, .exile-chip, .pile-card--exile)'
+const LIBRARY_PILE = ':is(.library-stack, .library-chip, .pile-card--library)'
 const PILE_CARD: CardSourceSize = { w: 44, h: 62 }
 
 /** A card leaving a pile chip (the new table's wide counters) starts as a small upright card, not as a card turned on its side. */
@@ -1111,7 +1142,7 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
     const pSel = getPlayerSelector(nextP.playerId, nextP.name)
     if (!pSel) continue
 
-    const libRect = getRect(`${pSel} :is(.library-stack, .library-chip)`)
+    const libRect = getRect(`${pSel} ${LIBRARY_PILE}`)
     const graveRect = getRect(`${pSel} ${GRAVE_PILE}`)
     const exileRect = getRect(`${pSel} ${EXILE_PILE}`)
 
@@ -1195,7 +1226,7 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
 
     // P) Put on the library (Brainstorm, Chaos Warp, a tuck): each card flies to the library pile and
     //    turns face down on the way; an opponent's hand cards leave it already face down.
-    const libSel = `${pSel} :is(.library-stack, .library-chip)`
+    const libSel = `${pSel} ${LIBRARY_PILE}`
     const tucks = libraryTucks(prevP, nextP, prevGame, nextGame)
     const tuckedPermanents = new Set(tucks.permanents)
     if (fxMotionAllowed()) {
@@ -1236,7 +1267,7 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
             return
           }
           flyAfterLayout(id, arrived, originRect, [
-            `${pSel} :is(.graveyard-stack, .graveyard-chip) [data-card-id="${id}"]`,
+            `${pSel} ${GRAVE_PILE} [data-card-id="${id}"]`,
             `${pSel} :is(.graveyard-stack, .graveyard-chip)`,
           ], graveRect, 350, registered ? getPreviousCardSize(id) : null)
         }, i * 70)
@@ -1625,12 +1656,14 @@ export function useGameTransitions(game: GameView | null, gameId: string | null)
   const prevGameRef = useRef<GameView | null>(null)
   const prevGameIdRef = useRef<string | null>(null)
   useMemo(() => {
+    if (forgetPrevious) return
     primeCombatHolds(prevGameRef.current, game)
     primeHandReturns(myHandReturns(prevGameRef.current, game))
     primeBoardWipe(prevGameRef.current, game)
     primeControlChanges(prevGameRef.current, game)
     primeCommandReturns(prevGameRef.current, game)
     primeStackEntries(prevGameRef.current, game)
+    primeStackArrivals(prevGameRef.current, game)
     primeCreatureShifts(prevGameRef.current, game)
   }, [game])
 
@@ -1653,7 +1686,8 @@ export function useGameTransitions(game: GameView | null, gameId: string | null)
     const coinMs = observeCoinFlip(game, gameId)
     if (prevGame) {
       const prevId = prevGameIdRef.current
-      if (gameId && prevId && gameId !== prevId) {
+      if (forgetPrevious || (gameId && prevId && gameId !== prevId)) {
+        forgetPrevious = false
         cancelPendingTransitions()
         clearCardPositionRegistry()
         clearPendingSlams()

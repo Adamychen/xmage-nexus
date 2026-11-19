@@ -21,99 +21,38 @@
   transition: opacity 0.2s ease;
 }
 
+/* TGT-11: an arrow is a beam, not a ladder. Two strokes make it: a dark seam right under it for the same reason, and the beam, drawn
+   with a gradient that runs dim at the source and full at the point. The direction is in that
+   gradient and in the dart at its end, so there is no need for a march of dashes to read it by,
+   which also makes a capture of the board reproducible. */
 .arrow-shadow {
   fill: none;
-  stroke: var(--shade-3);
-  stroke-width: 6;
+  stroke: var(--shade-2);
+  stroke-width: 7;
   stroke-linecap: round;
 }
 
 .arrow-path {
   fill: none;
+  stroke-width: 3.6;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
 
-/* Attack Arrow (Crimson) */
-.arrow-path.arrow-attack {
-  stroke: var(--err);
-  stroke-width: 4;
-  stroke-dasharray: 9 5;
-  animation: arrowFlowAttack 1.2s linear infinite;
-}
+.arrow-path.arrow-target { stroke-width: 3.2; }
 
-@keyframes arrowFlowAttack {
-  from {
-    stroke-dashoffset: 28;
-  }
-  to {
-    stroke-dashoffset: 0;
-  }
-}
+/* One colour the whole way. */
+.arrow-path.arrow-attack { stroke: var(--err); }
+.arrow-path.arrow-block { stroke: var(--brand-fg); }
+.arrow-path.arrow-target { stroke: var(--gold-300); }
 
-/* Block Arrow (Cyan / Blue) */
-.arrow-path.arrow-block {
-  stroke: var(--brand-fg);
-  stroke-width: 4;
-  stroke-dasharray: 9 5;
-  animation: arrowFlowBlock 1.2s linear infinite;
-}
+.arrow-head-attack { fill: var(--err); }
+.arrow-head-block { fill: var(--brand-fg); }
+.arrow-head-target { fill: var(--gold-300); }
 
-@keyframes arrowFlowBlock {
-  from {
-    stroke-dashoffset: 28;
-  }
-  to {
-    stroke-dashoffset: 0;
-  }
-}
-
-/* Target Arrow (Gold / Amber) */
-.arrow-path.arrow-target {
-  stroke: var(--gold-300);
-  stroke-width: 3.5;
-  stroke-dasharray: 7 6;
-  animation: arrowFlowTarget 0.8s linear infinite;
-}
-
-/* El flujo de guiones es una animación infinita: su fase depende del instante
-   de captura y no es reproducible en WebKit (`animations:'disabled'` no la
-   congela). Bajo movimiento reducido el trazo pasa a sólido (sin fase de guion
-   ligada a la longitud sub-píxel del path) y el overlay queda determinista. */
-@media (prefers-reduced-motion: reduce) {
-  .arrow-path.arrow-attack,
-  .arrow-path.arrow-block,
-  .arrow-path.arrow-target {
-    animation: none;
-    stroke-dasharray: none;
-  }
-}
-
+/* The seat-coloured arrows of the Table layout are the same beam, a touch thinner. */
 .arrow-path.arrow-v2 {
-  stroke-width: 2.2;
-  stroke-dasharray: 7 6;
-  opacity: 0.9;
-  filter: drop-shadow(0 0 5px currentColor);
-  animation: arrowFlowV2 1s linear infinite;
+  stroke-width: 3;
 }
 
-@keyframes arrowFlowV2 {
-  to {
-    stroke-dashoffset: -26;
-  }
-}
 
-@media (prefers-reduced-motion: reduce) {
-  .arrow-path.arrow-v2 {
-    animation: none;
-  }
-}
-
-@keyframes arrowFlowTarget {
-  from {
-    stroke-dashoffset: 26;
-  }
-  to {
-    stroke-dashoffset: 0;
-  }
-}

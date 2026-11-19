@@ -125,7 +125,7 @@ export function animateOpponentMulligan(playerId: string): void {
   if (!fxMotionAllowed() || typeof document === 'undefined') return
   afterLayout(() => {
     const seat = `[data-player-id="${playerId}"]`
-    const library = visibleRect(document.querySelector(`${seat} :is(.library-stack, .library-chip)`))
+    const library = visibleRect(document.querySelector(`${seat} :is(.library-stack, .library-chip, .pile-card--library)`))
     const hand = visibleRect(document.querySelector(`${seat} .hand-zone`))
       ?? visibleRect(document.querySelector(`.player-info-bar${seat} .pp-hand-badge`))
       ?? visibleRect(document.querySelector(`.player-info-bar${seat}`))

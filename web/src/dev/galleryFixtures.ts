@@ -849,20 +849,84 @@ function withIdenticalSpellPile(game: GameView): GameView {
   }
 }
 
-function pushStackEntry(game: GameView): GameView {
-  const me = controlledPlayer(game)
-  const id = 'gallery-push-' + Date.now()
-  const spell = { id, name: 'Lightning Bolt', expansionSetCode: 'M10', cardNumber: '146', cardTypes: ['INSTANT'], controllerId: me?.playerId, controllerName: me?.name }
-  return { ...game, stack: { [id]: spell, ...(game.stack ?? {}) } as unknown as GameView['stack'] }
+/**
+ * Resolves everything on the stack the way one server update would: all of it leaves at once and
+ * each object's card lands in its controller's graveyard. The screen still plays them one after
+ * another (FX-7), which is what the entry using this is for.
+ */
+function resolveWholeStack(game: GameView): GameView {
+  const fallback = controlledPlayer(game)?.playerId
+  const piles = new Map<string, Record<string, CardView>>()
+  for (const [id, spell] of Object.entries((game.stack ?? {}) as Record<string, CardView>)) {
+    const owner = spell.controllerId ?? spell.sourceCard?.controllerId ?? fallback
+    if (!owner) continue
+    const cardId = `${id}-card`
+    piles.set(owner, { ...(piles.get(owner) ?? {}), [cardId]: { ...spell, id: cardId } })
+  }
+  return {
+    ...game,
+    stack: {} as unknown as GameView['stack'],
+    players: players(game).map((p) => {
+      const pile = p.playerId ? piles.get(p.playerId) : undefined
+      return pile ? { ...p, graveyard: { ...(p.graveyard ?? {}), ...pile } as PlayerView['graveyard'] } : p
+    }),
+  }
 }
 
+/**
+ * Casts a card that is really in the hand, so the entry animation has somewhere to fly from. A
+ * spell conjured straight onto the stack leaves the transition engine with no origin, and the
+ * flight then starts where it ends: the card appears to twitch instead of travelling.
+ */
+function pushStackEntry(game: GameView): GameView {
+  const me = controlledPlayer(game)
+  const hand = { ...(game.myHand ?? {}) } as Record<string, CardView>
+  const handId = Object.keys(hand)[0]
+  const id = 'gallery-push-' + Date.now()
+  const fromHand = handId ? hand[handId] : undefined
+  if (handId) delete hand[handId]
+  const spell = {
+    id,
+    name: fromHand?.name ?? 'Lightning Bolt',
+    expansionSetCode: fromHand?.expansionSetCode ?? 'M10',
+    cardNumber: fromHand?.cardNumber ?? '146',
+    cardTypes: fromHand?.cardTypes ?? ['INSTANT'],
+    sourceCard: fromHand ? { ...fromHand } : undefined,
+    controllerId: me?.playerId,
+    controllerName: me?.name,
+  }
+  return {
+    ...game,
+    myHand: hand as unknown as GameView['myHand'],
+    stack: { [id]: spell, ...(game.stack ?? {}) } as unknown as GameView['stack'],
+  }
+}
+
+/**
+ * A real chain, so the target arrows have something to point at: a trigger with no target, a Path
+ * to Exile aimed at a creature on the battlefield, and a Counterspell aimed at the Path. Last in
+ * is first out, so the Counterspell is the one about to resolve.
+ */
 function withMixedStackKinds(game: GameView): GameView {
   const me = controlledPlayer(game)
-  const controller = { controllerId: me?.playerId, controllerName: me?.name }
+  const opponent = opponentPlayer(game)
+  const mine = { controllerId: me?.playerId, controllerName: me?.name }
+  const theirs = { controllerId: opponent?.playerId, controllerName: opponent?.name }
+  const prey = creatureIds(opponent)[0] ?? creatureIds(me)[0]
   const stack = {
-    'gallery-kind-trigger': { id: 'gallery-kind-trigger', name: 'Soul Warden', mageObjectType: 'TRIGGERED_ABILITY', abilityType: 'Triggered', rules: ['You gain 1 life.'], sourceCard: { name: 'Soul Warden', ...controller }, ...controller },
-    'gallery-kind-spell': { id: 'gallery-kind-spell', name: 'Lightning Bolt', expansionSetCode: 'M10', cardNumber: '146', cardTypes: ['INSTANT'], ...controller },
-    'gallery-kind-creature': { id: 'gallery-kind-creature', name: 'Mystic Snake', expansionSetCode: 'MH2', cardNumber: '50', cardTypes: ['CREATURE'], power: 2, toughness: 2, ...controller },
+    'gallery-kind-counter': {
+      id: 'gallery-kind-counter', name: 'Counterspell', expansionSetCode: 'MH2', cardNumber: '267', cardTypes: ['INSTANT'],
+      rules: ['Counter target spell.'], targets: ['gallery-kind-path'], ...theirs,
+    },
+    'gallery-kind-path': {
+      id: 'gallery-kind-path', name: 'Path to Exile', expansionSetCode: 'CON', cardNumber: '15', cardTypes: ['INSTANT'],
+      rules: ['Exile target creature. Its controller may search their library for a basic land card…'],
+      targets: prey ? [prey] : [], ...mine,
+    },
+    'gallery-kind-trigger': {
+      id: 'gallery-kind-trigger', name: 'Soul Warden', mageObjectType: 'TRIGGERED_ABILITY', abilityType: 'Triggered',
+      rules: ['You gain 1 life.'], sourceCard: { name: 'Soul Warden', ...mine }, ...mine,
+    },
   }
   return { ...game, stack: stack as unknown as GameView['stack'] }
 }
@@ -3267,8 +3331,12 @@ export function buildGalleryEntries(): GalleryEntry[] {
       id: 'stack:identical-pile',
       group: 'Pila',
       label: 'Stack: identical spells pile',
-      description: 'Three identical instants from the same controller, no targets: they fold into one row with ×3 and the cards beneath peek out below the top one.',
+      description: 'Three identical instants from the same controller: three cards on the stack, not one with a count, because each one resolves on its own (STK-4).',
       phase: 'game',
+      // The cascade lives in the Arena layout: pin it so the entry shows the stack it is about.
+      gameUi: 'v1',
+      boardLayout: 'arena',
+      boardSpotlight: true,
       game: withIdenticalSpellPile(game),
       gameId,
     })
@@ -3276,18 +3344,40 @@ export function buildGalleryEntries(): GalleryEntry[] {
       id: 'stack:entry-animation',
       group: 'Pila',
       label: 'Stack: entry animation (press the button)',
-      description: 'Each press puts a new spell on top of the pile: the new top card and its tab ease in. Press it to replay the entry animation.',
+      description: 'Each press puts a new spell in front of the cascade, easing in from the right. Press it to replay the entry animation.',
       phase: 'game',
+      // The cascade lives in the Arena layout: pin it so the entry shows the stack it is about.
+      gameUi: 'v1',
+      boardLayout: 'arena',
+      boardSpotlight: true,
       game: withIdenticalSpellPile(game),
       gameId,
       action: { label: 'Lanzar hechizo a la pila', apply: pushStackEntry },
     })
     entries.push({
+      id: 'stack:resolve',
+      group: 'Pila',
+      label: 'Stack: the pile resolves, one at a time',
+      description: 'Press it: three Bolts go on the stack and then leave in a single update. They resolve one after another (FX-7), each flying to its graveyard while the cascade closes up behind it.',
+      phase: 'game',
+      // The cascade lives in the Arena layout: pin it so the entry shows the stack it is about.
+      gameUi: 'v1',
+      boardLayout: 'arena',
+      boardSpotlight: true,
+      game: withIdenticalSpellPile(game),
+      gameId,
+      action: { label: 'Resolve the pile', run: replayQuietThen(game, gameId, withIdenticalSpellPile, resolveWholeStack, 60 + CAST_FLIGHT_MS + 400) },
+    })
+    entries.push({
       id: 'stack:mixed-kinds',
       group: 'Pila',
-      label: 'Stack: triggered ability, spell, creature cast',
-      description: 'One triggered ability, one instant and one creature spell: each row names its kind (habilidad disparada, hechizo, criatura).',
+      label: 'Stack: trigger, Path to Exile, Counterspell',
+      description: 'A real chain: Soul Warden triggers, a Path to Exile aims at a creature on the board, and the opponent answers with a Counterspell aimed at the Path. Only the front card and the hovered one draw their target arrow (STK-3).',
       phase: 'game',
+      // The cascade lives in the Arena layout: pin it so the entry shows the stack it is about.
+      gameUi: 'v1',
+      boardLayout: 'arena',
+      boardSpotlight: true,
       game: withMixedStackKinds(game),
       gameId,
     })

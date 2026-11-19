@@ -305,7 +305,10 @@ export default function CombatArrowsOverlay({
           ? Object.keys(targets)
           : []
 
-        const inDeck = !!stackFocusIds && !!sourceCenter.rect && !!boardEl.querySelector('.stack-deck')?.contains(
+        // Both ends on the stack: the objects lie over each other, so a straight line between their
+        // centres is a stub hidden under the cards. Those arrows hook out to the side instead.
+        const stackEl = boardEl.querySelector('.stack-deck, .stack-zone')
+        const inDeck = !!stackFocusIds && !!sourceCenter.rect && !!stackEl?.contains(
           boardEl.querySelector(`[data-card-id="${stackId}"]`),
         )
         const controllerId = String(cardObj.controllerId ?? '')
@@ -314,7 +317,7 @@ export default function CombatArrowsOverlay({
         targetList.forEach((tgtId, ti) => {
           const tgtCenter = getCenter(tgtId)
           const tgtEl = boardEl.querySelector(`[data-card-id="${tgtId}"]`)
-          if (inDeck && tgtCenter && tgtEl && boardEl.querySelector('.stack-deck')?.contains(tgtEl)) {
+          if (inDeck && tgtCenter && tgtEl && stackEl?.contains(tgtEl)) {
             const ax = Math.round(sourceCenter.rect.left - boardRect.left)
             const ay = Math.round(sourceCenter.y)
             const bx = Math.round(tgtCenter.rect.left - boardRect.left)
@@ -372,58 +375,23 @@ export default function CombatArrowsOverlay({
   return (
     <svg className="combat-arrows-overlay" aria-hidden="true">
       <defs>
-        {/* Attack Arrow Marker (Red / Crimson) */}
-        <marker
-          id="marker-attack"
-          viewBox="0 0 10 10"
-          refX="9"
-          refY="5"
-          markerWidth="8.5"
-          markerHeight="8.5"
-          orient="auto-start-reverse"
-        >
-          <path d="M 0 1 L 10 5 L 0 9 z" fill="#ff4757" stroke="#7a1020" strokeWidth="0.6" />
-        </marker>
+        {/* TGT-11: the head is a dart, notched at the back, so it reads as a point and not as a
+            blob where the stroke ends. */}
+        {(['attack', 'block', 'target'] as const).map((kind) => (
+          <marker
+            key={kind}
+            id={`marker-${kind}`}
+            viewBox="0 0 10 10"
+            refX="9"
+            refY="5"
+            markerWidth="7"
+            markerHeight="7"
+            orient="auto-start-reverse"
+          >
+            <path d="M 0 0.6 L 10 5 L 0 9.4 L 2.6 5 z" className={`arrow-head arrow-head-${kind}`} />
+          </marker>
+        ))}
 
-        {/* Block Arrow Marker (Cyan / Blue) */}
-        <marker
-          id="marker-block"
-          viewBox="0 0 10 10"
-          refX="9"
-          refY="5"
-          markerWidth="8.5"
-          markerHeight="8.5"
-          orient="auto-start-reverse"
-        >
-          <path d="M 0 1 L 10 5 L 0 9 z" fill="#38bdf8" stroke="#0c4a6e" strokeWidth="0.6" />
-        </marker>
-
-        {/* Target Arrow Marker (Gold / Amber) */}
-        <marker
-          id="marker-target"
-          viewBox="0 0 10 10"
-          refX="9"
-          refY="5"
-          markerWidth="8.5"
-          markerHeight="8.5"
-          orient="auto-start-reverse"
-        >
-          <path d="M 0 1 L 10 5 L 0 9 z" fill="#ffd070" stroke="#7c4a03" strokeWidth="0.6" />
-        </marker>
-
-        {/* Glow Filters */}
-        <filter id="glow-attack" x="-30%" y="-30%" width="160%" height="160%">
-          <feGaussianBlur stdDeviation="3" result="blur" />
-          <feComposite in="SourceGraphic" in2="blur" operator="over" />
-        </filter>
-        <filter id="glow-block" x="-30%" y="-30%" width="160%" height="160%">
-          <feGaussianBlur stdDeviation="3" result="blur" />
-          <feComposite in="SourceGraphic" in2="blur" operator="over" />
-        </filter>
-        <filter id="glow-target" x="-30%" y="-30%" width="160%" height="160%">
-          <feGaussianBlur stdDeviation="3" result="blur" />
-          <feComposite in="SourceGraphic" in2="blur" operator="over" />
-        </filter>
       </defs>
 
       {arrows.map((a) => {
@@ -450,8 +418,8 @@ export default function CombatArrowsOverlay({
               data-arrow-from={a.fromId}
               data-arrow-to={a.toId}
             >
-              <marker id={markerId} markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
-                <path d="M1,1 L9,5 L1,9 z" style={{ fill: a.color }} />
+              <marker id={markerId} viewBox="0 0 10 10" markerWidth="7" markerHeight="7" refX="9" refY="5" orient="auto-start-reverse">
+                <path d="M 0 0.6 L 10 5 L 0 9.4 L 2.6 5 z" style={{ fill: a.color }} />
               </marker>
               <path
                 d={pathData}
@@ -470,17 +438,13 @@ export default function CombatArrowsOverlay({
             data-arrow-from={a.fromId}
             data-arrow-to={a.toId}
           >
-            {/* Background shadow stroke */}
-            <path
-              d={pathData}
-              className="arrow-shadow"
-            />
-            {/* Glowing animated path */}
+            {/* Two strokes make the beam: a dark seam that keeps it legible over art, and the
+                beam itself, in one colour. */}
+            <path d={pathData} className="arrow-shadow" />
             <path
               d={pathData}
               className={`arrow-path arrow-${a.type}`}
               markerEnd={`url(#marker-${a.type})`}
-              filter={`url(#glow-${a.type})`}
             />
           </g>
         )

@@ -1089,6 +1089,8 @@ export const de: TranslationSchema = {
     enter_fullscreen: 'Vollbild (F11)',
     exit_fullscreen: 'Vollbild beenden (F11)',
     stack_empty: 'Stapel ist leer',
+    stack_push_aside: 'Stapel zur Seite schieben',
+    stack_bring_back: 'Stapel zurückholen',
     combat_damage_title: 'Kampfschaden',
     ledger_attacks: '{player} greift an',
     stack_empty_desc: 'Gespielte Sprüche und Fähigkeiten erscheinen hier.',

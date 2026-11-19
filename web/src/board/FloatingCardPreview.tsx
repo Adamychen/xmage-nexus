@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import type { ReactNode } from 'react'
 import type { CardView, PermanentView } from '../net/types'
 import { cardName, getSourceCardName, hiddenFaceDownName, isAbilityCard } from '../cards/cardImages'
 import { useCardImageUrl } from '../cards/useCardImageUrl'
@@ -29,6 +30,8 @@ interface FloatingCardPreviewProps {
   inModal?: boolean
   /** Leaving phase: set by the presenter while the hover is being dropped. */
   leaving?: boolean
+  /** STK-7: a chip drawn over the preview, for what the card itself cannot say (who controls it). */
+  badge?: ReactNode
 }
 
 export function foilKind(rarity: string | undefined | null): 'mythic' | 'rare' | null {
@@ -59,6 +62,7 @@ export default function FloatingCardPreview({
   fixedSide = 'auto',
   inModal = false,
   leaving = false,
+  badge,
 }: FloatingCardPreviewProps) {
   const modalOpen = useStore(isBlockingModal)
   const { cardRender, cardPreviewScale } = useSettings()
@@ -229,6 +233,7 @@ export default function FloatingCardPreview({
       data-preview-scale={scale}
     >
       <div className="floating-card-main" ref={mainRef}>
+        {badge && <div className="floating-card-badge">{badge}</div>}
         <div className="floating-card-inner" data-foil={imgUrl ? foilKind(activeCard.rarity) ?? undefined : undefined}>
           {hasSecondFace && (
             <div className="floating-card-flip-badge" title={t('wiki', 'flip_hint')}>

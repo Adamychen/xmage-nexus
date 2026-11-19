@@ -4,6 +4,7 @@ import { getGateway, setGateway } from '../net/commands'
 import type { Gateway } from '../net/Gateway'
 import { buildGalleryEntries, type GalleryAction, type GalleryEntry } from './galleryFixtures'
 import { getLanguage, setLanguage, t } from '../i18n'
+import { forgetPreviousView } from '../board/gameTransitionEngine'
 import GameScreen from '../game/GameScreen'
 import GameEndDialog from '../game/GameEndDialog'
 import HelpWikiModal from '../game/HelpWikiModal'
@@ -128,6 +129,9 @@ export default function GalleryScreen() {
   const seededStorage = useRef<Record<string, string | null> | null>(null)
 
   const selectEntry = (id: string) => {
+    // The stage is keyed by the entry, so the board remounts on this render, before the store
+    // holds the new fixture: the forgetting has to start here, not when the state is applied.
+    forgetPreviousView()
     restoreStorage(seededStorage.current)
     seededStorage.current = seedStorage(entries.find((e) => e.id === id)?.storageSeed)
     setActiveId(id)
@@ -137,6 +141,11 @@ export default function GalleryScreen() {
     if (!active) return
     const base = savedState.current
     const phase = active.phase ?? (active.screen === 'lobby' ? 'lobby' : 'game')
+    // FX-15: each entry is a board of its own, and two of them share the ids of the cards they
+    // are built from, so the one on screen must be forgotten before the next is handed over.
+    // They share a game id (an entry's buttons replay animations against it), which is the only
+    // thing the engine has to tell two games apart.
+    forgetPreviousView()
     setState({
       phase,
       game: active.game ?? null,

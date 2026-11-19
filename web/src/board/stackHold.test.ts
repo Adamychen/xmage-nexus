@@ -2,6 +2,7 @@ import { act, renderHook } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { CardView } from '../net/types'
 import { clearStackHold, enqueueStackResolve, useDisplayedStack } from './stackHold'
+import { isStackReplacement } from './stackLinks'
 
 const card = (id: string) => ({ id, name: id }) as unknown as CardView
 const stackOf = (...ids: string[]) => Object.fromEntries(ids.map((id) => [id, card(id)]))
@@ -101,5 +102,20 @@ describe('enqueueStackResolve', () => {
       vi.advanceTimersByTime(120)
     })
     expect(started).toEqual(['a', 'b'])
+  })
+})
+
+describe('FX-7: a stack that was replaced resolved nothing', () => {
+  it('FX-7: a non-empty stack sharing no id with the one before it holds nothing back', () => {
+    expect(isStackReplacement({ a: 1 }, { b: 2 })).toBe(true)
+  })
+
+  it('FX-7: a resolution leaves one of the previous ids behind, so it is not a replacement', () => {
+    expect(isStackReplacement({ a: 1, b: 2 }, { b: 2 })).toBe(false)
+  })
+
+  it('FX-7: the last object resolving empties the stack, which is a resolution, not a replacement', () => {
+    expect(isStackReplacement({ a: 1 }, {})).toBe(false)
+    expect(isStackReplacement({}, { a: 1 })).toBe(false)
   })
 })

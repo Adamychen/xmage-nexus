@@ -1089,6 +1089,8 @@ export const ja: TranslationSchema = {
     enter_fullscreen: 'フルスクリーン (F11)',
     exit_fullscreen: 'フルスクリーン解除 (F11)',
     stack_empty: 'スタックは空です',
+    stack_push_aside: 'スタックを横にどける',
+    stack_bring_back: 'スタックを戻す',
     combat_damage_title: '戦闘ダメージ',
     ledger_attacks: '{player} の攻撃',
     stack_empty_desc: '唱えた呪文や能力がここに表示されます。',

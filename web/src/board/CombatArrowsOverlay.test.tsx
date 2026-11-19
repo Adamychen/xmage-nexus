@@ -360,6 +360,14 @@ describe('CombatArrowsOverlay — stacking', () => {
     )
   })
 
+  it('TGT-11: an arrow is a beam in one colour, with a halo and a seam and no dash pattern', () => {
+    const sheet = css('./CombatArrowsOverlay.css')
+    expect(sheet).not.toMatch(/stroke-dasharray/)
+    expect(sheet).not.toMatch(/stroke-dashoffset/)
+    expect(sheet).not.toContain(".arrow-glow")
+    expect(sheet).toContain(".arrow-shadow")
+  })
+
   it('TGT-10: an arrow still passes under a card lifted out of the hand', () => {
     const lifted = layers('./HandBar.css').filter((l) => /hand-card-slot:hover/.test(l.selector))
     expect(lifted.length).toBe(1)

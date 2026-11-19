@@ -191,7 +191,7 @@ describe('CardSlot compact tile', () => {
   it('records a compact tile as compact so a flight leaving it keeps the art crop', () => {
     const { unmount } = render(<CardSlot card={perm()} compact />)
     unmount()
-    expect(recordCardPosition).toHaveBeenLastCalledWith('p1', expect.anything(), '', expect.objectContaining({ compact: true }))
+    expect(recordCardPosition).toHaveBeenLastCalledWith('p1', expect.anything(), '', expect.objectContaining({ compact: true }), undefined)
   })
 })
 

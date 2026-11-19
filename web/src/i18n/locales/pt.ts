@@ -1089,6 +1089,8 @@ export const pt: TranslationSchema = {
     enter_fullscreen: 'Tela cheia (F11)',
     exit_fullscreen: 'Sair de tela cheia (F11)',
     stack_empty: 'A pilha está vazia',
+    stack_push_aside: 'Afastar a pilha',
+    stack_bring_back: 'Trazer a pilha de volta',
     combat_damage_title: 'Dano de combate',
     ledger_attacks: '{player} ataca',
     stack_empty_desc: 'Mágicas e habilidades conjuradas aparecerão aqui.',

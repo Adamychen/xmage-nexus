@@ -1089,6 +1089,8 @@ export const fr: TranslationSchema = {
     enter_fullscreen: 'Plein écran (F11)',
     exit_fullscreen: 'Quitter le plein écran (F11)',
     stack_empty: 'La pile est vide',
+    stack_push_aside: 'Écarter la pile',
+    stack_bring_back: 'Ramener la pile',
     combat_damage_title: 'Dégâts de combat',
     ledger_attacks: '{player} attaque',
     stack_empty_desc: 'Les sorts et capacités joués apparaîtront ici.',

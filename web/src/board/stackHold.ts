@@ -1,4 +1,5 @@
 import { useMemo, useRef, useSyncExternalStore } from 'react'
+import { isStackReplacement } from './stackLinks'
 import type { CardView } from '../net/types'
 
 /** Pause between one spell leaving the stack and the next one starting to resolve. */
@@ -17,6 +18,7 @@ let shownIds: string[] = []
 let shown: Stack = EMPTY
 let busy = false
 let generation = 0
+let forgotten = false
 
 function notify() {
   listeners.forEach((fn) => fn())
@@ -54,9 +56,22 @@ function refreshShown() {
  * Called while rendering a new view: every spell that left the stack stays on display
  * until its own resolution has played (see `enqueueStackResolve`).
  */
+/**
+ * FX-7: an object that leaves the stack is held until its resolution has been played, which is
+ * what makes spells leave one at a time. That reading only holds while the stack is being
+ * resolved; a stack that was replaced wholesale (`isStackReplacement`) resolved nothing, so
+ * holding its objects would play a resolution for each of them.
+ */
 function syncStackHold(prev: Stack, next: Stack) {
-  for (const id of Object.keys(prev)) {
-    if (!(id in next)) held.set(id, prev[id])
+  if (isStackReplacement(prev, next)) {
+    generation++
+    held.clear()
+    queue.length = 0
+    busy = false
+  } else {
+    for (const id of Object.keys(prev)) {
+      if (!(id in next)) held.set(id, prev[id])
+    }
   }
   for (const id of Object.keys(next)) held.delete(id)
   current = next
@@ -119,6 +134,23 @@ export function clearStackHold() {
 }
 
 /**
+ * FX-15: the view this stack belongs to is being dropped for an unrelated one. Clearing the hold
+ * is not enough on its own, because the next update would still be read against the stack that is
+ * being left behind and would hold every object of it that the new one does not have.
+ */
+export function forgetStackHold() {
+  forgotten = true
+  resetStackHold()
+  notify()
+}
+
+function takeForgotten(): boolean {
+  const was = forgotten
+  forgotten = false
+  return was
+}
+
+/**
  * The stack as it is shown: the game's stack plus the spells still resolving, which stay
  * visible until their own resolution ends.
  */
@@ -127,7 +159,8 @@ export function useDisplayedStack(game: { stack?: Stack } | null, gameId: string
   const gameIdRef = useRef<string | null>(gameId)
   const next = game?.stack ?? EMPTY
   useMemo(() => {
-    if (!game || gameIdRef.current !== gameId) {
+    const forgetting = takeForgotten()
+    if (!game || gameIdRef.current !== gameId || forgetting) {
       gameIdRef.current = gameId
       prevRef.current = EMPTY
       resetStackHold()

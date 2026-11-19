@@ -1087,6 +1087,8 @@ export const en = {
     enter_fullscreen: 'Fullscreen (F11)',
     exit_fullscreen: 'Exit Fullscreen (F11)',
     stack_empty: 'Stack is empty',
+    stack_push_aside: 'Push the stack aside',
+    stack_bring_back: 'Bring the stack back',
     combat_damage_title: 'Combat damage',
     ledger_attacks: '{player} attacks',
     stack_empty_desc: 'Cast spells and activated abilities will appear here to resolve.',
