@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
-import { join, relative } from 'node:path'
+import { join, relative, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 
@@ -288,7 +288,10 @@ it('ACC-3: var(--fs-4xs) is retired and used nowhere under web/src', () => {
 describe('ACC-4: font-size 3xs ratchet', () => {
   const current: Record<string, number> = {}
   for (const file of files(SRC, ['.css']).sort()) {
-    const rel = relative(SRC, file)
+    // The baseline is keyed with forward slashes; `relative` hands back the platform's separator,
+    // so on Windows neither the board/game skip nor the baseline lookup matched and every file in
+    // the tree read as a regression.
+    const rel = relative(SRC, file).split(sep).join('/')
     if (rel.startsWith('board/') || rel.startsWith('game/')) continue
     const n = (stripComments(readFileSync(file, 'utf8')).match(/var\(--fs-3xs\)/g) ?? []).length
     if (n > 0) current[rel] = n

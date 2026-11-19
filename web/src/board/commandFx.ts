@@ -91,7 +91,9 @@ function originOf(ret: CommandReturn, prevGame: GameView): { rect: DOMRect; size
   }
   const owner = (prevGame.players ?? []).find((p) => p.playerId === ret.playerId)
   if (!owner) return null
-  const pile = ret.origin === 'graveyard' ? ':is(.graveyard-stack, .graveyard-chip)' : ':is(.exile-stack, .exile-chip)'
+  const pile = ret.origin === 'graveyard'
+    ? ':is(.graveyard-stack, .graveyard-chip, .pile-card--graveyard)'
+    : ':is(.exile-stack, .exile-chip, .pile-card--exile)'
   const rect = measured(document.querySelector(`${playerSelector(owner)} ${pile}`))
   if (!rect) return null
   return { rect, size: rect.width / rect.height > 1.05 ? PILE_CARD : null }

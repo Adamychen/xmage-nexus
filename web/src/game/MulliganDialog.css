@@ -10,7 +10,7 @@
   padding: var(--sp-4) var(--sp-5);
   background:
     radial-gradient(ellipse at 50% 42%, rgb(var(--brand-rgb) / 0.1), transparent 62%),
-    rgb(0 0 0 / 0.76);
+    var(--shade-4);
   backdrop-filter: blur(6px) saturate(0.85);
   animation: mulliganScreenIn calc(0.2s / var(--fx-speed, 1)) ease-out;
 }
@@ -18,7 +18,7 @@
 @media (prefers-reduced-transparency: reduce) {
   .mulligan-backdrop {
     backdrop-filter: none;
-    background: rgb(0 0 0 / 0.9);
+    background: var(--shade-5);
   }
 }
 
@@ -91,7 +91,7 @@
   font-weight: 800;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  text-shadow: 0 2px 18px rgb(0 0 0 / 0.75);
+  text-shadow: 0 2px 18px var(--shade-3);
 }
 
 .mulligan-screen-sub {
@@ -154,7 +154,7 @@
 .mulligan-card-wrap .card-slot {
   width: var(--card-w);
   height: calc(var(--card-w) * 1.4);
-  box-shadow: 0 10px 26px rgb(0 0 0 / 0.55);
+  box-shadow: 0 10px 26px var(--shade-2);
   border-radius: var(--r-md);
 }
 

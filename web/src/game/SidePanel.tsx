@@ -19,8 +19,8 @@ interface SidePanelProps {
 export default function SidePanel({ tab, onTabChange, onClose, hasCommanders, hasActiveMechanics, mechanicsCount }: SidePanelProps) {
   const [headSlot, setHeadSlot] = useState<HTMLElement | null>(null)
   const buttons = useRef<Array<HTMLButtonElement | null>>([])
-  const tabs = useDrawerTabs(tab, 0, hasCommanders, hasActiveMechanics, mechanicsCount).filter(
-    (item): item is typeof item & { id: SidePanelTab } => item.id !== 'stack' && !item.hidden,
+  const tabs = useDrawerTabs(tab, hasCommanders, hasActiveMechanics, mechanicsCount).filter(
+    (item): item is typeof item & { id: SidePanelTab } => !item.hidden,
   )
   const active = tabs.find((item) => item.id === tab)
 

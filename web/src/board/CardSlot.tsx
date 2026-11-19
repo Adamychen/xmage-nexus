@@ -287,7 +287,8 @@ export default function CardSlot({
           effectiveId,
           el.getBoundingClientRect(),
           zoneClass,
-          { w: el.offsetWidth, h: el.offsetHeight, compact: el.classList.contains('is-compact') }
+          { w: el.offsetWidth, h: el.offsetHeight, compact: el.classList.contains('is-compact') },
+          el.querySelector('img')?.currentSrc || undefined,
         )
       }
     }

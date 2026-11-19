@@ -1,9 +1,10 @@
-import { useLayoutEffect, useRef, useState } from 'react'
+import { useMemo, useLayoutEffect, useRef, useState } from 'react'
 import { useActiveFlights, markFlightLanded, normalizeFlightRect, FLIGHT_CARD_ASPECT, ENTER_LAND_AT, type FlightRecord } from './flightManager'
 import { useCardImageUrl } from '../cards/useCardImageUrl'
 import { soundManager } from '../audio/soundManager'
 import type { CardView, PermanentView } from '../net/types'
 import { spawnImpact } from './impactFx'
+import { getPreviousCardImage } from './cardPositionRegistry'
 import { artCropUrl } from './compactCard'
 import { restingRect } from './restingRect'
 import './FlyingCardOverlay.css'
@@ -83,7 +84,10 @@ function FlyingCardItem({ flight }: { flight: FlightRecord }) {
   const elRef = useRef<HTMLDivElement>(null)
   const cropRef = useRef<HTMLImageElement>(null)
   const resolvedUrl = useCardImageUrl(flight.card)
-  const imgUrl = resolvedUrl ?? (flight.card.faceDown === true ? CARD_BACK_URL : null)
+  // FX-13: the card cache answers asynchronously, so a card whose art was not already loaded would
+  // fly as a grey plate with its name on it. The board it is leaving had the picture on screen.
+  const lastSeen = useMemo(() => getPreviousCardImage(String(flight.card.id ?? '')), [flight.card.id])
+  const imgUrl = resolvedUrl ?? lastSeen ?? (flight.card.faceDown === true ? CARD_BACK_URL : null)
   const [cropFailed, setCropFailed] = useState(false)
   const cropUrl = (flight.fromCompact || flight.toCompact) && flight.card.faceDown !== true && !cropFailed
     ? artCropUrl(resolvedUrl)

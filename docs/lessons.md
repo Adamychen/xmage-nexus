@@ -284,6 +284,11 @@ ops), `docs/testing.md`, `web/AGENTS.md`, `Mage.Proxy/README.md`.
   of `getComputedStyle(el).animationName` after the class lands catches this; the fix is a
   `.stack-deck-face.fx-…` rule in `StackDeck.css`. `e2e/animations-play.spec.ts` now asserts the computed
   `animationName` per gallery entry (verified red with the fix removed).
+  It came back with the new cascade (2026-11-19): `.stack-card` carried `stackCardIn`, `StackZone.css`
+  loads after `CardSlot.css`, and the two effects went silent again. The entry animation now runs on
+  the child `.stack-card-face`, so the element an effect class lands on never declares `animation` of
+  its own. That is the general shape: whatever element FX classes are applied to must leave the
+  property they write free, because a per-effect override has to be written again for every effect.
 - **A looping status effect lives on a child, never on the card slot.** `.card-slot` already uses
   `translate` for the hover lift and the attack / block lunges, `transform` for the tap rotation and
   `box-shadow` for chosen / target states, so an infinite animation on any of those properties would

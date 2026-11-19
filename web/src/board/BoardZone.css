@@ -423,24 +423,29 @@
   width: var(--spread-w, 100%);
 }
 
+/* BRD-53/BRD-55: how many cards the pile holds is one of the card's badges, so it is drawn like
+   the rest of them: a dark plate, the number in white, the gold on the rim, and the figures in the
+   interface face lifted onto the middle of the plate instead of sitting low in it. */
 .stack-group-badge,
 .land-group-badge {
   position: absolute;
   top: 2px;
   right: 2px;
-  background: rgb(var(--ink-2-rgb) / 0.94);
+  background: var(--ink-1);
   border: 1px solid rgb(var(--gold-rgb) / 0.75);
-  color: var(--gold-300);
-  font-size: var(--fs-3xs);
+  color: var(--fg-hi);
+  font-size: var(--fs-2xs);
   font-weight: 800;
-  font-family: var(--font-display);
+  font-family: var(--font-ui);
+  font-variant-numeric: tabular-nums lining-nums;
   border-radius: var(--r-xs);
-  padding: 1px 4.5px;
+  padding: var(--sp-0h) var(--sp-1h);
   z-index: 6;
   pointer-events: none;
-  box-shadow: 0 2px 6px var(--shade-4);
+  box-shadow: 0 2px 4px var(--shade-4);
   transition: opacity 0.15s ease;
-  line-height: 1.2;
+  line-height: 1.1;
+  transform: translateY(calc(var(--digit-shift-ui, 0em) * -1));
 }
 
 .stack-group[data-spread] .stack-group-badge {

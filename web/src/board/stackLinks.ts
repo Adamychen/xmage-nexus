@@ -41,17 +41,67 @@ function ownIds(spellId: string, spell: CardView): string[] {
 
 const DESTINATIONS: StackDestination[] = ['battlefield', 'graveyard', 'exile']
 
+/** How long after it was primed an arrival still counts as about to fly. */
+const ARRIVAL_WINDOW_MS = 400
+const arrivals = new Map<string, number>()
+
+/**
+ * FX-14: read while the update renders, before the stack draws it: every object new to the stack
+ * in this update is one the engine is about to fly there, and the card it is flying to must not be
+ * sitting on the cascade already. The flight is only started two frames later, once the layout is
+ * settled, so without this the card is dealt onto the cascade first and taken away again.
+ */
+export function primeStackArrivals(prevGame: GameView | null | undefined, nextGame: GameView | null | undefined): void {
+  if (!prevGame || !nextGame) return
+  const prevStack = prevGame.stack ?? {}
+  const nextStack = nextGame.stack ?? {}
+  const now = Date.now()
+  for (const [id, when] of arrivals) {
+    if (now - when > ARRIVAL_WINDOW_MS) arrivals.delete(id)
+  }
+  if (isStackReplacement(prevStack, nextStack)) return
+  for (const id of Object.keys(nextStack)) {
+    if (!(id in prevStack)) arrivals.set(id, now)
+  }
+}
+
+/** Whether this object was primed as an arrival and its flight has not had time to start yet. */
+export function stackArrivalPending(id: string): boolean {
+  const when = arrivals.get(id)
+  return when !== undefined && Date.now() - when <= ARRIVAL_WINDOW_MS
+}
+
+export function clearStackArrivals(): void {
+  arrivals.clear()
+}
+
 /**
  * Where each spell that left the stack in this update went: the battlefield it resolved onto, or
  * the graveyard or exile it fell into. A spell on the stack has an id of its own (its spell ability's),
  * so the card is found by that id, its source card's or its parent's when the view carries one, and
  * otherwise as a card of the same name (or printing) new to that zone, its controller's first.
  */
+/**
+ * FX-7: the stack was replaced, not resolved. A resolution takes objects off one at a time, so it
+ * always leaves one of the previous ids behind unless the stack is now empty; a non-empty stack
+ * that shares no id with the one before it came from a rollback, a restart or a resync. Nothing
+ * resolved, so nothing flies anywhere and nothing is held back.
+ */
+export function isStackReplacement(
+  prevStack: Record<string, unknown>,
+  nextStack: Record<string, unknown>,
+): boolean {
+  const prevIds = Object.keys(prevStack)
+  if (prevIds.length === 0 || Object.keys(nextStack).length === 0) return false
+  return !prevIds.some((id) => id in nextStack)
+}
+
 export function stackDepartures(prevGame: GameView | null | undefined, nextGame: GameView | null | undefined): Map<string, StackDeparture> {
   const out = new Map<string, StackDeparture>()
   if (!prevGame || !nextGame) return out
   const prevStack = prevGame.stack ?? {}
   const nextStack = nextGame.stack ?? {}
+  if (isStackReplacement(prevStack, nextStack)) return out
   const departed = Object.entries(prevStack).filter(([id, spell]) => !(id in nextStack) && spell && isSpell(spell))
   if (departed.length === 0) return out
   const players = nextGame.players ?? []

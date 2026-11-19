@@ -1,17 +1,62 @@
+/* STK-2: the stack is a layer over the board, not a panel in a menu: no box around it, no
+   background, and the card about to resolve sits on the middle of the screen's height so the eye
+   always finds it in the same place however deep the stack is. */
 .stack-zone {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  min-height: 0;
-  pointer-events: auto;
+  /* The fallbacks live here, on the same element the measured numbers are written to, so an
+     inline value always wins; declared on the cascade they would override its own host. */
+  --card-w: 120px;
+  /* 680 / 488: the shape of Scryfall's own file, so the picture fills the box with nothing left
+     over on any side and the rounding falls exactly on the card's printed corner. */
+  --card-h: calc(var(--card-w) * 1.39344);
+  --stack-x: 14px;
+  --stack-y: 13px;
+  --stack-n: 1;
+  --stack-tilt: 2.4deg;
+  position: absolute;
+  right: var(--stack-right, var(--sp-5));
+  /* The cascade grows upward from its front card, so anchoring its bottom half a card below the
+     middle puts that card's centre exactly on the middle. */
+  bottom: calc(50% - var(--card-h) / 2);
+  /* Above the board's own chrome, below the arrows (TGT-10): an arrow that says which spell this
+     one counters has to be drawn over both of them, or it disappears between two cards that lie
+     on top of each other. */
+  z-index: 38;
   display: flex;
-  flex-direction: column;
-  gap: 0;
-  overflow-y: auto;
-  padding: var(--sp-2) var(--sp-2h);
-  background: transparent;
-  box-sizing: border-box;
+  align-items: flex-end;
+  /* The cards are turned, so their corners reach past the cascade's own box by about the card's
+     height times the sine of the deepest tilt. The grip stands clear of that, never on a card. */
+  gap: calc(var(--card-h) * 0.13 + var(--sp-2));
+  pointer-events: auto;
+  transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
 }
+
+/* Pushed aside: it leaves a grip on the edge so the board underneath can be read. */
+.stack-zone.is-pushed {
+  transform: translateX(calc(100% - var(--sp-6)));
+}
+
+.stack-push {
+  --grip-w: 26px;
+  --grip-h: 52px;
+  position: relative;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: var(--grip-w);
+  height: var(--grip-h);
+  /* Level with the middle of the front card, which is the middle of the zone. */
+  margin-bottom: calc(var(--card-h) / 2 - var(--grip-h) / 2);
+  padding: 0;
+  border: 1px solid var(--veil-5);
+  border-radius: var(--r-pill);
+  background: rgb(var(--ink-2-rgb) / 0.86);
+  color: var(--fg-1);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.stack-push:hover { background: rgb(var(--ink-2-rgb) / 0.95); color: var(--fg-hi); }
+.stack-push:focus-visible { outline: 2px solid var(--brand-fg); outline-offset: 2px; }
 
 /* ── Header ── */
 .stack-header {
@@ -525,7 +570,325 @@ html.fx-off .stack-tl-node.node-top {
   box-shadow: 0 var(--sp-1) 0 var(--veil-5), 0 var(--sp-2) 0 var(--veil-4), 0 var(--sp-3) 0 var(--veil-3);
 }
 
-/* A spell still flying to the stack: its entry keeps its space until the clone lands */
-.stack-entry-arriving {
+/* FX-14: the spell flies from the hand, the graveyard or the permanent that made it, and the card
+   it is flying to must not already be sitting there: while that flight is in the air its place on
+   the cascade is empty, and the card is handed over the instant the clone lands on it.
+   A card that arrives with no flight to watch (an opponent's spell with no visible source) still
+   eases in, so nothing ever pops into place. */
+/* The entry animation runs on the face, not on the card: the card itself is where an effect
+   (a countered spell shaking, a fizzle) puts its own `animation`, and two rules of the same
+   weight on one element are settled by which stylesheet came last, so the entry animation would
+   silently eat every one of those effects (`docs/lessons.md`). */
+.stack-card-face {
+  animation: stackCardIn calc(0.26s / var(--fx-speed, 1)) cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Primed as an arrival, waiting to learn whether a flight is coming: nothing is drawn and the
+   entry animation has not started, so it plays in full if no flight turns up. */
+.stack-card.stack-entry-waiting {
   visibility: hidden;
+}
+
+.stack-card.stack-entry-waiting .stack-card-face {
+  animation: none;
+}
+
+/* A flight owns it. The entry animation runs its course unseen, which is what keeps it from
+   playing again when the card is revealed: by then the clone has already put it in place, and
+   a card that slid in from the side after landing was the gap you could see. */
+.stack-card.stack-entry-arriving {
+  visibility: hidden;
+}
+
+@keyframes stackCardIn {
+  from {
+    opacity: 0;
+    transform: translateX(26px) scale(0.94);
+  }
+}
+
+html.fx-off .stack-card-face {
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stack-card-face {
+    animation: none;
+  }
+}
+
+/* ── STK-1: the cascade ───────────────────────────────────────────────────────
+   The stack is drawn as cards lying over each other: the object about to resolve is in front and
+   whole, and everything under it peeks out by its title bar, which is why that bar carries the
+   position, the name, the controller and the kind. The card size and the overlap come from
+   `stackCascadeFit`, measured from the room the cascade has, so a narrow column slides the cards
+   down and a wide band slides them sideways with no second set of numbers. */
+.stack-cascade {
+  /* The host says how much room the cascade has; the rest is measured. */
+  --stack-avail: 420px;
+  position: relative;
+  width: calc(var(--card-w) + var(--stack-x) * (var(--stack-n) - 1));
+}
+
+/* The room the cascade may use: a third of the width, and the height above its centred front
+   card. It is a box because a box can be measured; a custom property cannot, since a `min()` is
+   handed back unresolved. */
+.stack-room {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: min(30vw, 420px);
+  height: 46vh;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* The cascade asks for the height its cards need, and the card size is measured from the WIDTH it
+   was given, never from its own height: a height measured from itself would feed back into the
+   size it chose (BRD-54 learnt this on the player's counter stack). */
+.stack-cascade {
+  min-height: calc(var(--card-h) + var(--stack-y) * (var(--stack-n) - 1));
+}
+
+.stack-card {
+  position: absolute;
+  border-radius: 6% / 4.3%;
+  width: var(--card-w);
+  height: var(--card-h);
+  overflow: hidden;
+  /* The front card is the one that resolves next, so it is the one on top of the pile. */
+  z-index: calc(var(--stack-n) - var(--i));
+  transition: transform 0.16s cubic-bezier(0.34, 1.4, 0.64, 1), box-shadow 0.16s ease;
+  box-shadow: 0 6px 18px var(--shade-2);
+}
+
+/* Card 0 is the one that resolves next: bottom right, whole. The rest recede up and to the left,
+   each giving up all but a sliver of its edge. */
+.stack-cascade .stack-card {
+  right: calc(var(--stack-x) * var(--i));
+  bottom: calc(var(--stack-y) * var(--i));
+  /* Each card further back is turned a little more, the way a pile splays when it is pushed. */
+  transform-origin: 85% 100%;
+  transform: rotate(calc(var(--i) * var(--stack-tilt) * -1));
+}
+
+/* BRD-59: no border of ours around the picture. A card already prints a black one, and a pale
+   line outside it reads as the card having a white edge; the corner is clipped at the arc the
+   files carry, like every other card on the board. */
+.stack-card-face {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  border-radius: 6% / 4.3%;
+  background: transparent;
+  overflow: hidden;
+}
+
+/* Nothing of ours is drawn around a card. A ring or a glow hugging the edge reads as part of the
+   card, as a border it does not have; the one about to resolve is told apart by being in front and
+   whole, and who controls it by its chip. Only a card the player is being asked to click is ringed,
+   and that ring is drawn inside the card, not around it. */
+.stack-card.is-top {
+  box-shadow: 0 10px 26px var(--shade-3);
+}
+
+.stack-card.targetable .stack-card-face { outline: 2px solid var(--gold-300); outline-offset: -3px; }
+
+.stack-card.clickable { cursor: pointer; }
+
+/* STK-5: the card under the pointer stays exactly where it is. It does not rise, grow or change
+   place, because any of those covers the very cards you are looking past to reach one in the
+   middle; the big copy is already being drawn beside the cascade. All it gets is a ring, so you
+   can tell which one the preview belongs to. */
+.stack-card:hover .stack-card-face,
+.stack-card:focus-within .stack-card-face {
+  outline: 2px solid var(--brand-fg);
+  outline-offset: -2px;
+}
+
+/* The old timeline's thumbnail carried a pale 1px border and a dark backing of its own. On a card
+   drawn whole those read as an edge the card does not have, so here they go. */
+.stack-card .stack-thumb,
+.stack-card .stack-thumb-img {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: none;
+  border-radius: 0;
+  aspect-ratio: auto;
+}
+
+/* The box is already a card's shape, so filling it neither stretches the picture nor crops
+   anything that matters (0.24 % off the long side). It has to fill it: with `contain` the picture
+   sits inset from the box's corners, and the rounding that clips those corners then never reaches
+   the white the file carries outside the card's own arc. */
+.stack-card .stack-thumb-img { object-fit: cover; display: block; }
+
+.stack-card .stack-thumb-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-1);
+  width: 100%;
+  height: 100%;
+  padding: var(--sp-2);
+  color: var(--fg-1);
+  font-size: var(--fs-2xs);
+  font-weight: 700;
+  text-align: center;
+}
+
+/* Only the front card is read: the ones behind it show a sliver, which carries no text. */
+.stack-card:not(.is-top) .stack-card-bar { display: none; }
+
+/* The card prints its own name, so the bar only carries what the card cannot say: where it sits
+   in the stack, and how many identical copies folded into it. */
+.stack-card-bar {
+  position: absolute;
+  top: var(--sp-1);
+  left: var(--sp-1);
+  display: flex;
+  align-items: center;
+  gap: var(--sp-0h);
+  padding: 1px var(--sp-1);
+  border-radius: var(--r-pill);
+  background: rgb(var(--ink-2-rgb) / 0.88);
+  border: 1px solid var(--veil-5);
+  color: var(--fg-hi);
+  font-size: var(--fs-3xs, 10px);
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+/* No wash under it: the chip brings its own plate, so the card's own art stays the card's. */
+.stack-card-foot {
+  position: absolute;
+  inset: auto 0 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--sp-0h);
+  padding: var(--sp-1) var(--sp-1h);
+}
+
+/* Only the card in front has room under it for the rest: the others are covered there. */
+/* Only the card in front has room under it for the rest: the others are covered there. */
+.stack-card:not(.is-top) .stack-card-foot,
+.stack-card:not(.is-top) .stack-tl-targets,
+.stack-card:not(.is-top) .stack-tl-rules {
+  display: none;
+}
+
+/* Over art, a plate of its own: the card beneath can be any colour, so the text brings its
+   background with it instead of trusting the picture. */
+.stack-card .stack-tl-targets,
+.stack-card .stack-tl-rules {
+  position: absolute;
+  left: var(--sp-1h);
+  right: var(--sp-1h);
+  background: rgb(var(--ink-2-rgb) / 0.92);
+  border: 1px solid var(--veil-4);
+  border-radius: var(--r-sm);
+  padding: var(--sp-0h) var(--sp-1);
+  color: var(--fg-1);
+  font-size: var(--fs-3xs, 10px);
+  line-height: 1.3;
+}
+
+.stack-card .stack-tl-rules * { color: inherit; }
+
+.stack-card .stack-tl-targets { bottom: calc(var(--sp-5) + var(--sp-2)); }
+.stack-card .stack-tl-rules { bottom: calc(var(--sp-5) + var(--sp-2)); max-height: 3.4em; overflow: hidden; }
+.stack-card .stack-tl-targets + .stack-tl-rules { display: none; }
+
+/* The timeline drew a 2px bar that filled over three seconds under the top object. It counted
+   nothing: no timer ran behind it and nothing resolved when it finished. */
+
+/* An opened pile of identical objects lists its copies under the cascade. */
+.stack-card-sub {
+  position: relative;
+  z-index: calc(var(--stack-n) + 10);
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+  margin-top: var(--sp-0h);
+  padding: var(--sp-0h) var(--sp-1h);
+  border-radius: var(--r-sm);
+  background: rgb(var(--ink-2-rgb) / 0.9);
+  font-size: var(--fs-2xs);
+}
+
+.stack-card-sub.clickable { cursor: pointer; }
+.stack-card-sub:hover { background: rgb(var(--ink-3-rgb, var(--ink-2-rgb)) / 0.95); }
+
+/* How many more objects the cascade is not drawing. */
+.stack-card-more {
+  position: absolute;
+  top: var(--sp-1);
+  right: var(--sp-1);
+  z-index: 4;
+  padding: 1px var(--sp-1);
+  border-radius: var(--r-pill);
+  background: rgb(var(--ink-2-rgb) / 0.92);
+  border: 1px solid var(--veil-5);
+  color: var(--fg-1);
+  font-size: var(--fs-3xs, 10px);
+  font-weight: 700;
+}
+
+/* STK-7: who controls the object, on a plate of its own. The token has to be one that exists:
+   `--ink-1-rgb` is never declared, so `rgb(var(--ink-1-rgb) / .94)` is an invalid declaration and
+   the chip ends up with no background at all, unreadable over the art it sits on. */
+/* STK-7 (cont.): It sits over card art that can be any
+   colour, so it brings its own background instead of trusting the picture underneath, the way the
+   counter badges do (BRD-53). */
+.stack-card .stack-controller-pill,
+.floating-card-badge .stack-controller-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-0h);
+  padding: var(--sp-0h) var(--sp-1h);
+  border-radius: var(--r-xs);
+  background: var(--ink-1);
+  border: 1px solid rgb(var(--gold-rgb) / 0.75);
+  box-shadow: 0 2px 4px var(--shade-4);
+  color: var(--fg-hi);
+  font-family: var(--font-display);
+  font-size: var(--fs-2xs);
+  font-weight: 800;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+/* The rim says whose it is; the name stays white, like every number on a badge. */
+.stack-card .stack-controller-pill.is-me,
+.floating-card-badge .stack-controller-pill.is-me {
+  border-color: rgb(var(--brand-rgb) / 0.8);
+}
+
+.stack-card .stack-controller-pill.is-opp,
+.floating-card-badge .stack-controller-pill.is-opp {
+  border-color: var(--seat, var(--err));
+}
+
+.stack-card .stack-controller-pill .ctrl-name,
+.floating-card-badge .stack-controller-pill .ctrl-name {
+  font-family: var(--font-ui);
+  font-variant-numeric: tabular-nums lining-nums;
+  max-width: 11ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Over the big preview it sits inside the card, on its top-left corner: hanging off the edge it
+   read as a label stuck to the preview rather than something the card carries. */
+.floating-card-badge {
+  position: absolute;
+  top: var(--sp-1h);
+  left: var(--sp-1h);
+  z-index: 3;
+  pointer-events: none;
 }

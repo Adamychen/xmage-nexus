@@ -111,3 +111,15 @@ the board, a card lifted out of the hand, the menus and the dialogs.
   is its whole job; it was drawn at `z-index: 28`, under the phase strip and the piles, with an
   exception that lifted it only while the stack drawer was open.
 - Guard: `src/board/CombatArrowsOverlay.test.tsx`
+
+### TGT-11 · An arrow is a beam that points, not a ladder of dashes
+Every arrow is drawn as three strokes: a blurred halo, a dark seam under it, and the arrow itself,
+in one colour the whole way, ending in a notched dart. Nothing marches and nothing fades: the
+direction is in the dart.
+
+- Why: the arrows were dashed strokes animated forever, which read as a ladder and told the
+  direction only by watching them move; a gradient along the beam was tried first and read as the
+  arrow fading out rather than as a direction. A capture of the board was also never reproducible,
+  because the dash phase depends on the instant of capture and on the path's sub-pixel length, and
+  WebKit does not freeze it; the reduced-motion rule existed only to make screenshots settle.
+- Guard: `src/board/CombatArrowsOverlay.test.tsx`

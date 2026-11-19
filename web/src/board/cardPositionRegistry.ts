@@ -10,23 +10,59 @@ interface PositionRecord {
   timestamp: number
   zone: string
   size?: CardSourceSize
+  /** The picture the card was showing when it left, so its flight can wear the same one. */
+  img?: string
 }
 
 const registry = new Map<string, PositionRecord>()
 const EXPIRATION_MS = 3000
 
-export function recordCardPosition(id: string, rect: DOMRect, zone = '', size?: CardSourceSize) {
-  if (!id || rect.width <= 0 || rect.height <= 0) return
+/** Until when the registry neither writes nor answers (see `blindCardPositions`). */
+let blindUntil = 0
+
+function blind(): boolean {
+  return Date.now() < blindUntil
+}
+
+/**
+ * FX-15: the board on screen is about to be replaced by an unrelated one. The cards leaving write
+ * down where they stood, as they always do, and the cards arriving carry the same ids in a board
+ * of their own, so each one would fly in from wherever its namesake happened to be standing. For
+ * `ms` around the swap the registry is blind: nothing is written and nothing is found, so the new
+ * board simply appears.
+ */
+export function blindCardPositions(ms: number): void {
+  blindUntil = Date.now() + ms
+  registry.clear()
+}
+
+export function recordCardPosition(id: string, rect: DOMRect, zone = '', size?: CardSourceSize, img?: string) {
+  if (!id || blind() || rect.width <= 0 || rect.height <= 0) return
   registry.set(id, {
     rect,
     timestamp: Date.now(),
     zone,
     size: size && size.w > 0 && size.h > 0 ? size : undefined,
+    img: img || undefined,
   })
 }
 
+/**
+ * FX-13: the picture the card was wearing when it left the board. A flight asks the card cache for
+ * its image like anything else, and that answer is asynchronous: for a card whose art was not
+ * already loaded the url arrives after the flight is over, and the clone spends the whole flight
+ * as a grey plate with a name on it. The card it is flying out of had the picture on screen, so
+ * the flight borrows that one.
+ */
+export function getPreviousCardImage(id: string): string | null {
+  if (!id || blind()) return null
+  const record = registry.get(id)
+  if (!record || Date.now() - record.timestamp > EXPIRATION_MS) return null
+  return record.img ?? null
+}
+
 export function getPreviousCardPosition(id: string): DOMRect | null {
-  if (!id) return null
+  if (!id || blind()) return null
   const record = registry.get(id)
   if (!record) return null
   if (Date.now() - record.timestamp > EXPIRATION_MS) {
@@ -39,7 +75,7 @@ export function getPreviousCardPosition(id: string): DOMRect | null {
 /** Tamaño real (sin transforms) de la carta registrada: offsetWidth/offsetHeight
  *  del elemento de origen, inmune a rotaciones (tapped, abanico de la mano). */
 export function getPreviousCardSize(id: string): CardSourceSize | null {
-  if (!id) return null
+  if (!id || blind()) return null
   const record = registry.get(id)
   if (!record) return null
   if (Date.now() - record.timestamp > EXPIRATION_MS) {
@@ -50,7 +86,7 @@ export function getPreviousCardSize(id: string): CardSourceSize | null {
 }
 
 export function getPreviousCardZone(id: string): string {
-  if (!id) return ''
+  if (!id || blind()) return ''
   const record = registry.get(id)
   if (!record) return ''
   if (Date.now() - record.timestamp > EXPIRATION_MS) {
@@ -61,7 +97,7 @@ export function getPreviousCardZone(id: string): string {
 }
 
 export function consumePreviousCardPosition(id: string): { rect: DOMRect; zone: string; size?: CardSourceSize } | null {
-  if (!id) return null
+  if (!id || blind()) return null
   const record = registry.get(id)
   if (!record) return null
   registry.delete(id)

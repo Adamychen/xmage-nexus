@@ -81,8 +81,18 @@ stays visible while its projectiles fly and it exits to its zone, and the next s
 the previous one is done plus a short beat (120 ms). A spell still on the stack is never removed
 by this queue; a new game drops whatever was held.
 
+This only applies while the stack is being **resolved**. A stack can also be **replaced**: a
+rollback rewinds it, a Karn restart empties it inside the same game, a resync hands over a fresh
+one. Nothing resolved in any of those, so nothing is held and nothing flies. A resolution takes
+objects off one at a time and so always leaves one of the previous ids behind unless the stack is
+now empty, which makes "non-empty and sharing no id with the one before it" the reading of a
+replacement (`isStackReplacement`).
+
 - Why: `5dd25ca220`. The transition engine still diffs the real game; only the rendered stack is
-  held (`stackHold.ts`), so the board never disagrees with the server once the queue drains.
+  held (`stackHold.ts`), so the board never disagrees with the server once the queue drains. The
+  replacement case came from the gallery, where switching between two stack states played a
+  resolution for each spell of the first: six cards drained out of the cascade over 1.8 s, and in a
+  game the same shape would animate spells that never resolved.
 - Guard: `src/board/stackHold.test.ts`
 
 ### FX-8 · Only heavy spells slam, and only when they resolve
@@ -140,3 +150,45 @@ reads the computed `animationName`, so an effect that is wired but silently over
   CSS cascade: the countered and fizzle effects never played on the new stack because a later
   stylesheet won, and only the real-browser check caught it (`5359c64366`, `docs/lessons.md`).
 - Guard: `src/dev/galleryFixtures.test.ts` · `e2e/animations-play.spec.ts`
+
+### FX-13 · A card in flight wears the picture it had on the board
+A flying card shows the same image the card was showing where it left from. The card cache answers
+asynchronously, so a card whose art was not already loaded would spend its whole flight as a grey
+plate with its name written on it; the board it is leaving had the picture on screen, so the
+registry that already remembers where a card was also remembers what it was wearing, and the
+flight borrows that.
+
+- Why: a spell resolving off the stack flew as an empty frame reading "Lightning Bolt", which is
+  the one moment the card most needs to be recognisable. It only showed for cards whose art had
+  not been drawn yet, so it looked intermittent.
+- Guard: `src/board/cardPositionRegistry.test.ts`
+
+
+### FX-14 · A spell flying to the stack is handed over where it lands
+A spell cast onto the stack flies there as a clone, and the card it is flying to is not drawn on
+the cascade while the clone is in the air: from the first frame its place is empty, and it is shown
+the instant the clone lands on it, already in place underneath while the clone fades out over it.
+The flight only starts two frames after the view is drawn, so the object is marked as an arrival
+while the view renders (`primeStackArrivals`), and an object that is marked but never flown shows
+itself a tenth of a second later with the entry animation it would have had.
+
+- Why: the card was dealt onto the cascade, taken away again two frames later, and then dealt a
+  second time 150 ms after the clone had already vanished, sliding in from the side as if a second
+  copy were arriving. Measured against the gallery's entry animation: the clone landed at 1050 ms
+  and the card only appeared at 1290 ms, from 38 px away.
+- Guard: `src/board/stackLinks.test.ts` · `src/board/StackZone.arrival.test.tsx`
+
+### FX-15 · Two unrelated views are never diffed
+Animations are the difference between one view and the next of the same game. When the screen is
+handed a view of a different game, nothing is compared: whatever is in the air is dropped and the
+new view is simply drawn. The store's game id is what tells two games apart, and the state gallery
+hands the screen one fixture after another under a single id, so it says so itself
+(`forgetPreviousView`). The card positions go blind for a moment around the swap as well, because
+two fixtures share the ids of the cards they are built from and each card would otherwise fly in
+from wherever its namesake stood.
+
+- Why: switching between two gallery entries dealt a flight for every card the two had in common,
+  including three Lightning Bolts shrinking into nothing, and ran the resolutions the previous
+  entry's stack was still holding. The gallery is also how every animation is reviewed, so a bug
+  that only shows there still shows on everything else.
+- Guard: `src/board/cardPositionRegistry.test.ts` · `src/board/gameTransitionEngine.timers.test.tsx`

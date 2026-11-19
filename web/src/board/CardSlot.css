@@ -1,15 +1,27 @@
 .card-slot {
   --badge-size: clamp(14px, calc(var(--card-w, 100px) * 0.2), 24px);
   width: var(--card-w, 100px);
-  height: calc(var(--card-w, 100px) * var(--card-h-ratio, 1.4));
+  height: calc(var(--card-w, 100px) * var(--card-h-ratio, 1.39344));
   position: relative;
   isolation: isolate;
-  border-radius: var(--r-base);
+  /* BRD-59: the slot is the shape of the picture it holds, 680 / 488, which is what Scryfall's
+     `normal` images measure, so the file fills it with nothing left over on any side. The corner
+     is then rounded by a share of that size instead of a fixed 8 px. Rounded by a constant, the arc misses the printed one at
+     every size but one: too little leaves the white the JPEG has outside the card's corner (those
+     files carry no transparency), too much bites into the card's own black border. The 6 % is the
+     arc those files actually carry, found by clipping the same picture at 4, 5, 6, 7, 8 and 9 %
+     and looking: the wedge is there at 4 and 5 and gone from 6. */
+  border-radius: 6% / 4.3%;
   overflow: hidden;
   box-sizing: border-box;
   box-shadow: 0 4px 12px var(--shade-2);
   background: var(--ink-2);
-  border: 1.5px solid var(--veil-3);
+  /* BRD-59: the slot's ring is drawn over the picture, not as a border. A border eats into the
+     content box, so the picture ends up 1.5 px short on each side, and the rounding that is meant
+     to follow the card's printed corner then clips the slot's edge instead of the picture's. The
+     ring keeps every state it had; only `--slot-ring` changes colour now. */
+  --slot-ring: var(--veil-3);
+  border: 0;
   transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1),
               translate 0.28s cubic-bezier(0.34, 1.56, 0.64, 1),
               scale 0.28s cubic-bezier(0.34, 1.56, 0.64, 1),
@@ -509,7 +521,7 @@ html.fx-off .card-slot.stack-source-pulse {
 
 /* Playable glow (green) */
 .card-slot.playable {
-  border-color: var(--ok);
+  --slot-ring: var(--ok);
   box-shadow: 0 0 14px 2px rgb(var(--ok-rgb) / 0.65), 0 4px 12px var(--shade-2);
   cursor: pointer;
 }
@@ -582,7 +594,7 @@ html.fx-off .card-slot.casting-pop {
 .card-slot.targetable {
   box-shadow: 0 0 12px 2px rgb(var(--gold-rgb) / 0.6), 0 4px 12px var(--shade-2);
   cursor: crosshair;
-  border-color: var(--gold-500);
+  --slot-ring: var(--gold-500);
 }
 
 .card-slot.target-beacon {
@@ -614,12 +626,12 @@ html.fx-off .card-slot.casting-pop {
 
 /* Chosen / Attacking / Blocking glow (crimson / cyan) */
 .card-slot.chosen {
-  border-color: var(--err);
+  --slot-ring: var(--err);
   box-shadow: 0 0 18px 4px rgb(var(--err-rgb) / 0.8), 0 4px 12px var(--shade-3);
 }
 
 .card-slot.tapped.chosen {
-  border-color: var(--err);
+  --slot-ring: var(--err);
   box-shadow: 0 0 18px 4px rgb(var(--err-rgb) / 0.8), 0 4px 12px var(--shade-3);
   cursor: pointer;
 }
@@ -665,7 +677,7 @@ html.fx-off .card-slot.casting-pop {
 /* One-shot confirmation ring while the chosen target awaits the server echo. */
 .card-slot.is-chosen-pending {
   animation: chosenPendingRing 0.6s var(--ease-out) both;
-  border-color: var(--gold-300);
+  --slot-ring: var(--gold-300);
 }
 
 @keyframes chosenPendingRing {
@@ -688,6 +700,18 @@ html.fx-off .card-slot.casting-pop {
   .card-slot.is-chosen-pending {
     animation: none;
   }
+}
+
+/* The ring: over the picture, outside the layout. */
+.card-slot::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 1.5px solid var(--slot-ring);
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 4;
+  transition: border-color 0.2s ease;
 }
 
 /* Card image */
@@ -1396,7 +1420,7 @@ html.fx-off .card-slot.fx-designation-swell {
   display: inline-flex;
   flex-shrink: 0;
   overflow: visible;
-  height: calc(var(--card-w, 100px) * var(--card-h-ratio, 1.4));
+  height: calc(var(--card-w, 100px) * var(--card-h-ratio, 1.39344));
 }
 
 .card-attachment-group > .card-slot,
@@ -1445,7 +1469,7 @@ html.fx-off .card-slot.fx-designation-swell {
   display: inline-flex;
   flex-shrink: 0;
   overflow: visible;
-  height: calc(var(--card-w, 100px) * var(--card-h-ratio, 1.4));
+  height: calc(var(--card-w, 100px) * var(--card-h-ratio, 1.39344));
 }
 
 .mutate-parts {

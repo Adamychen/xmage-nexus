@@ -1,8 +1,4 @@
-import { Fragment, useLayoutEffect, useRef, useState, useCallback, useEffect, useContext } from 'react'
-import { createPortal } from 'react-dom'
-import Tabs from '../ui/Tabs'
-import Button from '../ui/Button'
-import EmptyState from '../ui/EmptyState'
+import { Fragment, useLayoutEffect, useRef, useState, useCallback, useEffect } from 'react'
 import type { ReactNode } from 'react'
 import type { CardView, PlayerView } from '../net/types'
 import { useCardImageUrl } from '../cards/useCardImageUrl'
@@ -11,25 +7,22 @@ import FloatingCardPreview from './FloatingCardPreview'
 import FormattedText from '../game/FormattedText'
 import { useStore, isBlockingModal } from '../state/store'
 import { recordCardPosition } from './cardPositionRegistry'
-import { useActiveFlights } from './flightManager'
+import { getActiveFlights, onFlightLanded, subscribeFlights, useActiveFlights } from './flightManager'
+import { stackArrivalPending } from './stackLinks'
 import { useTranslation } from '../i18n'
 import Icon from '../ui/Icon'
 import { clickableProps } from '../ui/clickable'
-import { groupAdjacent } from './groupAdjacent'
 import {
   getControllerInfo,
   isCopyCard,
   isStackAbility,
-  resolveStackTargetLabels,
-  stackAbilityIcon,
-  stackEntrySignature,
   stackRulesText,
-  stackSubtype,
-  stackTargetIds,
-  stackTypeLabel,
+
 } from './stackEntries'
-import { DrawerHeadSlotContext } from '../game/drawerHeadSlot'
-import { artCropUrl } from './compactCard'
+import RenderedCard from '../cards/rendered/RenderedCard'
+import { seatColorVar, seatIndexOf } from './seatColor'
+import { stackCascadeFit, type CascadeFit } from './stackCascadeFit'
+import { BOARD_RELAYOUT_EVENT } from './layout/relayout'
 import './StackZone.css'
 
 interface StackZoneProps {
@@ -37,23 +30,26 @@ interface StackZoneProps {
   onCardClick?: (id: string) => void
   onHover?: (card: CardView | null, rect?: DOMRect) => void
   targetIds?: Set<string>
-  onResolveClick?: () => void
-  canResolve?: boolean
   players?: PlayerView[]
   myPlayerId?: string | null
+  /** The objects whose target arrows the board should draw: the one resolving next, and the hovered one. */
+  onFocusIds?: (ids: ReadonlySet<string> | null) => void
 }
 
-function StackThumbnail({ card }: { card: CardView }) {
+/** STK-1: the face of one object on the stack, drawn as the card it is. */
+function StackCardFace({ card, rendered }: { card: CardView; rendered: boolean }) {
   const imgUrl = useCardImageUrl(card)
-  const artUrl = artCropUrl(imgUrl) ?? imgUrl
-
+  if (rendered) return <RenderedCard card={card} className="stack-thumb-img" />
   return (
     <div className="stack-thumb">
-      {artUrl ? (
-        <img src={artUrl} alt="" className="stack-thumb-img" draggable={false} />
+      {imgUrl ? (
+        /* The whole card, not a crop of its art: the one in front is the one you read, and its
+           own printed title is the name, so nothing above it repeats that name. */
+        <img src={imgUrl} alt="" className="stack-thumb-img" draggable={false} />
       ) : (
         <div className="stack-thumb-placeholder">
           <Icon name={isStackAbility(card) ? 'zap' : 'layers'} size={18} />
+          <StackEntryCardName card={card} />
         </div>
       )}
     </div>
@@ -72,6 +68,50 @@ export function StackEntryCardName({ card }: { card: CardView }) {
       {displayName}
     </span>
   )
+}
+
+/** How long an object primed as an arrival waits for its flight before giving up on it. */
+const ARRIVAL_WAIT_MS = 120
+
+/**
+ * FX-14: an object the engine is flying to the stack is handed over the instant its clone lands.
+ * It is kept off the cascade from the first frame it is drawn (the flight only starts two frames
+ * later, and the card must not be dealt onto the cascade and taken away again), and when the clone
+ * reaches it, it is already in place under it: the clone fades out over the card it just became.
+ */
+function useStackArrival(id: string): '' | ' stack-entry-waiting' | ' stack-entry-arriving' {
+  const flights = useActiveFlights()
+  const flightId = flights.find((f) => f.cardId === id && f.toSelector?.startsWith(`[data-card-id="${id}"]`))?.flightId ?? null
+  const [waiting, setWaiting] = useState(() => stackArrivalPending(id))
+  const [landed, setLanded] = useState(false)
+
+  useEffect(() => {
+    if (!waiting) return
+    // Nothing flew: the object was not one the engine could find a source for, so it eases in
+    // where it is, which is what the entry animation is for.
+    const giveUp = setTimeout(() => setWaiting(false), ARRIVAL_WAIT_MS)
+    return () => clearTimeout(giveUp)
+  }, [waiting])
+
+  useEffect(() => {
+    if (!flightId) return
+    setWaiting(false)
+    setLanded(false)
+    const land = () => setLanded(true)
+    const off = onFlightLanded(flightId, land)
+    // A flight can also end by being dropped (a new game, a burst that cancels it): the card is
+    // never left hidden waiting for a landing that will not come.
+    const unsub = subscribeFlights(() => {
+      if (!getActiveFlights().some((f) => f.flightId === flightId)) land()
+    })
+    return () => {
+      off()
+      unsub()
+    }
+  }, [flightId])
+
+  if (flightId && !landed) return ' stack-entry-arriving'
+  return waiting ? ' stack-entry-waiting' : ''
 }
 
 /** Entry del stack que registra su rect al desmontar (useLayoutEffect cleanup,
@@ -94,8 +134,7 @@ export function RecordedStackEntry({
   children: ReactNode
 }) {
   const ref = useRef<HTMLDivElement>(null)
-  const flights = useActiveFlights()
-  const arriving = flights.some((f) => f.cardId === id && f.toSelector?.startsWith(`[data-card-id="${id}"]`))
+  const arriving = useStackArrival(id)
   useLayoutEffect(() => {
     const el = ref.current
     return () => {
@@ -108,13 +147,14 @@ export function RecordedStackEntry({
         id,
         source.getBoundingClientRect(),
         'stack-zone',
-        { w: source.offsetWidth, h: source.offsetHeight }
+        { w: source.offsetWidth, h: source.offsetHeight },
+        source.querySelector('img')?.currentSrc || el.querySelector('img')?.currentSrc || undefined,
       )
     }
   }, [id])
 
   return (
-    <div ref={ref} data-card-id={id} className={arriving ? `${className} stack-entry-arriving` : className} style={style} onClick={onClick} onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave} onFocus={onMouseEnter} onBlur={onMouseLeave} {...clickableProps(onClick)}>
+    <div ref={ref} data-card-id={id} className={`${className}${arriving}`} style={style} onClick={onClick} onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave} onFocus={onMouseEnter} onBlur={onMouseLeave} {...clickableProps(onClick)}>
       {children}
     </div>
   )
@@ -125,14 +165,12 @@ export default function StackZone({
   onCardClick,
   onHover,
   targetIds = new Set(),
-  onResolveClick,
-  canResolve = false,
   players,
   myPlayerId,
+  onFocusIds,
 }: StackZoneProps) {
   const [hoverCard, setHoverCard] = useState<CardView | null>(null)
   const [hoverRect, setHoverRect] = useState<DOMRect | null>(null)
-  const [viewMode, setViewMode] = useState<'compact' | 'expanded'>('compact')
   const [openGroups, setOpenGroups] = useState<Set<string>>(() => new Set())
   const toggleGroup = useCallback((key: string) => {
     setOpenGroups((prev) => {
@@ -143,11 +181,49 @@ export default function StackZone({
     })
   }, [])
   const { t } = useTranslation()
-  const headSlot = useContext(DrawerHeadSlotContext)
 
   const zoneRef = useRef<HTMLDivElement>(null)
+  const cascadeRef = useRef<HTMLDivElement>(null)
+  const roomRef = useRef<HTMLDivElement>(null)
+  // STK-2: the stack can be pushed aside to read the board under it, without closing.
+  const [pushed, setPushed] = useState(false)
+  const [fit, setFit] = useState<CascadeFit | null>(null)
+  const cardRender = useStore((s) => s.settings.cardRender)
+
+  const entries = Object.entries(stack ?? {})
+  // STK-4: three copies of the same spell are three objects on the stack, and each one resolves
+  // on its own, so each one is drawn. Folding them into a single card with a count hid that.
+  const groups = entries.map(([id, card], i) => ({ items: [[id, card]] as [string, CardView][], start: i }))
+  const groupCount = groups.length
+  // Deeper than the cascade draws: the tail is counted on the front card.
+  const shownGroups = fit ? groups.slice(0, fit.shown) : groups
+  const foldedCount = groups.length - shownGroups.length
 
   const modalOpen = useStore(isBlockingModal)
+
+  // STK-1: the cascade is sized from the room its host declares, never from its own box: it sets
+  // its own width and height from the answer, so measuring either would be measuring that answer
+  // (BRD-54 learnt this on the player's counter stack).
+  useLayoutEffect(() => {
+    const el = roomRef.current
+    if (!el) return
+    const measure = () => {
+      const { width: w, height: h } = el.getBoundingClientRect()
+      if (w <= 0) return
+      const next = stackCascadeFit(w, h, groupCount)
+      setFit((prev) => (prev && prev.cardW === next.cardW && prev.stepX === next.stepX && prev.stepY === next.stepY && prev.shown === next.shown ? prev : next))
+    }
+    measure()
+    if (typeof ResizeObserver === 'undefined') return
+    const observer = new ResizeObserver(measure)
+    observer.observe(el)
+    window.addEventListener('resize', measure)
+    return () => {
+      observer.disconnect()
+      window.removeEventListener('resize', measure)
+    }
+  }, [groupCount])
+
   useEffect(() => {
     if (modalOpen) {
       setHoverCard(null)
@@ -176,7 +252,7 @@ export default function StackZone({
     const safeId = id.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
     const el = zoneRef.current?.querySelector<HTMLElement>(`[data-card-id="${safeId}"]`)
     if (el) setHoverRect(el.getBoundingClientRect())
-  }, [stack, hoverCard, viewMode, onHover])
+  }, [stack, hoverCard, onHover])
 
   const handleHover = useCallback(
     (card: CardView | null, rect?: DOMRect) => {
@@ -192,171 +268,148 @@ export default function StackZone({
     [onHover, modalOpen]
   )
 
-  const entries = Object.entries(stack ?? {})
-  const groups = groupAdjacent(entries, ([id, card]) => stackEntrySignature(id, card, targetIds, players, myPlayerId))
+  const topId = shownGroups[0]?.items[0]?.[0] ?? null
+  const hoverId = hoverCard?.id ?? null
 
-  if (entries.length === 0) {
-    return (
-      <EmptyState fill icon="bolt" iconSize={24} title={t('game', 'stack_empty')}>
-        {t('game', 'stack_empty_desc')}
-      </EmptyState>
-    )
-  }
+  // TGT-7: a stack object the player is being asked to target brings the stack back; it is always
+  // in view now, but it may have been pushed aside.
+  const anyTargetable = entries.some(([id]) => targetIds.has(id))
+  useEffect(() => {
+    if (anyTargetable) setPushed(false)
+  }, [anyTargetable])
 
-  const headerActions = (
-    <div className="stack-header-actions">
-      {canResolve && (
-        <Button variant="success" size="sm" data-testid="stack-resolve-header-btn"
-          onClick={onResolveClick}>
-          <Icon name="bolt" size={13} /> {t('game', 'resolve')}
-        </Button>
-      )}
-      <Tabs
-        variant="segmented"
-        size="sm"
-        value={viewMode}
-        onChange={setViewMode}
-        items={[
-          { id: 'compact', icon: 'list', title: t('game', 'compact_view') },
-          { id: 'expanded', icon: 'layoutGrid', title: t('game', 'expanded_view') },
-        ]}
-      />
-    </div>
-  )
+  // STK-3: only two objects point at their targets — the one about to resolve, always, and the one
+  // under the pointer. Every arrow at once is a thicket nobody reads.
+  useEffect(() => {
+    if (!onFocusIds) return
+    const ids = new Set<string>()
+    // Pushed aside, the stack is off the board and draws no arrows: the point of pushing it is to
+    // see what was under it, and an arrow reaching for a card that has left is the worst of both.
+    if (!pushed) {
+      if (topId) ids.add(topId)
+      if (hoverId) ids.add(hoverId)
+    }
+    onFocusIds(ids)
+  }, [onFocusIds, topId, hoverId, pushed])
+
+  useEffect(() => () => onFocusIds?.(null), [onFocusIds])
+
+  // STK-2: an empty stack draws nothing at all; it is a layer over the board, not a panel that
+  // stays behind saying it is empty. It is read after the hooks above, never before them: an
+  // empty stack publishes no focus and draws no arrows, which is the same answer by another road.
+  if (entries.length === 0) return null
+
+  const hoverCtrl = hoverCard?.id
+    ? getControllerInfo(hoverCard, String(hoverCard.id), players, myPlayerId, t)
+    : null
 
   return (
-    <div ref={zoneRef} className={`stack-zone view-mode-${viewMode}`}>
-      {headSlot ? createPortal(headerActions, headSlot) : (
-        <div className="stack-header">
-          <div className="stack-header-left">
-            <span className="stack-header-title">{t('game', 'stack')} ({entries.length})</span>
-          </div>
-          {headerActions}
-        </div>
-      )}
+    <div
+      ref={zoneRef}
+      className={`stack-zone${pushed ? ' is-pushed' : ''}`}
+      data-testid="stack-zone"
+      /* The arrows are drawn from where the cards are, and pushing the stack aside moves them
+         without changing any state the overlay watches: it has to be told, or an arrow keeps
+         pointing at where its card used to be. */
+      onTransitionEnd={(e) => {
+        if (e.target === e.currentTarget && e.propertyName === 'transform') {
+          window.dispatchEvent(new Event(BOARD_RELAYOUT_EVENT))
+        }
+      }}
+      style={fit ? ({
+        '--card-w': `${fit.cardW}px`,
+        '--stack-x': `${fit.stepX}px`,
+        '--stack-y': `${fit.stepY}px`,
+        '--stack-n': shownGroups.length,
+      } as React.CSSProperties) : undefined}
+    >
+      {/* The room the cascade may use, declared in CSS and measured here: a box of its own, so the
+          measurement can never read back the size the cascade chose. */}
+      <div ref={roomRef} className="stack-room" aria-hidden="true" />
+      <button
+        type="button"
+        className="stack-push"
+        data-testid="stack-push"
+        aria-pressed={pushed}
+        title={pushed ? t('game', 'stack_bring_back') : t('game', 'stack_push_aside')}
+        aria-label={pushed ? t('game', 'stack_bring_back') : t('game', 'stack_push_aside')}
+        onClick={() => setPushed((on) => !on)}
+      >
+        <Icon name={pushed ? 'chevronLeft' : 'chevronRight'} size={16} />
+      </button>
 
-      <div className="stack-timeline">
-        {groups.map((group, gi) => {
+      {/* STK-1: the stack is a cascade of cards, the one about to resolve in front and the rest
+          peeking behind it by their title, the way a hand of cards lies over itself. */}
+      <div
+        ref={cascadeRef}
+        className="stack-cascade"
+        data-testid="stack-cascade"
+      >
+        {shownGroups.map((group, gi) => {
           const [id, card] = group.items[0]
           const count = group.items.length
           const idx = group.start
           const isTop = gi === 0
-          const isLast = gi === groups.length - 1
           const isAbility = isStackAbility(card)
           const isCopy = isCopyCard(card)
-          const typeLabel = stackTypeLabel(card, t)
-          const subtype = stackSubtype(card)
           const rulesText = stackRulesText(card)
-          const manaCost = (card.manaCostLeftStr ?? []).join('')
           const isTargetable = targetIds.has(id)
           const ctrlInfo = getControllerInfo(card, id, players, myPlayerId, t)
           const ownership = ctrlInfo.isMe ? 'mine' : 'opponent'
-          const ptLine = !isAbility && card.power != null && card.toughness != null
-            ? `${card.power}/${card.toughness}`
-            : null
-          const tgtLabels = resolveStackTargetLabels(stackTargetIds(card), stack ?? {}, players)
+          const openGroup = count > 1 && openGroups.has(id)
 
           return (
             <Fragment key={group.items[count - 1][0]}>
             <RecordedStackEntry
               id={id}
               className={[
-                'stack-tl-entry',
+                'stack-card',
                 isTop ? 'is-top' : '',
-                isTop ? 'stack-top-pulse' : '',
                 isAbility ? 'is-ability' : 'is-spell',
                 isCopy ? 'is-copy' : '',
                 isTargetable ? 'targetable' : '',
                 onCardClick || count > 1 ? 'clickable' : '',
                 count > 1 ? 'is-group' : '',
-                count > 1 && openGroups.has(id) ? 'is-open' : '',
+                openGroup ? 'is-open' : '',
                 `owner-${ownership}`,
               ].filter(Boolean).join(' ')}
+              style={{ ['--i' as string]: gi, ['--seat' as string]: seatColorVar(seatIndexOf(players, ctrlInfo.id)) }}
               onClick={count > 1 ? () => toggleGroup(id) : onCardClick ? () => onCardClick(id) : undefined}
               onMouseEnter={(e) => handleHover(card, e.currentTarget.getBoundingClientRect())}
               onMouseLeave={() => handleHover(null)}
             >
-              {/* Timeline node + connector */}
-              <div className="stack-tl-rail">
-                <div className={`stack-tl-node ${isTop ? 'node-top' : ''}`} />
-                {!isLast && <div className={`stack-tl-line ${isTop ? 'line-top' : ''}`} />}
-              </div>
-
-              {/* Card content */}
-              <div className="stack-tl-body">
-                <div className="stack-tl-card">
-                  {viewMode === 'compact' && <StackThumbnail card={card} />}
-
-                  <div className="stack-tl-info">
-                    <div className="stack-tl-name-row">
-                      <span className="stack-tl-pos">
-                        {isTop && <Icon name="play" size={9} />}
-                        {count > 1 ? `#${idx + 1}–${idx + count}` : `#${idx + 1}`}
-                      </span>
-                      <StackEntryCardName card={card} />
-                      {count > 1 && <span className="stack-tl-count" data-testid="stack-group-count">×{count}</span>}
-                      {manaCost && (
-                        <span className="stack-tl-mana">
-                          <FormattedText text={manaCost} />
-                        </span>
-                      )}
-                    </div>
-                    <div className="stack-tl-type-row">
-                      <span className={`stack-tl-type-badge ${isAbility ? 'type-ability' : 'type-spell'}`}>
-                        {isAbility ? (<><Icon name={stackAbilityIcon(card)} size={11} /> </>) : ''}{typeLabel}
-                      </span>
-                      {subtype && <span className="stack-tl-subtype">{subtype}</span>}
-                      {ptLine && <span className="stack-tl-pt">{ptLine}</span>}
-                      {isCopy && <span className="stack-tl-copy-badge"><Icon name="sparkles" size={11} /> {t('game', 'copy_badge')}</span>}
-                      <span className={`stack-controller-pill ${ctrlInfo.isMe ? 'is-me' : 'is-opp'}`} title={`${t('game', 'controller')}: ${ctrlInfo.name}`}>
-                        <span className="ctrl-icon"><Icon name={ctrlInfo.avatarIcon} size={12} /></span>
-                        <span className="ctrl-name">{ctrlInfo.name}</span>
-                      </span>
-                    </div>
-                    {tgtLabels.length > 0 && (
-                      <div
-                        className="stack-tl-targets"
-                        data-testid="stack-targets"
-                        title={tgtLabels.join(', ')}
-                        tabIndex={0}
-                        aria-label={`${t('game', 'choose_target')}: ${tgtLabels.join(', ')}`}
-                      >
-                        <span className="stack-target-arrow" aria-hidden="true"><Icon name="target" size={11} /> →</span>
-                        <span className="stack-target-names" aria-hidden="true">{tgtLabels.join(', ')}</span>
-                      </div>
-                    )}
-                    {rulesText && (viewMode === 'expanded' || isAbility) && (
-                      <div className={`stack-tl-rules${viewMode === 'compact' ? ' is-clamped' : ''}`} title={viewMode === 'compact' ? rulesText : undefined}>
-                        <FormattedText text={rulesText} cardName={card.displayName ?? card.name} />
-                      </div>
-                    )}
-                  </div>
+              <div className="stack-card-face">
+                <StackCardFace card={card} rendered={cardRender === 'rendered'} />
+                {gi === 0 && foldedCount > 0 && (
+                  <span className="stack-card-more" data-testid="stack-cascade-more">+{foldedCount}</span>
+                )}
+                {/* The title bar is the strip that stays visible when a card is covered, so it
+                    carries everything you need to read the stack without hovering it. */}
+                <div className="stack-card-foot">
+                  <span className={`stack-controller-pill ${ctrlInfo.isMe ? 'is-me' : 'is-opp'}`} title={`${t('game', 'controller')}: ${ctrlInfo.name}`}>
+                    <span className="ctrl-icon"><Icon name={ctrlInfo.avatarIcon} size={12} /></span>
+                    <span className="ctrl-name">{ctrlInfo.name}</span>
+                  </span>
+                  {isCopy && <span className="stack-tl-copy-badge"><Icon name="sparkles" size={11} /> {t('game', 'copy_badge')}</span>}
                 </div>
-                {isTop && <span key={id} className="stack-top-wait-bar" aria-hidden="true" />}
+                {rulesText && isAbility && (
+                  <div className="stack-tl-rules is-clamped" title={rulesText}>
+                    <FormattedText text={rulesText} cardName={card.displayName ?? card.name} />
+                  </div>
+                )}
               </div>
             </RecordedStackEntry>
-            {count > 1 && openGroups.has(id) && group.items.map(([subId, subCard], k) => (
+            {openGroup && group.items.map(([subId, subCard], k) => (
               <RecordedStackEntry
                 key={subId}
                 id={subId}
-                className={['stack-tl-entry', 'stack-tl-sub', onCardClick ? 'clickable' : ''].filter(Boolean).join(' ')}
+                className={['stack-card-sub', onCardClick ? 'clickable' : ''].filter(Boolean).join(' ')}
                 onClick={onCardClick ? () => onCardClick(subId) : undefined}
                 onMouseEnter={(e) => handleHover(subCard, e.currentTarget.getBoundingClientRect())}
                 onMouseLeave={() => handleHover(null)}
               >
-                <div className="stack-tl-rail">
-                  <div className="stack-tl-node" />
-                </div>
-                <div className="stack-tl-body">
-                  <div className="stack-tl-card">
-                    <div className="stack-tl-info">
-                      <div className="stack-tl-name-row">
-                        <span className="stack-tl-pos">#{idx + k + 1}</span>
-                        <StackEntryCardName card={subCard} />
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                <span className="stack-tl-pos">#{idx + k + 1}</span>
+                <StackEntryCardName card={subCard} />
               </RecordedStackEntry>
             ))}
             </Fragment>
@@ -364,7 +417,17 @@ export default function StackZone({
         })}
       </div>
 
-      <FloatingCardPreview card={hoverCard} anchorRect={hoverRect} fixedSide="left" />
+      <FloatingCardPreview
+        card={hoverCard}
+        anchorRect={hoverRect}
+        fixedSide="left"
+        badge={hoverCtrl && (
+          <span className={`stack-controller-pill ${hoverCtrl.isMe ? 'is-me' : 'is-opp'}`}>
+            <span className="ctrl-icon"><Icon name={hoverCtrl.avatarIcon} size={12} /></span>
+            <span className="ctrl-name">{hoverCtrl.name}</span>
+          </span>
+        )}
+      />
     </div>
   )
 }

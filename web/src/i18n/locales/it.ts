@@ -1089,6 +1089,8 @@ export const it: TranslationSchema = {
     enter_fullscreen: 'Schermo intero (F11)',
     exit_fullscreen: 'Esci da schermo intero (F11)',
     stack_empty: 'La pila è vuota',
+    stack_push_aside: 'Sposta la pila di lato',
+    stack_bring_back: 'Riporta la pila',
     combat_damage_title: 'Danni da combattimento',
     ledger_attacks: '{player} attacca',
     stack_empty_desc: 'Le magie e le abilità giocate appariranno qui.',
