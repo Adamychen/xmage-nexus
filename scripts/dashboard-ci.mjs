@@ -15,6 +15,7 @@ import { enforceCoverageGate } from "./coverage-gate.mjs";
 
 const webDir = path.join(repoRoot, "web");
 const mcpDir = path.join(repoRoot, "mcp");
+const proxyReports = path.join(repoRoot, "reports", "proxy-surefire-reports");
 
 function writeMarker(name, status, extra) {
   fs.writeFileSync(path.join(webDir, name), JSON.stringify({ status, ...extra }));
@@ -58,9 +59,13 @@ async function main() {
     console.log("[dashboard-ci] fake e2e skipped (DASHBOARD_SKIP_E2E=1): runs in Web client CI and nightly");
   } else {
     clearReports("e2e-results.json");
+    // The suite is ~750 tests at 2 workers (the timing-sensitive specs cannot take more on a
+    // 4-vCPU runner), so on the nightly runner it needs ~40 min: at the old 30 min cap it was
+    // killed mid-run (spawnSync ETIMEDOUT) and the layer reported "no Playwright JSON report"
+    // instead of a real result. 60 min leaves room without hiding a genuinely hung run.
     const e2e = run("npx", ["playwright", "test", "--reporter=json"], {
       cwd: webDir,
-      timeoutMs: 1_800_000,
+      timeoutMs: 3_600_000,
       env: { PLAYWRIGHT_JSON_OUTPUT_NAME: "e2e-results.json" },
     });
     writeMarker(".e2e.json", e2e.code === 0 ? "pass" : "fail", { code: e2e.code });
@@ -82,10 +87,19 @@ async function main() {
 
   // 6. Proxy (java). Needs the org.mage artifacts in ~/.m2 (the fork release downloaded in CI,
   //    a local build on a development machine)
-  fs.rmSync(path.join(repoRoot, "Mage.Proxy", "target", "surefire-reports"), { recursive: true, force: true });
+  const targetReports = path.join(repoRoot, "Mage.Proxy", "target", "surefire-reports");
+  fs.rmSync(targetReports, { recursive: true, force: true });
+  fs.rmSync(proxyReports, { recursive: true, force: true });
   ensureMageArtifacts();
   const java = run(binName("mvn"), ["-f", "Mage.Proxy/pom.xml", "test"], { timeoutMs: 900_000 });
   writeMarker(".proxy.json", java.code === 0 ? "pass" : "fail", { code: java.code });
+  // Keep a copy outside target/: the nightly runs `scripts/build.mjs` afterwards, whose
+  // `mvn clean package` wipes Mage.Proxy/target and, with it, the reports the final dashboard
+  // regeneration needs. Without the copy the layer flipped from pass to "mvn passed but wrote no
+  // surefire reports" between the two generations (the proxy itself was green).
+  if (java.code === 0 && fs.existsSync(targetReports)) {
+    fs.cpSync(targetReports, proxyReports, { recursive: true });
+  }
   if (java.code !== 0) {
     console.log("java stdout (tail):", java.stdout.slice(-3000));
     console.log("java stderr (tail):", java.stderr.slice(-2000));

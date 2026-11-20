@@ -1,5 +1,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import {
   parseVitest,
   unitVerdict,
@@ -7,6 +11,7 @@ import {
   parsePlaywright,
   fakeE2eLayer,
   proxyVerdict,
+  readSurefire,
 } from "./gen-dashboard.mjs";
 
 const vitestGreen = {
@@ -155,6 +160,35 @@ test("no proxy marker and no reports is pending", () => {
 
 test("failing proxy tests fail the proxy layer", () => {
   assert.equal(proxyVerdict({ total: 40, passed: 38, failed: 2 }, { status: "pass", code: 0 }).status, "fail");
+});
+
+test("surefire reports are parsed from a directory, and a directory without them is null", () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "surefire-"));
+  try {
+    assert.equal(readSurefire(dir), null, "an empty directory yields no verdict");
+    assert.equal(readSurefire(path.join(dir, "missing")), null, "a missing directory yields no verdict");
+    fs.writeFileSync(
+      path.join(dir, "TEST-a.xml"),
+      '<testsuite name="a" tests="3" failures="1" errors="0"></testsuite>',
+    );
+    fs.writeFileSync(
+      path.join(dir, "TEST-b.xml"),
+      '<testsuite name="b" tests="2" failures="0" errors="0"></testsuite>',
+    );
+    assert.deepEqual(readSurefire(dir), { total: 5, passed: 4, failed: 1, durationMs: null });
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+// Regression: the nightly runs `mvn clean package` on Mage.Proxy after the first dashboard
+// generation, which deletes target/surefire-reports; the regeneration then reported the proxy as
+// "mvn passed but wrote no surefire reports". dashboard-ci has to copy them outside target/.
+test("dashboard-ci keeps a copy of the surefire reports outside target/", () => {
+  const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+  const src = fs.readFileSync(path.join(repoRoot, "scripts", "dashboard-ci.mjs"), "utf8");
+  assert.match(src, /reports", "proxy-surefire-reports"/, "the stable copy lives in reports/");
+  assert.match(src, /cpSync\(targetReports, proxyReports/, "the reports are copied after mvn test");
 });
 
 test("a green proxy run passes the proxy layer", () => {

@@ -6,6 +6,9 @@
 //   web/coverage/coverage-summary.json      (vitest coverage json-summary)
 //   web/e2e-results.json                    (playwright JSON reporter, PLAYWRIGHT_JSON_OUTPUT_NAME)
 //   Mage.Proxy/target/surefire-reports/*.xml (proxy junit)
+//   reports/proxy-surefire-reports/*.xml   (copy kept by dashboard-ci: the nightly's
+//                                          `mvn clean package` deletes target/ before the
+//                                          final regeneration, see pages.yml)
 //   reports/integration-result.json         (nightly, real stack)
 // Environment: GITHUB_SHA, GITHUB_RUN_URL, DASHBOARD_SKIP_E2E (1 = fake e2e not run in this run)
 
@@ -230,8 +233,15 @@ function buildReverseCoverage() {
   return out;
 }
 
-function readProxy() {
-  const dir = path.join(repoRoot, "Mage.Proxy", "target", "surefire-reports");
+// Surefire writes under target/, which the nightly's `mvn clean package` deletes after the first
+// dashboard generation. dashboard-ci copies the reports to reports/ so the regeneration that runs
+// after the integration suite reads the same verdict instead of "no surefire reports".
+const PROXY_REPORT_DIRS = [
+  path.join("Mage.Proxy", "target", "surefire-reports"),
+  path.join("reports", "proxy-surefire-reports"),
+];
+
+export function readSurefire(dir) {
   if (!fs.existsSync(dir)) return null;
   let tests = 0, failures = 0, errors = 0;
   for (const f of fs.readdirSync(dir)) {
@@ -248,6 +258,14 @@ function readProxy() {
   }
   if (!tests) return null;
   return { total: tests, passed: tests - failures - errors, failed: failures + errors, durationMs: null };
+}
+
+function readProxy() {
+  for (const rel of PROXY_REPORT_DIRS) {
+    const out = readSurefire(path.join(repoRoot, rel));
+    if (out) return out;
+  }
+  return null;
 }
 
 function build() {
