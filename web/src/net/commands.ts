@@ -1,5 +1,6 @@
 import { Gateway } from './Gateway'
 import type { DeckJson } from './types'
+import { applyArtPreferences } from '../cards/artPreferences'
 import type { DraftReport } from '../system/report'
 
 /** Tipo de juego y tipo de jugador reales del servidor (getGameTypes/getPlayerTypes). */
@@ -191,7 +192,8 @@ export interface JoinTableArgs {
 }
 
 export async function joinTable(args: JoinTableArgs) {
-  return getGateway().send('joinTable', { ...args })
+  const deck = args.playerType && args.playerType !== 'HUMAN' ? args.deck : applyArtPreferences(args.deck)
+  return getGateway().send('joinTable', { ...args, deck })
 }
 
 export async function startMatch(tableId: string) {
@@ -240,7 +242,7 @@ export async function removeTable(tableId: string) {
 }
 
 export async function submitDeck(tableId: string, deck: DeckJson) {
-  return getGateway().send('submitDeck', { tableId, deck })
+  return getGateway().send('submitDeck', { tableId, deck: applyArtPreferences(deck) })
 }
 
 export async function updateDeck(tableId: string, deck: DeckJson) {
@@ -444,7 +446,8 @@ export async function createTournamentTable(args: Record<string, unknown>) {
 }
 
 export async function joinTournamentTable(args: { roomId?: string; tableId: string; playerName?: string; playerType?: string; skill?: number; deck?: DeckJson; password?: string; deckType?: string; gameType?: string }) {
-  return getGateway().send('joinTournamentTable', { ...args })
+  const deck = args.playerType && args.playerType !== 'HUMAN' ? args.deck : applyArtPreferences(args.deck)
+  return getGateway().send('joinTournamentTable', { ...args, deck })
 }
 
 export async function watchTournamentTable(tableId: string, roomId?: string) {

@@ -48,7 +48,7 @@ export function CardPrintingsModal({
   cardName: string
   currentSet: string
   currentNumber: string
-  onSelectPrinting: (setCode: string, cardNumber: string) => void
+  onSelectPrinting: (setCode: string, cardNumber: string, onServer: boolean) => void
   onClose: () => void
 }) {
   const { t } = useTranslation()
@@ -155,7 +155,7 @@ export function CardPrintingsModal({
                     onClick={() => {
                       // Impresión de Scryfall tal cual: la traducción a la que
                       // carga el servidor (PLST, promos) la hace el proxy.
-                      onSelectPrinting(p.set, p.collectorNumber)
+                      onSelectPrinting(p.set, p.collectorNumber, !!onServer?.has(`${p.set}|${p.collectorNumber}`))
                       onClose()
                     }}
                   >

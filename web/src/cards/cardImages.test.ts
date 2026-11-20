@@ -1,7 +1,8 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { awaitImageUrl, resetCardImageCache, cardKey, hasVigilance, hiddenFaceDownName, largeImageUrl } from './cardImages'
 import { resetCardArtPreferences, setCardArtPreference } from './artPreferences'
-import type { CardView } from '../net/types'
+import { noteGameForArt } from './foreignCards'
+import type { CardView, GameView } from '../net/types'
 import { setScryfallPacing } from './scryfallClient'
 
 const card = {
@@ -401,12 +402,33 @@ describe('card art preference', () => {
     resetCardArtPreferences()
   })
 
-  it('la preferencia del jugador gana a la impresión de la vista, también en cartas del rival', () => {
+  afterEach(() => {
+    noteGameForArt(null)
+  })
+
+  it('DCK-32: the own preference wins on own cards, the server printing on the opponent\'s', () => {
     setCardArtPreference('Lightning Bolt', 'LEA', '161')
-    const mine = { name: 'Lightning Bolt', expansionSetCode: 'M10', cardNumber: '146' } as CardView
-    const rivals = { name: 'Lightning Bolt', expansionSetCode: '2XM', cardNumber: '130' } as CardView
+    const mine = { id: 'c-mine', name: 'Lightning Bolt', expansionSetCode: 'M10', cardNumber: '146' } as CardView
+    const rivals = { id: 'c-rival', name: 'Lightning Bolt', expansionSetCode: '2XM', cardNumber: '130' } as CardView
+    noteGameForArt({
+      myPlayerId: 'me',
+      myHand: { 'c-mine': mine },
+      players: [
+        { playerId: 'me', battlefield: {}, graveyard: {}, exile: {}, sideboard: {}, commandList: [] },
+        { playerId: 'opp', battlefield: { 'c-rival': rivals }, graveyard: {}, exile: {}, sideboard: {}, commandList: [] },
+      ],
+      opponentHands: {},
+      watchedHands: {},
+      stack: {},
+    } as unknown as GameView)
     expect(cardKey(mine)).toBe('LEA/161')
-    expect(cardKey(rivals)).toBe('LEA/161')
+    expect(cardKey(rivals)).toBe('2XM/130')
+  })
+
+  it('DCK-32: outside a game the preference still applies to every copy', () => {
+    setCardArtPreference('Lightning Bolt', 'LEA', '161')
+    const pick = { id: 'p1', name: 'Lightning Bolt', expansionSetCode: '2XM', cardNumber: '130' } as CardView
+    expect(cardKey(pick)).toBe('LEA/161')
   })
 
   it('no aplica a tokens ni a cartas boca abajo', () => {

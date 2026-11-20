@@ -2,6 +2,7 @@ import { describe, expect, it, vi, afterEach } from 'vitest'
 import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/react'
 import { CardPrintingsModal, parseScryfallPrints } from './CardPrintingsModal'
 import { setCustomCardArtDataUrl, resetCustomCardArtCache } from '../cards/customCardArt'
+import * as xmageCatalog from './xmageCatalog'
 
 describe('CardPrintingsModal', () => {
   afterEach(() => {
@@ -71,8 +72,35 @@ describe('CardPrintingsModal', () => {
     const dmuCard = screen.getByText('Dominaria United')
     fireEvent.click(dmuCard)
 
-    expect(onSelect).toHaveBeenCalledWith('DMU', '137')
+    expect(onSelect).toHaveBeenCalledWith('DMU', '137', false)
     expect(onClose).toHaveBeenCalled()
+  })
+
+  it('DCK-32: flags a pick as on the server only when the server catalogue lists it', async () => {
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => mockPrintsData,
+    }) as any
+    vi.spyOn(xmageCatalog, 'xmagePrintingsOf').mockResolvedValue([{ setCode: 'M10', cardNumber: '146' }])
+
+    const onSelect = vi.fn()
+    render(
+      <CardPrintingsModal
+        cardName="Lightning Bolt"
+        currentSet="DMU"
+        currentNumber="137"
+        onSelectPrinting={onSelect}
+        onClose={vi.fn()}
+      />
+    )
+
+    await waitFor(() => {
+      expect(document.querySelector('[data-unavailable]')).not.toBeNull()
+    })
+    fireEvent.click(screen.getByText('Magic 2010'))
+    expect(onSelect).toHaveBeenLastCalledWith('M10', '146', true)
+    fireEvent.click(screen.getByText('Dominaria United'))
+    expect(onSelect).toHaveBeenLastCalledWith('DMU', '137', false)
   })
 
   it('shows the uploaded custom image and removes it from the custom art section', async () => {
