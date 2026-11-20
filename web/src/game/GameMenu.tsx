@@ -18,6 +18,7 @@ import { useTranslation } from '../i18n'
 import { soundManager } from '../audio/soundManager'
 import Icon from '../ui/Icon'
 import { sendTriggerAutoOrder, sendManaPaymentMode } from '../net/commands'
+import { everyoneElseLeft } from '../state/gameUtils'
 import type { ManaPaymentAction } from '../net/commands'
 import type { ManaPaymentStored } from '../state/persistence'
 import { clearAutoAnswers, removeAutoAnswer } from './autoAnswers'
@@ -43,6 +44,7 @@ export default function GameMenu() {
   const [isFullscreenActive, toggleFullscreen] = useFullscreen()
 
   const me = game?.players?.find((p) => p.controlled)
+  const alone = everyoneElseLeft(game?.players)
 
   const toggleManaPayment = (key: keyof ManaPaymentStored) => {
     const next = { ...settings.manaPayment, [key]: !settings.manaPayment[key] }
@@ -136,11 +138,15 @@ export default function GameMenu() {
               </MenuItem>
             )}
             <MenuItem
-              danger
+              danger={!alone}
               className="leave-match-btn"
               onClick={async () => {
-                const msg = me ? t('game', 'concede_prompt') : t('game', 'leave_spectate_prompt')
                 close()
+                if (alone) {
+                  returnToLobby()
+                  return
+                }
+                const msg = me ? t('game', 'concede_prompt') : t('game', 'leave_spectate_prompt')
                 if (await confirmDialog(msg, { danger: !!me })) {
                   if (me && gameId) {
                     await concedeMatch(gameId)
@@ -149,7 +155,7 @@ export default function GameMenu() {
                   }
                 }
               }}
-              title={me ? t('game', 'concede_prompt') : t('game', 'return_to_lobby')}
+              title={!alone && me ? t('game', 'concede_prompt') : t('game', 'return_to_lobby')}
             >
               <Icon name="door" size={13} /> {t('game', 'leave')}
             </MenuItem>

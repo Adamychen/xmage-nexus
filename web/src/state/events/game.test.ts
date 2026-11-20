@@ -191,6 +191,34 @@ describe('game end and new game clear the pending prompt', () => {
     expect(getState().combat).toBeNull()
   })
 
+  it('GME-1: END_GAME_INFO ends the match when every other player has already left', () => {
+    const me = makePlayer({ playerId: 'p-me', name: 'Me', controlled: true })
+    const rival = makePlayer({ playerId: 'p-rival', name: 'Rival', hasLeft: true })
+    setState({
+      phase: 'game',
+      gameId: 'g-alone',
+      game: makeGameView({ players: [me, rival], myPlayerId: 'p-me' }),
+    })
+
+    handleMessage({
+      type: 'event',
+      method: 'END_GAME_INFO',
+      messageId: 2,
+      objectId: 'g-alone',
+      data: {
+        won: true,
+        gameInfo: 'You won the game on turn 5.',
+        matchInfo: 'You need one more win to win the match.',
+        players: [me, rival],
+      },
+    } as never)
+
+    expect(getState().phase).toBe('lobby')
+    expect(getState().gameId).toBeNull()
+    expect(getState().game).toBeNull()
+    expect(getState().gameEnd).not.toBeNull()
+  })
+
   it('START_GAME for another game clears the previous game prompt', () => {
     leavePendingPrompt('g-old')
     handleMessage({ type: 'event', method: 'START_GAME', messageId: 2, data: { gameId: 'g-new', tableName: 'T' } } as never)

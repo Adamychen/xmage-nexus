@@ -1,10 +1,24 @@
 import { render, fireEvent } from '@testing-library/react'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import GameMenu from './GameMenu'
 import { reset } from '../state/store'
-import { setState } from '../state/state'
+import { getState, setState } from '../state/state'
 import { setLanguage } from '../i18n'
 import { makeGameView, makePlayer } from '../__fixtures__/gameViews'
+
+vi.mock('../ui/confirmDialog', () => ({ confirmDialog: vi.fn().mockResolvedValue(true) }))
+
+vi.mock('../net/commands', async (importOriginal) => {
+  const mod = await importOriginal<typeof import('../net/commands')>()
+  return {
+    ...mod,
+    sendPlayerAction: vi.fn().mockResolvedValue({ ok: true }),
+    quitMatch: vi.fn().mockResolvedValue({ ok: true }),
+    stopWatching: vi.fn().mockResolvedValue({ ok: true }),
+    leaveChat: vi.fn().mockResolvedValue({ ok: true }),
+    leaveTable: vi.fn().mockResolvedValue({ ok: true }),
+  }
+})
 
 function openMenu(container: HTMLElement) {
   const btn = container.querySelector('[data-testid="game-menu-btn"]')
@@ -94,5 +108,27 @@ describe('GameMenu', () => {
     fireEvent.keyDown(window, { key: 'Escape' })
     expect(container.querySelector('[data-testid="game-menu"]')).toBeNull()
     expect(document.activeElement).toBe(btn)
+  })
+
+  it('GME-1: leaving a game where every opponent has left does not concede', async () => {
+    const { sendPlayerAction, quitMatch } = await import('../net/commands')
+    setState({
+      phase: 'game',
+      gameId: 'g-alone',
+      game: makeGameView({
+        players: [
+          makePlayer({ playerId: 'p1', name: 'Alice', controlled: true }),
+          makePlayer({ playerId: 'p2', name: 'Bob', hasLeft: true }),
+        ],
+      }),
+    })
+
+    const { container } = render(<GameMenu />)
+    const menu = openMenu(container)
+    fireEvent.click(menu!.querySelector('.leave-match-btn')!)
+
+    await vi.waitFor(() => expect(getState().phase).toBe('lobby'))
+    expect(quitMatch).toHaveBeenCalledWith('g-alone')
+    expect(sendPlayerAction).not.toHaveBeenCalledWith('CONCEDE', 'g-alone')
   })
 })

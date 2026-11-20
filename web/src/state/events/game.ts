@@ -11,7 +11,7 @@ import { t as tStatic } from '../../i18n'
 import { saveActiveGame, clearActiveGame, loadActiveGame } from '../persistence'
 import {
   consolidatePlayables, combatFromSelect,
-  isCombatStep, combatChosenFrom, emptyCombat,
+  isCombatStep, combatChosenFrom, emptyCombat, everyoneElseLeft,
 } from '../gameUtils'
 import { soundManager } from '../../audio/soundManager'
 import { notifyFeedbackOpened } from '../../audio/promptSound'
@@ -271,6 +271,7 @@ export function handleEndGameInfo(data: unknown, objectId?: string | null): void
   if (objectId && objectId !== getState().gameId) return
   const end = (data ?? {}) as GameEndInfo
   const matchOver = end.matchView?.endTime != null || /won the match/i.test(end.matchInfo ?? '')
+    || everyoneElseLeft(end.players)
   addLog('partida', matchOver ? (end.matchInfo ?? 'Fin del match') : (end.matchInfo ?? 'Fin de la partida'))
   if (matchOver) {
     autosaveGameLog(getState().gameId, end.matchInfo ?? end.gameInfo ?? 'Fin del match')
