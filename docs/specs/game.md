@@ -23,3 +23,15 @@ only way out is a concession.
   "You need one more win to win the match." text, which is what it says whenever no match player has
   reached the wins needed; an opponent quitting is not a win for the match counter.
 - Guard: `src/state/events/game.test.ts` · `src/game/GameEndDialog.test.tsx` · `src/game/GameMenu.test.tsx`
+
+### GME-2 · A table I joined takes the screen from the game I left
+While I sit in another table's waiting room, the updates of a game I have already left (one I
+conceded, was eliminated in, or quit) do not bring its board back: the client ignores the game events
+that arrive with the waiting room open, and only a game that actually starts, or one I choose to
+watch, changes the screen.
+
+- Why: report of 2026-11-17 (app 0.9.0): a player eliminated from a four-player game joined another
+  table and was pulled back into the game he had been eliminated from on its every update, losing his
+  new table's waiting room. The guard that drops trailing game events after leaving a game only knew
+  the lobby, not the waiting room (`phase: 'staging'`), so the pod's updates re-entered the board.
+- Guard: `src/state/store.test.ts`
