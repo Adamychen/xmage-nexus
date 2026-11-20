@@ -27,8 +27,10 @@ jobs:
   build:
     runs-on: ubuntu-latest
     # Without this, a zombie runner (e.g. a hung 'Install Playwright browsers') blocks
-    # the pages-* queue forever: cancel-in-progress is false.
-    timeout-minutes: 90
+    # the pages-* queue forever: cancel-in-progress is false. It has to cover the whole nightly:
+    # the fake e2e alone can take ~45 min on the runner, plus build (~4), integration (~12) and
+    # the dashboard layers (~8).
+    timeout-minutes: 120
     environment:
       name: github-pages
       url: ${{ steps.deploy.outputs.page_url }}
