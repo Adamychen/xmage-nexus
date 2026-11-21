@@ -81,6 +81,45 @@ and then restarts `xmage-proxy.service`.
   download guide and clears the flag, and the version becomes the full release. A tag that `release.yml` opens by
   itself is still born as a draft, as before.
 
+## Dev site: branch previews (`dev.xmage-nexus.com`)
+
+`Deploy dev` (`.github/workflows/deploy-dev.yml`) publishes the **web client of any branch or tag** to
+`https://dev.xmage-nexus.com`, so a change can be tried in a real browser against the real proxy and
+`beta.xmage.today` before it reaches players.
+
+- **Trigger:** Actions → *Deploy dev* → *Run workflow* → `ref` (default `master`). Dispatch-only, like
+  `deploy.yml`: a job on the self-hosted runner is never reachable from a pull request. The workflow file
+  only has to exist on the default branch, so it can preview a branch that does not have it.
+- **What it does:** validates the ref (`git ls-remote`), checks it out in the runner workspace, runs
+  `npm ci` + `npm --prefix web run build` with the dev env (`wss://ws.xmage-nexus.com`,
+  `wss://xdhs.xmage-nexus.com`, `beta.xmage.today`), rsyncs `web/dist/` to `~/xmage-dev-dist` with a
+  `dev-info.json` (ref, commit, date, run link), and restarts the user unit `xmage-dev-web.service`.
+- **What it does not do:** no `~/deploy-xmage.sh`, no proxy build, no `xmage-proxy` restart, no sudo, no
+  version bump, no release. Production keeps running the build of `master`; a branch whose build or
+  `tsc` fails is never published, and the site keeps the previous preview.
+- **What you see:** a fixed ribbon `dev · <ref> @ <shortsha> · <date>` (injected by the dev server, so it
+  works for any branch) and `/dev-info.json`. `X-Robots-Tag: noindex` + `robots.txt` keep it out of search.
+- **Limits:** only `web/` is built. A branch that changes `Mage.Proxy` or the wire protocol still talks to
+  the production proxy, so those changes need their own proxy instance. `localStorage` is per origin, so
+  profiles and settings are not shared with production. The URL is public.
+
+One-time host setup:
+
+```bash
+scripts/deploy/host-dev.sh   # installs and starts xmage-dev-web.service (127.0.0.1:8799)
+cloudflared tunnel route dns xmage dev.xmage-nexus.com
+# ~/.cloudflared/config.yml, before the http_status:404 line:
+#   - hostname: dev.xmage-nexus.com
+#     service: http://127.0.0.1:8799
+systemctl --user restart cloudflared-xmage.service
+```
+
+Then add `https://dev.xmage-nexus.com` to `--allowedOrigins` of `/etc/systemd/system/xmage-proxy.service`
+and `xmage-proxy-xdhs.service` (the check is an exact match on the browser's `Origin`, so without it the
+WebSocket is rejected), `daemon-reload` and restart both proxies: live sessions drop and clients reconnect.
+Guard: `scripts/workflows.test.mjs` (dispatch-only, ref input, read-only token, no sudo, no proxy restart,
+dev directory only).
+
 ## Host status dashboard (LAN only)
 
 `ops/status/` is a dependency-free Node service (`xmage-status.service`) that runs next to the proxy on the
