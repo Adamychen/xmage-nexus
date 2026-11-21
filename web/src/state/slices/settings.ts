@@ -35,7 +35,7 @@ export interface SettingsState {
   browserNotifications: boolean
   boardRewind: boolean
   turnRecap: boolean
-  boardLayout: 'standard' | 'pod' | 'arena'
+  boardLayout: 'standard' | 'arena'
   boardLayoutManual: boolean
   effects: boolean
   animationSpeed: number

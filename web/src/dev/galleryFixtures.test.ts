@@ -171,23 +171,23 @@ describe('galería de estados (P3)', () => {
       'anim:flashback',
       'anim:cast-from-exile',
       'anim:board-wipe',
-      'anim:board-wipe-pod',
+      'anim:board-wipe-table',
       'anim:morph-face-up',
       'anim:manifest-face-up',
       'anim:poison',
       'anim:poison-lethal',
-      'anim:poison-pod',
+      'anim:poison-table',
       'anim:energy',
       'anim:player-counter',
       'anim:speed',
       'anim:gain-control',
       'anim:control-return',
-      'anim:gain-control-pod',
+      'anim:gain-control-table',
       'anim:commander-to-command',
       'anim:commander-to-command-v2',
       'anim:commander-grave-to-command',
       'anim:commander-cast',
-      'anim:commander-to-command-pod',
+      'anim:commander-to-command-table',
       'anim:tuck',
       'anim:tuck-classic',
       'anim:hand-to-library',
@@ -298,11 +298,11 @@ describe('galería de estados (P3)', () => {
       return { base: e.game!, next: next! }
     }
 
-    for (const id of ['anim:board-wipe', 'anim:board-wipe-pod']) {
+    for (const id of ['anim:board-wipe', 'anim:board-wipe-table']) {
       const { base, next } = changeOf(id)
       expect(boardWipeIds(base, next).length, id).toBeGreaterThanOrEqual(BOARD_WIPE_MIN)
     }
-    expect(entry(entries, 'anim:board-wipe-pod').boardLayout).toBe('pod')
+    expect(entry(entries, 'anim:board-wipe-table').boardLayout).toBe('arena')
 
     for (const [id, kind] of [['anim:morph-face-up', 'morph'], ['anim:manifest-face-up', 'manifest']] as const) {
       const { base, next } = changeOf(id)
@@ -316,18 +316,18 @@ describe('galería de estados (P3)', () => {
     }
     expect(counterOf('anim:poison')).toEqual([{ name: 'poison', from: 2, to: 3 }])
     expect(counterOf('anim:poison-lethal')).toEqual([{ name: 'poison', from: 9, to: 10 }])
-    expect(counterOf('anim:poison-pod')).toEqual([{ name: 'poison', from: 4, to: 5 }])
+    expect(counterOf('anim:poison-table')).toEqual([{ name: 'poison', from: 4, to: 5 }])
     expect(counterOf('anim:energy')).toEqual([{ name: 'energy', from: 1, to: 3 }])
     expect(counterOf('anim:player-counter')).toEqual([{ name: 'experience', from: 1, to: 2 }])
     expect(counterOf('anim:speed')).toEqual([{ name: 'speed', from: 1, to: 2 }])
 
-    for (const id of ['anim:gain-control', 'anim:control-return', 'anim:gain-control-pod']) {
+    for (const id of ['anim:gain-control', 'anim:control-return', 'anim:gain-control-table']) {
       const { base, next } = changeOf(id)
       expect(controlChanges(base, next), id).toHaveLength(1)
     }
     const taken = changeOf('anim:gain-control')
     expect(controlChanges(taken.base, taken.next)[0].to).toBe((taken.base.players ?? []).find((p) => p.controlled)?.playerId)
-    const pod = changeOf('anim:gain-control-pod')
+    const pod = changeOf('anim:gain-control-table')
     const podChange = controlChanges(pod.base, pod.next)[0]
     expect((pod.base.players ?? []).filter((p) => !p.controlled).map((p) => p.playerId)).toEqual(expect.arrayContaining([podChange.from, podChange.to]))
   })
@@ -349,15 +349,15 @@ describe('galería de estados (P3)', () => {
     }
     const pair = (base: GameView, next: GameView) => (base.players ?? []).map((p) => [p, (next.players ?? []).find((n) => n.playerId === p.playerId)!] as const)
 
-    for (const [id, origin] of [['anim:commander-to-command', 'battlefield'], ['anim:commander-to-command-v2', 'battlefield'], ['anim:commander-grave-to-command', 'graveyard'], ['anim:commander-to-command-pod', 'battlefield']] as const) {
+    for (const [id, origin] of [['anim:commander-to-command', 'battlefield'], ['anim:commander-to-command-v2', 'battlefield'], ['anim:commander-grave-to-command', 'graveyard'], ['anim:commander-to-command-table', 'battlefield']] as const) {
       const { base, next } = changeOf(id)
       expect(commanderReturns(base, next).map((r) => r.origin), id).toEqual([origin])
     }
-    const pod = changeOf('anim:commander-to-command-pod')
+    const pod = changeOf('anim:commander-to-command-table')
     expect(commanderReturns(pod.base, pod.next)[0].playerId).not.toBe((pod.base.players ?? []).find((p) => p.controlled)?.playerId)
     expect(entry(entries, 'anim:commander-to-command').gameUi).toBe('v1')
     expect(entry(entries, 'anim:commander-to-command-v2').gameUi).toBe('v2')
-    expect(entry(entries, 'anim:commander-to-command-pod').boardLayout).toBe('pod')
+    expect(entry(entries, 'anim:commander-to-command-table').boardLayout).toBe('arena')
 
     const cast = changeOf('anim:commander-cast')
     const [spellId, spell] = Object.entries(cast.next.stack ?? {})[0]
@@ -641,7 +641,7 @@ describe('galería de estados (P3)', () => {
   })
 
   it('los tableros multi-jugador clonan rivales con ids únicos y un solo controlado', () => {
-    for (const id of ['board:pod-4', 'board:arena-4']) {
+    for (const id of ['board:table-4', 'board:arena-4']) {
       const game = entry(entries, id).game
       expect(game?.players?.length, id).toBe(4)
       const playerIds = (game?.players ?? []).map((p) => p.playerId)
@@ -651,14 +651,14 @@ describe('galería de estados (P3)', () => {
       expect(new Set(cardIds).size, `${id}: ids de carta únicos entre jugadores`).toBe(cardIds.length)
     }
 
-    const commander = entry(entries, 'board:pod-commander')
-    expect(commander.boardLayout).toBe('pod')
+    const commander = entry(entries, 'board:table-commander')
+    expect(commander.boardLayout).toBe('arena')
     expect(commander.game?.players?.length).toBe(3)
     expect((commander.game?.players ?? []).every((p) => (p.commandList ?? []).length > 0)).toBe(true)
   })
 
   it('los rivales clonados no heredan prioridad ni turno', () => {
-    const pod = entry(entries, 'board:pod-4').game
+    const pod = entry(entries, 'board:table-4').game
     expect((pod?.players ?? []).filter((p) => p.hasPriority).length).toBeLessThanOrEqual(1)
     expect((pod?.players ?? []).filter((p) => p.isActive).length).toBeLessThanOrEqual(1)
   })
@@ -685,10 +685,10 @@ describe('galería de estados (P3)', () => {
   })
 
   it('cada variante de tablero declara su layout y el frame base conserva su campo', () => {
-    expect(entry(entries, 'board:pod-4').boardLayout).toBe('pod')
+    expect(entry(entries, 'board:table-4').boardLayout).toBe('arena')
     expect(entry(entries, 'board:arena-4').boardLayout).toBe('arena')
     const base = recordedFrames.find((f) => f.file === 'gang-block.json')?.gameView
-    const pod = entry(entries, 'board:pod-4').game
+    const pod = entry(entries, 'board:table-4').game
     expect(pod?.myHand).toEqual(base?.myHand)
   })
 

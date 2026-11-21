@@ -1,6 +1,6 @@
 import { solveRow, type RowInput, type RowOut } from './solveRow'
 
-export type BoardLayoutKind = 'standard' | 'pod' | 'arena' | 'table' | 'spotlight' | '2hg'
+export type BoardLayoutKind = 'standard' | 'arena' | 'table' | 'spotlight' | '2hg'
 
 export type RowSpec = Omit<RowInput, 'width' | 'height' | 'aspect' | 'minW' | 'maxW'>
 

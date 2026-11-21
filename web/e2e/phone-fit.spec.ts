@@ -23,7 +23,7 @@ test.describe('BRD-19: life totals at phone width', () => {
     test.use({ viewport: { width: 390, height: 844 } })
 
     test('BRD-19: every life total in a four-seat pod sits inside its seat and on the screen', async ({ page }) => {
-      await openGalleryEntry(page, 'board:pod-4')
+      await openGalleryEntry(page, 'board:table-4')
       const seats = page.locator('.player-info-bar.is-portrait')
       await expect(seats).toHaveCount(4)
       const checks = await seats.evaluateAll((cards, width) => cards.map((card) => {
@@ -39,7 +39,7 @@ test.describe('BRD-19: life totals at phone width', () => {
     })
 
     test('BRD-19: every piece of text in a seat, the stats row included, ends inside the seat', async ({ page }) => {
-      await openGalleryEntry(page, 'board:pod-4')
+      await openGalleryEntry(page, 'board:table-4')
       const escaping = await page.locator('.player-info-bar.is-portrait').evaluateAll((cards) =>
         cards.flatMap((card) => {
           const seat = card.getBoundingClientRect()
@@ -57,7 +57,7 @@ test.describe('BRD-19: life totals at phone width', () => {
     test.use({ viewport: { width: 1280, height: 800 } })
 
     test('BRD-19: from 601 px up an opponent keeps the full-size life total', async ({ page }) => {
-      await openGalleryEntry(page, 'board:pod-4')
+      await openGalleryEntry(page, 'board:table-4')
       const size = await page.locator('.player-info-bar.is-portrait.opp .pp-life').first().evaluate((el) => getComputedStyle(el).fontSize)
       expect(size).toBe('38px')
     })

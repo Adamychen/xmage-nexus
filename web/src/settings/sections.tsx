@@ -37,7 +37,6 @@ import '../appearance/SleevePickerModal.css'
 
 export const LAYOUTS: Array<{ id: BoardLayoutChoice; labelKey: string; descKey: string }> = [
   { id: 'standard', labelKey: 'board_standard', descKey: 'board_standard_desc' },
-  { id: 'pod', labelKey: 'board_pod', descKey: 'board_pod_desc' },
   { id: 'arena', labelKey: 'board_arena', descKey: 'board_arena_desc' },
   { id: 'table', labelKey: 'board_table', descKey: 'board_table_desc' },
 ]

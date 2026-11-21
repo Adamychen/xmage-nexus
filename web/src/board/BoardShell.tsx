@@ -15,7 +15,7 @@ import { useChromeActions } from '../game/chromeActions'
 import './BoardShell.css'
 
 export interface BoardShellProps {
-  /** Clase de layout del modo (game-board / pod-board / arena-board). */
+  /** The mode's layout class (game-board / arena-board). */
   className: string
   testId?: string
   presenter: BoardPresenter

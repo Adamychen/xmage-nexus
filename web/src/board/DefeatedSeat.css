@@ -52,7 +52,6 @@
   display: none;
 }
 
-.pod-row--out .defeated-seat,
 .defeated-seat.is-open {
   flex-direction: row;
   justify-content: center;
@@ -60,12 +59,10 @@
   padding: var(--sp-1) var(--sp-2h);
 }
 
-.pod-row--out .defeated-seat-name,
 .defeated-seat.is-open .defeated-seat-name {
   writing-mode: horizontal-tb;
 }
 
-.pod-row--out .defeated-seat-status,
 .defeated-seat.is-open .defeated-seat-status,
 .defeated-seat.is-open .defeated-seat-chevron {
   display: inline;
@@ -79,14 +76,11 @@
   height: auto;
 }
 
-.pod-cell.seat-cell--open,
 .arena-opp-cell.seat-cell--open {
   flex-direction: column;
 }
 
-.pod-cell.seat-cell--open {
-  display: flex;
-}
+
 
 .seat-cell--open > .opponent-zone,
 .seat-cell--open > .player-zone {
@@ -99,26 +93,16 @@
   display: none;
 }
 
-.pod-cell.seat-cell--out,
 .arena-opp-cell.seat-cell--out {
   flex: 0 0 var(--seat-strip-w);
 }
 
-.pod-row.pod-row--out {
-  flex: 0 0 var(--seat-strip-h);
-}
 
-.pod-row.pod-row--out > .pod-cell.seat-cell--out {
-  flex: 1 1 0;
-}
 
-.pod-board.pod-board--br-out .hand-bar {
-  width: calc(100% - var(--seat-strip-w));
-  max-width: calc(100% - var(--seat-strip-w));
-}
 
-.pod-cell,
-.pod-row,
+
+
+
 .arena-opp-cell {
   transition: flex calc(0.3s / var(--fx-speed, 1)) ease;
 }
@@ -153,9 +137,7 @@ html.fx-off .board-zone.fx-eliminated .zone-defeated-overlay {
   animation: none !important;
 }
 
-html.fx-off .pod-cell,
-html.fx-off .pod-row,
-html.fx-off .arena-opp-cell {
+html.fx-off html.fx-off html.fx-off .arena-opp-cell {
   transition: none !important;
 }
 
@@ -165,9 +147,7 @@ html.fx-off .arena-opp-cell {
     animation: none;
   }
 
-  .pod-cell,
-  .pod-row,
-  .arena-opp-cell {
+      .arena-opp-cell {
     transition: none !important;
   }
 }

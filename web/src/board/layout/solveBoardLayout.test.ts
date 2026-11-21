@@ -84,7 +84,7 @@ function randomSeat(r: () => number, id: string, own: boolean): SeatInput {
 function randomBoard(r: () => number): BoardInput {
   const seats = Array.from({ length: 1 + Math.floor(r() * 4) }, (_, i) => randomSeat(r, `s${i}`, i === 0))
   return {
-    layout: pick(r, ['standard', 'pod', 'arena', 'table'] as const),
+    layout: pick(r, ['standard', 'arena', 'table'] as const),
     seats,
     aspect: pick(r, [1.4, 0.75]),
     opponentsCappedByOwn: r() < 0.5,

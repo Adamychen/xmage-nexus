@@ -881,8 +881,6 @@ export const it: TranslationSchema = {
     board_arena: 'Arena',
     board_table: 'Tavolo',
     board_table_desc: 'Quadrante delle fasi, ritratti e pila a mazzo di carte',
-    board_pod_desc: 'Tutti gli avversari in griglia',
-    board_pod: 'Pod (2×2)',
     board_standard_desc: 'Un avversario alla volta',
     board_standard: 'Standard',
     card_style_title: 'Stile carte',

@@ -4,12 +4,12 @@ import { dismissSetupWizard } from './start-game'
 
 type Rec = Record<string, unknown>
 
-export type Layout = 'standard' | 'pod' | 'arena' | 'table'
+export type Layout = 'standard' | 'arena' | 'table'
 export type CardStyle = 'classic' | 'compact'
 
 export const LAYOUT_SETTINGS: Record<Layout, Rec> = {
   standard: { gameUi: 'v1', boardLayout: 'standard', boardLayoutManual: true },
-  pod: { gameUi: 'v1', boardLayout: 'pod', boardLayoutManual: true },
+
   arena: { gameUi: 'v1', boardLayout: 'arena', boardLayoutManual: true },
   table: { gameUi: 'v2', boardLayout: 'arena', boardLayoutManual: true },
 }

@@ -4,9 +4,10 @@ Prefix: `BRD`
 
 How the battlefields of every seat are laid out: which band a permanent sits in, and how a
 multiplayer board makes room for one opponent. Each seat is a `BoardZone.tsx` (own side
-`PlayerZone`, opponents `OpponentZone`); the multiplayer layouts are `ArenaBoard.tsx` (the Arena
-layout, and the Table layout, which renders the same board under the v2 chrome) and
-`PodBoard.tsx`. The guiding principle: **in a Commander pod every board must stay readable as the
+`PlayerZone`, opponents `OpponentZone`); the multiplayer layout is `ArenaBoard.tsx` (the Arena
+layout, and the Table layout, which renders the same board under the v2 chrome). The 2x2 pod was
+removed on 2026-11-21: it capped the table at four seats without a switcher and said nothing the
+Arena board does not say. The guiding principle: **at a full table every board must stay readable as the
 game grows** — space goes to the board the player is looking at, and the same kind of permanent is
 always in the same place, on every board. Hands are `docs/specs/hand.md`, targets on the board
 `docs/specs/targeting.md`, combat arrows `docs/specs/combat.md`.

@@ -8,15 +8,16 @@ export function resolveBoardLayout(
 ): BoardLayoutPref {
   const multiplayer = opponentCount >= 2
   if (layout === 'arena') return multiplayer ? 'arena' : 'standard'
-  if (layout === 'pod') return 'pod'
-  if (multiplayer && !manual) return 'pod'
+  // A table of three or more that was never set by hand opens on the Arena board: it is the one
+  // that seats everybody at once now that the 2x2 pod is gone.
+  if (multiplayer && !manual) return 'arena'
   return 'standard'
 }
 
 /**
- * FFA de 5+ jugadores solo es posible en standard: pod/arena recortan a
- * MAX_BOARD_PLAYERS sin switcher (pod) y el standard muestra a todos los
- * rivales de uno en uno con el OpponentSwitcherBar (GameBoard no recorta).
+ * A free-for-all of five or more is only possible on the standard board: the Arena one seats
+ * MAX_BOARD_PLAYERS and has no switcher, while the standard board shows the opponents one at a
+ * time with the OpponentSwitcherBar and leaves nobody out.
  */
 export function effectiveBoardLayout(
   layout: BoardLayoutPref,

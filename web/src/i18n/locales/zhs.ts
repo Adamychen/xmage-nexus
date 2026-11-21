@@ -881,8 +881,6 @@ export const zhs: TranslationSchema = {
     board_arena: '竞技场',
     board_table: '牌桌',
     board_table_desc: '阶段转盘、玩家头像和牌堆式堆叠区',
-    board_pod_desc: '所有对手网格显示',
-    board_pod: 'Pod (2×2)',
     board_standard_desc: '一次显示一位对手',
     board_standard: '标准',
     card_style_title: '卡牌样式',

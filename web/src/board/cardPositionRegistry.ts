@@ -119,7 +119,7 @@ export function getFallbackSourceRect(element: HTMLElement): DOMRect | null {
   const isPlayerZone = !!element.closest('.player-zone')
   const isOppZone = !!element.closest('.opponent-zone')
 
-  const root = element.closest('.game-board, .pod-board') || document.body
+  const root = element.closest('.game-board, .arena-board') || document.body
 
   if (isHand) {
     const lib = isOppZone
