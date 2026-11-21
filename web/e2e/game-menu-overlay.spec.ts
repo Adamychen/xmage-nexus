@@ -9,7 +9,7 @@ fakeOnly()
 const zOf = (page: import('@playwright/test').Page, sel: string) =>
   page.locator(sel).first().evaluate((el) => Number(getComputedStyle(el).zIndex))
 
-test('CMB-5: the game menu (⋯) paints over the dock and the combat arrows yield while it is open', { tag: '@combat' }, async ({ page }) => {
+test('CMB-5, TGT-10: the game menu (⋯) paints over the dock and over the combat arrows, which stay over the board', { tag: '@combat' }, async ({ page }) => {
   await withFakeServer(() => combatHumanBlockScenario(), async () => {
     await quickStartGame(page, {
       prefix: 'gmo',
@@ -22,16 +22,16 @@ test('CMB-5: the game menu (⋯) paints over the dock and the combat arrows yiel
     const stripZ = await zOf(page, '.board-shell-divider.has-strip')
     expect(dockZ, 'el dock queda bajo la franja de control').toBeLessThan(stripZ)
 
-    // 2. Con el cajón de pila abierto las flechas suben sobre el tablero…
-    await page.locator('.drawer-toggles button').first().click()
-    await expect(page.locator('.game-drawer[data-tab="stack"]')).toBeVisible()
-    expect(await zOf(page, '.combat-arrows-overlay')).toBe(45)
+    // 2. TGT-10: las flechas se dibujan sobre la propia chrome del tablero, sin
+    //    depender de que haya un cajón abierto (ya no hay cajón de pila).
+    const arrowsZ = await zOf(page, '.combat-arrows-overlay')
+    expect(arrowsZ, 'las flechas van sobre el tablero').toBeGreaterThan(stripZ)
 
-    // 3. …pero ceden mientras el menú ⋯ está abierto: el popup es opaco y las
-    //    líneas de combate no lo cruzan.
+    // 3. …pero por debajo del menú ⋯: el popup es opaco y las líneas de combate
+    //    no lo cruzan.
     await page.getByTestId('game-menu-btn').click()
     await expect(page.locator('.game-menu-panel')).toBeVisible()
-    expect(await zOf(page, '.combat-arrows-overlay')).toBe(28)
+    expect(await zOf(page, '.game-menu-panel'), 'el menú va sobre las flechas').toBeGreaterThan(arrowsZ)
 
     // 4. La prueba de pintado real: donde el panel solapa el dock, el punto
     //    pertenece al panel (si la geometría los solapa en este viewport).
