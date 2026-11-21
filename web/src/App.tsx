@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect, useState } from 'react'
 import { usePhase, useStore, loadConn, doConnect } from './state/store'
+import { parseAutoConnect } from './lobby/autoConnect'
 import { linkBanner } from './system/linkBanner'
 import { isGalleryHash } from './dev/galleryRoute'
 import { setState } from './state/state'
@@ -105,7 +106,21 @@ export default function App() {
     if (isPublicRankingHash(window.location.hash)) return
     const saved = loadConn()
     if (saved?.username && phase === 'idle') {
-      void doConnect(saved.wsHost, saved.proxyPort, saved.serverHost, saved.port, saved.username, saved.password, saved.flagName, saved.avatarId)
+      // A link that names a proxy or a server is a link to that one, so it wins over the session
+      // saved here: reconnecting to the saved address instead dials whatever was last used (a dev
+      // port that may be dead by now) and the screen shows a proxy error for a proxy nobody asked
+      // for, while the one in the link is never tried.
+      const url = parseAutoConnect(window.location.search)
+      void doConnect(
+        url.proxyHost ?? saved.wsHost,
+        url.proxyPort ?? saved.proxyPort,
+        url.serverHost ?? saved.serverHost,
+        url.serverPort ?? saved.port,
+        url.username ?? saved.username,
+        saved.password,
+        saved.flagName,
+        saved.avatarId,
+      )
     }
   }, [])
 

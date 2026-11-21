@@ -111,7 +111,7 @@ the board, a card lifted out of the hand, the menus and the dialogs.
 - Why: an arrow that disappears behind a strip of chrome does not say who is attacking whom, which
   is its whole job; it was drawn at `z-index: 28`, under the phase strip and the piles, with an
   exception that lifted it only while the stack drawer was open.
-- Guard: `src/board/CombatArrowsOverlay.test.tsx`
+- Guard: `src/board/CombatArrowsOverlay.test.tsx` · `e2e/game-menu-overlay.spec.ts`
 
 ### TGT-11 · An arrow is a beam that points, not a ladder of dashes
 An arrow is one colour the whole way, ending in a notched dart, with a dark seam under it where it

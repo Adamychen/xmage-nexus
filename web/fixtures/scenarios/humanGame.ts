@@ -18,6 +18,15 @@ import {
 export { GAME_ID, TABLE_ID, SIM_NAME, HUMAN_NAME, HUMAN_PLAYER_ID, SIM_PLAYER_ID } from '../humanGameConstants'
 export type { ActivatedAbilityConfig, CastStep, LandConfig, ResolveEffect, CrossZoneConfig, HumanGameOptions } from '../humanGameConstants'
 
+/**
+ * A permanent the board can sort. The real server types a land as a land, and the bands split on
+ * exactly that: a fixture that calls every permanent a creature puts the whole table in one row,
+ * which is not what the client does against a real game.
+ */
+function makeBoardPermanent(name: string, rest: Omit<Parameters<typeof makePermanent>[0], 'name'>) {
+  return makePermanent(BASIC_LANDS.has(name) ? { name, cardTypes: ['Land'], ...rest } : { name, ...rest })
+}
+
 export class HumanGame {
   readonly tableName: string
   gameId = GAME_ID
@@ -58,7 +67,7 @@ export class HumanGame {
     this.tableName = options.tableName ?? 'Mesa E2E'
     for (const land of options.lands ?? []) {
       for (let i = 0; i < land.count; i++) {
-        this.myBattle.push(makePermanent({ name: land.name, parentId: `land-${i}`, controlled: true }))
+        this.myBattle.push(makeBoardPermanent(land.name, { parentId: `land-${i}`, controlled: true }))
       }
     }
     this.hand = options.hand.map((name, i) => ({ id: `human-${i}`, name }))
@@ -331,7 +340,7 @@ export class HumanGame {
 
   private playLand(card: { id: string; name: string }): void {
     this.hand = this.hand.filter((c) => c.id !== card.id)
-    this.myBattle.push(makePermanent({ name: card.name, parentId: card.id, controlled: true }))
+    this.myBattle.push(makeBoardPermanent(card.name, { parentId: card.id, controlled: true }))
     this.emitUpdateAndSelect()
   }
 
@@ -582,7 +591,7 @@ export class HumanGame {
     this.gameIds.push(this.gameId)
     this.hand = this.options.hand.map((name, i) => ({ id: `human-${i}`, name }))
     this.myBattle = (this.options.lands ?? []).flatMap((land, i) =>
-      Array.from({ length: land.count }, (_, k) => makePermanent({ name: land.name, parentId: `land-${i}-${k}`, controlled: true })),
+      Array.from({ length: land.count }, (_, k) => makeBoardPermanent(land.name, { parentId: `land-${i}-${k}`, controlled: true })),
     )
     this.humanLife = 20
     this.simLife = 20

@@ -781,7 +781,29 @@ export const DEFAULT_AUDIO_SETTINGS: AudioSettings = {
   prioritySound: 'every-prompt',
 }
 
+/**
+ * `?mute=1` (or `?sound=off`) opens the client with the sound off, whatever is saved. It is what
+ * a link handed to someone else should do when the point is to look at the client, not to hear it,
+ * and it is not written back to the stored settings: the switch in the settings panel still owns
+ * them, and a reload without the parameter sounds as it did before.
+ */
+function mutedByUrl(): boolean {
+  if (typeof window === 'undefined') return false
+  try {
+    const params = new URLSearchParams(window.location.search)
+    const mute = params.get('mute')
+    const sound = params.get('sound')
+    return mute === '1' || mute === 'true' || sound === 'off' || sound === '0'
+  } catch {
+    return false
+  }
+}
+
 export function loadAudioSettings(): AudioSettings {
+  if (mutedByUrl()) {
+    const stored = readJson<Partial<AudioSettings>>(AUDIO_SETTINGS_KEY)
+    return { ...DEFAULT_AUDIO_SETTINGS, ...stored, soundEnabled: false, prioritySound: normalizePrioritySound(stored?.prioritySound) }
+  }
   const parsed = readJson<Partial<AudioSettings>>(AUDIO_SETTINGS_KEY)
   if (parsed) {
     return {
@@ -821,6 +843,8 @@ function migrateSoundMusicSplit(): void {
 
 export function loadMusicSettings(): MusicSettings {
   migrateSoundMusicSplit()
+  // Muted means muted: the music goes with the sound.
+  if (mutedByUrl()) return { ...DEFAULT_MUSIC_SETTINGS, ...readJson<Partial<MusicSettings>>(MUSIC_SETTINGS_KEY), musicEnabled: false }
   const parsed = readJson<Partial<MusicSettings>>(MUSIC_SETTINGS_KEY)
   if (parsed) {
     return {

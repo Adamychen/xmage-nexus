@@ -45,10 +45,6 @@ function usePrefersReducedMotion() {
   return reduced
 }
 
-function urlProxyPort(): number | null {
-  return parseAutoConnect(window.location.search).proxyPort ?? null
-}
-
 import { sortedFlags, countryName, type ServerPreset } from './flags'
 import Button from '../ui/Button'
 import Field from '../ui/Field'
@@ -149,21 +145,25 @@ export default function LoginScreen() {
     const applySetupConn = (e: Event) => {
       const conn = (e as CustomEvent<ConnectionInfo>).detail
       if (!conn) return
-      setProxyHost(conn.wsHost)
-      // un ?proxyPort= explícito en la URL SIEMPRE gana (lo fijan los e2e para
-      // el FixtureServer; el wizard/defaults no debe pisarlo)
-      setProxyPort(String(urlProxyPort() ?? conn.proxyPort))
-      setServerHost(conn.serverHost)
-      setPort(String(conn.port))
-      setUsername(conn.username)
+      // Whatever the link says wins, every field of it and not only the port: the wizard and the
+      // saved connection fire this long after the form was filled from the URL, and a link that
+      // names a proxy is a link meant to reach that proxy (the e2e use it for the FixtureServer,
+      // and a shared link for a server someone else is on).
+      const url = parseAutoConnect(window.location.search)
+      setProxyHost(url.proxyHost ?? conn.wsHost)
+      setProxyPort(String(url.proxyPort ?? conn.proxyPort))
+      setServerHost(url.serverHost ?? conn.serverHost)
+      setPort(String(url.serverPort ?? conn.port))
+      setUsername(url.username ?? conn.username)
       setPassword(conn.password)
       if (conn.flagName) setFlagName(conn.flagName)
       if (conn.avatarId) setAvatarId(conn.avatarId)
-      if (conn.serverHost === 'beta.xmage.today') {
+      const target = url.serverHost ?? conn.serverHost
+      if (target === 'beta.xmage.today') {
         setPreset('official')
-      } else if (conn.serverHost === XDHS_SERVER_HOST) {
+      } else if (target === XDHS_SERVER_HOST) {
         setPreset('xdhs')
-      } else if (conn.serverHost === 'localhost' || conn.serverHost === '127.0.0.1') {
+      } else if (target === 'localhost' || target === '127.0.0.1') {
         setPreset('local')
       } else {
         setPreset('custom')
