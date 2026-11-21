@@ -50,6 +50,25 @@ test("the web job runs the node tests of scripts/ (dashboard and CI helpers)", (
   assert.match(webJobSteps(webCi), /run: node --test scripts\/\*\.test\.mjs/);
 });
 
+// actions/deploy-pages#451: uploading and deploying in the same job intermittently fails with
+// "Found 0 artifact(s)" ~300 ms after a successful upload (2 of 4 runs on 2026-11-20). The Pages
+// docs recommend a dedicated deploy job, and re-running only that job does not upload a second
+// artifact (deploy-pages#338).
+test("Pages uploads in the build job and deploys from a separate job that waits for it", () => {
+  const pages = fs.readFileSync(path.join(repoRoot, ".github", "workflows", "pages.yml"), "utf8");
+  const build = jobBlock(pages, "build");
+  const deploy = jobBlock(pages, "deploy");
+  assert.ok(build !== null && deploy !== null, "jobs build and deploy exist");
+  assert.match(build, /uses: actions\/upload-pages-artifact@v/, "the build job uploads the site");
+  assert.doesNotMatch(build, /actions\/deploy-pages/, "the build job never deploys");
+  assert.match(deploy, /^ {4}needs: build$/m, "the deploy waits for the upload");
+  assert.match(deploy, /^ {4}if: \$\{\{ !cancelled\(\) \}\}$/m,
+    "a red layer fails the build job but must not skip the deploy");
+  assert.match(deploy, /environment:\n {6}name: github-pages/);
+  assert.match(deploy, /pages: write/);
+  assert.match(deploy, /id-token: write/);
+});
+
 test("TST-4: the nightly integration steps run without continue-on-error", () => {
   const pages = fs.readFileSync(path.join(repoRoot, ".github", "workflows", "pages.yml"), "utf8");
   const build = jobBlock(pages, "build");
