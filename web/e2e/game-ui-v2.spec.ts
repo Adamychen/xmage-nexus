@@ -705,6 +705,9 @@ for (const vp of [{ width: 1920, height: 1080, docks: true }, { width: 1600, hei
     test(`BRD-15: v2 docks my command zone in the left column right above the last actions, as large as the room allows, following the log as it expands or collapses @gameui`, async ({ page }, testInfo) => {
       await showGame(page, richCommanderGame(), V2, LOG)
       await expect(page.getByTestId('log-ticker')).toHaveAttribute('data-expanded', '0', { timeout: 10_000 })
+      // BRD-34: the commander is drawn with the hand, so what docks here is the rest of the zone.
+      await expect(page.locator('[data-testid="hand-trailing"][data-trailing-id="cmd-adam"]')).toHaveCount(1)
+      await expect(page.locator('.pz-commander [data-card-id="cmd-adam"]')).toHaveCount(0)
       await page.mouse.move(2, 400)
       await expect.poll(async () => (await commanderColumn(page)).dock, vp.docks ? 'the one-line log leaves room above it' : 'no room above even a one-line log: stays in the row').toBe(vp.docks ? 'column' : null)
       await expect.poll(async () => commanderPlacement(await commanderColumn(page))).toEqual([])

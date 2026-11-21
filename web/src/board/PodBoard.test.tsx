@@ -79,8 +79,10 @@ describe('PodBoard', () => {
     expect(podCells.length).toBe(4)
     const boardZones = container.querySelectorAll('.board-zone')
     expect(boardZones.length).toBe(4)
+    // BRD-34: my commander is drawn with my hand, so only the three opponents keep a zone here.
     const commanderZones = container.querySelectorAll('.command-zone')
-    expect(commanderZones.length).toBe(4)
+    expect(commanderZones.length).toBe(3)
+    expect(container.querySelector('[data-testid="hand-trailing"]')).not.toBeNull()
   })
 
   it('renders my hand in the full-width hand bar below the pod grid (not in my cell)', () => {
@@ -95,7 +97,7 @@ describe('PodBoard', () => {
     const { container, getByTestId } = render(<PodBoard game={game} />)
     const bar = getByTestId('hand-bar')
     expect(bar).not.toBeNull()
-    expect(bar.querySelectorAll('.hand-card-slot').length).toBe(3)
+    expect(bar.querySelectorAll('.hand-card-slot:not(.hand-trailing)').length).toBe(3)
     // la barra es hermana de las filas del pod (fuera de las celdas)
     expect(bar.parentElement?.classList.contains('pod-board')).toBe(true)
     // mi celda ya no contiene mano

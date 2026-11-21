@@ -6,6 +6,7 @@ import { useBoardPresenter, useBoardPlayers } from './useBoardPresenter'
 import { opponentRevealedCards } from './revealedCards'
 import { useSpectatorBottomHand, useSwitchedHand, type BoardProps } from './boardShared'
 import { EMPTY_TARGET_ZONES } from './targetZones'
+import { useHandCommander } from './handCommander'
 import './GameBoard.css'
 
 export interface GameBoardProps extends BoardProps {
@@ -53,6 +54,7 @@ export default function GameBoard({
   const me = allPlayers.find((p) => p.controlled)
   const opps = allPlayers.filter((p) => !p.controlled)
   const isSpectator = !me
+  const handCommander = useHandCommander(me, !isSpectator, game?.myHelperEmblems)
   const oppBottom = isSpectator ? (opps.length >= 2 ? opps[opps.length - 1] : opps[0]) : undefined
   const topOpps = isSpectator ? (opps.length >= 2 ? opps.slice(0, opps.length - 1) : []) : opps
 
@@ -84,6 +86,8 @@ export default function GameBoard({
         onHover: (card, rect) => handleCardHover(card, rect, { fromHand: true }),
         playableIds: playableIdSet,
         targetIds: targetIdSet,
+        trailing: handCommander,
+        onTrailingClick: handleCardClick,
       } : null}
     >
       <OpponentZone

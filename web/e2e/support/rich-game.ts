@@ -85,6 +85,7 @@ export function richCommanderGame(opts: RichGameOptions = {}): Rec {
     commandList: [
       { id: 'cmd-adam', name: 'Korvold, Fae-Cursed King', mageObjectType: 'COMMANDER', cardTypes: ['CREATURE'], manaValue: 5, rules: ['<b>Commander</b>', '<b>Commander</b> did 7 combat damage to player Tobias.'] },
       { id: 'ring-adam', name: 'The Ring', mageObjectType: 'EMBLEM', cardTypes: ['EMBLEM'], manaValue: 0, rules: ['Your Ring-bearer is legendary.', 'Whenever your Ring-bearer attacks, draw then discard.', 'Blocked: sacrifice the blocker.'] },
+      { id: 'emb-adam', name: "Emblem Elspeth, Sun's Champion", mageObjectType: 'EMBLEM', cardTypes: ['EMBLEM'], manaValue: 0, rules: ['Creatures you control get +2/+2 and have flying.'] },
     ],
     battlefield: byId([
       creature('adam-korvold', 'Korvold, Fae-Cursed King', ['7', '7'], { manaValue: 5 }),
