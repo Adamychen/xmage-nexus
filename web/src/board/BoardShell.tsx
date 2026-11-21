@@ -79,8 +79,11 @@ export default function BoardShell({ className, testId, presenter, handBar = nul
         <HandRail
           cards={handBar.cards}
           onCardClick={handBar.onCardClick}
+          onHover={handBar.onHover}
           playableIds={handBar.playableIds}
           targetIds={handBar.targetIds}
+          trailing={handBar.trailing}
+          onTrailingClick={handBar.onTrailingClick}
         />
       )}
       {handBar && !railed && !rowed && (
@@ -100,8 +103,11 @@ export default function BoardShell({ className, testId, presenter, handBar = nul
         <HandRow
           cards={handBar.cards}
           onCardClick={handBar.onCardClick}
+          onHover={handBar.onHover}
           playableIds={handBar.playableIds}
           targetIds={handBar.targetIds}
+          trailing={handBar.trailing}
+          onTrailingClick={handBar.onTrailingClick}
         />
       )}
       <FloatingCardPreview

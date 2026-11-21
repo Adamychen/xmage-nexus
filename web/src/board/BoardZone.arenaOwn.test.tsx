@@ -135,13 +135,16 @@ describe('BoardZone on the own Arena board', () => {
     expect(container.querySelector('.bz-commander [data-card-id="cmd-atraxa"]')).toBeNull()
   })
 
-  it('BRD-34: with the hand as a row the commander stays on the board', () => {
-    setSetting('handRow', true)
-    try {
-      const { container } = renderOwn(own({ commandList: [atraxa()] }))
-      expect(container.querySelector('[data-testid="arena-own-commander"] [data-card-id="cmd-atraxa"]')).not.toBeNull()
-    } finally {
-      setSetting('handRow', false)
+  it('BRD-34: the commander follows the hand, as a column or as a row, and leaves the board in both', () => {
+    for (const key of ['handRow', 'handRail'] as const) {
+      setSetting(key, true)
+      try {
+        const { container, unmount } = renderOwn(own({ commandList: [atraxa()] }))
+        expect(container.querySelector('[data-card-id="cmd-atraxa"]'), key).toBeNull()
+        unmount()
+      } finally {
+        setSetting(key, false)
+      }
     }
   })
 })

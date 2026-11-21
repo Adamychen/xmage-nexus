@@ -7,21 +7,28 @@ import RenderedCard from '../cards/rendered/RenderedCard'
 import { useSettings } from '../state/store'
 import { useTranslation } from '../i18n'
 import { useDrawSlide } from './useDrawSlide'
+import { HandCommanderSlot, type HandTrailingCard } from './handCommander'
 import './HandRow.css'
 import './drawSlide.css'
 
 interface HandRowProps {
   cards: Record<string, CardView>
   onCardClick?: (id: string) => void
+  onHover?: (card: CardView | null, rect?: DOMRect) => void
   playableIds?: Set<string>
   targetIds?: Set<string>
+  /** BRD-32: the uncast commander, drawn beside the hand it is cast from. */
+  trailing?: HandTrailingCard[]
+  onTrailingClick?: (id: string) => void
 }
+
+const NO_TRAILING: HandTrailingCard[] = []
 
 function hasBackFace(card: CardView): boolean {
   return !card.faceDown && (!!card.secondCardFace || !!card.alternateName)
 }
 
-export default function HandRow({ cards, onCardClick, playableIds = new Set(), targetIds = new Set() }: HandRowProps) {
+export default function HandRow({ cards, onCardClick, onHover, playableIds = new Set(), targetIds = new Set(), trailing = NO_TRAILING, onTrailingClick }: HandRowProps) {
   const { t } = useTranslation()
   const { cardRender, handRailWidth } = useSettings()
   const entries = useMemo(() => Object.entries(cards), [cards])
@@ -34,7 +41,7 @@ export default function HandRow({ cards, onCardClick, playableIds = new Set(), t
     })
   const rootRef = useRef<HTMLDivElement>(null)
   const drawn = useDrawSlide(rootRef, entries.map(([id]) => id), true, { scope: '.board-shell', select: '.resource-bar.my .library-chip, .resource-bar.my .library-stack' })
-  if (entries.length === 0) return null
+  if (entries.length === 0 && trailing.length === 0) return null
   return (
     <div
       ref={rootRef}
@@ -92,6 +99,17 @@ export default function HandRow({ cards, onCardClick, playableIds = new Set(), t
           </div>
         )
       })}
+      {trailing.map((item) => (
+        <HandCommanderSlot
+          key={item.id}
+          item={item}
+          playable={playableIds.has(item.id)}
+          target={targetIds.has(item.id)}
+          onClick={onTrailingClick}
+          onHover={onHover}
+          className="hand-row-commander"
+        />
+      ))}
     </div>
   )
 }

@@ -28,7 +28,7 @@ import { isMarqueePermanent } from './marquee'
 import { bandFill, bandShares, permanentKind } from './bandWeights'
 import { EMPTY_TARGET_ZONES, type TargetZoneKind } from './targetZones'
 import { isPlayerDefeated, isPlayerOut } from './boardShared'
-import { commanderInHand } from './handCommander'
+import { useCommanderInHand } from './handCommander'
 import { useBattlefieldPulse } from './seatFocus'
 import { pileCornerReaches } from './pileCorner'
 import { useSeatColor } from './seatColor'
@@ -148,8 +148,10 @@ export default function BoardZone({
   const portrait = useStore((s) => s.settings.gameUi) === 'v2'
   const arenaBottom = arenaOwn && !portrait && !isTop && !compactPod
   const pileCards = pileCardsProp && !arenaBottom
-  const allSettings = useStore((s) => s.settings)
-  const commanderToHand = arenaBottom && effectiveControlled && commanderInHand(allSettings)
+  // BRD-32: the commander follows the hand in every chrome, so the zone on the board keeps only
+  // what a hand cannot hold (emblems, planes, dungeons).
+  const commanderFollowsHand = useCommanderInHand()
+  const commanderToHand = !isTop && effectiveControlled && commanderFollowsHand
   const arenaOppPiles = bareChip && !portrait && !effectiveControlled && !statusOnly
   const seatColor = useSeatColor(player?.playerId)
   const isTurnZone = useStore((s) => (s.game?.activePlayerId ? s.game.activePlayerId === player?.playerId : !!player?.isActive))
@@ -633,6 +635,7 @@ export default function BoardZone({
     <CommandZone
       player={player}
       side={statusSide}
+      only={commanderToHand ? 'others' : undefined}
       onCardClick={onCardClick}
       onHover={onCardHover}
       playableIds={playableIds}
@@ -791,6 +794,8 @@ export default function BoardZone({
 
   const arenaCommandCounts = commanderToHand ? commandSlotCounts(player, helperEmblems, statusSide) : null
   const arenaRestCommand = !!arenaCommandCounts && arenaCommandCounts.planes + arenaCommandCounts.emblems > 0
+  /** What the board still has to draw of the command zone once the commander followed the hand. */
+  const showCommandZone = commanderToHand ? arenaRestCommand : hasCommander
 
   const arenaStatusRow = arenaBottom ? (
     <div key="status-row" className="bz-row bz-status-row pz-bottom-row arena-own-row" data-testid="arena-own-row">
@@ -831,21 +836,9 @@ export default function BoardZone({
           />
         </div>
       )}
-      {(commanderToHand ? arenaRestCommand : hasCommander) && (
+      {showCommandZone && (
         <div className="arena-own-commander hand-side-panel" data-testid="arena-own-commander">
-          {commanderToHand ? (
-            <CommandZone
-              player={player}
-              side={statusSide}
-              only="others"
-              onCardClick={onCardClick}
-              onHover={onCardHover}
-              playableIds={playableIds}
-              targetIds={targetIds}
-              helperEmblems={helperEmblems}
-              compactCards={compactCards}
-            />
-          ) : commandZone}
+          {commandZone}
         </div>
       )}
       {canSwitchHands &&
@@ -955,7 +948,7 @@ export default function BoardZone({
       ref={setCreaturesRowEl}
       className={`bz-row bz-creatures-row oz-creatures-row pz-creatures-row${creaturesRowTargeted ? ' target-zone' : ''}`}
     >
-      {hasCommander && !arenaBottom && !oppCommanderInRow && (
+      {showCommandZone && !arenaBottom && !oppCommanderInRow && (
         <div ref={setCommanderEl} className="bz-commander oz-commander pz-commander">
           {commandZone}
         </div>

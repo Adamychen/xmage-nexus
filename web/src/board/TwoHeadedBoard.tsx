@@ -4,6 +4,7 @@ import OpponentZone from './OpponentZone'
 import PlayerZone from './PlayerZone'
 import BoardShell, { BoardColDivider, BoardDivider } from './BoardShell'
 import { useBoardPresenter, useBoardPlayers } from './useBoardPresenter'
+import { useHandCommander } from './handCommander'
 import { useSeatStates, useSwitchedHand, type BoardProps } from './boardShared'
 import { EMPTY_TARGET_ZONES } from './targetZones'
 import DefeatedSeat from './DefeatedSeat'
@@ -50,6 +51,7 @@ export default function TwoHeadedBoard({
     onCardHover,
   })
   const { handleCardHover, handleCardClick, targetIdSet, playableIdSet } = presenter
+  const handCommander = useHandCommander(me, !isSpectator, game?.myHelperEmblems)
 
   /**
    * Pod layout — always a 2×2 grid:
@@ -132,6 +134,8 @@ export default function TwoHeadedBoard({
         onHover: (card, rect) => handleCardHover(card, rect, { fromHand: true }),
         playableIds: playableIdSet,
         targetIds: targetIdSet,
+        trailing: handCommander,
+        onTrailingClick: handleCardClick,
       } : null}
     >
       {/* ── Top row ── */}

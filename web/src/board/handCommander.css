@@ -1,0 +1,32 @@
+/* BRD-32: the uncast commander drawn with the hand. It is the card it is, ringed in the gold of
+   its own symbol, and it stands apart from the hand so it never counts as one more card in it. */
+.hand-commander {
+  position: relative;
+  flex: none;
+}
+
+.hand-commander .hand-trailing-card {
+  box-shadow: 0 0 0 2px var(--gold-300), 0 0 18px rgb(var(--gold-rgb) / 0.45);
+}
+
+/* In the column the commander hangs under the hand, behind a line that says where the hand ends.
+   The column scrolls, so it sticks to the bottom: a commander you have to scroll to is a commander
+   you forget you can cast. */
+.hand-rail .hand-commander {
+  position: sticky;
+  bottom: calc(var(--sp-3) * -1);
+  width: 100%;
+  margin-top: auto;
+  padding: var(--sp-3) 0 var(--sp-3);
+  border-top: 1px solid var(--veil-4);
+  background: linear-gradient(180deg, transparent, var(--shade-4) 22%);
+}
+
+.hand-rail .hand-commander .hand-card {
+  width: 100%;
+}
+
+/* In the row it sits at the end, past a gap of its own. */
+.hand-row .hand-commander {
+  margin-left: var(--sp-4);
+}

@@ -46,3 +46,25 @@ describe('HandRow draw slide', () => {
     expect(container.querySelector('[data-hand-id="a"]')?.className).not.toContain('draw-')
   })
 })
+
+describe('HandRow, the commander at the end', () => {
+  const commander = {
+    id: 'cmd-atraxa',
+    card: { name: "Atraxa, Praetors' Voice", manaValue: 4, cardTypes: ['CREATURE'] } as CardView,
+    tax: 0,
+    companion: false,
+  }
+
+  it('BRD-34: the uncast commander is drawn at the end of the hand row', () => {
+    const { container } = render(<HandRow cards={hand} trailing={[commander]} />)
+    expect(container.querySelector('[data-trailing-id="cmd-atraxa"]')).not.toBeNull()
+    expect(container.querySelector('[data-testid="commander-tax"]'), 'a first cast shows no tax').toBeNull()
+  })
+
+  it('BRD-34: a click on it casts it', () => {
+    const cast: string[] = []
+    const { container } = render(<HandRow cards={hand} trailing={[commander]} onTrailingClick={(id) => cast.push(id)} />)
+    ;(container.querySelector('[data-trailing-id="cmd-atraxa"] .card-slot') as HTMLElement).click()
+    expect(cast).toEqual(['cmd-atraxa'])
+  })
+})

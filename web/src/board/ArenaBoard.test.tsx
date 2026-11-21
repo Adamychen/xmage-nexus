@@ -87,7 +87,8 @@ describe('ArenaBoard', () => {
     })
     const { container, getByTestId } = render(<ArenaBoard game={game} />)
     const bar = getByTestId('hand-bar')
-    expect(bar.querySelectorAll('.hand-card-slot').length).toBe(2)
+    // BRD-34: the commander rides with the hand, apart from the cards drawn into it.
+    expect(bar.querySelectorAll('.hand-card-slot:not(.hand-trailing)').length).toBe(2)
     expect(bar.parentElement?.classList.contains('arena-board')).toBe(true)
     expect(container.querySelector('.player-zone .hand-card-slot')).toBeNull()
   })
