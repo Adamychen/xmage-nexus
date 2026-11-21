@@ -49,7 +49,7 @@ async function expectOverlayLayout(page: Page): Promise<void> {
   const boxes = await page.evaluate<{ bar: Rect; board: Rect; zone: Rect }>(`${RECT_OF}
     (() => {
       const bar = document.querySelector('[data-testid="hand-bar"]')
-      const board = bar?.closest('.game-board, .pod-board, .arena-board')
+      const board = bar?.closest('.game-board, .arena-board')
       const zone = document.querySelector('.player-zone:not(.mirrored)')
       if (!bar || !board || !zone) throw new Error('hand-bar, tablero o player-zone no encontrado')
       return { bar: rectOf(bar), board: rectOf(board), zone: rectOf(zone) }
@@ -88,7 +88,7 @@ async function expectHandBarLayout(page: Page): Promise<void> {
   const boxes = await page.evaluate<{ bar: Rect; board: Rect; slots: Rect[]; cards: Rect[] }>(`${RECT_OF}
     (() => {
       const bar = document.querySelector('[data-testid="hand-bar"]')
-      const board = bar?.closest('.game-board, .pod-board, .arena-board')
+      const board = bar?.closest('.game-board, .arena-board')
       if (!bar || !board) throw new Error('hand-bar o tablero no encontrado')
       return {
         bar: rectOf(bar),
@@ -177,7 +177,7 @@ test('HND-3: hovering an own hand card grows it in place until legible, without 
     }).toPass({ timeout: 20_000 })
 
     const boxes = await page.evaluate(() => {
-      const board = document.querySelector('[data-testid="hand-bar"]')?.closest('.game-board, .pod-board, .arena-board')
+      const board = document.querySelector('[data-testid="hand-bar"]')?.closest('.game-board, .arena-board')
       const rb = board?.getBoundingClientRect()
       return { boardBottom: rb ? rb.y + rb.height : 0 }
     })
@@ -226,44 +226,3 @@ test('HND-3: hovering a battlefield land still opens the floating preview @fullf
   })
 })
 
-test('HND-1: the own hand spans the whole bottom row of a 1v1 pod @fullflow @hand-bar', async ({ page }) => {
-  await withFakeServer(() => spellsScenario('blaze'), async () => {
-    const { pageErrors } = await quickStartGame(page, {
-      prefix: 'hbp',
-      skipAsks: true,
-    })
-
-    await page.evaluate(() => {
-      const store = (globalThis as unknown as {
-        __mageStore?: { setSetting?: (k: string, v: unknown) => void }
-      }).__mageStore
-      store?.setSetting?.('boardLayout', 'pod')
-    })
-    await expect(page.locator('[data-testid="pod-board"]')).toBeVisible({ timeout: 15_000 })
-
-    // En pod 1v1 el humano está solo en la fila inferior (abajo-derecha vacío,
-    // rival arriba-izquierda): la mano usa todo el ancho inferior, como en
-    // standard y como en pod 3j (regla pod-board--bottom-full).
-    const boxes = await page.evaluate(() => {
-      const bar = document.querySelector('[data-testid="hand-bar"]')
-      const pod = document.querySelector('[data-testid="pod-board"]')
-      if (!bar || !pod) throw new Error('hand-bar o pod-board no encontrado')
-      const rectOf = (el: Element) => {
-        const r = el.getBoundingClientRect()
-        return { x: r.x, width: r.width }
-      }
-      return { bar: rectOf(bar), pod: rectOf(pod) }
-    })
-    expect(
-      boxes.bar.width,
-      'la mano ocupa toda la fila inferior del pod',
-    ).toBeGreaterThanOrEqual(boxes.pod.width * 0.9)
-    expect(
-      boxes.bar.x,
-      'la mano empieza en el borde izquierdo del pod',
-    ).toBeLessThanOrEqual(boxes.pod.x + 2)
-
-    await expectHandBarLayout(page)
-    expect(pageErrors).toEqual([])
-  })
-})

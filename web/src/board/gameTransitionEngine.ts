@@ -962,10 +962,10 @@ function playMulligan(prevHand: Record<string, CardView>, nextHand: Record<strin
   })
 }
 
-/** Measured in the same frame as the update: a pod seat is just starting to fold into its strip, so the crack covers the whole seat. */
+/** Measured in the same frame as the update: a seat is just starting to fold into its strip, so the crack covers the whole seat. */
 function eliminateSeat(playerId: string): void {
   const els = [...document.querySelectorAll(`.board-zone[data-player-id="${playerId}"], .defeated-seat[data-seat-id="${playerId}"]`)]
-  const cells = els.map((el) => el.closest('.pod-cell, .arena-opp-cell') ?? el)
+  const cells = els.map((el) => el.closest('.arena-opp-cell') ?? el)
   const rect = cells.map(rectOf).find((r): r is DOMRect => !!r) ?? getRect(`.player-info-bar[data-player-id="${playerId}"]`)
   if (consumeConceded(playerId)) {
     for (const el of els) replayClass(el, 'fx-conceded', fxMotionDuration(1200) + 40)

@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import GameBoard from '../board/GameBoard'
-import PodBoard from '../board/PodBoard'
 import ArenaBoard from '../board/ArenaBoard'
 import SpotlightBoard from '../board/SpotlightBoard'
 import { spotlightActive, useSpotlight } from '../board/spotlight'
@@ -362,7 +361,6 @@ export default function GameScreen() {
       ? 'arena'
       : effectiveBoardLayout(settings.boardLayout, settings.boardLayoutManual ?? false, opps.length, totalPlayers)
   const isArenaLayout = effectiveLayout === 'arena'
-  const isPodLayout = effectiveLayout === 'pod'
   const seatLiveIds = liveOpponentIds(game?.players)
   const seatFocus = useSeatFocus(seatLiveIds, game)
   const seatPillsClickable = isArenaLayout && !isSpectator && seatLiveIds.length >= 2
@@ -392,7 +390,7 @@ export default function GameScreen() {
   useOverlayGutters(boardWrapRef, v2 && isArenaLayout, `${isSpectator}|${!!game}|${chromeLeft}|${chromeRight}`)
 
   const stripCenter = (
-        isPodLayout || isArenaLayout || spotlightOn ? (
+        isArenaLayout || spotlightOn ? (
           <TurnOrderRing
             players={game?.players ?? []}
             activePlayerId={game?.activePlayerId ?? ''}
@@ -538,8 +536,6 @@ export default function GameScreen() {
                 ) : (
                   <ArenaBoard {...boardProps} />
                 )
-              ) : isPodLayout ? (
-                <PodBoard {...boardProps} />
               ) : (
                 <GameBoard {...boardProps} focusedOpponentId={currentOpp?.playerId} />
               )}

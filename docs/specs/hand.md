@@ -107,7 +107,7 @@ an effect, because it carries the target highlight.
 - Why: the hand size is public information and revealed cards stay known; a pod has no room for a
   row of backs per opponent (`6eaceab068`); the Table layout moved the hand to the portrait badge
   (`47ec51c1f9`).
-- Guard: `src/board/HandZone.test.tsx` · `e2e/pod-bands.spec.ts` · `e2e/reveal.spec.ts`
+- Guard: `src/board/HandZone.test.tsx` · `e2e/reveal.spec.ts`
 
 ### HND-9 · A known opponent hand opens in a viewer
 Clicking a pod's hand stack, or in the Table layout the hand badge on the portrait (eye icon,
@@ -117,7 +117,7 @@ playable reacts to a click; the viewer closes with its close button or Escape.
 
 - Why: the grimoire-style viewer for an opponent's hand (`6eaceab068`); in the Table layout a hand
   with known cards opens from its badge (`47ec51c1f9`).
-- Guard: `src/board/HandViewer.test.tsx` · `src/board/HandZone.test.tsx` · `src/board/ArenaBoard.test.tsx` · `e2e/pod-bands.spec.ts` · `e2e/game-ui-v2.spec.ts`
+- Guard: `src/board/HandViewer.test.tsx` · `src/board/HandZone.test.tsx` · `src/board/ArenaBoard.test.tsx` · `e2e/game-ui-v2.spec.ts`
 
 ### HND-10 · While you control another player, one button switches the hand you see
 When you control another player (Mindslaver), the server sends their hand and a Switch Hands button
@@ -161,4 +161,4 @@ player.
   (`GameView`/`GameState.getRevealed()`), so copying it into each opponent's hand painted the same
   cards face up in several hands at once in a pod; one function now answers "what do I know of this
   hand", for the hand row and for the reveal animation alike.
-- Guard: `src/board/revealedCards.test.ts` · `e2e/pod-bands.spec.ts`
+- Guard: `src/board/revealedCards.test.ts`

@@ -881,8 +881,6 @@ export const de: TranslationSchema = {
     board_arena: 'Arena',
     board_table: 'Tisch',
     board_table_desc: 'Phasenwahl, Porträts und Stapel als Kartendeck',
-    board_pod_desc: 'Alle Gegner im Raster',
-    board_pod: 'Pod (2×2)',
     board_standard_desc: 'Ein Gegner gleichzeitig',
     board_standard: 'Standard',
     card_style_title: 'Kartenstil',

@@ -881,8 +881,6 @@ export const ja: TranslationSchema = {
     board_arena: 'アリーナ',
     board_table: 'テーブル',
     board_table_desc: 'フェーズダイヤル、ポートレート、カード束のスタック',
-    board_pod_desc: '全員をグリッド表示',
-    board_pod: 'Pod (2×2)',
     board_standard_desc: '相手を一人ずつ表示',
     board_standard: 'スタンダード',
     card_style_title: 'カードスタイル',

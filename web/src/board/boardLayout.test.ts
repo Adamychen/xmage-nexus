@@ -8,9 +8,9 @@ describe('resolveBoardLayout', () => {
     expect(resolveBoardLayout('standard', false, 1)).toBe('standard')
   })
 
-  it('auto-pod con 3+ jugadores salvo override manual', () => {
-    expect(resolveBoardLayout('standard', false, 2)).toBe('pod')
-    expect(resolveBoardLayout('standard', false, 3)).toBe('pod')
+  it('auto-arena con 3+ jugadores salvo override manual', () => {
+    expect(resolveBoardLayout('standard', false, 2)).toBe('arena')
+    expect(resolveBoardLayout('standard', false, 3)).toBe('arena')
   })
 
   it('respeta el standard manual en multiplayer', () => {
@@ -18,10 +18,9 @@ describe('resolveBoardLayout', () => {
     expect(resolveBoardLayout('standard', true, 3)).toBe('standard')
   })
 
-  it('pod explícito siempre es pod', () => {
-    expect(resolveBoardLayout('pod', false, 1)).toBe('pod')
-    expect(resolveBoardLayout('pod', false, 2)).toBe('pod')
-    expect(resolveBoardLayout('pod', true, 3)).toBe('pod')
+  it('una mesa de tres o más sin elección propia abre en arena', () => {
+    expect(resolveBoardLayout('standard', false, 2)).toBe('arena')
+    expect(resolveBoardLayout('standard', false, 3)).toBe('arena')
   })
 
   it('arena solo en multiplayer, cae a standard en 1v1', () => {
@@ -31,15 +30,13 @@ describe('resolveBoardLayout', () => {
 })
 
 describe('effectiveBoardLayout (FFA solo en standard)', () => {
-  it('fuerza standard con 5+ jugadores aunque el layout sea pod o arena', () => {
-    expect(effectiveBoardLayout('pod', true, 4, 5)).toBe('standard')
+  it('fuerza standard con 5+ jugadores aunque el layout sea arena', () => {
     expect(effectiveBoardLayout('arena', true, 4, 5)).toBe('standard')
     expect(effectiveBoardLayout('standard', false, 4, 5)).toBe('standard')
   })
 
   it('respeta el layout con 4 o menos jugadores', () => {
-    expect(effectiveBoardLayout('standard', false, 3, 4)).toBe('pod')
-    expect(effectiveBoardLayout('pod', true, 3, 4)).toBe('pod')
+    expect(effectiveBoardLayout('standard', false, 3, 4)).toBe('arena')
     expect(effectiveBoardLayout('arena', true, 3, 4)).toBe('arena')
     expect(effectiveBoardLayout('standard', false, 1, 2)).toBe('standard')
   })

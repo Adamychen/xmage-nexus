@@ -881,8 +881,6 @@ export const ru: TranslationSchema = {
     board_arena: 'Арена',
     board_table: 'Стол',
     board_table_desc: 'Круг фаз, портреты и стопка как колода карт',
-    board_pod_desc: 'Все соперники сеткой',
-    board_pod: 'Pod (2×2)',
     board_standard_desc: 'Один соперник за раз',
     board_standard: 'Стандарт',
     card_style_title: 'Стиль карт',

@@ -866,7 +866,7 @@ import { normalizeGameUi, DEFAULT_GAME_UI, type GameUi } from '../game/gameUi'
 import { CARD_PREVIEW_SCALE_DEFAULT, normalizeCardPreviewScale } from '../board/cardPreviewScale'
 import { normalizeBoardSpotlight, normalizeBoardSpotlightPanel, normalizeBoardFill, normalizeStackCaption, normalizeCardRender, normalizeHandRail, normalizeHandRailWidth, normalizeHandRow, normalizePtBadgeMode, normalizeShowHandCost, normalizeShowManaSource, normalizeSicknessStyle, normalizeKeywordAuraMode, type CardRender, type KeywordAuraMode, type PtBadgeMode, type SicknessStyle } from '../board/cardOverlays'
 
-export type BoardLayoutPref = 'standard' | 'pod' | 'arena'
+export type BoardLayoutPref = 'standard' | 'arena'
 export type ZoomLevel = number
 
 export interface AppearanceSettings {
@@ -900,14 +900,18 @@ export interface AppearanceSettings {
 export const APPEARANCE_KEY = 'mage-web-appearance'
 export const DEFAULT_APPEARANCE: AppearanceSettings = { sleeveId: 'classic', appearance: 'dark', boardLayout: 'standard', uiScale: ZOOM_DEFAULT, cjkBoost: true, boardLayoutManual: false, transparentDialogs: false, showHandCost: true, showManaSource: false, ptBadgeMode: 'always', sicknessStyle: 'badge', keywordAura: 'subtle', cardRender: 'image', handRail: false, handRailWidth: 260, handRow: false, boardFill: true, boardSpotlight: false, boardSpotlightPanel: 22, stackCaption: true, gameUi: DEFAULT_GAME_UI, cardPreviewScale: CARD_PREVIEW_SCALE_DEFAULT }
 
-const VALID_LAYOUTS: BoardLayoutPref[] = ['standard', 'pod', 'arena']
+const VALID_LAYOUTS: BoardLayoutPref[] = ['standard', 'arena']
+/** The 2x2 pod was removed: a board stored under it reads as the Arena one, which is the other
+ *  layout that seats a whole table. */
+const RETIRED_LAYOUTS: Record<string, BoardLayoutPref> = { pod: 'arena' }
 
 export function loadAppearanceSettings(): AppearanceSettings {
   const parsed = readJson<Partial<AppearanceSettings>>(APPEARANCE_KEY)
   if (parsed) {
     const sid = typeof parsed.sleeveId === 'string' ? parsed.sleeveId : DEFAULT_APPEARANCE.sleeveId
-    const layout = VALID_LAYOUTS.includes(parsed.boardLayout as BoardLayoutPref)
-      ? (parsed.boardLayout as BoardLayoutPref)
+    const storedLayout = RETIRED_LAYOUTS[String(parsed.boardLayout)] ?? parsed.boardLayout
+    const layout = VALID_LAYOUTS.includes(storedLayout as BoardLayoutPref)
+      ? (storedLayout as BoardLayoutPref)
       : DEFAULT_APPEARANCE.boardLayout
     const scale = normalizeZoom(parsed.uiScale)
     const cjkBoost = typeof parsed.cjkBoost === 'boolean' ? parsed.cjkBoost : DEFAULT_APPEARANCE.cjkBoost

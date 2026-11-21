@@ -542,9 +542,9 @@ test.describe('narrow window', () => {
 })
 
 test('v2 always uses the arena layout, whatever the board layout setting says @gameui', async ({ page }, testInfo) => {
-  await showGame(page, richCommanderGame(), { gameUi: 'v2', boardLayout: 'pod', boardLayoutManual: true })
+  await showGame(page, richCommanderGame(), { gameUi: 'v2', boardLayout: 'standard', boardLayoutManual: true })
   await expect(page.getByTestId('arena-board')).toBeVisible({ timeout: 10_000 })
-  await expect(page.getByTestId('pod-board')).toHaveCount(0)
+  await expect(page.getByTestId('game-board')).toHaveCount(0)
   await page.waitForTimeout(500)
   const vh = page.viewportSize()!.height
   const bars = page.locator('.arena-board .player-info-bar')
@@ -817,7 +817,7 @@ test('v2 mana pool keeps every mana type and its label readable @gameui', async 
   await pool.screenshot({ path: testInfo.outputPath('v2-pool.png') })
 })
 
-for (const layout of ['pod', 'arena']) {
+for (const layout of ['standard', 'arena']) {
   test(`v2 with board layout ${layout}: last actions and the combat ledger stay inside the board and off the player boxes @gameui`, async ({ page }, testInfo) => {
     const log = [
       'Turn 7 Adam',

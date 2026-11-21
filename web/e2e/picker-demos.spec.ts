@@ -63,7 +63,7 @@ test.describe('Visual preset & playmat pickers', { tag: '@site' }, () => {
       const demo = (kind: string, value: string) => page.getByTestId(`board-demo-${kind}-${value}`)
       const tab = (id: string) => page.getByTestId(`settings-board-tab-${id}`).click()
 
-      for (const [layout, zones] of [['standard', 2], ['pod', 4], ['arena', 4], ['table', 4]] as const) {
+      for (const [layout, zones] of [['standard', 2], ['arena', 4], ['table', 4]] as const) {
         const miniature = page.getByTestId(`settings-layout-${layout}`).getByTestId(`layout-demo-${layout}`)
         await expect(miniature).toBeVisible()
         await expect(miniature.getByTestId('layout-demo-zone')).toHaveCount(zones)

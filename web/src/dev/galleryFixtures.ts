@@ -130,7 +130,7 @@ export interface GalleryEntry {
   /** Deck in play (`myDeck` in the store); omitted = keep the current one. */
   myDeck?: Deck | null
   chatMessages?: ChatMessageEvent[]
-  boardLayout?: 'standard' | 'pod' | 'arena'
+  boardLayout?: 'standard' | 'arena'
   /** Main board with side panel (`boardSpotlight`, BRD-6); omitted = the viewer's setting. */
   boardSpotlight?: boolean
   seatFocus?: string
@@ -3861,7 +3861,7 @@ export function buildGalleryEntries(): GalleryEntry[] {
         phase: 'game',
         game: podBase,
         gameId,
-        boardLayout: 'pod',
+        boardLayout: 'arena',
         action: { label: 'Replay', run: replayQuiet(podBase, gameId, (g) => withPlayerOut(g, podVictim.playerId)) },
       })
       entries.push({
@@ -3872,7 +3872,7 @@ export function buildGalleryEntries(): GalleryEntry[] {
         phase: 'game',
         game: podBase,
         gameId,
-        boardLayout: 'pod',
+        boardLayout: 'arena',
         action: { label: 'Replay', run: replayQuietWithLog(podBase, gameId, () => `${logName(podVictim.name)} has conceded.`, (g) => withPlayerOut(g, podVictim.playerId)) },
       })
     }
@@ -4759,14 +4759,14 @@ export function buildGalleryEntries(): GalleryEntry[] {
     })
     const wipePodBase = withMyPriority(withWrathOnStack(podBase))
     entries.push({
-      id: 'anim:board-wipe-pod',
+      id: 'anim:board-wipe-table',
       group: 'Animaciones',
       label: 'Board wipe: Wrath of God in a four-player pod',
       description: 'Four-player pod. "Replay" resolves Wrath of God: the wave crosses every seat at once while the board shakes, and the creatures of all four players die in its wake, left to right.',
       phase: 'game',
       game: wipePodBase,
       gameId,
-      boardLayout: 'pod',
+      boardLayout: 'arena',
       action: { label: 'Replay', run: replayQuiet(wipePodBase, gameId, resolveWrath) },
     })
     const faceUpLabels: Record<GalleryFaceDown, { label: string; description: string }> = {
@@ -4819,14 +4819,14 @@ export function buildGalleryEntries(): GalleryEntry[] {
     const podPoisoned = podVictim?.playerId
     const podPoisonBase = withPlayerCounter(podBase, podPoisoned, 'poison', 4)
     entries.push({
-      id: 'anim:poison-pod',
+      id: 'anim:poison-table',
       group: 'Animaciones',
       label: 'Poison: a pod opponent gets a poison counter',
       description: 'Four-player pod. "Replay" gives one opponent a fifth poison counter: their seat\'s poison chip pops toxic green, drips and floats a green "+1".',
       phase: 'game',
       game: podPoisonBase,
       gameId,
-      boardLayout: 'pod',
+      boardLayout: 'arena',
       action: { label: 'Replay', run: replayQuiet(podPoisonBase, gameId, (g) => withPlayerCounter(g, podPoisoned, 'poison', 5)) },
     })
     const energyBase = withPlayerCounter(animBase, myIdOfBase, 'energy', 1)
@@ -4890,14 +4890,14 @@ export function buildGalleryEntries(): GalleryEntry[] {
     const podStolenId = opponentNonLandId(podOwner)
     if (podThief && podStolenId) {
       entries.push({
-        id: 'anim:gain-control-pod',
+        id: 'anim:gain-control-table',
         group: 'Animaciones',
         label: 'Gain control: one pod opponent steals from another',
         description: `Four-player pod. "Replay" gives ${podThief.name} control of a creature of ${podOwner.name}: a tether in ${podThief.name}'s seat colour reels it from one opponent's seat into the other's.`,
         phase: 'game',
         game: podBase,
         gameId,
-        boardLayout: 'pod',
+        boardLayout: 'arena',
         action: { label: 'Replay', run: replayQuiet(podBase, gameId, (g) => withControl(g, podStolenId, podThief.playerId)) },
       })
     }
@@ -5326,14 +5326,14 @@ export function buildGalleryEntries(): GalleryEntry[] {
     if (podRival && commanderOf(podRival)) {
       const rivalOnField = withCommanderIn(podCmd, podRival.playerId, 'battlefield')
       entries.push({
-        id: 'anim:commander-to-command-pod',
+        id: 'anim:commander-to-command-table',
         group: 'Animaciones',
         label: 'Commander: an opponent\'s commander goes back to the command zone (pod)',
         description: `Three-player Commander pod. ${podRival.name}'s commander is on their battlefield; "Replay" sends it back to their command zone: the gold column and crown rise from their seat and the card flies into the command zone of that seat.`,
         phase: 'game',
         game: rivalOnField,
         gameId: COMMANDER_FRAME.gameId,
-        boardLayout: 'pod',
+        boardLayout: 'arena',
         action: { label: 'Replay', run: replayQuiet(rivalOnField, COMMANDER_FRAME.gameId, () => ({ ...podCmd })) },
       })
     }
@@ -5658,14 +5658,14 @@ export function buildGalleryEntries(): GalleryEntry[] {
   // Variantes de tablero: settings.boardLayout real decide el layout efectivo
   // (`effectiveBoardLayout`: pod/arena solo con rivales; >4 jugadores ⇒ standard).
   entries.push({
-    id: 'board:pod-4',
+    id: 'board:table-4',
     group: 'Tablero',
     label: 'Pod 2×2 (4 jugadores)',
     description: 'FFA de 4 con layout pod: rejilla 2×2 y anillo de turno.',
     phase: 'game',
     game: FOUR_PLAYER_GAME,
     gameId: GANG_BLOCK_FRAME?.gameId ?? null,
-    boardLayout: 'pod',
+    boardLayout: 'arena',
   })
   if (FOUR_PLAYER_GAME) {
     const fourGameId = GANG_BLOCK_FRAME?.gameId ?? 'gallery-4p'
@@ -5730,7 +5730,7 @@ export function buildGalleryEntries(): GalleryEntry[] {
         phase: 'game',
         game: FOUR_PLAYER_GAME,
         gameId: fourGameId,
-        boardLayout: 'pod',
+        boardLayout: 'arena',
         rollbackVote: e.vote,
       })
     }
@@ -5769,14 +5769,14 @@ export function buildGalleryEntries(): GalleryEntry[] {
     action: { label: 'Pasar prioridad', apply: rotatePriority },
   })
   entries.push({
-    id: 'board:pod-4-crowded',
+    id: 'board:table-4-crowded',
     group: 'Tablero',
     label: 'Pod 2×2 con el campo lleno',
     description: '4 jugadores con 16 criaturas y 14 tierras cada uno: las bandas encogen las cartas (y se reparten en líneas) en vez de hacer scroll.',
     phase: 'game',
     game: CROWDED_POD_GAME,
     gameId: GANG_BLOCK_FRAME?.gameId ?? null,
-    boardLayout: 'pod',
+    boardLayout: 'arena',
   })
   entries.push({
     id: 'board:arena-4-crowded',
@@ -5810,14 +5810,14 @@ export function buildGalleryEntries(): GalleryEntry[] {
     playableIds: commanderShowcasePlayableIds(showcase),
   })
   entries.push({
-    id: 'board:pod-commander',
+    id: 'board:table-commander',
     group: 'Tablero',
     label: 'Pod Commander (3 jugadores)',
     description: 'Commander Free For All de 3: zona de mando por rival y anillo.',
     phase: 'game',
     game: THREE_PLAYER_COMMANDER,
     gameId: COMMANDER_FRAME?.gameId ?? null,
-    boardLayout: 'pod',
+    boardLayout: 'arena',
   })
   entries.push({
     id: 'game:hand-3',

@@ -279,17 +279,17 @@ test('the marker changes side with the turn and keeps slot positions @board', as
   expect(minePlaying.map((s) => s.name)).toEqual(rivalPlaying.map((s) => s.name))
 })
 
-test('the pod ring and the FFA switcher still render @board', async ({ page }) => {
+test('the ring of a full table and the FFA switcher still render @board', async ({ page }) => {
   await boot(page)
   const pod = duel('p2', 'p2')
   pod.players.push(mkPlayer('p3', 'Carlos', false), mkPlayer('p4', 'Dana', false))
-  await pushGame(page, pod, 'pod')
-  await expect(page.locator('[data-testid="pod-board"]')).toBeVisible({ timeout: 10_000 })
+  await pushGame(page, pod, 'arena')
+  await expect(page.locator('[data-testid="arena-board"]')).toBeVisible({ timeout: 10_000 })
   const ring = await page.evaluate(() => {
     const el = document.querySelector<HTMLElement>('[data-testid="turn-order-ring"]')
     return el ? { cls: el.className, seats: el.querySelectorAll('.tor-seat').length } : null
   })
-  console.log('POD-RING ' + JSON.stringify(ring))
+  console.log('TABLE-RING ' + JSON.stringify(ring))
   expect(ring?.seats).toBe(4)
 })
 

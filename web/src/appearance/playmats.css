@@ -1,5 +1,4 @@
-.board-wrap:not([data-playmat='classic']) .board-shell,
-.board-wrap:not([data-playmat='classic']) .pod-board-wrapper {
+.board-wrap:not([data-playmat='classic']) .board-shell {
   background: transparent;
 }
 

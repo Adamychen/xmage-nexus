@@ -879,8 +879,6 @@ export const en = {
     board_arena: 'Arena',
     board_table: 'Table',
     board_table_desc: 'Phase dial, portraits and card-deck stack',
-    board_pod_desc: 'All opponents in a grid',
-    board_pod: 'Pod (2×2)',
     board_standard_desc: 'One opponent at a time',
     board_standard: 'Standard',
     card_style_title: 'Card style',
