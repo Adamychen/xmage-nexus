@@ -30,7 +30,7 @@ interface FloatingCardPreviewProps {
   inModal?: boolean
   /** Leaving phase: set by the presenter while the hover is being dropped. */
   leaving?: boolean
-  /** STK-7: a chip drawn over the preview, for what the card itself cannot say (who controls it). */
+  /** STK-6: a chip drawn over the preview, for what the card itself cannot say (who controls it). */
   badge?: ReactNode
 }
 

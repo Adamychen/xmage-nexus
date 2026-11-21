@@ -61,7 +61,7 @@ export function wipeBoardRect(): DOMRect | null {
 }
 
 function slotRect(id: string): DOMRect | null {
-  const slot = [...document.querySelectorAll(`.card-slot[data-card-id="${id}"]`)].find((el) => !el.closest('.stack-zone, .stack-deck, .stack-list'))
+  const slot = [...document.querySelectorAll(`.card-slot[data-card-id="${id}"]`)].find((el) => !el.closest('.stack-zone'))
   return rectOf(slot) ?? getPreviousCardPosition(id)
 }
 

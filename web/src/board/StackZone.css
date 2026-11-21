@@ -15,8 +15,10 @@
   position: absolute;
   right: var(--stack-right, var(--sp-5));
   /* The cascade grows upward from its front card, so anchoring its bottom half a card below the
-     middle puts that card's centre exactly on the middle. */
-  bottom: calc(50% - var(--card-h) / 2);
+     middle puts that card's centre exactly on the middle. It never goes below the floor the dock
+     leaves it, though: on a short window the middle of the board is low enough for the front card
+     to lie over the action button, and nothing may cover what the player is about to press. */
+  bottom: max(calc(50% - var(--card-h) / 2), var(--stack-floor, 0px));
   /* Above the board's own chrome, below the arrows (TGT-10): an arrow that says which spell this
      one counters has to be drawn over both of them, or it disappears between two cards that lie
      on top of each other. */
@@ -839,10 +841,10 @@ html.fx-off .stack-card-face {
   font-weight: 700;
 }
 
-/* STK-7: who controls the object, on a plate of its own. The token has to be one that exists:
+/* STK-6: who controls the object, on a plate of its own. The token has to be one that exists:
    `--ink-1-rgb` is never declared, so `rgb(var(--ink-1-rgb) / .94)` is an invalid declaration and
    the chip ends up with no background at all, unreadable over the art it sits on. */
-/* STK-7 (cont.): It sits over card art that can be any
+/* STK-6 (cont.): It sits over card art that can be any
    colour, so it brings its own background instead of trusting the picture underneath, the way the
    counter badges do (BRD-53). */
 .stack-card .stack-controller-pill,

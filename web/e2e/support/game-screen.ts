@@ -29,6 +29,7 @@ import {
   type GameFrame,
 } from './frames'
 import { parsedLen } from './frames'
+import { CASCADE_MAX_SHOWN } from '../../src/board/stackCascadeFit'
 import { FAKE_MODE } from '../dual'
 
 export type DrawerTab = 'stack' | 'log' | 'chat' | 'tracker' | 'commander' | 'mechanics'
@@ -39,16 +40,19 @@ export async function openDrawerTab(page: Page, tab: DrawerTab): Promise<void> {
   await expect(active).toBeVisible({ timeout: 10_000 })
 }
 
-/** El contador de la pila vive en la cabecera del drawer cuando está abierto
- *  (el título se pinta ahí) y en la propia zona cuando se usa suelta. */
+/** How many objects the stack is showing. The cascade draws one card per object (STK-1), with no
+ *  header to read a number off, and folds the tail past `CASCADE_MAX_SHOWN` into a count on the
+ *  front card. An empty stack draws nothing at all (STK-2). */
 export async function expectStackCount(page: Page, n: number): Promise<void> {
-  await expect(page.locator('.stack-zone')).toBeVisible()
-  const drawer = page.locator('[data-testid="game-drawer"][data-tab="stack"]')
-  const title =
-    (await drawer.count()) > 0
-      ? drawer.locator('.game-drawer-title')
-      : page.locator('.stack-zone .stack-header-title')
-  await expect(title).toContainText(`(${n})`)
+  const zone = page.locator('.stack-zone')
+  if (n === 0) {
+    await expect(zone).toHaveCount(0)
+    return
+  }
+  await expect(zone).toBeVisible()
+  const shown = Math.min(n, CASCADE_MAX_SHOWN)
+  await expect(zone.locator('.stack-card')).toHaveCount(shown)
+  if (n > shown) await expect(page.locator('[data-testid="stack-cascade-more"]')).toContainText(`+${n - shown}`)
 }
 
 export function feedbackDialog(page: Page) {

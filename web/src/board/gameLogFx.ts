@@ -99,7 +99,7 @@ const FLICKER_MS = 700
 export function flickerPermanent(permId: string): void {
   if (!fxMotionAllowed() || typeof document === 'undefined') return
   afterLayout(() => {
-    const slots = [...document.querySelectorAll(`.card-slot[data-card-id="${permId}"]`)].filter((el) => !el.closest('.stack-zone, .stack-deck, .stack-list'))
+    const slots = [...document.querySelectorAll(`.card-slot[data-card-id="${permId}"]`)].filter((el) => !el.closest('.stack-zone'))
     const rect = visibleRect(slots[0])
     if (!rect) return
     const ms = fxMotionDuration(FLICKER_MS)

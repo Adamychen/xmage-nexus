@@ -190,7 +190,7 @@ export function castCard(spellId: string, spell: CardView, prevGame: GameView, n
   return null
 }
 
-const STACK_SELECTOR = '.stack-zone, .stack-deck, .stack-list'
+const STACK_SELECTOR = '.stack-zone'
 
 /**
  * Where a spell is drawn right now: its large top card or its tab. Read when the spell resolves,

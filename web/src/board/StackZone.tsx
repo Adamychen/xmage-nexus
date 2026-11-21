@@ -188,6 +188,10 @@ export default function StackZone({
   // STK-2: the stack can be pushed aside to read the board under it, without closing.
   const [pushed, setPushed] = useState(false)
   const [fit, setFit] = useState<CascadeFit | null>(null)
+  // STK-2: how high above the bottom the cascade has to start so it never lies over the dock,
+  // which is where the button the player is about to press lives. The dock knows nothing about
+  // the stack, so reading it here cannot feed back into anything it depends on.
+  const [floor, setFloor] = useState(0)
   const cardRender = useStore((s) => s.settings.cardRender)
 
   const entries = Object.entries(stack ?? {})
@@ -223,6 +227,32 @@ export default function StackZone({
       window.removeEventListener('resize', measure)
     }
   }, [groupCount])
+
+  useLayoutEffect(() => {
+    const el = zoneRef.current
+    if (!el) return
+    const measure = () => {
+      const dock = document.querySelector('.game-dock')
+      const base = (el.offsetParent ?? document.documentElement).getBoundingClientRect()
+      const rect = dock?.getBoundingClientRect()
+      if (!rect || rect.height <= 0) {
+        setFloor(0)
+        return
+      }
+      setFloor(Math.max(0, Math.round(base.bottom - rect.top)))
+    }
+    measure()
+    if (typeof ResizeObserver === 'undefined') return
+    const observer = new ResizeObserver(measure)
+    const dock = document.querySelector('.game-dock')
+    if (dock) observer.observe(dock)
+    observer.observe(el)
+    window.addEventListener('resize', measure)
+    return () => {
+      observer.disconnect()
+      window.removeEventListener('resize', measure)
+    }
+  }, [])
 
   useEffect(() => {
     if (modalOpen) {
@@ -278,7 +308,7 @@ export default function StackZone({
     if (anyTargetable) setPushed(false)
   }, [anyTargetable])
 
-  // STK-3: only two objects point at their targets — the one about to resolve, always, and the one
+  // STK-3: only two objects point at their targets: the one about to resolve, always, and the one
   // under the pointer. Every arrow at once is a thicket nobody reads.
   useEffect(() => {
     if (!onFocusIds) return
@@ -321,7 +351,8 @@ export default function StackZone({
         '--stack-x': `${fit.stepX}px`,
         '--stack-y': `${fit.stepY}px`,
         '--stack-n': shownGroups.length,
-      } as React.CSSProperties) : undefined}
+        '--stack-floor': `${floor}px`,
+      } as React.CSSProperties) : ({ '--stack-floor': `${floor}px` } as React.CSSProperties)}
     >
       {/* The room the cascade may use, declared in CSS and measured here: a box of its own, so the
           measurement can never read back the size the cascade chose. */}

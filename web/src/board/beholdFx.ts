@@ -16,7 +16,7 @@ export function parseBehold(message: string): { objectId: string } | null {
 export function beholdCard(cardId: string): void {
   if (!fxMotionAllowed() || typeof document === 'undefined') return
   afterLayout(() => {
-    const slots = [...document.querySelectorAll(`.card-slot[data-card-id="${cardId}"]`)].filter((el) => !el.closest('.stack-zone, .stack-deck, .stack-list'))
+    const slots = [...document.querySelectorAll(`.card-slot[data-card-id="${cardId}"]`)].filter((el) => !el.closest('.stack-zone'))
     const ms = fxMotionDuration(BEHOLD_MS)
     for (const slot of slots) replayClass(slot, 'fx-behold', ms + 40)
   })

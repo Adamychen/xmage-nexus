@@ -407,6 +407,8 @@ export default function GameScreen() {
   const activeSidePanelTab = sidePanelTab === 'commander' && !hasCommanders ? null : sidePanelTab
   const chromeLeft = v2 && activeSidePanelTab ? 372 : 0
   // The stack floats over the board now, so no layout reserves a strip for it.
+  // STK-2: the stack is a layer over the board and may lie over its cards; the grip is what
+  // answers for that, not a gutter that squeezes the board every time something is cast.
   const chromeRight = 0
   useOverlayGutters(boardWrapRef, v2 && isArenaLayout, `${isSpectator}|${!!game}|${chromeLeft}|${chromeRight}`)
 

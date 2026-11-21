@@ -1,9 +1,6 @@
-import { act, fireEvent, render, waitFor } from '@testing-library/react'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { act, fireEvent, render } from '@testing-library/react'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import StackZone from './StackZone'
-import { DrawerHeadSlotContext } from '../game/drawerHeadSlot'
-import { clearFlights, startCardFlight } from './flightManager'
-import { awaitImageUrl } from '../cards/cardImages'
 import type { CardView, PlayerView } from '../net/types'
 
 vi.mock('../cards/cardImages', async (importOriginal) => ({
@@ -13,428 +10,178 @@ vi.mock('../cards/cardImages', async (importOriginal) => ({
     const t = card.mageObjectType ?? ''
     return t.includes('Ability') || t.includes('ABILITY')
   }),
-  getSourceCardName: vi.fn().mockImplementation((card: CardView) => {
-    if (card.rules?.[0]?.includes('Cloud, Midgar Mercenary')) return 'Cloud, Midgar Mercenary'
-    if (card.displayName && card.displayName !== 'Ability') return card.displayName
-    if (card.name && card.name !== 'Ability') return card.name
-    return 'Habilidad'
-  }),
-  cardName: vi.fn().mockImplementation((card: CardView) => {
-    if (card.rules?.[0]?.includes('Cloud, Midgar Mercenary')) return 'Cloud, Midgar Mercenary'
-    if (card.displayName && card.displayName !== 'Ability') return card.displayName
-    if (card.name && card.name !== 'Ability') return card.name
-    return 'Habilidad'
-  }),
+  getSourceCardName: vi.fn().mockImplementation((card: CardView) => card.displayName ?? card.name ?? 'Habilidad'),
+  cardName: vi.fn().mockImplementation((card: CardView) => card.displayName ?? card.name ?? 'Habilidad'),
 }))
+
+const spell = (id: string, name: string, over: Partial<CardView> = {}): CardView =>
+  ({ id, name, cardTypes: ['INSTANT'], manaValue: 1, ...over }) as CardView
+
+const stackOf = (...cards: CardView[]): Record<string, CardView> =>
+  Object.fromEntries(cards.map((c) => [String(c.id), c]))
+
+const cards = (container: HTMLElement) => [...container.querySelectorAll<HTMLElement>('.stack-card')]
+const ids = (container: HTMLElement) => cards(container).map((el) => el.getAttribute('data-card-id'))
+
+/** The ids the board was last told to draw arrows for. */
+function lastFocus(onFocusIds: ReturnType<typeof vi.fn>): string[] {
+  const call = onFocusIds.mock.calls.at(-1)?.[0] as ReadonlySet<string> | null
+  return call ? [...call].sort() : []
+}
 
 describe('StackZone', () => {
   beforeEach(() => {
     vi.clearAllMocks()
   })
 
-  it('renders empty when stack is null or empty', () => {
-    const { container } = render(<StackZone stack={null} />)
-    expect(container.querySelector('.ui-empty')).toBeTruthy()
+  it('STK-2: an empty stack draws nothing at all, not even a box saying so', () => {
+    const { container, rerender } = render(<StackZone stack={null} />)
+    expect(container.innerHTML).toBe('')
+    rerender(<StackZone stack={{}} />)
+    expect(container.innerHTML).toBe('')
   })
 
-  it('renders single spell on the stack as top item', () => {
-    const stack: Record<string, CardView> = {
-      'spell-1': {
-        name: 'Lightning Bolt',
-        cardTypes: ['INSTANT'],
-        manaValue: 1,
-        rules: ['Lightning Bolt deals 3 damage to any target.'],
-      },
-    }
-
-    const { container } = render(
-      <StackZone stack={stack} canResolve={true} onResolveClick={vi.fn()} />,
-    )
-
-    expect(container.textContent).toContain('Pila (1)')
+  it('STK-1: an object on the stack is drawn as the card it is', () => {
+    const { container } = render(<StackZone stack={stackOf(spell('spell-1', 'Lightning Bolt'))} />)
+    const card = container.querySelector<HTMLElement>('.stack-card')
+    expect(card).not.toBeNull()
+    expect(card!.getAttribute('data-card-id')).toBe('spell-1')
+    expect(card!.querySelector('.stack-card-face')).not.toBeNull()
     expect(container.textContent).toContain('Lightning Bolt')
-    expect(container.textContent).toContain('Instantáneo')
-    expect(container.querySelector('[data-testid="stack-resolve-header-btn"]')).toBeTruthy()
   })
 
-  it('dentro del drawer las acciones (Resolver + alternador) van al hueco de su cabecera y no hay fila propia', () => {
-    const slot = document.createElement('div')
-    document.body.appendChild(slot)
-    const stack: Record<string, CardView> = {
-      'spell-1': { name: 'Lightning Bolt', cardTypes: ['INSTANT'], manaValue: 1 },
-    }
+  it('STK-1: the object that resolves next is the one in front, and it is the only one', () => {
     const { container } = render(
-      <DrawerHeadSlotContext.Provider value={slot}>
-        <StackZone stack={stack} canResolve={true} onResolveClick={vi.fn()} />
-      </DrawerHeadSlotContext.Provider>,
+      <StackZone stack={stackOf(spell('spell-2', 'Counterspell'), spell('spell-1', 'Lightning Bolt'))} />,
     )
-    expect(slot.querySelector('[data-testid="stack-resolve-header-btn"]')).toBeTruthy()
-    expect(slot.querySelector('.ui-tabs, [role="tablist"]')).toBeTruthy()
-    expect(container.querySelector('.stack-header')).toBeNull()
-    expect(container.querySelector('.stack-timeline')).toBeTruthy()
-    slot.remove()
+    expect(ids(container)).toEqual(['spell-2', 'spell-1'])
+    expect(cards(container).map((el) => el.classList.contains('is-top'))).toEqual([true, false])
   })
 
-  it('cada entrada lleva posición, nombre y controlador en una sola fila compacta', () => {
-    const stack: Record<string, CardView> = {
-      'spell-1': { name: 'Lightning Bolt', cardTypes: ['INSTANT'], manaValue: 1 },
-    }
-    const { container } = render(<StackZone stack={stack} />)
-    const entry = container.querySelector('.stack-tl-entry') as HTMLElement
-    expect(entry.querySelector('.stack-tl-name-row .stack-tl-pos')?.textContent).toContain('#1')
-    expect(entry.querySelector('.stack-tl-type-row .stack-controller-pill')).toBeTruthy()
-    expect(entry.querySelector('.stack-tl-pos-row')).toBeNull()
+  it('STK-4: three copies of the same spell are three cards, not one with a count', () => {
+    const { container } = render(
+      <StackZone stack={stackOf(spell('bolt-1', 'Lightning Bolt'), spell('bolt-2', 'Lightning Bolt'), spell('bolt-3', 'Lightning Bolt'))} />,
+    )
+    expect(ids(container)).toEqual(['bolt-1', 'bolt-2', 'bolt-3'])
+    expect(container.textContent).not.toContain('×3')
+    expect(container.querySelector('[data-testid="stack-cascade-more"]')).toBeNull()
   })
 
-  it('renders multiple spells in timeline with newest on top', () => {
-    const stack: Record<string, CardView> = {
-      'spell-2': {
-        name: 'Counterspell',
-        cardTypes: ['INSTANT'],
-        manaValue: 2,
-        rules: ['Counter target spell.'],
-      },
-      'spell-1': {
-        name: 'Lightning Bolt',
-        cardTypes: ['INSTANT'],
-        manaValue: 1,
-      },
-    }
+  it('STK-2: the grip pushes the whole stack aside, and brings it back', () => {
+    const { container } = render(<StackZone stack={stackOf(spell('spell-1', 'Lightning Bolt'))} />)
+    const zone = container.querySelector<HTMLElement>('.stack-zone')!
+    const grip = container.querySelector<HTMLButtonElement>('[data-testid="stack-push"]')!
+    expect(zone.classList.contains('is-pushed')).toBe(false)
 
-    const { container } = render(<StackZone stack={stack} canResolve={true} />)
+    fireEvent.click(grip)
+    expect(zone.classList.contains('is-pushed')).toBe(true)
+    expect(grip.getAttribute('aria-pressed')).toBe('true')
 
-    expect(container.textContent).toContain('Pila (2)')
-    const entries = container.querySelectorAll('.stack-tl-entry')
-    expect(entries.length).toBe(2)
-    expect(entries[0].classList.contains('is-top')).toBe(true)
-    expect(entries[0].textContent).toContain('Counterspell')
-    expect(entries[1].textContent).toContain('Lightning Bolt')
+    fireEvent.click(grip)
+    expect(zone.classList.contains('is-pushed')).toBe(false)
   })
 
-  it('triggers onCardClick and onHover when interacting with stack items', () => {
+  it('STK-3: the object about to resolve points at its targets, and so does the one under the pointer', () => {
+    const onFocusIds = vi.fn()
+    const { container } = render(
+      <StackZone stack={stackOf(spell('spell-2', 'Counterspell'), spell('spell-1', 'Lightning Bolt'))} onFocusIds={onFocusIds} />,
+    )
+    expect(lastFocus(onFocusIds)).toEqual(['spell-2'])
+
+    fireEvent.mouseEnter(cards(container)[1])
+    expect(lastFocus(onFocusIds)).toEqual(['spell-1', 'spell-2'])
+
+    fireEvent.mouseLeave(cards(container)[1])
+    expect(lastFocus(onFocusIds)).toEqual(['spell-2'])
+  })
+
+  it('STK-3: a stack pushed aside points at nothing', () => {
+    const onFocusIds = vi.fn()
+    const { container } = render(
+      <StackZone stack={stackOf(spell('spell-1', 'Lightning Bolt'))} onFocusIds={onFocusIds} />,
+    )
+    expect(lastFocus(onFocusIds)).toEqual(['spell-1'])
+
+    fireEvent.click(container.querySelector('[data-testid="stack-push"]')!)
+    expect(lastFocus(onFocusIds)).toEqual([])
+  })
+
+  it('STK-1: clicking an object sends that object, and hovering it reports the card', () => {
     const onCardClick = vi.fn()
     const onHover = vi.fn()
-
-    const stack: Record<string, CardView> = {
-      'spell-2': {
-        name: 'Counterspell',
-        cardTypes: ['INSTANT'],
-        manaValue: 2,
-      },
-      'spell-1': {
-        name: 'Lightning Bolt',
-        cardTypes: ['INSTANT'],
-        manaValue: 1,
-      },
-    }
-
     const { container } = render(
-      <StackZone stack={stack} onCardClick={onCardClick} onHover={onHover} />,
+      <StackZone stack={stackOf(spell('spell-1', 'Lightning Bolt'))} onCardClick={onCardClick} onHover={onHover} />,
     )
+    const card = cards(container)[0]
+    expect(card.classList.contains('clickable')).toBe(true)
 
-    const entries = container.querySelectorAll('.stack-tl-entry')
-    fireEvent.click(entries[1])
+    fireEvent.click(card)
     expect(onCardClick).toHaveBeenCalledWith('spell-1')
 
-    fireEvent.mouseEnter(entries[1])
-    expect(onHover).toHaveBeenCalledWith(stack['spell-1'], expect.anything())
+    fireEvent.mouseEnter(card)
+    expect(onHover).toHaveBeenCalledWith(expect.objectContaining({ name: 'Lightning Bolt' }), expect.anything())
   })
 
-  it('renders ability capsules with resolved source name', () => {
-    const stack: Record<string, CardView> = {
-      'ab-1': {
-        name: 'Ability',
-        mageObjectType: 'TRIGGERED_ABILITY',
-        abilityType: 'Triggered',
-        manaValue: 0,
-        rules: ['When Cloud, Midgar Mercenary enters, search your library for an Equipment card...'],
-      },
-    }
-
-    const { container } = render(<StackZone stack={stack} />)
-    expect(container.textContent).toContain('Cloud, Midgar Mercenary')
-    expect(container.textContent).toContain('Disparada')
-    expect(container.querySelector('.stack-tl-entry.is-ability')).toBeTruthy()
-  })
-
-  it('muestra las reglas de una habilidad también en modo compacto, y no las de un hechizo', () => {
-    const stack: Record<string, CardView> = {
-      'ab-1': {
-        name: 'Ability',
-        mageObjectType: 'TRIGGERED_ABILITY',
-        abilityType: 'Triggered',
-        manaValue: 0,
-        rules: ['Whenever a creature dies, draw a card.'],
-      },
-      'spell-1': {
-        name: 'Counterspell',
-        cardTypes: ['INSTANT'],
-        manaValue: 2,
-        rules: ['Counter target spell.'],
-      },
-    }
-
-    const { container } = render(<StackZone stack={stack} />)
-    const rules = container.querySelectorAll('.stack-tl-rules')
-    expect(rules.length).toBe(1)
-    expect(rules[0].classList.contains('is-clamped')).toBe(true)
-    expect(rules[0].getAttribute('title')).toBe('Whenever a creature dies, draw a card.')
-
-    fireEvent.click(container.querySelectorAll('.stack-zone [role="tab"]')[1] as HTMLButtonElement)
-    const expanded = container.querySelectorAll('.stack-tl-rules')
-    expect(expanded.length).toBe(2)
-    expect(container.querySelector('.stack-tl-rules.is-clamped')).toBeNull()
-  })
-
-  it('el icono de la habilidad depende de su tipo, no del idioma', () => {
-    const stack: Record<string, CardView> = {
-      trig: { name: 'Ability', mageObjectType: 'TRIGGERED_ABILITY', abilityType: 'Triggered', manaValue: 0 },
-      act: { name: 'Ability', mageObjectType: 'ACTIVATED_ABILITY', abilityType: 'Activated', manaValue: 0 },
-    }
-
-    const { container } = render(<StackZone stack={stack} />)
-    const badges = container.querySelectorAll('.stack-tl-type-badge')
-    const trigIcon = badges[0].querySelector('svg')?.outerHTML
-    const actIcon = badges[1].querySelector('svg')?.outerHTML
-    expect(trigIcon).toBeTruthy()
-    expect(actIcon).toBeTruthy()
-    expect(trigIcon).not.toBe(actIcon)
-  })
-
-  const trigger = (rule: string, extra: Partial<CardView> = {}): CardView => ({
-    name: 'Ability',
-    mageObjectType: 'TRIGGERED_ABILITY',
-    abilityType: 'Triggered',
-    manaValue: 0,
-    rules: [rule],
-    sourceCard: { name: 'Soul Warden', controllerName: 'Yo' } as CardView,
-    controllerName: 'Yo',
-    ...extra,
-  })
-
-  it('agrupa habilidades idénticas consecutivas en una fila con ×N y rango de posición', () => {
-    const stack: Record<string, CardView> = {
-      t1: trigger('You gain 1 life.'),
-      t2: trigger('You gain 1 life.'),
-      t3: trigger('You gain 1 life.'),
-      bolt: { name: 'Lightning Bolt', cardTypes: ['INSTANT'], manaValue: 1 },
-    }
-
-    const { container } = render(<StackZone stack={stack} />)
-    const entries = container.querySelectorAll('.stack-tl-entry')
-    expect(entries.length).toBe(2)
-    expect(container.textContent).toContain('Pila (4)')
-    expect(entries[0].getAttribute('data-card-id')).toBe('t1')
-    expect(entries[0].querySelector('[data-testid="stack-group-count"]')?.textContent).toBe('×3')
-    expect(entries[0].querySelector('.stack-tl-pos')?.textContent).toContain('#1–3')
-    expect(entries[1].querySelector('.stack-tl-pos')?.textContent).toContain('#4')
-    expect(entries[1].querySelector('[data-testid="stack-group-count"]')).toBeNull()
-  })
-
-  it('no agrupa habilidades no consecutivas ni con distintas reglas; agrupa hechizos iguales consecutivos', () => {
-    const stack: Record<string, CardView> = {
-      a1: trigger('You gain 1 life.'),
-      s1: { name: 'Shock', cardTypes: ['INSTANT'], manaValue: 1 },
-      a2: trigger('You gain 1 life.'),
-      b1: trigger('Draw a card.'),
-      s2: { name: 'Shock', cardTypes: ['INSTANT'], manaValue: 1 },
-      s3: { name: 'Shock', cardTypes: ['INSTANT'], manaValue: 1 },
-    }
-
-    const { container } = render(<StackZone stack={stack} />)
-    const entries = container.querySelectorAll('.stack-tl-entry')
-    expect(entries.length).toBe(5)
-    expect(entries[4].querySelector('[data-testid="stack-group-count"]')?.textContent).toBe('×2')
-    expect(entries[4].querySelector('.stack-tl-pos')?.textContent).toContain('#5–6')
-  })
-
-  it('despliega una pila de hechizos iguales y permite elegir una copia concreta', () => {
+  it('TGT-7: only the objects the player may target are marked, and clicking one sends that object', () => {
     const onCardClick = vi.fn()
-    const stack: Record<string, CardView> = {
-      s1: { name: 'Shock', cardTypes: ['INSTANT'], manaValue: 1 },
-      s2: { name: 'Shock', cardTypes: ['INSTANT'], manaValue: 1 },
-      s3: { name: 'Shock', cardTypes: ['INSTANT'], manaValue: 1 },
-    }
-
-    const { container } = render(<StackZone stack={stack} onCardClick={onCardClick} />)
-    expect(container.querySelectorAll('.stack-tl-entry').length).toBe(1)
-    fireEvent.click(container.querySelector('.stack-tl-entry')!)
-    const subs = container.querySelectorAll('.stack-tl-sub')
-    expect(subs.length).toBe(3)
-    fireEvent.click(subs[1])
-    expect(onCardClick).toHaveBeenCalledWith('s2')
-    expect(onCardClick).not.toHaveBeenCalledWith('s1')
-  })
-
-  it('TGT-6: does not group entries that are legal targets, so a specific one can be chosen', () => {
-    const stack: Record<string, CardView> = {
-      t1: trigger('You gain 1 life.'),
-      t2: trigger('You gain 1 life.'),
-    }
-
-    const { container } = render(<StackZone stack={stack} targetIds={new Set(['t2'])} />)
-    expect(container.querySelectorAll('.stack-tl-entry').length).toBe(2)
-  })
-
-  it('TGT-7: marks eligible targets on the stack as targetable and clickable, and only those', () => {
-    const onCardClick = vi.fn()
-    const stack: Record<string, CardView> = {
-      'spell-2': { name: 'Lightning Bolt', cardTypes: ['INSTANT'], manaValue: 1 },
-      'spell-1': { name: 'Giant Growth', cardTypes: ['INSTANT'], manaValue: 1 },
-    }
     const { container } = render(
-      <StackZone stack={stack} targetIds={new Set(['spell-1'])} onCardClick={onCardClick} />,
+      <StackZone
+        stack={stackOf(spell('spell-2', 'Counterspell'), spell('spell-1', 'Lightning Bolt'))}
+        targetIds={new Set(['spell-1'])}
+        onCardClick={onCardClick}
+      />,
     )
-    const entries = container.querySelectorAll('.stack-tl-entry')
-    expect(entries[0].classList.contains('targetable')).toBe(false)
-    expect(entries[1].classList.contains('targetable')).toBe(true)
-    fireEvent.click(entries[1])
+    const [top, under] = cards(container)
+    expect(top.classList.contains('targetable')).toBe(false)
+    expect(under.classList.contains('targetable')).toBe(true)
+
+    fireEvent.click(under)
     expect(onCardClick).toHaveBeenCalledWith('spell-1')
   })
 
-  it('no agrupa habilidades de controladores distintos', () => {
-    const stack: Record<string, CardView> = {
-      t1: trigger('You gain 1 life.', { controllerName: 'Yo' }),
-      t2: trigger('You gain 1 life.', { controllerName: 'Rival' }),
-    }
-    const players = [
-      { playerId: 'p1', name: 'Yo', controlled: true },
-      { playerId: 'p2', name: 'Rival', controlled: false },
-    ] as unknown as PlayerView[]
+  it('TGT-7: being asked to target something on the stack brings it back into view', () => {
+    const stack = stackOf(spell('spell-1', 'Lightning Bolt'))
+    const { container, rerender } = render(<StackZone stack={stack} />)
+    fireEvent.click(container.querySelector('[data-testid="stack-push"]')!)
+    expect(container.querySelector('.stack-zone')!.classList.contains('is-pushed')).toBe(true)
 
-    const { container } = render(<StackZone stack={stack} players={players} />)
-    expect(container.querySelectorAll('.stack-tl-entry').length).toBe(2)
+    rerender(<StackZone stack={stack} targetIds={new Set(['spell-1'])} />)
+    expect(container.querySelector('.stack-zone')!.classList.contains('is-pushed')).toBe(false)
   })
 
-  it('mantiene la fila del grupo al resolverse la habilidad del tope (sin remontarla)', () => {
-    const three: Record<string, CardView> = {
-      t1: trigger('You gain 1 life.'),
-      t2: trigger('You gain 1 life.'),
-      t3: trigger('You gain 1 life.'),
-    }
-    const { container, rerender } = render(<StackZone stack={three} />)
-    const row = container.querySelector('.stack-tl-entry')
-    expect(row?.getAttribute('data-card-id')).toBe('t1')
+  it('STK-1: an ability reads its rules on the card; a spell does not repeat what its card already prints', () => {
+    const ability = spell('ability-1', 'Soul Warden', {
+      mageObjectType: 'TRIGGERED_ABILITY',
+      rules: ['You gain 1 life.'],
+    })
+    const instant = spell('spell-1', 'Lightning Bolt', { rules: ['Lightning Bolt deals 3 damage to any target.'] })
 
-    rerender(<StackZone stack={{ t2: three.t2, t3: three.t3 }} />)
-    const after = container.querySelector('.stack-tl-entry')
-    expect(after).toBe(row)
-    expect(after?.getAttribute('data-card-id')).toBe('t2')
-    expect(after?.querySelector('[data-testid="stack-group-count"]')?.textContent).toBe('×2')
+    const { container, rerender } = render(<StackZone stack={stackOf(ability)} />)
+    expect(container.querySelector('.stack-card')!.classList.contains('is-ability')).toBe(true)
+    expect(container.querySelector('.stack-tl-rules')?.textContent).toContain('You gain 1 life.')
 
-    rerender(<StackZone stack={{ t3: three.t3 }} />)
-    expect(container.querySelector('.stack-tl-entry')).toBe(row)
-    expect(container.querySelector('[data-testid="stack-group-count"]')).toBeNull()
+    rerender(<StackZone stack={stackOf(instant)} />)
+    expect(container.querySelector('.stack-card')!.classList.contains('is-spell')).toBe(true)
+    expect(container.querySelector('.stack-tl-rules')).toBeNull()
   })
+})
 
-  it('renders storm copy badges and allows toggling view mode', () => {
-    const stack: Record<string, CardView> = {
-      'storm-1': {
-        name: 'Grapeshot',
-        cardTypes: ['SORCERY'],
-        manaValue: 2,
-        originalIsCopy: true,
-      },
-      'storm-orig': {
-        name: 'Grapeshot',
-        cardTypes: ['SORCERY'],
-        manaValue: 2,
-        originalIsCopy: false,
-      },
-    }
+describe('StackZone, who controls each object', () => {
+  const me = { playerId: 'p-human', name: 'Mage Web', life: 20, controlled: true, isHuman: true } as PlayerView
+  const opponent = { playerId: 'p-opp', name: 'SimBot', life: 20, controlled: false, isHuman: false } as PlayerView
+  const pill = (container: HTMLElement) => container.querySelector<HTMLElement>('.stack-controller-pill')!
 
-    const { container } = render(<StackZone stack={stack} />)
-    expect(container.querySelectorAll('.stack-tl-copy-badge')).toHaveLength(1)
-    expect(container.querySelector('.stack-tl-entry.is-copy')?.getAttribute('data-card-id')).toBe('storm-1')
-
-    const expandedBtn = container.querySelectorAll('.stack-zone [role="tab"]')[1] as HTMLButtonElement
-    expect(expandedBtn).toBeTruthy()
-    fireEvent.click(expandedBtn)
-    expect(container.querySelector('.view-mode-expanded')).toBeTruthy()
-  })
-
-  it('shows timeline rail with green top node', () => {
-    const stack: Record<string, CardView> = {
-      'spell-1': {
-        name: 'Bolt',
-        cardTypes: ['INSTANT'],
-        manaValue: 1,
-      },
-      'spell-2': {
-        name: 'Giant Growth',
-        cardTypes: ['INSTANT'],
-        manaValue: 1,
-      },
-    }
-
-    const { container } = render(<StackZone stack={stack} />)
-    const nodes = container.querySelectorAll('.stack-tl-node')
-    expect(nodes.length).toBe(2)
-    expect(nodes[0].classList.contains('node-top')).toBe(true)
-    expect(nodes[1].classList.contains('node-top')).toBe(false)
-
-    const lines = container.querySelectorAll('.stack-tl-line')
-    expect(lines.length).toBe(1)
-    expect(lines[0].classList.contains('line-top')).toBe(true)
-  })
-
-  it('renders resolve button in header when canResolve is true', () => {
-    const onResolveClick = vi.fn()
-    const stack: Record<string, CardView> = {
-      'spell-1': {
-        name: 'Bolt',
-        cardTypes: ['INSTANT'],
-        manaValue: 1,
-      },
-    }
-
+  it('STK-6: each card says whose it is, mine apart from theirs', () => {
     const { container } = render(
-      <StackZone stack={stack} canResolve={true} onResolveClick={onResolveClick} />,
+      <StackZone
+        stack={stackOf(
+          spell('spell-mine', 'Lightning Bolt', { controllerId: 'p-human' }),
+          spell('spell-opp', 'Counterspell', { controllerId: 'p-opp' }),
+        )}
+        players={[me, opponent]}
+        myPlayerId="p-human"
+      />,
     )
-
-    const btn = container.querySelector('[data-testid="stack-resolve-header-btn"]') as HTMLButtonElement
-    expect(btn).toBeTruthy()
-    fireEvent.click(btn)
-    expect(onResolveClick).toHaveBeenCalled()
-  })
-
-  it('renders controller pill distinguishing human player vs opponent', () => {
-    const players: PlayerView[] = [
-      {
-        playerId: 'p-human',
-        name: 'Mage Web',
-        life: 20,
-        controlled: true,
-        isHuman: true,
-      } as PlayerView,
-      {
-        playerId: 'p-opp',
-        name: 'SimBot',
-        life: 20,
-        controlled: false,
-        isHuman: false,
-      } as PlayerView,
-    ]
-
-    const stack: Record<string, CardView> = {
-      'spell-mine': {
-        name: 'Lightning Bolt',
-        cardTypes: ['INSTANT'],
-        manaValue: 1,
-        controllerId: 'p-human',
-      } as any,
-      'spell-opp': {
-        name: 'Counterspell',
-        cardTypes: ['INSTANT'],
-        manaValue: 2,
-        controllerId: 'p-opp',
-      } as any,
-    }
-
-    const { container } = render(
-      <StackZone stack={stack} players={players} myPlayerId="p-human" />,
-    )
-
     const pills = container.querySelectorAll('.stack-controller-pill')
     expect(pills.length).toBe(2)
     expect(pills[0].classList.contains('is-me')).toBe(true)
@@ -443,305 +190,80 @@ describe('StackZone', () => {
     expect(pills[1].textContent).toContain('SimBot')
   })
 
-  it('no labels an unknown controller as "Tú" when spectating', () => {
-    const players: PlayerView[] = [
-      { playerId: 'p-opp', name: 'SimBot', life: 20, controlled: false, isHuman: false } as PlayerView,
-    ]
-
-    const stack: Record<string, CardView> = {
-      'spell-unknown': {
-        name: 'Mystic Remora',
-        cardTypes: ['ENCHANTMENT'],
-        manaValue: 2,
-      } as any,
-    }
-
-    const { container } = render(<StackZone stack={stack} players={players} />)
-
-    const pill = container.querySelector('.stack-controller-pill')
-    expect(pill).not.toBeNull()
-    expect(pill!.classList.contains('is-me')).toBe(false)
-    expect(pill!.textContent).not.toContain('Tú')
-    expect(pill!.textContent).toContain('Desconocido')
+  it('STK-6: a watcher is never told that someone else\'s spell is theirs', () => {
+    const { container } = render(
+      <StackZone stack={stackOf(spell('spell-watched', 'Counterspell', { controllerId: 'p-opp' }))} players={[opponent]} />,
+    )
+    expect(pill(container).classList.contains('is-me')).toBe(false)
+    expect(pill(container).classList.contains('is-opp')).toBe(true)
+    expect(pill(container).textContent).toContain('SimBot')
+    expect(pill(container).textContent).not.toContain('Tú')
   })
 
-  it('attributes a watched spell to its controller via controllerId (no "Tú" for spectators)', () => {
-    const players: PlayerView[] = [
-      { playerId: 'p-opp', name: 'SimBot', life: 20, controlled: false, isHuman: false } as PlayerView,
-    ]
-
-    const stack: Record<string, CardView> = {
-      'spell-watched': {
-        name: 'Counterspell',
-        cardTypes: ['INSTANT'],
-        manaValue: 2,
-        controllerId: 'p-opp',
-      } as any,
-    }
-
-    const { container } = render(<StackZone stack={stack} players={players} />)
-
-    const pill = container.querySelector('.stack-controller-pill')
-    expect(pill).not.toBeNull()
-    expect(pill!.classList.contains('is-me')).toBe(false)
-    expect(pill!.classList.contains('is-opp')).toBe(true)
-    expect(pill!.textContent).toContain('SimBot')
-    expect(pill!.textContent).not.toContain('Tú')
+  it('STK-6: an object that says nothing about its controller is marked unknown, not mine', () => {
+    const { container } = render(
+      <StackZone stack={stackOf(spell('spell-unknown', 'Mystic Remora', { cardTypes: ['ENCHANTMENT'] }))} players={[opponent]} />,
+    )
+    expect(pill(container).classList.contains('is-me')).toBe(false)
+    expect(pill(container).textContent).not.toContain('Tú')
+    expect(pill(container).textContent).toContain('Desconocido')
   })
 
-  it('falls back to sourceCard.controllerId for stack abilities (no "Desconocido")', () => {    const players: PlayerView[] = [
-      { playerId: 'p-opp', name: 'SimBot', life: 20, controlled: false, isHuman: false } as PlayerView,
-    ]
+  it('STK-6: an ability is attributed through the card that made it', () => {
+    const ability = {
+      id: 'ability-watched',
+      name: 'Ability',
+      mageObjectType: 'TRIGGERED_ABILITY',
+      sourceCard: { controllerId: 'p-opp', controllerName: 'SimBot' },
+    } as unknown as CardView
 
-    const stack: Record<string, CardView> = {
-      'ability-watched': {
-        name: 'Ability',
-        sourceCard: { controllerId: 'p-opp', controllerName: 'SimBot' },
-      } as any,
-    }
-
-    const { container } = render(<StackZone stack={stack} players={players} />)
-
-    const pill = container.querySelector('.stack-controller-pill')
-    expect(pill).not.toBeNull()
-    expect(pill!.classList.contains('is-me')).toBe(false)
-    expect(pill!.classList.contains('is-opp')).toBe(true)
-    expect(pill!.textContent).toContain('SimBot')
-    expect(pill!.textContent).not.toContain('Desconocido')
+    const { container } = render(<StackZone stack={stackOf(ability)} players={[opponent]} />)
+    expect(pill(container).classList.contains('is-opp')).toBe(true)
+    expect(pill(container).textContent).toContain('SimBot')
+    expect(pill(container).textContent).not.toContain('Desconocido')
   })
+})
 
-  it('shows the target names inline (permanent + player)', () => {
-    const players: PlayerView[] = [
-      { playerId: 'p-me', name: 'Yo', life: 20, controlled: true, isHuman: true } as PlayerView,
-      {
-        playerId: 'p-opp',
-        name: 'SimBot',
-        life: 20,
-        controlled: false,
-        isHuman: false,
-        battlefield: {
-          'perm-acer': { id: 'perm-acer', name: 'Acererak, el Archiliche', manaValue: 3 },
-        },
-      } as unknown as PlayerView,
-    ]
+describe('StackZone, the preview the pointer opens', () => {
+  const preview = (container: HTMLElement) => container.querySelector('.floating-card-preview')
 
-    const stack: Record<string, CardView> = {
-      'spell-1': {
-        name: 'Lightning Bolt',
-        cardTypes: ['INSTANT'],
-        manaValue: 1,
-        targets: ['perm-acer', 'p-opp'],
-      } as any,
-    }
-
-    const { container } = render(<StackZone stack={stack} players={players} myPlayerId="p-me" />)
-
-    const line = container.querySelector('[data-testid="stack-targets"]')
-    expect(line).not.toBeNull()
-    expect(line?.textContent).toContain('Acererak, el Archiliche')
-    expect(line?.textContent).toContain('SimBot')
-  })
-
-  it('exposes the full target list on a focusable labelled element (ellipsis is structural)', () => {
-    const players: PlayerView[] = [
-      { playerId: 'p-me', name: 'Yo', life: 20, controlled: true, isHuman: true } as PlayerView,
-      {
-        playerId: 'p-opp',
-        name: 'SimBot',
-        life: 20,
-        controlled: false,
-        isHuman: false,
-        battlefield: {
-          'perm-acer': { id: 'perm-acer', name: 'Acererak, el Archiliche', manaValue: 3 },
-        },
-      } as unknown as PlayerView,
-    ]
-
-    const stack: Record<string, CardView> = {
-      'spell-1': {
-        name: 'Lightning Bolt',
-        cardTypes: ['INSTANT'],
-        manaValue: 1,
-        targets: ['perm-acer', 'p-opp'],
-      } as any,
-    }
-
-    const { container } = render(<StackZone stack={stack} players={players} myPlayerId="p-me" />)
-
-    const line = container.querySelector('[data-testid="stack-targets"]') as HTMLElement
-    expect(line).not.toBeNull()
-    expect(line.tabIndex).toBe(0)
-    expect(line.getAttribute('aria-label')).toContain('Acererak, el Archiliche')
-    expect(line.getAttribute('aria-label')).toContain('SimBot')
-  })
-
-  it('hides the target line when the spell has no targets', () => {
-    const stack: Record<string, CardView> = {
-      'spell-1': { name: 'Lightning Bolt', cardTypes: ['INSTANT'], manaValue: 1 },
-    }
-    const { container } = render(<StackZone stack={stack} />)
-    expect(container.querySelector('[data-testid="stack-targets"]')).toBeNull()
-  })
-
-  it('clears the hover preview when the hovered card leaves the stack', () => {
+  it('STK-5: the preview closes when the card it was showing leaves the stack', () => {
     const onHover = vi.fn()
-    const stack: Record<string, CardView> = {
-      'spell-2': { id: 'spell-2', name: 'Counterspell', cardTypes: ['INSTANT'], manaValue: 2 },
-      'spell-1': { id: 'spell-1', name: 'Lightning Bolt', cardTypes: ['INSTANT'], manaValue: 1 },
-    }
-
+    const stack = stackOf(spell('spell-2', 'Counterspell'), spell('spell-1', 'Lightning Bolt'))
     const { container, rerender } = render(<StackZone stack={stack} onHover={onHover} />)
-    fireEvent.mouseEnter(container.querySelectorAll('.stack-tl-entry')[0])
-    expect(container.querySelector('.floating-card-preview')).toBeTruthy()
 
-    // Counterspell se resuelve: la pila sigue viva pero sin spell-2
-    rerender(<StackZone stack={{ 'spell-1': stack['spell-1'] }} onHover={onHover} />)
-    expect(container.querySelector('.floating-card-preview')).toBeNull()
+    fireEvent.mouseEnter(cards(container)[0])
+    expect(preview(container)).not.toBeNull()
+
+    rerender(<StackZone stack={stackOf(stack['spell-1'])} onHover={onHover} />)
+    expect(preview(container)).toBeNull()
     expect(onHover).toHaveBeenCalledWith(null)
   })
 
-  it('does not resurrect the stale card when the stack empties and refills', async () => {
-    const stack: Record<string, CardView> = {
-      'spell-1': { id: 'spell-1', name: 'Lightning Bolt', cardTypes: ['INSTANT'], manaValue: 1 },
-    }
+  it('STK-5: a resolved card never comes back when the stack fills again', async () => {
+    const { container, rerender } = render(<StackZone stack={stackOf(spell('spell-1', 'Lightning Bolt'))} />)
+    fireEvent.mouseEnter(cards(container)[0])
+    expect(preview(container)).not.toBeNull()
 
-    const { container, rerender } = render(<StackZone stack={stack} />)
-    fireEvent.mouseEnter(container.querySelectorAll('.stack-tl-entry')[0])
-    expect(container.querySelector('.floating-card-preview')).toBeTruthy()
-
-    // La pila se resuelve por completo...
     rerender(<StackZone stack={{}} />)
-    expect(container.querySelector('.ui-empty')).toBeTruthy()
+    expect(container.innerHTML).toBe('')
 
-    // ...y una carta NUEVA abre una pila fresca: el Bolt resuelto no debe reaparecer
-    rerender(
-      <StackZone
-        stack={{
-          'spell-9': { id: 'spell-9', name: 'Giant Growth', cardTypes: ['INSTANT'], manaValue: 1 },
-        }}
-      />,
-    )
-    expect(container.querySelector('.floating-card-preview')).toBeNull()
+    rerender(<StackZone stack={stackOf(spell('spell-9', 'Giant Growth'))} />)
+    expect(preview(container)).toBeNull()
 
-    // Hover sobre la nueva carta muestra la carta nueva (no el Bolt viejo)
     await act(async () => {
-      fireEvent.mouseEnter(container.querySelectorAll('.stack-tl-entry')[0])
+      fireEvent.mouseEnter(cards(container)[0])
     })
-    const img = container.querySelector('.floating-card-img')
-    expect(img?.getAttribute('alt')).toBe('Giant Growth')
+    expect(container.querySelector('.floating-card-img')?.getAttribute('alt')).toBe('Giant Growth')
   })
 
-  it('keeps the preview when the hovered card stays while a new card enters', () => {
-    const stack1: Record<string, CardView> = {
-      'spell-1': { id: 'spell-1', name: 'Lightning Bolt', cardTypes: ['INSTANT'], manaValue: 1 },
-    }
-    const { container, rerender } = render(<StackZone stack={stack1} />)
-    fireEvent.mouseEnter(container.querySelectorAll('.stack-tl-entry')[0])
-    expect(container.querySelector('.floating-card-preview')).toBeTruthy()
+  it('STK-5: a card entering the stack does not close the preview of the one being read', () => {
+    const bolt = spell('spell-1', 'Lightning Bolt')
+    const { container, rerender } = render(<StackZone stack={stackOf(bolt)} />)
+    fireEvent.mouseEnter(cards(container)[0])
+    expect(preview(container)).not.toBeNull()
 
-    // Entra una nueva carta: el Bolt sigue en pila → el preview no debe cerrarse
-    rerender(
-      <StackZone
-        stack={{
-          'spell-2': { id: 'spell-2', name: 'Counterspell', cardTypes: ['INSTANT'], manaValue: 2 },
-          'spell-1': stack1['spell-1'],
-        }}
-      />,
-    )
-    expect(container.querySelector('.floating-card-preview')).toBeTruthy()
-  })
-})
-
-describe('StackZone countdown (C2)', () => {
-  const spell = (name: string) => ({ name, cardTypes: ['INSTANT'], manaValue: 1 }) as unknown as CardView
-
-  it('only the top entry pulses (a finite run, 3 iterations in CSS) and carries the wait bar', () => {
-    const stack = { 'spell-1': spell('Counterspell'), 'spell-2': spell('Lightning Bolt') }
-    const { container } = render(<StackZone stack={stack} />)
-    const entries = container.querySelectorAll('.stack-tl-entry')
-    expect(container.querySelectorAll('.stack-top-pulse')).toHaveLength(1)
-    expect(entries[0].classList.contains('stack-top-pulse')).toBe(true)
-    expect(entries[1].classList.contains('stack-top-pulse')).toBe(false)
-    expect(container.querySelectorAll('.stack-top-wait-bar')).toHaveLength(1)
-    expect(entries[0].querySelector('.stack-top-wait-bar')).not.toBeNull()
-  })
-
-  it('the pulse and the bar disappear when the stack empties', () => {
-    const stack = { 'spell-1': spell('Counterspell') }
-    const view = render(<StackZone stack={stack} />)
-    expect(view.container.querySelector('.stack-top-wait-bar')).not.toBeNull()
-    view.rerender(<StackZone stack={{}} />)
-    expect(view.container.querySelector('.ui-empty')).toBeTruthy()
-    expect(view.container.querySelector('.stack-top-pulse')).toBeNull()
-    expect(view.container.querySelector('.stack-top-wait-bar')).toBeNull()
-  })
-
-  it('the bar restarts only when the top card changes', () => {
-    const view = render(<StackZone stack={{ 'spell-1': spell('Counterspell') }} />)
-    const first = view.container.querySelector('.stack-top-wait-bar')
-
-    view.rerender(<StackZone stack={{ 'spell-1': spell('Counterspell'), 'spell-2': spell('Lightning Bolt') }} />)
-    expect(view.container.querySelector('.stack-top-wait-bar')).toBe(first)
-
-    view.rerender(<StackZone stack={{ 'spell-3': spell('Giant Growth'), 'spell-1': spell('Counterspell'), 'spell-2': spell('Lightning Bolt') }} />)
-    const restarted = view.container.querySelector('.stack-top-wait-bar')
-    expect(restarted).not.toBeNull()
-    expect(restarted).not.toBe(first)
-  })
-
-  it('compact rows show the card art as an art-crop thumbnail', async () => {
-    vi.mocked(awaitImageUrl).mockResolvedValueOnce('https://cards.scryfall.io/normal/front/a/b/bolt.jpg')
-    const stack: Record<string, CardView> = {
-      'spell-1': { name: 'Lightning Bolt', cardTypes: ['INSTANT'], manaValue: 1 },
-    }
-    const { container } = render(<StackZone stack={stack} />)
-    const img = await waitFor(() => {
-      const el = container.querySelector<HTMLImageElement>('.stack-thumb .stack-thumb-img')
-      expect(el).not.toBeNull()
-      return el as HTMLImageElement
-    })
-    expect(img.getAttribute('src')).toBe('https://cards.scryfall.io/art_crop/front/a/b/bolt.jpg')
-  })
-})
-
-describe('StackZone arriving spells', () => {
-  const rectAt = (left: number, top: number, width = 100, height = 140) =>
-    ({ left, top, width, height, right: left + width, bottom: top + height, x: left, y: top, toJSON: () => {} }) as DOMRect
-
-  afterEach(() => {
-    clearFlights()
-  })
-
-  it('hides an arriving spell in its slot while its flight to the stack is active, then shows it', () => {
-    const stack: Record<string, CardView> = {
-      'spell-1': { name: 'Lightning Bolt', cardTypes: ['INSTANT'], manaValue: 1 },
-    }
-    const { container } = render(<StackZone stack={stack} />)
-    const entry = container.querySelector<HTMLElement>('[data-card-id="spell-1"]')
-    expect(entry).toBeTruthy()
-    expect(entry!.classList.contains('stack-entry-arriving')).toBe(false)
-
-    act(() => {
-      startCardFlight({ ...stack['spell-1'], id: 'spell-1' }, rectAt(50, 600), rectAt(900, 120), 900, '[data-card-id="spell-1"] .stack-tl-card')
-    })
-    expect(container.querySelector('[data-card-id="spell-1"]')!.classList.contains('stack-entry-arriving')).toBe(true)
-    expect(container.querySelectorAll('.stack-tl-entry').length).toBe(1)
-
-    act(() => {
-      clearFlights()
-    })
-    expect(container.querySelector('[data-card-id="spell-1"]')!.classList.contains('stack-entry-arriving')).toBe(false)
-  })
-
-  it('does not hide a spell that is leaving the stack for its graveyard', () => {
-    const stack: Record<string, CardView> = {
-      'spell-2': { name: 'Giant Growth', cardTypes: ['INSTANT'], manaValue: 1 },
-    }
-    const { container } = render(<StackZone stack={stack} />)
-
-    act(() => {
-      startCardFlight({ ...stack['spell-2'], id: 'spell-2' }, rectAt(900, 120), rectAt(50, 600), 380, '[data-player-name="a"] .graveyard-stack [data-card-id="spell-2"]')
-    })
-    expect(container.querySelector('[data-card-id="spell-2"]')!.classList.contains('stack-entry-arriving')).toBe(false)
+    rerender(<StackZone stack={stackOf(spell('spell-2', 'Counterspell'), bolt)} />)
+    expect(preview(container)).not.toBeNull()
   })
 })

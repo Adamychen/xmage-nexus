@@ -41,8 +41,8 @@ describe('gameTransitionEngine', () => {
           <div class="graveyard-stack" style="width: 80px; height: 112px;"></div>
         </div>
         <div class="stack-zone" style="width: 250px; height: 400px;">
-          <div data-card-id="spell-bolt" class="stack-tl-entry">
-            <div class="stack-tl-card">
+          <div data-card-id="spell-bolt" class="stack-card">
+            <div class="stack-thumb">
               <div class="stack-thumb" style="width: 40px; height: 56px;"></div>
             </div>
           </div>
@@ -400,10 +400,10 @@ describe('gameTransitionEngine', () => {
     }
   })
 
-  it('flies a cast spell to the StackDeck when the stack is shown as a deck', () => {
+  it('flies a cast spell to the stack on the board', () => {
     document.querySelector('.stack-zone')?.remove()
     const deck = document.createElement('section')
-    deck.className = 'stack-deck'
+    deck.className = 'stack-zone'
     document.body.appendChild(deck)
     vi.spyOn(deck, 'getBoundingClientRect').mockReturnValue(mockRect(800, 300, 250, 400))
     const bolt = makeCard({
