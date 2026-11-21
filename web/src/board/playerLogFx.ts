@@ -6,7 +6,7 @@ import { spawnImpact } from './impactFx'
 import { spawnFloater } from './feedbackFx'
 import { afterLayout, objectIdAfter, replayClass, visibleRect } from './gameLogFx'
 
-const STACK_ZONES = '.stack-zone, .stack-deck, .stack-list'
+const STACK_ZONES = '.stack-zone'
 
 /** "<player> chooses to pay … / chooses not to pay … / pays the cost to prevent the effect". */
 export function parsePayChoice(message: string): { player: string; paid: boolean } | null {

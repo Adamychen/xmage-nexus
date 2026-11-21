@@ -109,7 +109,7 @@ function getRect(selector: string): DOMRect | null {
   return rectOf(document.querySelector(selector))
 }
 
-const STACK_SELECTOR = '.stack-zone, .stack-deck, .stack-list'
+const STACK_SELECTOR = '.stack-zone'
 /* Every layout's spelling of each pile: the table draws a stack or a chip, the Arena strip draws
    a pile card (`ResourceBar`). A flight whose destination only knows one of them has no landing
    place in the other, and the card it is carrying simply vanishes in mid-air. */
@@ -1024,7 +1024,7 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
     later(bannerDelayMs, () => announceBanner(t('game', 'turn_banner_player', { turn: nextGame.turn, player: playerName })))
   }
 
-  const stackEl = document.querySelector('.stack-zone, .stack-deck, .stack-list, [data-testid="drawer-tab-stack"]') as HTMLElement | null
+  const stackEl = document.querySelector('.stack-zone') as HTMLElement | null
   const stackRect = stackEl ? stackEl.getBoundingClientRect() : null
 
   // 1. Detect New Spells on the Stack (Hand/Battlefield -> Stack)
@@ -1065,8 +1065,7 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
           spawnImpact('copy', fromRect)
           flyAfterLayout(spellId, spell, fromRect, [
             `[data-card-id="${spellId}"] .stack-thumb`,
-            `[data-card-id="${spellId}"] .stack-tl-card`,
-            `[data-card-id="${spellId}"]`,
+              `[data-card-id="${spellId}"]`,
           ], stackRect, COPY_FLIGHT_MS, originalSource?.size ?? null, 'copy')
         }
         continue
@@ -1120,7 +1119,6 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
         const lift = !isAbilityCard(spell) && fxMotionAllowed()
         flyAfterLayout(spellId, spell, sourceRect, [
           `[data-card-id="${spellId}"] .stack-thumb`,
-          `[data-card-id="${spellId}"] .stack-tl-card`,
           `[data-card-id="${spellId}"]`,
         ], stackRect, lift ? CAST_FLIGHT_MS : 380, sourceSize, weight > 0 ? 'heavy' : undefined, isAbilityCard(spell) ? undefined : 'gold', lift)
       } else if (!sourceRect) {

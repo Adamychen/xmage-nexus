@@ -251,7 +251,7 @@ describe('gameTransitionEngine — stack resolution and feedback', () => {
 
   it('a countered spell shatters on the stack and fires no projectile at its own target', async () => {
     document.body.innerHTML =
-      '<div class="stack-deck"><div data-card-id="bolt-1"></div><div data-card-id="cs-1"></div></div>'
+      '<div class="stack-zone"><div data-card-id="bolt-1"></div><div data-card-id="cs-1"></div></div>'
       + '<div data-player-id="p1" data-player-name="Alice"><div class="graveyard-stack"></div><div class="card-slot" data-card-id="c1"></div></div>'
     clearImpacts()
     const counterspell = { id: 'cs-1', name: 'Counterspell', targets: ['bolt-1'] } as unknown as CardView
@@ -330,7 +330,7 @@ describe('gameTransitionEngine — stack resolution and feedback', () => {
 
   it('a fizzled spell drifts apart on the stack and fires no projectile', async () => {
     document.body.innerHTML =
-      '<div class="stack-deck"><div data-card-id="bolt-1"></div></div>'
+      '<div class="stack-zone"><div data-card-id="bolt-1"></div></div>'
       + '<div data-player-id="p1" data-player-name="Alice"><div class="graveyard-stack"></div><div class="card-slot" data-card-id="c1"></div></div>'
     clearImpacts()
     clearProjectiles()
@@ -342,7 +342,7 @@ describe('gameTransitionEngine — stack resolution and feedback', () => {
     noteFizzled('bolt-1')
 
     detectAndAnimateTransitions(prev, next)
-    await vi.waitFor(() => expect(document.querySelector('.stack-deck [data-card-id="bolt-1"]')?.classList.contains('fx-fizzle')).toBe(true), { timeout: 3000, interval: 25 })
+    await vi.waitFor(() => expect(document.querySelector('.stack-zone [data-card-id="bolt-1"]')?.classList.contains('fx-fizzle')).toBe(true), { timeout: 3000, interval: 25 })
     await vi.waitFor(() => expect(hasFlightFor('bolt-1')).toBe(true), { timeout: 3000, interval: 25 })
 
     expect(getProjectiles()).toHaveLength(0)
@@ -352,7 +352,7 @@ describe('gameTransitionEngine — stack resolution and feedback', () => {
 
   it('the same spell without a fizzle line fires its projectile', async () => {
     document.body.innerHTML =
-      '<div class="stack-deck"><div data-card-id="bolt-1"></div></div>'
+      '<div class="stack-zone"><div data-card-id="bolt-1"></div></div>'
       + '<div data-player-id="p1" data-player-name="Alice"><div class="graveyard-stack"></div><div class="card-slot" data-card-id="c1"></div></div>'
     clearImpacts()
     clearProjectiles()
@@ -365,7 +365,7 @@ describe('gameTransitionEngine — stack resolution and feedback', () => {
     detectAndAnimateTransitions(prev, next)
     await vi.waitFor(() => expect(getProjectiles().length).toBeGreaterThan(0), { timeout: 3000, interval: 25 })
 
-    expect(document.querySelector('.stack-deck [data-card-id="bolt-1"]')?.classList.contains('fx-fizzle')).toBe(false)
+    expect(document.querySelector('.stack-zone [data-card-id="bolt-1"]')?.classList.contains('fx-fizzle')).toBe(false)
   })
 
   it('a player who leaves the game cracks their seat', () => {

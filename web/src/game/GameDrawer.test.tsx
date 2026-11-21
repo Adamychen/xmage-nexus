@@ -4,18 +4,17 @@ import GameDrawer, { DrawerToggles, type DrawerTab } from './GameDrawer'
 import { setState } from '../state/store'
 import { useState } from 'react'
 
-function Harness({ commanders = false, mechanics = false, stackCount = 0 }: { commanders?: boolean; mechanics?: boolean; stackCount?: number }) {
+function Harness({ commanders = false, mechanics = false }: { commanders?: boolean; mechanics?: boolean }) {
   const [tab, setTab] = useState<DrawerTab | null>(null)
   return (
     <>
       <DrawerToggles
         active={tab}
-        stackCount={stackCount}
         onToggle={(next) => setTab((cur) => (cur === next ? null : next))}
         hasCommanders={commanders}
         hasActiveMechanics={mechanics}
       />
-      {tab && <GameDrawer tab={tab} stackCount={stackCount} stack={<div data-testid="stack-content" />} onClose={() => setTab(null)} />}
+      {tab && <GameDrawer tab={tab} onClose={() => setTab(null)} />}
     </>
   )
 }
@@ -58,16 +57,10 @@ describe('GameDrawer', () => {
     expect(withCommanders.queryByTestId('drawer-tab-commander')).not.toBeNull()
   })
 
-  it('el icono de la pila muestra el contador y abre su contenido', () => {
-    const empty = render(<Harness />)
-    expect(empty.queryByTestId('stack-count')).toBeNull()
-    empty.unmount()
-    const { getByTestId } = render(<Harness stackCount={3} />)
-    expect(getByTestId('stack-count').textContent).toBe('3')
-    fireEvent.click(getByTestId('drawer-tab-stack'))
-    expect(getByTestId('game-drawer').getAttribute('data-tab')).toBe('stack')
-    expect(getByTestId('stack-content')).toBeDefined()
-    expect(getByTestId('game-drawer').textContent).toContain('(3)')
+  it('STK-2: the drawer has no tab for the stack: the stack is on the board', () => {
+    const { queryByTestId } = render(<Harness />)
+    expect(queryByTestId('drawer-tab-stack')).toBeNull()
+    expect(queryByTestId('stack-count')).toBeNull()
   })
 
   it('marca las mecánicas activas con una estrella', () => {

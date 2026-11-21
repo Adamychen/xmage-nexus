@@ -137,7 +137,7 @@ function visibleRect(el: Element | null): DOMRect | null {
   return rect.width > 0 && rect.height > 0 ? rect : null
 }
 
-const OFF_BATTLEFIELD = '.graveyard-stack, .exile-stack, .library-stack, .hand-zone, .hand-bar, .stack-zone, .stack-list, .combat-strike-layer'
+const OFF_BATTLEFIELD = '.graveyard-stack, .exile-stack, .library-stack, .hand-zone, .hand-bar, .stack-zone, .combat-strike-layer'
 
 export function isOffBattlefield(el: Element): boolean {
   return el.closest(OFF_BATTLEFIELD) !== null

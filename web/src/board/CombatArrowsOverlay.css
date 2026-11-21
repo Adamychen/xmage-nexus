@@ -22,9 +22,8 @@
 }
 
 /* TGT-11: an arrow is a beam, not a ladder. Two strokes make it: a dark seam right under it for the same reason, and the beam, drawn
-   with a gradient that runs dim at the source and full at the point. The direction is in that
-   gradient and in the dart at its end, so there is no need for a march of dashes to read it by,
-   which also makes a capture of the board reproducible. */
+   in one colour the whole way. The direction is in the dart at its end, so there is no need for a
+   march of dashes to read it by, which also makes a capture of the board reproducible. */
 .arrow-shadow {
   fill: none;
   stroke: var(--shade-2);

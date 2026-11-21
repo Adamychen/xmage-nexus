@@ -282,7 +282,7 @@ test.describe('BRD-22 combat steps on the dial', () => {
   })
 })
 
-test('v2 stack deck: top card, tabs, expand and collapse @gameui', async ({ page }, testInfo) => {
+test('STK-1, STK-2: the stack draws every object on the board, and the grip pushes it aside @gameui', async ({ page }, testInfo) => {
   const stack = [
     { id: 's-fow', name: 'Force of Will', controllerId: 'p-mira', targets: ['s-pact'] },
     { id: 's-pact', name: 'Pact of Negation', controllerId: 'p-adam', targets: ['s-cs'] },
@@ -291,24 +291,24 @@ test('v2 stack deck: top card, tabs, expand and collapse @gameui', async ({ page
     { id: 's-rs', name: 'Rhystic Study', controllerId: 'p-mira', ability: true, targets: ['p-adam'], rules: ['Whenever an opponent casts a spell, you may draw a card unless that player pays {1}.'] },
   ]
   await showGame(page, richCommanderGame({ stack }), V2)
-  const deck = page.getByTestId('stack-deck')
-  await expect(deck).toBeVisible({ timeout: 10_000 })
-  await expect(deck).toHaveAttribute('data-state', 'collapsed')
-  await expect(page.getByTestId('stack-count')).toHaveText('5')
-  await expect(page.getByTestId('stack-deck-top')).toContainText('Mira')
-  await expect(page.locator('.stack-deck-tab')).toHaveCount(4)
+  const zone = page.getByTestId('stack-zone')
+  await expect(zone).toBeVisible({ timeout: 10_000 })
+  const cards = zone.locator('.stack-card')
+  await expect(cards, 'five objects, five cards').toHaveCount(5)
+  await expect(cards.first(), 'the one that resolves next is in front').toHaveClass(/is-top/)
+  await expect(cards.first(), 'and it says whose it is').toContainText('Mira')
   await expect(page.locator('.action-btn-label').first()).toContainText(/resolve/i)
   await page.waitForTimeout(600)
-  await page.screenshot({ path: testInfo.outputPath('v2-stack-collapsed.png') })
+  await page.screenshot({ path: testInfo.outputPath('v2-stack-cascade.png') })
 
-  await page.getByTestId('stack-deck-toggle').click()
-  await expect(deck).toHaveAttribute('data-state', 'open')
-  await expect(page.locator('.stack-trow')).toHaveCount(5)
+  await page.getByTestId('stack-push').click()
+  await expect(zone).toHaveClass(/is-pushed/)
   await page.waitForTimeout(600)
-  await page.screenshot({ path: testInfo.outputPath('v2-stack-open.png') })
+  await page.screenshot({ path: testInfo.outputPath('v2-stack-pushed.png') })
 
-  await page.getByTestId('stack-deck-toggle').click()
-  await expect(deck).toHaveAttribute('data-state', 'collapsed')
+  await page.getByTestId('stack-push').click()
+  await expect(zone).not.toHaveClass(/is-pushed/)
+  await expect(cards, 'bringing it back keeps every object on it').toHaveCount(5)
 })
 
 test('v2 side panel opens from the top bar and pushes the board @gameui', async ({ page }, testInfo) => {
@@ -474,7 +474,7 @@ test('v2 mechanic chips open the mechanics tab of the side panel @gameui', async
   await expect(page.getByTestId('mech-table-state')).toContainText('Tobias')
 })
 
-test('v2 arrows take the seat colour of their source and stay thin and dashed @gameui', async ({ page }) => {
+test('TGT-11: v2 arrows take the seat colour of their source and are one colour, with nothing marching @gameui', async ({ page }) => {
   const game = richCommanderGame({ step: 'DECLARE_BLOCKERS' }) as { players: Array<Record<string, any>>; combat: unknown[]; activePlayerId: string }
   game.activePlayerId = 'p-tobias'
   game.combat = [{ attackers: { 'tobias-edgar': game.players[2].battlefield['tobias-edgar'] }, blockers: {}, defenderId: 'p-adam' }]
@@ -482,8 +482,10 @@ test('v2 arrows take the seat colour of their source and stay thin and dashed @g
   const arrow = page.locator('.arrow-group--v2[data-arrow-from="tobias-edgar"][data-arrow-to="p-adam"] .arrow-path')
   await expect(arrow).toHaveCount(1, { timeout: 10_000 })
   await expect(arrow).toHaveAttribute('style', /--seat-2/)
-  await expect(arrow).toHaveCSS('stroke-width', '2.2px')
-  await expect(page.locator('.arrow-shadow')).toHaveCount(0)
+  await expect(arrow).toHaveCSS('stroke-width', '3px')
+  await expect(arrow, 'one colour the whole way, not a gradient').not.toHaveCSS('stroke', /url\(/)
+  await expect(arrow, 'no ladder of dashes').toHaveCSS('stroke-dasharray', 'none')
+  await expect(page.locator('.arrow-shadow'), 'the seat-coloured beam needs no seam over the table').toHaveCount(0)
 })
 
 test('HND-7: v2 hand column gives way to the fan while the side panel is open @gameui', async ({ page }) => {
@@ -501,30 +503,40 @@ test('HND-7: v2 hand column gives way to the fan while the side panel is open @g
 test.describe('narrow window', () => {
   test.use({ viewport: { width: 1280, height: 720 } })
 
-  test('v2 keeps the dial, the stack deck and the top bar inside a 1280x720 window @gameui', async ({ page }, testInfo) => {
+  test('v2 keeps the dial, the stack and the top bar inside a 1280x720 window @gameui', async ({ page }, testInfo) => {
     const stack = [
       { id: 's-cs', name: 'Counterspell', controllerId: 'p-mira', targets: ['s-bolt'] },
       { id: 's-bolt', name: 'Lightning Bolt', controllerId: 'p-adam', targets: ['tobias-edgar'] },
     ]
     await showGame(page, richCommanderGame({ stack }), V2)
-    await expect(page.getByTestId('stack-deck')).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByTestId('stack-zone')).toBeVisible({ timeout: 10_000 })
     await page.waitForTimeout(600)
     const inside = await page.evaluate(() => {
       const vw = window.innerWidth
       const vh = window.innerHeight
-      const ids = ['phase-dial', 'stack-deck', 'game-topbar']
+      const ids = ['phase-dial', 'stack-zone', 'game-topbar']
       return ids.map((id) => {
         const r = document.querySelector(`[data-testid="${id}"]`)!.getBoundingClientRect()
         return { id, ok: r.left >= -1 && r.top >= -1 && r.right <= vw + 1 && r.bottom <= vh + 1 }
       })
     })
     for (const entry of inside) expect(entry.ok, `${entry.id} stays inside the window`).toBe(true)
-    const gap = await page.evaluate(() => {
-      const deck = document.querySelector('[data-testid="stack-deck"]')!.getBoundingClientRect()
-      const dial = document.querySelector('[data-testid="phase-dial"]')!.getBoundingClientRect()
-      return dial.top - deck.bottom
+    // The stack is a layer over the board (STK-2), but never over anything the player clicks. The
+    // dock's own box is mostly empty room (it does not take the pointer), so what is measured is
+    // the controls inside it.
+    const covered = await page.evaluate(() => {
+      const stack = document.querySelector('.stack-zone')!.getBoundingClientRect()
+      const hits: string[] = []
+      for (const el of document.querySelectorAll('[data-testid="game-dock"] button, [data-testid="game-dock"] [role="button"]')) {
+        const r = el.getBoundingClientRect()
+        if (r.width === 0 || r.height === 0) continue
+        if (stack.left < r.right - 1 && stack.right > r.left + 1 && stack.top < r.bottom - 1 && stack.bottom > r.top + 1) {
+          hits.push(el.textContent?.trim().slice(0, 24) || el.className.toString().split(' ')[0])
+        }
+      }
+      return hits
     })
-    expect(gap, 'the stack deck ends above the phase dial').toBeGreaterThanOrEqual(0)
+    expect(covered, 'the stack covers nothing the player clicks in the dock').toEqual([])
     await page.screenshot({ path: testInfo.outputPath('v2-1280.png') })
   })
 })
@@ -544,8 +556,8 @@ test('v2 always uses the arena layout, whatever the board layout setting says @g
   await page.screenshot({ path: testInfo.outputPath('v2-forced-arena.png') })
 })
 
-async function boardCardsUnderOverlays(page: import('@playwright/test').Page) {
-  return page.evaluate(() => {
+async function boardCardsUnderOverlays(page: import('@playwright/test').Page, withStack = true) {
+  return page.evaluate((withStack: boolean) => {
     const visible = (el: Element): DOMRect | null => {
       const box = el.getBoundingClientRect()
       let l = box.left
@@ -565,7 +577,8 @@ async function boardCardsUnderOverlays(page: import('@playwright/test').Page) {
     }
     const cards = [...document.querySelectorAll('.arena-board .bz-band .card-slot, .arena-board .bz-commander .card-slot, .arena-board .bz-marquee .card-slot')]
     const overlays = [
-      ...document.querySelectorAll('.arena-board .player-info-bar, [data-testid="log-ticker"], [data-testid="combat-ledger"], [data-testid="stack-deck"], [data-testid="game-dock"]'),
+      ...document.querySelectorAll('.arena-board .player-info-bar, [data-testid="log-ticker"], [data-testid="combat-ledger"], [data-testid="game-dock"]'),
+      ...(withStack ? document.querySelectorAll('[data-testid="stack-zone"]') : []),
     ]
     const label = (el: Element) => el.getAttribute('data-testid') ?? el.className.toString().split(' ')[0]
     const hit: string[] = []
@@ -579,7 +592,7 @@ async function boardCardsUnderOverlays(page: import('@playwright/test').Page) {
       }
     }
     return { hit, cards: cards.length, overlays: overlays.length }
-  })
+  }, withStack)
 }
 
 const STACK = [
@@ -593,7 +606,7 @@ for (const vp of [{ width: 1600, height: 900 }, { width: 1280, height: 720 }]) {
   test.describe(`no overlap ${vp.width}x${vp.height}`, () => {
     test.use({ viewport: vp })
 
-    for (const scenario of ['quiet', 'combat', 'stack', 'stack-open', 'spectator-quiet', 'spectator-combat']) {
+    for (const scenario of ['quiet', 'combat', 'stack', 'stack-pushed', 'spectator-quiet', 'spectator-combat']) {
       test(`v2 no battlefield card touches a portrait, the log, the ledger, the stack or the dial: ${scenario} @gameui`, async ({ page }, testInfo) => {
         const base = scenario.replace('spectator-', '')
         const game =
@@ -608,11 +621,13 @@ for (const vp of [{ width: 1600, height: 900 }, { width: 1280, height: 720 }]) {
         await showGame(page, game, V2, LOG)
         if (base === 'combat') await expect(page.getByTestId('combat-ledger')).toBeVisible({ timeout: 10_000 })
         else if (base === 'quiet') await expect(page.getByTestId('log-ticker')).toBeVisible({ timeout: 10_000 })
-        else await expect(page.getByTestId('stack-deck')).toBeVisible({ timeout: 10_000 })
-        if (scenario === 'stack-open') await page.getByTestId('stack-deck-toggle').click()
+        else await expect(page.getByTestId('stack-zone')).toBeVisible({ timeout: 10_000 })
+        if (scenario === 'stack-pushed') await page.getByTestId('stack-push').click()
         await page.mouse.move(2, 400)
         await page.waitForTimeout(900)
-        const result = await boardCardsUnderOverlays(page)
+        // STK-2: a stack with something on it lies over the board on purpose, which is what the
+        // grip is for; pushed aside it must leave every card alone, and that is what is asserted.
+        const result = await boardCardsUnderOverlays(page, scenario !== 'stack')
         expect(result.cards).toBeGreaterThan(0)
         expect(result.hit).toEqual([])
         const crossing = await page.evaluate(() => {

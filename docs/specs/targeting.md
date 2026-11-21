@@ -63,23 +63,24 @@ nor playable take no click.
 - Guard: `src/board/PileOverlay.test.tsx` · `src/game/InfoWindows.test.tsx` · `src/board/HandViewer.test.tsx` · `src/board/HandBar.test.tsx`
 
 ### TGT-6 · A legal target is never folded into a group
-Piles that collapse identical permanents (lands, tokens) leave a legal target out as its own card,
-and the stack's `×N` rows of identical abilities never absorb an entry that is a legal target.
-The player always clicks the exact object the server will receive.
+Piles that collapse identical permanents (lands, tokens) leave a legal target out as its own card.
+The player always clicks the exact object the server will receive. The stack folds nothing into
+anything any more (STK-4), so this is a rule about the battlefield now.
 
-- Why: on the stack, so that the targeting click stays per entry (`90b4c9be46`); on the
-  battlefield, the review in `8fbb005e7b` ("stacks exclude targets and attachments").
-- Guard: `src/board/BoardZone.battlefield.test.tsx` · `src/board/stackGroups.test.ts` · `src/board/StackZone.test.tsx`
+- Why: on the stack, so that the targeting click stayed per entry (`90b4c9be46`), until the
+  cascade stopped folding at all; on the battlefield, the review in `8fbb005e7b` ("stacks exclude
+  targets and attachments").
+- Guard: `src/board/BoardZone.battlefield.test.tsx` · `src/board/stackGroups.test.ts`
 
 ### TGT-7 · A target on the stack brings the stack into view
-When a legal target is a spell or ability on the stack (a counterspell, Stifle), the stack opens
-by itself (the stack drawer, or the stack deck in the Table layout), even if the player had
-another tab open. Only the eligible entries are marked, they stay selectable after the stack is
-closed and reopened, and clicking one sends the stack object's id.
+When a legal target is a spell or ability on the stack (a counterspell, Stifle), the stack is in
+view. It is always on the board now (STK-2), so what this asks for is narrower than it used to be:
+a stack the player had pushed aside comes back by itself. Only the eligible objects are marked,
+they stay marked while the stack moves, and clicking one sends the stack object's id.
 
 - Why: added in v0.2.7 (`1d104eef17`), so that a counterspell's target is on screen without the
-  player hunting for the stack tab.
-- Guard: `src/game/stackTargeting.test.ts` · `src/board/StackZone.test.tsx` · `src/board/StackDeck.test.tsx` · `e2e/stack-target.spec.ts`
+  player hunting for the stack tab; the tab and the deck are gone, the grip is not.
+- Guard: `src/game/stackTargeting.test.ts` · `src/board/StackZone.test.tsx` · `e2e/stack-target.spec.ts`
 
 ### TGT-8 · Players are targeted on their own bar
 When a player is a legal target ("any target", "target player"), that player's info bar is marked
@@ -92,15 +93,15 @@ Your own pill in the switcher is never a target; your own bar is.
   only checks the opponent is among the legal ids)
 
 ### TGT-9 · Arrows show what each spell points at
-Every spell or ability on the stack draws an arrow from its stack entry to each of its targets.
-In the Table layout only the top object and the hovered tab draw arrows, so a long chain hides the
-rest by design. While a choice is open, an arrow also runs from the source to each target already
-chosen.
+An arrow runs from an object on the stack to each of its targets, drawn from the card the object
+is. Which objects draw one is STK-3: the one about to resolve and the one under the pointer, in
+every layout, so a long chain never becomes a thicket. While a choice is open, an arrow also runs
+from the source to each target already chosen.
 
-- Why: arrows were added in `09f8b123bd`; the Table layout filters them to the top and the hovered
-  object (`ROADMAP.md` §4, "Stack tabs past the 7th and the arrow filter").
-- Guard: `src/board/CombatArrowsOverlay.test.tsx` · `src/board/StackDeck.test.tsx` (the
-  source-to-chosen arrow during a choice is not asserted)
+- Why: arrows were added in `09f8b123bd`, filtered to the top and the hovered object in the Table
+  layout only; the cascade made that the rule everywhere (`ROADMAP.md` §4).
+- Guard: `src/board/CombatArrowsOverlay.test.tsx` (the source-to-chosen arrow during a choice is
+  not asserted)
 
 ### TGT-10 · An arrow is drawn over the board, not under it
 The arrow layer sits above everything the board itself paints: the phase strip, the player chips,
@@ -113,13 +114,14 @@ the board, a card lifted out of the hand, the menus and the dialogs.
 - Guard: `src/board/CombatArrowsOverlay.test.tsx`
 
 ### TGT-11 · An arrow is a beam that points, not a ladder of dashes
-Every arrow is drawn as three strokes: a blurred halo, a dark seam under it, and the arrow itself,
-in one colour the whole way, ending in a notched dart. Nothing marches and nothing fades: the
-direction is in the dart.
+An arrow is one colour the whole way, ending in a notched dart, with a dark seam under it where it
+crosses the board. Nothing marches, nothing fades and nothing glows: the direction is in the dart.
+A halo was tried under the beam and taken out again, and so was a gradient along it.
 
 - Why: the arrows were dashed strokes animated forever, which read as a ladder and told the
   direction only by watching them move; a gradient along the beam was tried first and read as the
   arrow fading out rather than as a direction. A capture of the board was also never reproducible,
   because the dash phase depends on the instant of capture and on the path's sub-pixel length, and
-  WebKit does not freeze it; the reduced-motion rule existed only to make screenshots settle.
-- Guard: `src/board/CombatArrowsOverlay.test.tsx`
+  WebKit does not freeze it; the reduced-motion rule existed only to make screenshots settle. The
+  halo went the same way: over a board of card art it read as a smear around the beam.
+- Guard: `src/board/CombatArrowsOverlay.test.tsx` · `e2e/game-ui-v2.spec.ts`

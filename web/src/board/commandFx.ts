@@ -69,7 +69,7 @@ export function castFromCommand(spell: CardView, spellId: string, prevGame: Game
   return left.find(([id]) => ids.includes(id))?.[0] ?? left.find(([, card]) => card.name === spell.name)?.[0] ?? null
 }
 
-const BATTLEFIELD_SKIP = '.stack-zone, .stack-deck, .stack-list, .command-zone'
+const BATTLEFIELD_SKIP = '.stack-zone, .command-zone'
 
 function playerSelector(player: PlayerView): string {
   return `:is([data-player-id="${player.playerId}"], [data-player-name="${player.name}"])`

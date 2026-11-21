@@ -307,7 +307,7 @@ export default function CombatArrowsOverlay({
 
         // Both ends on the stack: the objects lie over each other, so a straight line between their
         // centres is a stub hidden under the cards. Those arrows hook out to the side instead.
-        const stackEl = boardEl.querySelector('.stack-deck, .stack-zone')
+        const stackEl = boardEl.querySelector('.stack-zone')
         const inDeck = !!stackFocusIds && !!sourceCenter.rect && !!stackEl?.contains(
           boardEl.querySelector(`[data-card-id="${stackId}"]`),
         )

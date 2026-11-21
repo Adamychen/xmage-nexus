@@ -79,7 +79,7 @@ test.describe('Recorded real frames (anti-drift smoke)', { tag: '@recorded' }, (
           const preview = page.locator('.stack-zone .floating-card-preview')
           await expect(async () => {
             await page.mouse.move(0, 0)
-            await page.locator('.stack-zone .stack-tl-entry').first().hover()
+            await page.locator('.stack-zone .stack-card').first().hover()
             await expect(preview).toBeVisible({ timeout: 2_000 })
           }).toPass({ timeout: 20_000 })
           const box = await preview.boundingBox()
@@ -93,11 +93,17 @@ test.describe('Recorded real frames (anti-drift smoke)', { tag: '@recorded' }, (
         if (entry.assert === 'hasPlaneswalker') {
           const marquee = page.locator('.pz-marquee')
           await expect(marquee).toBeVisible()
-          const stackPanel = page.locator('[data-testid="game-drawer"] .stack-zone')
+          const stackPanel = page.locator('.stack-zone')
           await expect(stackPanel).toBeVisible()
+          // STK-2: the stack lies over the board, so what it owes the planeswalker is to leave it
+          // readable when the grip is pressed. The grip itself stays on the edge, which is how it
+          // is brought back, so what has to clear the board is the cascade of cards.
+          await page.locator('[data-testid="stack-push"]').click()
+          await expect(stackPanel).toHaveClass(/is-pushed/)
+          const cascade = page.locator('.stack-cascade')
           await expect.poll(async () => {
             const pw = await marquee.boundingBox()
-            const stack = await stackPanel.boundingBox()
+            const stack = await cascade.boundingBox()
             if (!pw || !stack) return 'missing'
             const overlaps =
               pw.x < stack.x + stack.width &&
