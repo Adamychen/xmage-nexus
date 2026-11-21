@@ -31,13 +31,22 @@ test.describe('Rotación de cartas giradas', () => {
       // Hover: sigue girada, y el alzado va por `translate` (eje de pantalla),
       // no por `transform`, que rotaría el desplazamiento con la carta.
       await tapped.hover()
-      await page.waitForTimeout(350)
-      const hovered = await tapped.evaluate((el) => {
-        const cs = getComputedStyle(el)
-        return { transform: cs.transform, translate: cs.translate }
-      })
-      expect(hovered.transform, 'el hover no puede enderezar una carta girada').toBe(ROT_90)
-      expect(hovered.translate, 'el alzado del hover va en `translate`').toBe('0px -6px')
+      // The lift takes 0.28s on an easing that overshoots the target
+      // (cubic-bezier(0.34, 1.56, 0.64, 1) in CardSlot.css), so a fixed wait reads it
+      // mid curve whenever the runner is busy: -6.08555px, then -6.01834px on the retry,
+      // in run 43579204109. Wait for the value to settle instead of for a clock.
+      const hoverStyle = () =>
+        tapped.evaluate((el) => {
+          const cs = getComputedStyle(el)
+          return { transform: cs.transform, translate: cs.translate }
+        })
+      await expect
+        .poll(async () => (await hoverStyle()).translate, {
+          message: 'el alzado del hover va en `translate`',
+          timeout: 5_000,
+        })
+        .toBe('0px -6px')
+      expect((await hoverStyle()).transform, 'el hover no puede enderezar una carta girada').toBe(ROT_90)
 
       // Montaje (`entering`): la animación de aparición no puede tocar el giro
       // en ningún fotograma. Elemento sintético para medir la ventana entera

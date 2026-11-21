@@ -13,7 +13,7 @@ Canonical references live elsewhere; this folder indexes them instead of duplica
 6. `Mage.Proxy/README.md` — full protocol reference (actions, events, serialization).
 7. `docs/testing.md` — how to run and interpret the suite.
 8. `docs/user-manual.md` — how to play (for users, also useful for testers).
-9. `docs/deployment.md` — running the stack and publishing the dashboard.
+9. `docs/deployment.md` — running the stack, deploying to the server (and the release that goes with it) and publishing the dashboard.
 10. `docs/enhancements.md` — open client-only feature specs (board rewind, draft pick helper). The full historic catalog is archived in `docs/history/enhancements-catalog.md`.
 11. `docs/lessons.md` — durable cross-cutting lessons worth re-reading before debugging.
 12. `mcp/README.md` — MCP server: gameplay loop, the 38 `mage_*` tools, and autonomous LLM play notes (archived long-form overview in `docs/history/mcp-overview.md`).

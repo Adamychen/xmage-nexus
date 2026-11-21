@@ -19,6 +19,19 @@
   </tr>
 </table>
 
+## What's new in 0.9.1
+
+- **XMage 1.4.63-V2**: the server, the proxy and the desktop app's bundled engine move to the latest upstream XMage release.
+- **Discarding to hand size**: the discard prompt no longer stays on screen after you discard down to your maximum hand size. A target prompt takes one pick, so a quick double click cannot answer it twice.
+
+## What's new in 0.9.0
+
+- **Freeform Commander**: the format is there from the deck editor to the table, with real Commander precons to start from. The draft bot is never seated in a match it cannot play.
+- **Decks**: the deck you play is the one you pick, and equipping is gone. Creating a table asks about each deck once, a repair made before the table is kept, a deck imported from the join dialog stays in the gallery, and the catalogue's printings name the card the server loads.
+- **Playing**: a spell or ability being played can be cancelled, the combat declaration stays open until you confirm it, every card in a card prompt can be looked at without choosing it, and ordering triggers shows each trigger's source and target.
+- **Board**: each hand cost sits on its own card, an opponent's floating mana shows in the side panel, only a window that names a hand fills an opponent's hand, and the panel stays readable when players leave or a duel is all that is left. The waiting pill breaks on whole words.
+- **Settings**: sound effects and music have their own switches, the phase stops it shows are the ones the game applies, and the borrowed sections fit inside the setup wizard. The news bell finds a new release soon after a deploy instead of a day later.
+
 ## What's new in 0.8.0
 
 - **Search by rules text**: type part of a card's text in the deck editor and the results narrow to the cards that say it. The search waits for a name or a filter before loading cards.
@@ -106,7 +119,7 @@ Also new: the coin flip that shows who plays first, an Arena-style stack column 
 ┌──────────────────────────┐   WS JSON    ┌────────────────────┐   XMage protocol    ┌───────────────────┐
 │  XMage Nexus Web Client  │ ──────────▶ │ Proxy Java (Mage   │ ─────────────────── │ Server XMage        │
 │  React 19 + TypeScript   │ ◀────────── │ .Proxy)            │ ◀────────────────── │ (Mage.Server)       │
-│  Vite + CSS3 / SVG       │              │ WebSocket :8787    │                     │ 1.4.63-V1           │
+│  Vite + CSS3 / SVG       │              │ WebSocket :8787    │                     │ 1.4.63-V2           │
 └──────────────────────────┘              └────────────────────┘                     └───────────────────┘
 ```
 
@@ -118,7 +131,7 @@ Also new: the coin flip that shows who plays first, an Arena-style stack column 
 
 | Layer | Technologies |
 |---|---|
-| XMage Server | Java 17, jboss-remoting (1.4.63-V1) |
+| XMage Server | Java 17, jboss-remoting (1.4.63-V2) |
 | WebSocket Proxy | Java 17, Java-WebSocket, Gson (`Mage.Proxy`) |
 | Web Client | React 19, TypeScript, Vite 8, CSS3 / SVG, Web Audio API, Vitest, Playwright |
 
@@ -218,7 +231,7 @@ node scripts/ctl.mjs restart proxy
 node scripts/build.mjs
 ```
 
-> The proxy jar is `Mage.Proxy/target/mage-proxy-1.4.63.jar` (`1.4.63-V1`, `Mage.Proxy/pom.xml:11`). Changing the XMage version requires updating the parent pom + rebuilding everything.
+> The proxy jar is `Mage.Proxy/target/mage-proxy-1.4.63.jar` (`1.4.63-V2`, `Mage.Proxy/pom.xml:11`). Changing the XMage version requires updating the parent pom + rebuilding everything.
 
 ### Ports & URLs
 

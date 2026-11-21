@@ -3,6 +3,7 @@ import { getCardLanguage } from '../i18n'
 import { extractOwnedKeywords } from '../data/keywordExtractor'
 import { scryfallJson } from './scryfallClient'
 import { cardArtPreference } from './artPreferences'
+import { isForeignCard } from './foreignCards'
 import tokenImageData from '../data/tokenImages.generated.json'
 
 const memory = new Map<string, string | null>()
@@ -185,7 +186,7 @@ export function cardKey(card: CardView): string | null {
     if (exact) return pinTokenKey(card, exact)
   }
 
-  if (!isToken) {
+  if (!isToken && !isForeignCard(card)) {
     const preferred = cardArtPreference(card.name)
     if (preferred) return `${preferred.setCode}/${preferred.cardNumber}${backSuffix}`
   }

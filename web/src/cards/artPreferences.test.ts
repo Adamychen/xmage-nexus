@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { cardArtPreference, resetCardArtPreferences, setCardArtPreference } from './artPreferences'
+import { applyArtPreferences, cardArtPreference, resetCardArtPreferences, setCardArtPreference } from './artPreferences'
 
 describe('artPreferences', () => {
   const mockStorage: Record<string, string> = {}
@@ -44,5 +44,33 @@ describe('artPreferences', () => {
     vi.resetModules()
     const fresh = await import('./artPreferences')
     expect(fresh.cardArtPreference('Lightning Bolt')).toEqual({ setCode: 'LEA', cardNumber: '161' })
+  })
+it('DCK-32: keeps the server-confirmed flag across a reload', async () => {
+    setCardArtPreference('Lightning Bolt', 'LEA', '161', true)
+    vi.resetModules()
+    const fresh = await import('./artPreferences')
+    expect(fresh.cardArtPreference('Lightning Bolt')).toEqual({ setCode: 'LEA', cardNumber: '161', onServer: true })
+  })
+
+  it('DCK-32: sends a server-confirmed printing with the deck, in every list', () => {
+    setCardArtPreference('Lightning Bolt', 'LEA', '161', true)
+    setCardArtPreference('Sol Ring', 'SLD', '1011')
+    const deck = applyArtPreferences({
+      name: 'd',
+      cards: [
+        { cardName: 'Lightning Bolt', setCode: 'M10', cardNumber: '146', amount: 4 },
+        { cardName: 'Sol Ring', setCode: 'C21', cardNumber: '263', amount: 1 },
+        { cardName: 'Shock', setCode: 'M21', cardNumber: '159', amount: 4 },
+      ],
+      sideboard: [{ cardName: 'Lightning Bolt', setCode: '2XM', cardNumber: '130', amount: 1 }],
+      commanders: [{ cardName: 'Lightning Bolt', setCode: 'M10', cardNumber: '146', amount: 1 }],
+    })
+    expect(deck.cards).toEqual([
+      { cardName: 'Lightning Bolt', setCode: 'LEA', cardNumber: '161', amount: 4 },
+      { cardName: 'Sol Ring', setCode: 'C21', cardNumber: '263', amount: 1 },
+      { cardName: 'Shock', setCode: 'M21', cardNumber: '159', amount: 4 },
+    ])
+    expect(deck.sideboard[0]).toMatchObject({ setCode: 'LEA', cardNumber: '161' })
+    expect(deck.commanders?.[0]).toMatchObject({ setCode: 'LEA', cardNumber: '161' })
   })
 })

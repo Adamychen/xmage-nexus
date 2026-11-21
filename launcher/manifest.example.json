@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "release": "1.4.63-1",
-  "xmage": "1.4.63-V1",
+  "xmage": "1.4.63-V2",
   "git_sha": "<short-sha>",
   "min_launcher": "0.1.0",
   "components": {
