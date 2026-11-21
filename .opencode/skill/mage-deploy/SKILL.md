@@ -136,7 +136,7 @@ Piezas:
 | Proxy WS / HTTP | 8787 / 8788 (beta) · 8797 / 8798 (XDHS) |
 | Vite dev / e2e fake | 5173 / 5175 |
 | FakeServer WS | 8789 |
-| Versión | XMage 1.4.63-V1 (beta) + 1.5.8-XDHS-r1; jars `mage-proxy-1.4.63.jar` / `mage-proxy-1.5.8.jar` |
+| Versión | XMage 1.4.63-V2 (beta) + 1.5.8-XDHS-r1; jars `mage-proxy-1.4.63.jar` / `mage-proxy-1.5.8.jar` |
 
 ## Trampas
 

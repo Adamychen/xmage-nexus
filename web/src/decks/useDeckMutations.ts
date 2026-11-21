@@ -427,10 +427,10 @@ export function useDeckMutations(deps: Deps) {
     setPrintingTargetCard(card)
   }
 
-  const handleApplyPrinting = (setCode: string, cardNumber: string) => {
+  const handleApplyPrinting = (setCode: string, cardNumber: string, onServer = false) => {
     if (!printingTargetCard) return
     const printing = normalizeDeckCard({ cardName: printingTargetCard.cardName, setCode, cardNumber, amount: 1 })
-    setCardArtPreference(printingTargetCard.cardName, printing.setCode, printing.cardNumber)
+    setCardArtPreference(printingTargetCard.cardName, printing.setCode, printing.cardNumber, onServer)
     updateMetaForDeck([printingTargetCard])
     setPrintingTargetCard(null)
   }

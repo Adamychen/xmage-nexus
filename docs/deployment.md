@@ -17,7 +17,7 @@ XMage `17171` (testMode) · proxy WS `8787` · proxy HTTP page `8788/index.html`
 - `node scripts/build.mjs` — full (server + plugins + proxy; copies plugins to `local-server/plugins/`).
 - `node scripts/install.mjs` — zero-setup from scratch (Maven build + plugins + npm install), then `ctl.mjs start` + `test.mjs`.
 - Requirements: JDK 17 (Homebrew `openjdk@17`; `/usr/bin/java` stub breaks daemons — `scripts/lib.mjs` resolves the real binary), Maven 3.9, Node 20+ for the web client and the scripts (**Node ≥24 for `mcp/`**, which runs TypeScript directly via native type stripping). Server and proxy must run with `--add-opens=java.base/java.io=ALL-UNNAMED` (jboss-serialization on JDK 17).
-- XMage version `1.4.63-V1` (upstream tag `xmage_1.4.63V1`). Release bumps are a one-line pom change + recompile, but strict version checks mean a mismatched server rejects the proxy. Default target server: `beta.xmage.today:17171`.
+- XMage version `1.4.63-V2` (upstream tag `xmage_1.4.63V2`). Release bumps are a one-line pom change + recompile, but strict version checks mean a mismatched server rejects the proxy. Default target server: `beta.xmage.today:17171`.
 
 ## Second flavor: XDHS (`mage.xdhs.net`)
 
@@ -44,6 +44,42 @@ See **`docs/deploy-tunnels.md`** for the full English guide: run one `Mage.Proxy
 TCP tunnels, and point it at `beta.xmage.today`. Bundle it with
 `node scripts/deploy-bundle.mjs`; start scripts live in `scripts/deploy/`
 (`start-proxy.sh` for Linux/macOS, `start-proxy.bat` for Windows).
+
+## Production deploy (`.github/workflows/deploy.yml`)
+
+The project's own server is updated by a self-hosted runner (labels `self-hosted, xmage-nexus`) that runs
+`~/deploy-xmage.sh` (it lives on the server, not in the repo: it pulls `master` and rebuilds proxy and web)
+and then restarts `xmage-proxy.service`.
+
+- **Only a version bump deploys.** The trigger is a push to `master` that touches `web/package.json`, and the
+  `gate` job then compares the version of the pushed commit with the one in its first parent (`fetch-depth: 2`,
+  `git show HEAD~1:web/package.json`). The path filter alone would not do: a dependency change touches the same
+  file and must not reach players. A `workflow_dispatch` run deploys without the gate, for a hotfix.
+- **The gate reads the head commit against `HEAD~1`**, so a bump that lands on `master` as a merge commit or as
+  a squash is seen. The one case it misses is a direct push of several commits with the bump in the middle: the
+  head commit and its parent already carry the new version, so nothing deploys. Run the workflow by hand then.
+- **Two bumps inside one deploy lose the middle release.** `concurrency: deploy` keeps at most one run waiting,
+  so if a second bump lands while a deploy is running and a third follows it, GitHub cancels the one in the middle:
+  its code still reaches the server with the next deploy, but its release is never created and the bell never shows
+  that version. The deploy takes about half a minute, so it takes two bumps inside the same minute. The way back is
+  to write the notes out with `node scripts/release-notes.mjs --version <version> --out notes.md` and open the
+  release by hand with `gh release create v<version> --prerelease --notes-file notes.md`. The `release` job leaves a
+  tag that already exists alone, so nothing collides afterwards.
+- **The job that runs on the server keeps a read-only token** (`contents: read`, spelled out in the job), and the
+  workflow never gains a `pull_request` trigger: a pull request from a fork would otherwise run code on the host.
+  `concurrency: deploy` with `cancel-in-progress: false` keeps two deploys from overlapping and never cuts one
+  halfway through.
+- Guard: `scripts/workflows.test.mjs` (trigger, gate, condition, token and concurrency).
+- **The deploy publishes the GitHub release of that version**, which is what lights the news bell in the client:
+  `web/src/system/news.ts` reads the releases API, not what is running on the server. The `release` job runs on a
+  GitHub runner, is the only one with a `contents: write` token, waits for the deploy (a version that never reached
+  the server is not announced), takes its body from the `What's new in <version>` section of `readme.md`, and
+  leaves an existing tag alone, so a re-run publishes nothing twice.
+- **That release is born a prerelease.** `releases/latest`, which the download page reads (`site/app.js`), skips
+  prereleases, so it keeps pointing at the last release that carries launcher installers; the releases list the bell
+  reads does include it. When `release.yml` later uploads the installers for that tag it restores the body with the
+  download guide and clears the flag, and the version becomes the full release. A tag that `release.yml` opens by
+  itself is still born as a draft, as before.
 
 ## Host status dashboard (LAN only)
 

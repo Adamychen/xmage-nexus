@@ -489,3 +489,25 @@ fails.
 - Why: the player who imported a deck from the join dialog could not find it among their decks, and
   from DCK-30 its repair could not be saved either, because its id resolves to nothing in storage.
 - Guard: `src/lobby/JoinTableDialog.test.tsx` · `src/decks/storage.idb.test.ts`
+
+### DCK-32 · Every player sees the printing its owner chose
+The printing a player picks for a card (the deck editor's Printing… or the card inspector's Custom
+art) is sent with their deck when it is one the server has: `joinTable`, `joinTournamentTable` and
+`submitDeck` (`web/src/net/commands.ts`) replace each entry's set and number with the player's
+preference for that card name (`applyArtPreferences`, `web/src/cards/artPreferences.ts`). A
+preference is sent only when the printings dialog confirmed it against the server's catalogue
+(`onServer`), because the server loads a deck strictly by set and number and a printing it lacks
+would fail the join; a printing the server does not have stays cosmetic, on the player's own screen.
+Bot seats get their deck unchanged.
+
+In a game, a card the game view places with another player — their battlefield, graveyard, exile,
+sideboard, command zone, top card, a hand shown to the player, or an object on the stack they
+control — is drawn with the printing the server sends, never with the viewer's own preference
+(`web/src/cards/foreignCards.ts`, read by `cardKey`). The viewer's preference still decides their
+own cards and any card whose owner the view does not name (a shared exile, the log, a draft pack).
+A spectator has no cards of their own, so they see every player's choice.
+
+- Why: the preference was a name-wide local setting applied to every copy on screen, so a player's
+  chosen art never reached the opponent, and the opponent's copies of a card took the viewer's art
+  (request of 2026-11-20).
+- Guard: `src/cards/artPreferences.test.ts` · `src/cards/foreignCards.test.ts` · `src/cards/cardImages.test.ts` · `src/decks/CardPrintingsModal.test.tsx`

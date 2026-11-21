@@ -362,9 +362,9 @@ export default function CardInspector() {
           cardName={customArtName(active as CardView) ?? displayName}
           currentSet={(active as CardView).expansionSetCode ?? ''}
           currentNumber={(active as CardView).cardNumber ?? ''}
-          onSelectPrinting={(setCode, cardNumber) => {
+          onSelectPrinting={(setCode, cardNumber, onServer) => {
             const name = customArtName(active as CardView)
-            if (name) setCardArtPreference(name, setCode, cardNumber)
+            if (name) setCardArtPreference(name, setCode, cardNumber, onServer)
           }}
           onClose={() => setShowPrintings(false)}
         />

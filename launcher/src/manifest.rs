@@ -43,7 +43,7 @@ mod tests {
     const SAMPLE: &str = r#"{
         "schema": 1,
         "release": "1.4.63-1",
-        "xmage": "1.4.63-V1",
+        "xmage": "1.4.63-V2",
         "git_sha": "abc123",
         "components": {
             "jre": {"mac-arm64": {"url": "https://x/jre.tar.gz", "sha256": "aa", "bytes": 42}},

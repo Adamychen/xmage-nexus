@@ -204,3 +204,14 @@ both prompts are answered for them and never shown.
   picks who plays first"); a player who wanted the coin toss out of the way lost the mulligan with
   it (2026-11-13).
 - Guard: `src/state/store.test.ts` · `src/settings/settingsIndex.test.tsx`
+
+### PRM-17 · A target prompt takes one pick
+A click on a target (a card in the hand, on the board, on the stack, or a player) answers the open
+target prompt; further clicks on that same prompt are ignored until the server sends the next one
+or rejects the pick.
+
+- Why: discarding down to the hand size asks once per card. Two quick clicks both went out against
+  the first prompt; the server applied the second to the re-ask that followed and finished, but that
+  re-ask had arrived before the second acknowledgement, so PRM-9 kept it. The discard bar and the
+  highlighted hand stayed until a reload (reported 2026-11-16).
+- Guard: `src/game/useTargetPick.test.ts`
