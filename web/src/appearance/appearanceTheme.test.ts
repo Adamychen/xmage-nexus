@@ -54,7 +54,9 @@ const lightMedia = tokens.find((r) => r.prelude === '@media (prefers-color-schem
 const lightRoot = parseRules(lightMedia.body).find((r) => r.prelude === ':root:not([data-appearance="dark"]), :root:not([data-appearance="dark"]) .chrome-surface')!
 const lightForced = tokens.find((r) => r.prelude === ':root[data-appearance="light"], :root[data-appearance="light"] .chrome-surface')!
 
-const GAME_ELEMENT = /^--(mana-|seat-|dial-|ember-|ash-|blood-|toxic|ledger-line)/
+/** Tokens that paint a thing in the game rather than the app's chrome: a mana symbol, a seat's
+ *  colour, the paper and ink of a card's text box. They are the same in both appearances. */
+const GAME_ELEMENT = /^--(mana-|seat-|dial-|ember-|ash-|blood-|toxic|ledger-line|card-paper|card-ink)/
 
 function isLiteralColour(value: string): boolean {
   if (value.includes('var(')) return false

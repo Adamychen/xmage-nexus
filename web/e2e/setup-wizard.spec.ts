@@ -45,15 +45,24 @@ for (const viewport of [{ width: 1366, height: 768 }, { width: 375, height: 812 
       const cards = [...body.querySelectorAll('[data-testid^="settings-layout-"]')].map((c) => rect(c))
       return {
         body: rect(body),
-        cards: cards.map((c) => ({ width: c.width, top: c.top, bottom: c.bottom })),
+        cards: cards.map((c) => ({ width: c.width, top: c.top, bottom: c.bottom, right: c.right })),
         preview: rect(body.querySelector('[data-testid="board-layout-preview"]')),
       }
     })
-    // Two cards per row, each wide enough to read its description.
-    expect(box.cards).toHaveLength(4)
-    for (const card of box.cards) expect(card.width).toBeGreaterThan(box.body.width / 2 - 40)
-    expect(box.cards[0].top).toBe(box.cards[1].top)
-    expect(box.cards[2].top).toBeGreaterThan(box.cards[0].bottom)
+    // The cards share each row evenly and every one is wide enough to read its description. How
+    // many fit in a row follows from how many layouts there are (`pickerColumns`), so what is
+    // asserted is the shape, not a column count: with the 2x2 pod gone there are three of them.
+    expect(box.cards.length).toBeGreaterThanOrEqual(3)
+    const rows = [...new Set(box.cards.map((c) => Math.round(c.top)))].sort((a, b) => a - b)
+    const perRow = box.cards.length / rows.length
+    expect(Number.isInteger(perRow)).toBe(true)
+    for (const card of box.cards) {
+      expect(card.width).toBeGreaterThan(box.body.width / perRow - 40)
+      expect(card.right).toBeLessThanOrEqual(box.body.right + 1)
+    }
+    for (let i = 1; i < rows.length; i++) {
+      expect(rows[i]).toBeGreaterThan(Math.max(...box.cards.filter((c) => Math.round(c.top) === rows[i - 1]).map((c) => c.top)))
+    }
     // The preview sits under the options and inside the wizard.
     expect(box.preview.top).toBeGreaterThan(Math.max(...box.cards.map((c) => c.bottom)))
     expect(box.preview.right).toBeLessThanOrEqual(box.body.right + 1)
