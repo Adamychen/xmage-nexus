@@ -74,13 +74,17 @@ test('prompts faltantes del servidor: SELECT_PLAYER, CHOOSE_STRING (lista+libre)
     await expect(freeInput).toBeVisible({ timeout: 10_000 })
     await freeInput.fill('Blinkmoth Nexus')
     await fbDialog.getByRole('button', { name: /Enviar|Confirmar/i }).click()
-    expect(
-      parseSent(sentOf(page)).some(
-        (s) => s.action === 'sendPlayerString' && String(s.args?.value) === 'Blinkmoth Nexus',
-      ),
-      'el texto libre debería enviarse como sendPlayerString',
-    ).toBeTruthy()
-
+    // CardGrid sends through a dynamic import (net/commands), so the frame lands a microtask
+    // later: assert with expect.poll like the rest of the suite instead of right after the click.
+    await expect
+      .poll(
+        () =>
+          parseSent(sentOf(page)).some(
+            (s) => s.action === 'sendPlayerString' && String(s.args?.value) === 'Blinkmoth Nexus',
+          ),
+        { message: 'el texto libre debería enviarse como sendPlayerString', timeout: 10_000 },
+      )
+      .toBe(true)
     // 4. GAME_CHOOSE_NUMBER (integer)
     await step('GAME_CHOOSE_NUMBER', 'Choose a number')
     await resolveInteger(page, 3, 'CHOOSE_NUMBER')
@@ -100,12 +104,15 @@ test('prompts faltantes del servidor: SELECT_PLAYER, CHOOSE_STRING (lista+libre)
     // 8. GAME_CHOOSE_CARDS (uuid + cardsView1, selección de 1) — renderiza en CardGrid
     await step('GAME_CHOOSE_CARDS', 'Choose a card')
     await clickCardCell('Mountain')
-    expect(
-      parseSent(sentOf(page)).some(
-        (s) => s.action === 'sendPlayerUUID' && String(s.args?.value) === 'c-a',
-      ),
-      'GAME_CHOOSE_CARDS debería enviar sendPlayerUUID con la carta elegida',
-    ).toBeTruthy()
+    await expect
+      .poll(
+        () =>
+          parseSent(sentOf(page)).some(
+            (s) => s.action === 'sendPlayerUUID' && String(s.args?.value) === 'c-a',
+          ),
+        { message: 'GAME_CHOOSE_CARDS debería enviar sendPlayerUUID con la carta elegida', timeout: 10_000 },
+      )
+      .toBe(true)
 
     // 9. GAME_TARGET_PLAYER (uuid, eligir jugador) — 'Choose a player' → 'Elige jugador'
     await step('GAME_TARGET_PLAYER', 'Elige jugador')
@@ -117,13 +124,16 @@ test('prompts faltantes del servidor: SELECT_PLAYER, CHOOSE_STRING (lista+libre)
 
     // 11. GAME_SELECT_CARDS (uuid + cardsView1, multi-selección de 2) — renderiza en CardGrid
     await step('GAME_SELECT_CARDS', 'Select up to two cards')
+    const uuidsBefore = parseSent(sentOf(page)).filter((s) => s.action === 'sendPlayerUUID').length
     await clickCardCell('Mountain')
     await clickCardCell('Island')
     await confirmCardGrid()
-    expect(
-      parseSent(sentOf(page)).filter((s) => s.action === 'sendPlayerUUID').length >= 2,
-      'GAME_SELECT_CARDS debería enviar al menos 2 sendPlayerUUID',
-    ).toBeTruthy()
+    await expect
+      .poll(
+        () => parseSent(sentOf(page)).filter((s) => s.action === 'sendPlayerUUID').length,
+        { message: 'GAME_SELECT_CARDS debería enviar al menos 2 sendPlayerUUID', timeout: 10_000 },
+      )
+      .toBeGreaterThanOrEqual(uuidsBefore + 2)
 
     // 12. GAME_PLAY_XMANA (boolean)
     await step('GAME_PLAY_XMANA', 'Pay X mana?')
@@ -132,12 +142,15 @@ test('prompts faltantes del servidor: SELECT_PLAYER, CHOOSE_STRING (lista+libre)
     // 13. USER_REQUEST_DIALOG (botones -> sendPlayerAction)
     await step('USER_REQUEST_DIALOG', '¿Qué quieres hacer?')
     await fbDialog.getByRole('button', { name: /Rebobinar/i }).click()
-    expect(
-      parseSent(sentOf(page)).some(
-        (s) => s.action === 'sendPlayerAction' && String(s.args?.action) === 'ROLLBACK_TURN',
-      ),
-      'USER_REQUEST_DIALOG debería enviar sendPlayerAction con la acción del botón pulsado',
-    ).toBeTruthy()
+    await expect
+      .poll(
+        () =>
+          parseSent(sentOf(page)).some(
+            (s) => s.action === 'sendPlayerAction' && String(s.args?.action) === 'ROLLBACK_TURN',
+          ),
+        { message: 'USER_REQUEST_DIALOG debería enviar sendPlayerAction con la acción del botón pulsado', timeout: 10_000 },
+      )
+      .toBe(true)
 
     // fin: GAME_SELECT de prioridad
     await waitFrameAt(page, (f) => f.method === 'GAME_SELECT', 'GAME_SELECT final', 15_000, cursor)

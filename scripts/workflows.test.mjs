@@ -273,3 +273,61 @@ test("the launcher release reuses the notes of the version bump when its input i
   assert.match(publish, /node scripts\/release-notes.mjs --version "\$\{TAG#v\}"/,
     "the What changed block says what the news bell already showed");
 });
+
+// The dev site (dev.xmage-nexus.com) publishes the web client of a chosen branch so a change can
+// be tried in a real browser before it reaches players. It shares the self-hosted runner with
+// production, so the two invariants are the same as deploy.yml plus one more: it must not be able
+// to touch what players are running.
+const deployDev = fs.readFileSync(path.join(repoRoot, ".github", "workflows", "deploy-dev.yml"), "utf8").replace(/\r\n/g, "\n");
+
+test("deploy-dev is dispatch-only, with a ref input, and unreachable from a pull request", () => {
+  const on = deployDev.slice(deployDev.indexOf("\non:"), deployDev.indexOf("\npermissions:"));
+  assert.match(on, /workflow_dispatch:/, "the only trigger is a manual dispatch");
+  assert.match(on, /^ {6}ref:/m, "it asks which branch or tag to build");
+  assert.match(on, /default: master/, "an empty dispatch previews master");
+  // The header comment names the trigger it must avoid, so absences are read without comments.
+  const triggers = deployDev.replace(/(^|\n)\s*#[^\n]*/g, "$1");
+  assert.doesNotMatch(triggers, /pull_request/, "a job on the server is never reachable from a pull request");
+  assert.doesNotMatch(triggers, /^\s{2}push:/m, "a branch preview is never published by a push");
+});
+
+test("deploy-dev validates the ref and never builds a pull request ref", () => {
+  const job = jobBlock(deployDev, "deploy");
+  assert.ok(job !== null, "job deploy exists");
+  assert.match(job, /git ls-remote --exit-code --heads --tags/, "the ref has to exist in the repository");
+  assert.match(job, /grep -Eq '\^\[A-Za-z0-9\]\[A-Za-z0-9\._\/-\]\*\$'/, "the ref is a plain branch/tag name");
+  assert.match(job, /grep -q '\\\.\\\.'/, "no .. in a ref");
+  assert.match(job, /actions\/checkout@v6/, "it checks out the requested ref");
+});
+
+test("deploy-dev publishes only the web build to the dev directory", () => {
+  const job = jobBlock(deployDev, "deploy");
+  const code = job.replace(/(^|\n)\s*#[^\n]*/g, "$1");
+  assert.match(job, /npm --prefix web run build/, "it builds the web client");
+  assert.match(job, /nvm\.sh/, "the runner has node but no npm in PATH: the build sources nvm");
+  assert.match(job, /rsync -a --delete web\/dist\/ "\$dest\/"/, "it publishes that build to the dev directory");
+  assert.match(job, /dest="\$HOME\/xmage-dev-dist"/, "the destination is the dev directory");
+  assert.match(job, /systemctl --user restart xmage-dev-web\.service/, "it restarts only the dev web server");
+  assert.doesNotMatch(code, /sudo/, "it never escalates");
+  assert.doesNotMatch(code, /deploy-xmage\.sh/, "the production deploy script is not its business");
+  assert.doesNotMatch(code, /build\.mjs proxy/, "it does not build the proxy");
+  assert.doesNotMatch(code, /systemctl (--user )?restart xmage-proxy/, "it never restarts the proxy players use");
+  assert.doesNotMatch(code, /web\/dist\/?$/, "it does not write the production dist");
+});
+
+test("deploy-dev keeps a read-only token and cancels a superseded preview", () => {
+  assert.match(deployDev, /^permissions:\n {2}contents: read$/m, "the workflow default is read-only");
+  assert.match(jobBlock(deployDev, "deploy"), /permissions:\n {6}contents: read/, "the server job repeats it");
+  assert.doesNotMatch(deployDev, /contents: write/, "nothing here may write to the repository");
+  const block = deployDev.slice(deployDev.indexOf("\nconcurrency:"), deployDev.indexOf("\njobs:"));
+  assert.match(block, /group: deploy-dev/);
+  assert.match(block, /cancel-in-progress: true/, "a preview is disposable; the newest dispatch wins");
+});
+
+test("deploy-dev records the commit it built, not the branch the dispatch came from", () => {
+  const job = jobBlock(deployDev, "deploy");
+  assert.match(job, /SHA=\$\(git rev-parse HEAD\)/, "the built commit comes from the checkout");
+  assert.match(job, /dev-info\.json/, "the page can say what it is serving");
+  assert.doesNotMatch(job, /\$\{\{\s*github\.sha\s*\}\}/,
+    "github.sha is the dispatching ref, which is master when previewing another branch");
+});
