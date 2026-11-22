@@ -880,7 +880,7 @@ export const zhs: TranslationSchema = {
     board_arena_desc: '己方全宽显示',
     board_arena: '竞技场',
     board_table: '牌桌',
-    board_table_desc: '阶段转盘、玩家头像和牌堆式堆叠区',
+    board_table_desc: '阶段转盘、玩家头像和侧边面板',
     board_standard_desc: '一次显示一位对手',
     board_standard: '标准',
     card_style_title: '卡牌样式',

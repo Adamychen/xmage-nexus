@@ -880,7 +880,7 @@ export const ja: TranslationSchema = {
     board_arena_desc: '自分は全幅表示',
     board_arena: 'アリーナ',
     board_table: 'テーブル',
-    board_table_desc: 'フェーズダイヤル、ポートレート、カード束のスタック',
+    board_table_desc: 'フェーズダイヤル、ポートレート、サイドパネル',
     board_standard_desc: '相手を一人ずつ表示',
     board_standard: 'スタンダード',
     card_style_title: 'カードスタイル',

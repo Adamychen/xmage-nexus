@@ -880,7 +880,7 @@ export const fr: TranslationSchema = {
     board_arena_desc: 'Votre plateau pleine largeur',
     board_arena: 'Arena',
     board_table: 'Table',
-    board_table_desc: 'Cadran de phases, portraits et pile en paquet de cartes',
+    board_table_desc: 'Cadran de phases, portraits et panneau latéral',
     board_standard_desc: 'Un adversaire à la fois',
     board_standard: 'Standard',
     card_style_title: 'Style des cartes',

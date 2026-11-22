@@ -878,7 +878,7 @@ export const en = {
     board_arena_desc: 'Your board full-width',
     board_arena: 'Arena',
     board_table: 'Table',
-    board_table_desc: 'Phase dial, portraits and card-deck stack',
+    board_table_desc: 'Phase dial, portraits and side panel',
     board_standard_desc: 'One opponent at a time',
     board_standard: 'Standard',
     card_style_title: 'Card style',

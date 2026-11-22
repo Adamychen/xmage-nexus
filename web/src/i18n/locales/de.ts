@@ -880,7 +880,7 @@ export const de: TranslationSchema = {
     board_arena_desc: 'Eigenes Feld vollbreit',
     board_arena: 'Arena',
     board_table: 'Tisch',
-    board_table_desc: 'Phasenwahl, Porträts und Stapel als Kartendeck',
+    board_table_desc: 'Phasenwahl, Porträts und Seitenleiste',
     board_standard_desc: 'Ein Gegner gleichzeitig',
     board_standard: 'Standard',
     card_style_title: 'Kartenstil',

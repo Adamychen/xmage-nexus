@@ -880,7 +880,7 @@ export const ru: TranslationSchema = {
     board_arena_desc: 'Ваше поле на всю ширину',
     board_arena: 'Арена',
     board_table: 'Стол',
-    board_table_desc: 'Круг фаз, портреты и стопка как колода карт',
+    board_table_desc: 'Круг фаз, портреты и боковая панель',
     board_standard_desc: 'Один соперник за раз',
     board_standard: 'Стандарт',
     card_style_title: 'Стиль карт',
