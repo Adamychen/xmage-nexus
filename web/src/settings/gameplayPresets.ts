@@ -4,6 +4,9 @@ import { PHASES } from '../game/phaseStops'
 
 export type GameplayPresetId = 'simple' | 'balanced' | 'manual'
 
+/** What a player who has never chosen gets, and what the picker opens on (SET-14). */
+export const DEFAULT_GAMEPLAY_PRESET: GameplayPresetId = 'simple'
+
 export interface GameplayPresetBundle {
   smartStops: boolean
   holdPriority: boolean

@@ -5,6 +5,7 @@ import { getState, setSetting } from '../state/store'
 import { loadAppearanceSettings, loadGameplayPreset, loadPhaseStops, loadTurnRecap, saveGameplayPreset } from '../state/persistence'
 import { t } from '../i18n'
 import { normalizeSearch } from './settingsIndex'
+import { DEFAULT_PHASE_STOPS } from '../game/phaseStops'
 
 afterEach(() => cleanup())
 
@@ -136,6 +137,7 @@ describe('SettingsModal', () => {
   })
 
   it('SET-8: the default phase stops are a table headed by each step, and persist', () => {
+    setSetting('phaseStops', DEFAULT_PHASE_STOPS)
     render(<SettingsModal onClose={() => {}} />)
     const block = screen.getByTestId('settings-phase-stops')
     const btns = block.querySelectorAll('.phase-stop-btn')

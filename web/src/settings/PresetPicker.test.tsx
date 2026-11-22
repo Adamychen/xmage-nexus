@@ -20,6 +20,14 @@ describe('PresetPicker', () => {
     }
   })
 
+  it('SET-14: the picker opens on the simple preset for a player who has chosen none', () => {
+    render(<PresetPicker />)
+    expect(screen.getByTestId('settings-preset-simple').getAttribute('aria-pressed')).toBe('true')
+    for (const id of ['balanced', 'manual'] as const) {
+      expect(screen.getByTestId(`settings-preset-${id}`).getAttribute('aria-pressed')).toBe('false')
+    }
+  })
+
   it('shows each preset name exactly once', () => {
     render(<PresetPicker />)
     for (const id of ['simple', 'balanced', 'manual'] as const) {

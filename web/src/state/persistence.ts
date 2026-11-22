@@ -4,6 +4,7 @@ import type { DeckJson } from '../net/types'
 import type { ConstructState, DraftState } from './slices/limited'
 import { mergePhaseStops } from '../game/phaseStops'
 import { normalizeDeckStacksScale } from '../decks/stacksScale'
+import { DEFAULT_GAMEPLAY_PRESET } from '../settings/gameplayPresets'
 
 export interface ConnectionInfo {
   /** Host del proxy WebSocket (ws://wsHost:proxyPort). */
@@ -665,11 +666,23 @@ export function saveDeckStacksSeparateCreatures(separate: boolean) {
 
 const GAMEPLAY_PRESET_KEY = 'mage-web-gameplay-preset'
 
+/** The automation a player configured by hand, whatever they set it to. A player who has touched
+ *  none of it has never answered the question, so the default preset stands for them (SET-14). */
+function hasStoredAutomation(): boolean {
+  try {
+    const storage = getStorage()
+    return [MANA_PAYMENT_KEY, SMART_STOPS_KEY, PHASE_STOPS_KEY].some((key) => storage.getItem(key) !== null)
+  } catch {}
+  return true
+}
+
 export function loadGameplayPreset(): string | null {
   try {
-    return getStorage().getItem(GAMEPLAY_PRESET_KEY)
+    const stored = getStorage().getItem(GAMEPLAY_PRESET_KEY)
+    if (stored) return stored
+    return hasStoredAutomation() ? null : DEFAULT_GAMEPLAY_PRESET
   } catch {}
-  return null
+  return DEFAULT_GAMEPLAY_PRESET
 }
 
 export function saveGameplayPreset(id: string | null) {

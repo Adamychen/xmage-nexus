@@ -1,8 +1,9 @@
 import { render } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import PhaseStopSelector from './PhaseStopSelector'
-import { reset } from '../state/store'
+import { reset, setSetting } from '../state/store'
 import { t, setLanguage } from '../i18n'
+import { DEFAULT_PHASE_STOPS } from './phaseStops'
 
 vi.mock('../net/commands', () => ({
   updatePreferences: vi.fn().mockResolvedValue({ ok: true }),
@@ -37,11 +38,14 @@ describe('PhaseStopSelector', () => {
     expect(allBtns.length).toBe(14)
   })
 
-  it('default state has every stop on (your turn and opponent turn)', () => {
-    const { container } = render(<PhaseStopSelector />)
-    const btns = container.querySelectorAll('.phase-stop-btn')
-    const activeCount = Array.from(btns).filter((b) => b.classList.contains('active')).length
-    // 7 active per row × 2 rows = 14
-    expect(activeCount).toBe(14)
+  it('draws the stops it is given, on and off', () => {
+    const active = () => {
+      const { container } = render(<PhaseStopSelector />)
+      return Array.from(container.querySelectorAll('.phase-stop-btn')).filter((b) => b.classList.contains('active')).length
+    }
+    // SET-14: a player who has set nothing stops on no step by hand.
+    expect(active()).toBe(0)
+    setSetting('phaseStops', DEFAULT_PHASE_STOPS)
+    expect(active()).toBe(14)
   })
 })

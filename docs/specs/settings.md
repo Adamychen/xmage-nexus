@@ -170,3 +170,19 @@ the scroll the previous step was left at.
   per line, the 300 px preview took half the width and overflowed on a phone, and the Sound and
   gameplay step opened scrolled to the middle (report of 2026-11-13).
 - Guard: `src/setup/SetupWizard.test.tsx` · `src/settings/settingsUi.test.tsx` · `e2e/setup-wizard.spec.ts`
+
+### SET-14 · A player who has set nothing starts on the Simple preset
+A player who has never configured the automation plays on the **Simple** gameplay preset, and both
+the settings dialog and the setup wizard open with that card already picked: mana is paid for
+them, the smart stops decide where the game pauses and no step is stopped by hand. The preset
+stands only while nothing it owns was ever stored: the moment the mana payment, the smart stops or
+the phase-stop table is set by hand, those values are the player's and no preset is shown as
+picked. The mana cost of a card in hand is read on the card from the start as well.
+
+- Why: the picker opened with nothing selected, so the player who never answered it ran on the
+  loaders' own defaults, which are the strictest of the three (every step stopped, no smart stops):
+  the slowest game we have, given to the player least able to ask for something else. The user
+  asked for the Simple preset and the cost symbols to be on for someone new (2026-11-22). It is
+  read as a default, not as a migration, so a player who did configure their automation keeps every
+  value of it.
+- Guard: `src/state/persistence.test.ts` · `src/state/store.test.ts` · `src/settings/PresetPicker.test.tsx`

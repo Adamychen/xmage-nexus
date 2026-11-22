@@ -71,7 +71,30 @@ export async function dismissSetupWizard(page: Page): Promise<void> {
   }
 }
 
+/**
+ * SET-14 starts a player who has set nothing on the Simple preset: smart stops on, no stop of
+ * their own. The game specs drive priority themselves and the web's auto-pass competes with their
+ * launch windows, so a session opened through `login` runs on the stops this suite has always
+ * used. A spec about the defaults seeds nothing and reads them as a new player would.
+ */
+async function seedSuiteStops(page: Page): Promise<void> {
+  await page.addInitScript(() => {
+    const steps = ['upkeep', 'draw', 'main1', 'beginCombat', 'endCombat', 'main2', 'endStep']
+    const row = () => Object.fromEntries(steps.map((key) => [key, true]))
+    // Only what this session has not set: a spec that seeds its own stops, or one that changed
+    // them and reloads, keeps its own, here and on every later navigation.
+    const seed = (key: string, value: string) => {
+      if (window.localStorage.getItem(key) === null) window.localStorage.setItem(key, value)
+    }
+    try {
+      seed('mage-web-smart-stops', 'false')
+      seed('mage-web-phase-stops', JSON.stringify({ yourTurn: row(), opponentTurn: row() }))
+    } catch {}
+  })
+}
+
 export async function login(page: Page, username: string, opts: LoginOptions = {}): Promise<void> {
+  await seedSuiteStops(page)
   await page.goto(`/?proxyPort=${FAKE_MODE ? getFakePort() : 8787}`)
   await dismissSetupWizard(page)
   if (await page.locator('details.login-network-box:not([open])').count() > 0) {

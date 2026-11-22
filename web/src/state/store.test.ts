@@ -103,6 +103,7 @@ describe('handleMessage', () => {
   it('SET-11: GAME_INIT pushes the Settings stops to the server and keeps no per-game copy', () => {
     const custom = clonePhaseStops(DEFAULT_PHASE_STOPS)
     custom.opponentTurn.main1 = false
+    setSetting('smartStops', false)
     setSetting('phaseStops', custom)
     const me = makePlayer({ playerId: 'p-me', name: 'Me', controlled: true })
     const game = makeGameView({ players: [me] })
@@ -111,6 +112,7 @@ describe('handleMessage', () => {
     expect('phaseStops' in getState()).toBe(false)
     expect(updatePreferences).toHaveBeenCalledWith({ phases: custom, confirmEmptyManaPool: getState().settings.manaPayment.confirmEmptyPool })
     setSetting('phaseStops', clonePhaseStops(DEFAULT_PHASE_STOPS))
+    setSetting('smartStops', true)
   })
 
   it('SET-11: a game rejoined without GAME_INIT still runs on the Settings stops', () => {
@@ -131,18 +133,22 @@ describe('handleMessage', () => {
   it('SET-11: changing a stop mid-game saves it in Settings and pushes it to the running game', () => {
     const me = makePlayer({ playerId: 'p-me', name: 'Me', controlled: true })
     handleMessage({ type: 'event', method: 'GAME_INIT', messageId: 1, objectId: 'g-live', data: makeGameView({ players: [me] }) })
+    setSetting('smartStops', false)
+    setSetting('phaseStops', clonePhaseStops(DEFAULT_PHASE_STOPS))
     vi.mocked(updatePreferences).mockClear()
     const next = togglePhaseStop(getState().settings.phaseStops, 'yourTurn', 'upkeep')
     setSetting('phaseStops', next)
     expect(loadPhaseStops().yourTurn.upkeep).toBe(false)
     expect(updatePreferences).toHaveBeenCalledWith({ phases: next, confirmEmptyManaPool: getState().settings.manaPayment.confirmEmptyPool })
     setSetting('phaseStops', clonePhaseStops(DEFAULT_PHASE_STOPS))
+    setSetting('smartStops', true)
   })
 
   it('SET-11: every push carries the stops and the empty-pool confirmation together', () => {
     // XMage replaces the whole UserData: a push with one of them alone resets the other
     const me = makePlayer({ playerId: 'p-me', name: 'Me', controlled: true })
     handleMessage({ type: 'event', method: 'GAME_INIT', messageId: 1, objectId: 'g-both', data: makeGameView({ players: [me] }) })
+    setSetting('smartStops', false)
     const stops = togglePhaseStop(clonePhaseStops(DEFAULT_PHASE_STOPS), 'opponentTurn', 'draw')
     setSetting('phaseStops', stops)
     vi.mocked(updatePreferences).mockClear()
@@ -154,6 +160,7 @@ describe('handleMessage', () => {
     expect(updatePreferences).toHaveBeenCalledWith({ phases: more, confirmEmptyManaPool: false })
     setSetting('manaPayment', { ...getState().settings.manaPayment, confirmEmptyPool: true })
     setSetting('phaseStops', clonePhaseStops(DEFAULT_PHASE_STOPS))
+    setSetting('smartStops', true)
   })
 
   it('starts stack attribution fresh on GAME_INIT of another game', () => {
@@ -914,16 +921,18 @@ describe('phaseStops', () => {
     vi.clearAllMocks()
   })
 
-  it('has every default phase stop enabled', () => {
+  it('SET-14: a player who has set nothing stops on no step by hand, and lets smart stops decide', () => {
+    expect(getState().settings.gameplayPreset).toBe('simple')
+    expect(getState().settings.smartStops).toBe(true)
     const stops = getState().settings.phaseStops
     for (const key of ['upkeep', 'draw', 'main1', 'beginCombat', 'endCombat', 'main2', 'endStep']) {
-      expect(stops.yourTurn[key]).toBe(true)
-      expect(stops.opponentTurn[key]).toBe(true)
+      expect(stops.yourTurn[key]).toBe(false)
+      expect(stops.opponentTurn[key]).toBe(false)
     }
   })
 
-  it('default phase stops are independent for your turn and opponent turn', () => {
-    const stops = getState().settings.phaseStops
+  it('phase stops are independent for your turn and opponent turn', () => {
+    const stops = clonePhaseStops(DEFAULT_PHASE_STOPS)
     const toggled = togglePhaseStop(stops, 'opponentTurn', 'main1')
     expect(toggled.opponentTurn.main1).toBe(false)
     expect(toggled.yourTurn.main1).toBe(true)
