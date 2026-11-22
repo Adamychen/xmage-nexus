@@ -107,11 +107,12 @@ function handleEvent(method: string, objectId: string | null, data: unknown, mes
     return
   }
 
-  // Guard: If we are in the lobby, ignore in-flight trailing game events from closed/stopped games.
-  // Excepción: el replay de una partida que acabamos de re-unir (joinGame tras
-  // recarga/desconexión) llega con phase='lobby' y es justo lo que hay que aplicar.
+  // Guard: If we are in the lobby or in another table's waiting room, ignore in-flight trailing game
+  // events from closed/stopped games. Excepción: el replay de una partida que acabamos de re-unir
+  // (joinGame tras recarga/desconexión) llega con phase='lobby' y es justo lo que hay que aplicar.
   const restoringGame = !!s.resumingGameId && objectId === s.resumingGameId
-  if (s.phase === 'lobby' && isGameEvent && !restoringGame && method !== 'START_GAME' && method !== 'WATCHGAME') {
+  const awayFromTheGame = s.phase === 'lobby' || s.phase === 'staging'
+  if (awayFromTheGame && isGameEvent && !restoringGame && method !== 'START_GAME' && method !== 'WATCHGAME') {
     return
   }
 

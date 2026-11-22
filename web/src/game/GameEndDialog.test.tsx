@@ -197,6 +197,31 @@ describe('GameEndDialog', () => {
     expect(quitMatch).toHaveBeenCalledWith('g-cont')
   })
 
+  it('GME-1: offers returning to the lobby without conceding when every opponent has left', async () => {
+    const { sendPlayerAction, quitMatch } = await import('../net/commands')
+    vi.mocked(sendPlayerAction).mockClear()
+    vi.mocked(quitMatch).mockClear()
+    const me = makePlayer({ playerId: 'p-hero', name: 'Hero', controlled: true })
+    const rival = makePlayer({ playerId: 'p-rival', name: 'Rival', hasLeft: true })
+    setState({
+      phase: 'game',
+      gameId: 'g-alone',
+      game: makeGameView({ players: [me, rival] }),
+      gameEnd: {
+        won: true,
+        gameInfo: 'You won the game on turn 5.',
+        matchInfo: 'You need one more win to win the match.',
+        players: [me, rival],
+      },
+    })
+
+    render(<GameEndDialog />)
+    fireEvent.click(screen.getByRole('button', { name: /Volver al lobby/i }))
+    await vi.waitFor(() => expect(getState().phase).toBe('lobby'))
+    expect(quitMatch).toHaveBeenCalledWith('g-alone')
+    expect(sendPlayerAction).not.toHaveBeenCalledWith('CONCEDE', 'g-alone')
+  })
+
   it('shows follow button when the table already has a newer game (B.10)', () => {
     setState({
       gameId: 'g-1',

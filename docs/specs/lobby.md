@@ -384,4 +384,3 @@ deck is a different one is still asked about on its own.
   a click the dialog swallowed (report of 2026-11-13, "Accept and play needed two clicks in 2 of 4
   attempts"). Asking twice about one deck is also a question the player has already answered.
 - Guard: `e2e/deckvalidation.spec.ts` · `src/lobby/CreateTable/submitTable.test.ts`
-

@@ -1,4 +1,4 @@
-import type { GameView } from '../net/types'
+import type { GameView, PlayerView } from '../net/types'
 import type { FeedbackPrompt } from '../game/feedback'
 import { playableObjectIds } from '../board/playableUtils'
 import type { CombatState } from './state'
@@ -27,6 +27,11 @@ export function emptyCombat(): CombatState {
 
 export function isCombatStep(game: GameView): boolean {
   return game.step === 'DECLARE_ATTACKERS' || game.step === 'DECLARE_BLOCKERS'
+}
+
+export function everyoneElseLeft(players: readonly PlayerView[] | null | undefined): boolean {
+  const others = (players ?? []).filter((p) => !p.controlled)
+  return others.length > 0 && others.every((p) => p.hasLeft === true)
 }
 
 export function stringList(value: unknown): string[] {

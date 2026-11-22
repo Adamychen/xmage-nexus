@@ -7,6 +7,7 @@ import { formatMatchDuration } from '../lobby/FinishedMatchesPanel'
 import { downloadLatestGameLog, toSavedEntries } from '../system/gameLogs'
 import { localizeGameEndMessage } from './serverMessageTranslation'
 import { getMatchStats, keyCardOf } from './matchStats'
+import { everyoneElseLeft } from '../state/gameUtils'
 import { useCardImageUrl } from '../cards/useCardImageUrl'
 import { particleVectors } from '../board/impactFx'
 import { cardName } from '../cards/cardImages'
@@ -63,6 +64,7 @@ export default function GameEndDialog() {
   const me = game?.players?.find((p) => p.controlled)
   const isSpectator = !me
   const matchOver = end.matchView?.endTime != null || /won the match/i.test(end.matchInfo ?? '') || isSpectator
+    || everyoneElseLeft(end.players ?? game?.players)
   // B.10: la mesa puede tener ya otra partida (Bo3/torneo); sin auto-follow,
   // solo aviso + botón Seguir (claves game.spectator_game_changed / game.follow_game).
   const followGameId = isSpectator ? findFollowGameId(lobbyTables, watchedGameId) : null
