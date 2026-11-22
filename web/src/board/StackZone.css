@@ -481,14 +481,6 @@ html.fx-off .stack-tl-node.node-top {
   border-top: 1px solid var(--veil-2);
 }
 
-.stack-tl-rules.is-clamped {
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
-  line-clamp: 3;
-  overflow: hidden;
-}
-
 /* ── Expanded mode: show more space ── */
 .view-mode-expanded .stack-tl-card {
   padding: var(--sp-2) var(--sp-2h);
@@ -796,14 +788,32 @@ html.fx-off .stack-card-face {
   border-radius: var(--r-sm);
   padding: var(--sp-0h) var(--sp-1);
   color: var(--fg-1);
-  font-size: var(--fs-3xs, 10px);
+  font-size: clamp(10px, calc(var(--card-w, 180px) * 0.058), 14px);
   line-height: 1.3;
 }
 
 .stack-card .stack-tl-rules * { color: inherit; }
 
 .stack-card .stack-tl-targets { bottom: calc(var(--sp-5) + var(--sp-2)); }
-.stack-card .stack-tl-rules { bottom: calc(var(--sp-5) + var(--sp-2)); max-height: 3.4em; overflow: hidden; }
+
+/* STK-7: the ability that is resolving reads as the card's own text box: the plate sits where
+   that box is printed, on its paper and in its ink, so the eye goes to it the way it goes to the
+   text of a card. It is sized from the card it sits on and it is not cut. */
+.stack-card.is-top .stack-tl-rules {
+  left: 7.5%;
+  right: 7.5%;
+  bottom: 10.5%;
+  max-height: 31%;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: var(--card-paper);
+  border: 1px solid rgb(var(--ink-rgb) / 0.35);
+  border-radius: var(--r-sm);
+  color: var(--card-ink);
+  font-size: clamp(10px, calc(var(--card-w, 180px) * 0.062), 15px);
+  line-height: 1.35;
+  padding: var(--sp-0h) var(--sp-1);
+}
 .stack-card .stack-tl-targets + .stack-tl-rules { display: none; }
 
 /* The timeline drew a 2px bar that filled over three seconds under the top object. It counted

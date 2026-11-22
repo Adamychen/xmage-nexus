@@ -300,7 +300,9 @@ export default function SpotlightBoard({
     else onSelectSeat(id)
   }
 
-  const seatBoard = (id: string) => {
+  // BRD-6: the seat in the main area is drawn the way the own board is, whatever the chrome: it
+  // has the whole area, so there is no reason for it to keep the arrangement of a small seat.
+  const seatBoard = (id: string, main = false) => {
     const player: PlayerView | undefined = playerById.get(id)
     if (!player) return null
     if (player.controlled) {
@@ -355,6 +357,7 @@ export default function SpotlightBoard({
             attackingIds={attackingIds}
             blockingIds={blockingIds}
             kindColumns
+            arenaOwn={!narrow}
           />
         </div>
       )
@@ -375,7 +378,7 @@ export default function SpotlightBoard({
             targetZones={targetZones}
             revealedCards={opponentRevealedCards(game, player)}
             stackHand
-            arenaOwn={!narrow && gameUi !== 'v2'}
+            arenaOwn={!narrow && (main || gameUi !== 'v2')}
             playableIds={playableIdSet}
             combatSelectable={combatSelectable}
             combatMode={combatMode}
@@ -417,7 +420,7 @@ export default function SpotlightBoard({
       {stripInDivider && <BoardDivider />}
       <div className="spotlight-body">
         <div className="spotlight-main" data-testid="spotlight-main" data-main-seat={mainId} ref={mainRef}>
-          {seatBoard(mainId)}
+          {seatBoard(mainId, true)}
         </div>
         <div
           className={`spotlight-panel${copyRatio ? ' has-copy-ratio' : ''}`}

@@ -35,21 +35,39 @@ const EMPTY_ARRAY: string[] = []
 
 type Pt = { x: number; y: number }
 
-export function rectEdgePoint(center: Pt, halfW: number, halfH: number, toward: Pt): Pt {
-  const dx = toward.x - center.x
-  const dy = toward.y - center.y
-  if (dx === 0 && dy === 0) return center
-  const tx = dx === 0 ? Infinity : halfW / Math.abs(dx)
-  const ty = dy === 0 ? Infinity : halfH / Math.abs(dy)
-  const t = Math.min(tx, ty, 1)
-  return { x: center.x + dx * t, y: center.y + dy * t }
+/**
+ * TGT-12: an arrow always comes into its target over the top edge, and it leaves its source by the
+ * edge that reads as the start of the move: a spell or ability on the stack points down out of the
+ * card and into the top of what it is aimed at, while an attacker and a blocker leave by the top,
+ * which is the side the creature is facing. Nobody has to work out which end of the beam is which.
+ */
+export function arrowAnchors(
+  from: Pt & { rect: DOMRect },
+  to: Pt & { rect: DOMRect },
+  type: 'attack' | 'block' | 'target',
+): { a: Pt; b: Pt } {
+  const outUnder = type === 'target'
+  return {
+    a: { x: from.x, y: from.y + (outUnder ? from.rect.height / 2 : -from.rect.height / 2) },
+    b: { x: to.x, y: to.y - to.rect.height / 2 },
+  }
 }
 
-export function liftedArcPath(a: Pt, b: Pt): string {
-  const lift = Math.min(90, Math.hypot(b.x - a.x, b.y - a.y) * 0.18)
-  const mx = Math.round((a.x + b.x) / 2)
-  const my = Math.round((a.y + b.y) / 2 - lift)
-  return `M ${Math.round(a.x)} ${Math.round(a.y)} Q ${mx} ${my} ${Math.round(b.x)} ${Math.round(b.y)}`
+/** The curve between those two: it leaves the source the way it left its edge and always drops
+ *  into the target from above, so both ends meet their card square. The handles stay inside the
+ *  board (`height`, when it is known), because a curve that swings off the screen is drawn as a
+ *  straight cut across the edge and reads as two arrows instead of one. */
+export function arrowPath(a: Pt, b: Pt, outUnder: boolean, height?: number): string {
+  const span = Math.hypot(b.x - a.x, b.y - a.y)
+  const bow = Math.max(28, Math.min(140, span * 0.35))
+  const r = (v: number) => Math.round(v)
+  const bounded = !!height && height > 40
+  const lo = bounded ? 6 : -Infinity
+  const hi = bounded ? height - 6 : Infinity
+  const clamp = (v: number) => Math.max(lo, Math.min(hi, v))
+  const c1y = clamp(outUnder ? a.y + bow : a.y - bow)
+  const c2y = clamp(b.y - bow)
+  return `M ${r(a.x)} ${r(a.y)} C ${r(a.x)} ${r(c1y)} ${r(b.x)} ${r(c2y)} ${r(b.x)} ${r(b.y)}`
 }
 
 export default function CombatArrowsOverlay({
@@ -157,11 +175,10 @@ export default function CombatArrowsOverlay({
     }
 
     const makeArrow = (id: string, from: { x: number; y: number; rect: DOMRect }, to: { x: number; y: number; rect: DOMRect }, type: ArrowItem['type'], fromId = '', toId = ''): ArrowItem => {
+      // TGT-12: over the top of the target always; out under the source only on the stack.
+      const outUnder = type === 'target'
+      const { a, b } = arrowAnchors(from, to, type)
       if (seated) {
-        const a = rectEdgePoint(from, from.rect.width / 2, from.rect.height / 2, to)
-        const edge = rectEdgePoint(to, to.rect.width / 2, to.rect.height / 2, from)
-        const len = Math.hypot(edge.x - a.x, edge.y - a.y) || 1
-        const b = { x: edge.x - ((edge.x - a.x) / len) * 3, y: edge.y - ((edge.y - a.y) / len) * 3 }
         return {
           id,
           x1: Math.round(a.x),
@@ -171,29 +188,22 @@ export default function CombatArrowsOverlay({
           type,
           fromId,
           toId,
-          path: liftedArcPath(a, b),
+          path: arrowPath(a, b, outUnder, boardRect.height),
           color: seatColorVar(seatIndexOf(game.players, controllerOf(fromId) ?? me?.playerId)),
         }
       }
-      const dx = to.x - from.x
-      const dy = to.y - from.y
-      const dist = Math.hypot(dx, dy) || 1
-      const ux = dx / dist
-      const uy = dy / dist
-      const startInset = Math.min(Math.round(from.rect.width), Math.round(from.rect.height)) * 0.42
-      const endInset = type === 'target' ? 12 : 18
-      // Extremos a píxel entero: con entradas enteras el trazo discontinuo y la
-      // punta del marcador quedan idénticos entre sesiones.
+      // Whole pixels at both ends: with integer input the dart sits identically between sessions.
       const end = (v: number) => Math.round(v)
       return {
         id,
-        x1: end(from.x + ux * startInset),
-        y1: end(from.y + uy * startInset),
-        x2: end(to.x - ux * endInset),
-        y2: end(to.y - uy * endInset),
+        x1: end(a.x),
+        y1: end(a.y),
+        x2: end(b.x),
+        y2: end(b.y),
         type,
         fromId,
         toId,
+        path: arrowPath(a, b, outUnder, boardRect.height),
       }
     }
 

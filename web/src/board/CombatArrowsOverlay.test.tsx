@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { render } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
-import CombatArrowsOverlay, { liftedArcPath, rectEdgePoint } from './CombatArrowsOverlay'
+import CombatArrowsOverlay, { arrowAnchors, arrowPath } from './CombatArrowsOverlay'
 
 describe('CombatArrowsOverlay', () => {
   it('renders nothing when there are no arrows', () => {
@@ -170,10 +170,10 @@ describe('CombatArrowsOverlay', () => {
     const attackPath = container.querySelector('.arrow-path.arrow-attack') as SVGPathElement | null
     expect(attackPath).not.toBeNull()
     const d = attackPath!.getAttribute('d') ?? ''
-    // Attacker card center (150, 470), avatar center (150, 60):
-    // trimmed start y = 470 - 42 = 428, trimmed end y = 60 + 18 = 78
-    expect(d.startsWith('M 150 428')).toBe(true)
-    expect(d.endsWith('150 78')).toBe(true)
+    // TGT-12: the attacker's card is (100,400,100,140) and the avatar (120,30,60,60), so the beam
+    // leaves the top edge of the card (y 400) and comes in over the top of the avatar (y 30).
+    expect(d.startsWith('M 150 400')).toBe(true)
+    expect(d.endsWith('150 30')).toBe(true)
 
     unmount()
     boardDiv.remove()
@@ -206,22 +206,33 @@ describe('CombatArrowsOverlay', () => {
     expect(path).not.toBeNull()
     expect(path!.style.stroke).toBe('var(--seat-1)')
     const d = path!.getAttribute('d')!
-    expect(d).toMatch(/^M 149 170 Q /)
-    expect(d.endsWith(' 139 597')).toBe(true)
+    // TGT-12: out of the attacker's top edge (y 100), in over the portrait's top edge (y 600).
+    expect(d).toMatch(/^M 150 100 C /)
+    expect(d.endsWith(' 138 600')).toBe(true)
     expect(container.querySelector('.arrow-shadow')).toBeNull()
     unmount()
     boardDiv.remove()
   })
 
-  it('rectEdgePoint clips the centre line to the box edge', () => {
-    expect(rectEdgePoint({ x: 0, y: 0 }, 50, 20, { x: 0, y: 100 })).toEqual({ x: 0, y: 20 })
-    expect(rectEdgePoint({ x: 0, y: 0 }, 50, 20, { x: -200, y: 0 })).toEqual({ x: -50, y: 0 })
-    expect(rectEdgePoint({ x: 0, y: 0 }, 50, 20, { x: 10, y: 10 })).toEqual({ x: 10, y: 10 })
+  it('TGT-12: a spell on the stack leaves under its card, an attacker leaves over it, and both come in over the target', () => {
+    const box = (x: number, y: number, w: number, h: number) =>
+      ({ x, y, rect: { width: w, height: h } as DOMRect })
+    const from = box(100, 300, 80, 120)
+    const to = box(400, 120, 80, 120)
+    expect(arrowAnchors(from, to, 'target').a).toEqual({ x: 100, y: 360 })
+    expect(arrowAnchors(from, to, 'attack').a).toEqual({ x: 100, y: 240 })
+    expect(arrowAnchors(from, to, 'block').a).toEqual({ x: 100, y: 240 })
+    for (const type of ['target', 'attack', 'block'] as const) {
+      expect(arrowAnchors(from, to, type).b, type).toEqual({ x: 400, y: 60 })
+    }
   })
 
-  it('liftedArcPath always bows upward, by at most 90 px', () => {
-    expect(liftedArcPath({ x: 0, y: 100 }, { x: 100, y: 100 })).toBe('M 0 100 Q 50 82 100 100')
-    expect(liftedArcPath({ x: 0, y: 500 }, { x: 1000, y: 500 })).toBe('M 0 500 Q 500 410 1000 500')
+  it('TGT-12: the curve leaves the source the way it left its edge and drops into the target from above', () => {
+    expect(arrowPath({ x: 0, y: 200 }, { x: 0, y: 0 }, true)).toBe('M 0 200 C 0 270 0 -70 0 0')
+    expect(arrowPath({ x: 0, y: 200 }, { x: 0, y: 0 }, false)).toBe('M 0 200 C 0 130 0 -70 0 0')
+    // TGT-12: told the board's height, the handles stay inside it instead of swinging off screen.
+    expect(arrowPath({ x: 0, y: 200 }, { x: 0, y: 0 }, true, 300)).toBe('M 0 200 C 0 270 0 6 0 0')
+    expect(arrowPath({ x: 0, y: 800 }, { x: 0, y: 700 }, true, 300)).toBe('M 0 800 C 0 294 0 294 0 700')
   })
 
   it('BRD-10: an attack arrow ends on the defender\'s portrait inside a copy', () => {
@@ -267,8 +278,8 @@ describe('CombatArrowsOverlay', () => {
     const arrow = container.querySelector('.arrow-group.arrow-attack')
     expect(arrow?.getAttribute('data-arrow-from')).toBe('card-goblin-1')
     expect(arrow?.getAttribute('data-arrow-to')).toBe('p-opp')
-    const coords = container.querySelector('.arrow-path.arrow-attack')!.getAttribute('d')!.split(/[ MQ]+/).filter(Boolean).map(Number)
-    const [x2, y2] = coords.slice(4)
+    const coords = container.querySelector('.arrow-path.arrow-attack')!.getAttribute('d')!.split(/[ MCQ]+/).filter(Boolean).map(Number)
+    const [x2, y2] = coords.slice(-2)
     expect(x2).toBeGreaterThanOrEqual(500)
     expect(x2).toBeLessThanOrEqual(560)
     expect(y2).toBeGreaterThanOrEqual(100)

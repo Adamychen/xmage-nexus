@@ -31,3 +31,13 @@ describe('the cascade under the pointer', () => {
     expect(siblings).toEqual([])
   })
 })
+
+describe('the text of the object in front', () => {
+  it('STK-7: the rules plate is sized from the card and is not clamped to a line count', () => {
+    const block = /\.stack-card\.is-top \.stack-tl-rules \{([^}]*)\}/.exec(css)?.[1] ?? ''
+    expect(block, 'the front card has a plate of its own').not.toBe('')
+    expect(block, 'its type follows the card width').toMatch(/font-size:\s*clamp\([^)]*var\(--card-w/)
+    expect(block).not.toMatch(/line-clamp|-webkit-box/)
+    expect(css, 'no clamp rule is left anywhere for it').not.toMatch(/stack-tl-rules[^{]*\{[^}]*line-clamp/)
+  })
+})

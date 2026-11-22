@@ -75,3 +75,15 @@ the chip says so rather than guessing.
 - Why: on a shared pile the only question that cannot be answered by the card itself is whose it
   is, and a spectator seeing "You" over a player's counterspell is worse than no chip at all.
 - Guard: `src/board/StackZone.test.tsx`
+
+### STK-7 · The text of the object in front is read, not guessed
+An ability on the stack is its text: the card under it is only the art of the source that made it.
+So the object in front shows that text on a plate of its own, sized from the card it sits on rather
+than from a fixed number of pixels, and it is never cut to a fixed number of lines. A long ability
+takes up to half the card and scrolls past that; the objects behind the front one show no text,
+because what is visible of them is a sliver.
+
+- Why: the plate was 10 px with a three-line clamp, so the ability that is about to resolve, which
+  is the one thing on the stack that cannot be read from the art, was both small and cut off (user
+  report with a screenshot, 2026-11-22).
+- Guard: `src/board/StackZone.css.test.ts`

@@ -28,7 +28,7 @@ import { isMarqueePermanent } from './marquee'
 import { bandFill, bandShares, permanentKind } from './bandWeights'
 import { EMPTY_TARGET_ZONES, type TargetZoneKind } from './targetZones'
 import { isPlayerDefeated, isPlayerOut } from './boardShared'
-import { useCommanderInHand } from './handCommander'
+import { useCommanderInHand, useHandCommander } from './handCommander'
 import { useBattlefieldPulse } from './seatFocus'
 import { pileCornerReaches } from './pileCorner'
 import { useSeatColor } from './seatColor'
@@ -151,7 +151,14 @@ export default function BoardZone({
   // BRD-32: the commander follows the hand in every chrome, so the zone on the board keeps only
   // what a hand cannot hold (emblems, planes, dungeons).
   const commanderFollowsHand = useCommanderInHand()
-  const commanderToHand = !isTop && effectiveControlled && commanderFollowsHand
+  // BRD-34: a seat whose hand is drawn here (a watched player in the main area) carries its
+  // commander at the end of that hand; my own goes with the hand the shell draws.
+  // A seat whose own hand is drawn here as cards (the watched seat of the main area) carries its
+  // commander at the end of it; a hand collapsed into a stack of backs is not a hand to read, so
+  // that seat keeps its command zone.
+  const handDrawnHere = showHand && !statusOnly && !stackHand && !compactPod && !isTop
+  const commanderToHand = !isTop && (effectiveControlled || handDrawnHere) && commanderFollowsHand
+  const seatCommander = useHandCommander(player, commanderToHand && !effectiveControlled, effectiveControlled ? helperEmblems : undefined)
   const arenaOppPiles = bareChip && !portrait && !effectiveControlled && !statusOnly
   const seatColor = useSeatColor(player?.playerId)
   const isTurnZone = useStore((s) => (s.game?.activePlayerId ? s.game.activePlayerId === player?.playerId : !!player?.isActive))
@@ -732,6 +739,8 @@ export default function BoardZone({
           viewable={handViewable}
           viewKnownCount={knownHandEntries.length}
           onViewHand={() => setHandViewerOpen(true)}
+          trailing={seatCommander}
+          onTrailingClick={onCardClick}
         />
       )}
       {oppCommanderInRow && (
@@ -1000,11 +1009,12 @@ export default function BoardZone({
       ? [{ id: 'permanents', el: permanentsBandEl, items: [...landGroups.map(pileItem), ...tokenGroups.map(pileItem), ...landSolos.map(([id, perm]) => cardItem(id, perm)), ...otherSolos.map(([id, perm]) => cardItem(id, perm))], evenLines: true }]
       : []
   const creaturesBands: BandRegistration[] = []
-  if (hasCommander && commanderEl) {
+  if (showCommandZone && commanderEl) {
+    const counts = commandSlotCounts(player, effectiveControlled ? helperEmblems : undefined, statusSide)
     creaturesBands.push({
       id: 'commander',
       el: commanderEl,
-      items: [{ kind: 'commander', ...commandSlotCounts(player, effectiveControlled ? helperEmblems : undefined, statusSide), compactPod }],
+      items: [{ kind: 'commander', ...counts, commanders: commanderToHand ? 0 : counts.commanders, compactPod }],
       maxLines: 1,
     })
   }

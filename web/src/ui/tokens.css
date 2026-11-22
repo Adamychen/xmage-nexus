@@ -28,6 +28,11 @@
 
   --fg-hi: #ffffff;
 
+  /* The paper of a card's text box and its ink. They belong to the card, not to the app's theme,
+     so they are the same in light and dark. */
+  --card-paper: #f7f5ee;
+  --card-ink: #0f1012;
+
   --purple-rgb: 168 85 247;
   --purple: #a855f7;
   --purple-fg: #c084fc;

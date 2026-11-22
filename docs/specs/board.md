@@ -496,8 +496,9 @@ who only lost the connection is still in the game for the server until it drops 
 
 ### BRD-31 · Each copy in the side panel shows its player's name and life
 In the main board mode (BRD-6) every copy in the panel has a head above it, drawn at full size and
-not scaled with the board: the seat colour, the player's name (cut with an ellipsis when it does not
-fit) and their life with a heart, updated with every game view. The head of the player whose turn
+not scaled with the board: the player's name (cut with an ellipsis when it does not fit) and their
+life with a heart, updated with every game view. No bar of the seat colour beside the name: the
+board under the head already carries that colour, and a second copy of it only drew a line. The head of the player whose turn
 it is carries a turn badge and a gold edge. A click on the head brings that seat to the main area,
 as a click on the copy does (BRD-7). The board in the main area has no head: its own status row is
 already readable.

@@ -4,6 +4,7 @@ import CardSlot from './CardSlot'
 import Icon from '../ui/Icon'
 import { clickableProps } from '../ui/clickable'
 import { useTranslation } from '../i18n'
+import { HandCommanderSlot, type HandTrailingCard } from './handCommander'
 import { useDrawSlide } from './useDrawSlide'
 import './HandZone.css'
 import './drawSlide.css'
@@ -31,12 +32,19 @@ interface HandZoneProps {
   /** BRD-38: how the collapsed backs are drawn: one card (default), half a card turned round
    *  hanging from the top edge (an Arena opponent facing the player), or a small fan. */
   backsStyle?: 'stack' | 'half' | 'fan' | 'half-fan'
+  /** BRD-34: the uncast commander of this seat, drawn at the end of the hand it is cast from. */
+  trailing?: HandTrailingCard[]
+  onTrailingClick?: (id: string) => void
 }
+
+const NO_TRAILING: HandTrailingCard[] = []
 
 const FAN_MAX = 10
 const FAN_STEP_DEG = 5
 
 export default function HandZone({
+  trailing = NO_TRAILING,
+  onTrailingClick,
   cards,
   onCardClick,
   onHover,
@@ -174,6 +182,17 @@ export default function HandZone({
           )}
         </div>
       )}
+      {trailing.map((item) => (
+        <HandCommanderSlot
+          key={item.id}
+          item={item}
+          playable={playableIds.has(item.id)}
+          target={targetIds.has(item.id)}
+          onClick={onTrailingClick}
+          onHover={onHover}
+          className="hand-zone-commander"
+        />
+      ))}
     </div>
   )
 }

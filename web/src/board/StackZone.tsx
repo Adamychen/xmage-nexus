@@ -424,7 +424,7 @@ export default function StackZone({
                   {isCopy && <span className="stack-tl-copy-badge"><Icon name="sparkles" size={11} /> {t('game', 'copy_badge')}</span>}
                 </div>
                 {rulesText && isAbility && (
-                  <div className="stack-tl-rules is-clamped" title={rulesText}>
+                  <div className="stack-tl-rules" title={rulesText}>
                     <FormattedText text={rulesText} cardName={card.displayName ?? card.name} />
                   </div>
                 )}
