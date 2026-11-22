@@ -79,7 +79,12 @@ the real game.
 When several spells leave the stack in one update, they resolve on screen one after another: each
 stays visible while its projectiles fly and it exits to its zone, and the next starts only after
 the previous one is done plus a short beat (120 ms). A spell still on the stack is never removed
-by this queue; a new game drops whatever was held.
+by this queue; a new game drops whatever was held, and so does a fresh screen: the hold lives in
+module state, so a remount must not inherit a spell from the previous instance, even when it comes
+back with the same game id. A resolution that never reports back is released by a 2.5 s watchdog,
+and a burst beyond six queued resolutions drops the rest instead of replaying them: after a
+reconnect or a hidden tab the board has already moved on, and animating the backlog would keep old
+spells on the stack for seconds.
 
 - Why: `5dd25ca220`. The transition engine still diffs the real game; only the rendered stack is
   held (`stackHold.ts`), so the board never disagrees with the server once the queue drains.
