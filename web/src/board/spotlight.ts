@@ -1,4 +1,5 @@
 import type { GameView } from '../net/types'
+import { isPlayerOut } from './boardShared'
 import { useStore, setSpotlight } from '../state/store'
 
 export interface SpotlightChoice {
@@ -19,14 +20,20 @@ export function spotlightActive({ enabled, arenaLayout, isSpectator, liveOppCoun
   return enabled && arenaLayout && liveOppCount >= (isSpectator ? 2 : 1)
 }
 
-export function mainSeatId({ chosen, homeId, liveOppIds, declaration }: {
+/** BRD-57: a seat that is out of the game never holds the main area while anyone is still playing.
+ *  The home seat is where the view falls back to, and when that seat is out itself (the player lost,
+ *  or the spectator's home seat did) the first seat still playing takes its place. */
+export function mainSeatId({ chosen, homeId, homeOut = false, liveOppIds, declaration }: {
   chosen: SpotlightChoice | null
   homeId: string
+  homeOut?: boolean
   liveOppIds: readonly string[]
   declaration: string | null
 }): string {
-  if (!chosen || (chosen.playerId !== homeId && !liveOppIds.includes(chosen.playerId))) return homeId
-  if (declaration !== null && chosen.pickedIn !== declaration) return homeId
+  const home = homeOut ? liveOppIds[0] ?? homeId : homeId
+  const alive = chosen ? (chosen.playerId === homeId ? !homeOut : liveOppIds.includes(chosen.playerId)) : false
+  if (!chosen || !alive) return home
+  if (declaration !== null && chosen.pickedIn !== declaration) return home
   return chosen.playerId
 }
 
@@ -53,11 +60,14 @@ export function useSpotlight(game: GameView | null, homeId: string | undefined, 
   const spotlight = useStore((s) => s.spotlight)
   const gameId = useStore((s) => s.gameId)
   const declaration = declarationKey(game?.turn ?? 0, combatMode)
+  const homeOut = isPlayerOut(game?.players?.find((p) => p.playerId === homeId))
   const mainId = homeId
-    ? mainSeatId({ chosen: choiceForGame(spotlight, gameId), homeId, liveOppIds, declaration })
+    ? mainSeatId({ chosen: choiceForGame(spotlight, gameId), homeId, homeOut, liveOppIds, declaration })
     : undefined
   const select = (playerId: string) => {
     if (gameId === null) return
+    // BRD-57: a seat out of the game cannot be brought to the main area at all.
+    if (playerId === homeId ? homeOut : !liveOppIds.includes(playerId)) return
     setSpotlight({ gameId, ...chooseMainSeat(playerId, declaration) })
   }
   return { mainId, select }

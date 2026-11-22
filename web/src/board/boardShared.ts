@@ -12,9 +12,12 @@ export function isPlayerOut(player: PlayerView | undefined | null): boolean {
   return !!player && player.hasLeft === true
 }
 
-/** The seat a spectator's column view draws at the bottom (with its hand, if visible). */
+/** The seat a spectator's column view draws at the bottom (with its hand, if visible). A seat out
+ *  of the game is skipped while anyone is still playing (BRD-57): watching a dead board is what a
+ *  spectator joining a game in progress used to get. */
 export function spectatorHomeSeat(opps: readonly PlayerView[]): PlayerView | undefined {
-  return opps.length >= 2 ? opps[opps.length - 1] : opps[0]
+  const seats = opps.some((p) => !isPlayerOut(p)) ? opps.filter((p) => !isPlayerOut(p)) : opps
+  return seats.length >= 2 ? seats[seats.length - 1] : seats[0]
 }
 
 export function isPlayerDefeated(player: PlayerView | undefined | null): boolean {

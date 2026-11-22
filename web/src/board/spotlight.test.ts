@@ -12,7 +12,7 @@ import {
 } from './spotlight'
 import { getState, setState } from '../state/state'
 import { spectatorHomeSeat } from './boardShared'
-import type { PlayerView } from '../net/types'
+import type { GameView, PlayerView } from '../net/types'
 
 const ME = 'p1'
 const LIVE = ['p2', 'p3', 'p4']
@@ -113,10 +113,33 @@ describe('spotlight', () => {
     expect(main(picked, declarationKey(5, 'attack'))).toBe(ME)
   })
 
+  it('BRD-57: a home seat that is out hands the main area to a seat still playing', () => {
+    const out = (chosen: SpotlightChoice | null, liveOppIds: readonly string[] = LIVE) =>
+      mainSeatId({ chosen, homeId: ME, homeOut: true, liveOppIds, declaration: null })
+    expect(out(null)).toBe('p2')
+    expect(out(chooseMainSeat(ME, null))).toBe('p2')
+    expect(out(chooseMainSeat('p3', null))).toBe('p3')
+    expect(out(chooseMainSeat('p3', null), ['p4'])).toBe('p4')
+  })
+
+  it('BRD-57: with nobody left to watch the home seat stays, out or not', () => {
+    expect(mainSeatId({ chosen: null, homeId: ME, homeOut: true, liveOppIds: [], declaration: null })).toBe(ME)
+  })
+
+  it('BRD-57: the seat a spectator opens on is one still in the game', () => {
+    const seat = (playerId: string, hasLeft = false) => ({ playerId, name: playerId, hasLeft } as PlayerView)
+    expect(spectatorHomeSeat([seat('p1'), seat('p2'), seat('p3'), seat('p4', true)])?.playerId).toBe('p3')
+    expect(spectatorHomeSeat([seat('p1'), seat('p2', true)])?.playerId).toBe('p1')
+    expect(spectatorHomeSeat([seat('p1', true), seat('p2', true)])?.playerId).toBe('p2')
+  })
+
   describe('useSpotlight', () => {
     beforeEach(() => {
       setState({ gameId: 'g1', spotlight: null } as never)
     })
+
+    const gameOf = (...players: Array<[string, boolean]>) =>
+      ({ players: players.map(([playerId, hasLeft]) => ({ playerId, name: playerId, hasLeft })) } as GameView)
 
     it('BRD-7: useSpotlight stores the pick for the current game and returns it as the main seat', () => {
       const { result } = renderHook(() => useSpotlight(null, ME, LIVE, null))
@@ -124,6 +147,28 @@ describe('spotlight', () => {
       act(() => result.current.select('p3'))
       expect(getState().spotlight).toEqual({ gameId: 'g1', playerId: 'p3', pickedIn: null })
       expect(result.current.mainId).toBe('p3')
+    })
+
+    it('BRD-57: a seat that is out cannot be brought to the main area', () => {
+      const game = gameOf([ME, false], ['p2', false], ['p3', true])
+      const { result } = renderHook(() => useSpotlight(game, ME, ['p2'], null))
+      act(() => result.current.select('p3'))
+      expect(getState().spotlight).toBeNull()
+      expect(result.current.mainId).toBe(ME)
+    })
+
+    it('BRD-57: watching a seat that dies falls back to the own board, and to another seat when that one is out too', () => {
+      const alive = gameOf([ME, false], ['p2', false], ['p3', false])
+      const { result, rerender } = renderHook(
+        ({ game, live }: { game: GameView; live: string[] }) => useSpotlight(game, ME, live, null),
+        { initialProps: { game: alive, live: ['p2', 'p3'] } },
+      )
+      act(() => result.current.select('p3'))
+      expect(result.current.mainId).toBe('p3')
+      rerender({ game: gameOf([ME, false], ['p2', false], ['p3', true]), live: ['p2'] })
+      expect(result.current.mainId).toBe(ME)
+      rerender({ game: gameOf([ME, true], ['p2', false], ['p3', true]), live: ['p2'] })
+      expect(result.current.mainId).toBe('p2')
     })
   })
 })

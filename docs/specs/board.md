@@ -114,7 +114,8 @@ place on every board. An opponent's hand, in the main area or a copy, is a stack
 count beside their portrait (a click opens the known cards), so it never sits under the own hand. A
 seat that has left or lost stays in the panel folded to its head (BRD-30).
 A spectator gets the same mode when two or more players are still in the game: the main area
-starts on the seat the column view draws at the bottom for a spectator (the last in turn order),
+starts on the seat the column view draws at the bottom for a spectator (the last in turn order
+still in the game, BRD-57),
 the panel holds every other seat in turn order after it, and a seat whose hand the spectator may
 see shows it in the main area as the column view does. In a duel the Arena preference keeps the
 Arena layout while the switch is on (with it off a duel is drawn on the Standard board, as before),
@@ -955,3 +956,18 @@ copy of the numbers.
   viewer rather than a board (user request, 17-nov-2026). Measured on the four-player showcase, a
   full board draws its creatures at 162 px and its lands at 80, so nothing there moves.
 - Guard: `src/board/layout/solveBoardLayout.test.ts`
+
+### BRD-57 · The main area never holds a seat that is out
+A player who has left or lost is never the board drawn at full size while anybody is still
+playing. Their pill in the turn strip takes no click, their copy in the side panel is folded to its
+head and takes none either, and neither does any other way of picking a seat. A seat that goes out
+while it is in the main area hands it back at once: to the player's own board, or, when that board
+is out too because the player lost or is watching, to the first seat still in the game. The seat a
+spectator opens on is chosen the same way, so joining a game in progress never starts on a dead
+board. When nobody is left in the game the home seat stays, because there is nothing else to show.
+
+- Why: the spectator's home seat was the last in turn order whatever its state, so watching a game
+  where that player had already lost opened on their empty board (user report, 2026-11-22). The
+  fallback had the same hole from the other side: a chosen seat that died fell back to the home
+  seat without asking whether the home seat was still playing.
+- Guard: `src/board/spotlight.test.ts`
