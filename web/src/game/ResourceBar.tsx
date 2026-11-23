@@ -77,7 +77,7 @@ export default function ResourceBar({
   const micro = microProp || stats
   const [openPile, setOpenPile] = useState<'graveyard' | 'exile' | 'crosszone' | 'library' | null>(null)
   const gameId = useStore((s) => s.gameId)
-  const librarySleeve = useSleeveFor(side === 'my' ? player.playerId : null)
+  const librarySleeve = useSleeveFor(player.playerId)
   const pool = player.manaPool ?? {}
   const canPayMana = side === 'my' && !!gameId
   const manaPromptOpen = useStore((s) => s.feedback?.mode === 'mana')
