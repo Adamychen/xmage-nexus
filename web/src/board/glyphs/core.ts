@@ -4,14 +4,17 @@ const SHIELD = 'M12 2.5 4.5 5.5v6c0 4.7 3.2 8.2 7.5 9.8 4.3-1.6 7.5-5.1 7.5-9.8v
 
 export const group: GlyphGroup = {
   glyphs: {
+    // The weapon players already read as a strike: Lucide's sword for one, its two swords for
+    // two. The old pair (an arrow and a pair of slashes) said neither 'strike' nor 'twice'.
     first_strike: [
-      ['path', { d: 'M20 4 9 15' }],
-      ['path', { d: 'M20 4v5M20 4h-5' }],
-      ['path', { d: 'm7 13 4 4M7 17l-3 3' }],
+      ['polyline', { points: '14.5 17.5 3 6 3 3 6 3 17.5 14.5' }],
+      ['path', { d: 'M13 19l6-6M16 16l4 4M19 21l2-2' }],
     ],
     double_strike: [
-      ['path', { d: 'M4 4l11 11M20 4 9 15' }],
-      ['path', { d: 'm13 17 4-4M7 13l4 4' }],
+      ['polyline', { points: '14.5 17.5 3 6 3 3 6 3 17.5 14.5' }],
+      ['path', { d: 'M13 19l6-6M16 16l4 4M19 21l2-2' }],
+      ['polyline', { points: '14.5 6.5 18 3 21 3 21 6 17.5 9.5' }],
+      ['path', { d: 'M5 14l4 4M7 17l-3 3M3 19l2 2' }],
     ],
     vigilance: [
       ['path', { d: 'M2 12c1.2-2.6 5-6.5 10-6.5S20.8 9.4 22 12c-1.2 2.6-5 6.5-10 6.5S3.2 14.6 2 12z' }],
