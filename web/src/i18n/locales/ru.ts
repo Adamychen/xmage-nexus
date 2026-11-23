@@ -1089,6 +1089,8 @@ export const ru: TranslationSchema = {
     stack_empty: 'Стек пуст',
     stack_push_aside: 'Отодвинуть стек',
     stack_bring_back: 'Вернуть стек',
+    stack_text_show: 'Показать, что делает',
+    stack_text_hide: 'Скрыть текст',
     combat_damage_title: 'Боевой урон',
     ledger_attacks: '{player} атакует',
     stack_empty_desc: 'Разыгранные заклинания и способности появятся здесь.',

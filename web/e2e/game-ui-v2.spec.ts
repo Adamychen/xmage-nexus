@@ -296,7 +296,7 @@ test('STK-1, STK-2: the stack draws every object on the board, and the grip push
   const cards = zone.locator('.stack-card')
   await expect(cards, 'five objects, five cards').toHaveCount(5)
   await expect(cards.first(), 'the one that resolves next is in front').toHaveClass(/is-top/)
-  await expect(cards.first(), 'and it says whose it is').toContainText('Mira')
+  await expect(zone.getByTestId('stack-bubble-tab'), 'and its bubble says whose it is').toContainText('Mira')
   await expect(page.locator('.action-btn-label').first()).toContainText(/resolve/i)
   await page.waitForTimeout(600)
   await page.screenshot({ path: testInfo.outputPath('v2-stack-cascade.png') })

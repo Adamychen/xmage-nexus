@@ -756,68 +756,6 @@ html.fx-off .stack-card-face {
   line-height: 1.2;
 }
 
-/* No wash under it: the chip brings its own plate, so the card's own art stays the card's. */
-.stack-card-foot {
-  position: absolute;
-  inset: auto 0 0 0;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: flex-end;
-  gap: var(--sp-0h);
-  padding: var(--sp-1) var(--sp-1h);
-}
-
-/* Only the card in front has room under it for the rest: the others are covered there. */
-/* Only the card in front has room under it for the rest: the others are covered there. */
-.stack-card:not(.is-top) .stack-card-foot,
-.stack-card:not(.is-top) .stack-tl-targets,
-.stack-card:not(.is-top) .stack-tl-rules {
-  display: none;
-}
-
-/* Over art, a plate of its own: the card beneath can be any colour, so the text brings its
-   background with it instead of trusting the picture. */
-.stack-card .stack-tl-targets,
-.stack-card .stack-tl-rules {
-  position: absolute;
-  left: var(--sp-1h);
-  right: var(--sp-1h);
-  background: rgb(var(--ink-2-rgb) / 0.92);
-  border: 1px solid var(--veil-4);
-  border-radius: var(--r-sm);
-  padding: var(--sp-0h) var(--sp-1);
-  color: var(--fg-1);
-  font-size: clamp(10px, calc(var(--card-w, 180px) * 0.058), 14px);
-  line-height: 1.3;
-}
-
-.stack-card .stack-tl-rules * { color: inherit; }
-
-.stack-card .stack-tl-targets { bottom: calc(var(--sp-5) + var(--sp-2)); }
-
-/* STK-7: the ability that is resolving reads as the card's own text box: the plate sits where
-   that box is printed, on its paper and in its ink, so the eye goes to it the way it goes to the
-   text of a card. It is sized from the card it sits on and it is not cut. */
-.stack-card.is-top .stack-tl-rules {
-  left: 7.5%;
-  right: 7.5%;
-  bottom: 10.5%;
-  /* STK-7: the plate takes the room the text needs, up to most of the card: an ability of five or
-     six lines used to scroll inside a third of the card and read as a cut sentence. */
-  max-height: 58%;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  background: var(--card-paper);
-  border: 1px solid rgb(var(--ink-rgb) / 0.35);
-  border-radius: var(--r-sm);
-  color: var(--card-ink);
-  font-size: clamp(10px, calc(var(--card-w, 180px) * 0.062), 15px);
-  line-height: 1.35;
-  padding: var(--sp-0h) var(--sp-1);
-}
-.stack-card .stack-tl-targets + .stack-tl-rules { display: none; }
-
 /* The timeline drew a 2px bar that filled over three seconds under the top object. It counted
    nothing: no timer ran behind it and nothing resolved when it finished. */
 
@@ -859,7 +797,7 @@ html.fx-off .stack-card-face {
 /* STK-6 (cont.): It sits over card art that can be any
    colour, so it brings its own background instead of trusting the picture underneath, the way the
    counter badges do (BRD-53). */
-.stack-card .stack-controller-pill,
+.stack-bubble .stack-controller-pill,
 .floating-card-badge .stack-controller-pill {
   display: inline-flex;
   align-items: center;
@@ -878,17 +816,17 @@ html.fx-off .stack-card-face {
 }
 
 /* The rim says whose it is; the name stays white, like every number on a badge. */
-.stack-card .stack-controller-pill.is-me,
+.stack-bubble .stack-controller-pill.is-me,
 .floating-card-badge .stack-controller-pill.is-me {
   border-color: rgb(var(--brand-rgb) / 0.8);
 }
 
-.stack-card .stack-controller-pill.is-opp,
+.stack-bubble .stack-controller-pill.is-opp,
 .floating-card-badge .stack-controller-pill.is-opp {
   border-color: var(--seat, var(--err));
 }
 
-.stack-card .stack-controller-pill .ctrl-name,
+.stack-bubble .stack-controller-pill .ctrl-name,
 .floating-card-badge .stack-controller-pill .ctrl-name {
   font-family: var(--font-ui);
   font-variant-numeric: tabular-nums lining-nums;
@@ -906,3 +844,163 @@ html.fx-off .stack-card-face {
   z-index: 3;
   pointer-events: none;
 }
+
+/* STK-10: what the object being read will do hangs under the cascade as a speech bubble. Folded it
+   is one strip, the chips the front card used to carry over its own art, with a chevron saying
+   there is more; open, the same strip heads the server's text. Its height is the room measured
+   between the cascade and the dock, never a number; with no room there it lies over the front
+   card's own lower half, which is the one part of the screen it may cover. */
+.stack-bubble {
+  --bubble-paper: var(--card-paper);
+  --bubble-ink: var(--card-ink);
+  --bubble-edge: color-mix(in srgb, var(--card-ink) 45%, transparent);
+  --bubble-rule: color-mix(in srgb, var(--card-ink) 16%, transparent);
+  position: absolute;
+  right: 0;
+  z-index: calc(var(--stack-n) + 20);
+  width: max(var(--card-w), 200px);
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--r-md);
+  background: var(--bubble-paper);
+  color: var(--bubble-ink);
+  border: 1px solid var(--bubble-edge);
+  box-shadow: 0 8px 22px var(--shade-3);
+  pointer-events: auto;
+}
+
+.stack-bubble.is-below {
+  top: calc(100% + 12px);
+  max-height: var(--bubble-max, 40vh);
+}
+
+.stack-bubble.is-inside {
+  right: var(--sp-1);
+  bottom: var(--sp-1);
+  width: calc(var(--card-w) - var(--sp-2));
+  max-height: calc(var(--card-h) - var(--sp-2));
+}
+
+/* The tail points at the card being read, and slides to it when another one is read. */
+@media (prefers-reduced-motion: no-preference) {
+  .stack-bubble.is-below::before,
+  .stack-bubble.is-below::after { transition: right 0.14s ease; }
+}
+
+/* The card being read keeps its ring while the pointer is on the bubble, so it is plain which of
+   the cards the text belongs to. */
+.stack-card.is-reading .stack-card-face {
+  outline: 2px solid var(--brand-fg);
+  outline-offset: -2px;
+}
+
+.stack-bubble.is-below::before,
+.stack-bubble.is-below::after {
+  content: "";
+  position: absolute;
+  width: 0;
+  height: 0;
+  border: 8px solid transparent;
+}
+
+.stack-bubble.is-below::before {
+  right: min(calc(var(--card-w) / 2 + var(--stack-x) * var(--read-i, 0) - 9px), calc(100% - 26px));
+  top: -9px;
+  border-width: 0 9px 9px;
+  border-bottom-color: var(--bubble-edge);
+}
+
+.stack-bubble.is-below::after {
+  right: min(calc(var(--card-w) / 2 + var(--stack-x) * var(--read-i, 0) - 8px), calc(100% - 25px));
+  top: -8px;
+  border-width: 0 8px 8px;
+  border-bottom-color: var(--bubble-paper);
+}
+
+.stack-bubble-tab {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+  min-width: 0;
+  width: 100%;
+  padding: var(--sp-1) var(--sp-1h);
+  border: 0;
+  border-radius: inherit;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.stack-bubble-tab:focus-visible {
+  outline: 2px solid var(--brand-fg);
+  outline-offset: 2px;
+}
+
+.stack-bubble-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-ui);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+}
+
+.stack-bubble-kind {
+  display: inline-flex;
+  color: inherit;
+  opacity: 0.75;
+}
+
+/* The chevron is what says the strip opens: it nods once when the bubble first appears, and turns
+   when the text is open. */
+.stack-bubble-chevron {
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  flex: none;
+  border-radius: var(--r-pill);
+  background: var(--bubble-rule);
+}
+
+.stack-bubble-tab:hover .stack-bubble-chevron { background: var(--bubble-edge); }
+
+@media (prefers-reduced-motion: no-preference) {
+  html:not(.fx-off) .stack-bubble:not(.is-open) .stack-bubble-chevron {
+    animation: stack-bubble-nod 0.9s ease 0.4s 2;
+  }
+  html:not(.fx-off) .stack-bubble.is-open .stack-bubble-body {
+    animation: stack-bubble-open 0.18s ease-out;
+  }
+}
+
+@keyframes stack-bubble-nod {
+  0%, 100% { transform: translateY(0); }
+  40% { transform: translateY(3px); }
+}
+
+@keyframes stack-bubble-open {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: none; }
+}
+
+.stack-bubble-body {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: var(--sp-1) var(--sp-2) var(--sp-2);
+  border-top: 1px solid var(--bubble-rule);
+  font-size: var(--fs-sm);
+  line-height: 1.35;
+}
+
+.stack-bubble-body[hidden] { display: none; }
+
+.stack-bubble-body p { margin: 0 0 var(--sp-1); text-wrap: pretty; }
+.stack-bubble-body p:last-child { margin-bottom: 0; }
+.stack-bubble-body * { color: inherit; }
+.stack-bubble-x { font-weight: 700; }

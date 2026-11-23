@@ -149,7 +149,7 @@ describe('StackZone', () => {
     expect(container.querySelector('.stack-zone')!.classList.contains('is-pushed')).toBe(false)
   })
 
-  it('STK-1: an ability reads its rules on the card; a spell does not repeat what its card already prints', () => {
+  it('STK-7: the object in front is read in the bubble, an ability and a spell alike, and nothing is written over the card', () => {
     const ability = spell('ability-1', 'Soul Warden', {
       mageObjectType: 'TRIGGERED_ABILITY',
       rules: ['You gain 1 life.'],
@@ -158,11 +158,98 @@ describe('StackZone', () => {
 
     const { container, rerender } = render(<StackZone stack={stackOf(ability)} />)
     expect(container.querySelector('.stack-card')!.classList.contains('is-ability')).toBe(true)
-    expect(container.querySelector('.stack-tl-rules')?.textContent).toContain('You gain 1 life.')
+    expect(container.querySelector('[data-testid="stack-bubble-body"]')?.textContent).toContain('You gain 1 life.')
+    expect(container.querySelector('.stack-card .stack-tl-rules, .stack-card .stack-controller-pill')).toBeNull()
 
     rerender(<StackZone stack={stackOf(instant)} />)
     expect(container.querySelector('.stack-card')!.classList.contains('is-spell')).toBe(true)
-    expect(container.querySelector('.stack-tl-rules')).toBeNull()
+    expect(container.querySelector('[data-testid="stack-bubble-body"]')?.textContent).toContain('Lightning Bolt deals 3 damage')
+  })
+})
+
+describe('StackZone, the bubble', () => {
+  const tab = (container: HTMLElement) => container.querySelector<HTMLButtonElement>('[data-testid="stack-bubble-tab"]')!
+  const body = (container: HTMLElement) => container.querySelector<HTMLElement>('[data-testid="stack-bubble-body"]')!
+  const two = () => stackOf(
+    spell('spell-2', 'Counterspell', { rules: ['Counter target spell.'] }),
+    spell('spell-1', 'Lightning Bolt', { rules: ['Lightning Bolt deals 3 damage to any target.'] }),
+  )
+
+  it('STK-10: folded, it is one strip that says it opens; the text is not on screen', () => {
+    const { container } = render(<StackZone stack={two()} />)
+    expect(tab(container).getAttribute('aria-expanded')).toBe('false')
+    expect(body(container).hidden).toBe(true)
+    expect(container.querySelector('.stack-bubble-chevron')).not.toBeNull()
+  })
+
+  it('STK-10: the pointer on the cascade opens it on the card under the pointer, and it folds a moment after leaving', () => {
+    vi.useFakeTimers()
+    try {
+      const { container } = render(<StackZone stack={two()} />)
+      const behind = cards(container)[1]
+      fireEvent.mouseEnter(behind)
+      expect(tab(container).getAttribute('aria-expanded')).toBe('true')
+      expect(body(container).textContent).toContain('Lightning Bolt deals 3 damage')
+
+      fireEvent.mouseLeave(behind)
+      fireEvent.mouseEnter(container.querySelector('[data-testid="stack-bubble"]')!)
+      act(() => { vi.advanceTimersByTime(1000) })
+      expect(tab(container).getAttribute('aria-expanded'), 'crossing to the bubble keeps it open').toBe('true')
+      expect(body(container).textContent, 'and on the card that was being read').toContain('Lightning Bolt')
+      expect(behind.classList.contains('is-reading'), 'which keeps its ring, so the text plainly belongs to it').toBe(true)
+      expect(container.querySelector<HTMLElement>('[data-testid="stack-bubble"]')!.style.getPropertyValue('--read-i'), 'and the tail points at it').toBe('1')
+
+      fireEvent.mouseLeave(container.querySelector('[data-testid="stack-bubble"]')!)
+      expect(tab(container).getAttribute('aria-expanded'), 'it does not fold the instant the pointer leaves').toBe('true')
+      act(() => { vi.advanceTimersByTime(1000) })
+      expect(tab(container).getAttribute('aria-expanded')).toBe('false')
+      expect(tab(container).textContent, 'folded, it reads the object about to resolve again').toContain('Counterspell')
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('STK-10: a click on the strip keeps it open without a pointer, and a second one folds it', () => {
+    vi.useFakeTimers()
+    try {
+      const { container } = render(<StackZone stack={two()} />)
+      fireEvent.click(tab(container))
+      act(() => { vi.advanceTimersByTime(1000) })
+      expect(tab(container).getAttribute('aria-expanded')).toBe('true')
+      fireEvent.click(tab(container))
+      act(() => { vi.advanceTimersByTime(1000) })
+      expect(tab(container).getAttribute('aria-expanded')).toBe('false')
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('STK-10: it hangs under the cascade down to the dock, and over the front card when there is no room for it', () => {
+    const rect = (top: number, bottom: number) => ({ top, bottom, left: 0, right: 100, width: 100, height: bottom - top, x: 0, y: top, toJSON: () => ({}) }) as DOMRect
+    let dockTop = 700
+    const spy = vi.spyOn(Element.prototype, 'getBoundingClientRect').mockImplementation(function (this: Element) {
+      if (this.classList.contains('stack-cascade')) return rect(200, 500)
+      if (this.classList.contains('game-dock')) return rect(dockTop, 760)
+      return rect(0, 800)
+    })
+    const dock = document.createElement('div')
+    dock.className = 'game-dock'
+    document.body.appendChild(dock)
+    try {
+      const { container, unmount } = render(<StackZone stack={two()} />)
+      const bubble = container.querySelector<HTMLElement>('[data-testid="stack-bubble"]')!
+      expect(bubble.classList.contains('is-below')).toBe(true)
+      const zone = container.querySelector<HTMLElement>('[data-testid="stack-zone"]')!
+      expect(zone.style.getPropertyValue('--bubble-max'), 'its height is the room above the dock').toBe('188px')
+      unmount()
+
+      dockTop = 540
+      const again = render(<StackZone stack={two()} />)
+      expect(again.container.querySelector('[data-testid="stack-bubble"]')!.classList.contains('is-inside')).toBe(true)
+    } finally {
+      spy.mockRestore()
+      dock.remove()
+    }
   })
 })
 
@@ -171,7 +258,7 @@ describe('StackZone, who controls each object', () => {
   const opponent = { playerId: 'p-opp', name: 'SimBot', life: 20, controlled: false, isHuman: false } as PlayerView
   const pill = (container: HTMLElement) => container.querySelector<HTMLElement>('.stack-controller-pill')!
 
-  it('STK-6: each card says whose it is, mine apart from theirs', () => {
+  it('STK-6: the object being read says whose it is, mine apart from theirs', () => {
     const { container } = render(
       <StackZone
         stack={stackOf(
@@ -182,12 +269,11 @@ describe('StackZone, who controls each object', () => {
         myPlayerId="p-human"
       />,
     )
-    const pills = container.querySelectorAll('.stack-controller-pill')
-    expect(pills.length).toBe(2)
-    expect(pills[0].classList.contains('is-me')).toBe(true)
-    expect(pills[0].textContent).toContain('Tú')
-    expect(pills[1].classList.contains('is-opp')).toBe(true)
-    expect(pills[1].textContent).toContain('SimBot')
+    expect(pill(container).classList.contains('is-me')).toBe(true)
+    expect(pill(container).textContent).toContain('Tú')
+    fireEvent.mouseEnter(cards(container)[1])
+    expect(pill(container).classList.contains('is-opp')).toBe(true)
+    expect(pill(container).textContent).toContain('SimBot')
   })
 
   it('STK-6: a watcher is never told that someone else\'s spell is theirs', () => {

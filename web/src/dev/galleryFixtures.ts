@@ -931,6 +931,45 @@ function withMixedStackKinds(game: GameView): GameView {
   return { ...game, stack: stack as unknown as GameView['stack'] }
 }
 
+/**
+ * STK-10: what the bubble has to carry when the card does not say it: a modal spell whose chosen
+ * modes the server appended, under a trigger long enough to scroll, and an X spell with its
+ * announced value.
+ */
+function withBubbleTexts(game: GameView): GameView {
+  const me = controlledPlayer(game)
+  const opponent = opponentPlayer(game)
+  const mine = { controllerId: me?.playerId, controllerName: me?.name }
+  const theirs = { controllerId: opponent?.playerId, controllerName: opponent?.name }
+  const stack = {
+    'gallery-bubble-modal': {
+      id: 'gallery-bubble-modal', name: 'Kolaghan\'s Command', expansionSetCode: 'DTK', cardNumber: '224', cardTypes: ['INSTANT'],
+      manaCost: ['{1}', '{B}', '{R}'],
+      rules: [
+        'Choose two &mdash;<br>&bull Return target creature card from your graveyard to your hand.<br>&bull Target player discards a card.<br>&bull Destroy target artifact.<br>&bull Kolaghan\'s Command deals 2 damage to any target.',
+        "<span color='green'><i>Chosen mode: Target player discards a card.</i></span>",
+        "<span color='green'><i>Chosen mode: Kolaghan's Command deals 2 damage to any target.</i></span>",
+      ],
+      ...theirs,
+    },
+    'gallery-bubble-trigger': {
+      id: 'gallery-bubble-trigger', name: 'Smothering Tithe', mageObjectType: 'TRIGGERED_ABILITY', abilityType: 'Triggered',
+      rules: [
+        'Whenever an opponent draws a card, that player may pay {2}. If the player doesn\'t, you create a Treasure token. <i>(It\'s an artifact with "{T}, Sacrifice this artifact: Add one mana of any color.")</i>',
+        'Then, if you control seven or more Treasures, each opponent loses 1 life for each Treasure you control beyond six, and you gain that much life. This is a long line so the bubble has to scroll in a short window.',
+      ],
+      sourceCard: { name: 'Smothering Tithe', expansionSetCode: 'RNA', cardNumber: '22', ...mine }, ...mine,
+    },
+    'gallery-bubble-x': {
+      id: 'gallery-bubble-x', name: 'Fireball', expansionSetCode: 'M10', cardNumber: '136', cardTypes: ['SORCERY'],
+      rules: ['This spell costs {1} more to cast for each target beyond the first.', 'Fireball deals X damage divided evenly, rounded down, among any number of targets.'],
+      cardIcons: [{ cardIconType: 'OTHER_COST_X', text: 'x=4', hint: 'Announced X = 4' }],
+      ...mine,
+    },
+  }
+  return { ...game, stack: stack as unknown as GameView['stack'] }
+}
+
 const BOLT_ON_STACK_ID = 'gallery-bolt-targeting'
 
 function withBoltTargeting(game: GameView, targetId: string): GameView {
@@ -3379,6 +3418,18 @@ export function buildGalleryEntries(): GalleryEntry[] {
       boardLayout: 'arena',
       boardSpotlight: true,
       game: withMixedStackKinds(game),
+      gameId,
+    })
+    entries.push({
+      id: 'stack:bubble-texts',
+      group: 'Pila',
+      label: 'Stack: bubble with modes, a long trigger and X',
+      description: 'STK-10: the bubble under the cascade, folded until the pointer reaches the stack. The front Command shows only its chosen modes, the trigger behind it scrolls, and the Fireball ends with X = 4.',
+      phase: 'game',
+      gameUi: 'v1',
+      boardLayout: 'arena',
+      boardSpotlight: true,
+      game: withBubbleTexts(game),
       gameId,
     })
     entries.push({

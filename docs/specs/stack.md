@@ -66,31 +66,30 @@ the pile never rearranges itself under the hand.
   which is the one thing the shape is for.
 - Guard: `src/board/StackZone.css.test.ts` · `src/board/StackZone.test.tsx`
 
-### STK-6 · Who controls an object is said on the object
-Each card on the stack carries a chip with its controller's name, and so does the preview the
-pointer opens. It is read from the object's own controller, or from its source card when the object
-is an ability, and a watcher is never told that someone else's spell is theirs. When neither says,
-the chip says so rather than guessing.
+### STK-6 · Who controls an object is said with the object
+The object being read carries a chip with its controller's name at the head of its bubble (STK-10),
+and so does the preview the pointer opens. It is read from the object's own controller, or from its
+source card when the object is an ability, and a watcher is never told that someone else's spell is
+theirs. When neither says, the chip says so rather than guessing.
 
 - Why: on a shared pile the only question that cannot be answered by the card itself is whose it
-  is, and a spectator seeing "You" over a player's counterspell is worse than no chip at all.
+  is, and a spectator seeing "You" over a player's counterspell is worse than no chip at all. The
+  chip moved from the card's art to the bubble so that nothing of ours is drawn over a card
+  (2026-11-23).
 - Guard: `src/board/StackZone.test.tsx`
 
-### STK-7 · The text of the object in front is read, not guessed
+### STK-7 · The text of the object is read, not guessed
 An ability on the stack is its text: the card under it is only the art of the source that made it.
-So the object in front shows that text on a plate of its own, sized from the card it sits on rather
-than from a fixed number of pixels, and it is never cut to a fixed number of lines. A long ability
-takes up to most of the card and scrolls only past that; the objects behind the front one show no
-text, because what is visible of them is a sliver. The plate is the ability itself: the lines the
-engine adds to name what it is aimed at ("Related objects", "Target on stack") are left out,
-because the arrow over the board already says it, and they were the longest part of the text.
+So that text is read in the bubble (STK-10), and so is a spell's: nothing is written over the card,
+which is drawn whole as the printed image. The text is never cut to a fixed number of lines; what
+does not fit scrolls.
 
-- Why: the plate was 10 px with a three-line clamp, so the ability that is about to resolve, which
-  is the one thing on the stack that cannot be read from the art, was both small and cut off (user
-  report with a screenshot, 2026-11-22). A third of the card was still not enough for a six-line
-  ability, and half of what it held was a list of target names the arrow already drew (user
-  report, 23-nov-2026).
-- Guard: `src/board/StackZone.css.test.ts` · `src/board/stackEntries.test.ts`
+- Why: the plate over the card was 10 px with a three-line clamp, so the ability that is about to
+  resolve was both small and cut off (user report with a screenshot, 2026-11-22). The stack card
+  frame that drew the text inside a card of our own was set aside for the bubble (branch
+  `feat/stack-card-frame`): the user preferred the printed image with the text beside it
+  (2026-11-23, mockup https://claude.ai/artifact/XEhy954NqPRyZGfndeoSmd).
+- Guard: `src/board/StackZone.test.tsx` · `src/board/stackEntries.test.ts`
 
 ### STK-8 · An object reaches the stack from where it came
 A spell flies to the cascade from the card that was cast: the hand it left, or the zone it was
@@ -104,3 +103,32 @@ never saw) eases in where it lands, as before.
   23-nov-2026).
 - Guard: `src/board/stackLinks.test.ts`
 
+### STK-9 · The text says what will happen
+The bubble's text is read from what the server sends, not from the printed card: an ability shows
+its own text; a modal spell shows only the modes that were chosen, without the "Choose…" header or
+the modes left out; an announced X is the last line, `X = n`; the lines the server appends for its
+own panel (target on the stack, related objects, hints) are not shown, because the target arrow
+already says them.
+
+- Why: the printed card already shows the printed text, so the bubble is worth its place only if it
+  says what this object will do. The X value comes as a card icon, not in the text, so it is its own
+  line rather than a number guessed into the sentence.
+- Guard: `src/cards/frame/stackCardText.test.ts`
+
+### STK-10 · The text hangs under the cascade in a bubble, folded until it is asked for
+Under the cascade hangs a speech bubble whose tail points at the front card. Folded, it is a single
+strip: the controller chip, an ability mark, a "Copy" chip, the object's name and a chevron that says
+it opens. It opens while the pointer is on the cascade or on the bubble, on the card under the
+pointer (a card behind the front one is read too), and a click or a key on the strip keeps it open
+until the next one; it folds a moment after the pointer leaves, so the pointer can cross from the
+card to the bubble, and while it is open it keeps reading the card last hovered. The card being read
+is ringed and the tail slides to point at it, so it is plain which card the text belongs to. Its height is the
+room measured between the cascade and the dock, never a number; past that it scrolls. When there is
+no room for it there, it lies over the front card's own lower half instead, because the only part of
+the screen it may cover is the stack itself: never the board, never the dock.
+
+- Why: the user liked the bubble of the mockup but not that it covered the board, and asked for it
+  to read as folded and open on hover; they chose it under the cascade rather than beside it
+  (2026-11-23). Under the cascade it is as wide as the card, so it stays out of the middle of the
+  board.
+- Guard: `src/board/StackZone.test.tsx` · `src/board/StackZone.css.test.ts`

@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { render } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
-import CombatArrowsOverlay, { arrowAnchors, arrowPath } from './CombatArrowsOverlay'
+import CombatArrowsOverlay, { arrowAnchors, arrowPath, stackLoopPath } from './CombatArrowsOverlay'
 
 describe('CombatArrowsOverlay', () => {
   it('renders nothing when there are no arrows', () => {
@@ -171,9 +171,9 @@ describe('CombatArrowsOverlay', () => {
     expect(attackPath).not.toBeNull()
     const d = attackPath!.getAttribute('d') ?? ''
     // TGT-12: the attacker's card is (100,400,100,140) and the avatar (120,30,60,60), so the beam
-    // leaves the top edge of the card (y 400) and comes in over the top of the avatar (y 30).
+    // leaves the top edge of the card (y 400) and comes in under the avatar (y 90).
     expect(d.startsWith('M 150 400')).toBe(true)
-    expect(d.endsWith('150 30')).toBe(true)
+    expect(d.endsWith('150 90')).toBe(true)
 
     unmount()
     boardDiv.remove()
@@ -206,33 +206,41 @@ describe('CombatArrowsOverlay', () => {
     expect(path).not.toBeNull()
     expect(path!.style.stroke).toBe('var(--seat-1)')
     const d = path!.getAttribute('d')!
-    // TGT-12: out of the attacker's top edge (y 100), in over the portrait's top edge (y 600).
+    // TGT-12: out of the attacker's top edge (y 100), in under the portrait's bottom edge (y 676).
     expect(d).toMatch(/^M 150 100 C /)
-    expect(d.endsWith(' 138 600')).toBe(true)
+    expect(d.endsWith(' 138 676')).toBe(true)
     expect(container.querySelector('.arrow-shadow')).toBeNull()
     unmount()
     boardDiv.remove()
   })
 
-  it('TGT-12: a spell on the stack leaves under its card, an attacker leaves over it, and both come in over the target', () => {
+  it('TGT-12: every arrow leaves its source through the top edge and comes into its target through the bottom edge', () => {
     const box = (x: number, y: number, w: number, h: number) =>
       ({ x, y, rect: { width: w, height: h } as DOMRect })
     const from = box(100, 300, 80, 120)
     const to = box(400, 120, 80, 120)
-    expect(arrowAnchors(from, to, 'target').a).toEqual({ x: 100, y: 360 })
-    expect(arrowAnchors(from, to, 'attack').a).toEqual({ x: 100, y: 240 })
-    expect(arrowAnchors(from, to, 'block').a).toEqual({ x: 100, y: 240 })
-    for (const type of ['target', 'attack', 'block'] as const) {
-      expect(arrowAnchors(from, to, type).b, type).toEqual({ x: 400, y: 60 })
-    }
+    expect(arrowAnchors(from, to)).toEqual({ a: { x: 100, y: 240 }, b: { x: 400, y: 180 } })
   })
 
-  it('TGT-12: the curve leaves the source the way it left its edge and drops into the target from above', () => {
-    expect(arrowPath({ x: 0, y: 200 }, { x: 0, y: 0 }, true)).toBe('M 0 200 C 0 270 0 -70 0 0')
-    expect(arrowPath({ x: 0, y: 200 }, { x: 0, y: 0 }, false)).toBe('M 0 200 C 0 130 0 -70 0 0')
+  it('TGT-12: the curve leaves the source upwards and rises into the target from below', () => {
+    expect(arrowPath({ x: 0, y: 200 }, { x: 0, y: 0 })).toBe('M 0 200 C 0 130 0 70 0 0')
+    expect(arrowPath({ x: 0, y: 0 }, { x: 0, y: 200 })).toBe('M 0 0 C 0 -70 0 270 0 200')
     // TGT-12: told the board's height, the handles stay inside it instead of swinging off screen.
-    expect(arrowPath({ x: 0, y: 200 }, { x: 0, y: 0 }, true, 300)).toBe('M 0 200 C 0 270 0 6 0 0')
-    expect(arrowPath({ x: 0, y: 800 }, { x: 0, y: 700 }, true, 300)).toBe('M 0 800 C 0 294 0 294 0 700')
+    expect(arrowPath({ x: 0, y: 0 }, { x: 0, y: 200 }, 300)).toBe('M 0 0 C 0 6 0 270 0 200')
+    expect(arrowPath({ x: 0, y: 100 }, { x: 0, y: 280 }, 300)).toBe('M 0 100 C 0 37 0 294 0 280')
+  })
+
+  it('TGT-12: an arrow between two objects on the stack swings out past the cascade and still rises into its target from below', () => {
+    const d = stackLoopPath({ x: 1100, y: 300 }, { x: 1010, y: 560 }, 900, 900)
+    expect(d.startsWith('M 1100 300 C 1100 ')).toBe(true)
+    const nums = d.match(/-?\d+/g)!.map(Number)
+    expect(nums[3], 'it leaves upwards').toBeLessThan(300)
+    const xs = nums.filter((_, i) => i % 2 === 0)
+    expect(Math.min(...xs), 'it goes round the cascade, not through it').toBe(900)
+    const [, , c2x, c2y, ex, ey] = nums.slice(-6)
+    expect([ex, ey]).toEqual([1010, 560])
+    expect(c2x, 'the last handle sits straight under the target').toBe(1010)
+    expect(c2y, 'so the dart rises into its bottom edge').toBeGreaterThan(560)
   })
 
   it('BRD-10: an attack arrow ends on the defender\'s portrait inside a copy', () => {

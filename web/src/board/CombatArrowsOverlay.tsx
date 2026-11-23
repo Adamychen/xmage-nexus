@@ -36,28 +36,26 @@ const EMPTY_ARRAY: string[] = []
 type Pt = { x: number; y: number }
 
 /**
- * TGT-12: an arrow always comes into its target over the top edge, and it leaves its source by the
- * edge that reads as the start of the move: a spell or ability on the stack points down out of the
- * card and into the top of what it is aimed at, while an attacker and a blocker leave by the top,
- * which is the side the creature is facing. Nobody has to work out which end of the beam is which.
+ * TGT-12: every arrow leaves its source through the top edge and comes into its target through the
+ * bottom edge, whatever is acting: a spell on the stack, an ability, an attacker or a blocker. The
+ * source points up and out, the target is reached from below, and nobody has to work out which end
+ * of the beam is which.
  */
 export function arrowAnchors(
   from: Pt & { rect: DOMRect },
   to: Pt & { rect: DOMRect },
-  type: 'attack' | 'block' | 'target',
 ): { a: Pt; b: Pt } {
-  const outUnder = type === 'target'
   return {
-    a: { x: from.x, y: from.y + (outUnder ? from.rect.height / 2 : -from.rect.height / 2) },
-    b: { x: to.x, y: to.y - to.rect.height / 2 },
+    a: { x: from.x, y: from.y - from.rect.height / 2 },
+    b: { x: to.x, y: to.y + to.rect.height / 2 },
   }
 }
 
-/** The curve between those two: it leaves the source the way it left its edge and always drops
- *  into the target from above, so both ends meet their card square. The handles stay inside the
- *  board (`height`, when it is known), because a curve that swings off the screen is drawn as a
- *  straight cut across the edge and reads as two arrows instead of one. */
-export function arrowPath(a: Pt, b: Pt, outUnder: boolean, height?: number): string {
+/** The curve between those two: it leaves the source upwards and rises into the target from
+ *  below, so both ends meet their card square. The handles stay inside the board (`height`, when
+ *  it is known), because a curve that swings off the screen is drawn as a straight cut across the
+ *  edge and reads as two arrows instead of one. */
+export function arrowPath(a: Pt, b: Pt, height?: number): string {
   const span = Math.hypot(b.x - a.x, b.y - a.y)
   const bow = Math.max(28, Math.min(140, span * 0.35))
   const r = (v: number) => Math.round(v)
@@ -65,9 +63,28 @@ export function arrowPath(a: Pt, b: Pt, outUnder: boolean, height?: number): str
   const lo = bounded ? 6 : -Infinity
   const hi = bounded ? height - 6 : Infinity
   const clamp = (v: number) => Math.max(lo, Math.min(hi, v))
-  const c1y = clamp(outUnder ? a.y + bow : a.y - bow)
-  const c2y = clamp(b.y - bow)
+  const c1y = clamp(a.y - bow)
+  const c2y = clamp(b.y + bow)
   return `M ${r(a.x)} ${r(a.y)} C ${r(a.x)} ${r(c1y)} ${r(b.x)} ${r(c2y)} ${r(b.x)} ${r(b.y)}`
+}
+
+/**
+ * TGT-12 inside the cascade: an object aimed at another object on the stack leaves through its top
+ * edge like any arrow, swings out past the cascade's left edge (`left`) and rises into the bottom
+ * of its target, at the corner of a covered card that stays in view. A straight beam between two
+ * cards that lie over each other would be a stub hidden under them.
+ */
+export function stackLoopPath(a: Pt, b: Pt, left: number, height?: number): string {
+  const r = (v: number) => Math.round(v)
+  const bounded = !!height && height > 40
+  const clamp = (v: number) => (bounded ? Math.max(6, Math.min(height - 6, v)) : v)
+  const drop = Math.max(24, Math.min(60, Math.abs(a.y - b.y) * 0.4))
+  const midY = (a.y + b.y) / 2
+  return [
+    `M ${r(a.x)} ${r(a.y)}`,
+    `C ${r(a.x)} ${r(clamp(a.y - drop))} ${r(left)} ${r(clamp(a.y - drop))} ${r(left)} ${r(midY)}`,
+    `C ${r(left)} ${r(clamp(b.y + drop * 2))} ${r(b.x)} ${r(clamp(b.y + drop * 2))} ${r(b.x)} ${r(b.y)}`,
+  ].join(' ')
 }
 
 export default function CombatArrowsOverlay({
@@ -175,9 +192,8 @@ export default function CombatArrowsOverlay({
     }
 
     const makeArrow = (id: string, from: { x: number; y: number; rect: DOMRect }, to: { x: number; y: number; rect: DOMRect }, type: ArrowItem['type'], fromId = '', toId = ''): ArrowItem => {
-      // TGT-12: over the top of the target always; out under the source only on the stack.
-      const outUnder = type === 'target'
-      const { a, b } = arrowAnchors(from, to, type)
+      // TGT-12: out of the source's top edge, into the target's bottom edge.
+      const { a, b } = arrowAnchors(from, to)
       if (seated) {
         return {
           id,
@@ -188,7 +204,7 @@ export default function CombatArrowsOverlay({
           type,
           fromId,
           toId,
-          path: arrowPath(a, b, outUnder, boardRect.height),
+          path: arrowPath(a, b, boardRect.height),
           color: seatColorVar(seatIndexOf(game.players, controllerOf(fromId) ?? me?.playerId)),
         }
       }
@@ -203,7 +219,7 @@ export default function CombatArrowsOverlay({
         type,
         fromId,
         toId,
-        path: arrowPath(a, b, outUnder, boardRect.height),
+        path: arrowPath(a, b, boardRect.height),
       }
     }
 
@@ -315,37 +331,36 @@ export default function CombatArrowsOverlay({
           ? Object.keys(targets)
           : []
 
-        // Both ends on the stack: the objects lie over each other, so a straight line between their
-        // centres is a stub hidden under the cards. Those arrows hook out to the side instead.
+        // Both ends on the stack: the objects lie over each other, so a straight line between them
+        // is a stub hidden under the cards. Those arrows loop out past the cascade's left edge and
+        // rise into the bottom of the covered card, at the corner of it that stays in view.
         const stackEl = boardEl.querySelector('.stack-zone')
-        const inDeck = !!stackFocusIds && !!sourceCenter.rect && !!stackEl?.contains(
-          boardEl.querySelector(`[data-card-id="${stackId}"]`),
-        )
         const controllerId = String(cardObj.controllerId ?? '')
         const seatColor = seatColorVar(seatIndexOf(game.players, controllerId))
 
         targetList.forEach((tgtId, ti) => {
           const tgtCenter = getCenter(tgtId)
+          if (!tgtCenter) return
           const tgtEl = boardEl.querySelector(`[data-card-id="${tgtId}"]`)
-          if (inDeck && tgtCenter && tgtEl && stackEl?.contains(tgtEl)) {
-            const ax = Math.round(sourceCenter.rect.left - boardRect.left)
-            const ay = Math.round(sourceCenter.y)
-            const bx = Math.round(tgtCenter.rect.left - boardRect.left)
-            const by = Math.round(tgtCenter.y)
+          const sourceEl = boardEl.querySelector(`[data-card-id="${stackId}"]`)
+          const inDeck = !!stackFocusIds && !!stackEl?.contains(sourceEl) && !!tgtEl && stackEl.contains(tgtEl)
+          if (inDeck && stackEl) {
+            const cascadeLeft = (stackEl.querySelector('.stack-cascade') ?? stackEl).getBoundingClientRect().left
+            const { a } = arrowAnchors(sourceCenter, tgtCenter)
+            const corner = Math.min(24, tgtCenter.rect.width / 4)
+            const b = { x: tgtCenter.rect.left - boardRect.left + corner, y: tgtCenter.rect.bottom - boardRect.top }
             newArrows.push({
               id: `stack-target-${stackId}-${ti}-${tgtId}`,
-              x1: ax, y1: ay, x2: bx, y2: by,
+              x1: Math.round(a.x), y1: Math.round(a.y), x2: Math.round(b.x), y2: Math.round(b.y),
               type: 'target',
               fromId: String(stackId),
               toId: String(tgtId),
-              path: `M ${ax} ${ay} C ${ax - 80} ${ay} ${bx - 80} ${by} ${bx - 2} ${by}`,
+              path: stackLoopPath(a, b, cascadeLeft - boardRect.left - 40, boardRect.height),
               color: seatColor,
             })
             return
           }
-          if (tgtCenter) {
-            newArrows.push(makeArrow(`stack-target-${stackId}-${ti}-${tgtId}`, sourceCenter, tgtCenter, 'target', String(stackId), String(tgtId)))
-          }
+          newArrows.push(makeArrow(`stack-target-${stackId}-${ti}-${tgtId}`, sourceCenter, tgtCenter, 'target', String(stackId), String(tgtId)))
         })
       })
     }

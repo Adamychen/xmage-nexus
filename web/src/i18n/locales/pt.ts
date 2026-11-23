@@ -1089,6 +1089,8 @@ export const pt: TranslationSchema = {
     stack_empty: 'A pilha está vazia',
     stack_push_aside: 'Afastar a pilha',
     stack_bring_back: 'Trazer a pilha de volta',
+    stack_text_show: 'Mostrar o que faz',
+    stack_text_hide: 'Ocultar o texto',
     combat_damage_title: 'Dano de combate',
     ledger_attacks: '{player} ataca',
     stack_empty_desc: 'Mágicas e habilidades conjuradas aparecerão aqui.',

@@ -32,12 +32,13 @@ describe('the cascade under the pointer', () => {
   })
 })
 
-describe('the text of the object in front', () => {
-  it('STK-7: the rules plate is sized from the card and is not clamped to a line count', () => {
-    const block = /\.stack-card\.is-top \.stack-tl-rules \{([^}]*)\}/.exec(css)?.[1] ?? ''
-    expect(block, 'the front card has a plate of its own').not.toBe('')
-    expect(block, 'its type follows the card width').toMatch(/font-size:\s*clamp\([^)]*var\(--card-w/)
-    expect(block).not.toMatch(/line-clamp|-webkit-box/)
-    expect(css, 'no clamp rule is left anywhere for it').not.toMatch(/stack-tl-rules[^{]*\{[^}]*line-clamp/)
+describe('the bubble under the cascade', () => {
+  it('STK-10: no text plate is drawn over the card; the bubble is as tall as the room measured for it', () => {
+    expect(css, 'the front card carries no rules plate').not.toMatch(/\.stack-card[^{,]*\.stack-tl-rules/)
+    const below = /\.stack-bubble\.is-below \{([^}]*)\}/.exec(css)?.[1] ?? ''
+    expect(below).toMatch(/max-height:\s*var\(--bubble-max/)
+    const bodyBlock = /\n\.stack-bubble-body \{([^}]*)\}/.exec(css)?.[1] ?? ''
+    expect(bodyBlock, 'what does not fit scrolls').toMatch(/overflow-y:\s*auto/)
+    expect(css).not.toMatch(/stack-bubble[^{]*\{[^}]*line-clamp/)
   })
 })

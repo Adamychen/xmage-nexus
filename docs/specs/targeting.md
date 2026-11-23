@@ -125,16 +125,19 @@ A halo was tried under the beam and taken out again, and so was a gradient along
   WebKit does not freeze it; the reduced-motion rule existed only to make screenshots settle. The
   halo went the same way: over a board of card art it read as a smear around the beam.
 - Guard: `src/board/CombatArrowsOverlay.test.tsx` · `e2e/game-ui-v2.spec.ts`
-### TGT-12 · An arrow comes in over the top of its target
-Every arrow ends on the top edge of what it points at, so the dart is always read coming down onto
-the card. Where it starts depends on what is acting: a spell or an ability on the stack leaves
-through the bottom edge of its card, pointing down out of the stack and into the board, while an
-attacker and a blocker leave through the top edge, the side the creature is facing. The curve
-follows those edges, leaving the source the way it left it and dropping into the target from above,
-so neither end crosses its own card.
+### TGT-12 · An arrow leaves over the top of its source and comes in under its target
+Every arrow leaves what is acting through its top edge and arrives at what it points at through
+the bottom edge, whatever is acting: a spell or an ability on the stack, an attacker, a blocker. The
+curve rises out of the source and comes up into the target, so neither end crosses its own card and
+the dart is always read arriving from below. An arrow between two objects on the stack, which lie
+over each other, swings out past the cascade's left edge and rises into the bottom corner of the
+covered card that stays in view.
 
 - Why: the arrows were anchored on the line between the two centres, trimmed by a fixed inset, so
   the same pair of cards gave a different entry point as either one moved and the dart could sit on
-  the card's own art. The user asked for MTG Arena's reading (2026-11-22): the stack points down
-  into the board, combat points up out of the creature, and everything arrives from above.
+  the card's own art. A first fix brought every arrow in over the target's top and sent the stack's
+  out of the bottom of its card; with the stack's bubble under the cascade (STK-9) that crossed the
+  bubble's text, and it was not what the user had asked for: any card that targets has its arrow
+  leaving through the top, and any card that is targeted has it arriving through the bottom, as in
+  MTG Arena (2026-11-23).
 - Guard: `src/board/CombatArrowsOverlay.test.tsx`
