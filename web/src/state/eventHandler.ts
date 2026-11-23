@@ -161,7 +161,7 @@ function handleEvent(method: string, objectId: string | null, data: unknown, mes
       addLog('partida', 'Espectador: el servidor envió la vista en caché del inicio de la partida; sincronizando con el estado en vivo…')
     } else if (!stale || rollbackRestored) {
       if (objectId) noteGameEvent(objectId, messageId, method === 'GAME_INIT')
-      dispatchGameSounds(currentGame, embeddedGame, method, s.settings.prioritySound)
+      dispatchGameSounds(currentGame, embeddedGame, method, s.settings.prioritySound, s.settings.smartStops)
       recordMatchStats(currentGame, embeddedGame, objectId ?? s.gameId ?? null)
       if (rollbackRestored) resetTurnRecap(objectId ?? s.gameId ?? null)
       const recap = rollbackRestored ? null : observeTurnRecap(currentGame, embeddedGame, objectId ?? s.gameId ?? null)
