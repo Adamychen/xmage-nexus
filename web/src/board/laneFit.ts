@@ -39,3 +39,29 @@ export function chooseLaneFit(input: LaneFitInput): LaneFit {
   // the row scroll rather than cutting the active name in half.
   return 'dots'
 }
+
+/**
+ * The same promise for the pod ring (BRD-37), which carries every seat instead of two: a seat name
+ * is never clipped. What it gives up, in order, is spacing first (nothing is lost) and then the
+ * names of the seats that are not playing — their avatar dot, their seat colour and the boards
+ * above them still say who they are, and the seat that is playing keeps its name whole.
+ */
+export type RingFit = 'full' | 'tight' | 'dots'
+
+export interface RingFitInput {
+  /** Natural width of the row as it is drawn. */
+  needFull: number
+  /** The same row with its padding and gaps tightened. */
+  needTight: number
+  /** Room the band actually gives the ring. */
+  avail: number
+}
+
+export function chooseRingFit({ needFull, needTight, avail }: RingFitInput): RingFit {
+  if (!(avail > 0) || !(needFull > 0)) return 'full'
+  if (needFull <= avail) return 'full'
+  if (needTight <= avail) return 'tight'
+  // There is nothing narrower than dropping the names, so it is measured against nothing: whether
+  // it fits or not, it is the rung that carries the most and still clips no name.
+  return 'dots'
+}

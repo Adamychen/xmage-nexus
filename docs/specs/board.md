@@ -641,7 +641,19 @@ of their own (a spectator, whose pills do nothing, keeps it).
   user asked for one, without life (2026-11-13). A button on every column said what a click does
   but took the width the status row needed, while the pill said nothing at all, so the icon and the
   lit pair moved that offer to the strip, where there is room for it (2026-11-13).
-- Guard: `src/board/TurnOrderRing.test.tsx` · `src/board/ArenaBoard.test.tsx` · `e2e/seat-focus.spec.ts`
+
+The ring never clips a name. When the band gives the row less room than it needs it gives up, in
+order, its spacing and the size of its type (nothing is lost), and then the names of the seats that
+are not playing, which stay as their dot and their seat colour while the seat that is playing keeps
+its name whole. Which of those fits is measured against hidden rulers (`useRingFit`), never decided
+by a width.
+
+- Why: four seats with the 14-character names the server allows need more than the band has at
+  1366px, and the only thing that could shrink was the active seat's name, so the player's own name
+  read "Youxxxxxxxxx…" while the row spilled over the phase badges on its left. It is the same
+  promise the 1v1 walkway already makes, and for the same reason: the width a name needs is a
+  property of the font the platform resolves, not of the layout.
+- Guard: `src/board/TurnOrderRing.test.tsx` · `src/board/TurnOrderRing.css.test.ts` · `src/board/laneFit.test.ts` · `src/board/ArenaBoard.test.tsx` · `e2e/seat-focus.spec.ts`
 
 ### BRD-38 · Opponents' hands: half a card facing the player, a fan in the side panel mode
 On the Arena layout with the v1 chrome, an opponent's hidden hand is one pile of backs with its

@@ -287,7 +287,8 @@ test('the ring of a full table and the FFA switcher still render @board', async 
   await expect(page.locator('[data-testid="arena-board"]')).toBeVisible({ timeout: 10_000 })
   const ring = await page.evaluate(() => {
     const el = document.querySelector<HTMLElement>('[data-testid="turn-order-ring"]')
-    return el ? { cls: el.className, seats: el.querySelectorAll('.tor-seat').length } : null
+    // The row the player sees: beside it the ring keeps hidden rulers rendering the same seats.
+    return el ? { cls: el.className, fit: el.getAttribute('data-ring-fit'), seats: el.querySelectorAll('.tor-seats-flow .tor-seat').length } : null
   })
   console.log('TABLE-RING ' + JSON.stringify(ring))
   expect(ring?.seats).toBe(4)
@@ -313,4 +314,58 @@ test('in FFA the walkway does not swallow the opponent switcher @board', async (
   expect(center.switcher).toBe(true)
   expect(center.pills).toBe(4) // three rivals + my own pill
   expect(center.lane).toBe(false)
+})
+
+// BRD-37: the same contract for the pod ring, which carries four seats instead of two. Four
+// 14-char names (the server's cap) is the worst roster a real table can deal, and the band it sits
+// in is the middle of the strip, so the narrow widths are where it has to give something up.
+test('the pod ring never clips a seat name @board', async ({ page }) => {
+  await boot(page)
+  const pod = duel('p1', 'p1')
+  pod.players[0].name = 'Adamyszczynsk'
+  pod.players[1].name = 'Rivalmuygrand'
+  pod.players.push(mkPlayer('p3', 'Carlosgrandote', false), mkPlayer('p4', 'Danamuygrandel', false))
+  pod.activePlayerName = 'Adamyszczynsk'
+  pod.priorityPlayerName = 'Adamyszczynsk'
+  await pushGame(page, pod, 'arena')
+  await expect(page.locator('[data-testid="arena-board"]')).toBeVisible({ timeout: 10_000 })
+
+  for (const width of [1600, 1280, 1024]) {
+    await page.setViewportSize({ width, height: 800 })
+    await page.waitForTimeout(350)
+    const state = await page.evaluate(() => {
+      const ring = document.querySelector<HTMLElement>('[data-testid="turn-order-ring"]')
+      const row = ring?.querySelector<HTMLElement>('.tor-seats-flow')
+      if (!ring || !row) return { missing: true as const }
+      const r = ring.getBoundingClientRect()
+      const w = row.getBoundingClientRect()
+      return {
+        missing: false as const,
+        fit: ring.dataset.ringFit ?? null,
+        // the row, not the pill: the hidden rulers inside the ring are wider on purpose
+        rowFits: w.left >= r.left - 1 && w.right <= r.right + 1,
+        ringFits: r.right <= (document.querySelector('.game-strip-center')?.getBoundingClientRect().right ?? 0) + 1,
+        clones: Object.fromEntries(Array.from(ring.querySelectorAll<HTMLElement>('[data-lane-measure]')).map((c) => [c.dataset.laneMeasure ?? '?', Math.round(c.scrollWidth)])),
+        seats: Array.from(row.querySelectorAll<HTMLElement>('.tor-seat')).map((s) => {
+          const name = s.querySelector<HTMLElement>('.tor-seat-name')
+          const shown = !!name && name.clientWidth > 0
+          return {
+            name: name?.textContent ?? null,
+            shown,
+            clipped: shown && name.scrollWidth > name.clientWidth + 1,
+            active: s.classList.contains('is-active'),
+          }
+        }),
+      }
+    })
+    console.log(`RING@${width} ` + JSON.stringify(state))
+    expect(state.missing).toBe(false)
+    expect(state.rowFits).toBe(true)
+    expect(state.ringFits).toBe(true)
+    const seats = state.seats ?? []
+    expect(seats.length).toBe(4)
+    for (const s of seats) expect(s.clipped).toBe(false)
+    // whatever it gives up, the seat that is playing keeps its name
+    expect(seats.find((s) => s.active)?.shown).toBe(true)
+  }
 })

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { chooseLaneFit } from './laneFit'
+import { chooseLaneFit, chooseRingFit } from './laneFit'
 
 /**
  * Measured in Chromium against the real walkway (two 14-char names, which is
@@ -87,5 +87,52 @@ describe('chooseLaneFit', () => {
     const shortNames = ROW.narrow - 2 * (94.9 - 40)
     expect(chooseLaneFit({ needAll: shortNames, needActive: SOLO.narrow, needActiveDots: DOTS.narrow, avail: 244 })).toBe('full')
     expect(chooseLaneFit({ needAll: ROW.narrow, needActive: SOLO.narrow, needActiveDots: DOTS.narrow, avail: 244 })).toBe('solo')
+  })
+})
+
+/**
+ * Measured in Chromium on the four-seat pod ring of the commander showcase (names of 5, 5, 4 and
+ * 3 characters, the shortest a real roster gets): the row as it is drawn and the same row with its
+ * spacing and type tightened. The band gives it 359px at a 1024px window and 734px at 1500px.
+ */
+const RING = { full: 471, tight: 350 }
+const RING_PAD = 16
+
+describe('chooseRingFit', () => {
+  it('BRD-37: the ring keeps every name and every arrow while the band has the room', () => {
+    for (const avail of [734, 600, 487]) {
+      expect(chooseRingFit({ needFull: RING.full + RING_PAD, needTight: RING.tight + RING_PAD, avail })).toBe('full')
+    }
+  })
+
+  it('BRD-37: it gives up spacing before it gives up a name', () => {
+    expect(chooseRingFit({ needFull: RING.full + RING_PAD, needTight: RING.tight + RING_PAD, avail: 455 })).toBe('tight')
+  })
+
+  it('BRD-37: the names of the seats that are not playing go last, and only then', () => {
+    expect(chooseRingFit({ needFull: RING.full + RING_PAD, needTight: RING.tight + RING_PAD, avail: 359 })).toBe('dots')
+    expect(chooseRingFit({ needFull: RING.full + RING_PAD, needTight: RING.tight + RING_PAD, avail: 120 })).toBe('dots')
+  })
+
+  it('BRD-37: it shows everything when nothing was measured (jsdom, first paint)', () => {
+    expect(chooseRingFit({ needFull: 0, needTight: 0, avail: 0 })).toBe('full')
+    expect(chooseRingFit({ needFull: RING.full, needTight: RING.tight, avail: 0 })).toBe('full')
+    expect(chooseRingFit({ needFull: RING.full, needTight: RING.tight, avail: -1 })).toBe('full')
+  })
+
+  it('BRD-37: no rung it picks still overflows, for any room, unless none can fit', () => {
+    for (let avail = 40; avail <= 800; avail += 7) {
+      const needFull = RING.full + RING_PAD
+      const needTight = RING.tight + RING_PAD
+      const fit = chooseRingFit({ needFull, needTight, avail })
+      if (fit === 'full') expect(needFull).toBeLessThanOrEqual(avail)
+      if (fit === 'tight') expect(needTight).toBeLessThanOrEqual(avail)
+    }
+  })
+
+  it('BRD-37: it is driven by the content, not by a budget: wider names step down sooner', () => {
+    const long = { needFull: 643 + RING_PAD, needTight: 520 + RING_PAD }
+    expect(chooseRingFit({ ...long, avail: 598 })).toBe('tight')
+    expect(chooseRingFit({ needFull: RING.full + RING_PAD, needTight: RING.tight + RING_PAD, avail: 598 })).toBe('full')
   })
 })

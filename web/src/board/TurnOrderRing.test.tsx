@@ -188,12 +188,42 @@ describe('TurnOrderRing', () => {
     expect(getByTestId('tor-seat-rival').classList.contains('is-peek')).toBe(false)
   })
 
+  it('BRD-37: the pod ring carries a ruler of its own and says which rung it is on', () => {
+    setSetting('gameUi', 'v1')
+    const { getByTestId, container } = render(<TurnOrderRing players={[me, rival, third]} activePlayerId="me" />)
+    const ring = getByTestId('turn-order-ring')
+    // jsdom measures nothing, so the rung is the widest one: the ring starts whole.
+    expect(ring.getAttribute('data-ring-fit')).toBe('full')
+    expect(container.querySelector('[data-lane-measure="full"]')).not.toBeNull()
+    expect(container.querySelector('[data-lane-measure="tight"]')).not.toBeNull()
+    // The ruler must render the same row, or it measures something the band never draws.
+    expect(container.querySelectorAll('[data-lane-measure="tight"] .tor-seat').length).toBe(3)
+    setSetting('gameUi', 'v2')
+  })
+
+  it('BRD-37: the walkway and the portrait ring keep their own fit, and a duel ring needs none', () => {
+    setSetting('gameUi', 'v1')
+    const lane = render(<TurnOrderRing lane players={[me, rival]} activePlayerId="me" />)
+    expect(lane.getByTestId('turn-lane').getAttribute('data-ring-fit')).toBeNull()
+    expect(lane.getByTestId('turn-lane').getAttribute('data-lane-fit')).toBe('full')
+    cleanup()
+    const alone = render(<TurnOrderRing players={[me]} activePlayerId="me" />)
+    expect(alone.getByTestId('turn-order-ring').getAttribute('data-ring-fit')).toBeNull()
+    cleanup()
+    setSetting('gameUi', 'v2')
+    const portrait = render(<TurnOrderRing players={[me, rival, third]} activePlayerId="me" />)
+    expect(portrait.getByTestId('turn-order-ring').getAttribute('data-ring-fit')).toBeNull()
+    expect(portrait.container.querySelector('[data-lane-measure]')).toBeNull()
+  })
+
   it('BRD-37: noLife leaves the life out of every pill', () => {
     setSetting('gameUi', 'v1')
     const { container, rerender } = render(<TurnOrderRing players={[me, rival, third]} activePlayerId="me" />)
-    expect(container.querySelectorAll('.tor-seat-life').length).toBe(3)
+    // The row the player sees, not the hidden ruler beside it, which renders the same seats.
+    const row = () => container.querySelectorAll('.tor-seats-flow .tor-seat-life').length
+    expect(row()).toBe(3)
     rerender(<TurnOrderRing players={[me, rival, third]} activePlayerId="me" noLife />)
-    expect(container.querySelectorAll('.tor-seat-life').length).toBe(0)
+    expect(row()).toBe(0)
     expect(container.querySelector('[data-testid="tor-active-badge"]')).not.toBeNull()
     setSetting('gameUi', 'v2')
   })
