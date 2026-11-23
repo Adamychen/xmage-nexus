@@ -5186,12 +5186,22 @@ export function buildGalleryEntries(): GalleryEntry[] {
     entries.push({
       id: 'anim:turn-banner',
       group: 'Animaciones',
-      label: 'Turn banner: a new turn starts',
-      description: `Turn ${animBase.turn}, your combat. "Replay" sends the first view of turn ${animBase.turn + 1}: the centred banner announces the turn number and ${opponentOfBase?.name ?? 'the opponent'}, the new active player.`,
+      label: 'Turn banner: an opponent takes the turn',
+      description: `Turn ${animBase.turn}, your combat. "Replay" sends the first view of turn ${animBase.turn + 1}: two rules open from the centre, the band lights blue, a specular pass runs along it and "Turno de ${opponentOfBase?.name ?? 'the opponent'}" settles out of a blur (FX-10).`,
       phase: 'game',
       game: animBase,
       gameId,
       action: { label: 'Replay', run: replayQuiet(animBase, gameId, (g) => startNextTurn(g, opponentOfBase)) },
+    })
+    entries.push({
+      id: 'anim:turn-banner-mine',
+      group: 'Animaciones',
+      label: 'Turn banner: the turn comes back to me',
+      description: 'The same announcement for your own turn (FX-10): it reads "Tu turno", with no name over it, and the band and the glow take the gold of the board instead of the blue an opponent gets.',
+      phase: 'game',
+      game: startNextTurn(animBase, opponentOfBase),
+      gameId,
+      action: { label: 'Replay', run: replayQuiet(startNextTurn(animBase, opponentOfBase), gameId, (g) => startNextTurn(g, controlledPlayer(g))) },
     })
     const wipeBase = withStep(animBase, 'PRECOMBAT_MAIN', 'PRECOMBAT_MAIN')
     entries.push({

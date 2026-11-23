@@ -163,7 +163,8 @@ describe('coin flip trigger', () => {
     const ms = observeCoinFlip(turnTwo, g1)
     expect(ms).toBe(0)
     detectAndAnimateTransitions(turnOne, turnTwo, ms)
-    expect(getFeedbackFxState().banner?.text).toContain('Alice')
+    // Alice is the viewer, so her turn is the one spoken to her, and it fires with no wait
+    expect(getFeedbackFxState().banner?.own).toBe(true)
   })
 
   it('FX-10: the turn banner is not announced for the mulligan view (turn 1, phase null)', () => {

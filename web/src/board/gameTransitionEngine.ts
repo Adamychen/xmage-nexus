@@ -1021,7 +1021,12 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
   if (nextGame.turn > 0 && nextGame.phase != null && (nextGame.turn !== prevGame.turn || prevGame.phase == null)) {
     const active = nextGame.players?.find((p) => p.isActive)
     const playerName = active?.name ?? nextGame.activePlayerName ?? ''
-    later(bannerDelayMs, () => announceBanner(t('game', 'turn_banner_player', { turn: nextGame.turn, player: playerName })))
+    // FX-10: the banner names whose turn it is, and speaks to the player when the turn is theirs.
+    // A spectator controls nobody, so every turn reads as somebody else's, which is what it is.
+    const mine = active?.controlled === true
+    later(bannerDelayMs, () => (mine
+      ? announceBanner(t('game', 'turn_banner_mine'), undefined, { own: true })
+      : announceBanner(playerName, t('game', 'turn_banner_of'))))
   }
 
   const stackEl = document.querySelector('.stack-zone') as HTMLElement | null

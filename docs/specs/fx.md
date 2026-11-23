@@ -123,15 +123,29 @@ under reduced motion. Its layering against dialogs is DLG-7.
 - Guard: `src/board/coinFlipFx.test.ts`
 
 ### FX-10 · The turn banner announces each new turn once
-The banner names the turn and its active player when the turn changes, on the first view of that
-turn with a phase, never for the mulligan view. On turn 1 it waits for the coin (FX-9). A banner
-still pending when its game ends or another game starts is dropped instead of firing in the next
-one.
+The banner names whose turn it is when the turn changes, on the first view of that turn with a
+phase, never for the mulligan view. On turn 1 it waits for the coin (FX-9). A banner still pending
+when its game ends or another game starts is dropped instead of firing in the next one.
+
+It names the player, not the turn number, which the strip already carries: a label reading
+"Turno de" over the name of whoever is playing, and for the viewer's own turn the name is dropped
+for "Tu turno" and the band takes the board's gold instead of the blue another player gets. A
+spectator controls nobody, so every turn reads as somebody else's. The band is a layer across the
+whole window, not a part of a seat, so it reaches each player on their own screen whatever board
+they have in the main area. Two rules open from the centre, the band lights between them, a
+specular pass runs along it and the name settles out of a blur, every part on the one duration the
+effects speed sets.
+
+While a dialog covers the board the turn passes unannounced: the banner is dropped, never queued
+for when the dialog closes.
 
 - Why: `e30ae35277` tied the banner to the first phased view so it still appears when the turn
   number does not change after the mulligan; the drop guard came with the bounded timers of
-  `8fbb005e7b`.
-- Guard: `src/board/gameTransitionEngine.resolve.test.ts` · `src/board/gameTransitionEngine.timers.test.tsx` · `src/board/coinFlipFx.test.ts`
+  `8fbb005e7b`. It read "Turno 11 · Pablo" on a grey band, which says what the strip says and does
+  not land as an announcement; the user asked for the shape every other client of this game uses,
+  where the name is the headline (user request, 23-nov-2026). Queueing it behind a dialog would
+  announce a turn that had already moved on, so a covered board gets no banner at all.
+- Guard: `src/board/gameTransitionEngine.resolve.test.ts` · `src/board/gameTransitionEngine.timers.test.tsx` · `src/board/coinFlipFx.test.ts` · `src/board/feedbackFx.test.ts` · `src/board/FeedbackOverlay.test.tsx`
 
 ### FX-11 · Board effects stay inside the style system
 FX colours come from `web/src/ui/tokens.css` (`--mana-*-rgb`, `--ember-rgb`, …), never from

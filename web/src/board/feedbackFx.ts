@@ -18,6 +18,8 @@ export interface BannerFx {
   id: number
   text: string
   sub?: string
+  /** FX-10: the turn is the viewer's own, which is what the banner is drawn in gold for. */
+  own?: boolean
   duration: number
 }
 
@@ -95,11 +97,22 @@ export function spawnFloater(
   }, duration + 60)
 }
 
+/**
+ * FX-10: a dialog has taken the screen, so the board behind it is not being read. The banner is an
+ * announcement over the board and nothing else, so it is dropped rather than queued: it would
+ * otherwise fire on closing the dialog, naming a turn that had already moved on.
+ */
+export function boardIsCovered(): boolean {
+  if (typeof document === 'undefined') return false
+  return document.querySelector('[aria-modal="true"], [role="dialog"]') != null
+}
+
 /** Banner centrado (anuncio de turno) con auto-cierre. */
-export function announceBanner(text: string, sub?: string): void {
+export function announceBanner(text: string, sub?: string, opts: { own?: boolean } = {}): void {
   const duration = fxMotionDuration(1900)
   if (!duration) return
-  const item: BannerFx = { id: ++counter, text, sub, duration }
+  if (boardIsCovered()) return
+  const item: BannerFx = { id: ++counter, text, sub, ...(opts.own ? { own: true } : null), duration }
   state = { ...state, banner: item }
   notify()
   setTimeout(() => {

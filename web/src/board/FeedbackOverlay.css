@@ -74,7 +74,13 @@
    el divisor central (`.board-shell-divider`, mismo degradado) se enciende al
    cambiar de turno: ancho completo, sin panel sólido y desvanecido en los
    bordes, así que solo roza los bordes de las filas adyacentes. */
+/* FX-10: the turn announcement. Two rules open from the centre of the board, a wash of the turn's
+   colour lights between them, a specular pass runs along it and the name settles out of a blur:
+   the shape of the announcement every other client of this game uses, so it is read without being
+   learnt. Blue for somebody else's turn, the board's own gold for yours. Every part runs on the
+   banner's own duration (`animation-duration: inherit`), which carries the effects speed. */
 .fx-banner {
+  --turn-rgb: var(--brand-rgb);
   position: fixed;
   top: 50%;
   left: 0;
@@ -83,59 +89,151 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--sp-0h);
-  padding: var(--sp-2h) var(--sp-5);
+  justify-content: center;
+  gap: var(--sp-1);
+  padding: var(--sp-4) var(--sp-5);
   background: linear-gradient(
     90deg,
     transparent 0%,
-    rgb(var(--ink-rgb) / 0.72) 18%,
-    rgb(var(--ink-rgb) / 0.93) 50%,
-    rgb(var(--ink-rgb) / 0.72) 82%,
+    rgb(var(--turn-rgb) / 0.2) 24%,
+    rgb(var(--turn-rgb) / 0.42) 50%,
+    rgb(var(--turn-rgb) / 0.2) 76%,
     transparent 100%
   );
-  border-top: 1px solid rgb(var(--gold-rgb) / 0.28);
-  border-bottom: 1px solid rgb(var(--gold-rgb) / 0.28);
-  box-shadow: 0 0 34px rgb(var(--brand-rgb) / 0.22);
-  animation-name: fxBannerIn;
-  animation-timing-function: ease;
+  animation-name: fxBannerBand;
+  animation-timing-function: ease-out;
   animation-fill-mode: both;
-  will-change: transform, opacity;
+  will-change: opacity;
+}
+
+.fx-banner[data-own] {
+  --turn-rgb: var(--gold-rgb);
+}
+
+/* The two rules, drawn on the band's own edges so they open with it. */
+.fx-banner::before,
+.fx-banner::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgb(255 255 255 / 0.5) 12%,
+    rgb(var(--turn-rgb) / 1) 50%,
+    rgb(255 255 255 / 0.5) 88%,
+    transparent 100%
+  );
+  box-shadow: 0 0 14px rgb(var(--turn-rgb) / 0.7);
+  transform: scaleX(0);
+  transform-origin: 50% 50%;
+  animation-name: fxBannerRule;
+  animation-duration: inherit;
+  animation-timing-function: cubic-bezier(0.16, 0.84, 0.3, 1);
+  animation-fill-mode: both;
+}
+
+.fx-banner::before { top: 0; }
+.fx-banner::after { bottom: 0; animation-delay: 40ms; }
+
+/* The specular pass. It is clipped by its own box, so the glow of the name is not. */
+.fx-banner-sweep {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.fx-banner-sweep::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -40%;
+  width: 34%;
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.5), transparent);
+  filter: blur(6px);
+  animation-name: fxBannerSweep;
+  animation-duration: inherit;
+  animation-timing-function: cubic-bezier(0.3, 0, 0.2, 1);
+  animation-fill-mode: both;
 }
 
 .fx-banner-text {
+  position: relative;
+  max-width: 92%;
   font-family: var(--font-display);
-  font-size: var(--fs-2xl);
+  font-size: clamp(1.5rem, 0.9rem + 2.6vw, 3.2rem);
+  line-height: 1.05;
   font-weight: 700;
-  color: var(--gold, var(--gold-500));
-  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  text-align: center;
+  overflow-wrap: anywhere;
+  color: var(--fg-hi);
   /* La banda es translúcida (deja ver el tapete), así que el texto necesita
      su propia sombra opaca para no lavarse sobre el arte de las cartas. */
-  text-shadow: 0 1px 2px rgb(var(--ink-rgb) / 0.95), 0 2px 14px rgb(var(--ink-rgb) / 0.8);
+  text-shadow:
+    0 0 8px rgb(255 255 255 / 0.55),
+    0 0 26px rgb(var(--turn-rgb) / 0.9),
+    0 0 60px rgb(var(--turn-rgb) / 0.6),
+    0 3px 3px rgb(var(--ink-rgb) / 0.85);
+  animation-name: fxBannerText;
+  animation-duration: inherit;
+  animation-timing-function: cubic-bezier(0.12, 0.8, 0.26, 1);
+  animation-fill-mode: both;
 }
 
 .fx-banner-sub {
-  font-size: var(--fs-sm);
-  color: var(--text-dim, var(--fg-3));
-  letter-spacing: 0.08em;
+  position: relative;
+  font-family: var(--font-display);
+  font-size: clamp(0.8rem, 0.6rem + 0.7vw, 1.2rem);
+  font-weight: 600;
+  color: var(--fg-hi);
+  letter-spacing: 0.12em;
   text-transform: uppercase;
+  text-shadow:
+    0 0 6px rgb(255 255 255 / 0.5),
+    0 0 20px rgb(var(--turn-rgb) / 0.85),
+    0 2px 2px rgb(var(--ink-rgb) / 0.8);
+  animation-name: fxBannerText;
+  animation-duration: inherit;
+  animation-timing-function: cubic-bezier(0.12, 0.8, 0.26, 1);
+  animation-fill-mode: both;
 }
 
 /* La banda ocupa el ancho completo (left/right: 0), así que el centrado es
    solo vertical: sin `translateX(-50%)`, que la sacaría de cuadro. */
-@keyframes fxBannerIn {
-  0% {
-    opacity: 0;
-    transform: translateY(-50%) scaleY(0.6);
-  }
-12%,
-78% {
-    opacity: 1;
-    transform: translateY(-50%) scaleY(1);
-  }
-  100% {
-    opacity: 0;
-    transform: translateY(-50%) scaleY(0.85);
-  }
+@keyframes fxBannerBand {
+  0% { opacity: 0; }
+  22% { opacity: 1; }
+  76% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@keyframes fxBannerRule {
+  0% { transform: scaleX(0); opacity: 0; }
+  12% { opacity: 1; }
+  30% { transform: scaleX(1); }
+  78% { transform: scaleX(1); opacity: 1; }
+  100% { transform: scaleX(1); opacity: 0; }
+}
+
+@keyframes fxBannerSweep {
+  0% { left: -40%; opacity: 0; }
+  14% { opacity: 1; }
+  55% { left: 108%; opacity: 1; }
+  70% { left: 108%; opacity: 0; }
+  100% { left: 108%; opacity: 0; }
+}
+
+@keyframes fxBannerText {
+  0% { opacity: 0; transform: scale(1.14); filter: blur(6px); }
+  26% { opacity: 1; transform: scale(1); filter: blur(0); }
+  74% { opacity: 1; transform: scale(1); filter: blur(0); }
+  100% { opacity: 0; transform: scale(0.985); filter: blur(2px); }
 }
 
 html.fx-off .fx-floater,
