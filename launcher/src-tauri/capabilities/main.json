@@ -1,0 +1,10 @@
+{
+  "$schema": "https://schema.tauri.app/config/2/capability",
+  "identifier": "main",
+  "description": "Open external links from the game window in the system browser",
+  "windows": ["main"],
+  "permissions": [
+    "opener:allow-open-url",
+    "opener:allow-default-urls"
+  ]
+}

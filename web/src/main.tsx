@@ -5,11 +5,13 @@ import ErrorBoundary from './ui/ErrorBoundary'
 import { preloadInitialLocale } from './i18n'
 import { installErrorCapture } from './system/errorLog'
 import { installFlagEmojiFont } from './system/flagEmoji'
+import { installExternalLinks } from './system/externalLinks'
 import './system/webFonts.css'
 import './styles.css'
 
 installErrorCapture()
 installFlagEmojiFont()
+installExternalLinks()
 
 // The nine locales are separate chunks; only the one this player reads is fetched, and the
 // render below starts immediately in English if it has not arrived yet.
