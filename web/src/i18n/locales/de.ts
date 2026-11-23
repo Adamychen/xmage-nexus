@@ -2214,6 +2214,8 @@ export const de: TranslationSchema = {
     designation_prepared_title: 'Vorbereitet: dieser Permanent hat die Vorbereitet-Kennzeichnung',
     designation_protector: 'Beschützer',
     designation_protector_title: 'Beschützt von {name}',
+    designation_chosenmode: 'Modus',
+    designation_chosenmode_title: 'Gewählter Modus: {mode}',
     designation_room_title: 'Türen entriegelt ({sides})',
     turn_order_label: 'Zugreihenfolge',
     turn_active_badge: 'Aktiv',

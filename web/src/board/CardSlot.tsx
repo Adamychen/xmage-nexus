@@ -16,7 +16,7 @@ import { counterPulseClass as pulseClass, useCounterPulse } from './useCounterPu
 import { counterTip } from './counterName'
 import { extractOwnedKeywords } from '../data/keywordExtractor'
 import { keywordDisplayName, keywordSummary } from '../data/keywordI18n'
-import { cardDesignations, gainedDesignations, pairedPartnerName, classLevelOf, evidenceCounts, protectorName, type Designation } from './designations'
+import { cardDesignations, gainedDesignations, pairedPartnerName, classLevelOf, evidenceCounts, protectorName, chosenModeOf, type Designation } from './designations'
 import { roomDoorKey, roomSidesLabel } from '../game/rooms'
 import { useChangeFlag } from '../game/useChangeFlag'
 import CardIcons from './CardIcons'
@@ -374,6 +374,7 @@ export default function CardSlot({
   useBadgeLayout(slotRef)
 
   const designations = useMemo(() => cardDesignations(card.rules), [card.rules])
+  const chosenMode = useMemo(() => chosenModeOf(card.rules), [card.rules])
   const [seenRules, setSeenRules] = useState(card.rules)
   const [gainedDes, setGainedDes] = useState<Designation[]>([])
   const [swell, setSwell] = useState(false)
@@ -467,6 +468,12 @@ const showPtBadge =
       return {
         label: t('board', 'designation_evidence'),
         title: t('board', 'designation_evidence_title', { need: String(evidence.need), collect: String(evidence.canCollect) }),
+      }
+    }
+    if (d === 'chosenmode' && chosenMode) {
+      return {
+        label: chosenMode,
+        title: t('board', 'designation_chosenmode_title', { mode: chosenMode }),
       }
     }
     if (d === 'protector' && protector) {

@@ -1013,3 +1013,14 @@ the other permanents.
   behind it. On a real table they read as faint rectangles around the groups, which is the layout's
   scaffolding showing through (user report, 23-nov-2026).
 - Guard: `src/board/BoardZone.css.test.ts`
+
+### BRD-61 · A permanent says on the table which mode it was given
+A permanent that chose a mode as it entered carries that mode's name as a badge on the card, beside
+its other designations (BRD-52), with the full line in its tooltip. The engine writes the choice
+into the card's text as an info line ("Chosen mode: Mardu"), so until now it could only be read by
+opening the card.
+
+- Why: a modal enchantment on the table gave no sign of which half of it was live, and the player
+  had to right-click every one of them to tell (user report, 23-nov-2026).
+- Guard: `src/board/designations.test.ts` · `src/board/CardSlot.test.tsx`
+

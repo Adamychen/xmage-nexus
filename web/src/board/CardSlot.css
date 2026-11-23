@@ -1395,6 +1395,7 @@ html.fx-off .card-icon.icon-gained {
 .designation-badge.is-evidence { border-color: var(--brand); color: var(--brand-fg); }
 .designation-badge.is-prepared { border-color: var(--brand-fg); color: var(--fg-1); }
 .designation-badge.is-protector { border-color: var(--ok); color: var(--ok); }
+.designation-badge.is-chosenmode { border-color: var(--brand); color: var(--brand-fg); }
 
 /* A designation gained between views pops in and glows in its own colour. */
 .designation-badge.designation-gained {

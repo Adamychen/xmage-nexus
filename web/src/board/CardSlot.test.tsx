@@ -112,6 +112,19 @@ describe('CardSlot', () => {
     expect(container.querySelector('.designation-badge.is-renowned')).toBeNull()
   })
 
+  it('BRD-61: a modal permanent wears the mode it was given', () => {
+    const card = {
+      id: 'c3b',
+      name: 'Windcrag Siege',
+      cardTypes: ['Enchantment'],
+      rules: ['As this enters, choose Mardu or Jeskai.', "<font color = 'blue'>Chosen mode: Mardu</font>"],
+    } as unknown as PermanentView
+    const { container } = render(<CardSlot card={card} />)
+    const badge = container.querySelector('.designation-badge.is-chosenmode')
+    expect(badge).not.toBeNull()
+    expect(badge?.textContent).toBe('Mardu')
+  })
+
   it('renders no designation badge for the negative hint branch', () => {
     const card = {
       id: 'c4',

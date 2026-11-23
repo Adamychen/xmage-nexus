@@ -1,7 +1,7 @@
 import { stripTags } from '../utils/textRefs'
 
 export type Designation = 'monstrous' | 'renowned' | 'suspected' | 'paired' | 'classlevel'
-  | 'casesolved' | 'harnessed' | 'evidence' | 'prepared' | 'protector'
+  | 'casesolved' | 'harnessed' | 'evidence' | 'prepared' | 'protector' | 'chosenmode'
 
 const POSITIVE_RE = /^(?:ICON_GOOD\s*)?\{this\}\s+is\s+(monstrous|renowned)\s*\.?$/i
 const SUSPECT_RE = /^suspected\s*\(has menace and can't block\)\.?$/i
@@ -12,6 +12,7 @@ const HARNESSED_RE = /^(?:ICON_GOOD\s*)?\{this\}\s+is\s+harnessed\s*\.?$/i
 const EVIDENCE_RE = /^(?!ICON_BAD\s*)(?:ICON_GOOD\s*)?evidence was used(?:\s*\(need:\s*(\d+),\s*can collect:\s*(\d+)\))?\s*\.?$/i
 const PREPARED_RE = /^prepared\s*\.?$/i
 const PROTECTOR_RE = /^protected by\s+(.+?)(?:\s*\[[0-9a-fA-F]{2,8}\])?\s*\.?$/i
+const CHOSEN_MODE_RE = /^chosen mode:\s*(.+?)\s*\.?$/i
 
 /**
  * Reads the live designation hints the engine appends to `rules`
@@ -45,6 +46,7 @@ export function cardDesignations(rules?: readonly string[] | null): Designation[
     else if (EVIDENCE_RE.test(line)) push('evidence')
     else if (PREPARED_RE.test(line)) push('prepared')
     else if (PROTECTOR_RE.test(line)) push('protector')
+    else if (CHOSEN_MODE_RE.test(line)) push('chosenmode')
   }
   return out
 }
@@ -123,3 +125,18 @@ export function classLevelOf(rules?: readonly string[] | null): number | null {
  * `ICON_GOOD` / `ICON_BAD` → ✓ / ✗.
  */
 export { substituteCardRefs } from '../utils/textRefs'
+
+/**
+ * The mode a permanent was given when it entered, from the engine's `_modeChoice` info line
+ * ("<font color='blue'>Chosen mode: Mardu</font>"), or null. Only the table knew it before: the
+ * line is in the card's rules, so the inspector showed it and the board did not (BRD-61).
+ */
+export function chosenModeOf(rules?: readonly string[] | null): string | null {
+  if (!rules) return null
+  for (const raw of rules) {
+    if (typeof raw !== 'string') continue
+    const m = CHOSEN_MODE_RE.exec(stripTags(raw))
+    if (m) return m[1]
+  }
+  return null
+}

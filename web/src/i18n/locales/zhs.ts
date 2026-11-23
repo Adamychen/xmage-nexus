@@ -2214,6 +2214,8 @@ export const zhs: TranslationSchema = {
     designation_prepared_title: '已准备：此永久物具有已准备的标记',
     designation_protector: '保护者',
     designation_protector_title: '受{name}保护',
+    designation_chosenmode: '模式',
+    designation_chosenmode_title: '已选模式：{mode}',
     designation_room_title: '已解锁的门 ({sides})',
     turn_order_label: '回合顺序',
     turn_active_badge: '进行中',

@@ -2212,6 +2212,8 @@ export const en = {
     designation_prepared_title: 'Prepared: this permanent has the prepared designation',
     designation_protector: 'Protector',
     designation_protector_title: 'Protected by {name}',
+    designation_chosenmode: 'Mode',
+    designation_chosenmode_title: 'Chosen mode: {mode}',
     designation_room_title: 'Room doors unlocked ({sides})',
     turn_order_label: 'Turn order',
     turn_active_badge: 'Active',

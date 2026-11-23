@@ -76,3 +76,14 @@ an English card language with a Spanish interface shows English cards.
   language, so a Spanish interface showed Spanish card names while the picker said English (report of
   2026-10-31, after importing a deck).
 - Guard: `src/cards/cardLanguage.test.ts`
+
+### CRD-7 · Engine text is decoded before it is read, semicolon or not
+Whatever the engine writes in a card's text reaches the player as text, never as markup: HTML tags
+are stripped, object hashes dropped and named entities decoded. The entities XMage writes without
+their closing semicolon are decoded too (`Modes.java` writes `&bull ` in front of each mode of a
+modal permanent), and a word that merely starts like one is left alone.
+
+- Why: a modal enchantment's text read "&bull Mardu — …" in the inspector, because the decoder only
+  knew the well-formed `&bull;` (user report, 23-nov-2026).
+- Guard: `src/game/FormattedText.test.tsx`
+

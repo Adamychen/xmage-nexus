@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { cardDesignations, classLevelOf, evidenceCounts, gainedDesignations, pairedPartnerName, protectorName, substituteCardRefs } from './designations'
+import { cardDesignations, chosenModeOf, classLevelOf, evidenceCounts, gainedDesignations, pairedPartnerName, protectorName, substituteCardRefs } from './designations'
 
 describe('cardDesignations', () => {
   it('detecta monstrous desde la hint en vivo del motor', () => {
@@ -130,3 +130,18 @@ describe('substituteCardRefs', () => {
       .toBe('Bear deals damage. Bear attacks.')
   })
 })
+
+describe('the mode a permanent was given', () => {
+  const MODE = "<font color = 'blue'>Chosen mode: Mardu</font>"
+
+  it('BRD-61: reads the engine info line and names the mode', () => {
+    expect(chosenModeOf([MODE])).toBe('Mardu')
+    expect(cardDesignations([MODE])).toContain('chosenmode')
+  })
+
+  it('BRD-61: a card that chose nothing carries no mode', () => {
+    expect(chosenModeOf(['Flying', 'When this enters, choose Mardu or Jeskai.'])).toBeNull()
+    expect(cardDesignations(['When this enters, choose Mardu or Jeskai.'])).not.toContain('chosenmode')
+  })
+})
+

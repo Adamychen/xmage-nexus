@@ -2214,6 +2214,8 @@ export const ru: TranslationSchema = {
     designation_prepared_title: 'Подготовлен: этот перманент имеет обозначение «подготовлен»',
     designation_protector: 'Защитник',
     designation_protector_title: 'Защищён {name}',
+    designation_chosenmode: 'Режим',
+    designation_chosenmode_title: 'Выбранный режим: {mode}',
     designation_room_title: 'Открытые двери ({sides})',
     turn_order_label: 'Порядок ходов',
     turn_active_badge: 'Активен',

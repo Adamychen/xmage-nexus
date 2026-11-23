@@ -127,6 +127,13 @@ export function decodeHtmlEntities(raw: string): string {
     str = str.replaceAll(entity, char)
   }
 
+  // XMage writes some entities without their semicolon ("&bull Mardu &mdash; ...", `Modes.java`),
+  // so the named pass above never sees them and the raw entity reached the card.
+  str = str.replace(/&(bull|mdash|ndash|nbsp|amp|hellip|middot|times|deg)(?![a-z;])/gi, (_, name) => {
+    const char = entities[`&${String(name).toLowerCase()};`]
+    return char ?? `&${name}`
+  })
+
   // Decodifica entidades numéricas &#123; o &#x1f;
   str = str.replace(/&#(\d+);/g, (_, dec) => String.fromCharCode(Number(dec)))
   str = str.replace(/&#x([0-9a-fA-F]+);/g, (_, hex) => String.fromCharCode(parseInt(hex, 16)))

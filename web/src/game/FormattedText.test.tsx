@@ -11,6 +11,12 @@ describe('FormattedText', () => {
     expect(decodeHtmlEntities('l&hellip;attaquant &agrave; Paris')).toBe('l…attaquant à Paris')
   })
 
+  it('CRD-7: an entity the engine wrote without its semicolon is decoded too', () => {
+    // Modes.java writes "&bull " in front of each mode of a modal permanent.
+    expect(decodeHtmlEntities('&bull Mardu &mdash; A trigger')).toBe('• Mardu — A trigger')
+    expect(decodeHtmlEntities('&bullseye is not an entity')).toBe('&bullseye is not an entity')
+  })
+
   it('cleans XMage internal object hashes and raw div tags', () => {
     const raw = "Pay {R}<div style='font-size:11pt'><font color='#FF6347' object_id='3736f396-aef9-421c-ae65-453d81b8d0aa'>Lightning Bolt</font> [373]</div>"
     expect(cleanMageHtml(raw)).toBe('Pay {R} Lightning Bolt')
