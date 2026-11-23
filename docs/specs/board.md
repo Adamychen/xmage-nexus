@@ -410,8 +410,10 @@ reading another seat's applied size.
 ### BRD-26 · Bands that share a row share it by what they hold
 The bands of one row (creatures, marquee and commander in the creatures row; lands and other
 permanents in the other row in the Arena and Table layouts) use one card size: the largest, up to
-the seat's cap, at which every band of the row fits its cards in at most three lines inside the
-row's width and height. Each band is then as wide as its cards need at that size, and the width
+the seat's cap, at which every band of the row fits its cards inside the row's width and height,
+going no deeper than three lines of classic cards would. How deep a band may go is that height, not
+a count of lines, so the compact tile (0.75 of its width against the printed card's 1.4) opens the
+lines that height holds: five of them, not three. Each band is then as wide as its cards need at that size, and the width
 left over is shared in proportion to that need, unless a band takes fewer lines than the row is
 tall for and grows its own cards into the room it leaves (BRD-50). So a band never shrinks to the floor or scrolls
 while a band beside it in the same row keeps room it does not use. Only when not even the floor
@@ -421,8 +423,12 @@ same seat may use different sizes.
 - Why: measured 2026-11-01 on a 4-seat Table board at 1000 px, the creatures band of the own seat
   was 38 px wide (the floor) for seven creatures, scrolling 294 px of content, while the marquee
   band beside it kept 122 px for one planeswalker: each band fitted itself inside a width that
-  flex had already handed out.
-- Guard: `src/board/layout/layoutEngine.test.ts` · `src/board/layout/solveBoardLayout.test.ts` · `e2e/board-resize.spec.ts` · `e2e/board-fill.spec.ts`
+  flex had already handed out. The depth was a count of lines, which is the same number for two
+  card shapes of very different height: measured on the showcase at 1024 px, the own lands band
+  drew its twelve piles in three lines of 52 px tiles, 108 px of a band 305 px tall, and could not
+  make them wider because a fourth line was not allowed (user report, 23-nov-2026). As a height it
+  is four lines of 74 px there, and the classic board is untouched.
+- Guard: `src/board/layout/layoutEngine.test.ts` · `src/board/layout/solveBoardLayout.test.ts` · `src/board/layout/solveRow.test.ts` · `e2e/board-resize.spec.ts` · `e2e/board-fill.spec.ts`
 
 ### BRD-27 · A band that scrolls takes no room for its scrollbar
 A band that cannot fit its cards even at the floor size scrolls sideways (wheel, drag, keyboard

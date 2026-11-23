@@ -1,3 +1,4 @@
+import { CLASSIC_CARD_ASPECT } from '../compactCard'
 import type { ItemModel } from './itemModel'
 
 export interface BandInput {
@@ -55,6 +56,18 @@ export const PREFER_ONE_LINE_RATIO = 0.75
  */
 export const BAND_GROWTH_LIMIT = 1.35
 const EPS = 1e-6
+
+/**
+ * BRD-26: how deep a band may become, counted in the height three lines of classic cards would
+ * take, not in a count of lines. A compact tile is 0.75 of its width tall against the classic
+ * card's 1.4, so three lines of tiles fill about half the height three lines of cards do: with the
+ * count fixed at three the band kept its whole share of the row's height, drew in half of it and,
+ * unable to open another line, could not make its tiles any wider either.
+ */
+export function defaultMaxLines(aspect: number): number {
+  if (!(aspect > 0)) return DEFAULT_MAX_LINES
+  return Math.max(DEFAULT_MAX_LINES, Math.floor((DEFAULT_MAX_LINES * CLASSIC_CARD_ASPECT) / aspect + EPS))
+}
 
 interface Prepared {
   id: string
@@ -315,7 +328,7 @@ export function solveRow(row: RowInput): RowOut {
 }
 
 function solveRowCore(row: RowInput): RowOut {
-  const rowMaxLines = row.maxLines ?? DEFAULT_MAX_LINES
+  const rowMaxLines = row.maxLines ?? defaultMaxLines(row.aspect)
   const bands = row.bands.filter((b) => b.items.length > 0).map((b) => prepare(b, row, rowMaxLines))
   const gaps = Math.max(0, bands.length - 1) * row.bandGap
   const total = Math.max(0, Math.floor(row.width - gaps))

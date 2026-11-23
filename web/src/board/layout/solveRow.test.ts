@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { solveRow, type RowInput } from './solveRow'
+import { defaultMaxLines, solveRow, type RowInput } from './solveRow'
 
 const CARD = { a: 1, b: 0 }
 
@@ -213,5 +213,37 @@ describe('BRD-50: a band with fewer lines grows into the room it leaves', () => 
       expect(b.lines * b.cardW * 1.4 + (b.lines - 1) * 2 + 2 * 2).toBeLessThanOrEqual(200)
     }
     expect(out.bands.reduce((sum, b) => sum + b.width, 0)).toBeLessThanOrEqual(900 - 8)
+  })
+})
+
+describe('BRD-26: how deep a band may go is a height, not a count of lines', () => {
+  // The own lands band of the four-player showcase, measured at a 1024px window with the side
+  // panel at 40%: twelve piles in a band 232px wide and 305px tall.
+  const lands = Array.from({ length: 12 }, () => CARD)
+  const band = (aspect: number, maxLines?: number) =>
+    solveRow(row({ width: 232, height: 305, aspect, maxW: aspect < 1 ? 150 : 180, bands: [{ id: 'lands', items: lands, maxLines }] }))
+
+  it('BRD-26: three lines of classic cards and the tiles that fill the same height', () => {
+    expect(defaultMaxLines(1.4)).toBe(3)
+    expect(defaultMaxLines(0.75)).toBe(5)
+    // Whatever the style, the cap stands for the same slice of the row's height.
+    expect(defaultMaxLines(0.75) * 0.75).toBeGreaterThanOrEqual(3 * 1.4 - 0.75)
+    expect(defaultMaxLines(1)).toBe(4)
+  })
+
+  it('BRD-26: a classic row is untouched by it', () => {
+    const out = band(1.4)
+    expect(out.bands[0].lines).toBeLessThanOrEqual(3)
+    expect(out).toEqual(band(1.4, 3))
+  })
+
+  it('BRD-26: the compact tiles open the line the height has room for, and come out wider for it', () => {
+    const capped = band(0.75, 3)
+    const free = band(0.75)
+    expect(capped.bands[0].lines).toBe(3)
+    expect(free.bands[0].lines).toBeGreaterThan(3)
+    expect(free.cardW).toBeGreaterThan(capped.cardW)
+    // and the band still fits the height it was given
+    expect(free.bands[0].lines * free.cardW * 0.75).toBeLessThanOrEqual(305)
   })
 })

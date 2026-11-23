@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { solveBoardLayout, type BoardInput, type SeatInput } from './solveBoardLayout'
-import { solveRow, type BandInput, type RowInput, type RowOut } from './solveRow'
+import { defaultMaxLines, solveRow, type BandInput, type RowInput, type RowOut } from './solveRow'
 import type { ItemModel } from './itemModel'
 
 function mulberry32(seed: number): () => number {
@@ -136,7 +136,7 @@ describe('BRD-25: the same board in the same window always looks the same', () =
     }
   })
 
-  it('BRD-25: over 500 random rows, integer widths, a card width in range, lines in 1..3, the height respected and every band that does not overflow fits its need', () => {
+  it('BRD-25: over 500 random rows, integer widths, a card width in range, the lines the aspect allows, the height respected and every band that does not overflow fits its need', () => {
     const r = mulberry32(42)
     for (let i = 0; i < 500; i++) {
       const row = randomRow(r)
@@ -156,7 +156,7 @@ describe('BRD-25: the same board in the same window always looks the same', () =
         const input = used[k]
         expect(Number.isInteger(band.width)).toBe(true)
         expect(band.lines).toBeGreaterThanOrEqual(1)
-        expect(band.lines).toBeLessThanOrEqual(3)
+        expect(band.lines).toBeLessThanOrEqual(row.maxLines ?? defaultMaxLines(row.aspect))
         expect(band.lines).toBeLessThanOrEqual(input.items.length)
         expect(band.lines * out.cardW * row.aspect + (band.lines - 1) * row.rowGap + 2 * row.padY).toBeLessThanOrEqual(row.height + 1e-6)
         if (!band.overflow) {
