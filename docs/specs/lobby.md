@@ -384,3 +384,19 @@ deck is a different one is still asked about on its own.
   a click the dialog swallowed (report of 2026-11-13, "Accept and play needed two clicks in 2 of 4
   attempts"). Asking twice about one deck is also a question the player has already answered.
 - Guard: `e2e/deckvalidation.spec.ts` · `src/lobby/CreateTable/submitTable.test.ts`
+
+### LBY-33 · The spectator waiting room shows the table it is watching, and invents nothing
+The waiting room a spectator sees between an accepted watch and the first game view is the table
+being watched: WATCHGAME names it (`currentTableId`, or `parentTableId` for a tournament sub-table)
+and the lobby list describes it. A watch the client already holds is not sent again. With no seat
+information the room says so and draws no seat: the layout is never chosen by a seat count that can
+be zero, and the format label, the seat chip and the "Players" step stay silent rather than count
+seats nobody reported. A table of two Commander seats is still a pod, not a duel.
+
+- Why: `handleWatchGame` cleared `watchingTable` while putting the client in the spectator phase, so
+  the room had no name, no format and no seats, and `seats.length <= 2` read that emptiness as a
+  duel: watching a Commander pod drew two invented seats with a VS between them, "Duel", "0 seats"
+  and "Players 0/0" (report of 2026-11-23). The same handler re-sent the `watchGame` of a watch it
+  already held, which `GameController.watch` refuses, so a bare "Command failed" sat over that room
+  while no game view ever came.
+- Guard: `src/lobby/SpectatorStagingScreen.test.tsx` · `src/state/events/game.test.ts` · `e2e/spectate-staging.spec.ts`
