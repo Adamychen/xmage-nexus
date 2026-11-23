@@ -115,20 +115,26 @@ already says them.
   line rather than a number guessed into the sentence.
 - Guard: `src/cards/frame/stackCardText.test.ts`
 
-### STK-10 · The text hangs under the cascade in a bubble, folded until it is asked for
-Under the cascade hangs a speech bubble whose tail points at the front card. Folded, it is a single
-strip: the controller chip, an ability mark, a "Copy" chip, the object's name and a chevron that says
-it opens. It opens while the pointer is on the cascade or on the bubble, on the card under the
-pointer (a card behind the front one is read too), and a click or a key on the strip keeps it open
-until the next one; it folds a moment after the pointer leaves, so the pointer can cross from the
-card to the bubble, and while it is open it keeps reading the card last hovered. The card being read
-is ringed and the tail slides to point at it, so it is plain which card the text belongs to. Its height is the
-room measured between the cascade and the dock, never a number; past that it scrolls. When there is
-no room for it there, it lies over the front card's own lower half instead, because the only part of
-the screen it may cover is the stack itself: never the board, never the dock.
+### STK-10 · The text hangs under the cascade in a bubble, open until it is folded away
+Under the cascade hangs a speech bubble whose tail points at the front card. Its head is a single
+strip: the controller chip, an ability mark, a "Copy" chip, the object's name and a chevron. It
+comes open, reading the object about to resolve, and the strip is what folds it away and what
+brings it back; nothing else does, so the pointer crossing the stack never folds or unfolds it. A
+fold is undone by the next stack: pushing the stack aside or running it out leaves none behind.
 
-- Why: the user liked the bubble of the mockup but not that it covered the board, and asked for it
-  to read as folded and open on hover; they chose it under the cascade rather than beside it
-  (2026-11-23). Under the cascade it is as wide as the card, so it stays out of the middle of the
-  board.
+What the pointer moves is which object is read: the card under it, a card behind the front one
+included, and it keeps reading the card last hovered for a moment after leaving, so the pointer can
+cross from the card to the bubble; then it falls back to the object about to resolve. The card
+being read that way is ringed and the tail slides to point at it, so it is plain which card the
+text belongs to. Its height is the room measured between the cascade and the dock, never a number;
+past that it scrolls. When there is no room for it there, it lies over the front card's own lower
+half instead, because the only part of the screen it may cover is the stack itself: never the
+board, never the dock.
+
+- Why: the user liked the bubble of the mockup but not that it covered the board, and chose it
+  under the cascade rather than beside it (2026-11-23). It read as folded and opened on hover at
+  first; the same day the user asked for the opposite, since what an object is about to do is the
+  reason the stack is on screen and asking for it every time is a click to read the thing you were
+  already looking at. Under the cascade it is as wide as the card, so it stays out of the middle of
+  the board.
 - Guard: `src/board/StackZone.test.tsx` · `src/board/StackZone.css.test.ts`

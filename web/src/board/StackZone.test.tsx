@@ -175,50 +175,74 @@ describe('StackZone, the bubble', () => {
     spell('spell-1', 'Lightning Bolt', { rules: ['Lightning Bolt deals 3 damage to any target.'] }),
   )
 
-  it('STK-10: folded, it is one strip that says it opens; the text is not on screen', () => {
+  it('STK-10: it comes open on the object about to resolve, with no pointer and no click', () => {
     const { container } = render(<StackZone stack={two()} />)
-    expect(tab(container).getAttribute('aria-expanded')).toBe('false')
-    expect(body(container).hidden).toBe(true)
+    expect(tab(container).getAttribute('aria-expanded')).toBe('true')
+    expect(body(container).hidden).toBe(false)
+    expect(body(container).textContent).toContain('Counter target spell')
     expect(container.querySelector('.stack-bubble-chevron')).not.toBeNull()
   })
 
-  it('STK-10: the pointer on the cascade opens it on the card under the pointer, and it folds a moment after leaving', () => {
+  it('STK-10: the pointer moves it onto the card under it, and it falls back a moment after leaving', () => {
     vi.useFakeTimers()
     try {
       const { container } = render(<StackZone stack={two()} />)
       const behind = cards(container)[1]
       fireEvent.mouseEnter(behind)
-      expect(tab(container).getAttribute('aria-expanded')).toBe('true')
       expect(body(container).textContent).toContain('Lightning Bolt deals 3 damage')
 
       fireEvent.mouseLeave(behind)
       fireEvent.mouseEnter(container.querySelector('[data-testid="stack-bubble"]')!)
       act(() => { vi.advanceTimersByTime(1000) })
-      expect(tab(container).getAttribute('aria-expanded'), 'crossing to the bubble keeps it open').toBe('true')
-      expect(body(container).textContent, 'and on the card that was being read').toContain('Lightning Bolt')
+      expect(body(container).textContent, 'crossing to the bubble keeps the card that was being read').toContain('Lightning Bolt')
       expect(behind.classList.contains('is-reading'), 'which keeps its ring, so the text plainly belongs to it').toBe(true)
       expect(container.querySelector<HTMLElement>('[data-testid="stack-bubble"]')!.style.getPropertyValue('--read-i'), 'and the tail points at it').toBe('1')
 
       fireEvent.mouseLeave(container.querySelector('[data-testid="stack-bubble"]')!)
-      expect(tab(container).getAttribute('aria-expanded'), 'it does not fold the instant the pointer leaves').toBe('true')
+      expect(body(container).textContent, 'it does not jump back the instant the pointer leaves').toContain('Lightning Bolt')
       act(() => { vi.advanceTimersByTime(1000) })
-      expect(tab(container).getAttribute('aria-expanded')).toBe('false')
-      expect(tab(container).textContent, 'folded, it reads the object about to resolve again').toContain('Counterspell')
+      expect(tab(container).getAttribute('aria-expanded'), 'and it is still open, because nothing folded it').toBe('true')
+      expect(tab(container).textContent, 'reading the object about to resolve again').toContain('Counterspell')
+      expect(behind.classList.contains('is-reading'), 'with no ring left on the card the pointer left').toBe(false)
     } finally {
       vi.useRealTimers()
     }
   })
 
-  it('STK-10: a click on the strip keeps it open without a pointer, and a second one folds it', () => {
+  it('STK-10: the strip is what folds it away, and what brings it back', () => {
     vi.useFakeTimers()
     try {
       const { container } = render(<StackZone stack={two()} />)
       fireEvent.click(tab(container))
       act(() => { vi.advanceTimersByTime(1000) })
+      expect(tab(container).getAttribute('aria-expanded')).toBe('false')
+      expect(body(container).hidden).toBe(true)
+      fireEvent.click(tab(container))
+      act(() => { vi.advanceTimersByTime(1000) })
       expect(tab(container).getAttribute('aria-expanded')).toBe('true')
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('STK-10: folded by hand, it stays folded while that stack lasts and comes back with the next one', () => {
+    vi.useFakeTimers()
+    try {
+      const { container, rerender } = render(<StackZone stack={two()} />)
       fireEvent.click(tab(container))
       act(() => { vi.advanceTimersByTime(1000) })
       expect(tab(container).getAttribute('aria-expanded')).toBe('false')
+
+      // the pointer does not undo the fold: only the strip does
+      fireEvent.mouseEnter(cards(container)[1])
+      expect(tab(container).getAttribute('aria-expanded')).toBe('false')
+      fireEvent.mouseLeave(cards(container)[1])
+
+      rerender(<StackZone stack={{}} />)
+      act(() => { vi.advanceTimersByTime(1000) })
+      rerender(<StackZone stack={two()} />)
+      act(() => { vi.advanceTimersByTime(1000) })
+      expect(tab(container).getAttribute('aria-expanded'), 'a stack that has run out leaves no fold behind').toBe('true')
     } finally {
       vi.useRealTimers()
     }

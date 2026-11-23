@@ -199,12 +199,14 @@ export default function StackZone({
   // the stack, so reading it here cannot feed back into anything it depends on.
   const [floor, setFloor] = useState(0)
   const cardRender = useStore((s) => s.settings.cardRender)
-  // STK-10: the bubble under the cascade. It opens while the pointer is on the cascade or on the
-  // bubble itself, or after a click on its strip, and closes a moment after the pointer leaves, so
-  // the pointer can cross the gap between the card and the bubble without it folding.
+  // STK-10: the bubble under the cascade. It comes open: what the object is about to do is the
+  // reason the stack is on screen, so it is read without asking for it, and the strip folds it
+  // away for whoever wants the board behind it. The pointer only chooses which object is read; it
+  // keeps reading the card last hovered for a moment after leaving, so the pointer can cross the
+  // gap between the card and the bubble.
   const [bubbleHover, setBubbleHover] = useState(false)
-  const [bubblePinned, setBubblePinned] = useState(false)
-  const [bubbleOpen, setBubbleOpen] = useState(false)
+  const [bubbleFolded, setBubbleFolded] = useState(false)
+  const [reading, setReading] = useState(false)
   const [bubblePlacement, setBubblePlacement] = useState<StackBubblePlacement>('below')
   const [bubbleMax, setBubbleMax] = useState<number | null>(null)
 
@@ -314,18 +316,23 @@ export default function StackZone({
 
   const topId = shownGroups[0]?.items[0]?.[0] ?? null
   const hoverId = hoverCard?.id ?? null
-  const wantBubble = bubblePinned || bubbleHover || hoverId != null
+  const bubbleOpen = !bubbleFolded
+  const wantRead = bubbleHover || hoverId != null
   useEffect(() => {
-    if (wantBubble) {
-      setBubbleOpen(true)
+    if (wantRead) {
+      setReading(true)
       return
     }
-    const fold = setTimeout(() => setBubbleOpen(false), BUBBLE_FOLD_MS)
-    return () => clearTimeout(fold)
-  }, [wantBubble])
+    const back = setTimeout(() => setReading(false), BUBBLE_FOLD_MS)
+    return () => clearTimeout(back)
+  }, [wantRead])
+  // Pushed aside, or a stack that has run out: the next one comes open again, as a fresh one does.
   useEffect(() => {
-    if (pushed) setBubblePinned(false)
+    if (pushed) setBubbleFolded(false)
   }, [pushed])
+  useEffect(() => {
+    if (groupCount === 0) setBubbleFolded(false)
+  }, [groupCount])
   // The card last hovered stays the one read while the pointer crosses to the bubble; once the
   // bubble folds, it goes back to the object about to resolve.
   const [readId, setReadId] = useState<string | null>(null)
@@ -333,8 +340,8 @@ export default function StackZone({
     if (hoverId != null) setReadId(String(hoverId))
   }, [hoverId])
   useEffect(() => {
-    if (!bubbleOpen) setReadId(null)
-  }, [bubbleOpen])
+    if (!reading) setReadId(null)
+  }, [reading])
 
   // TGT-7: a stack object the player is being asked to target brings the stack back; it is always
   // in view now, but it may have been pushed aside.
@@ -465,7 +472,7 @@ export default function StackZone({
                 onCardClick || count > 1 ? 'clickable' : '',
                 count > 1 ? 'is-group' : '',
                 openGroup ? 'is-open' : '',
-                bubbleOpen && id === readingId ? 'is-reading' : '',
+                reading && bubbleOpen && id === readingId ? 'is-reading' : '',
                 `owner-${ownership}`,
               ].filter(Boolean).join(' ')}
               style={{ ['--i' as string]: gi, ['--seat' as string]: seatColorVar(seatIndexOf(players, ctrlInfo.id)) }}
@@ -503,7 +510,7 @@ export default function StackZone({
             depth={Math.max(0, shownGroups.findIndex((g) => g.items[0][0] === readingId))}
             open={bubbleOpen}
             placement={bubblePlacement}
-            onToggle={() => setBubblePinned((on) => !on)}
+            onToggle={() => setBubbleFolded((folded) => !folded)}
             onEnter={() => setBubbleHover(true)}
             onLeave={() => setBubbleHover(false)}
           />
