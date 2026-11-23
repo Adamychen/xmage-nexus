@@ -2234,6 +2234,7 @@ export const zhs: TranslationSchema = {
     opp_turn_tag: '回合',
     opp_combat_tag: '战斗',
     restriction_fallback: '限制',
+    commander_mark: '指挥官',
     pile_top: '顶部',
   },
   system: {

@@ -473,6 +473,13 @@
   z-index: 2;
 }
 
+/* BRD-33: a single line (one planeswalker, saga or battle) stands in the middle of that height
+   instead of hanging from the top, where it read as misplaced beside a full creatures row. */
+.board-zone.arena-own .bz-band.bz-marquee-band:not([data-band-lines]) {
+  align-content: center;
+  align-items: center;
+}
+
 .board-zone.arena-own:has(.bz-marquee-band) > .bz-permanents-row {
   padding-right: calc(var(--arena-edge) + var(--arena-marquee-w) + var(--arena-perm-gap));
 }

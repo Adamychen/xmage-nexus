@@ -2234,6 +2234,7 @@ export const it: TranslationSchema = {
     opp_turn_tag: 'TURNO',
     opp_combat_tag: 'COMBATTIMENTO',
     restriction_fallback: 'Restrizione',
+    commander_mark: 'Comandante',
     pile_top: 'Cima',
   },
   system: {

@@ -332,10 +332,6 @@
   overflow-x: auto;
   overflow-y: hidden;
   border-radius: var(--r-md);
-  border: 1px solid rgb(var(--gold-rgb) / 0.16);
-  border-left: 2px solid rgb(var(--gold-rgb) / 0.45);
-  background: linear-gradient(180deg, rgb(var(--gold-rgb) / 0.06) 0%, rgb(var(--gold-rgb) / 0.02) 100%);
-  box-shadow: inset 0 1px 0 var(--veil-1);
   min-width: 0;
   min-height: 0;
   height: 100%;
@@ -362,10 +358,6 @@
 .bz-band.bz-marquee-band {
   flex: 1 1 0;
   width: auto;
-  border: 1px solid rgb(var(--gold-rgb) / 0.16);
-  border-left: 2px solid rgb(var(--gold-rgb) / 0.45);
-  background: linear-gradient(180deg, rgb(var(--gold-rgb) / 0.06) 0%, rgb(var(--gold-rgb) / 0.02) 100%);
-  box-shadow: inset 0 1px 0 var(--veil-1);
 }
 
 .stack-group,
@@ -507,14 +499,9 @@
   grid-template-rows: 1fr 1fr auto;
 }
 
-/* Las bandas no dibujan caja: las cartas descansan sobre el tapete. Una
-   banda vacía deja solo un halo tenue y la frontera entre criaturas y
-   permanentes es una línea fina que se desvanece en los extremos. */
-.board-zone .bz-band:empty,
-.opponent-zone .oz-band:empty,
-.player-zone .pz-band:empty {
-  background: radial-gradient(ellipse 60% 70% at 50% 50%, rgb(var(--brand-rgb) / 0.06) 0%, transparent 100%);
-}
+/* BRD-60: a band draws no box and no halo. The cards rest on the mat, and the only line the board
+   draws is the thin one between creatures and the other permanents, fading at both ends. An empty
+   band used to leave a soft ellipse behind, which showed the boxes the layout works in. */
 
 .bz-permanents-row {
   position: relative;

@@ -99,27 +99,13 @@ describe('PlayerInfoBar portrait (new table interface)', () => {
     expect(chips[0].getAttribute('title')).toContain('Edgar Markov')
   })
 
-  it('shows only the rank icon, on the avatar corner opposite the hand count', () => {
+  it('BRD-58: the portrait carries no rank, neither emblem nor rating', () => {
     const ranked = makePlayer({ playerId: 'r', name: 'Rina', isHuman: true, userData: { generalRating: 1850 } as never })
     setState({ game: makeGameView({ players: [me, ranked] }) })
     const { container } = render(<PlayerInfoBar player={ranked} side="opp" />)
-    const badge = container.querySelector('.player-avatar .rank-badge.pp-rank-icon')
-    expect(badge).not.toBeNull()
-    expect(badge?.querySelector('.rank-badge-name')).toBeNull()
-    expect(container.querySelector('.player-name-row .rank-badge')).toBeNull()
-    expect(container.querySelectorAll('.rank-badge')).toHaveLength(1)
-  })
-
-  it('renders the v2 rank as a large emblem with no name or elo text', () => {
-    const ranked = makePlayer({ playerId: 'r', name: 'Rina', isHuman: true, userData: { generalRating: 1850 } as never })
-    setState({ game: makeGameView({ players: [me, ranked] }) })
-    const { container } = render(<PlayerInfoBar player={ranked} side="opp" />)
-    const badge = container.querySelector('.player-avatar .rank-badge.pp-rank-icon') as HTMLElement
-    expect(badge).not.toBeNull()
-    expect(badge.classList.contains('pp-rank-icon-lg')).toBe(true)
-    expect(badge.querySelector('.rank-emblem svg')).not.toBeNull()
-    expect(badge.querySelector('.rank-badge-elo')).toBeNull()
-    expect(badge.textContent?.trim()).toBe('')
+    expect(container.querySelector('.rank-badge')).toBeNull()
+    expect(container.querySelector('.rank-emblem')).toBeNull()
+    expect(container.textContent).not.toContain('1850')
   })
 
   it('opens the mechanics panel from a mechanic chip', () => {

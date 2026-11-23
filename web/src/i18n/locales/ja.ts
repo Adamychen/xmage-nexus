@@ -2234,6 +2234,7 @@ export const ja: TranslationSchema = {
     opp_turn_tag: '手番',
     opp_combat_tag: '戦闘',
     restriction_fallback: '制限',
+    commander_mark: '統率者',
     pile_top: 'トップ',
   },
   system: {

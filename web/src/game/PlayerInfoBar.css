@@ -248,7 +248,7 @@ html.fx-off .life-value {
   display: inline-flex;
   align-items: center;
   gap: var(--sp-0h);
-  font-size: var(--fs-2xs);
+  font-size: var(--fs-xs);
   font-weight: 800;
   padding: 0;
   border: 0;
@@ -337,10 +337,11 @@ html.fx-off .life-value {
   color: var(--volt);
 }
 
+/* BRD-54: a counter with no box cannot flash a box. The change lights the symbol and the number
+   themselves, so what the eye catches is the counter, not a rectangle around nothing. */
 .player-counter-badge.counter-badge-changed,
 .player-badges .badge-speed.counter-badge-changed {
-  box-shadow: 0 0 12px 2px rgb(var(--pulse-rgb) / 0.85);
-  filter: brightness(1.3);
+  filter: brightness(1.3) drop-shadow(0 0 6px rgb(var(--pulse-rgb) / 0.9));
 }
 
 .player-counter-badge.counter-badge-pulse,
@@ -355,20 +356,22 @@ html.fx-off .life-value {
   100% { scale: 1; }
 }
 
+/* BRD-54: and the wave it sends out is a halo around the symbol, not a square ring: the badge has
+   no border to inherit a shape from, so a bordered ring drew the box the rule took away. */
 .player-counter-badge .counter-change-ring,
 .player-badges .badge-speed .counter-change-ring {
   position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  border: 2px solid rgb(var(--pulse-rgb) / 0.95);
-  box-shadow: 0 0 10px 1px rgb(var(--pulse-rgb) / 0.8);
+  inset: -6px;
+  border: 0;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgb(var(--pulse-rgb) / 0.4) 0%, rgb(var(--pulse-rgb) / 0.12) 55%, transparent 72%);
   pointer-events: none;
   animation: playerCounterRing calc(0.5s / var(--fx-speed, 1)) var(--ease-out) both;
 }
 
 @keyframes playerCounterRing {
-  0% { scale: 1; opacity: 0.95; }
-  100% { scale: 2.1; opacity: 0; }
+  0% { scale: 0.6; opacity: 0.95; }
+  100% { scale: 1.8; opacity: 0; }
 }
 
 .player-counter-badge .counter-tick,
@@ -821,34 +824,6 @@ html.fx-off .player-info-bar.active-glow {
   text-shadow: none;
   box-shadow: 0 2px 8px var(--shade-2);
   pointer-events: none;
-}
-
-.rank-badge.pp-rank-icon {
-  position: absolute;
-  left: -8px;
-  top: -4px;
-  padding: 0;
-  justify-content: center;
-  border-radius: 50%;
-  border-width: 1.5px;
-  background: var(--ink-gap);
-  box-shadow: 0 2px 8px var(--shade-2);
-  pointer-events: auto;
-}
-
-.rank-badge.pp-rank-icon-lg {
-  font-size: var(--fs-lg);
-  width: 2.2em;
-  height: 2.2em;
-}
-
-.rank-badge.pp-rank-icon-lg .rank-badge-icon {
-  font-size: 1em;
-}
-
-.arena-board > .zone-bottom .pz-bottom-row > .player-info-bar.is-portrait .rank-badge.pp-rank-icon-lg {
-  font-size: var(--fs-xl);
-  left: -10px;
 }
 
 .pp-hand-badge.is-viewable {

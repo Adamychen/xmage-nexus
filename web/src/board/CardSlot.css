@@ -1143,6 +1143,39 @@ html.fx-off .loyalty-badge .counter-tick {
 .counter-badge.plain { --counter-rgb: var(--line-3-rgb, var(--gold-rgb)); }
 
 /* Card restriction / ability icons (Goad, combat restrictions, keywords) */
+/* BRD-59: the commander icon in the card's top-left corner. The server sends the commander as a
+   card icon with no text, and the generic fallback abbreviated its hint ("Card is commander") to
+   a meaningless "CI". */
+.card-commander-mark {
+  position: absolute;
+  left: 3px;
+  top: 3px;
+  z-index: 7;
+  display: inline-flex;
+  padding: 2px;
+  border-radius: var(--r-xs);
+  background: rgb(var(--ink-1-rgb) / 0.72);
+  box-shadow: 0 1px 4px var(--shade-4);
+  pointer-events: auto;
+}
+
+.card-commander-mark .commander-mark {
+  width: 12px;
+  height: 12px;
+  fill: var(--gold-300);
+}
+
+.card-slot.is-compact .card-commander-mark .commander-mark {
+  width: 10px;
+  height: 10px;
+}
+
+/* The two things that live in that corner step aside for it instead of sitting under it. */
+.card-slot:has(.card-commander-mark) .sickness-badge,
+.card-slot:has(.card-commander-mark) .facedown-badges {
+  left: 24px;
+}
+
 .card-icons {
   position: absolute;
   left: 2px;

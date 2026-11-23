@@ -2234,6 +2234,7 @@ export const de: TranslationSchema = {
     opp_turn_tag: 'ZUG',
     opp_combat_tag: 'KAMPF',
     restriction_fallback: 'Einschränkung',
+    commander_mark: 'Commander',
     pile_top: 'Oben',
   },
   system: {

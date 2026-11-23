@@ -2234,6 +2234,7 @@ export const ru: TranslationSchema = {
     opp_turn_tag: 'ХОД',
     opp_combat_tag: 'БОЙ',
     restriction_fallback: 'Ограничение',
+    commander_mark: 'Командир',
     pile_top: 'Верх',
   },
   system: {

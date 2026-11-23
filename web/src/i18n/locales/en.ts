@@ -2232,6 +2232,7 @@ export const en = {
     opp_turn_tag: 'TURN',
     opp_combat_tag: 'COMBAT',
     restriction_fallback: 'Restriction',
+    commander_mark: 'Commander',
     pile_top: 'Top',
   },
   system: {

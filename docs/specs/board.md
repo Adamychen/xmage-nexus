@@ -542,7 +542,9 @@ bottom row and the planeswalker zone do not fit there.
 ### BRD-33 · The own planeswalkers take the right edge of both rows, as in MTG Arena
 On the own board of the Arena layout (BRD-32) planeswalkers, sagas and battles (BRD-2) take a zone
 at the right edge that runs from the top of the creatures row down to the bottom of the lands row,
-starting at the top, and the lands row leaves that width free. One card stands alone; two or more
+starting at the top, and the lands row leaves that width free. A zone of a single line stands in
+the middle of that height instead, since a lone card hanging from the top reads as misplaced
+beside a full creatures row. One card stands alone; two or more
 take at least two lines, filled from left to right with the same count on each line. Among the
 line counts the height holds with cards of at least 75% of the creatures' size, the zone takes the
 one that needs the least width, so the room it frees goes to the lands and the other permanents:
@@ -557,7 +559,7 @@ creatures keep their own size.
   (three cards as 2 + 1, five as 3 + 2). With the side panel two lines left most of the height
   empty, and the user asked for the zone to use it (2026-11-12); a 2×2 square of four still left
   a column's width unused below it (2026-11-13).
-- Guard: `src/board/layout/solveRow.test.ts`
+- Guard: `src/board/layout/solveRow.test.ts` · `src/board/BoardZone.css.test.ts`
 
 ### BRD-34 · The uncast own commander is drawn with the hand
 On the own board of the Arena layout (BRD-32) the commander and the companion in the command zone
@@ -913,7 +915,10 @@ viewBox to hold its whole drawing and then centres it on the ink it paints.
 The counters of a player are drawn beside the photo, the name and the life as their symbol and
 their number in the counter's own colour (BRD-53), with no plate, border or background: the symbol
 sits right against its number and the counters sit apart from one another, which is what tells one
-from the next. They stack downwards and open another column when they run out of room, and how
+from the next, and they read at the interface's small size so a number beside a symbol is
+legible at a glance. A counter that changes lights its own symbol and number and sends out a
+round halo; it never flashes a plate or a square ring, because the counter has no box for
+either to belong to. They stack downwards and open another column when they run out of room, and how
 many fit in a column is measured from what the rest of the chip is tall (`useStackRows`), never a
 number written down, so the stack never makes the chip taller: a seat's status row keeps the height
 of its photo whatever counters it holds, on the own board and on an opponent's.
@@ -921,10 +926,14 @@ of its photo whatever counters it holds, on the own board and on an opponent's.
 - Why: the counters ran along the top of the chip in one line, which on a rival's column pushed
   them clear of the photo and the name; the user asked for them to stack like the keyword badges of
   a card (BRD-52), bounded by the chip's own height, and for the boxes to go, since the colour and
-  the spacing already separate them (16-nov-2026). Measured at 1920 on the four-player board: the
+  the spacing already separate them (16-nov-2026). The change animation kept drawing one: a glow
+  the size of a box and a ring with a square corner around a badge that has neither, which on a
+  live board read as a green rectangle floating beside the chip, and the counters were a size
+  smaller than anything else on the chip (user report, 23-nov-2026).
+  Measured at 1920 on the four-player board: the
   chip holds three to a column, and the rival chips, four pixels shorter, hold three as well once
   the rows sit flush.
-- Guard: `src/game/PlayerInfoBar.counters.test.tsx`
+- Guard: `src/game/PlayerInfoBar.counters.test.tsx` · `src/game/PlayerInfoBar.css.test.ts`
 
 ### BRD-55 · The number on a badge stands level with its symbol
 Every number the board writes inside a badge, a counter, a power and toughness, a damage mark, the
@@ -971,3 +980,36 @@ board. When nobody is left in the game the home seat stays, because there is not
   fallback had the same hole from the other side: a chosen seat that died fell back to the home
   seat without asking whether the home seat was still playing.
 - Guard: `src/board/spotlight.test.ts`
+
+### BRD-58 · A seat in a game carries no rank
+The chip of a player in a game shows who they are and what they hold, never how the server rates
+them: no rank badge beside the name, no emblem on the photo and no rating anywhere on it. The
+ranking lives in the lobby, in the ranking screen and in a player's profile, which is where
+somebody goes to look it up.
+
+- Why: the rank was the widest thing on the chip ("BRONCE I (1052)" beside a four-letter name) and
+  said nothing about the game being played; the user asked for it off the chip (23-nov-2026).
+- Guard: `src/game/PlayerInfoBar.test.tsx` · `src/game/PlayerInfoBar.portrait.test.tsx`
+
+### BRD-59 · A commander on the battlefield wears the Commander symbol
+The server marks a commander with a card icon that carries no text of its own, only the hint
+`Card is commander`. That card draws the Commander symbol (BRD-45) in the top-left corner of its
+frame, in gold, and the badges that live in that corner step aside for it. It is never abbreviated
+from its hint.
+
+- Why: the generic fallback turns an icon with no text into the initials of its hint, so a
+  commander wore a badge reading "CI" (user report, 23-nov-2026). The symbol is the one the rest of
+  the client already uses for a commander, in the command zone and with the hand.
+- Guard: `src/board/CardIcons.test.tsx`
+
+### BRD-60 · A band draws no box
+The bands a board lays its cards in, the creatures row, the lands, the other permanents and the
+planeswalker zone, draw no background, border, tint or halo, empty or full. The cards rest on the
+mat; the only line the board draws between them is the thin fading rule between the creatures and
+the other permanents.
+
+- Why: BRD-32 had already taken the frame off the planeswalker zone in the Arena layout, but the
+  box survived in the shared rules and in the other layouts, and an empty band left a soft ellipse
+  behind it. On a real table they read as faint rectangles around the groups, which is the layout's
+  scaffolding showing through (user report, 23-nov-2026).
+- Guard: `src/board/BoardZone.css.test.ts`

@@ -2234,6 +2234,7 @@ export const fr: TranslationSchema = {
     opp_turn_tag: 'TOUR',
     opp_combat_tag: 'ATTAQUE',
     restriction_fallback: 'Limitation',
+    commander_mark: 'Commandant',
     pile_top: 'Dessus',
   },
   system: {

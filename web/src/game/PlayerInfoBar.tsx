@@ -21,8 +21,6 @@ import { formatSeatDamage } from './commanderSeats'
 import { COMMANDER_LETHAL } from './CommanderDamageMatrix'
 import { useChromeActions } from './chromeActions'
 import { dungeonStateOf, hasCityBlessing, speedOf } from './mechanicsState'
-import RankBadge from '../lobby/RankBadge'
-import { playerRankRating } from '../lobby/ranking'
 import { speedLevelKey } from './speed'
 import { useStackRows } from './useStackRows'
 import CounterGlyph from '../board/CounterGlyph'
@@ -281,7 +279,6 @@ export default function PlayerInfoBar({
   const flagName = rawUserData?.flagName
   // Real per-player rating from the wire (userData travels with every PlayerView);
   // null when absent → no badge (never a fabricated default).
-  const rankElo = player.isHuman ? playerRankRating(rawUserData) : null
 
   const hasPriority = !!player.hasPriority
   // Turno activo (quién juega ahora) ≠ prioridad (quién puede actuar).
@@ -588,9 +585,6 @@ export default function PlayerInfoBar({
           )
         )}
         {portrait && <CountFlash flash={handFlash} className="count-flash--hand" />}
-        {portrait && rankElo != null && (
-          <RankBadge elo={rankElo} iconOnly className="pp-rank-icon pp-rank-icon-lg" />
-        )}
       </div>
 
       <div className="player-details">
@@ -598,9 +592,6 @@ export default function PlayerInfoBar({
           <span className="player-name" data-priority={player.hasPriority || undefined}>
             {player.name}
           </span>
-          {!portrait && rankElo != null && (
-            <RankBadge elo={rankElo} compact={compact} showElo={!compact} className="player-rank-badge" />
-          )}
           {isDefeated && (
             wasDefeated ? (
               <span className="player-status-badge status-defeated"><Icon name="skull" size={12} /> {t('game', 'status_defeated')}</span>

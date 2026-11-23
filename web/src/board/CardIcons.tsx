@@ -19,6 +19,7 @@ function abbrev(hint: string): string {
 import { useState } from 'react'
 import { t as tStatic } from '../i18n'
 import BadgeTip from '../ui/BadgeTip'
+import CommanderMark from './CommanderMark'
 import Icon from '../ui/Icon'
 import { iconKeywordId } from './cardBadges'
 import { gainedIconKeys, iconKey, isGoadIcon, type CardIconLike as CardIcon } from './cardIconFx'
@@ -41,29 +42,41 @@ export default function CardIcons({ icons }: { icons?: CardIcon[] }) {
   }
   if (!icons || icons.length === 0) return null
   const restrictions = icons.filter((i) => i.cardIconType === 'OTHER_HAS_RESTRICTIONS')
-  const others = icons.filter((i) => i.cardIconType !== 'OTHER_HAS_RESTRICTIONS' && !iconKeywordId(i))
-  if (restrictions.length === 0 && others.length === 0) return null
+  const commander = icons.find((i) => i.cardIconType === 'COMMANDER')
+  const others = icons.filter(
+    (i) => i.cardIconType !== 'OTHER_HAS_RESTRICTIONS' && i.cardIconType !== 'COMMANDER' && !iconKeywordId(i),
+  )
+  if (restrictions.length === 0 && others.length === 0 && !commander) return null
 
   return (
-    <div className="card-icons" data-badge-zone="icons">
-      {restrictions.map((r, i) => (
-        <BadgeTip
-          key={`r${i}`}
-          className={`card-icon restriction${gained.includes(iconKey(r)) ? (isGoadIcon(r) ? ' icon-gained icon-gained--goad' : ' icon-gained') : ''}`}
-          tip={hintTip(r.hint, tStatic('board', 'restriction_fallback'))}
-        >
-          {r.text || <Icon name="alert" size={11} />}
+    <>
+      {commander && (
+        <BadgeTip className="card-commander-mark" tip={hintTip(commander.hint, tStatic('board', 'commander_mark'))}>
+          <CommanderMark />
         </BadgeTip>
-      ))}
-      {others.map((o, i) => (
-        <BadgeTip
-          key={`a${i}`}
-          className={`card-icon ability${gained.includes(iconKey(o)) ? ' icon-gained' : ''}`}
-          tip={hintTip(o.hint, o.text || tStatic('board', 'restriction_fallback'))}
-        >
-          {o.text || abbrev(o.hint ?? '')}
-        </BadgeTip>
-      ))}
-    </div>
+      )}
+      {(restrictions.length > 0 || others.length > 0) && (
+        <div className="card-icons" data-badge-zone="icons">
+          {restrictions.map((r, i) => (
+            <BadgeTip
+              key={`r${i}`}
+              className={`card-icon restriction${gained.includes(iconKey(r)) ? (isGoadIcon(r) ? ' icon-gained icon-gained--goad' : ' icon-gained') : ''}`}
+              tip={hintTip(r.hint, tStatic('board', 'restriction_fallback'))}
+            >
+              {r.text || <Icon name="alert" size={11} />}
+            </BadgeTip>
+          ))}
+          {others.map((o, i) => (
+            <BadgeTip
+              key={`a${i}`}
+              className={`card-icon ability${gained.includes(iconKey(o)) ? ' icon-gained' : ''}`}
+              tip={hintTip(o.hint, o.text || tStatic('board', 'restriction_fallback'))}
+            >
+              {o.text || abbrev(o.hint ?? '')}
+            </BadgeTip>
+          ))}
+        </div>
+      )}
+    </>
   )
 }
