@@ -30,7 +30,8 @@ test('costes complejos de MTG: Maná Pirexiano, Kicker, Split Cards, Aventuras/M
     await waitFrame(page, (f) => f.method === 'GAME_ASK' && /gitaxian/i.test(String(f.data?.message ?? '')), 'GAME_ASK de Gitaxian Probe', 15_000, cursor)
     const phyrexianDialog = page.locator('.feedback-dialog')
     await expect(phyrexianDialog, 'diálogo de maná pirexiano visible').toBeVisible({ timeout: 15_000 })
-    await expect(phyrexianDialog.locator('.mana-badge.mana-phyrexian.mana-u'), 'símbolo de maná pirexiano').toBeVisible({ timeout: 5_000 })
+    // PRM-18: la pregunta, con sus símbolos, se lee sobre el tablero; la barra se queda los botones
+    await expect(page.getByTestId('board-order').locator('.mana-badge.mana-phyrexian.mana-u'), 'símbolo de maná pirexiano').toBeVisible({ timeout: 5_000 })
     await page.waitForTimeout(300)
     fs.writeFileSync(path.join(SHOTS_DIR, 'complex-costs-01-phyrexian-mana.png'), await page.screenshot({ fullPage: true }))
 

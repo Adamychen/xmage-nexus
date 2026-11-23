@@ -10,7 +10,7 @@ import type { UseFeedbackForm } from '../useFeedbackForm'
 import type { FeedbackPrompt } from '../feedback'
 import { nextSmartManaAction, parseRemainingManaCost } from '../smartManaPayment'
 import Button from '../../ui/Button'
-import { DockPrompt } from '../GameDock'
+import { DockPrompt, OrderPrompt } from '../GameDock'
 import { usePromptCancelKey } from '../usePromptCancelKey'
 import './promptBars.css'
 
@@ -85,16 +85,16 @@ export default function ManaBar({ form }: { form: UseFeedbackForm }) {
   if (!prompt) return null
   const localizedManaMsg = localizeServerMessage(prompt.message, dynamicT(t))
   return (
+    <>
+    <OrderPrompt>
+      <span className="board-order" data-testid="board-order">
+        <span className="board-order-icon" aria-hidden="true"><Icon name="zap" size={16} /></span>
+        <FormattedText text={localizedManaMsg} />
+      </span>
+    </OrderPrompt>
     <DockPrompt>
       <div className="action-prompt-bar mana-prompt-bar">
         <div className="action-prompt-info">
-          <span className="action-prompt-title">
-            <span className="action-prompt-icon" aria-hidden="true"><Icon name="zap" size={14} /></span>{' '}
-            {t('game', 'pay_mana')}
-          </span>
-          <span className="action-prompt-msg">
-            <FormattedText text={localizedManaMsg} />
-          </span>
           <span className="action-prompt-hint" role="status" aria-live="polite">{t('game', 'mana_hint')}</span>
         </div>
         <div className="action-prompt-actions">
@@ -115,5 +115,6 @@ export default function ManaBar({ form }: { form: UseFeedbackForm }) {
         </div>
       </div>
     </DockPrompt>
+    </>
   )
 }

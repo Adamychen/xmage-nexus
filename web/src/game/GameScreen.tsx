@@ -148,6 +148,7 @@ export default function GameScreen() {
   const [promptSlot, setPromptSlot] = useState<HTMLElement | null>(null)
   const [dividerSlot, setDividerSlot] = useState<HTMLElement | null>(null)
   const [handPromptSlot, setHandPromptSlot] = useState<HTMLElement | null>(null)
+  const [orderSlot, setOrderSlot] = useState<HTMLElement | null>(null)
   const [busy, setBusy] = useState(false)
   const displayStack = useDisplayedStack(game, gameId)
   const stackCount = Object.keys(displayStack).length
@@ -500,7 +501,7 @@ export default function GameScreen() {
   }
 
   return (
-    <PromptSlotProvider value={promptSlot} hand={handPromptSlot} onHandSlot={setHandPromptSlot}>
+    <PromptSlotProvider value={promptSlot} hand={handPromptSlot} onHandSlot={setHandPromptSlot} order={orderSlot}>
       <ChromeActionsContext.Provider value={v2 ? chromeActions : null}>
       <DividerSlotContext.Provider value={setDividerSlot}>
         <div
@@ -539,6 +540,8 @@ export default function GameScreen() {
               ) : (
                 <GameBoard {...boardProps} focusedOpponentId={currentOpp?.playerId} />
               )}
+              {/* PRM-18: the order being given is read here, across the middle of the board. */}
+              <div className="board-order-slot" data-testid="board-order-slot" ref={setOrderSlot} role="status" aria-live="polite" />
               <LowLifeVignette game={displayGame} />
               {settings.turnRecap && <TurnRecapStrip />}
               <FeedbackOverlay />
