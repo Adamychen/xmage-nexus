@@ -376,14 +376,35 @@ compresses instead.
   beside a land pile is never covered") was not enforced.
 - Guard: `src/board/stackSpread.test.ts` · `e2e/land-fan.spec.ts`
 
-### BRD-24 · The playable-from-other-zones overlay wraps its cards and scrolls down, never sideways
-The list of cards playable from the graveyard, exile or another zone lays its cards out in rows that
-wrap to the width of the overlay, and the list scrolls vertically. A long list (ten cards in the
-graveyard) never needs a sideways scroll on a desktop or a phone screen.
+### BRD-24 · A zone viewer is a fan of cards on an arc, slid along it with a thumb
+The viewers of a graveyard, an exile, a library, a known hand, the revealed and looked-at windows and
+the cards playable from other zones are one full-screen viewer, laid out like MTG Arena's: the board
+dims behind it, the zone's name and card count sit on top, the cards are fanned like a hand of cards
+held up, each turned `FAN_STEP_DEG` further than the one before around a pivot below the row, so the
+outer cards lean out and sit lower, and one Done button closes it. Neighbouring cards overlap by the
+same slice, 44 % of a card (`FAN_SLICE`), whatever the count: the fan shows as many cards as fit at
+that overlap and never squeezes them. A longer pile slides its cards along the arc, from its first
+card, with the mouse wheel, by dragging the pill-shaped thumb on the thin line under the fan, by
+clicking that line, or with the arrow keys on the thumb; the line is hidden when every card fits.
+The cards past either end of the fan are not hidden: up to `PILE_DEPTH` of them gather at that side
+in a tight, dimmed pile, each turned only `PILE_STEP_DEG` past the one before, so the pile shows
+there are more and on which side; the fan leaves room for both piles when it does not hold every
+card. A click on a piled card slides the fan one card toward it and never plays that card, and
+pointing at it lifts nothing.
+Pointing at a card lifts it in front of its neighbours, larger, but what lifts is a copy that takes
+no pointer: the cards underneath never move, so the card under the pointer is always the one whose
+slice it is on, and sweeping along the fan lifts every card in order without skipping the ones the
+lifted card covers.
 
-- Why: the list was one row at a fixed 760 px, so ten cards spread over 2 300 px and the player had to
-  slide sideways to see them all (reported 2026-10-30).
-- Guard: `e2e/cross-zone-layout.spec.ts`
+- Why: the user asked for the viewer to be MTG Arena's, fan and scroll included (23-nov-2026). The
+  rule it replaces wrapped the cards into rows because one fixed 760 px row of full cards spread ten
+  of them over 2 300 px and the player had to slide sideways to see them all (reported 2026-10-30);
+  the fan shows seven or so at once and the thumb makes the slide a deliberate gesture. A first
+  version grew the pointed card in place, so it covered the next card's slice and a sweep to the
+  right jumped over it (user report, same day); the sweep guard fails with that version restored.
+  The cards out of the window first vanished, so nothing said a longer pile went on; the user
+  asked for Arena's small heap at each side (same day).
+- Guard: `src/board/zoneFan.test.ts` · `e2e/cross-zone-layout.spec.ts`
 
 ### BRD-25 · The same board in the same window always looks the same
 Every card size, band width and number of lines on the board is a function of the game view, the

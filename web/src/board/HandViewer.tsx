@@ -1,14 +1,10 @@
-import CloseButton from '../ui/CloseButton'
-import { useEscape } from '../ui/useEscape'
 import EmptyState from '../ui/EmptyState'
 import { useMemo, useState } from 'react'
-import { createPortal } from 'react-dom'
 import type { CardView, PermanentView } from '../net/types'
 import CardSlot from './CardSlot'
 import FloatingCardPreview from './FloatingCardPreview'
-import { overlayRoot } from './overlayRoot'
+import ZoneViewer from './ZoneViewer'
 import { useTranslation } from '../i18n'
-import './PileOverlay.css'
 
 interface HandViewerProps {
   playerName: string
@@ -35,8 +31,6 @@ export default function HandViewer({
   const [hoverCard, setHoverCard] = useState<CardView | null>(null)
   const [hoverRect, setHoverRect] = useState<DOMRect | null>(null)
 
-  useEscape(onClose)
-
   const handleCardHover = (card: CardView | PermanentView | null, rect?: DOMRect) => {
     setHoverCard(card ?? null)
     setHoverRect(rect ?? null)
@@ -44,22 +38,29 @@ export default function HandViewer({
 
   const total = known.length + unknownCount
 
-  return createPortal(
-    <div className="pile-overlay-backdrop" onClick={onClose} data-space-shortcut-off="true">
-      <div className="pile-overlay hand-viewer" data-testid="hand-viewer" onClick={(e) => e.stopPropagation()}>
-        <div className="pile-overlay-header">
-          <div className="pile-header-titles">
-            <h3>{t('game', 'opp_hand_view', { known: known.length, count: total }) + ` — ${playerName}`}</h3>
-          </div>
-          <CloseButton variant="solid" size="lg" className="pile-overlay-close" onClick={onClose} title={`${t('common', 'close')} (Esc)`} />
-        </div>
-        <div className="pile-overlay-scroll">
+  return (
+    <ZoneViewer
+      title={`${t('game', 'pile_hand')} · ${playerName}`}
+      count={t('game', 'opp_hand_view', { known: known.length, count: total })}
+      className="hand-viewer"
+      testId="hand-viewer"
+      itemCount={total}
+      onClose={onClose}
+      after={(
+        <FloatingCardPreview
+          card={hoverCard}
+          anchorRect={hoverRect}
+          fixedSide="left"
+          inModal
+        />
+      )}
+    >
           {known.map(([id, card], index) => {
             const clickable = (targetSet.has(id) || playableSet.has(id)) && onCardClick
             return (
               <div
                 key={id}
-                className="pile-card-wrapper is-revealed"
+                className="pile-card-wrapper zone-fan-item is-revealed"
                 onFocus={(e) => handleCardHover(card, (e.target as HTMLElement).getBoundingClientRect())}
                 onBlur={() => handleCardHover(null)}
               >
@@ -77,7 +78,7 @@ export default function HandViewer({
             )
           })}
           {Array.from({ length: unknownCount }, (_, i) => (
-            <div key={`hv-back-${i}`} className="pile-card-wrapper" data-testid="hand-viewer-back" data-index={known.length + i + 1}>
+            <div key={`hv-back-${i}`} className="pile-card-wrapper zone-fan-item" data-testid="hand-viewer-back" data-index={known.length + i + 1}>
               <div className="pile-position-badge">#{known.length + i + 1}</div>
               <CardSlot card={{ id: `hv-back-${i}`, name: '?', manaValue: 0, expansionSetCode: '', cardNumber: '0' }} faceDown className="pile-card" />
             </div>
@@ -85,16 +86,6 @@ export default function HandViewer({
           {known.length === 0 && unknownCount === 0 && (
             <EmptyState>{t('game', 'pile_hand')}</EmptyState>
           )}
-        </div>
-      </div>
-
-      <FloatingCardPreview
-        card={hoverCard}
-        anchorRect={hoverRect}
-        fixedSide="left"
-        inModal
-      />
-    </div>,
-    overlayRoot()
+    </ZoneViewer>
   )
 }
