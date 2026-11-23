@@ -675,7 +675,7 @@
 }
 
 /* BRD-54: the counters stack down the side of the chip, own or opponent's, in columns of what the
-   chip's height holds (`useStackRows`), so a rival's status row is never taller than the others'. */
+   chip holds under it (BRD-54), so a rival's status row keeps the height of its photo. */
 
 /* An opponent's chip never breaks into two lines: a second line would make its status row twice as
    tall and drop that seat's board. It keeps one line, the name truncating if need be. */

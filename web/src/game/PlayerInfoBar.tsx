@@ -1,4 +1,3 @@
-import { useRef } from 'react'
 import type { ReactNode } from 'react'
 import type { CardView, GameView, PlayerView } from '../net/types'
 import { seatColorVar, seatIndexOf, useSeatColor } from '../board/seatColor'
@@ -22,7 +21,6 @@ import { COMMANDER_LETHAL } from './CommanderDamageMatrix'
 import { useChromeActions } from './chromeActions'
 import { dungeonStateOf, hasCityBlessing, speedOf } from './mechanicsState'
 import { speedLevelKey } from './speed'
-import { useStackRows } from './useStackRows'
 import CounterGlyph from '../board/CounterGlyph'
 import { counterTip } from '../board/counterName'
 import { counterArtUrl } from '../board/glyphs/counterArt'
@@ -304,8 +302,6 @@ export default function PlayerInfoBar({
   const life = useTweenNumber(shownLife)
 
   const { counters: activeCounters, pulses: counterPulses } = usePlayerCounters(player)
-  const bareCountersRef = useRef<HTMLDivElement>(null)
-  const counterRows = useStackRows(bareCountersRef, activeCounters.length)
   const speedPulse = Object.entries(counterPulses).find(([name]) => name.toLowerCase().includes('speed'))?.[1]
   const isDefeated = isPlayerOut(player)
   const wasDefeated = isPlayerDefeated(player)
@@ -659,8 +655,6 @@ export default function PlayerInfoBar({
         <div
           className="bare-counters"
           data-testid="bare-counters"
-          ref={bareCountersRef}
-          style={{ '--counter-rows': counterRows } as React.CSSProperties}
         >
           {counterBadges}
         </div>

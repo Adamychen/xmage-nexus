@@ -1274,16 +1274,14 @@ html.fx-off .badge-dungeon.fx-dungeon-complete {
   display: none;
 }
 
-/* BRD-54: the counters stack down beside the chip and open another column when they run out of
-   room, so they never make the chip taller. How many fit in a column is measured, not assumed
-   (`useStackRows`), and the stack is centred against the photo, the name and the life. */
+/* BRD-54: the counters hang under the chip, on a line of their own, and run sideways from the
+   left edge, wrapping onto another line when there are many. Beside the photo they ate the width
+   the board needs; under it the chip spends height, which it has. */
 .player-info-bar.is-bare > .bare-counters {
-  display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: max-content;
-  grid-template-rows: repeat(var(--counter-rows, 1), auto);
-  gap: 0 var(--sp-2);
-  align-self: center;
-  align-content: center;
-  justify-items: start;
+  flex-basis: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-0h) var(--sp-2);
+  align-items: center;
+  justify-content: flex-start;
 }

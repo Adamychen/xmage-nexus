@@ -96,14 +96,16 @@ describe('BRD-54: the stack of counters beside the chip', () => {
     setState({ game: null })
   })
 
-  it('BRD-54: the stack says how many counters a column holds, and never fewer than one', () => {
+  it('BRD-54: the counters hang under the chip, all of them on their own line', () => {
     const counters = [{ name: 'poison', count: 1 }, { name: 'energy', count: 2 }, { name: 'rad', count: 3 }]
     const player = { ...withCounters(counters), controlled: true }
     setState({ game: makeGameView({ players: [player] }) })
     const { container } = render(<PlayerInfoBar player={player} side="my" bare />)
     const stack = container.querySelector<HTMLElement>('[data-testid="bare-counters"]')
     expect(stack).not.toBeNull()
-    expect(Number(stack!.style.getPropertyValue('--counter-rows'))).toBeGreaterThanOrEqual(1)
+    // The block is a child of the chip, after the name and the life, and it carries every counter.
+    expect(stack!.parentElement?.className).toContain('player-info-bar')
+    expect(stack!.querySelectorAll('.player-counter-badge')).toHaveLength(3)
     // No plate of its own: the colour and the spacing are what separate one counter from the next.
     const badge = stack!.querySelector<HTMLElement>('.player-counter-badge')!
     expect(badge.className).toContain('counter-poison')
