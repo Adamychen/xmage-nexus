@@ -1,7 +1,7 @@
 import { act, renderHook } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { CardView } from '../net/types'
-import { clearStackHold, enqueueStackResolve, useDisplayedStack } from './stackHold'
+import { clearStackHold, enqueueStackResolve, stackHoldSnapshot, useDisplayedStack } from './stackHold'
 import { isStackReplacement } from './stackLinks'
 
 const card = (id: string) => ({ id, name: id }) as unknown as CardView
@@ -55,6 +55,53 @@ describe('useDisplayedStack', () => {
     expect(Object.keys(result.current)).toEqual(['a'])
   })
 
+  it('FX-7: a resolution that never reports back is released by the watchdog', () => {
+    const { result, rerender } = renderHook(({ game }) => useDisplayedStack(game, 'g1'), {
+      initialProps: { game: { stack: stackOf('a') } as { stack?: Record<string, CardView> } | null },
+    })
+    rerender({ game: { stack: {} } })
+    expect(Object.keys(result.current)).toEqual(['a'])
+
+    act(() => {
+      enqueueStackResolve('a', () => {})
+    })
+    expect(Object.keys(result.current)).toEqual(['a'])
+
+    act(() => {
+      vi.advanceTimersByTime(2500)
+    })
+    expect(Object.keys(result.current)).toEqual([])
+  })
+
+  it('FX-7: a burst beyond the queue cap drops the extra spells instead of replaying them', () => {
+    const ids = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
+    const { result, rerender } = renderHook(({ game }) => useDisplayedStack(game, 'g1'), {
+      initialProps: { game: { stack: stackOf(...ids) } as { stack?: Record<string, CardView> } | null },
+    })
+    rerender({ game: { stack: {} } })
+    expect(Object.keys(result.current)).toEqual(ids)
+
+    act(() => {
+      for (const id of ids) enqueueStackResolve(id, () => {})
+    })
+
+    expect(Object.keys(result.current)).toEqual(['a', 'b', 'c', 'd', 'e', 'f', 'g'])
+    expect(stackHoldSnapshot().queued).toBe(6)
+  })
+
+  it('FX-7: the snapshot tells the displayed stack apart from what is still held', () => {
+    renderHook(({ game }) => useDisplayedStack(game, 'g1'), {
+      initialProps: { game: { stack: stackOf('a') } as { stack?: Record<string, CardView> } | null },
+    }).rerender({ game: { stack: {} } })
+
+    expect(stackHoldSnapshot()).toEqual({
+      shown: [{ id: 'a', name: 'a' }],
+      held: [{ id: 'a', name: 'a' }],
+      queued: 0,
+      busy: false,
+    })
+  })
+
   it('FX-7: shows nothing held once the game changes', () => {
     const { result, rerender } = renderHook(({ game, id }) => useDisplayedStack(game, id), {
       initialProps: { game: { stack: stackOf('a') } as { stack?: Record<string, CardView> } | null, id: 'g1' as string | null },
@@ -63,6 +110,18 @@ describe('useDisplayedStack', () => {
     expect(Object.keys(result.current)).toEqual(['a'])
     rerender({ game: { stack: {} }, id: 'g2' })
     expect(Object.keys(result.current)).toEqual([])
+  })
+
+  it('FX-7: a fresh screen drops what the previous one held, even with the same game id', () => {
+    const first = renderHook(({ game }) => useDisplayedStack(game, 'g1'), {
+      initialProps: { game: { stack: stackOf('a') } as { stack?: Record<string, CardView> } | null },
+    })
+    first.rerender({ game: { stack: {} } })
+    expect(Object.keys(first.result.current)).toEqual(['a'])
+    first.unmount()
+
+    const second = renderHook(() => useDisplayedStack({ stack: {} }, 'g1'))
+    expect(Object.keys(second.result.current)).toEqual([])
   })
 })
 

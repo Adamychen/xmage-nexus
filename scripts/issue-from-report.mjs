@@ -160,11 +160,26 @@ function titleFor(report) {
   return game ? `${report.kind}: something wrong around turn ${String(game.turn)}` : report.fingerprint.slice(0, 70)
 }
 
+function stackLines(report) {
+  const bundle = bundleOf(report)
+  const server = (bundle.game?.stack ?? []).map((s) => `${s.name}${s.ability ? ' (ability)' : ''}`)
+  const hold = bundle.stackHold
+  if (!hold && server.length === 0) return []
+  const lines = [`- Server: ${server.length > 0 ? server.join(', ') : '(empty)'}`]
+  if (hold) {
+    lines.push(`- Shown: ${hold.shown?.length > 0 ? hold.shown.map((s) => s.name).join(', ') : '(empty)'}`)
+    if (hold.held?.length > 0) lines.push(`- Still held: ${hold.held.map((s) => s.name).join(', ')}`)
+    lines.push(`- Queue: ${hold.queued ?? 0}${hold.busy ? ' (resolving)' : ''}`)
+  }
+  return lines
+}
+
 function bodyFor(report, group) {
   const game = gameState(report)
   const wire = wireOf(report)
   const bundle = bundleOf(report)
   const viewport = wire.viewport ?? {}
+  const stack = stackLines(report)
   const environment = [
     `- Mode: ${bundle.conn?.wsAlive ? 'full stack (real)' : 'not connected at report time'}`,
     `- Proxy: ${bundle.conn?.wsUrl ?? 'none'}`,
@@ -201,6 +216,7 @@ function bodyFor(report, group) {
           '```',
           ...frameLines(report),
           '```',
+          ...(stack.length > 0 ? ['', '## Stack', '', ...stack] : []),
         ]
       : [
           '## What I was doing',

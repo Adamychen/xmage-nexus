@@ -3,6 +3,9 @@ import { recentFrames } from '../net/frameBuffer'
 import { APP_VERSION } from './version'
 import { getLanguage } from '../i18n'
 import { downloadBlob } from '../utils/download'
+import { stackHoldSnapshot, type StackHoldSnapshot } from '../board/stackHold'
+import { isStackAbility } from '../board/stackEntries'
+import type { CardView } from '../net/types'
 
 export interface DiagnosticBundle {
   exportedAt: number
@@ -27,7 +30,11 @@ export interface DiagnosticBundle {
     step: unknown
     activePlayer: string | null
     players: { name: string; life: unknown; active: boolean }[]
+    /** The server's stack, top first: what the board should be showing. */
+    stack: { id: string; name: string; ability: boolean }[]
   } | null
+  /** What the client actually renders on the stack, including spells still resolving. */
+  stackHold: StackHoldSnapshot
   settings: {
     boardLayout: string
     uiScale: unknown
@@ -36,6 +43,10 @@ export interface DiagnosticBundle {
   }
   log: { time: number; from: string; text: string }[]
   frames: ReturnType<typeof recentFrames>
+}
+
+function stackOf(card: CardView): { id: string; name: string; ability: boolean } {
+  return { id: card.id ?? '', name: String(card.name ?? '').slice(0, 80), ability: isStackAbility(card) }
 }
 
 export function buildDiagnosticBundle(): DiagnosticBundle {
@@ -69,8 +80,10 @@ export function buildDiagnosticBundle(): DiagnosticBundle {
             life: p.life,
             active: p.playerId === (game as { activePlayerId?: string }).activePlayerId,
           })),
+          stack: Object.values(game.stack ?? {}).map(stackOf),
         }
       : null,
+    stackHold: stackHoldSnapshot(),
     settings: {
       boardLayout: s.settings.boardLayout,
       uiScale: s.settings.uiScale,

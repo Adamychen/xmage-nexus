@@ -1305,6 +1305,30 @@ describe('active game persistence in store', () => {
     expect(getState().game).toBeNull()
   })
 
+  it('GME-2: a game view of the game I left does not reopen it while I am in another table waiting room', () => {
+    setState({
+      phase: 'game',
+      gameId: 'g-old',
+      game: makeGameView({}),
+    })
+
+    returnToLobby()
+    openStagingTable('t-new')
+    expect(getState().phase).toBe('staging')
+
+    handleMessage({
+      type: 'event',
+      method: 'GAME_UPDATE',
+      messageId: 43,
+      objectId: 'g-old',
+      data: makeGameView({ turn: 23 }),
+    })
+
+    expect(getState().phase).toBe('staging')
+    expect(getState().stagingTableId).toBe('t-new')
+    expect(getState().gameId).toBeNull()
+  })
+
   it('GAME_OVER sets gameEnd for spectators so end game notification is visible', () => {
     setState({
       phase: 'game',

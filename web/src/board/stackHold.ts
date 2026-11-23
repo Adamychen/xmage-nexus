@@ -4,6 +4,10 @@ import type { CardView } from '../net/types'
 
 /** Pause between one spell leaving the stack and the next one starting to resolve. */
 const RESOLVE_BEAT_MS = 120
+/** Longest a resolution may take before the hold is released without waiting for its animation. */
+const RESOLVE_WATCHDOG_MS = 2500
+/** More departures than this in one go (a reconnect, a hidden tab) are not replayed one by one. */
+const MAX_RESOLVE_QUEUE = 6
 
 type Stack = Record<string, CardView>
 type ResolveRun = (done: () => void) => void
@@ -99,11 +103,19 @@ function pump(gen: number) {
     return
   }
   busy = true
-  task.run(() => {
+  let finished = false
+  let watchdog: ReturnType<typeof setTimeout> | null = null
+  const finish = () => {
+    if (finished) return
+    finished = true
+    if (watchdog) clearTimeout(watchdog)
     if (gen !== generation) return
     releaseHeld(task.id)
     setTimeout(() => pump(gen), RESOLVE_BEAT_MS)
-  })
+  }
+  // A resolve whose animation never reports back must not keep the spell on the stack.
+  watchdog = setTimeout(finish, RESOLVE_WATCHDOG_MS)
+  task.run(finish)
 }
 
 /**
@@ -113,6 +125,12 @@ function pump(gen: number) {
  * came back to the stack before its turn.
  */
 export function enqueueStackResolve(id: string, run: ResolveRun, skip?: () => void) {
+  if (queue.length >= MAX_RESOLVE_QUEUE) {
+    // A burst of old departures (reconnect, hidden tab) would keep the stack showing them for
+    // seconds; the board already moved on, so drop the display instead of animating the backlog.
+    if (!(id in current)) releaseHeld(id)
+    return
+  }
   queue.push({ id, run, skip })
   if (!busy) pump(generation)
 }
@@ -131,6 +149,30 @@ function resetStackHold() {
 export function clearStackHold() {
   resetStackHold()
   notify()
+}
+
+export interface StackHoldSnapshot {
+  shown: { id: string; name: string }[]
+  held: { id: string; name: string }[]
+  queued: number
+  busy: boolean
+}
+
+function nameOf(card: CardView): string {
+  return String(card.displayName ?? card.name ?? '').slice(0, 80)
+}
+
+/** What the stack is showing versus what the game's stack says, for a bug report. */
+export function stackHoldSnapshot(): StackHoldSnapshot {
+  return {
+    shown: shownIds.flatMap((id) => {
+      const card = current[id] ?? held.get(id)
+      return card ? [{ id, name: nameOf(card) }] : []
+    }),
+    held: [...held.entries()].map(([id, card]) => ({ id, name: nameOf(card) })),
+    queued: queue.length,
+    busy,
+  }
 }
 
 /**
@@ -156,7 +198,9 @@ function takeForgotten(): boolean {
  */
 export function useDisplayedStack(game: { stack?: Stack } | null, gameId: string | null): Stack {
   const prevRef = useRef<Stack>(EMPTY)
-  const gameIdRef = useRef<string | null>(gameId)
+  // `undefined` until the first render: a fresh screen drops whatever the previous one held, even
+  // when it comes back with the same game id (a remount would otherwise show a resolved spell).
+  const gameIdRef = useRef<string | null | undefined>(undefined)
   const next = game?.stack ?? EMPTY
   useMemo(() => {
     const forgetting = takeForgotten()
