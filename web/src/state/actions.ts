@@ -506,8 +506,9 @@ export function setSetting<K extends keyof AppState['settings']>(key: K, value: 
   persistClientSettings(next, prev)
   if (key === 'autoAnswers') syncAutoAnswersToServer()
   // One set of stops (SET-11): a change from Settings or from the board reaches the
-  // running game's HumanPlayer right away, not on the next game.
-  if (key === 'smartStops' || key === 'phaseStops' || key === 'manaPayment') {
+  // running game's HumanPlayer right away, not on the next game. A sleeve rides in the same
+  // object, so changing it mid-game reaches the other seats the same way (APR-6).
+  if (key === 'smartStops' || key === 'phaseStops' || key === 'manaPayment' || key === 'sleeveId') {
     const gameId = getState().gameId
     if (gameId && (getState().game?.players ?? []).some((p) => p.controlled)) pushServerPreferences(next)
   }

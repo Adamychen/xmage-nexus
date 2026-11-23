@@ -7,8 +7,8 @@ type Vars = CSSProperties & Record<`--${string}`, string | number>
 
 const FLICKS = 4
 
-export function CardBack({ playerId, mine, className, style }: { playerId: string; mine: boolean; className: string; style?: Vars }) {
-  const sleeve = useSleeveFor(mine ? playerId : null)
+export function CardBack({ playerId, className, style }: { playerId: string; className: string; style?: Vars }) {
+  const sleeve = useSleeveFor(playerId)
   return sleeve.kind === 'css' ? (
     <span className={`${className} sleeve-css-back`} style={{ ...style, background: sleeve.css }} data-sleeve-id={sleeve.id} />
   ) : (
@@ -32,14 +32,13 @@ function ShuffleItem({ fx }: { fx: ShuffleFx }) {
   return (
     <div className={`shuffle-fx is-${fx.mode}`} data-testid="fx-shuffle" data-mode={fx.mode} data-player-id={fx.playerId} style={style}>
       <div className="shuffle-deck">
-        <CardBack playerId={fx.playerId} mine={fx.mine} className="shuffle-card shuffle-base" />
-        <CardBack playerId={fx.playerId} mine={fx.mine} className="shuffle-card shuffle-half is-left" />
-        <CardBack playerId={fx.playerId} mine={fx.mine} className="shuffle-card shuffle-half is-right" />
+        <CardBack playerId={fx.playerId} className="shuffle-card shuffle-base" />
+        <CardBack playerId={fx.playerId} className="shuffle-card shuffle-half is-left" />
+        <CardBack playerId={fx.playerId} className="shuffle-card shuffle-half is-right" />
         {Array.from({ length: FLICKS }, (_, i) => (
           <CardBack
             key={i}
             playerId={fx.playerId}
-            mine={fx.mine}
             className={`shuffle-card shuffle-flick ${i % 2 === 0 ? 'is-left' : 'is-right'}`}
             style={{ '--flick-at': (0.36 + i * 0.1).toFixed(2) }}
           />
