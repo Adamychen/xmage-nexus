@@ -566,7 +566,11 @@ On the own board of the Arena layout (BRD-32) the commander and the companion in
 are drawn with the hand, which is where their owner looks for something to cast: the last cards of
 the fan, apart from it by a gap of 0.4 of a card and with a gold edge; under the hand column,
 behind a line of its own; at the end of the hand row, past a gap. They follow the hand in every
-chrome, the v1 and the v2, because the question they answer is the same in all of them. Their cost bubbles (HND-6) already include the commander tax: the tax
+chrome, the v1 and the v2, because the question they answer is the same in all of them. A seat drawn
+at full size that is not mine, the main area of the main-board mode (BRD-6), carries its hand the
+same way: the backs of the cards it holds, with its uncast commander at the end of them, instead
+of a command zone of its own. A card that is face down stays face down there, known or not
+(BRD-7). Their cost bubbles (HND-6) already include the commander tax: the tax
 is generic mana, so it adds to the cost's generic pip (`{2}{R}{R}` with a tax of 2 reads
 `{4}{R}{R}`) or becomes one in front of the coloured pips (`{G}{W}{U}{B}` reads
 `{2}{G}{W}{U}{B}`), after `{X}` when the cost has one, and it grows with every cast. A first cast
@@ -580,7 +584,7 @@ too: the hand has no room to spare at that width.
   not read against the gold edge, and a separate "+N" still had to be added up by eye. It was the
   fanned hand of the v1 chrome only until the user asked for it everywhere (2026-11-21): with the
   v2 chrome the commander sat in the left column (BRD-15) and read as one more thing on the board.
-- Guard: `src/board/HandBar.test.tsx` · `src/board/commanders.test.ts` · `src/board/BoardZone.arenaOwn.test.tsx` · `src/board/HandRail.test.tsx` · `src/board/HandRow.test.tsx`
+- Guard: `src/board/HandBar.test.tsx` · `src/board/commanders.test.ts` · `src/board/BoardZone.arenaOwn.test.tsx` · `src/board/HandRail.test.tsx` · `src/board/HandRow.test.tsx` · `src/board/SpotlightBoard.test.tsx`
 
 ### BRD-35 · A band in several lines holds the same count on each line
 A band that wraps into several lines puts the same number of items on each line, or fewer on the

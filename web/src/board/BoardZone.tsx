@@ -156,7 +156,11 @@ export default function BoardZone({
   // A seat whose own hand is drawn here as cards (the watched seat of the main area) carries its
   // commander at the end of it; a hand collapsed into a stack of backs is not a hand to read, so
   // that seat keeps its command zone.
-  const handDrawnHere = showHand && !statusOnly && !stackHand && !compactPod && !isTop
+  // BRD-34: a seat drawn at full size (the main area of the main-board mode) shows its hand where
+  // its own board would, whatever the chrome, and its commander trails that hand. Its hand is a
+  // stack of backs, which is still the place its owner would look for the card.
+  const seatDrawnBig = arenaOwn && !compactPod && !isTop && !statusOnly
+  const handDrawnHere = showHand && !statusOnly && !compactPod && !isTop && (!stackHand || seatDrawnBig)
   const commanderToHand = !isTop && (effectiveControlled || handDrawnHere) && commanderFollowsHand
   const seatCommander = useHandCommander(player, commanderToHand && !effectiveControlled, effectiveControlled ? helperEmblems : undefined)
   const arenaOppPiles = bareChip && !portrait && !effectiveControlled && !statusOnly
@@ -343,7 +347,9 @@ export default function BoardZone({
         res[id] = {
           ...card,
           id,
-          faceDown: false,
+          // BRD-7: a card that is face down stays face down, known or not. Only the ones the
+          // viewer may read are turned over here.
+          faceDown: card.faceDown === true,
         }
       })
 
@@ -724,7 +730,7 @@ export default function BoardZone({
           {t('board', 'seat_focus_all')}
         </button>
       )}
-      {!statusOnly && showHand && (!portrait || handTargeted || effectiveControlled) && (
+      {!statusOnly && showHand && (!portrait || handTargeted || effectiveControlled || seatDrawnBig) && (
         <HandZone
           cards={stackedHand}
           onCardClick={onHandCardClick ?? onCardClick}

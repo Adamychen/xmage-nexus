@@ -273,6 +273,19 @@ describe('SpotlightBoard', () => {
     expect(container.textContent).not.toContain('Secret Hand Card')
   })
 
+  it('BRD-34: the seat in the main area carries its hand and its uncast commander at the end of it', () => {
+    const game = fourPlayerGame()
+    const bob = game.players!.find((p) => p.playerId === 'p2') as unknown as Record<string, unknown>
+    bob['handCount'] = 3
+    bob['commandList'] = [{ id: 'cmd-meren', name: 'Meren of Clan Nel Toth', manaValue: 4, mageObjectType: 'COMMANDER' }]
+    const { container } = render(<SpotlightBoard game={game} homeId="p1" mainId="p2" onSelectSeat={() => {}} />)
+    const main = container.querySelector('[data-testid="spotlight-main"]')!
+    expect(main.querySelector('.hand-zone'), 'the watched seat shows the hand it holds').not.toBeNull()
+    expect(main.querySelector('[data-testid="opp-hand-stack"]'), 'face down, as a stack').not.toBeNull()
+    expect(main.querySelector('.hand-zone-commander'), 'with the commander at the end of it').not.toBeNull()
+    expect(main.querySelector('.command-zone'), 'and no command zone of its own').toBeNull()
+  })
+
   it('BRD-6: a spectator sees no hand bar and every seat drawn as an opponent board', () => {
     const { container, getByTestId } = render(
       <SpotlightBoard game={spectatorGame()} homeId="p4" mainId="p4" onSelectSeat={() => {}} />,
