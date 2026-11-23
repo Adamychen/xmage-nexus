@@ -1,4 +1,5 @@
 import type { CardView, PlayerView } from '../net/types'
+import { stripTags } from '../utils/textRefs'
 import { isAbilityCard } from '../cards/cardImages'
 import { useTranslation } from '../i18n'
 import type { CategoryT } from '../i18n/types'
@@ -52,8 +53,16 @@ export function stackSubtype(card: CardView): string | null {
   return null
 }
 
+/**
+ * STK-7: the lines the engine appends to an ability's rules to name what it is aimed at
+ * ("Related objects: ...", "Target on stack: ...", `StackAbilityView.updateTargets`). The arrow
+ * over the board already says what the object points at, so the plate keeps the text and drops
+ * the list of names, which was the longest part of it.
+ */
+const TARGET_LINE = /^\s*(related objects|target on stack)\s*:/i
+
 export function stackRulesText(card: CardView): string | null {
-  const rules = card.rules ?? []
+  const rules = (card.rules ?? []).filter((line) => !TARGET_LINE.test(stripTags(String(line ?? ''))))
   if (rules.length) return rules.join('\n')
   return null
 }

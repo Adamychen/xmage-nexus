@@ -803,7 +803,9 @@ html.fx-off .stack-card-face {
   left: 7.5%;
   right: 7.5%;
   bottom: 10.5%;
-  max-height: 31%;
+  /* STK-7: the plate takes the room the text needs, up to most of the card: an ability of five or
+     six lines used to scroll inside a third of the card and read as a cut sentence. */
+  max-height: 58%;
   overflow-y: auto;
   overscroll-behavior: contain;
   background: var(--card-paper);

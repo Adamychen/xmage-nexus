@@ -80,10 +80,14 @@ the chip says so rather than guessing.
 An ability on the stack is its text: the card under it is only the art of the source that made it.
 So the object in front shows that text on a plate of its own, sized from the card it sits on rather
 than from a fixed number of pixels, and it is never cut to a fixed number of lines. A long ability
-takes up to half the card and scrolls past that; the objects behind the front one show no text,
-because what is visible of them is a sliver.
+takes up to most of the card and scrolls only past that; the objects behind the front one show no
+text, because what is visible of them is a sliver. The plate is the ability itself: the lines the
+engine adds to name what it is aimed at ("Related objects", "Target on stack") are left out,
+because the arrow over the board already says it, and they were the longest part of the text.
 
 - Why: the plate was 10 px with a three-line clamp, so the ability that is about to resolve, which
   is the one thing on the stack that cannot be read from the art, was both small and cut off (user
-  report with a screenshot, 2026-11-22).
-- Guard: `src/board/StackZone.css.test.ts`
+  report with a screenshot, 2026-11-22). A third of the card was still not enough for a six-line
+  ability, and half of what it held was a list of target names the arrow already drew (user
+  report, 23-nov-2026).
+- Guard: `src/board/StackZone.css.test.ts` · `src/board/stackEntries.test.ts`
