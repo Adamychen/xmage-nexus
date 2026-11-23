@@ -238,7 +238,9 @@ function handleEvent(method: string, objectId: string | null, data: unknown, mes
       handleGameUpdate(method, objectId, data, embeddedGame, s)
       break
     case 'WATCHGAME': {
-      handleWatchGame(objectId)
+      // The payload names the table being watched: the spectator waiting room needs it
+      // to describe the match while the first game view is on its way (LBY-33).
+      handleWatchGame(objectId, data)
       break
     }
     case 'GAME_INFORM':
