@@ -614,11 +614,18 @@
   order: 3;
 }
 
-/* BRD-38: in the bottom row the opponent's fan shows only its top half, like the own resting
-   hand, so it covers nothing. */
+/* BRD-38: in the bottom row the opponent's fan is tucked like the own resting hand (HND-1), so it
+   covers nothing: seven tenths of the card, not the sliver it used to be. */
 .arena-own-row > .arena-opp-hand .hand-back-stack.is-fan {
-  height: calc(var(--card-w, 60px) * 0.7);
+  height: calc(var(--card-w, 60px) * 0.98);
   overflow: hidden;
+}
+
+/* BRD-38: the seat drawn at full size has the room, so its hand is drawn whole and nothing clips
+   it: a watched board shows the cards it holds the way its owner would see them. */
+.spotlight-main .arena-own-row > .arena-opp-hand .hand-back-stack.is-fan {
+  height: calc(var(--card-w, 60px) * 1.4);
+  overflow: visible;
 }
 
 .arena-own-row > .arena-opp-hand .hand-back-stack.is-fan .hand-back-fan {

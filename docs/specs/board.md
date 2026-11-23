@@ -650,13 +650,15 @@ Without the side panel the opponent faces the player, so the fan is turned round
 half shows, hanging from the top edge of the column, at the size of that seat's piles (a narrow
 column closes it to almost one card). It never takes its size from the status row's height, which
 grows with the chip's counters and would leave one seat's hand much larger than another's.
-With the side panel (BRD-6) the fan sits upright in the bottom row of that board (BRD-39), on the
-board in the main area and on the copies, showing only its top half like the own resting hand, so it
-covers nothing. A known card still shows face up and the pile
+With the side panel (BRD-6) the fan sits upright in the bottom row of that board (BRD-39). On a
+copy in the panel it is tucked like the own resting hand (HND-1), seven tenths of the card, so it
+covers nothing; in the main area it is drawn whole and nothing clips it, because that board has
+the room and its cards are the ones the watcher came to read. A known card still shows face up and the pile
 still opens the hand viewer.
 
 - Why: a whole card back took a column's height for a number, and a stacked pile read less like a
-  hand than a fan (user request, 2026-11-13).
+  hand than a fan (user request, 2026-11-13). The tuck was then a sliver of about a seventh of the
+  card, which in the main area read as a cut, not as a hand (user report, 23-nov-2026).
 - Guard: `src/board/HandZone.test.tsx`
 
 ### BRD-39 · With the side panel every board is drawn like the own Arena board
