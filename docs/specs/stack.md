@@ -91,3 +91,16 @@ because the arrow over the board already says it, and they were the longest part
   ability, and half of what it held was a list of target names the arrow already drew (user
   report, 23-nov-2026).
 - Guard: `src/board/StackZone.css.test.ts` · `src/board/stackEntries.test.ts`
+
+### STK-8 · An object reaches the stack from where it came
+A spell flies to the cascade from the card that was cast: the hand it left, or the zone it was
+cast from. A triggered or activated ability is a new object with an id of its own and no past, so
+it flies from the card that made it, the source the view names (`sourceCard`), which is still on
+the board where the player can see it. An object whose source nobody has drawn (a card the client
+never saw) eases in where it lands, as before.
+
+- Why: every ability simply appeared on the stack, so nothing tied it to the permanent that
+  triggered it and a player had to read the name to find out what had gone off (user request,
+  23-nov-2026).
+- Guard: `src/board/stackLinks.test.ts`
+

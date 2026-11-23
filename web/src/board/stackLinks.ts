@@ -1,6 +1,21 @@
 import type { CardView, GameView, PlayerView } from '../net/types'
+
 import { isAbilityCard } from '../cards/cardImages'
-import { recordCardPosition, type CardSourceSize } from './cardPositionRegistry'
+import { getPreviousCardPosition, getPreviousCardSize, recordCardPosition, type CardSourceSize } from './cardPositionRegistry'
+
+/**
+ * STK-8: where an ability on the stack flies in from. A spell carries the id of the card that was
+ * cast, so it flies from the hand it left; a triggered or activated ability is a new object with
+ * no past of its own, and without this it could only fade in. It comes from the card that made it,
+ * which the view names in `sourceCard`, and that card is still on the board.
+ */
+export function abilitySourceOrigin(card: CardView): { rect: DOMRect; size: CardSourceSize | null } | null {
+  const sourceId = (card as { sourceCard?: { id?: string } }).sourceCard?.id
+  if (!sourceId) return null
+  const rect = getPreviousCardPosition(sourceId)
+  if (!rect || rect.width <= 0 || rect.height <= 0) return null
+  return { rect, size: getPreviousCardSize(sourceId) }
+}
 
 export type StackDestination = 'battlefield' | 'graveyard' | 'exile'
 

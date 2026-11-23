@@ -4,6 +4,7 @@ import { cardName, hiddenFaceDownName } from '../cards/cardImages'
 import { useCardImageUrl } from '../cards/useCardImageUrl'
 import RenderedCard from '../cards/rendered/RenderedCard'
 import { getPreviousCardPosition, getPreviousCardSize, getPreviousCardZone, recordCardPosition } from './cardPositionRegistry'
+import { abilitySourceOrigin } from './stackLinks'
 import { startCardFlight, onFlightLanded, getActiveFlights, subscribeFlights, noteFlightEvent, flightLandingDelay, ENTER_FLIGHT_MS } from './flightManager'
 import { combatHoldRemaining, isOffBattlefield } from './combatStrikes'
 import { CONTROL_FLIGHT_MS, controlChangeTint } from './controlFx'
@@ -239,7 +240,11 @@ export default function CardSlot({
       const lastRect = el.getBoundingClientRect()
       if (lastRect.width > 0 && lastRect.height > 0) {
         const commandFrom = el.closest('.command-zone') ? commandReturnSource(String(effectiveId)) : null
-        const prev = commandFrom?.rect ?? getPreviousCardPosition(effectiveId)
+        const ownPrev = getPreviousCardPosition(effectiveId)
+        // STK-8: an object that just appeared on the stack with no past of its own is an ability;
+        // it comes from the card that made it, which is still on the board.
+        const abilityFrom = !commandFrom && !ownPrev && el.closest('.stack-zone') ? abilitySourceOrigin(card) : null
+        const prev = commandFrom?.rect ?? ownPrev ?? abilityFrom?.rect ?? null
         const prevZone = getPreviousCardZone(effectiveId)
         if (prev && prev.width > 0) {
           const curZone = el.closest('.opponent-zone, .player-zone, .stack-zone, .hand-zone')
@@ -247,7 +252,7 @@ export default function CardSlot({
           const controlTint = controlChangeTint(String(effectiveId))
           const shift = el.closest('.creatures-band, .permanents-band, .bz-marquee, .bz-marquee-band') ? creatureShiftOf(String(effectiveId)) : null
           if (commandFrom || !prevZone || !curZoneClass || prevZone !== curZoneClass || controlTint || shift) {
-            const sourceSize = commandFrom ? commandFrom.size : getPreviousCardSize(effectiveId)
+            const sourceSize = commandFrom ? commandFrom.size : abilityFrom ? abilityFrom.size : getPreviousCardSize(effectiveId)
             const flyIn = (toRect: DOMRect) => {
               const enteringLand = (card.cardTypes ?? []).some((t) => String(t).toUpperCase() === 'LAND')
               const onBattlefield = !!el.closest('.creatures-band, .permanents-band')

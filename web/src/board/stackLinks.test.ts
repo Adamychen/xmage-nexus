@@ -1,7 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { castCard, clearStackArrivals, primeStackArrivals, primeStackEntries, stackArrivalPending, stackDepartures } from './stackLinks'
-import { clearCardPositionRegistry, getPreviousCardPosition, getPreviousCardZone } from './cardPositionRegistry'
+import { abilitySourceOrigin, castCard, clearStackArrivals, primeStackArrivals, primeStackEntries, stackArrivalPending, stackDepartures } from './stackLinks'
+import { clearCardPositionRegistry, getPreviousCardPosition, getPreviousCardZone, recordCardPosition } from './cardPositionRegistry'
 import { makeCard, makeGameView, makePermanent, makePlayer } from '../__fixtures__/gameViews'
+import type { CardView } from '../net/types'
 
 // Ids from a local 1.4.62 server (record of 2026-10-20): the card keeps its id in the hand, on the
 // battlefield and in the graveyard, while the spell on the stack is keyed by its spell ability id.
@@ -128,5 +129,27 @@ describe('FX-14: a spell flying to the stack is handed over where it lands', () 
     } finally {
       vi.useRealTimers()
     }
+  })
+})
+
+describe('where an ability on the stack comes from', () => {
+  const rect = (left: number, top: number): DOMRect => ({
+    left, top, width: 100, height: 140, right: left + 100, bottom: top + 140, x: left, y: top, toJSON: () => ({}),
+  } as DOMRect)
+
+  it('STK-8: it flies from the card that made it, which is still on the board', () => {
+    clearCardPositionRegistry()
+    recordCardPosition('perm-1', rect(400, 300), 'player-zone', { w: 100, h: 140 })
+    const ability = { id: 'ab-1', name: 'Ability', sourceCard: { id: 'perm-1' } } as unknown as CardView
+    const from = abilitySourceOrigin(ability)
+    expect(from?.rect.left).toBe(400)
+    expect(from?.size).toEqual({ w: 100, h: 140 })
+  })
+
+  it('STK-8: an object with no source, or a source nobody saw, has nowhere to fly from', () => {
+    clearCardPositionRegistry()
+    expect(abilitySourceOrigin({ id: 'ab-2', name: 'Ability' } as unknown as CardView)).toBeNull()
+    const orphan = { id: 'ab-3', name: 'Ability', sourceCard: { id: 'gone' } } as unknown as CardView
+    expect(abilitySourceOrigin(orphan)).toBeNull()
   })
 })
