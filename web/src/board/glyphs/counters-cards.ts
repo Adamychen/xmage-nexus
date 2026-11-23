@@ -15,6 +15,14 @@ export const group: GlyphGroup = {
       ['path', { d: 'm18 15 4-4' }],
       ['path', { d: 'm21.5 11.5-1.914-1.914A2 2 0 0 1 19 8.172v-.344a2 2 0 0 0-.586-1.414l-1.657-1.657A6 6 0 0 0 12.516 3H9l1.243 1.243A6 6 0 0 1 12 8.485V10l2 2h1.172a2 2 0 0 1 1.414.586L18.5 14.5' }],
     ],
+    // Scry: an eye over the top of the library, which is what the keyword does. It was a two
+    // letter sigla ("Ry", because "Sc" had gone to scavenge), and scry is on far more cards.
+    scry: [
+      ['path', { d: 'M2 8.5c1-2 3.9-4.5 10-4.5s9 2.5 10 4.5c-1 2-3.9 4.5-10 4.5S3 10.5 2 8.5z' }],
+      ['circle', { cx: 12, cy: 8.5, r: 2.1 }],
+      ['rect', { x: 5, y: 15.5, width: 14, height: 2.6, rx: 1 }],
+      ['rect', { x: 7, y: 19.6, width: 10, height: 2.4, rx: 1 }],
+    ],
     incubate: [
       ['path', { d: 'M12 2C8 2 4 8 4 14a8 8 0 0 0 16 0c0-6-4-12-8-12' }],
     ],
@@ -55,6 +63,5 @@ export const group: GlyphGroup = {
     evolve: 'Ev',
     graft: 'Gr',
     miracle: 'Mi',
-    scry: 'Ry',
   },
 }
