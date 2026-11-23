@@ -1143,39 +1143,33 @@ html.fx-off .loyalty-badge .counter-tick {
 .counter-badge.plain { --counter-rgb: var(--line-3-rgb, var(--gold-rgb)); }
 
 /* Card restriction / ability icons (Goad, combat restrictions, keywords) */
-/* BRD-59: the commander bubble in the card's top-left corner. The server sends the commander as a
-   card icon with no text, and the generic fallback abbreviated its hint ("Card is commander") to
-   a meaningless "CI". */
+/* BRD-59: the commander coin, on the left of the row the keyword coins start on. The server sends
+   the commander as a card icon with no text, and the generic fallback abbreviated its hint
+   ("Card is commander") to a meaningless "CI". It is a coin like a keyword's: same size, same row,
+   and the symbol fills it the way `.kw-art` fills a keyword coin. */
 .card-commander-mark {
-  --mark-size: clamp(14px, calc(var(--card-w, 100px) * 0.22), 28px);
   position: absolute;
-  left: 3px;
-  /* Under the title bar: the name of a commander is the one thing on that card worth reading. */
-  top: calc(var(--card-w, 100px) * 0.17);
+  left: 4px;
+  /* The row the keyword coins start on, and never under the badge that owns that corner. */
+  top: max(22px, calc(8px + var(--badge-size)));
   z-index: 8;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: var(--mark-size);
-  height: var(--mark-size);
+  width: var(--badge-size);
+  height: var(--badge-size);
   border-radius: 50%;
-  border: 1.5px solid rgb(var(--gold-rgb) / 0.75);
+  /* The ring is the symbol's own gold, so the coin reads as one piece. */
+  border: 1px solid var(--gold-300);
   background: rgb(10 14 24 / 0.92);
   box-shadow: 0 2px 6px var(--shade-4);
   pointer-events: auto;
 }
 
 .card-commander-mark .commander-mark {
-  width: 62%;
-  height: 62%;
+  width: 80%;
+  height: 80%;
   fill: var(--gold-300);
-}
-
-/* The bubble hangs off the corner, so what lives inside it only steps aside by the half that
-   covers the card. */
-.card-slot:has(.card-commander-mark) .sickness-badge,
-.card-slot:has(.card-commander-mark) .facedown-badges {
-  left: calc(var(--card-w, 100px) * 0.2);
 }
 
 .card-icons {

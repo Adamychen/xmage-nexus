@@ -997,17 +997,20 @@ somebody goes to look it up.
 
 ### BRD-59 · A commander on the battlefield wears the Commander symbol
 The server marks a commander with a card icon that carries no text of its own, only the hint
-`Card is commander`. That card draws the Commander symbol (BRD-45) in the top-left corner of its
-frame, in gold, inside a round bubble of its own, about a fifth of the card wide, the way a hand
-card wears its cost (HND-6) but with no number on it. The badges that live in that corner step
-aside for it. It is never abbreviated from its hint.
+`Card is commander`. That card draws the Commander symbol (BRD-45) in a coin of its own, on the
+left of the row the keyword coins start on: the same size as one of those coins, ringed in the
+symbol's own gold, with the symbol filling it as a keyword's art fills its coin. The coin never
+rides under the badge that owns the card's top-left corner. It is never abbreviated from its hint.
 
 - Why: the generic fallback turns an icon with no text into the initials of its hint, so a
   commander wore a badge reading "CI" (user report, 23-nov-2026). The symbol is the one the rest of
   the client already uses for a commander, in the command zone and with the hand. Drawn flat in the
-  corner it was hard to pick out on a busy board, so it went into a bubble like the hand's cost
-  (user request, 23-nov-2026).
-- Guard: `src/board/CardIcons.test.tsx`
+  corner it was hard to pick out on a busy board, so it went into a bubble (user request,
+  23-nov-2026). That first bubble was wider than a keyword coin yet its symbol filled barely half
+  of it, inside a pale ring: it read as an empty circle rather than as a mark, and the card's marks
+  did not line up (user report, 23-nov-2026). A card already has a vocabulary for a round mark, the
+  keyword coin, so the commander wears one of those.
+- Guard: `src/board/CardIcons.test.tsx`, `src/board/CardSlot.css.test.ts`
 
 ### BRD-60 · A band draws no box
 The bands a board lays its cards in, the creatures row, the lands, the other permanents and the
