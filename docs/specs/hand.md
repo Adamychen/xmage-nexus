@@ -13,12 +13,15 @@ Picks from the hand for a prompt are PRM-4 and the keep/mulligan bar over the ra
 ### HND-1 · Your hand is a fan tucked under the bottom edge of the board
 The own hand is a fan of overlapping cards floating over the bottom edge of the board: it takes no
 layout space (your battlefield reaches the bottom of the board), the cards arc (the edges tilt
-outward, the middle rises) and at rest only their top half shows. Pointing at any card lifts the
+outward, the middle rises) and at rest about seven tenths of each card shows: its art, its name
+and its type line, with only the rules box tucked under the edge. Pointing at any card lifts the
 whole fan to about 90% visible. The empty strip around the cards does not catch clicks, so what
 lies under it stays usable. In a 1v1 pod the fan spans the whole bottom row.
 
 - Why: the Arena-style overlay (`10d84d4073`) keeps the player zone at full height instead of
-  pushing the battlefield up to make room for the hand.
+  pushing the battlefield up to make room for the hand. The resting fan used to sink 56% of each
+  card under the edge, which cut them across the middle of the art and read as a bad crop rather
+  than as a tucked hand (user report, 23-nov-2026).
 - Guard: `src/board/handSizing.test.ts` · `src/board/HandBar.test.tsx` · `e2e/hand-bar.spec.ts`
 
 ### HND-2 · A growing hand spreads first and shrinks last, between the side panels

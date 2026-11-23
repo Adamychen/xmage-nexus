@@ -12,8 +12,10 @@ export const HAND_BAR_PADDING_Y = 12
 export const HAND_BAR_PANEL_GAP_PX = 16
 
 export const HAND_BAR_PEEK_RATIO = 0.5
-/** How far below the band a resting card is pushed, in band heights (`--hand-sink-k` in HandBar.css). */
-export const HAND_BAR_REST_SINK_K = 1.12
+/** How far below the band a resting card is pushed, in band heights (`--hand-sink-k` in HandBar.css).
+ *  At 0.6 a resting card shows about seven tenths of itself: enough to read the art, the name and
+ *  the type line. It used to be 1.12, which cut every card across the middle of its art. */
+export const HAND_BAR_REST_SINK_K = 0.6
 /** Clear space between the resting hand and the battlefield above it, as a share of the viewport height. */
 export const HAND_LANDS_GAP_VH_RATIO = 0.015
 export const HAND_LANDS_GAP_MIN_PX = 6

@@ -75,7 +75,7 @@
   height: calc(var(--card-w, 136px) * 1.4);
   transform-origin: 50% 150%;
   transform: translateX(var(--shift-x, 0px)) rotate(var(--rot, 0deg))
-    translateY(calc(-1 * var(--rise, 0px) + var(--sink, 0px) * var(--hand-sink-k, 1.12))) scale(1);
+    translateY(calc(-1 * var(--rise, 0px) + var(--sink, 0px) * var(--hand-sink-k, 0.6))) scale(1);
   transition: transform 0.24s cubic-bezier(0.34, 1.35, 0.5, 1), box-shadow 0.18s ease-out, border-color 0.18s ease-out, filter 0.18s ease-out;
 }
 
