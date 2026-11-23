@@ -6,7 +6,7 @@ import { useTranslation, dynamicT } from '../../i18n'
 import { localizeServerMessage } from '../serverMessageTranslation'
 import type { UseFeedbackForm } from '../useFeedbackForm'
 import { stripTargetProgress, targetProgressLabel } from '../feedback'
-import { DockPrompt, OrderPrompt } from '../GameDock'
+import { DockPrompt } from '../GameDock'
 import { usePromptCancelKey } from '../usePromptCancelKey'
 import './promptBars.css'
 
@@ -37,16 +37,13 @@ export default function TargetBar({ form, onExpand }: { form: UseFeedbackForm; o
   const icon: IconName = prompt.isStartingPlayer ? 'dice' : isDiscard ? 'trash' : 'target'
 
   return (
-    <>
-    <OrderPrompt>
-      <span className="board-order" data-testid="board-order">
-        <span className="board-order-icon" aria-hidden="true"><Icon name={icon} size={16} /></span>
-        <FormattedText text={titleText} />
-      </span>
-    </OrderPrompt>
     <DockPrompt>
       <div className="action-prompt-bar targeting-bar">
         <div className="action-prompt-info">
+          <span className="action-prompt-title">
+            <span className="action-prompt-icon" aria-hidden="true"><Icon name={icon} size={14} /></span>{' '}
+            <FormattedText text={titleText} />
+          </span>
           <span className="action-prompt-hint" role="status" aria-live="polite">
             {hintText}
             {progressText && <span className="action-prompt-progress" data-testid="target-progress"> · {progressText}</span>}
@@ -72,6 +69,5 @@ export default function TargetBar({ form, onExpand }: { form: UseFeedbackForm; o
         </div>
       </div>
     </DockPrompt>
-    </>
   )
 }

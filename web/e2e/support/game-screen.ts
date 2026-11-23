@@ -59,17 +59,8 @@ export function feedbackDialog(page: Page) {
   return page.locator('.feedback-dialog, .targeting-bar, .mana-prompt-bar')
 }
 
-/**
- * PRM-18: what a prompt says is now in two places — the order across the middle of the board, and
- * the bar in the dock with the hint and the controls. Either one naming the thing is the prompt
- * naming it.
- */
-export function promptText(page: Page) {
-  return page.locator('[data-testid="board-order"], .feedback-dialog, .targeting-bar, .mana-prompt-bar')
-}
-
-export async function expectFeedbackDialog(page: Page, title: string | RegExp, timeoutMs = 15_000): Promise<void> {
-  await expect(promptText(page).filter({ hasText: title }).first()).toBeVisible({ timeout: timeoutMs })
+export async function expectFeedbackDialog(page: Page, title: string, timeoutMs = 15_000): Promise<void> {
+  await expect(feedbackDialog(page)).toContainText(title, { timeout: timeoutMs })
 }
 
 export function dumpE2E(page: Page, tag: string): void {

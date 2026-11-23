@@ -3,7 +3,7 @@ import Icon from '../../ui/Icon'
 import { useTranslation } from '../../i18n'
 import type { UseFeedbackForm } from '../useFeedbackForm'
 import Button from '../../ui/Button'
-import { DockPrompt, OrderPrompt } from '../GameDock'
+import { DockPrompt } from '../GameDock'
 import './promptBars.css'
 
 export default function CombatBar({ form }: { form: UseFeedbackForm }) {
@@ -15,16 +15,13 @@ export default function CombatBar({ form }: { form: UseFeedbackForm }) {
   const confirmLabel = isAtk ? t('game', 'combat_confirm_attackers') : t('game', 'combat_confirm_blockers')
 
   return (
-    <>
-    <OrderPrompt>
-      <span className="board-order" data-testid="board-order">
-        <span className="board-order-icon" aria-hidden="true"><Icon name="swords" size={16} /></span>
-        {combatTitle}
-      </span>
-    </OrderPrompt>
     <DockPrompt>
       <div className="action-prompt-bar combat-bar">
         <div className="action-prompt-info">
+          <span className="action-prompt-title">
+            <span className="action-prompt-icon" aria-hidden="true"><Icon name="swords" size={14} /></span>{' '}
+            {combatTitle}
+          </span>
           <span className="action-prompt-hint">
             {t('game', 'combat_hint')}
           </span>
@@ -44,6 +41,5 @@ export default function CombatBar({ form }: { form: UseFeedbackForm }) {
         </div>
       </div>
     </DockPrompt>
-    </>
   )
 }

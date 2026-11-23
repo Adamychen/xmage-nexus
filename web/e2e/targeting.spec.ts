@@ -18,7 +18,7 @@ import { playableInSceneByName, waitScene } from './support/scene'
 import { quickStartGame } from './support/start-game'
 import { targetingScenario } from '../fixtures/scenarios/targeting'
 import { withFakeServer } from './support/fake-backend'
-import { expectFeedbackDialog, feedbackDialog, payMana } from './support/game-screen'
+import { feedbackDialog, payMana } from './support/game-screen'
 
 const SHOTS_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), 'shots')
 
@@ -75,8 +75,7 @@ test('TGT-1: casting Lightning Bolt marks its legal targets on the board, player
     (f) => f.method === 'GAME_TARGET' && !/bottom of your library/i.test(String(f.data?.message ?? '')),
     'GAME_TARGET del Lightning Bolt',
   )
-  await expectFeedbackDialog(page, /Lightning Bolt/)
-  expect(pageErrors.map(String).join(' | '), 'sin errores de página con el objetivo abierto').toBe('')
+  await expect(feedbackDialog(page), `pageerrors: ${pageErrors.map(String).join(' | ')}`).toContainText(/Lightning Bolt/, { timeout: 15_000 })
 
   // (f) evidencias visuales del targeting en el CANVAS por estado de escena
   //     (determinista): el targeting está activo, con fuente y objetivos reales.

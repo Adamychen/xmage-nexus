@@ -15,27 +15,20 @@ const PromptSlotContext = createContext<HTMLElement | null>(null)
 
 const HandPromptContext = createContext<HTMLElement | null>(null)
 
-/** PRM-18: the slot across the middle of the board, where the order being given is read. */
-const OrderPromptContext = createContext<HTMLElement | null>(null)
-
 interface PromptSlotProviderProps {
   value: HTMLElement | null
   /** Slot above the own hand, published by the board through `onHandSlot`. */
   hand?: HTMLElement | null
   onHandSlot?: ((el: HTMLElement | null) => void) | null
-  /** PRM-18: slot across the middle of the board, for the order being given. */
-  order?: HTMLElement | null
   children: ReactNode
 }
 
-export function PromptSlotProvider({ value, hand = null, onHandSlot = null, order = null, children }: PromptSlotProviderProps) {
+export function PromptSlotProvider({ value, hand = null, onHandSlot = null, children }: PromptSlotProviderProps) {
   return (
     <PromptSlotContext.Provider value={value}>
-      <OrderPromptContext.Provider value={order}>
-        <HandPromptContext.Provider value={hand}>
-          <HandPromptSlotContext.Provider value={onHandSlot}>{children}</HandPromptSlotContext.Provider>
-        </HandPromptContext.Provider>
-      </OrderPromptContext.Provider>
+      <HandPromptContext.Provider value={hand}>
+        <HandPromptSlotContext.Provider value={onHandSlot}>{children}</HandPromptSlotContext.Provider>
+      </HandPromptContext.Provider>
     </PromptSlotContext.Provider>
   )
 }
@@ -43,16 +36,6 @@ export function PromptSlotProvider({ value, hand = null, onHandSlot = null, orde
 export function DockPrompt({ children }: { children: ReactNode }) {
   const slot = useContext(PromptSlotContext)
   return slot ? createPortal(children, slot) : <>{children}</>
-}
-
-/**
- * PRM-18: the order the player is being given, read across the middle of the board instead of in
- * the corner the controls live in. With no board to lay it over (a dialog standing in for the
- * bar), it falls back to the dock, where it is still beside what answers it.
- */
-export function OrderPrompt({ children }: { children: ReactNode }) {
-  const slot = useContext(OrderPromptContext)
-  return slot ? createPortal(children, slot) : <DockPrompt>{children}</DockPrompt>
 }
 
 /** Prompt about the own hand: floats above the fan when the board publishes
