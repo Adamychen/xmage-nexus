@@ -18,6 +18,7 @@ import { translateError } from '../i18n'
 import { isControllingPriority } from './control'
 import { soundManager } from '../audio/soundManager'
 import { resetPromptSound } from '../audio/promptSound'
+import { playPriorityStopCue, type PriorityStopReason } from '../audio/prioritySound'
 import type { AppState } from './state'
 import {
   ROLLBACK_ACCEPT_ACTION, ROLLBACK_DENY_ACTION, ROLLBACK_PENDING_TTL_MS, rollbackAcceptChatText,
@@ -539,18 +540,41 @@ export function applyGameplayPreset(id: GameplayPresetId) {
 }
 
 let lastSmartAnswer: GameView | null = null
+let lastCuedStop: GameView | null = null
+
+/**
+ * Why this priority window is not passed for the player, or null when it is.
+ * Every reason is a moment the player has to act in, which is what the
+ * `on-stop` priority cue announces.
+ */
+function priorityStopReason(s: AppState, game: GameView): PriorityStopReason | null {
+  if (s.feedback) return 'prompt'
+  if (isRollbackVoting(s.rollbackVote, s.gameId)) return 'rollback-vote'
+  if (isControllingPriority(game)) return 'controlled-priority'
+  if (s.combat && s.combat.selectable.length > 0) return 'combat'
+  if (decideStop(game, s.settings.phaseStops).action === 'stop') return 'phase-stop'
+  return null
+}
 
 export function maybeAutoPass(game: GameView) {
   const s = getState()
-  if (!s.settings.smartStops || s.feedback || !s.gameId) return
-  if (isRollbackVoting(s.rollbackVote, s.gameId)) return
-  if (isControllingPriority(game)) return
+  if (!s.settings.smartStops || !s.gameId) return
   const me = game.players?.find((p) => p.controlled)
   if (!me?.hasPriority) return
-  if (s.combat && s.combat.selectable.length > 0) return
+  // The window the server opened and that is still the one on screen: the
+  // GAME_UPDATEs around it carry no decision to take.
   const request = s.priorityRequest
-  if (!request || s.game !== request || request === lastSmartAnswer) return
-  if (decideStop(game, s.settings.phaseStops).action === 'stop') return
+  if (!request || s.game !== request) return
+
+  const stop = priorityStopReason(s, game)
+  if (stop) {
+    if (request !== lastCuedStop) {
+      lastCuedStop = request
+      playPriorityStopCue(s.settings.prioritySound, s.settings.smartStops, stop)
+    }
+    return
+  }
+  if (request === lastSmartAnswer) return
   lastSmartAnswer = request
   void cmds.sendPlayerBoolean(false, s.gameId)
 }

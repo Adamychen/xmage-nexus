@@ -1,5 +1,5 @@
 import type { GameView } from '../net/types.generated'
-import type { PrioritySoundMode } from './prioritySound'
+import { effectivePrioritySound, type PrioritySoundMode } from './prioritySound'
 import { soundManager } from './soundManager'
 
 export function dispatchGameSounds(
@@ -7,6 +7,7 @@ export function dispatchGameSounds(
   nextGame: GameView | null,
   method: string | undefined,
   prioritySound: PrioritySoundMode,
+  smartStops = false,
 ) {
   if (!nextGame) return
 
@@ -17,9 +18,12 @@ export function dispatchGameSounds(
   // a GAME_SELECT carries the view where my `hasPriority` already flipped.
   const gainedPriority = !!prevGame && !prevMe?.hasPriority && nextMe?.hasPriority === true
 
-  if (prioritySound === 'every-prompt') {
+  // `on-stop` plays nothing here: the cue is the client's own stop decision and
+  // `maybeAutoPass` emits it a frame later (`playPriorityStopCue`).
+  const mode = effectivePrioritySound(prioritySound, smartStops)
+  if (mode === 'every-prompt') {
     if (method === 'GAME_SELECT' || gainedPriority) soundManager.play('priority', 'game')
-  } else if (prioritySound === 'on-gain' && gainedPriority) {
+  } else if (mode === 'on-gain' && gainedPriority) {
     soundManager.play('priority', 'game')
   }
 

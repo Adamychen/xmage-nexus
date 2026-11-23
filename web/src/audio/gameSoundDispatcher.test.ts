@@ -92,8 +92,16 @@ describe('dispatchGameSounds priority cue (issue #12)', () => {
     expect(priorityPlays()).toBe(0)
   })
 
+  it('on-stop leaves the cue to the stop decision, and falls back to on-gain without smart stops', () => {
+    dispatchGameSounds(view(false), view(true), 'GAME_SELECT', 'on-stop', true)
+    expect(priorityPlays()).toBe(0)
+    play.mockClear()
+    dispatchGameSounds(view(false), view(true), 'GAME_SELECT', 'on-stop', false)
+    expect(priorityPlays()).toBe(1)
+  })
+
   it('no mode plays the cue twice for one dispatch', () => {
-    for (const mode of ['every-prompt', 'on-gain', 'off'] as const) {
+    for (const mode of ['every-prompt', 'on-gain', 'on-stop', 'off'] as const) {
       play.mockClear()
       dispatchGameSounds(view(false), view(true), 'GAME_SELECT', mode)
       expect(priorityPlays(), mode).toBeLessThanOrEqual(1)
@@ -103,7 +111,7 @@ describe('dispatchGameSounds priority cue (issue #12)', () => {
   it('leaves the other cues alone in every mode', () => {
     const prev = view(true)
     const next = view(true, { myHand: { a: { id: 'a' } as never } })
-    for (const mode of ['every-prompt', 'on-gain', 'off'] as const) {
+    for (const mode of ['every-prompt', 'on-gain', 'on-stop', 'off'] as const) {
       play.mockClear()
       dispatchGameSounds(prev, next, 'GAME_UPDATE', mode)
       expect(play.mock.calls.filter(([key]) => key === 'draw').length, mode).toBe(1)
