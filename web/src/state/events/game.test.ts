@@ -1,11 +1,12 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { handleMessage } from '../eventHandler'
+import * as cmds from '../../net/commands'
 import { getState, setState } from '../state'
 import { clearActiveGame, loadActiveGame } from '../persistence'
 import { emptyCombat } from '../gameUtils'
 import { makeGameView, makePlayer } from '../../__fixtures__/gameViews'
 import { startCardFlight, getActiveFlights, clearFlights } from '../../board/flightManager'
-import type { CardView } from '../../net/types'
+import type { CardView, TableView } from '../../net/types'
 
 vi.mock('../../net/commands', () => ({
   joinGame: vi.fn().mockResolvedValue(null),
@@ -226,5 +227,81 @@ describe('game end and new game clear the pending prompt', () => {
     expect(getState().feedback).toBeNull()
     expect(getState().playableIds).toEqual([])
     expect(getState().combat).toBeNull()
+  })
+})
+
+describe('WATCHGAME keeps the watched table (LBY-33)', () => {
+  const COMMANDER_TABLE: TableView = {
+    tableId: 'table-commander',
+    tableName: 'Epic Commander Pod',
+    controllerName: 'Bob',
+    gameType: 'Commander Free For All',
+    deckType: 'Constructed - Commander',
+    additionalInfoShort: '',
+    additionalInfoFull: '',
+    createTime: 0,
+    tableState: 'DUELING',
+    skillLevel: 'CASUAL',
+    tableStateText: 'Dueling',
+    seatsInfo: '4/4',
+    isTournament: false,
+    seats: [0, 1, 2, 3].map((i) => ({ playerName: `P${i}`, seatIndex: i, playerType: 'HUMAN' as const })),
+    games: ['g-watch'],
+    quitRatio: '0%',
+    minimumRating: '0',
+    limited: false,
+    rated: false,
+    passworded: false,
+    spectatorsAllowed: true,
+  }
+
+  beforeEach(() => {
+    clearActiveGame()
+    vi.mocked(cmds.watchGame).mockClear()
+    setState({
+      phase: 'lobby',
+      gameId: null,
+      game: null,
+      watchingTable: null,
+      lobby: { type: 'lobby', tables: [COMMANDER_TABLE] } as never,
+    })
+  })
+
+  afterEach(() => {
+    setState({ phase: 'lobby', gameId: null, watchingTable: null, lobby: null })
+  })
+
+  const watchGameEvent = (data: unknown) => ({
+    type: 'event', method: 'WATCHGAME', messageId: 1, objectId: 'g-watch', data,
+  })
+
+  it('LBY-33: resolves the table from the callback payload', () => {
+    handleMessage(watchGameEvent({ currentTableId: 'table-commander', parentTableId: null }) as never)
+
+    expect(getState().phase).toBe('spectating_pending')
+    expect(getState().watchingTable?.tableId).toBe('table-commander')
+    expect(getState().watchingTable?.seats).toHaveLength(4)
+  })
+
+  it('LBY-33: falls back to the parent table of a tournament sub-table', () => {
+    handleMessage(watchGameEvent({ currentTableId: 'sub-table-unknown', parentTableId: 'table-commander' }) as never)
+
+    expect(getState().watchingTable?.tableId).toBe('table-commander')
+  })
+
+  it('LBY-33: keeps the table the lobby already set when the payload names none', () => {
+    setState({ phase: 'spectating_pending', watchingTable: COMMANDER_TABLE })
+
+    handleMessage(watchGameEvent({}) as never)
+
+    expect(getState().watchingTable?.tableId).toBe('table-commander')
+  })
+
+  it('LBY-33: does not watch again the game it already watches', () => {
+    handleMessage(watchGameEvent({ currentTableId: 'table-commander' }) as never)
+    expect(cmds.watchGame).toHaveBeenCalledTimes(1)
+
+    handleMessage(watchGameEvent({ currentTableId: 'table-commander' }) as never)
+    expect(cmds.watchGame).toHaveBeenCalledTimes(1)
   })
 })

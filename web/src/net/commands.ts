@@ -329,11 +329,17 @@ export interface PhaseStops {
 export interface ServerPreferences {
   phases: PhaseStops
   confirmEmptyManaPool: boolean
+  /** The appearance this player declares to the table (APR-6); empty declares none. */
+  appearance: string
 }
 
 /** Always every field: the server replaces the whole UserData (see `pushServerPreferences`). */
 export async function updatePreferences(prefs: ServerPreferences) {
-  return getGateway().send('updatePreferences', { phases: prefs.phases, confirmEmptyManaPool: prefs.confirmEmptyManaPool })
+  return getGateway().send('updatePreferences', {
+    phases: prefs.phases,
+    confirmEmptyManaPool: prefs.confirmEmptyManaPool,
+    appearance: prefs.appearance,
+  })
 }
 
 export async function quitMatch(gameId: string) {

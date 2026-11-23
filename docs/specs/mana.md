@@ -75,7 +75,7 @@ on any yes/no answer and the spell or ability is not cast. Escape does the same 
 
 ### MNA-7 · Smart payment is opt-in and steps aside when it is not sure
 *Smart mana payment* is what the Simple and Balanced presets turn on, and the Simple one is where a
-player who has set nothing starts (SET-14), so it is on until they say otherwise. When on, it
+player who has set nothing starts (SET-15), so it is on until they say otherwise. When on, it
 taps one source per mana prompt and re-solves at the next one. It does nothing while an answer is
 in flight, when the cost holds a symbol it cannot model or cannot be paid from known sources. If
 the next prompt's cost did not drop by exactly one (the player clicked a source, or the engine

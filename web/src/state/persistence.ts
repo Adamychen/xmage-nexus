@@ -667,7 +667,7 @@ export function saveDeckStacksSeparateCreatures(separate: boolean) {
 const GAMEPLAY_PRESET_KEY = 'mage-web-gameplay-preset'
 
 /** The automation a player configured by hand, whatever they set it to. A player who has touched
- *  none of it has never answered the question, so the default preset stands for them (SET-14). */
+ *  none of it has never answered the question, so the default preset stands for them (SET-15). */
 function hasStoredAutomation(): boolean {
   try {
     const storage = getStorage()

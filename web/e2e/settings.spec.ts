@@ -119,6 +119,39 @@ test.describe('Global settings modal', () => {
     })
   })
 
+  // The fourth cue mode ("When I stop") is a fourth nowrap button in the same row, and the
+  // longest translations are the ones that can push it past the panel edge, so the check is
+  // per language and at the narrowest supported window.
+  test('SET-14: the four priority-cue modes read and fit in every language', async ({ page }) => {
+    const LANGS = ['Español', 'English', 'Deutsch', 'Français', 'Italiano', 'Português', 'Русский', '日本語', '简体中文']
+    await withFakeServer(lobbyScenario, async () => {
+      await page.setViewportSize({ width: 900, height: 700 })
+      await login(page, 'e2e')
+      await page.getByTestId('open-settings').click()
+      const row = page.locator('[data-setting="priority-sound"]')
+      const labels = row.locator('.settings-row-control button')
+      for (const lang of LANGS) {
+        await page.getByTestId('settings-nav-language').click()
+        await page.getByTestId('settings-ui-lang').click()
+        await page.getByRole('option', { name: lang }).click()
+        await page.getByTestId('settings-nav-sound').click()
+        await expect(row).toBeVisible()
+        await expect(labels).toHaveCount(4)
+        await expect(async () => {
+          const seen = (await labels.allInnerTexts()).map((s) => s.trim())
+          expect(seen.filter(Boolean), lang).toHaveLength(4)
+          expect(new Set(seen).size, lang).toBe(4)
+        }).toPass({ timeout: 5_000 })
+        const overflow = await row.evaluate((el) => {
+          const seg = el.querySelector('.settings-seg') as HTMLElement
+          const body = el.closest('.settings-body') ?? el.parentElement!
+          return Math.round(seg.getBoundingClientRect().right - body.getBoundingClientRect().right)
+        })
+        expect(overflow, lang).toBeLessThanOrEqual(1)
+      }
+    })
+  })
+
   test('SET-6: search finds a board setting by name and "Go" opens its tab with the setting in view', async ({ page }) => {
     await withFakeServer(lobbyScenario, async () => {
       await login(page, 'e2e')

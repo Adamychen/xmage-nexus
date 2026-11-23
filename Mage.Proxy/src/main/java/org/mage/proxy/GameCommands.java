@@ -206,7 +206,8 @@ final class GameCommands {
                 return true;
             }
             case "updatePreferences": {
-                UserData userData = userDataFromPreferences(args);
+                UserData userData = ctx.withConnectionProfile(userDataFromPreferences(args),
+                        JsonArgs.str(args, "appearance", null));
                 ctx.gateway().send(conn, ProxyProtocol.resultJson(action, requestId, ctx.session().updatePreferencesForServer(userData), null, null));
                 return true;
             }

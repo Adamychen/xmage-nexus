@@ -494,4 +494,47 @@ describe('SpectatorStagingScreen', () => {
     expect(getByText('(1480)')).not.toBeNull()
     expect(queryByText('(1600)')).toBeNull()
   })
+  // LBY-33
+  it('LBY-33: una sala sin informacion de asientos no se dibuja como duelo', () => {
+    setState({ phase: 'spectating_pending', watchingTable: null })
+    const { queryByText, queryByTestId, getByTestId, container } = render(<SpectatorStagingScreen />)
+
+    expect(getByTestId('staging-roster-pending')).not.toBeNull()
+    expect(container.querySelector('.staging-duel-roster')).toBeNull()
+    expect(container.querySelector('.staging-player-card')).toBeNull()
+    expect(container.querySelector('.staging-ring')).toBeNull()
+    expect(queryByText('VS')).toBeNull()
+    expect(queryByText('Esperando jugador…')).toBeNull()
+    expect(queryByText('Esperando oponente…')).toBeNull()
+    expect(queryByTestId('staging-seat-empty-0')).toBeNull()
+  })
+
+  it('LBY-33: sin asientos, la etiqueta de formato y el contador de plazas callan', () => {
+    setState({ phase: 'spectating_pending', watchingTable: null })
+    const { queryByText, getByTestId } = render(<SpectatorStagingScreen />)
+
+    expect(queryByText('Duelo')).toBeNull()
+    expect(queryByText('0 plazas')).toBeNull()
+    expect(getByTestId('staging-stepper').textContent).toContain('Jugadores')
+    expect(getByTestId('staging-stepper').textContent).not.toContain('0/0')
+  })
+
+  it('LBY-33: una mesa de Commander de dos asientos sigue sin ser un duelo', () => {
+    const twoSeatCommander: TableView = {
+      ...MOCK_COMMANDER_TABLE,
+      seatsInfo: '2/2',
+      seats: MOCK_COMMANDER_TABLE.seats.slice(0, 2),
+    }
+    const { container, getByTestId } = render(<SpectatorStagingScreen table={twoSeatCommander} />)
+
+    expect(getByTestId('staging-ring')).not.toBeNull()
+    expect(container.querySelector('.staging-duel-roster')).toBeNull()
+  })
+
+  it('LBY-33: con asientos conocidos vuelve el duelo de siempre', () => {
+    const { container, queryByTestId } = render(<SpectatorStagingScreen table={MOCK_DUEL_TABLE} />)
+
+    expect(container.querySelector('.staging-duel-roster')).not.toBeNull()
+    expect(queryByTestId('staging-roster-pending')).toBeNull()
+  })
 })

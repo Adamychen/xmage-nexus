@@ -16,12 +16,11 @@ function PeekItem({ fx }: { fx: LibraryPeekFx }) {
   }
   return (
     <div className="library-peek-fx" data-testid="fx-library-peek" data-player-id={fx.playerId} data-count={fx.count} style={style}>
-      <CardBack playerId={fx.playerId} mine={fx.mine} className="peek-card peek-base" />
+      <CardBack playerId={fx.playerId} className="peek-card peek-base" />
       {Array.from({ length: fx.count }, (_, i) => (
         <CardBack
           key={i}
           playerId={fx.playerId}
-          mine={fx.mine}
           className="peek-card peek-lift"
           style={{ '--fan': (i - (fx.count - 1) / 2).toFixed(2), '--i': i }}
         />

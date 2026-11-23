@@ -252,7 +252,11 @@ export default function SpectatorStagingScreen({
     window.setTimeout(() => setJoinedSeats([]), 1400)
   }, [seats])
   const joinedClass = (idx: number) => (joinedSeats.includes(idx) ? ' seat-just-joined' : '')
-  const is1v1 = (activeTable?.seats.length ?? 0) <= 2 && !activeTable?.gameType?.toLowerCase().includes('commander')
+  // A table nobody has described yet is not a duel: its seat count is 0, which `<= 2` used to
+  // read as "two seats", so a Commander pod was drawn with two invented seats and a VS. The
+  // layout is chosen from what the screen actually knows (LBY-33).
+  const seatsKnown = seats.length > 0
+  const is1v1 = seatsKnown && seats.length <= 2 && !activeTable?.gameType?.toLowerCase().includes('commander')
   const hasEmptySeats = seats.some((s) => !s.playerName)
 
   const avatarFor = (seat?: SeatView): number | undefined => {
@@ -485,7 +489,9 @@ export default function SpectatorStagingScreen({
               </div>
               <h2 className="staging-table-name">{activeTable?.tableName || t('lobby', 'staging_waiting_fallback')}</h2>
               <div className="staging-tags-row">
-                <Chip icon="gamepad" className="staging-tag tag-game">{activeTable?.gameType || t('lobby', 'staging_duel_fallback')}</Chip>
+                {activeTable?.gameType && (
+                  <Chip icon="gamepad" className="staging-tag tag-game">{activeTable.gameType}</Chip>
+                )}
                 {skill && (
                   <Chip className={`staging-tag tag-skill ${skill.className}`}>
                     <span className="staging-skill-stars">
@@ -502,7 +508,11 @@ export default function SpectatorStagingScreen({
                 {activeTable?.passworded && (
                   <Chip tone="warn" icon="lock" className="staging-tag tag-private">{t('lobby', 'tag_private')}</Chip>
                 )}
-                <Chip icon="users" className="staging-tag tag-seats">{activeTable?.seatsInfo || t('lobby', 'staging_seats_count', { count: seats.length })}</Chip>
+                {(activeTable?.seatsInfo || seatsKnown) && (
+                  <Chip icon="users" className="staging-tag tag-seats">
+                    {activeTable?.seatsInfo || t('lobby', 'staging_seats_count', { count: seats.length })}
+                  </Chip>
+                )}
               </div>
             </div>
             <div className="staging-invite">
@@ -511,7 +521,12 @@ export default function SpectatorStagingScreen({
           </div>
 
           <div className="staging-roster-area">
-            {is1v1 ? (
+            {!seatsKnown ? (
+              <div className="staging-roster-pending" data-testid="staging-roster-pending">
+                <div className="pulse-spinner" />
+                <span className="roster-pending-text">{t('lobby', 'staging_seats_pending')}</span>
+              </div>
+            ) : is1v1 ? (
               <div className="staging-duel-roster">
                 {renderSeatCard(0, t('lobby', 'staging_waiting_player'), t('lobby', 'staging_seat_available'))}
                 <div className="staging-vs-emblem">
@@ -637,7 +652,9 @@ export default function SpectatorStagingScreen({
                 { key: 'table', label: t('lobby', 'staging_step_table'), state: 'done' as const },
                 {
                   key: 'players',
-                  label: t('lobby', 'staging_step_players', { filled: filledSeats, total: seats.length }),
+                  label: seatsKnown
+                    ? t('lobby', 'staging_step_players', { filled: filledSeats, total: seats.length })
+                    : t('lobby', 'staging_step_players_pending'),
                   state: (isReady || allPlayersReady ? 'done' : 'active') as 'done' | 'active',
                 },
                 {

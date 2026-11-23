@@ -81,6 +81,11 @@ class ExpansionsCommandTest {
         }
 
         @Override
+        public mage.players.net.UserData withConnectionProfile(mage.players.net.UserData prefs, String appearance) {
+            return UserAppearance.withAppearance(prefs, appearance);
+        }
+
+        @Override
         public void startSims(JsonObject args, java.util.UUID roomId, java.util.UUID tableId) {
         }
 

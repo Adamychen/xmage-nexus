@@ -770,6 +770,18 @@ public class ProxyClient implements MageClient, CommandContext {
     }
 
     @Override
+    public UserData withConnectionProfile(UserData prefs, String appearance) {
+        Connection live = lastConnection;
+        UserData logged = live == null ? null : live.getUserData();
+        if (prefs != null && logged != null) {
+            prefs.setFlagName(logged.getFlagName());
+            prefs.setAvatarId(logged.getAvatarId());
+            prefs.setAllowRequestShowHandCards(logged.isAllowRequestHandToAll());
+        }
+        return UserAppearance.withAppearance(prefs, appearance);
+    }
+
+    @Override
     public boolean simEnabled() {
         return config.isSimEnabled();
     }

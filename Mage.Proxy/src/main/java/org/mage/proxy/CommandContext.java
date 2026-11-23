@@ -1,6 +1,7 @@
 package org.mage.proxy;
 
 import com.google.gson.JsonObject;
+import mage.players.net.UserData;
 import mage.remote.SessionImpl;
 import org.java_websocket.WebSocket;
 
@@ -33,6 +34,14 @@ interface CommandContext {
 
     /** The answer was rejected, so the prompt is still open. */
     void restorePrompt(UUID gameId, ReplayCache.Prompt prompt);
+
+    /**
+     * The preferences of an update, carrying what identifies the player at the table: the
+     * avatar and the flag of the live connection, and the appearance token (APR-6). XMage
+     * replaces the whole {@code UserData} on every update, so an object built from preferences
+     * alone resets all three for everyone else at the table.
+     */
+    UserData withConnectionProfile(UserData prefs, String appearance);
 
     void startSims(JsonObject args, UUID roomId, UUID tableId);
 

@@ -43,7 +43,7 @@ describe('PhaseStopSelector', () => {
       const { container } = render(<PhaseStopSelector />)
       return Array.from(container.querySelectorAll('.phase-stop-btn')).filter((b) => b.classList.contains('active')).length
     }
-    // SET-14: a player who has set nothing stops on no step by hand.
+    // SET-15: a player who has set nothing stops on no step by hand.
     expect(active()).toBe(0)
     setSetting('phaseStops', DEFAULT_PHASE_STOPS)
     expect(active()).toBe(14)

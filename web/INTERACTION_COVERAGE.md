@@ -34,7 +34,7 @@ Leyenda: ✅ = sí · ❌ = no · ⚠️ = parcial/log-only · — = no aplica /
 | `DRAFT_PICK` | ✅ | ✅ | ✅ | DraftScreen.test.tsx (acuse + espera + anti doble pick) / draft.spec.ts `el pick acusa al instante` / vivo 2026-09-14 (2×HUMAN real en local y beta: espera larga y re-habilitación) | 2026-09-14 |
 | `DRAFT_UPDATE` | ✅ | — | ✅ | merge `picking:false` (draft.test.ts) / draft.spec.ts / vivo 2026-09-14 | 2026-09-14 |
 | `SHOW_TOURNAMENT` | ✅ | — | ✅ | resolve tableId→tournamentId del watch (lobby) / TournamentBracket; unit store.test + vivo 2026-09-14 | 2026-09-14 |
-| `WATCHGAME` | ✅ | — | ✅ | self-test (real) | 2026-08-24 |
+| `WATCHGAME` | ✅ | ✅ | ✅ | self-test (real) / game.test.ts (LBY-33: resuelve la mesa del payload, no repite el watch) / spectate-staging.spec.ts | 2026-11-23 |
 | `VIEW_LIMITED_DECK` | ✅ | ✅ | ✅ | eventHandler.test.ts / verify-hand-permission.mjs (real) | 2026-09-08 |
 | `VIEW_SIDEBOARD` | ✅ | ✅ | ✅ | eventHandler.test.ts / player-menu.spec.ts / verify-hand-permission.mjs (real) | 2026-09-08 |
 | `USER_REQUEST_DIALOG` | ✅ | ✅ | ✅ | eventHandler.test.ts / missing-prompts.spec.ts / UserRequestDialog.test.tsx / verify-hand-permission.mjs (real: hand permission); rollback vote → `RollbackVoteDialog` (state/rollbackVote.test.ts, RollbackVoteDialog.test.tsx, `scripts/verify-rollback-vote.mjs` real 4-player: all accept / deny / late vote / SIM seats auto-accept) | 2026-09-25 |

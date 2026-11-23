@@ -234,6 +234,21 @@
   overflow: auto;
 }
 
+/* No seat information yet (a watch whose table the lobby list has not described):
+   say so instead of drawing seats nobody reported (LBY-33). */
+.staging-roster-pending {
+  --tone: rgb(var(--brand-rgb));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-3);
+  width: 100%;
+  padding: var(--sp-6) var(--sp-4);
+  color: var(--text-dim);
+  font-size: var(--fs-sm);
+  text-align: center;
+}
+
 .staging-duel-roster {
   display: flex;
   align-items: stretch;
