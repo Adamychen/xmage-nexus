@@ -998,12 +998,15 @@ somebody goes to look it up.
 ### BRD-59 · A commander on the battlefield wears the Commander symbol
 The server marks a commander with a card icon that carries no text of its own, only the hint
 `Card is commander`. That card draws the Commander symbol (BRD-45) in the top-left corner of its
-frame, in gold, and the badges that live in that corner step aside for it. It is never abbreviated
-from its hint.
+frame, in gold, inside a round bubble of its own, about a fifth of the card wide, the way a hand
+card wears its cost (HND-6) but with no number on it. The badges that live in that corner step
+aside for it. It is never abbreviated from its hint.
 
 - Why: the generic fallback turns an icon with no text into the initials of its hint, so a
   commander wore a badge reading "CI" (user report, 23-nov-2026). The symbol is the one the rest of
-  the client already uses for a commander, in the command zone and with the hand.
+  the client already uses for a commander, in the command zone and with the hand. Drawn flat in the
+  corner it was hard to pick out on a busy board, so it went into a bubble like the hand's cost
+  (user request, 23-nov-2026).
 - Guard: `src/board/CardIcons.test.tsx`
 
 ### BRD-60 · A band draws no box

@@ -4,7 +4,7 @@
   height: calc(var(--card-w, 100px) * var(--card-h-ratio, 1.39344));
   position: relative;
   isolation: isolate;
-  /* BRD-59: the slot is the shape of the picture it holds, 680 / 488, which is what Scryfall's
+  /* The slot is the shape of the picture it holds, 680 / 488, which is what Scryfall's
      `normal` images measure, so the file fills it with nothing left over on any side. The corner
      is then rounded by a share of that size instead of a fixed 8 px. Rounded by a constant, the arc misses the printed one at
      every size but one: too little leaves the white the JPEG has outside the card's corner (those
@@ -16,7 +16,7 @@
   box-sizing: border-box;
   box-shadow: 0 4px 12px var(--shade-2);
   background: var(--ink-2);
-  /* BRD-59: the slot's ring is drawn over the picture, not as a border. A border eats into the
+  /* The slot's ring is drawn over the picture, not as a border. A border eats into the
      content box, so the picture ends up 1.5 px short on each side, and the rounding that is meant
      to follow the card's printed corner then clips the slot's edge instead of the picture's. The
      ring keeps every state it had; only `--slot-ring` changes colour now. */
@@ -1143,37 +1143,38 @@ html.fx-off .loyalty-badge .counter-tick {
 .counter-badge.plain { --counter-rgb: var(--line-3-rgb, var(--gold-rgb)); }
 
 /* Card restriction / ability icons (Goad, combat restrictions, keywords) */
-/* BRD-59: the commander icon in the card's top-left corner. The server sends the commander as a
+/* BRD-59: the commander bubble in the card's top-left corner. The server sends the commander as a
    card icon with no text, and the generic fallback abbreviated its hint ("Card is commander") to
    a meaningless "CI". */
 .card-commander-mark {
+  --mark-size: clamp(14px, calc(var(--card-w, 100px) * 0.22), 28px);
   position: absolute;
   left: 3px;
   top: 3px;
-  z-index: 7;
+  z-index: 8;
   display: inline-flex;
-  padding: 2px;
-  border-radius: var(--r-xs);
-  background: rgb(var(--ink-1-rgb) / 0.72);
-  box-shadow: 0 1px 4px var(--shade-4);
+  align-items: center;
+  justify-content: center;
+  width: var(--mark-size);
+  height: var(--mark-size);
+  border-radius: 50%;
+  border: 1.5px solid rgb(var(--gold-rgb) / 0.75);
+  background: radial-gradient(circle at 35% 30%, rgb(var(--ink-2-rgb) / 0.98), rgb(var(--ink-1-rgb) / 0.98));
+  box-shadow: 0 2px 6px var(--shade-4);
   pointer-events: auto;
 }
 
 .card-commander-mark .commander-mark {
-  width: 12px;
-  height: 12px;
+  width: 62%;
+  height: 62%;
   fill: var(--gold-300);
 }
 
-.card-slot.is-compact .card-commander-mark .commander-mark {
-  width: 10px;
-  height: 10px;
-}
-
-/* The two things that live in that corner step aside for it instead of sitting under it. */
+/* The bubble hangs off the corner, so what lives inside it only steps aside by the half that
+   covers the card. */
 .card-slot:has(.card-commander-mark) .sickness-badge,
 .card-slot:has(.card-commander-mark) .facedown-badges {
-  left: 24px;
+  left: calc(var(--card-w, 100px) * 0.2);
 }
 
 .card-icons {
