@@ -1150,7 +1150,8 @@ html.fx-off .loyalty-badge .counter-tick {
   --mark-size: clamp(14px, calc(var(--card-w, 100px) * 0.22), 28px);
   position: absolute;
   left: 3px;
-  top: 3px;
+  /* Under the title bar: the name of a commander is the one thing on that card worth reading. */
+  top: calc(var(--card-w, 100px) * 0.17);
   z-index: 8;
   display: inline-flex;
   align-items: center;
@@ -1159,7 +1160,7 @@ html.fx-off .loyalty-badge .counter-tick {
   height: var(--mark-size);
   border-radius: 50%;
   border: 1.5px solid rgb(var(--gold-rgb) / 0.75);
-  background: radial-gradient(circle at 35% 30%, rgb(var(--ink-2-rgb) / 0.98), rgb(var(--ink-1-rgb) / 0.98));
+  background: rgb(10 14 24 / 0.92);
   box-shadow: 0 2px 6px var(--shade-4);
   pointer-events: auto;
 }

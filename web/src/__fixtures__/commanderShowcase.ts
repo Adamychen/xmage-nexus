@@ -244,6 +244,9 @@ function perm(seat: Seat, name: string, opts: PermOpts = {}): PermanentView {
       ...(RULES.get(name) ?? []),
       ...(opts.commander != null ? [commanderInfoRule(opts.commander)] : []),
     ],
+    // BRD-59: the server marks a commander permanent with a card icon that carries no text, only
+    // the hint. The board draws its bubble from this, so the fixture has to carry it too.
+    ...(opts.commander != null ? { cardIcons: [{ cardIconType: 'COMMANDER', hint: 'Card is commander' }] } : null),
     tapped: !!opts.tapped,
     summoningSickness: !!opts.sick,
     controlled: seat.me,

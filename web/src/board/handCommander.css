@@ -30,3 +30,11 @@
 .hand-row .hand-commander {
   margin-left: var(--sp-4);
 }
+
+/* BRD-34: in a hand drawn as a zone (a watched seat, a copy in the panel) the commander stands at
+   the end with air on both sides, so it is not read as one more card of the hand and nothing
+   crowds it against what comes next in the row. */
+.hand-zone > .hand-zone-commander {
+  margin-left: calc(var(--card-w, 100px) * 0.22);
+  margin-right: calc(var(--card-w, 100px) * 0.3);
+}
