@@ -215,3 +215,20 @@ or rejects the pick.
   re-ask had arrived before the second acknowledgement, so PRM-9 kept it. The discard bar and the
   highlighted hand stayed until a reload (reported 2026-11-16).
 - Guard: `src/game/useTargetPick.test.ts`
+
+### PRM-18 · The order is read across the board, the controls stay in the dock
+What the player is being told to do is one line, drawn over the middle of the board in the display
+face, with nothing around it: no box, no border, and no click of its own. It is the most specific
+thing the server said — the cost for a mana payment, the question for a yes/no, the card that is
+asking for a target, "declare attackers" for combat — and the bar in the dock no longer repeats it,
+keeping the hint that says how and the buttons that answer. The line steps aside while the turn
+banner is up (FX-10), and it lies under the stack, which is cards to read rather than a line to
+glance at. Where there is no board to lay it over, a prompt that stands as a dialog of its own, the
+line falls back into the dock, so nothing of it is lost.
+
+- Why: the dock carried the order, the hint, the source and the controls in one corner panel, so
+  the sentence that matters most was the smallest text on the screen and sat furthest from where
+  the player was looking. Every other client of this game puts that sentence across the middle of
+  the table (user request, with screenshots, 23-nov-2026). It is text and not a panel because the
+  board underneath is what the order is about.
+- Guard: `src/game/feedbackModes/boardOrder.test.tsx`

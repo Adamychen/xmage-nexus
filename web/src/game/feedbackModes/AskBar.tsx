@@ -3,7 +3,7 @@ import Button from '../../ui/Button'
 import Checkbox from '../../ui/Checkbox'
 import FormattedText from '../FormattedText'
 import Icon from '../../ui/Icon'
-import { DockPrompt } from '../GameDock'
+import { DockPrompt, OrderPrompt } from '../GameDock'
 import { useTranslation, dynamicT } from '../../i18n'
 import { getState } from '../../state/state'
 import { setSetting } from '../../state/store'
@@ -54,6 +54,15 @@ export default function AskBar({ form }: { form: UseFeedbackForm }) {
   }
 
   return (
+    <>
+    {message && (
+      <OrderPrompt>
+        <span className="board-order" data-testid="board-order">
+          <span className="board-order-icon" aria-hidden="true"><Icon name="info" size={16} /></span>
+          <FormattedText text={message} />
+        </span>
+      </OrderPrompt>
+    )}
     <DockPrompt>
       <div
         className="action-prompt-bar ask-prompt-bar feedback-dialog"
@@ -68,11 +77,6 @@ export default function AskBar({ form }: { form: UseFeedbackForm }) {
           {prompt.sourceName && (
             <span className="action-prompt-source" data-testid="ask-source">
               <FormattedText text={prompt.sourceName} />
-            </span>
-          )}
-          {message && (
-            <span className="action-prompt-msg" role="status" aria-live="polite">
-              <FormattedText text={message} />
             </span>
           )}
         </div>
@@ -104,5 +108,6 @@ export default function AskBar({ form }: { form: UseFeedbackForm }) {
         )}
       </div>
     </DockPrompt>
+    </>
   )
 }
