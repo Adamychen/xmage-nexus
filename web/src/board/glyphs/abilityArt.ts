@@ -6,7 +6,7 @@
  * through a CSS mask, so their colour comes from the chip, and a keyword outside
  * this list keeps the glyph drawn in `glyphs/`.
  *
- * Generated from the folder: 59 symbols.
+ * Generated from the folder: 64 symbols.
  */
 export const ABILITY_ART = new Set<string>([
   'adapt',
@@ -29,6 +29,7 @@ export const ABILITY_ART = new Set<string>([
   'decayed',
   'defender',
   'disturb',
+  'double_strike',
   'embalm',
   'enlist',
   'escape',
@@ -36,9 +37,11 @@ export const ABILITY_ART = new Set<string>([
   'exploit',
   'explore',
   'fabricate',
+  'first_strike',
   'flash',
   'flying',
   'foretell',
+  'for_mirrodin',
   'goad',
   'haste',
   'hexproof',
@@ -47,6 +50,7 @@ export const ABILITY_ART = new Set<string>([
   'incubate',
   'indestructible',
   'investigate',
+  'jump_start',
   'kicker',
   'learn',
   'lifelink',
@@ -55,6 +59,7 @@ export const ABILITY_ART = new Set<string>([
   'mutate',
   'ninjutsu',
   'proliferate',
+  'read_ahead',
   'prototype',
   'prowess',
   'reach',

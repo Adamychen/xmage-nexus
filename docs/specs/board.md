@@ -801,7 +801,7 @@ emoji) is ignored, and the rest of the appearance blob is read as before.
   symbol filled its square while another floated in it; the script above measures both the centre
   and the weight from a real render, because a path's bounding box counts geometry the fill rule
   leaves invisible (13-nov-2026).
-- Guard: `src/board/CardSlot.test.tsx` · `src/board/KeywordGlyph.test.tsx` · `src/state/persistence.test.ts` · `src/settings/BoardDemo.test.tsx`
+- Guard: `src/board/CardSlot.test.tsx` · `src/board/KeywordGlyph.test.tsx` · `src/state/persistence.test.ts` · `src/settings/BoardDemo.test.tsx` · `src/board/glyphs/abilityArt.test.ts`
 
 ### BRD-48 · The width a row has to spare buys fewer lines, not empty space
 When the row's card size is settled (BRD-25) and the bands still leave width unused, a band takes
@@ -911,17 +911,16 @@ viewBox to hold its whole drawing and then centres it on the ink it paints.
   disc, dropped here so the trefoil can take the badge's colour.
 - Guard: `src/game/PlayerInfoBar.counters.test.tsx` · `src/board/CardSlot.test.tsx`
 
-### BRD-54 · A player's counters stack beside the chip, with no box around them
+### BRD-54 · A player's counters hang under the chip, with no box around them
 The counters of a player are drawn beside the photo, the name and the life as their symbol and
 their number in the counter's own colour (BRD-53), with no plate, border or background: the symbol
 sits right against its number and the counters sit apart from one another, which is what tells one
 from the next, and they read at the interface's small size so a number beside a symbol is
 legible at a glance. A counter that changes lights its own symbol and number and sends out a
 round halo; it never flashes a plate or a square ring, because the counter has no box for
-either to belong to. They stack downwards and open another column when they run out of room, and how
-many fit in a column is measured from what the rest of the chip is tall (`useStackRows`), never a
-number written down, so the stack never makes the chip taller: a seat's status row keeps the height
-of its photo whatever counters it holds, on the own board and on an opponent's.
+either to belong to. They hang under the chip, on a line of their own under the photo,
+the name and the life, and run sideways from the left edge, wrapping onto another line when there
+are many: the width beside the photo belongs to the board, and the chip has the height to spare.
 
 - Why: the counters ran along the top of the chip in one line, which on a rival's column pushed
   them clear of the photo and the name; the user asked for them to stack like the keyword badges of
@@ -930,9 +929,8 @@ of its photo whatever counters it holds, on the own board and on an opponent's.
   the size of a box and a ring with a square corner around a badge that has neither, which on a
   live board read as a green rectangle floating beside the chip, and the counters were a size
   smaller than anything else on the chip (user report, 23-nov-2026).
-  Measured at 1920 on the four-player board: the
-  chip holds three to a column, and the rival chips, four pixels shorter, hold three as well once
-  the rows sit flush.
+  Stacking them in columns beside the life solved the height but spent
+  width the board wanted, so they moved under the chip (user request, 23-nov-2026).
 - Guard: `src/game/PlayerInfoBar.counters.test.tsx` · `src/game/PlayerInfoBar.css.test.ts`
 
 ### BRD-55 · The number on a badge stands level with its symbol
