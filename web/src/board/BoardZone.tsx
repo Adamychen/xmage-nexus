@@ -848,6 +848,8 @@ export default function BoardZone({
             viewable={handViewable}
             viewKnownCount={knownHandEntries.length}
             onViewHand={() => setHandViewerOpen(true)}
+            trailing={seatCommander}
+            onTrailingClick={onCardClick}
           />
         </div>
       )}

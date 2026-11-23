@@ -273,6 +273,16 @@ describe('SpotlightBoard', () => {
     expect(container.textContent).not.toContain('Secret Hand Card')
   })
 
+  it('BRD-34: a seat in the side panel still shows the commander it has in the command zone', () => {
+    const game = spectatorGame()
+    const carol = game.players!.find((p) => p.playerId === 'p3') as unknown as Record<string, unknown>
+    carol['handCount'] = 2
+    carol['commandList'] = [{ id: 'cmd-carol', name: 'Meren of Clan Nel Toth', manaValue: 4, mageObjectType: 'COMMANDER' }]
+    const { container } = render(<SpotlightBoard game={game} homeId="p1" mainId="p1" onSelectSeat={() => {}} />)
+    const copy = container.querySelector('[data-testid="spotlight-copy-p3"]')!
+    expect(copy.querySelector('.hand-zone-commander, .command-zone .card-slot'), 'drawn somewhere on the copy').not.toBeNull()
+  })
+
   it('BRD-34: a spectator sees the same, on the seat they are watching', () => {
     const game = spectatorGame()
     const bob = game.players!.find((p) => p.playerId === 'p2') as unknown as Record<string, unknown>
