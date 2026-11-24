@@ -363,7 +363,7 @@ html.fx-off .life-value {
   position: absolute;
   inset: -6px;
   border: 0;
-  border-radius: 999px;
+  border-radius: var(--r-pill);
   background: radial-gradient(circle, rgb(var(--pulse-rgb) / 0.4) 0%, rgb(var(--pulse-rgb) / 0.12) 55%, transparent 72%);
   pointer-events: none;
   animation: playerCounterRing calc(0.5s / var(--fx-speed, 1)) var(--ease-out) both;

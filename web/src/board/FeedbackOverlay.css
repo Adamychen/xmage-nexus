@@ -121,9 +121,9 @@
   background: linear-gradient(
     90deg,
     transparent 0%,
-    rgb(255 255 255 / 0.5) 12%,
+    var(--glow-core) 12%,
     rgb(var(--turn-rgb) / 1) 50%,
-    rgb(255 255 255 / 0.5) 88%,
+    var(--glow-core) 88%,
     transparent 100%
   );
   box-shadow: 0 0 14px rgb(var(--turn-rgb) / 0.7);
@@ -153,7 +153,7 @@
   bottom: 0;
   left: -40%;
   width: 34%;
-  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.5), transparent);
+  background: linear-gradient(90deg, transparent, var(--glow-core), transparent);
   filter: blur(6px);
   animation-name: fxBannerSweep;
   animation-duration: inherit;
@@ -176,7 +176,7 @@
   /* La banda es translúcida (deja ver el tapete), así que el texto necesita
      su propia sombra opaca para no lavarse sobre el arte de las cartas. */
   text-shadow:
-    0 0 8px rgb(255 255 255 / 0.55),
+    0 0 8px var(--glow-core),
     0 0 26px rgb(var(--turn-rgb) / 0.9),
     0 0 60px rgb(var(--turn-rgb) / 0.6),
     0 3px 3px rgb(var(--ink-rgb) / 0.85);
@@ -195,7 +195,7 @@
   letter-spacing: 0.12em;
   text-transform: uppercase;
   text-shadow:
-    0 0 6px rgb(255 255 255 / 0.5),
+    0 0 6px var(--glow-core),
     0 0 20px rgb(var(--turn-rgb) / 0.85),
     0 2px 2px rgb(var(--ink-rgb) / 0.8);
   animation-name: fxBannerText;

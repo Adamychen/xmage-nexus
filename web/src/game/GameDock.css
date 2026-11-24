@@ -91,7 +91,7 @@
   position: relative;
   display: inline-block;
   max-width: min(42rem, 100%);
-  padding-bottom: calc(var(--sp-1) + 2px);
+  padding-bottom: calc(var(--sp-1) + var(--sp-0h));
   text-align: center;
   font-family: var(--font-display);
   /* Named once, because the mana symbols are sized from it: `em` inside the badge would resolve
@@ -129,8 +129,8 @@
      way the rail of the official client sits on the table. */
   backdrop-filter: blur(3px);
   -webkit-backdrop-filter: blur(3px);
-  -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 22%, #000 78%, transparent 100%);
-  mask-image: linear-gradient(180deg, transparent 0%, #000 22%, #000 78%, transparent 100%);
+  -webkit-mask-image: linear-gradient(180deg, transparent 0%, var(--mask-opaque) 22%, var(--mask-opaque) 78%, transparent 100%);
+  mask-image: linear-gradient(180deg, transparent 0%, var(--mask-opaque) 22%, var(--mask-opaque) 78%, transparent 100%);
   pointer-events: none;
 }
 
@@ -259,7 +259,7 @@
    pill, a light edge, a highlight on the top border and a sunken shadow on the bottom one. The
    relief is an overlay, so every mode keeps the colour and the glow it already had. */
 .prompt-action-btn {
-  border-radius: 999px;
+  border-radius: var(--r-pill);
 }
 
 .prompt-action-btn::after {
@@ -268,7 +268,5 @@
   inset: 0;
   border-radius: inherit;
   pointer-events: none;
-  box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.42),
-    inset 0 -8px 14px rgb(0 0 0 / 0.26);
+  box-shadow: var(--keycap-relief);
 }
