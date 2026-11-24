@@ -525,9 +525,11 @@ already readable.
   EDHPlay shows them (user report, 2026-11-12). The look follows the panel, not EDHPlay's.
 - Guard: `src/board/SpotlightBoard.test.tsx`
 
-### BRD-32 · The own Arena board is framed around the hand
-The own board, with or without the side panel (BRD-6),
-keeps the battlefield clear of everything around it. The player chip sits at the top-left corner
+### BRD-32 · The board at the bottom is framed around the hand
+The board drawn at the bottom, with or without the side panel (BRD-6), keeps the battlefield clear
+of everything around it. It is the frame of the seat in that place, not a reward for owning it: a
+spectator, and a second window watching a game of your own (which carries no controlled seat), get
+the same frame around the seat they are watching. The player chip sits at the top-left corner
 with no frame: the photo, the name and a large life total. The creatures only leave it room when
 they would actually reach it in height. The bottom row is as tall as the resting hand (BRD-16) and
 holds, from left to right, the library, graveyard and exile and, when the player can play

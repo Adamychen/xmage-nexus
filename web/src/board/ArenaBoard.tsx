@@ -168,7 +168,11 @@ export default function ArenaBoard({
         helperEmblems={game?.myHelperEmblems}
         showHand={isSpectator}
         kindColumns
-        arenaOwn={!!me && !narrow}
+        // BRD-32: the board at the bottom wears the Arena frame whether it is played or watched.
+        // Asking for a seat of your own left a spectator (and a second window watching your own
+        // game, which has no controlled seat) with the plain arrangement: the chip inside its row,
+        // the piles as chips and no bottom row, while the side panel framed the same seat (BRD-6).
+        arenaOwn={!narrow}
       />
     </BoardShell>
   )
