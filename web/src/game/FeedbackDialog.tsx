@@ -16,12 +16,24 @@ import ManaBar from './feedbackModes/ManaBar'
 import CombatBar from './feedbackModes/CombatBar'
 import AskBar from './feedbackModes/AskBar'
 import GenericDialog from './feedbackModes/GenericDialog'
+import ArenaLibraryPrompt from './ArenaLibraryPrompt'
 
 export default function FeedbackDialog() {
   const form = useFeedbackForm()
   const { prompt } = form
   const myHand = useStore((s) => s.game?.myHand)
   const [expandedPrompt, setExpandedPrompt] = useState<FeedbackPrompt | null>(null)
+  const libraryPlan = useStore((s) => s.libraryPlan)
+  const libraryPrompt = useStore((s) => s.libraryPrompt)
+
+  if (libraryPlan && libraryPrompt) {
+    return (
+      <div className="chrome-surface">
+        <span data-prompt-method={libraryPrompt.method} data-prompt-mode={libraryPrompt.mode} hidden aria-hidden="true" />
+        <ArenaLibraryPrompt key={promptKey(libraryPrompt)} prompt={libraryPrompt} sending />
+      </div>
+    )
+  }
 
   if (!prompt) return null
 
@@ -41,6 +53,10 @@ function renderPrompt(form: UseFeedbackForm, handPick: boolean, onExpandHandPick
   const { prompt, selected, setSelected, send, sendNow, cancel, busy } = form
 
   if (!prompt) return null
+
+  if (isArenaLibraryPick(prompt)) {
+    return <ArenaLibraryPrompt key={promptKey(prompt)} prompt={prompt} sending={false} />
+  }
 
   // ── Scry / Surveil / Reorder dialog (GAME_CHOOSE_CARDS_ORDER or mode === 'order')
   if (prompt.mode === 'order' || prompt.method === 'GAME_CHOOSE_CARDS_ORDER') {
@@ -115,4 +131,20 @@ function renderPrompt(form: UseFeedbackForm, handPick: boolean, onExpandHandPick
   }
 
   return <GenericDialog form={form} />
+}
+
+const promptKeys = new WeakMap<FeedbackPrompt, number>()
+let promptKeySeq = 0
+
+function promptKey(prompt: FeedbackPrompt): number {
+  let key = promptKeys.get(prompt)
+  if (key === undefined) {
+    key = ++promptKeySeq
+    promptKeys.set(prompt, key)
+  }
+  return key
+}
+
+function isArenaLibraryPick(prompt: FeedbackPrompt): boolean {
+  return prompt.libraryStep === 'surveil-pick' || prompt.libraryStep === 'scry-pick'
 }

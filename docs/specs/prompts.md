@@ -232,4 +232,4 @@ the plan.
 - Why: XMage asks one Arena decision as a chain: a pick of the cards to move, then one order pick per
   card but the last for each pile, each "last one chosen will be topmost/bottommost"
   (`docs/plans/2026-11-24-arena-surveil-design.md`, 2026-11-24).
-- Guard: `src/game/feedback/libraryPlan.test.ts` · `src/state/events/prompts.libraryPlan.test.ts`
+- Guard: `src/game/feedback/libraryPlan.test.ts` · `src/state/events/prompts.libraryPlan.test.ts` · `src/game/ArenaLibraryPrompt.test.tsx`

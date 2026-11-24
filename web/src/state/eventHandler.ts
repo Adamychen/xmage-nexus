@@ -44,6 +44,7 @@ export function handleMessage(msg: ProxyMessage) {
       break
     }
     case 'disconnected':
+      endLibraryPlan()
       setState({ link: 'ok', linkAttempt: 0, phase: 'idle', connecting: false, game: null, gameId: null, gameChatId: null, tableChatId: null, tableChatTableId: null, tournamentChatId: null, tournamentChatTournamentId: null, playableIds: [], playableWindow: null, combat: null, feedback: null, lobby: null, roomChatId: null, sideboardScreen: null, pendingSideboardScreen: null, rollbackPendingFor: null, rollbackPendingAt: null, rollbackVote: null, resumingGameId: null, turnRecap: null, enteredThisTurn: {}, elimination: null })
       break
     case 'info':
@@ -116,6 +117,8 @@ function handleEvent(method: string, objectId: string | null, data: unknown, mes
   if (awayFromTheGame && isGameEvent && !restoringGame && method !== 'START_GAME' && method !== 'WATCHGAME') {
     return
   }
+
+  if ((method === 'START_GAME' || method === 'GAME_INIT') && objectId && s.libraryPlan && objectId !== s.libraryPlan.gameId) endLibraryPlan()
 
   const embeddedGame = gameViewFrom(data)
   if (embeddedGame) {

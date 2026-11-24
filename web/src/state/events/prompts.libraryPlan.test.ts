@@ -161,4 +161,30 @@ describe('library plan runner', () => {
     expect(getState().libraryPlan).toBeNull()
     expect(getState().libraryPrompt).toBeNull()
   })
+
+  it('PRM-18: a disconnect ends a running plan', () => {
+    startLibraryPlan(surveilPrompt(['a', 'b', 'c']), { mode: 'surveil', top: ['a', 'c'], away: ['b'] })
+    handleMessage({ type: 'disconnected' } as never)
+    expect(getState().libraryPlan).toBeNull()
+    expect(getState().libraryPrompt).toBeNull()
+  })
+
+  it('PRM-18: the start of another game ends a running plan', () => {
+    startLibraryPlan(surveilPrompt(['a', 'b', 'c']), { mode: 'surveil', top: ['a', 'c'], away: ['b'] })
+    handleMessage({ type: 'event', method: 'GAME_INIT', objectId: 'g2', data: {} } as never)
+    expect(getState().libraryPlan).toBeNull()
+    expect(getState().libraryPrompt).toBeNull()
+  })
+
+  it('PRM-18: a START_GAME of another game ends a running plan', () => {
+    startLibraryPlan(surveilPrompt(['a', 'b', 'c']), { mode: 'surveil', top: ['a', 'c'], away: ['b'] })
+    handleMessage({ type: 'event', method: 'START_GAME', objectId: 'g2', data: {} } as never)
+    expect(getState().libraryPlan).toBeNull()
+  })
+
+  it('PRM-18: a GAME_INIT of the same game keeps the plan', () => {
+    startLibraryPlan(surveilPrompt(['a', 'b', 'c']), { mode: 'surveil', top: ['a', 'c'], away: ['b'] })
+    handleMessage({ type: 'event', method: 'GAME_INIT', objectId: 'g1', data: {} } as never)
+    expect(getState().libraryPlan).not.toBeNull()
+  })
 })
