@@ -127,7 +127,7 @@ test.describe('Phase stops', { tag: '@phasestops' }, () => {
       await expect(page.locator('.stop-dot')).toHaveCount(0)
 
       await page.reload({ waitUntil: 'domcontentloaded' })
-      await expect(page.locator('.game-board')).toBeVisible({ timeout: 30_000 })
+      await expect(page.locator('.arena-board').first()).toBeVisible({ timeout: 30_000 })
       await expect(bar).toBeVisible()
       await expect(page.locator('.stop-dot')).toHaveCount(0)
     })

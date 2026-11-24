@@ -44,20 +44,19 @@ interface Case {
 }
 
 const SHARING_CASES: Case[] = [
-  { layout: 'table', seats: 4, style: 'compact', viewport: NARROW },
-  { layout: 'table', seats: 2, style: 'compact', viewport: NARROW },
+  { layout: 'arena', seats: 4, style: 'compact', viewport: NARROW },
+  { layout: 'arena', seats: 2, style: 'compact', viewport: NARROW },
   { layout: 'arena', seats: 4, style: 'classic', viewport: { width: 1366, height: 768 } },
 ]
 
 const OVERFLOW_CASES: Case[] = [
-  { layout: 'table', seats: 4, style: 'compact', viewport: NARROW },
+  { layout: 'arena', seats: 4, style: 'compact', viewport: NARROW },
   { layout: 'arena', seats: 4, style: 'classic', viewport: NARROW },
-  { layout: 'table', seats: 4, style: 'classic', viewport: NARROW },
 ]
 
 const HIDE_CASES: Case[] = [
-  { layout: 'table', seats: 4, style: 'compact', viewport: NARROW },
-  { layout: 'table', seats: 4, style: 'compact', viewport: { width: 1100, height: 900 } },
+  { layout: 'arena', seats: 4, style: 'compact', viewport: NARROW },
+  { layout: 'arena', seats: 4, style: 'compact', viewport: { width: 1100, height: 900 } },
   { layout: 'arena', seats: 4, style: 'classic', viewport: NARROW },
 ]
 

@@ -73,14 +73,14 @@
           { "icon": "target", "title": "Interacción completa", "desc": "Prioridad, targeting visual animado, pago de maná, combate multibloqueo y hechizos complejos." },
           { "icon": "layers", "title": "Deck Builder", "desc": "Constructor in-app con Scryfall e import/export en texto, Arena y .dck." },
           { "icon": "trophy", "title": "Todos los formatos", "desc": "Commander, Draft y Sealed de 8 jugadores, torneos Suizo/Eliminación y repeticiones." },
-          { "icon": "palette", "title": "A tu gusto", "desc": "9 idiomas, motor de sonido, VFX y deck tracker integrado." }
+          { "icon": "palette", "title": "A tu gusto", "desc": "9 idiomas, motor de sonido y VFX, en un tablero al estilo de MTG Arena." }
         ],
         "desktopBridgeTitle": "¿Ya juegas en XMage de escritorio?",
         "desktopBridgeDesc": "El mismo motor, las mismas mesas y tus decks, sin instalar nada: se abre en el navegador.",
         "desktopBridgeBullets": [
           "Sin Java ni descargas: entra con un nombre y juega",
           "Las partidas sobreviven a desconexiones, reinicios del proxy y cortes del servidor",
-          "Targeting visual, VFX, audio, deck tracker y 9 idiomas"
+          "Targeting visual, VFX, audio y 9 idiomas"
         ],
         "desktopBridgeLink": "Ver paridad de funciones →",
         "formatsTitle": "Formatos y modos",
@@ -166,14 +166,14 @@
           { "icon": "target", "title": "Full interaction", "desc": "Priority, animated visual targeting, mana payment, multi-block combat and complex spells." },
           { "icon": "layers", "title": "Deck Builder", "desc": "In-app builder with Scryfall and text, Arena and .dck import/export." },
           { "icon": "trophy", "title": "All formats", "desc": "Commander, 8-player Draft & Sealed, Swiss/Single-Elim tournaments and replays." },
-          { "icon": "palette", "title": "Your way", "desc": "9 languages, sound engine, VFX and an integrated deck tracker." }
+          { "icon": "palette", "title": "Your way", "desc": "9 languages, sound engine and VFX, on a board in the style of MTG Arena." }
         ],
         "desktopBridgeTitle": "Already playing desktop XMage?",
         "desktopBridgeDesc": "The same engine, the same tables and your decks, with nothing to install: it opens in the browser.",
         "desktopBridgeBullets": [
           "No Java, no downloads: type a name and play",
           "Games survive dropped connections, proxy restarts and server outages",
-          "Visual targeting, VFX, audio, deck tracker and 9 languages"
+          "Visual targeting, VFX, audio and 9 languages"
         ],
         "desktopBridgeLink": "See feature parity →",
         "formatsTitle": "Formats & modes",

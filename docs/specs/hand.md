@@ -28,7 +28,7 @@ lies under it stays usable. In a 1v1 pod the fan spans the whole bottom row.
 As cards are added the fan spreads across the width it has (at most 1100 px) while every card
 keeps its size; only when each card would show less than 35% of its width do the cards shrink,
 down to a 64 px minimum. A bigger hand never gets bigger cards. The fan lives in the centre band
-between the bottom-left player panel (with its mana pool) and the command wheel on the right, and
+between your piles (library, graveyard, exile) on the left and the action button on the right, and
 never covers either.
 
 - Why: the sizing solved for a pitch the CSS never rendered, so 15 cards collapsed into ~195 px of
@@ -92,35 +92,30 @@ Besides the fan, the hand can be a column at the left of the board or a scrollab
 cards; the two are exclusive, and both show every card whole (readable as text with the rendered
 card style) and mark the playable ones. The
 opening-hand decision always shows the raised fan (PRM-2). The column gives way to the fan while
-the side panel is open, and comes back when it closes.
+the chat and log panel (PNL-10) is open, since that panel lies over it, and comes back when it closes.
 
 - Why: the column makes the hand readable at once and moves the board instead of covering it, and
   the fan stays for the mulligan (`fee20914ce`); the row is the third option (`febb74f9a3`); the
-  column and the side panel do not fit together (ROADMAP §4.3c).
-- Guard: `src/board/HandRail.test.tsx` · `src/board/HandRow.test.tsx` · `e2e/game-ui-v2.spec.ts`
+  column and the chat and log panel cannot share the left edge (ROADMAP §4.3c).
+- Guard: `src/board/HandRail.test.tsx` · `src/board/HandRow.test.tsx` · `e2e/arena-chrome.spec.ts` · `src/game/GameScreen.test.tsx`
 
 ### HND-8 · An opponent's hand shows its size face down and what you know of it face up
 An opponent's hand row shows one back per card in hand. Cards this client knows (revealed from
 that hand by an effect, watched with permission, or in a hand you control; HND-13) show face up in
 it, the backs after them. In a pod the backs collapse into one ×N stack as soon as there are two,
-with the known cards kept face up beside it; a hand that is entirely face up never collapses. In the Table layout the row
-is replaced by the hand badge of HND-9 and the stack only appears while the hand is the target of
-an effect, because it carries the target highlight.
+with the known cards kept face up beside it; a hand that is entirely face up never collapses.
 
 - Why: the hand size is public information and revealed cards stay known; a pod has no room for a
-  row of backs per opponent (`6eaceab068`); the Table layout moved the hand to the portrait badge
-  (`47ec51c1f9`).
+  row of backs per opponent (`6eaceab068`).
 - Guard: `src/board/HandZone.test.tsx` · `e2e/reveal.spec.ts`
 
 ### HND-9 · A known opponent hand opens in a viewer
-Clicking a pod's hand stack, or in the Table layout the hand badge on the portrait (eye icon,
-`known/total`), opens the hand viewer: the known cards numbered from #1, then one numbered back per
+Clicking an opponent's hand opens the hand viewer: the known cards numbered from #1, then one numbered back per
 unknown card. The stack opens it even when nothing is known. Only a known card that is a target or
 playable reacts to a click; the viewer closes with its close button or Escape.
 
-- Why: the grimoire-style viewer for an opponent's hand (`6eaceab068`); in the Table layout a hand
-  with known cards opens from its badge (`47ec51c1f9`).
-- Guard: `src/board/HandViewer.test.tsx` · `src/board/HandZone.test.tsx` · `src/board/ArenaBoard.test.tsx` · `e2e/game-ui-v2.spec.ts`
+- Why: the grimoire-style viewer for an opponent's hand (`6eaceab068`).
+- Guard: `src/board/HandViewer.test.tsx` · `src/board/HandZone.test.tsx`
 
 ### HND-10 · While you control another player, one button switches the hand you see
 When you control another player (Mindslaver), the server sends their hand and a Switch Hands button
@@ -130,14 +125,16 @@ is no longer sent, the client switches back by itself. An opponent's zone never 
 
 - Why: acting on a controlled turn (`4fba86bc77`); the button is mounted above the fan because the
   fan intercepted its click and in 1v1 the hand never changed.
-- Guard: `src/board/handSwitch.test.ts` · `src/board/BoardZone.handSwitch.test.tsx` · `src/board/GameBoard.control.test.tsx` · `src/state/store.test.ts`
+- Guard: `src/board/handSwitch.test.ts` · `src/board/BoardZone.handSwitch.test.tsx` · `src/board/ArenaBoard.control.test.tsx` · `src/state/store.test.ts`
 
 ### HND-11 · Clicking a hand card never moves the board
-Focusing or clicking a hand card, even one that peeks below the board edge, never scrolls the board.
+Focusing or clicking a hand card or one of your pile cards, even one that peeks below the board
+edge, never scrolls the board.
 
 - Why: the board containers were scroll containers, so a clicked hand card was scrolled into view
   and shifted the whole board up by up to ~100 px with no way back (`0ab8316a85`,
-  `docs/lessons.md`).
+  `docs/lessons.md`). The Arena zone kept `overflow: hidden`, so focusing a pile card at the
+  bottom-left moved the own board up 182 px (24-nov-2026).
 - Guard: `e2e/board-scroll.spec.ts`
 
 ### HND-12 · The client shows how many cards a player holds, never a maximum hand size

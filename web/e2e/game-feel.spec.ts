@@ -66,7 +66,7 @@ async function startFeelGame(page: Page) {
     prefix: 'feel',
     skipAsks: true,
   })
-  await expect(page.locator('.game-board')).toBeVisible({ timeout: 20_000 })
+  await expect(page.locator('.arena-board').first()).toBeVisible({ timeout: 20_000 })
   return session
 }
 
@@ -171,7 +171,7 @@ test('FX-4: game-feel: after a reload no animation is left hanging and the board
     await launchDrawFlight(page)
     await page.reload()
 
-    await expect(page.locator('.game-board')).toBeVisible({ timeout: 30_000 })
+    await expect(page.locator('.arena-board').first()).toBeVisible({ timeout: 30_000 })
     await expect
       .poll(() => page.locator('.flight-hidden, .entering, .flying-card-item').count(), { timeout: 10_000 })
       .toBe(0)

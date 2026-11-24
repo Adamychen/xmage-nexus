@@ -23,23 +23,34 @@ function main(chosen: SpotlightChoice | null, declaration: string | null = null,
 }
 
 describe('spotlight', () => {
-  it('BRD-6: the main board mode needs the switch, an Arena or Table layout and one live opponent, a duel included', () => {
-    const on = { enabled: true, arenaLayout: true, isSpectator: false, liveOppCount: 2 }
+  it('BRD-6: the main board mode needs the switch and one live opponent, a duel included', () => {
+    const on = { enabled: true, isSpectator: false, liveOppCount: 2, totalPlayers: 3 }
     expect(spotlightActive(on)).toBe(true)
     expect(spotlightActive({ ...on, liveOppCount: 1 })).toBe(true)
     expect(spotlightActive({ ...on, enabled: false })).toBe(false)
-    expect(spotlightActive({ ...on, arenaLayout: false })).toBe(false)
     expect(spotlightActive({ ...on, liveOppCount: 0 })).toBe(false)
   })
 
+  it('BRD-6: five players force the main board even with the switch off', () => {
+    expect(spotlightActive({ enabled: false, isSpectator: false, liveOppCount: 4, totalPlayers: 5 })).toBe(true)
+  })
+
+  it('BRD-6: a duel with the switch off stays in columns', () => {
+    expect(spotlightActive({ enabled: false, isSpectator: false, liveOppCount: 1, totalPlayers: 2 })).toBe(false)
+  })
+
+  it('BRD-6: a spectator of six players needs two live players for the forced main board', () => {
+    expect(spotlightActive({ enabled: false, isSpectator: true, liveOppCount: 1, totalPlayers: 6 })).toBe(false)
+    expect(spotlightActive({ enabled: false, isSpectator: true, liveOppCount: 2, totalPlayers: 6 })).toBe(true)
+  })
+
   it('BRD-6: a spectator gets the main board mode with two or more players left, not with one', () => {
-    const on = { enabled: true, arenaLayout: true, isSpectator: true, liveOppCount: 3 }
+    const on = { enabled: true, isSpectator: true, liveOppCount: 3, totalPlayers: 4 }
     expect(spotlightActive(on)).toBe(true)
     expect(spotlightActive({ ...on, liveOppCount: 4 })).toBe(true)
     expect(spotlightActive({ ...on, liveOppCount: 2 })).toBe(true)
     expect(spotlightActive({ ...on, liveOppCount: 1 })).toBe(false)
     expect(spotlightActive({ ...on, enabled: false })).toBe(false)
-    expect(spotlightActive({ ...on, arenaLayout: false })).toBe(false)
   })
 
   it('BRD-7: a spectator starts on the seat the column view draws at the bottom and falls back to it when the chosen seat leaves', () => {

@@ -4,16 +4,14 @@ import { dismissSetupWizard } from './start-game'
 
 type Rec = Record<string, unknown>
 
-export type Layout = 'standard' | 'arena' | 'table'
+export type Layout = 'arena' | 'panel'
 export type CardStyle = 'classic' | 'compact'
 
 export const LAYOUT_SETTINGS: Record<Layout, Rec> = {
-  standard: { gameUi: 'v1', boardLayout: 'standard', boardLayoutManual: true },
-
-  arena: { gameUi: 'v1', boardLayout: 'arena', boardLayoutManual: true },
-  table: { gameUi: 'v2', boardLayout: 'arena', boardLayoutManual: true },
+  arena: { boardSpotlight: false },
+  panel: { boardSpotlight: true },
 }
-export const LAYOUTS = Object.keys(LAYOUT_SETTINGS) as Layout[]
+export const LAYOUTS: Layout[] = ['arena']
 export const SEAT_COUNTS = [2, 4]
 export const CARD_STYLES: CardStyle[] = ['classic', 'compact']
 

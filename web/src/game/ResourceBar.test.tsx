@@ -340,6 +340,14 @@ describe('ResourceBar top-card peek', () => {
     expect(slot?.nextElementSibling?.classList.contains('library-stack')).toBe(true)
   })
 
+  it('shows the peeked card beside the library pile card on the Arena bottom row', () => {
+    showPeek(40)
+    const { container } = render(<ResourceBar player={me(40)} side="my" pileCards pileLabels />)
+    const slot = container.querySelector('[data-testid="pile-cards"] [data-testid="library-peek"]')
+    expect(slot).toBeTruthy()
+    expect(slot!.querySelector('[data-card-id="top-1"]')).toBeTruthy()
+  })
+
   it('never shows it on an opponent bar', () => {
     showPeek(40)
     const { container } = render(<ResourceBar player={makePlayer({ playerId: 'opp', name: 'Bob', libraryCount: 40 })} side="opp" />)

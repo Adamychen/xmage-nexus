@@ -7,7 +7,7 @@
   height: 100%;
   min-height: 0;
   gap: var(--sp-1);
-  overflow: hidden;
+  overflow: clip;
   box-sizing: border-box;
 }
 
@@ -392,6 +392,10 @@
 
 .stack-group[data-spread] {
   z-index: 30;
+}
+
+.bz-band:not([data-band-overflow]):has(> .stack-group[data-spread]) {
+  overflow: visible;
 }
 
 .stack-group[data-spread] > :not(.stack-group-badge) {

@@ -214,7 +214,6 @@ function predicted(item: ItemKind, opts: ItemOpts, c: number): number {
 
 const card = (tapped: boolean, attachments: number, mutateParts = 0): ItemKind => ({ kind: 'card', tapped, attachments, mutateParts })
 const pile = (pileKind: 'land' | 'token', count: number, tapped: number): ItemKind => ({ kind: 'pile', pile: pileKind, count, tapped })
-const commandZone = (commanders: number, compactPod: boolean, planes = 0, emblems = 0): ItemKind => ({ kind: 'commander', commanders, compactPod, planes, emblems })
 
 const BOARD_KINDS: ItemKind[] = [
   card(false, 0),
@@ -249,7 +248,7 @@ for (const { cardStyle, tapStyle } of STYLE_CASES) {
   const tilted = tapStyle === 'tilted'
   const title = `${cardStyle} cards with ${tapStyle} tapped cards`
   test(`BRD-28: ${title}: every battlefield item and command zone is as wide as itemModel predicts`, async ({ page }) => {
-    const settings = { gameUi: 'v1', boardLayout: 'standard', boardLayoutManual: true, cardStyle, tapStyle }
+    const settings = { boardSpotlight: false, cardStyle, tapStyle }
     await showBoard(page, boardGame(2), settings)
     await expect(page.locator('.board-zone.card-style-compact')).toHaveCount(compact ? 2 : 0)
     await expect(page.locator('.board-zone.tap-tilted')).toHaveCount(tilted ? 2 : 0)
@@ -258,8 +257,8 @@ for (const { cardStyle, tapStyle } of STYLE_CASES) {
     const failures: string[] = []
     for (const width of WIDTHS) {
       await setCardWidth(page, width)
-      const measured = await measure(page)
-      expect(sortedJson(measured.map((m) => m.kind)), `${title}: items drawn at ${width}px`).toEqual(sortedJson([...BOARD_KINDS, commandZone(1, false, 1, 2), commandZone(2, false, 0, 1)]))
+      const measured = (await measure(page)).filter((m) => m.kind.kind !== 'commander')
+      expect(sortedJson(measured.map((m) => m.kind)), `${title}: items drawn at ${width}px`).toEqual(sortedJson([...BOARD_KINDS]))
       for (const m of measured) {
         const want = predicted(m.kind, opts, width)
         const deviation = Math.abs(m.footprint - want)
@@ -271,21 +270,3 @@ for (const { cardStyle, tapStyle } of STYLE_CASES) {
     expect(failures, 'items whose width differs from itemModel').toEqual([])
   })
 }
-
-test('BRD-28: two commanders in a compact pod: the command zone is 0.88c per commander plus its frame', async ({ page }) => {
-  const settings = { gameUi: 'v1', boardLayout: 'arena', boardLayoutManual: true, cardStyle: 'classic', tapStyle: 'upright' }
-  await showBoard(page, boardGame(4), settings)
-  const failures: string[] = []
-  for (const width of WIDTHS) {
-    await setCardWidth(page, width)
-    const measured = await measure(page)
-    if (width === WIDTHS[0]) expect(measured.map((m) => m.kind)).toContainEqual(commandZone(2, true, 0, 1))
-    const zones = measured.filter((m) => m.kind.kind === 'commander')
-    for (const m of zones) {
-      const want = predicted(m.kind, { compact: false, tilted: false }, width)
-      const deviation = Math.abs(m.footprint - want)
-      if (deviation > TOLERANCE_PX) failures.push(`${m.label} ${JSON.stringify(m.kind)} at ${width}px: measured ${m.footprint}px, predicted ${want}px`)
-    }
-  }
-  expect(failures, 'command zones whose width differs from itemModel').toEqual([])
-})

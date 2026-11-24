@@ -7,8 +7,7 @@ fakeOnly()
 
 type Rec = Record<string, unknown>
 
-const V2_ARENA = { gameUi: 'v2', boardLayout: 'arena', boardLayoutManual: true }
-const V1_ARENA = { gameUi: 'v1', boardLayout: 'arena', boardLayoutManual: true, boardSpotlight: false }
+const ARENA = { boardSpotlight: false }
 
 function token(id: string, name: string, types: string[]): Rec {
   return { id, parentId: id, name, displayName: name, cardTypes: types, isToken: true, mageObjectType: 'TOKEN', manaValue: 0, expansionSetCode: '', cardNumber: '0' }
@@ -46,6 +45,7 @@ interface Box {
 
 interface SeatBoxes {
   name: string
+  own: boolean
   lands: Box | null
   others: Box | null
   landCards: Box[]
@@ -57,7 +57,7 @@ interface SeatBoxes {
   status: Box | null
   marquee: Box | null
   marqueeCards: Box[]
-  marqueeBudget: number
+  marqueeChrome: number
 }
 
 function intersects(a: Box, b: Box): boolean {
@@ -75,6 +75,7 @@ async function seatBoxes(page: import('@playwright/test').Page): Promise<SeatBox
       Array.from(scope.querySelectorAll(sel)).map((el) => box(el)!)
     return Array.from(document.querySelectorAll<HTMLElement>('.arena-board .board-zone')).map((zone) => ({
       name: zone.dataset.playerName ?? '',
+      own: zone.classList.contains('arena-own'),
       lands: box(zone.querySelector('[data-testid="lands-band"]')),
       others: box(zone.querySelector('[data-testid="others-band"]')),
       landCards: boxes('[data-testid="lands-band"] .card-slot', zone),
@@ -86,14 +87,11 @@ async function seatBoxes(page: import('@playwright/test').Page): Promise<SeatBox
       status: box(zone.querySelector('.bz-status-row')),
       marquee: box(zone.querySelector('[data-testid="marquee-band"]')),
       marqueeCards: boxes('[data-testid="marquee-band"] .card-slot', zone),
-      marqueeBudget: (() => {
+      marqueeChrome: (() => {
         const band = zone.querySelector<HTMLElement>('[data-testid="marquee-band"]')
         if (!band) return 0
-        const slots = parseFloat(band.style.getPropertyValue('--marquee-slots'))
-        const zoneW = parseFloat(getComputedStyle(zone).getPropertyValue('--zone-card-w'))
         const cs = getComputedStyle(band)
-        const chrome = parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight) + parseFloat(cs.borderLeftWidth) + parseFloat(cs.borderRightWidth)
-        return slots * zoneW + (slots - 1) * parseFloat(cs.columnGap) + chrome
+        return parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight) + parseFloat(cs.borderLeftWidth) + parseFloat(cs.borderRightWidth)
       })(),
     }))
   })
@@ -107,7 +105,7 @@ test.beforeEach(async ({ page }) => {
 })
 
 test('BRD-1: on every seat the lands band sits left of the others band and no card crosses', async ({ page }) => {
-  await showGame(page, withKinds(), V2_ARENA)
+  await showGame(page, withKinds(), ARENA)
   await expect(page.getByTestId('arena-board')).toBeVisible({ timeout: 10_000 })
   await expect(page.locator('.arena-board [data-testid="lands-band"]').first()).toBeVisible({ timeout: 10_000 })
   const seats = await seatBoxes(page)
@@ -128,7 +126,7 @@ test('BRD-1: on every seat the lands band sits left of the others band and no ca
 })
 
 test('BRD-2: the marquee band sits at the right end of the creatures row on every seat with a planeswalker or saga', async ({ page }) => {
-  await showGame(page, withKinds(), V2_ARENA)
+  await showGame(page, withKinds(), ARENA)
   await expect(page.getByTestId('arena-board')).toBeVisible({ timeout: 10_000 })
   await expect(page.locator('.arena-board [data-testid="marquee-band"]').first()).toBeVisible({ timeout: 10_000 })
   const seats = await seatBoxes(page)
@@ -144,7 +142,12 @@ test('BRD-2: the marquee band sits at the right end of the creatures row on ever
     const row = seat.creatures!
     const creatureBand = seat.creatureBand!
     expect(Math.abs(band.top - row.top), `${seat.name}: band starts at the top of the creatures row`).toBeLessThanOrEqual(1)
-    expect(Math.abs(band.bottom - row.bottom), `${seat.name}: band ends at the bottom of the creatures row`).toBeLessThanOrEqual(1)
+    if (seat.own) {
+      expect(band.bottom, `${seat.name}: the own board's band takes the right edge of both rows (BRD-33)`).toBeGreaterThan(row.bottom)
+      expect(band.bottom, `${seat.name}: the own board's band stays inside the permanents row`).toBeLessThanOrEqual(seat.permanents!.bottom + 1)
+    } else {
+      expect(Math.abs(band.bottom - row.bottom), `${seat.name}: band ends at the bottom of the creatures row`).toBeLessThanOrEqual(1)
+    }
     expect(band.left, `${seat.name}: band sits right of the creatures band`).toBeGreaterThanOrEqual(creatureBand.right - 1)
     expect(seat.marqueeCards.length, `${seat.name}: band holds its permanents`).toBeGreaterThan(0)
     const cardW = seat.marqueeCards[0].right - seat.marqueeCards[0].left
@@ -156,7 +159,8 @@ test('BRD-2: the marquee band sits at the right end of the creatures row on ever
         expect(intersects(card, creature), `${seat.name}: a marquee card overlaps a creature`).toBe(false)
       }
     }
-    expect(band.right - band.left, `${seat.name}: band is no wider than its cards need`).toBeLessThanOrEqual(seat.marqueeBudget + 2)
+    const extent = Math.max(...seat.marqueeCards.map((c) => c.right)) - Math.min(...seat.marqueeCards.map((c) => c.left))
+    expect(band.right - band.left, `${seat.name}: band is no wider than its cards need`).toBeLessThanOrEqual(extent + seat.marqueeChrome + 2)
     if (seat.creatureCards.length === 2 && seat.marqueeCards.length === 2) {
       expect(creatureBand.right - creatureBand.left, `${seat.name}: creatures keep the rest of the row`).toBeGreaterThan(band.right - band.left)
     }
@@ -169,7 +173,7 @@ test('BRD-2: the marquee band sits at the right end of the creatures row on ever
 })
 
 test('BRD-48: a band of the own board wraps only when its line would not fit in the row', async ({ page }) => {
-  await showGame(page, withKinds(), V1_ARENA)
+  await showGame(page, withKinds(), ARENA)
   await expect(page.getByTestId('arena-board')).toBeVisible({ timeout: 10_000 })
   await expect(page.locator('.arena-own [data-testid="lands-band"]').first()).toBeVisible({ timeout: 10_000 })
   const rows = await page.evaluate(() => {

@@ -20,7 +20,7 @@ test.describe('Cross-zone cast (ray)', { tag: '@crosszone' }, () => {
   test('Arc Trail desde el cementerio: clic en el rayo, selección en overlay y resolución', async ({ page }) => {
    await withFakeServer(() => crossZoneScenario('graveyard-cast'), async () => {
     const { frames, pageErrors, helper } = await quickStartGame(page, { prefix: 'cz' })
-    const board = page.locator('.game-board')
+    const board = page.locator('.arena-board').first()
 
      // esperar la mano inicial (mulligan auto-keep)
     await waitCrossZonePlayable(page, 'Arc Trail', { timeoutMs: 30_000, minUntapped: 0 })
@@ -31,7 +31,7 @@ test.describe('Cross-zone cast (ray)', { tag: '@crosszone' }, () => {
     expect(await crossZoneInScene(page, arcId), 'Arc Trail debería estar en la escena como cross-zone jugable').toBe(true)
 
      // (b) abrir el overlay del rayo y hacer clic en la carta
-    const rayButton = page.locator('.ray-stack')
+    const rayButton = page.getByTestId('pile-card-playable')
     await expect(rayButton, 'el icono del rayo debería ser visible').toBeVisible({ timeout: 10_000 })
     await rayButton.click()
 
@@ -73,12 +73,12 @@ test.describe('Cross-zone cast (ray)', { tag: '@crosszone' }, () => {
   test('Arc Trail desde exilio: mismo flujo con la carta en exilio', async ({ page }) => {
    await withFakeServer(() => crossZoneScenario('exile-cast'), async () => {
     const { frames, pageErrors, helper } = await quickStartGame(page, { prefix: 'czx' })
-    const board = page.locator('.game-board')
+    const board = page.locator('.arena-board').first()
 
     const arcId = await waitCrossZonePlayable(page, 'Arc Trail', { timeoutMs: 30_000, minUntapped: 0 })
     if (!arcId) throw new Error('Arc Trail no fue jugable desde exilio en 30s')
 
-    const rayButton = page.locator('.ray-stack')
+    const rayButton = page.getByTestId('pile-card-playable')
     await expect(rayButton, 'el icono del rayo debería ser visible').toBeVisible({ timeout: 10_000 })
     await rayButton.click()
 

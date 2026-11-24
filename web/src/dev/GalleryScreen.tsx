@@ -168,9 +168,7 @@ export default function GalleryScreen() {
       seatFocus: active.seatFocus ? { gameId: active.gameId ?? null, playerId: active.seatFocus, combatTurn: null } : null,
       settings: {
         ...base.settings,
-        boardLayout: active.boardLayout ?? base.settings.boardLayout,
         boardSpotlight: active.boardSpotlight ?? base.settings.boardSpotlight,
-        gameUi: active.gameUi ?? base.settings.gameUi,
         uiScale: active.uiScale ?? base.settings.uiScale,
         cjkBoost: active.cjkBoost ?? base.settings.cjkBoost,
       },

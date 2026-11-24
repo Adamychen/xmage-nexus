@@ -1,10 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import GameBoard from '../board/GameBoard'
 import ArenaBoard from '../board/ArenaBoard'
 import SpotlightBoard from '../board/SpotlightBoard'
 import { spotlightActive, useSpotlight } from '../board/spotlight'
-import OpponentSwitcherBar from '../board/OpponentSwitcherBar'
 import { DividerSlotContext } from '../board/BoardShell'
 import TurnOrderRing from '../board/TurnOrderRing'
 import { liveOpponentIds, useSeatFocus } from '../board/seatFocus'
@@ -30,12 +28,8 @@ import GameDock, { PromptSlotProvider, useDockOffset } from './GameDock'
 import GameStrip from './GameStrip'
 import { useChangeFlag } from './useChangeFlag'
 import GameDrawer, { DrawerToggles, type DrawerTab } from './GameDrawer'
-import SidePanel, { type SidePanelTab } from './SidePanel'
-import GameTopBar from './GameTopBar'
-import PhaseDial from './PhaseDial'
+import ChatLogPanel, { ChatLogToggles, type ChatLogTab } from './ChatLogPanel'
 import { ChromeActionsContext } from './chromeActions'
-import LogTicker from './LogTicker'
-import CombatLedger from './CombatLedger'
 import StackZone from '../board/StackZone'
 import CombatArrowsOverlay from '../board/CombatArrowsOverlay'
 import FeedbackOverlay from '../board/FeedbackOverlay'
@@ -67,9 +61,7 @@ import { SPACE_PASS_REGION_SELECTOR, SPACE_SHORTCUT_OFF_SELECTOR } from '../ui/c
 import { crossZonePlayables } from '../board/crossZone'
 import { resolveTargetHits, targetZoneKindOf } from '../board/targetZones'
 import { combatActorsFrom } from '../state/gameUtils'
-import { effectiveBoardLayout } from '../board/boardLayout'
-import { MAX_BOARD_PLAYERS, spectatorHomeSeat } from '../board/boardShared'
-import { useOverlayGutters } from './useOverlayGutters'
+import { spectatorHomeSeat } from '../board/boardShared'
 import { useTranslation } from '../i18n'
 import { soundManager } from '../audio/soundManager'
 import { inverseZoom } from '../appearance/zoom'
@@ -141,9 +133,8 @@ export default function GameScreen() {
   const gameRootRef = useRef<HTMLDivElement>(null)
   const gameBodyRef = useRef<HTMLDivElement>(null)
   const boardWrapRef = useRef<HTMLDivElement>(null)
-  const v2 = settings.gameUi === 'v2'
   const [drawerTab, setDrawerTab] = useState<DrawerTab | null>(null)
-  const [sidePanelTab, setSidePanelTab] = useState<SidePanelTab | null>(null)
+  const [chatLogTab, setChatLogTab] = useState<ChatLogTab | null>(null)
   const [stackFocus, setStackFocus] = useState<ReadonlySet<string> | null>(null)
   const [promptSlot, setPromptSlot] = useState<HTMLElement | null>(null)
   const [dividerSlot, setDividerSlot] = useState<HTMLElement | null>(null)
@@ -332,20 +323,6 @@ export default function GameScreen() {
 
   const opps = game?.players?.filter((p) => !p.controlled) ?? []
   const isSpectator = !me
-  const topOpps = isSpectator ? (opps.length >= 2 ? opps.slice(0, opps.length - 1) : []) : opps
-
-  const [selectedOppId, setSelectedOppId] = useState<string | null>(null)
-
-  const currentOpp = useMemo(() => {
-    if (topOpps.length <= 1) return topOpps[0]
-    if (selectedOppId) {
-      const found = topOpps.find((p) => p.playerId === selectedOppId)
-      if (found) return found
-    }
-    const activeOpp = topOpps.find((p) => p.playerId === game?.activePlayerId)
-    if (activeOpp) return activeOpp
-    return topOpps[0]
-  }, [topOpps, selectedOppId, game?.activePlayerId])
 
   const mechanicsCount = useMemo(() => activeMechanicsCount(game), [game])
   const hasActiveMechanics = mechanicsCount > 0
@@ -353,66 +330,36 @@ export default function GameScreen() {
   const hasCommanders = useMemo(() => hasCommandersInGame(game), [game])
 
   const totalPlayers = game?.players?.length ?? opps.length + (isSpectator ? 0 : 1)
-  // With the main board setting on, the Arena preference keeps the Arena layout in a duel too, so the
-  // side panel stays (BRD-6); without it a duel falls back to Standard as before.
-  const arenaDuel = !v2 && settings.boardSpotlight && settings.boardLayout === 'arena'
-  const effectiveLayout =
-    (v2 || arenaDuel) && totalPlayers <= MAX_BOARD_PLAYERS
-      ? 'arena'
-      : effectiveBoardLayout(settings.boardLayout, settings.boardLayoutManual ?? false, opps.length, totalPlayers)
-  const isArenaLayout = effectiveLayout === 'arena'
   const seatLiveIds = liveOpponentIds(game?.players)
   const seatFocus = useSeatFocus(seatLiveIds, game)
-  const seatPillsClickable = isArenaLayout && !isSpectator && seatLiveIds.length >= 2
+  const seatPillsClickable = !isSpectator && seatLiveIds.length >= 2
   const homeId = me?.playerId ?? spectatorHomeSeat(opps)?.playerId
   const spotlight = useSpotlight(game, homeId, seatLiveIds, isSpectator ? null : combat?.mode ?? null)
   const spotlightOn = spotlightActive({
     enabled: settings.boardSpotlight,
-    arenaLayout: isArenaLayout,
     isSpectator,
     liveOppCount: seatLiveIds.length,
+    totalPlayers,
   }) && !!spotlight.mainId
 
-  useDockOffset(boardWrapRef, [effectiveLayout, isSpectator, !!game, game?.turn, v2])
+  useDockOffset(boardWrapRef, [isSpectator, !!game, game?.turn])
   const [turnGlow, clearTurnGlow] = useChangeFlag(game?.turn)
 
-  const toggleDrawer = useCallback((tab: DrawerTab) => {
-    setSidePanelTab((cur) => (cur === tab ? null : tab))
-  }, [])
   const toggleLegacyDrawer = useCallback((tab: DrawerTab) => setDrawerTab((cur) => (cur === tab ? null : tab)), [])
+  const toggleChatLog = useCallback((tab: ChatLogTab) => setChatLogTab((cur) => (cur === tab ? null : tab)), [])
+  const closeChatLog = useCallback(() => setChatLogTab(null), [])
+  const chatLogOpen = chatLogTab !== null
+  const chromeActions = useMemo(() => ({ sidePanelOpen: chatLogOpen }), [chatLogOpen])
   const activeDrawerTab = drawerTab === 'commander' && !hasCommanders ? null : drawerTab
-  const activeSidePanelTab = sidePanelTab === 'commander' && !hasCommanders ? null : sidePanelTab
-  const chromeLeft = v2 && activeSidePanelTab ? 372 : 0
-  // The stack floats over the board now, so no layout reserves a strip for it.
-  // STK-2: the stack is a layer over the board and may lie over its cards; the grip is what
-  // answers for that, not a gutter that squeezes the board every time something is cast.
-  const chromeRight = 0
-  useOverlayGutters(boardWrapRef, v2 && isArenaLayout, `${isSpectator}|${!!game}|${chromeLeft}|${chromeRight}`)
 
   const stripCenter = (
-        isArenaLayout || spotlightOn ? (
-          <TurnOrderRing
-            players={game?.players ?? []}
-            activePlayerId={game?.activePlayerId ?? ''}
-            onSeatClick={spotlightOn ? spotlight.select : seatPillsClickable ? seatFocus.select : undefined}
-            selfClickable={spotlightOn}
-            focusedId={spotlightOn ? spotlight.mainId : seatPillsClickable ? seatFocus.focusId : null}
-            noLife={!v2 && isArenaLayout}
-          />
-        ) : topOpps.length > 1 ? (
-          <OpponentSwitcherBar
-            players={game?.players ?? []}
-            controlledId={me?.playerId}
-            selectedOppId={currentOpp?.playerId || ''}
-            onSelectOpponent={(id) => setSelectedOppId(id)}
-            activePlayerId={game?.activePlayerId ?? undefined}
-            targetIds={new Set(targetIds)}
-            onTargetClick={onTargetClick}
-            combat={game?.combat ?? []}
-          />
-        ) : (
-          <TurnOrderRing lane players={game?.players ?? []} activePlayerId={game?.activePlayerId ?? ''} />
-        )
+    <TurnOrderRing
+      players={game?.players ?? []}
+      activePlayerId={game?.activePlayerId ?? ''}
+      onSeatClick={spotlightOn ? spotlight.select : seatPillsClickable ? seatFocus.select : undefined}
+      selfClickable={spotlightOn}
+      focusedId={spotlightOn ? spotlight.mainId : seatPillsClickable ? seatFocus.focusId : null}
+    />
   )
 
   const strip = (
@@ -434,11 +381,13 @@ export default function GameScreen() {
       center={stripCenter}
       right={
         <>
+          <ChatLogToggles active={chatLogTab} onToggle={toggleChatLog} />
           <DrawerToggles
             active={activeDrawerTab}
             onToggle={toggleLegacyDrawer}
             hasCommanders={hasCommanders}
             hasActiveMechanics={hasActiveMechanics}
+            mechanicsCount={mechanicsCount}
           />
           <GameMenu />
         </>
@@ -463,34 +412,8 @@ export default function GameScreen() {
       onPass={onResolveClick}
       onSkip={sendSkip}
       busy={busy}
-      variant={v2 ? 'dial' : 'bar'}
     />
   )
-  const dockAction = v2 ? (
-    <PhaseDial step={game?.step ?? ''} mine={!!me?.hasPriority && stackCount === 0} action={actionButton} />
-  ) : (
-    actionButton
-  )
-  const topBar = (
-    <GameTopBar
-      game={game}
-      menu={<GameMenu />}
-      center={stripCenter}
-      toggles={
-        <DrawerToggles
-          active={activeSidePanelTab}
-          onToggle={toggleDrawer}
-          hasCommanders={hasCommanders}
-          hasActiveMechanics={hasActiveMechanics}
-          mechanicsCount={mechanicsCount}
-        />
-      }
-    />
-  )
-
-  const sidePanelOpen = activeSidePanelTab !== null
-  const chromeActions = useMemo(() => ({ openPanel: (tab: SidePanelTab) => setSidePanelTab(tab), sidePanelOpen }), [sidePanelOpen])
-
   if (narrowScreen && isSpectator && !fullBoardOnNarrow) {
     return (
       <div className="game board-surface game--mobile-spectator" ref={gameRootRef} style={{ zoom: inverseZoom(settings.uiScale) }}>
@@ -501,43 +424,29 @@ export default function GameScreen() {
 
   return (
     <PromptSlotProvider value={promptSlot} hand={handPromptSlot} onHandSlot={setHandPromptSlot}>
-      <ChromeActionsContext.Provider value={v2 ? chromeActions : null}>
+      <ChromeActionsContext.Provider value={chromeActions}>
       <DividerSlotContext.Provider value={setDividerSlot}>
         <div
-          className={`game board-surface${v2 ? ' game--v2' : ''}${rewindView ? ' game--rewind' : ''}`}
+          className={`game board-surface${rewindView ? ' game--rewind' : ''}`}
           ref={gameRootRef}
           data-rewind={rewindView ? 'true' : undefined}
           style={{ zoom: inverseZoom(settings.uiScale) }}
         >
-          {v2 ? (
-            <>
-              <header className="game-top game-top--v2">{topBar}</header>
-            </>
-          ) : (
-            <>
-              {!dividerSlot && <header className="game-top">{strip}</header>}
-              {dividerSlot && createPortal(strip, dividerSlot)}
-            </>
-          )}
+          {!dividerSlot && <header className="game-top">{strip}</header>}
+          {dividerSlot && createPortal(strip, dividerSlot)}
           <div className="game-body" ref={gameBodyRef} data-space-passes-priority="true">
             <div
               className="board-wrap"
               ref={boardWrapRef}
               data-playmat={playmatId}
-              data-ui={v2 ? 'v2' : undefined}
-              style={v2 ? ({ '--chrome-l': `${chromeLeft}px`, '--chrome-r': `${chromeRight}px` } as React.CSSProperties) : undefined}
             >
               {playmatId !== 'classic' && (
                 <div className="playmat-layer" data-playmat={playmatId} data-testid="playmat-layer" style={matStyle} aria-hidden="true" />
               )}
-              {isArenaLayout ? (
-                spotlightOn ? (
-                  <SpotlightBoard {...boardProps} homeId={homeId ?? ''} mainId={spotlight.mainId!} onSelectSeat={spotlight.select} />
-                ) : (
-                  <ArenaBoard {...boardProps} />
-                )
+              {spotlightOn ? (
+                <SpotlightBoard {...boardProps} homeId={homeId ?? ''} mainId={spotlight.mainId!} onSelectSeat={spotlight.select} />
               ) : (
-                <GameBoard {...boardProps} focusedOpponentId={currentOpp?.playerId} />
+                <ArenaBoard {...boardProps} />
               )}
               <LowLifeVignette game={displayGame} />
               {settings.turnRecap && <TurnRecapStrip />}
@@ -562,28 +471,16 @@ export default function GameScreen() {
                   onFocusIds={setStackFocus}
                 />
               )}
-              {v2 && activeSidePanelTab !== 'log' && <LogTicker />}
-              {v2 && <CombatLedger />}
-              {v2 && activeSidePanelTab && (
-                <SidePanel
-                  tab={activeSidePanelTab}
-                  onTabChange={setSidePanelTab}
-                  onClose={() => setSidePanelTab(null)}
-                  hasCommanders={hasCommanders}
-                  hasActiveMechanics={hasActiveMechanics}
-                  mechanicsCount={mechanicsCount}
-                />
-              )}
+              {chatLogTab && <ChatLogPanel tab={chatLogTab} onTabChange={setChatLogTab} onClose={closeChatLog} />}
               <GameDock
                 onPromptSlot={setPromptSlot}
                 rewind={(settings.boardRewind || rewind.replay) ? <RewindBar rewind={rewind} /> : null}
-                action={dockAction}
+                action={actionButton}
               />
             </div>
             <CombatArrowsOverlay
               game={game}
               stackFocusIds={stackFocus}
-              variant={v2 ? 'v2' : 'v1'}
               boardRef={gameBodyRef}
               targetSourceId={targetSourceId}
               chosenTargetIds={chosenTargetIds}

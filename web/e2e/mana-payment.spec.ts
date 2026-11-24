@@ -54,7 +54,7 @@ test.describe('Mana payment prefs', { tag: '@manapayment' }, () => {
       })
       expect(pageErrors).toEqual([])
 
-      await page.locator('.resource-bar.my [data-testid="mana-pay-R"]').click()
+      await page.locator('.player-zone [data-testid="mana-pay-R"]').first().click()
       await expect.poll(() => MANA_TYPES.length, { timeout: 5000 }).toBeGreaterThan(0)
       expect(MANA_TYPES[0]).toEqual({ playerId: 'human-1', manaType: 'RED' })
     })

@@ -289,7 +289,7 @@
   flex: 1 1 0;
   min-width: 0;
   min-height: 0;
-  overflow: hidden;
+  overflow: clip;
 }
 
 .spotlight-copy-slot.target-zone::after {

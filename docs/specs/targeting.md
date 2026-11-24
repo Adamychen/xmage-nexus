@@ -124,7 +124,7 @@ A halo was tried under the beam and taken out again, and so was a gradient along
   because the dash phase depends on the instant of capture and on the path's sub-pixel length, and
   WebKit does not freeze it; the reduced-motion rule existed only to make screenshots settle. The
   halo went the same way: over a board of card art it read as a smear around the beam.
-- Guard: `src/board/CombatArrowsOverlay.test.tsx` · `e2e/game-ui-v2.spec.ts`
+- Guard: `src/board/CombatArrowsOverlay.test.tsx` · `e2e/arena-chrome.spec.ts`
 ### TGT-12 · An arrow leaves over the top of its source and comes in under its target
 Every arrow leaves what is acting through its top edge and arrives at what it points at through
 the bottom edge, whatever is acting: a spell or an ability on the stack, an attacker, a blocker. The

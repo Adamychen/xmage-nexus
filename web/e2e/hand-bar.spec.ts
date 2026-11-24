@@ -127,15 +127,15 @@ async function expectHandBarLayout(page: Page): Promise<void> {
     expect(
       visible,
       `carta ${i}: mitad superior visible (${visible}px de ${card.height}px)`,
-    ).toBeGreaterThanOrEqual(card.height * 0.3)
-    expect(visible).toBeLessThanOrEqual(card.height * 0.7)
+    ).toBeGreaterThanOrEqual(card.height * 0.6)
+    expect(visible, `carta ${i}: the rules box stays under the edge`).toBeLessThanOrEqual(card.height * 0.85)
   }
 
   expectMinVisibility(boxes.slots)
   await expectOverlayLayout(page)
 }
 
-test('HND-1, HND-2: the own hand floats as an overlay anchored to the bottom without taking layout space (standard) @fullflow @hand-bar', async ({ page }) => {
+test('HND-1, HND-2: the own hand floats as an overlay anchored to the bottom without taking layout space @fullflow @hand-bar', async ({ page }) => {
   await withFakeServer(() => spellsScenario('blaze'), async () => {
     const { pageErrors } = await quickStartGame(page, {
       prefix: 'hb',

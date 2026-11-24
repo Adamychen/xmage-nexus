@@ -48,7 +48,7 @@ describe('SetupWizard', () => {
     fireEvent.click(screen.getByTestId('setup-back'))
     expect(screen.getByTestId('setup-username')).toBeTruthy()
     next(2)
-    expect(screen.getByTestId('settings-layout-arena')).toBeTruthy()
+    expect(screen.getByTestId('option-switch-boardSpotlight')).toBeTruthy()
     expect(screen.getByTestId('setup-counter').textContent).toContain('4')
 
     next()

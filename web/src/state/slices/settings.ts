@@ -7,7 +7,6 @@ import type { ChoiceMemoryRule } from '../../game/choiceMemory'
 import { normalizePlaymat, type PlaymatId } from '../../appearance/playmats'
 import { normalizeCardStyle, normalizeTapStyle, type CardStyle, type TapStyle } from '../../board/compactCard'
 import { normalizeBoardSpotlight, normalizeBoardSpotlightPanel, normalizeBoardFill, normalizeStackCaption, normalizeCardRender, normalizeHandRail, normalizeHandRailWidth, normalizeHandRow, normalizePtBadgeMode, normalizeShowHandCost, normalizeShowManaSource, normalizeSicknessStyle, normalizeKeywordAuraMode, type CardRender, type KeywordAuraMode, type PtBadgeMode, type SicknessStyle } from '../../board/cardOverlays'
-import { normalizeGameUi, type GameUi } from '../../game/gameUi'
 import { normalizeAppearanceChoice, type AppearanceChoice } from '../../appearance/appearanceChoice'
 import { normalizeCardPreviewScale } from '../../board/cardPreviewScale'
 import { gameplayPreset, isGameplayPresetId, type GameplayPresetId } from '../../settings/gameplayPresets'
@@ -35,8 +34,6 @@ export interface SettingsState {
   browserNotifications: boolean
   boardRewind: boolean
   turnRecap: boolean
-  boardLayout: 'standard' | 'arena'
-  boardLayoutManual: boolean
   effects: boolean
   animationSpeed: number
   soundEnabled: boolean
@@ -61,7 +58,6 @@ export interface SettingsState {
   boardSpotlight: boolean
   boardSpotlightPanel: number
   stackCaption: boolean
-  gameUi: GameUi
   cardPreviewScale: number
   sicknessStyle: SicknessStyle
   keywordAura: KeywordAuraMode
@@ -79,7 +75,6 @@ export function loadAppearanceSlice() {
   return {
     ...appearance,
     appearance: normalizeAppearanceChoice(appearance.appearance),
-    boardLayoutManual: appearance.boardLayoutManual ?? false,
     transparentDialogs: appearance.transparentDialogs ?? false,
     playmatId: normalizePlaymat(appearance.playmatId),
     cardStyle: normalizeCardStyle(appearance.cardStyle),
@@ -95,7 +90,6 @@ export function loadAppearanceSlice() {
     boardSpotlight: normalizeBoardSpotlight(appearance.boardSpotlight),
     boardSpotlightPanel: normalizeBoardSpotlightPanel(appearance.boardSpotlightPanel),
     stackCaption: normalizeStackCaption(appearance.stackCaption),
-    gameUi: normalizeGameUi(appearance.gameUi),
     cardPreviewScale: normalizeCardPreviewScale(appearance.cardPreviewScale),
     sicknessStyle: normalizeSicknessStyle(appearance.sicknessStyle),
     keywordAura: normalizeKeywordAuraMode(appearance.keywordAura),

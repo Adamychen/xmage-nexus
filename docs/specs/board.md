@@ -4,19 +4,20 @@ Prefix: `BRD`
 
 How the battlefields of every seat are laid out: which band a permanent sits in, and how a
 multiplayer board makes room for one opponent. Each seat is a `BoardZone.tsx` (own side
-`PlayerZone`, opponents `OpponentZone`); the multiplayer layout is `ArenaBoard.tsx` (the Arena
-layout, and the Table layout, which renders the same board under the v2 chrome). The 2x2 pod was
-removed on 2026-11-21: it capped the table at four seats without a switcher and said nothing the
-Arena board does not say. The guiding principle: **at a full table every board must stay readable as the
-game grows** — space goes to the board the player is looking at, and the same kind of permanent is
-always in the same place, on every board. Hands are `docs/specs/hand.md`, targets on the board
-`docs/specs/targeting.md`, combat arrows `docs/specs/combat.md`.
+`PlayerZone`, opponents `OpponentZone`). There is one layout, the Arena one (`ArenaBoard.tsx`, and
+`SpotlightBoard.tsx` for its main-board mode), in every game: duels, pods and spectators. The 2x2
+pod was removed on 2026-11-21, and the Standard layout and the Table (v2) interface on 2026-11-23:
+the user wanted one layout to iterate on, as close to MTG Arena as possible, instead of every
+board change being made and tested several times. The guiding principle: **at a full table every
+board must stay readable as the game grows** — space goes to the board the player is looking at,
+and the same kind of permanent is always in the same place, on every board. Hands are
+`docs/specs/hand.md`, targets on the board `docs/specs/targeting.md`, combat arrows
+`docs/specs/combat.md`.
 
-Rules BRD-1 and BRD-2 apply to the Arena and Table layouts; Standard and Pod keep their bands.
-In those two layouts a multiplayer game is drawn in one of two modes, picked by the **main board**
-setting (BRD-6): off, the opponents share a row above the own board and one of them can be focused
-(BRD-3…BRD-5); on, one board fills the main area and every other board sits in a side panel as a
-scaled-down copy (BRD-6…BRD-13).
+A game is drawn in one of two modes, picked by the **main board** setting (BRD-6): off, the
+opponents share a row above the own board and one of them can be focused (BRD-3…BRD-5); on, one
+board fills the main area and every other board sits in a side panel as a scaled-down copy
+(BRD-6…BRD-13).
 
 ### BRD-1 · Lands on the left, other non-creature permanents on the right
 The row that does not hold creatures is split in two bands side by side: lands on the left (grouped
@@ -34,14 +35,16 @@ with the creatures, as before.
 
 ### BRD-2 · Planeswalkers, sagas and battles get their own zone in the creatures row
 Non-creature planeswalkers, sagas and battles sit in their own band at the right end of the
-creatures row, beside the creatures band, drawn with the gold marquee frame. The row is split the
+creatures row, beside the creatures band, with no frame of its own (BRD-32). The row is split the
 way BRD-1 splits the other row: the bands share one card size and each band's width follows what
 its cards need at that size (BRD-26). The marquee band is never narrower than one of its cards and
-never wider than its cards need (the width left over goes to the creatures). The sizes come from
+never wider than its cards need (the width left over goes to the creatures): with no frame, that is
+its cards plus its padding. The engine never reads a band's border as a frame, because the spare a
+band in several lines keeps (BRD-35) is drawn as a transparent border. The sizes come from
 the board's single layout function (BRD-25), so no band reads a size another band chose. They never stack with each other, each shows
 its own loyalty, lore or defense, and a seat without any has no marquee band, so the creatures
 band keeps the whole row. A seat with only marquee permanents (no creatures, no commander) still
-has a creatures row: it is the row that holds them. The own board of the Arena layout (v1 chrome)
+has a creatures row: it is the row that holds them. The own board
 gives this zone the right edge of both rows instead (BRD-33).
 
 - Why: the column at the right edge (issue #23, part 3) copied the smallest card size of the
@@ -49,10 +52,10 @@ gives this zone the right edge of both rows instead (BRD-33).
   other every frame, so a board with one planeswalker kept resizing forever (user report,
   2026-10-29; reproduced at 1366×900 with 6 creatures and 7 lands: about 180 style changes per
   second). A band of its own in the creatures row has no such dependency, and the user chose it.
-- Guard: `src/board/BoardZone.kindColumns.test.tsx` · `src/board/bandWeights.test.ts` · `src/board/layout/solveRow.test.ts` · `src/board/marquee.test.ts` · `e2e/kind-bands.spec.ts`
+- Guard: `src/board/BoardZone.kindColumns.test.tsx` · `src/board/bandWeights.test.ts` · `src/board/layout/layoutEngine.test.ts` · `src/board/layout/solveRow.test.ts` · `src/board/marquee.test.ts` · `e2e/kind-bands.spec.ts`
 
 ### BRD-3 · One opponent's board can take the whole opponents' row
-In the Arena and Table layouts with the main board setting off (BRD-6) and two or more opponents
+With the main board setting off (BRD-6) and two or more opponents
 still in the game, each opponent's
 status row has a focus button, and a click on an opponent's pill in the turn-order ring does the
 same. Focusing an opponent gives their board the whole opponents' row: cards that a crowded column had
@@ -99,7 +102,7 @@ had chosen, unless the player picked another seat during combat.
 
 ### BRD-6 · The main board setting: one board at full size, the others in a side panel
 Settings → Board has a **Main board with side panel** switch (`boardSpotlight`, off by default).
-With it on, in the Arena and Table layouts, a player (not a spectator) with at least one opponent
+With it on, a player (not a spectator) with at least one opponent
 still in the game — a duel, a game that started as one, or a pod down to two — sees one board at
 full size in the main area — their own when the game starts —
 and every other seat in a panel on the right edge of the board, one copy per seat, top to bottom
@@ -117,11 +120,12 @@ A spectator gets the same mode when two or more players are still in the game: t
 starts on the seat the column view draws at the bottom for a spectator (the last in turn order
 still in the game, BRD-57),
 the panel holds every other seat in turn order after it, and a seat whose hand the spectator may
-see shows it in the main area as the column view does. In a duel the Arena preference keeps the
-Arena layout while the switch is on (with it off a duel is drawn on the Standard board, as before),
-so the mode stays when a pod is down to two and in games that start with two players. With the
-switch off or in Standard or Pod, the board is drawn as BRD-3…BRD-5 describe (or as the duel board);
-turning the switch on or off mid-game takes effect at once and never drops an open prompt.
+see shows it in the main area as the column view does. The mode stays when a pod is down to two
+and in games that start with two players. With the switch off the board is drawn as BRD-3…BRD-5
+describe; a duel then has its one opponent across the whole opponents' row. A game of five or more
+players is always drawn in this mode, whatever the switch says, since the opponents' row seats at
+most three; the turn-order strip and the panel then hold every seat. Turning the switch on or off
+mid-game takes effect at once and never drops an open prompt.
 
 - Why: issue #23 asked for one board on the whole screen; a full point-of-view switch was held back
   (BRD-3) because it hid the blockers, targets and triggers the player must answer. With every other
@@ -136,7 +140,10 @@ turning the switch on or off mid-game takes effect at once and never drops an op
   With one copy in a duel its box used to stretch to the panel's whole height around a much smaller
   board; the user asked for each box to keep the table's proportions at the panel's width, and for
   the panel to scroll when the copies do not fit (user report, 2026-11-12).
-- Guard: `src/board/ScaledCopy.test.tsx` · `src/board/SpotlightBoard.test.tsx` · `src/board/cardOverlays.test.ts` · `src/board/spotlight.test.ts` · `src/game/GameScreen.test.tsx` · `src/state/persistence.test.ts` · `e2e/spotlight.spec.ts`
+  A duel with the switch off used to fall back to a separate Standard board, and five or more
+  players could only be seated there; with Standard gone (2026-11-23) a duel is one Arena column and
+  a big table takes the panel, which already scrolls.
+- Guard: `e2e/arena-duel.spec.ts` · `e2e/spotlight.spec.ts` · `src/board/ScaledCopy.test.tsx` · `src/board/SpotlightBoard.test.tsx` · `src/board/cardOverlays.test.ts` · `src/board/spotlight.test.ts` · `src/game/GameScreen.test.tsx` · `src/state/persistence.test.ts`
 
 ### BRD-7 · A click on a copy brings that board to the main area
 Clicking a copy — anywhere that is not something the current prompt can pick (BRD-8) — swaps it:
@@ -215,7 +222,7 @@ Arena layout draws its piles at the bottom-left with a caption instead (BRD-32),
 column draws them at the right of its status row (BRD-36).
 
 - Why: players coming from MTG Arena, EDHPlay or paper look for the piles next to the board (issue
-  #23); the chips stay in the column mode, where the Table layout chose them.
+  #23); the chips stay where a narrow column has no room for piles.
 - Guard: `src/board/BoardZone.pileCards.test.tsx` · `src/board/SpotlightBoard.test.tsx` · `src/game/ResourceBar.test.tsx` · `e2e/spotlight.spec.ts`
 
 ### BRD-13 · The panel can be resized
@@ -231,37 +238,17 @@ scrolls sideways.
 
 
 ### BRD-14 · The phase dial's centre is big enough for what it says
-The round button at the centre of the phase dial (v2 chrome) is large enough to hold its longest
-everyday text — "Waiting for <name>" with a 14-character name, and the clock line under it
-("Thinking 0:00 · 07:13 left") — without spilling past the circle's edge. Text inside it wraps only
-between words, never inside one ("BLACKMAGI / C", "THINKIN / G" are bugs); a name that still does
-not fit is cut with an ellipsis and the full text stays in the button's tooltip. The phase pips
-move out with the bigger centre, so no pip overlaps it and the pips keep their spacing, and the
-whole dial still fits the dock corner it sits in without covering the hand or the side panel. The
-fit is measured against the rendered text, not a fixed pixel budget, so a wider font (injected
-`--font-ui`) still fits.
+Retired 2026-11-23: the Table (v2) interface was removed when every game moved to the one Arena layout; the action button is the Arena one in the bottom-right corner (BRD-29, BRD-32), and the phase dial is gone.
 
-- Why: a 112 px centre broke "Waiting for BlackMagic" into "BLACKMAGI / C", "Thinking" into
-  "THINKIN / G" and clipped "07:13 left" at the edge (user report with screenshot, 2026-10-24).
-- Guard: `src/game/PhaseDial.test.tsx` · `e2e/game-ui-v2.spec.ts`
+- Guard: none yet (retired)
 
 ### BRD-15 · The own command zone sits in the left column, above the last actions
-On the v2 board the own command zone (what is left in it once the commander is drawn with the
-hand, BRD-34: the emblems, the planes and the dungeons) is not part of the creatures row: it docks in the bottom-left column, left-aligned with it and right above the
-highest overlay stacked there (the "Last actions" box, the combat ledger, or the portrait when
-both are hidden). Its position is measured from those overlays, so it moves up when the log grows
-and drops onto the portrait when the log collapses or closes. Its cards are as large as that space
-allows: they fill the room between the divider and that overlay, as wide as the column, and may
-be larger than the board's own cards. When not even a card of `min(board card, 56px)` fits there
-(a small window, or the log expanded, BRD-17), the zone falls back to the start of the creatures
-row, clear of the column.
+Retired 2026-11-23: the Table (v2) interface was removed when every game moved to the one Arena layout; the own emblems, planes and dungeons sit in the Arena board's bottom row (BRD-39).
 
-- Why: the column above the log was empty while the commander sat offset to the right of it,
-  taking room from the battlefield (user report with screenshot, 2026-10-24).
-- Guard: `e2e/game-ui-v2.spec.ts`
+- Guard: none yet (retired)
 
 ### BRD-16 · The resting hand never covers the own battlefield
-On the arena board (the one v2 always uses) the fanned hand still floats over the bottom edge of
+The fanned hand floats over the bottom edge of
 the board, but the own zone reserves room for it: its bottom padding is the height the resting
 fan shows above the board edge (the visible part of each sunk card, plus its arc rise, the
 playable lift and the lift of its rotated top corner) plus a gap of 1.5% of the viewport height,
@@ -269,23 +256,16 @@ between 6 and 16 px. The reserve is computed by `HandBar` from the card size it 
 and follows it on every resize. The lands row sits above the reserve, and when the zone has no
 room left its cards shrink instead of sliding under the hand. Hovering a hand card lifts it with
 a transform only: it is drawn above the battlefield, and the battlefield does not move. The own
-board of the Arena layout (v1 chrome, with or without the side panel) reserves the same height as
-its bottom row (BRD-32).
+board, with or without the side panel, reserves the same height as its bottom row (BRD-32).
 
 - Why: the resting fan sat on top of the lands row, and a hovered card covered it even more
   (user report with screenshot, 2026-10-24).
-- Guard: `src/board/handSizing.test.ts` · `e2e/game-ui-v2.spec.ts`
+- Guard: `src/board/handSizing.test.ts` · `e2e/arena-chrome.spec.ts`
 
 ### BRD-17 · The last actions box is one line until the player expands it
-On the v2 board the "Last actions" box shows only the newest action, on one line cut with an
-ellipsis, so the column above it is free for the command zone (BRD-15). A +/− button on the box
-expands it to the header and the last four actions, and back; the choice is remembered across
-games and reloads (`mage-web-log-ticker-expanded`), collapsed by default. A click anywhere else on
-the box still opens the log panel; the button does not.
+Retired 2026-11-23: the "Last actions" box and the combat ledger floated over the own lands once the Table (v2) interface's measured gutter was gone, and MTG Arena, the layout's model, has neither; the log is one click away in the chat and log panel (PNL-10).
 
-- Why: the four-line box took the room the commander needed; the user asked for one line that
-  the player can expand, with the freed space going to the commander (2026-10-24).
-- Guard: `src/game/LogTicker.test.tsx` · `e2e/game-ui-v2.spec.ts`
+- Guard: none yet (retired)
 
 ### BRD-18 · A commander that changes object is one column, not two
 The commander damage matrix has one column per commander. A commander cast from the command zone
@@ -294,16 +274,12 @@ id is the same commander, so the roster drops it and keeps the live one with its
 
 - Why: the seat showed the damage next to a stale 0 (`3/0`), because the roster kept the command-zone
   entry for the whole game. A player has one copy of each commander, so an owner and a name identify it.
-- Guard: `src/board/commanders.test.ts` · `src/game/CommanderSeatMatrix.test.tsx`
+- Guard: `src/board/commanders.test.ts`
 
 ### BRD-19 · A life total stays inside its seat at phone width
-On a phone an opponent's seat (the v2 board, the default) is about 100 px wide, so its name takes the top row and the avatar sits
-under it beside the life total. No life total is cut off by its seat or the screen edge, and the stats row
-wraps inside the seat instead of losing its counts. From 601 px up the seat keeps the full-size life total.
+Retired 2026-11-23: the phone layout is no longer a target (user decision with the one Arena layout); its guard checked the Table (v2) seat at phone width.
 
-- Why: at 390 px the opponents' 20 life was drawn as a single "2" at the seat's edge, the rest of the number
-  cut off by the screen (review of 2026-10-26). The life total is the number a player needs at a glance.
-- Guard: `e2e/phone-fit.spec.ts`
+- Guard: none yet (retired)
 
 ### BRD-20 · Piles hold five; token piles open after a second of hover
 Three or more identical permanents pile up (two lands are enough on the own board of the Arena layout, as
@@ -330,7 +306,9 @@ once per change of input and then stay. This holds for a board drawn at a window
 board already on screen whose window is then resized, with the browser's scrollbars visible. A
 compact hand in a status row (an opponent's hand) takes no height of its own: the row's height
 comes from the rest of the row, the hand stretches to it and sizes its cards from it in one step.
-The guard sweeps every board layout (Standard, Pod, Arena, Table) with 2 and 4 seats, boards of
+The room the own creatures leave beside the player chip (BRD-32) is decided only from a settled
+board drawn without it, and kept while the zone, the chip and the number of cards stay the same, so
+a board resized away and back draws the same sizes it had. The guard sweeps the Arena board, with and without the side panel, with 2 and 4 seats, boards of
 several sizes with planeswalkers, sagas, commanders, tokens and attachments, both card styles and
 several window sizes, both drawn fresh and reached by resizing a drawn board, and allows no size
 change at all after the board has settled.
@@ -343,38 +321,33 @@ change at all after the board has settled.
   moved the fixed points: on 2026-11-01 a Table board with 4 seats and compact cards, resized from
   1600 to 1000 px with scrollbars visible, flipped its lands and other permanents bands between
   47 and 110 px 120-180 times a second, while the guard (fresh draws only, scrollbars hidden,
-  2 changes tolerated) stayed green. The board is now sized by one pure function (BRD-25).
-- Guard: `src/board/HandZone.test.tsx` · `e2e/board-settle.spec.ts` · `e2e/board-spotlight-settle.spec.ts`
+  2 changes tolerated) stayed green. The board is now sized by one pure function (BRD-25). The
+  chip reserve was decided from the board drawn with it on (smaller cards sit lower) plus half a
+  chip of margin, so once a 1000 px window turned it on it stayed on at 1600 px and the own board
+  drew 118 px cards instead of 130 px; its first fix measured too early, while the cards were still
+  the 1000 px ones on two lines, and locked it on again (24-nov-2026; never caught while the guard
+  ran on the Table interface).
+- Guard: `src/board/HandZone.test.tsx` · `src/board/chipReserve.test.ts` · `e2e/board-settle.spec.ts` · `e2e/board-spotlight-settle.spec.ts`
 
 ### BRD-22 · The phase dial shows the steps of combat
-On the phase dial (v2 chrome) the combat pip keeps its place on the arc, and five small circles
-sit outside it on a short arc of their own, in order: beginning of combat, declare attackers,
-declare blockers, combat damage (first strike and regular damage are one circle) and end of
-combat. They are always shown. During combat the circle of the current step is lit like the
-active pip, the ones already passed this turn are dimmed like past pips, and the combat pip stays
-lit for the whole combat. Each circle is 26 px and carries a two-letter mark, the same marks the phase bar
-uses (BC, AT, BL, DM, EC), in text no smaller than 10 px (ACC-3), and has the step's full name as its tooltip and accessible
-name. While the game is in combat, the phase name shown with the dial names the step too
-("Combat · Blockers"), so the current step can be read without decoding the marks. No
-circle is clipped by the dial's box or by any element around it. The beginning and end of combat circles toggle the stop of that step (click for the own
-turn, right-click or Shift+click for the opponent's, with the same stop dots as the pips); the
-other three have no stop in XMage and are not buttons. The circles never overlap each other, a
-pip or the centre, and the whole dial still fits its dock corner (BRD-14).
+Retired 2026-11-23: the Table (v2) interface was removed when every game moved to the one Arena layout; the phase dial is gone and the phase strip names the combat steps.
 
-- Why: the dial showed combat as one pip, so a player could not tell whether the game was
-  waiting on attackers, blockers or damage (user request, 2026-10-29); the user chose small
-  circles beside the combat pip over ten pips on the arc, which would not fit the corner.
-- Guard: `src/game/PhaseDial.test.tsx` · `e2e/game-ui-v2.spec.ts`
+- Guard: none yet (retired)
 
 ### BRD-23 · A fanned pile never covers the permanents beside it
 A pile fanned out on hover spreads to the right of its own first card and pushes the permanents after it
-aside. It never moves left over the permanents before it: when the band leaves no room on the right, the fan
-compresses instead.
+aside. It may use the empty part of its row: rightwards up to the next band, and leftwards when the right
+leaves no room, into the empty space before it, never past the last permanent before it. Only when the
+row has no free room either does the fan compress. A band that already scrolls its own overflow keeps
+the fan inside it; any other band lets the fan show outside its box while it is open.
 
 - Why: the fan slid left to stay inside the band when the pile sat near the right edge, so it covered the
   tapped lands in front of it (reported 2026-10-30). The rule already written in `StackPile` ("a mana rock
-  beside a land pile is never covered") was not enforced.
-- Guard: `src/board/stackSpread.test.ts` · `e2e/land-fan.spec.ts`
+  beside a land pile is never covered") was not enforced. On the Arena board the others band is pushed to
+  the right edge, so a Treasure pile had no room inside it and compressed while half the row stood empty;
+  opening into that room first drew the fan clipped by the band, and the hidden cards could not be
+  clicked (24-nov-2026).
+- Guard: `src/board/stackSpread.test.ts` · `src/board/StackPile.test.tsx` · `e2e/land-fan.spec.ts` · `e2e/stack-groups.spec.ts`
 
 ### BRD-24 · A zone viewer is a fan of cards on an arc, slid along it with a thumb
 The viewers of a graveyard, an exile, a library, a known hand, the revealed and looked-at windows and
@@ -430,7 +403,7 @@ reading another seat's applied size.
 
 ### BRD-26 · Bands that share a row share it by what they hold
 The bands of one row (creatures, marquee and commander in the creatures row; lands and other
-permanents in the other row in the Arena and Table layouts) use one card size: the largest, up to
+permanents in the other row) use one card size: the largest, up to
 the seat's cap, at which every band of the row fits its cards in at most three lines inside the
 row's width and height. Each band is then as wide as its cards need at that size, and the width
 left over is shared in proportion to that need, unless a band takes fewer lines than the row is
@@ -472,7 +445,7 @@ it is not identical to the others (BRD-20) and stays a single card with its atta
 - Guard: `src/board/layout/itemModel.test.ts` · `src/board/stackGroups.test.ts` · `e2e/board-item-model.spec.ts`
 
 ### BRD-29 · The classic bar's waiting pill keeps its text, clock and arrow aligned
-On the classic interface (v1) the action button shows "Waiting for <name>" while another player
+The action button shows "Waiting for <name>" while another player
 holds priority. Its text sits on one line, or on two when it does not fit, breaking only between
 words ("ESPERANDO / A" is a bug); a name that still does not fit its line is cut with an ellipsis,
 never clipped at the pill's edge, and stays whole in the button's tooltip. The hourglass sits in its
@@ -531,7 +504,7 @@ already readable.
 - Guard: `src/board/SpotlightBoard.test.tsx`
 
 ### BRD-32 · The own Arena board is framed around the hand
-On the Arena layout with the v1 chrome, the own board, with or without the side panel (BRD-6),
+The own board, with or without the side panel (BRD-6),
 keeps the battlefield clear of everything around it. The player chip sits at the top-left corner
 with no frame: the photo, the name and a large life total. The creatures only leave it room when
 they would actually reach it in height. The bottom row is as tall as the resting hand (BRD-16) and
@@ -558,7 +531,7 @@ bottom row and the planeswalker zone do not fit there.
   EDHPlay. Before, the action button covered enchantments, the chips sat in boxes, the hand covered
   the bottom of the board with the side panel open (its reserve did not reach `.spotlight-seat`) and
   hid the floating mana there.
-- Guard: `src/board/BoardZone.arenaOwn.test.tsx` · `src/board/layout/solveRow.test.ts` · `src/board/stackGroups.test.ts` · `e2e/spotlight.spec.ts`
+- Guard: `src/board/BoardZone.arenaOwn.test.tsx` · `src/board/chipReserve.test.ts` · `src/board/layout/solveRow.test.ts` · `src/board/stackGroups.test.ts` · `e2e/spotlight.spec.ts` · `src/game/GameScreen.test.tsx`
 
 ### BRD-33 · The own planeswalkers take the right edge of both rows, as in MTG Arena
 On the own board of the Arena layout (BRD-32) planeswalkers, sagas and battles (BRD-2) take a zone
@@ -587,7 +560,7 @@ On the own board of the Arena layout (BRD-32) the commander and the companion in
 are drawn with the hand, which is where their owner looks for something to cast: the last cards of
 the fan, apart from it by a gap of 0.4 of a card and with a gold edge; under the hand column,
 behind a line of its own; at the end of the hand row, past a gap. They follow the hand in every
-chrome, the v1 and the v2, because the question they answer is the same in all of them. A seat drawn
+hand layout, because the question they answer is the same in all of them. A seat drawn
 at full size that is not mine, the main area of the main-board mode (BRD-6), carries its hand the
 same way: the backs of the cards it holds, with its uncast commander at the end of them, instead
 of a command zone of its own. A card that is face down stays face down there, known or not
@@ -604,7 +577,7 @@ too: the hand has no room to spare at that width.
   tax drawn in the card's corner sat below the board edge in the hand, a "+" drawn next to a pip did
   not read against the gold edge, and a separate "+N" still had to be added up by eye. It was the
   fanned hand of the v1 chrome only until the user asked for it everywhere (2026-11-21): with the
-  v2 chrome the commander sat in the left column (BRD-15) and read as one more thing on the board.
+  v2 chrome the commander sat in the left column and read as one more thing on the board.
 - Guard: `src/board/HandBar.test.tsx` · `src/board/commanders.test.ts` · `src/board/BoardZone.arenaOwn.test.tsx` · `src/board/HandRail.test.tsx` · `src/board/HandRow.test.tsx` · `src/board/SpotlightBoard.test.tsx`
 
 ### BRD-35 · A band in several lines holds the same count on each line
@@ -626,7 +599,7 @@ short last line sits in the middle: five land piles above and two centred below,
 - Guard: `src/board/layout/layoutEngine.test.ts` · `src/board/layout/solveRow.test.ts`
 
 ### BRD-36 · Each opponent column of the Arena layout shows its piles, mirrored
-On the Arena layout with the v1 chrome and no side panel, every opponent column keeps its place
+With no side panel, every opponent column keeps its place
 facing the own board and shows its library, graveyard and exile as small piles at the right end of
 its status row, instead of chips: each one half a card, smaller than the own piles, with a caption
 with its name and count. The opponent's board is mirrored vertically, so the piles hang from the
@@ -644,7 +617,7 @@ their chips.
 - Guard: `src/board/BoardZone.arenaOwn.test.tsx`
 
 ### BRD-37 · The Arena layout shows the same turn order strip with and without the side panel
-On the Arena layout with the v1 chrome, the strip in the divider (or in the top bar with the side
+The strip in the divider (or at the top of the board with the side
 panel) always shows the turn order ring: every player in turn order, with arrows, the active one
 marked and "Your turn" on the own pill. The pills carry no life: every board of the layout shows
 it already. A click on an opponent's pill brings that board to the main area with the side panel
@@ -665,7 +638,7 @@ of their own (a spectator, whose pills do nothing, keeps it).
 - Guard: `src/board/TurnOrderRing.test.tsx` · `src/board/ArenaBoard.test.tsx` · `e2e/seat-focus.spec.ts`
 
 ### BRD-38 · Opponents' hands: half a card facing the player, a fan in the side panel mode
-On the Arena layout with the v1 chrome, an opponent's hidden hand is one pile of backs with its
+An opponent's hidden hand is one pile of backs with its
 count, drawn as a small fan of up to ten backs, each turned a little, with the count on it.
 Without the side panel the opponent faces the player, so the fan is turned round and only its top
 half shows, hanging from the top edge of the column, at the size of that seat's piles (a narrow
@@ -683,7 +656,7 @@ still opens the hand viewer.
 - Guard: `src/board/HandZone.test.tsx`
 
 ### BRD-39 · With the side panel every board is drawn like the own Arena board
-On the Arena layout with the v1 chrome and the side panel on (BRD-6), every player's board, the one
+With the side panel on (BRD-6), every player's board, the one
 in the main area and every copy in the panel, the own and the opponents', uses the arrangement of
 the own Arena board: the frameless chip at the top-left (BRD-32), the bottom row with the piles
 and their captions, the floating mana and the command zone, the planeswalker zone on the right
@@ -696,7 +669,7 @@ always the last card of the own hand (BRD-34), whichever board is in the main ar
 - Guard: `src/board/BoardZone.arenaOwn.test.tsx` · `src/board/SpotlightBoard.test.tsx` · `e2e/spotlight.spec.ts`
 
 ### BRD-40 · An Arena opponent's uncast commander sits beside its hand, not on its board
-On the Arena layout with the v1 chrome and no side panel, an opponent's command zone is drawn in
+With no side panel, an opponent's command zone is drawn in
 its status row, right after its hand and before its piles, instead of in its creatures row, and
 drawn like one more card of that hand (BRD-38): half a card hanging from the top edge, turned
 round, with the crown and the commander tax on the half that shows, both of them turned back so
@@ -730,8 +703,8 @@ a click still picks that card, not its host.
 - Guard: `src/board/OpponentZone.test.tsx` · `e2e/mechanics.spec.ts`
 
 ### BRD-42 · A card on the battlefield never shows the same number twice
-These are rules about the card itself, so they hold in every layout (Arena, Table and Standard,
-with the side panel and without it) and in both card styles, not only on the Arena board.
+These are rules about the card itself, so they hold on every board, in the main area and in the
+copies, with the side panel and without it, and in both card styles.
 
 A planeswalker's loyalty, a battle's defense and a saga's chapter have their own badge, so the
 counter the server sends for them ("loyalty 7", "defense 3", "lore 2") is left out of the counter
@@ -1014,7 +987,7 @@ somebody goes to look it up.
 
 - Why: the rank was the widest thing on the chip ("BRONCE I (1052)" beside a four-letter name) and
   said nothing about the game being played; the user asked for it off the chip (23-nov-2026).
-- Guard: `src/game/PlayerInfoBar.test.tsx` · `src/game/PlayerInfoBar.portrait.test.tsx`
+- Guard: `src/game/PlayerInfoBar.test.tsx`
 
 ### BRD-59 · A commander on the battlefield wears the Commander symbol
 The server marks a commander with a card icon that carries no text of its own, only the hint

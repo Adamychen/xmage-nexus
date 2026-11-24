@@ -1,5 +1,5 @@
 import type { GameView } from '../net/types'
-import { isPlayerOut } from './boardShared'
+import { isPlayerOut, MAX_BOARD_PLAYERS } from './boardShared'
 import { useStore, setSpotlight } from '../state/store'
 
 export interface SpotlightChoice {
@@ -11,13 +11,13 @@ export function declarationKey(turn: number, combatMode: 'attack' | 'block' | nu
   return combatMode === null ? null : `${turn}:${combatMode}`
 }
 
-export function spotlightActive({ enabled, arenaLayout, isSpectator, liveOppCount }: {
+export function spotlightActive({ enabled, isSpectator, liveOppCount, totalPlayers }: {
   enabled: boolean
-  arenaLayout: boolean
   isSpectator: boolean
   liveOppCount: number
+  totalPlayers: number
 }): boolean {
-  return enabled && arenaLayout && liveOppCount >= (isSpectator ? 2 : 1)
+  return (enabled || totalPlayers > MAX_BOARD_PLAYERS) && liveOppCount >= (isSpectator ? 2 : 1)
 }
 
 /** BRD-57: a seat that is out of the game never holds the main area while anyone is still playing.

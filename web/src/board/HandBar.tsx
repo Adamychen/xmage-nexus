@@ -35,6 +35,8 @@ const NO_TRAILING: HandTrailingCard[] = []
 /** Side panels the hand must not cover: the bottom-left player panel (its mana pool row) and the command wheel. */
 const HAND_SIDE_PANELS = '.pz-bottom-row:not(.arena-own-row), [data-testid="game-dock"], .spotlight-panel, .hand-side-panel'
 const SCALED_COPY = '.spotlight-copy'
+const CARD_W_HYSTERESIS_PX = 0.5
+const RESERVE_HYSTERESIS_PX = 1
 const SPOTLIGHT_MAIN_ROW = '.spotlight-main .pz-bottom-row'
 import './targetZone.css'
 
@@ -168,7 +170,10 @@ export default function HandBar({
     if (!el || !scope || viewportH === null) return
     reserveScopeRef.current = scope
     const paddingBottom = parseFloat(getComputedStyle(el).paddingBottom) || 0
-    scope.style.setProperty('--hand-reserve', `${Math.ceil(restH + paddingBottom) + handLandsGap(viewportH)}px`)
+    const next = Math.ceil(restH + paddingBottom) + handLandsGap(viewportH)
+    const prev = parseFloat(scope.style.getPropertyValue('--hand-reserve'))
+    if (Number.isFinite(prev) && Math.abs(prev - next) <= RESERVE_HYSTERESIS_PX) return
+    scope.style.setProperty('--hand-reserve', `${next}px`)
   }, [restH, viewportH])
 
   useEffect(() => () => { reserveScopeRef.current?.style.removeProperty('--hand-reserve') }, [])
@@ -199,7 +204,7 @@ export default function HandBar({
       if (availW <= 0) return
       const sizing = computeHandBarSizing(availW, entries.length + (trailing.length > 0 ? trailing.length + 1 : 0))
       setSideReserve(reserve)
-      setCardW(sizing.cardW)
+      setCardW((prev) => (Math.abs(prev - sizing.cardW) < CARD_W_HYSTERESIS_PX ? prev : sizing.cardW))
       setGap(sizing.gap)
       setHoverScale(computeHandHoverScale(sizing.cardW, window.innerHeight))
       setViewportH(window.innerHeight)

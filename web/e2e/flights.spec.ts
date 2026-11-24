@@ -33,7 +33,7 @@ test('animaciones de movimiento: diagnóstico de vuelos por transición @flights
         prefix: 'fl',
         skipAsks: true,
       })
-      await expect(page.locator('.game-board')).toBeVisible({ timeout: 20_000 })
+      await expect(page.locator('.arena-board').first()).toBeVisible({ timeout: 20_000 })
 
       const setup = await page.evaluate(() => {
         const s = (

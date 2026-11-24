@@ -298,6 +298,7 @@ export default function ResourceBar({
     return (
       <>
         <div className={`resource-pile-cards${pileLabels ? ' has-labels' : ''}`} data-testid="pile-cards">
+          {peekSlot}
           {labeled('pile_library', libraryCount, <Button
             variant="link"
             type="button"

@@ -23,14 +23,14 @@ test.describe('Mechanics & Reminder Tray Widget', { tag: '@mechanics' }, () => {
       const myZone = page.locator('.player-zone:not(.mirrored)')
       await expect(myZone).toBeVisible({ timeout: 30_000 })
 
-      const dock = myZone.locator('.bz-marquee')
+      const dock = myZone.locator('[data-testid="marquee-band"]')
       await expect(dock, 'dock marquee visible').toBeVisible({ timeout: 30_000 })
       await expect(dock.locator('.card-slot', { hasText: 'Jace' })).toHaveCount(1)
       await expect(dock.locator('.card-slot', { hasText: 'Invasion of Zendikar' })).toHaveCount(1)
 
       // Bard Class (encantamiento normal) se queda en la banda de permanentes.
-      await expect(myZone.locator('.permanents-band .card-slot', { hasText: 'Bard Class' })).toHaveCount(1)
-      await expect(myZone.locator('.permanents-band .card-slot', { hasText: 'Jace' })).toHaveCount(0)
+      await expect(myZone.locator('[data-testid="others-band"] .card-slot', { hasText: 'Bard Class' })).toHaveCount(1)
+      await expect(myZone.locator('[data-testid="others-band"] .card-slot', { hasText: 'Jace' })).toHaveCount(0)
 
       expect(pageErrors).toEqual([])
     })
@@ -81,11 +81,9 @@ test.describe('Mechanics & Reminder Tray Widget', { tag: '@mechanics' }, () => {
       await expect(myZone).toBeVisible({ timeout: 30_000 })
 
       const pool = myZone.locator('[data-testid="mana-inline"]')
-      await expect(pool, 'el pool inline siempre está montado').toBeVisible({ timeout: 30_000 })
-      // Este escenario no reparte maná: fuera del pago no se pintan los seis
-      // ceros, solo el placeholder (la caja no colapsa y la fila no salta).
+      await expect(pool, 'the inline pool is mounted').toHaveCount(1, { timeout: 30_000 })
+      // BRD-32: this scenario floats no mana, so the own pool draws no pip at all.
       expect(await pool.locator('.mana-inline-pip').count()).toBe(0)
-      await expect(pool.locator('.mana-inline-empty')).toHaveCount(1)
       // La garantía original del test: nunca vuelve a ser un desplegable.
       await expect(myZone.locator('.resource-mana')).toHaveCount(0)
       await expect(myZone.locator('.mana-breakdown')).toHaveCount(0)
@@ -181,7 +179,7 @@ test.describe('Mechanics & Reminder Tray Widget', { tag: '@mechanics' }, () => {
       // Revealed / known hand (opponent)
       await expect(page.locator('.opponent-zone [data-card-name="Shock"]').first()).toBeVisible()
       // Revealed top of library (scry/mill support)
-      await expect(page.locator('.library-stack.has-top-revealed').first()).toBeVisible()
+      await expect(page.locator('.player-zone [data-testid="pile-card-library"] .pile-card-face').first()).toBeVisible()
 
       // Full board screenshot with the Mechanics Tray open
       const finalFullShot = await page.screenshot({ fullPage: true })

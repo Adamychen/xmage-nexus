@@ -8,6 +8,7 @@ fakeOnly()
 
 test.describe('Keyword badges & hover', { tag: '@keywords' }, () => {
   test('renders keyword badges on card and hover shows keyword boxes', async ({ page }) => {
+    await page.setViewportSize({ width: 1920, height: 1080 })
     await withFakeServer(mechanicsScenario, async () => {
       const { pageErrors } = await quickStartGame(page, {
         prefix: 'kw',
@@ -63,7 +64,7 @@ test.describe('Keyword badges & hover', { tag: '@keywords' }, () => {
         await dismissInfoWindows(page)
         const rows = page.locator('.card-slot .keyword-badges')
         await expect(rows.first()).toBeAttached()
-        if (size.width >= 1600) await expect(rows.first()).toBeVisible()
+        if (size.width >= 1600) await expect(page.locator('.card-slot .keyword-badges:not([data-badge-hidden])').first()).toBeVisible()
         const overflow = await rows.evaluateAll((els) =>
           els.filter((row) => getComputedStyle(row).visibility !== 'hidden').filter((row) => {
             const card = row.closest('.card-slot')!.getBoundingClientRect()

@@ -1,21 +1,17 @@
 import { useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
-import { useGame, useSettings, useStore } from '../state/store'
+import { useGame, useStore } from '../state/store'
 import { useTranslation } from '../i18n'
 import IconButton from '../ui/IconButton'
 import CloseButton from '../ui/CloseButton'
 import type { IconName } from '../ui/Icon'
-import ActionFeed from './ActionFeed'
-import GameChat, { isGameChatEntry } from './GameChat'
-import DeckTrackerPanel from './DeckTrackerPanel'
+import { isGameChatEntry } from './GameChat'
 import MechanicsTray from './MechanicsTray'
-import MechanicsOverview from './MechanicsOverview'
 import CommanderDamageMatrix from './CommanderDamageMatrix'
-import CommanderSeatMatrix from './CommanderSeatMatrix'
 import { DrawerHeadSlotContext } from './drawerHeadSlot'
 import './GameDrawer.css'
 
-export type DrawerTab = 'log' | 'chat' | 'tracker' | 'commander' | 'mechanics'
+export type DrawerTab = 'commander' | 'mechanics'
 
 interface DrawerTabDef {
   id: DrawerTab
@@ -26,7 +22,7 @@ interface DrawerTabDef {
   hidden?: boolean
 }
 
-function useChatUnread(chatOpen: boolean): number {
+export function useChatUnread(chatOpen: boolean): number {
   const total = useStore((s) => s.log.reduce((n, e) => n + (isGameChatEntry(e) ? 1 : 0), 0))
   const [seen, setSeen] = useState(total)
   useEffect(() => {
@@ -35,19 +31,9 @@ function useChatUnread(chatOpen: boolean): number {
   return chatOpen ? 0 : Math.max(0, total - seen)
 }
 
-export function useDrawerTabs(active: DrawerTab | null, hasCommanders: boolean, hasActiveMechanics: boolean, mechanicsCount?: number): DrawerTabDef[] {
+export function useDrawerTabs(hasCommanders: boolean, hasActiveMechanics: boolean, mechanicsCount?: number): DrawerTabDef[] {
   const { t } = useTranslation()
-  const unread = useChatUnread(active === 'chat')
   return [
-    { id: 'log', icon: 'history', label: t('game', 'tab_log'), title: t('game', 'tab_log') },
-    {
-      id: 'chat',
-      icon: 'chat',
-      label: t('game', 'tab_chat'),
-      title: t('game', 'tab_chat'),
-      badge: unread > 0 && <span className="right-tab-badge" data-testid="chat-unread">{unread > 9 ? '9+' : unread}</span>,
-    },
-    { id: 'tracker', icon: 'layers', label: t('game', 'tab_tracker'), title: t('game', 'tab_tracker') },
     { id: 'commander', icon: 'crown', label: t('game', 'tab_commander'), title: t('game', 'commander_damage'), hidden: !hasCommanders },
     {
       id: 'mechanics',
@@ -71,7 +57,7 @@ interface DrawerTogglesProps {
 }
 
 export function DrawerToggles({ active, onToggle, hasCommanders, hasActiveMechanics, exclude = [], mechanicsCount }: DrawerTogglesProps) {
-  const tabs = useDrawerTabs(active, hasCommanders, hasActiveMechanics, mechanicsCount).filter((tab) => !exclude.includes(tab.id))
+  const tabs = useDrawerTabs(hasCommanders, hasActiveMechanics, mechanicsCount).filter((tab) => !exclude.includes(tab.id))
   return (
     <div className="drawer-toggles" role="toolbar">
       {tabs.filter((tab) => !tab.hidden).map((tab) => (
@@ -95,21 +81,12 @@ export function DrawerToggles({ active, onToggle, hasCommanders, hasActiveMechan
 
 export function DrawerBody({ tab }: { tab: DrawerTab }) {
   const game = useGame()
-  const v2 = useSettings().gameUi === 'v2'
   return (
     <>
-      {tab === 'log' ? (
-        <ActionFeed />
-      ) : tab === 'chat' ? (
-        <GameChat />
-      ) : tab === 'tracker' ? (
-        <DeckTrackerPanel />
-      ) : tab === 'commander' ? (
+      {tab === 'commander' ? (
         <div className="sidebar-commander-tab">
-          {v2 ? <CommanderSeatMatrix game={game} /> : <CommanderDamageMatrix game={game} defaultView="cards" />}
+          <CommanderDamageMatrix game={game} defaultView="cards" />
         </div>
-      ) : v2 ? (
-        <MechanicsOverview />
       ) : (
         <MechanicsTray />
       )}
@@ -121,9 +98,6 @@ export default function GameDrawer({ tab, onClose }: { tab: DrawerTab; onClose: 
   const { t } = useTranslation()
   const [headSlot, setHeadSlot] = useState<HTMLElement | null>(null)
   const titles: Record<DrawerTab, string> = {
-    log: t('game', 'tab_log'),
-    chat: t('game', 'tab_chat'),
-    tracker: t('game', 'tab_tracker'),
     commander: t('game', 'commander_damage'),
     mechanics: t('game', 'tab_mechanics'),
   }

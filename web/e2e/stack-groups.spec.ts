@@ -6,7 +6,7 @@ import { tokensScenario } from '../fixtures/scenarios/tokens'
 fakeOnly()
 
 test.describe('Visual token piles (×3)', () => {
-  test('BRD-20: fungible tokens pile from ×3, open after a second of hover without a preview over them, and a click reaches the card under the pile @fullflow @stack-groups', async ({ page }) => {
+  test('BRD-20, BRD-23: fungible tokens pile from ×3, open after a second of hover without a preview over them, and a click reaches the card under the pile @fullflow @stack-groups', async ({ page }) => {
     await withFakeServer(tokensScenario, async () => {
       const { pageErrors } = await quickStartGame(page, {
         prefix: 'sg',
@@ -33,13 +33,12 @@ test.describe('Visual token piles (×3)', () => {
       const preview = page.locator('.floating-card-preview')
       await page.mouse.move(2, 2)
       await treasureGroup.locator('.card-slot').last().hover()
-      await expect(preview).toBeVisible({ timeout: 10_000 })
-      const previewImg = preview.locator('img.floating-card-img')
-      if ((await previewImg.count()) > 0) {
-        await expect(previewImg).toHaveAttribute('alt', 'Treasure')
-      } else {
-        await expect(preview.locator('.floating-card-name')).toContainText('Treasure')
-      }
+      const previewName = await page.waitForFunction(() => {
+        const p = document.querySelector('.floating-card-preview')
+        if (!p) return null
+        return p.querySelector('img.floating-card-img')?.getAttribute('alt') ?? p.querySelector('.floating-card-name')?.textContent ?? null
+      }, null, { timeout: 10_000, polling: 'raf' })
+      expect(await previewName.jsonValue()).toContain('Treasure')
       await expect(treasureGroup).not.toHaveAttribute('data-spread')
       await expect(treasureGroup).toHaveAttribute('data-spread', '', { timeout: 2_000 })
 

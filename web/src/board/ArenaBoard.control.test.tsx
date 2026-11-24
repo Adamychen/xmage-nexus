@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render } from '@testing-library/react'
-import GameBoard from './GameBoard'
+import ArenaBoard from './ArenaBoard'
 import { getState, setState } from '../state/store'
 import { makeCard, makeGameView, makePermanent, makePlayer } from '../__fixtures__/gameViews'
 import type { GameView } from '../net/types'
@@ -40,7 +40,7 @@ function controlledGame(): GameView {
   })
 }
 
-describe('GameBoard bajo control del turno ajeno (Mindslaver)', () => {
+describe('ArenaBoard under another player turn control (Mindslaver)', () => {
   beforeEach(() => {
     setState({ game: null, gameId: null, switchedHandKey: null })
   })
@@ -54,7 +54,7 @@ describe('GameBoard bajo control del turno ajeno (Mindslaver)', () => {
     const onPlayableClick = vi.fn()
     const onCombatClick = vi.fn()
     const { container } = render(
-      <GameBoard game={getState().game} playableIds={['opp-perm']} onPlayableClick={onPlayableClick} />,
+      <ArenaBoard game={getState().game} playableIds={['opp-perm']} onPlayableClick={onPlayableClick} />,
     )
     const perm = container.querySelector('.opponent-zone [data-card-id="opp-perm"]')
     expect(perm).not.toBeNull()
@@ -69,7 +69,7 @@ describe('GameBoard bajo control del turno ajeno (Mindslaver)', () => {
     setState({ game: controlledGame(), gameId: 'g-1' })
     const onCombatClick = vi.fn()
     const { container } = render(
-      <GameBoard
+      <ArenaBoard
         game={getState().game}
         combatSelectable={['opp-perm']}
         combatChosen={['opp-chosen']}
@@ -89,7 +89,7 @@ describe('GameBoard bajo control del turno ajeno (Mindslaver)', () => {
     setState({ game: controlledGame(), gameId: 'g-1' })
     const onPlayableClick = vi.fn()
     const { getByTestId, container } = render(
-      <GameBoard game={getState().game} playableIds={['sim-hand-1']} onPlayableClick={onPlayableClick} />,
+      <ArenaBoard game={getState().game} playableIds={['sim-hand-1']} onPlayableClick={onPlayableClick} />,
     )
     expect(container.querySelector('[data-testid="hand-bar"] [data-card-id="my-hand"]')).not.toBeNull()
 

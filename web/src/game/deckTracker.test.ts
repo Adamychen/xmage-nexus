@@ -264,7 +264,7 @@ describe('deckTracker card metadata', () => {
     ['lightning bolt', { manaCost: '{R}', manaValue: 1, cardTypes: ['INSTANT'], colors: ['R'] }],
   ])
 
-  it('PNL-5: an unseen creature with meta counts as a creature and keeps its cost', () => {
+  it('an unseen creature with meta counts as a creature and keeps its cost', () => {
     const game = makeGame(makePlayer({ libraryCount: 27 }))
     const stats = computeDeckTracker(bearsDeck, game, null, meta)
     const bears = stats.cards.find((c) => c.name === 'Grizzly Bears')
@@ -278,7 +278,7 @@ describe('deckTracker card metadata', () => {
     expect(stats.countsRemaining.other).toBe(0)
   })
 
-  it('PNL-5: an unseen card with neither sample nor meta is in no type and counted as unknown', () => {
+  it('an unseen card with neither sample nor meta is in no type and counted as unknown', () => {
     const game = makeGame(makePlayer({ libraryCount: 27 }))
     const stats = computeDeckTracker(bearsDeck, game, null, meta)
     const mystery = stats.cards.find((c) => c.name === 'Mystery Card')
@@ -291,7 +291,7 @@ describe('deckTracker card metadata', () => {
     expect(stats.oddsNextDraw.other).toBe(0)
   })
 
-  it('PNL-5: the type odds stay over the whole library, so the unknown share is in no type', () => {
+  it('the type odds stay over the whole library, so the unknown share is in no type', () => {
     const game = makeGame(makePlayer({ libraryCount: 23 }))
     const stats = computeDeckTracker(
       { ...bearsDeck, cards: [{ cardName: 'Mystery Card', amount: 3, setCode: '', cardNumber: '0' }, { cardName: 'Mountain', amount: 20, setCode: '', cardNumber: '0' }] },
@@ -305,7 +305,7 @@ describe('deckTracker card metadata', () => {
     expect(stats.remainingTotal).toBe(23)
   })
 
-  it('PNL-5: a seen card keeps its own cost and types over the meta', () => {
+  it('a seen card keeps its own cost and types over the meta', () => {
     const goblin: PermanentView = {
       id: 'g1',
       name: 'Grizzly Bears',
@@ -327,7 +327,7 @@ describe('deckTracker card metadata', () => {
     expect(bears?.isInstantOrSorcery).toBe(false)
   })
 
-  it('PNL-5: a basic land with no sample and no meta is a land with data', () => {
+  it('a basic land with no sample and no meta is a land with data', () => {
     const game = makeGame(makePlayer({ libraryCount: 27 }))
     const stats = computeDeckTracker(bearsDeck, game, null)
     const mountain = stats.cards.find((c) => c.name === 'Mountain')
@@ -337,7 +337,7 @@ describe('deckTracker card metadata', () => {
     expect(stats.unknownRemaining).toBe(3 + 4 + 4)
   })
 
-  it('PNL-5: without meta a seen card is still counted by its sample, unseen non-basics are unknown', () => {
+  it('without meta a seen card is still counted by its sample, unseen non-basics are unknown', () => {
     const bolt: CardView = { id: 'b1', name: 'Lightning Bolt', manaValue: 1, manaCostLeftStr: ['{R}'], cardTypes: ['Instant'] }
     const game = makeGame(makePlayer({ libraryCount: 26 }), { myHand: { b1: bolt } })
     const stats = computeDeckTracker(bearsDeck, game, null)

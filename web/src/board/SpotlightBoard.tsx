@@ -265,8 +265,7 @@ export default function SpotlightBoard({
   const handCommander = useHandCommander(ownSeat, !narrow && !isSpectator && !!ownSeat, game?.myHelperEmblems)
   const switchedHand = useSwitchedHand(game)
   const { seatState, toggleSeat } = useSeatStates()
-  const { boardSpotlightPanel: panelPercent, gameUi } = useSettings()
-  const stripInDivider = gameUi !== 'v2'
+  const { boardSpotlightPanel: panelPercent } = useSettings()
 
   const players = useMemo(() => game?.players ?? [], [game?.players])
   const playerById = useMemo(() => new Map(players.map((p) => [p.playerId, p])), [players])
@@ -300,9 +299,7 @@ export default function SpotlightBoard({
     else onSelectSeat(id)
   }
 
-  // BRD-6: the seat in the main area is drawn the way the own board is, whatever the chrome: it
-  // has the whole area, so there is no reason for it to keep the arrangement of a small seat.
-  const seatBoard = (id: string, main = false) => {
+  const seatBoard = (id: string) => {
     const player: PlayerView | undefined = playerById.get(id)
     if (!player) return null
     if (player.controlled) {
@@ -378,7 +375,7 @@ export default function SpotlightBoard({
             targetZones={targetZones}
             revealedCards={opponentRevealedCards(game, player)}
             stackHand
-            arenaOwn={!narrow && (main || gameUi !== 'v2')}
+            arenaOwn={!narrow}
             playableIds={playableIdSet}
             combatSelectable={combatSelectable}
             combatMode={combatMode}
@@ -417,10 +414,10 @@ export default function SpotlightBoard({
         onTrailingClick: handleCardClick,
       } : null}
     >
-      {stripInDivider && <BoardDivider />}
+      <BoardDivider />
       <div className="spotlight-body">
         <div className="spotlight-main" data-testid="spotlight-main" data-main-seat={mainId} ref={mainRef}>
-          {seatBoard(mainId, true)}
+          {seatBoard(mainId)}
         </div>
         <div
           className={`spotlight-panel${copyRatio ? ' has-copy-ratio' : ''}`}

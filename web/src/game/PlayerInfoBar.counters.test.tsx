@@ -1,7 +1,6 @@
 import { act, cleanup, render } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import PlayerInfoBar from './PlayerInfoBar'
-import { setSetting } from '../state/store'
 import { setState } from '../state/state'
 import { COUNTER_PULSE_MS } from '../board/useCounterPulse'
 import { makeGameView, makePlayer } from '../__fixtures__/gameViews'
@@ -17,7 +16,6 @@ function badge(container: HTMLElement, kind: string): HTMLElement | null {
 describe('PlayerInfoBar player counters', () => {
   beforeEach(() => {
     vi.useFakeTimers()
-    setSetting('gameUi', 'v1')
     setState({ game: makeGameView({ players: [base] }) })
   })
 

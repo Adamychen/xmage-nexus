@@ -32,11 +32,16 @@ import { parsedLen } from './frames'
 import { CASCADE_MAX_SHOWN } from '../../src/board/stackCascadeFit'
 import { FAKE_MODE } from '../dual'
 
-export type DrawerTab = 'stack' | 'log' | 'chat' | 'tracker' | 'commander' | 'mechanics'
+export type DrawerTab = 'log' | 'chat' | 'commander' | 'mechanics'
 
+/** PNL-10: log and chat open in the floating chat and log panel; commander damage and mechanics
+ *  drop down from the strip. */
 export async function openDrawerTab(page: Page, tab: DrawerTab): Promise<void> {
-  const active = page.locator(`[data-testid="game-drawer"][data-tab="${tab}"]`)
-  if ((await active.count()) === 0) await page.locator(`[data-testid="drawer-tab-${tab}"]`).click()
+  const chatLog = tab === 'log' || tab === 'chat'
+  const active = chatLog
+    ? page.locator(`[data-testid="chatlog-panel"][data-tab="${tab}"]`)
+    : page.locator(`[data-testid="game-drawer"][data-tab="${tab}"]`)
+  if ((await active.count()) === 0) await page.locator(chatLog ? `[data-testid="chatlog-toggle-${tab}"]` : `[data-testid="drawer-tab-${tab}"]`).click()
   await expect(active).toBeVisible({ timeout: 10_000 })
 }
 

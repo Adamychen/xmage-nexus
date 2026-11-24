@@ -47,8 +47,8 @@ async function openHand(page: Page, entry: string): Promise<HandMetrics> {
       cards: union(cards.map((c) => rect(c)!)),
       cardW: cards[0]?.offsetWidth ?? 0,
       lastRight: rect(cards[cards.length - 1] ?? slots[slots.length - 1])!.right,
-      pool: rect(document.querySelector('.pp-pool')),
-      dock: rect(document.querySelector('[data-testid="game-dock"]')),
+      pool: rect(document.querySelector('[data-testid="arena-own-piles"]')),
+      dock: rect(document.querySelector('.action-button-container')),
     }
   }, entry)
 }
@@ -80,16 +80,16 @@ test.describe('the hand spreads across the width as cards are added @hand-bar', 
   for (const entry of ['game:hand-8', 'game:hand-15']) {
     test(`HND-2: ${entry} stays in the centre band between the side panels`, async ({ page }) => {
     const hand = await openHand(page, entry)
-    expect(hand.pool, 'the bottom-left pool row is on screen').not.toBeNull()
-    expect(hand.dock, 'the command wheel dock is on screen').not.toBeNull()
+    expect(hand.pool, 'the own piles are on screen').not.toBeNull()
+    expect(hand.dock, 'the action button is on screen').not.toBeNull()
     const pool = hand.pool!
     const dock = hand.dock!
 
     const overlaps = (a: Rect, b: Rect) => a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top
-    expect(overlaps(hand.cards, pool), 'the hand does not cover the pool row').toBe(false)
-    expect(overlaps(hand.cards, dock), 'the hand does not cover the command wheel').toBe(false)
-    expect(hand.bar.left, 'the centre band starts after the pool row').toBeGreaterThanOrEqual(pool.right)
-    expect(hand.bar.right, 'the centre band ends before the command wheel').toBeLessThanOrEqual(dock.left)
+    expect(overlaps(hand.cards, pool), 'the hand does not cover the own piles').toBe(false)
+    expect(overlaps(hand.cards, dock), 'the hand does not cover the action button').toBe(false)
+    expect(hand.bar.left, 'the centre band starts after the own piles').toBeGreaterThanOrEqual(pool.right)
+    expect(hand.bar.right, 'the centre band ends before the action button').toBeLessThanOrEqual(dock.left)
     expect(hand.bar.right - hand.lastRight, 'the last card reaches the centre band edge').toBeLessThanOrEqual((hand.bar.right - hand.bar.left) * 0.03)
     })
   }

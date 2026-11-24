@@ -82,6 +82,23 @@ describe('BoardLayoutEngine', () => {
     expect(creaturesBand.style.flexBasis).toBe('900px')
   })
 
+  it('BRD-2: a marquee band is as wide as its card and its padding, and the spare its line leaves never counts as a frame', () => {
+    const { reg, creaturesBand } = seatFixture({ creatures: [card(), card()], permanents: [card()] })
+    const marquee = document.createElement('div')
+    marquee.style.paddingLeft = '2px'
+    marquee.style.paddingRight = '2px'
+    marquee.style.borderStyle = 'solid'
+    marquee.style.borderLeftWidth = '20px'
+    marquee.style.borderRightWidth = '20px'
+    creaturesBand.parentElement!.appendChild(marquee)
+    reg.rows.creatures.push({ id: 'marquee', el: marquee, items: [card()], minWidthCards: 1, maxWidthNeed: true })
+    const engine = new BoardLayoutEngine({ layout: 'arena', opponentsCappedByOwn: true })
+    engine.register('seat', reg)
+    engine.flush()
+    const cardW = parseFloat(marquee.style.getPropertyValue('--card-w'))
+    expect(parseFloat(marquee.style.flexBasis)).toBe(Math.ceil(cardW + 4))
+  })
+
   it('BRD-25: a seat without a size is left out and writes nothing', () => {
     const { reg, seat } = seatFixture({ creatures: [card()], permanents: [] }, 0, 0)
     const engine = new BoardLayoutEngine({ layout: 'standard', opponentsCappedByOwn: false })

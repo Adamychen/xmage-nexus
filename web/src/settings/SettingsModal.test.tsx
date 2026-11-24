@@ -249,7 +249,8 @@ describe('SettingsModal', () => {
     for (const tab of ['layout', 'cards', 'overlays', 'table']) {
       expect(screen.getByTestId(`settings-board-tab-${tab}`)).toBeTruthy()
     }
-    expect(screen.getByTestId('board-layout-preview')).toBeTruthy()
+    expect(screen.getByTestId('board-live-preview')).toBeTruthy()
+    expect(screen.queryByTestId('settings-layout-standard')).toBeNull()
     for (const tab of ['layout', 'cards', 'overlays']) {
       fireEvent.click(screen.getByTestId(`settings-board-tab-${tab}`))
       expect(screen.getByTestId(`settings-board-tab-panel-${tab}`)).toBeTruthy()

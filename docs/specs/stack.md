@@ -22,7 +22,7 @@ number does not carry better.
 - Why: the stack was a list of rows with a header and a tab in the drawer, which said what was on
   the stack but never showed it. BRD-54 had already paid for the measurement trap on the player's
   counter stack, and the cascade walked into it twice more before the room became a box.
-- Guard: `src/board/stackCascadeFit.test.ts` · `src/board/StackZone.test.tsx` · `e2e/game-ui-v2.spec.ts`
+- Guard: `src/board/stackCascadeFit.test.ts` · `src/board/StackZone.test.tsx` · `e2e/arena-chrome.spec.ts`
 
 ### STK-2 · It is a layer over the board, and it can be pushed aside
 An empty stack draws nothing at all: no box, no panel, no line saying it is empty. A stack with
@@ -37,7 +37,7 @@ is about to press is not a card they can look at later.
 - Why: a stack you have to open is a stack you read after the moment has passed. The grip is what
   pays for always being in view, and it stands clear of the turned cards' corners so it never sits
   on one.
-- Guard: `src/board/StackZone.test.tsx` · `src/game/GameDrawer.test.tsx` · `e2e/game-ui-v2.spec.ts`
+- Guard: `src/board/StackZone.test.tsx` · `src/game/GameDrawer.test.tsx` · `e2e/arena-chrome.spec.ts`
 
 ### STK-3 · Only two objects point at their targets
 The object about to resolve always draws its target arrows, and so does the one under the pointer.

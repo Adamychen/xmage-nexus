@@ -75,13 +75,13 @@ export function clearShuffles(): void {
 }
 
 export function libraryElement(playerId: string): { el: HTMLElement; mode: ShuffleMode } | null {
-  const els = [...document.querySelectorAll<HTMLElement>(`[data-player-id="${playerId}"] :is(.library-stack, .library-chip)`)]
+  const els = [...document.querySelectorAll<HTMLElement>(`[data-player-id="${playerId}"] :is(.library-stack, .library-chip, [data-testid="pile-card-library"])`)]
   const el = els.find((e) => {
     const r = e.getBoundingClientRect()
     return r.width > 0 && r.height > 0
   })
   if (!el) return null
-  return { el, mode: el.classList.contains('library-stack') ? 'pile' : 'chip' }
+  return { el, mode: el.classList.contains('library-chip') ? 'chip' : 'pile' }
 }
 
 /**

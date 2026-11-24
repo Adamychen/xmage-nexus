@@ -20,7 +20,7 @@ function memoryStorage(): Storage {
 function show(extra: Record<string, unknown> = {}) {
   setState({
     ...initialState,
-    settings: { ...initialState.settings, gameUi: 'v1' },
+    settings: { ...initialState.settings },
     conn: { serverHost: 'localhost', port: 17171, username: 'tester', wsHost: 'localhost', proxyPort: 8787 },
     gameId: 'game-1',
     game: playerGameView,
@@ -46,7 +46,7 @@ describe('GameScreen', () => {
     const errors = vi.spyOn(console, 'error').mockImplementation(() => {})
     const { container } = show()
     expect(container.querySelector('.game')).not.toBeNull()
-    expect(container.querySelector('[data-testid="game-board"]')).not.toBeNull()
+    expect(container.querySelector('.arena-board')).not.toBeNull()
     expect(errors).not.toHaveBeenCalled()
     errors.mockRestore()
   })
@@ -77,7 +77,7 @@ describe('GameScreen', () => {
     const { container } = show({
       game: fourPlayerArena(),
       myPlayerId: 'p1',
-      settings: { ...initialState.settings, gameUi: 'v1', boardLayout: 'arena', boardSpotlight: true },
+      settings: { ...initialState.settings, boardSpotlight: true },
     })
     expect(container.querySelector('[data-testid="spotlight-board"]')).not.toBeNull()
     expect(container.querySelector('[data-testid="spotlight-panel"]')).not.toBeNull()
@@ -93,7 +93,7 @@ describe('GameScreen', () => {
     const { container } = show({
       game: watched,
       myPlayerId: null,
-      settings: { ...initialState.settings, gameUi: 'v1', boardLayout: 'arena', boardSpotlight: true },
+      settings: { ...initialState.settings, boardSpotlight: true },
     })
     expect(container.querySelector('[data-testid="spotlight-board"]')).not.toBeNull()
     expect(container.querySelector('[data-testid="spotlight-main"]')?.getAttribute('data-main-seat')).toBe('p4')
@@ -104,24 +104,33 @@ describe('GameScreen', () => {
     return { ...fourPlayerArena(), players: fourPlayerArena().players!.slice(0, 2) }
   }
 
-  const spotlightSettings = (gameUi: 'v1' | 'v2', boardSpotlight = true) =>
-    ({ ...initialState.settings, gameUi, boardLayout: 'arena', boardSpotlight }) as typeof initialState.settings
+  const spotlightSettings = (boardSpotlight = true) =>
+    ({ ...initialState.settings, boardSpotlight }) as typeof initialState.settings
 
-  it.each(['v1', 'v2'] as const)('BRD-6: in a duel the switch on keeps the main board with the opponent in the panel (%s)', (gameUi) => {
-    const { container } = show({ game: duel(), myPlayerId: 'p1', settings: spotlightSettings(gameUi) })
+  it('BRD-6: in a duel the switch on keeps the main board with the opponent in the panel', () => {
+    const { container } = show({ game: duel(), myPlayerId: 'p1', settings: spotlightSettings() })
     expect(container.querySelector('[data-testid="spotlight-main"]')?.getAttribute('data-main-seat')).toBe('p1')
     expect(container.querySelector('[data-testid="spotlight-copy-p2"]')).not.toBeNull()
   })
 
-  it('BRD-6: in a duel with the switch off the Arena preference stays the Standard duel board', () => {
-    const { container } = show({ game: duel(), myPlayerId: 'p1', settings: spotlightSettings('v1', false) })
+  it('BRD-6: a duel with the switch off is drawn on the Arena board, its opponent in one column', () => {
+    const { container } = show({ game: duel(), myPlayerId: 'p1', settings: { ...initialState.settings, boardSpotlight: false } })
     expect(container.querySelector('[data-testid="spotlight-board"]')).toBeNull()
-    expect(container.querySelector('[data-testid="game-board"]')).not.toBeNull()
+    expect(container.querySelector('[data-testid="game-board"]')).toBeNull()
+    expect(container.querySelector('.arena-board')).not.toBeNull()
+    expect(container.querySelectorAll('[data-testid^="arena-opp-cell-"]')).toHaveLength(1)
+  })
+
+  it('BRD-6: six players with the switch off get the main board and every opponent in the panel', () => {
+    const six = { ...fourPlayerArena(), players: [...fourPlayerArena().players!, makePlayer({ playerId: 'p5', name: 'Eve', life: 40, commandList: [] }), makePlayer({ playerId: 'p6', name: 'Finn', life: 40, commandList: [] })] }
+    const { container } = show({ game: six, myPlayerId: 'p1', settings: { ...initialState.settings, boardSpotlight: false } })
+    expect(container.querySelector('[data-testid="spotlight-board"]')).not.toBeNull()
+    for (const id of ['p2', 'p3', 'p4', 'p5', 'p6']) expect(container.querySelector(`[data-testid="spotlight-copy-${id}"]`)).not.toBeNull()
   })
 
   it('BRD-6: a spectator watching a duel with the switch on gets the main board', () => {
     const watched = { ...duel(), myPlayerId: null, players: duel().players!.map((p) => ({ ...p, controlled: false })) } as GameView
-    const { container } = show({ game: watched, myPlayerId: null, settings: spotlightSettings('v1') })
+    const { container } = show({ game: watched, myPlayerId: null, settings: spotlightSettings() })
     expect(container.querySelector('[data-testid="spotlight-main"]')?.getAttribute('data-main-seat')).toBe('p2')
     expect(container.querySelector('[data-testid="spotlight-copy-p1"]')).not.toBeNull()
   })
@@ -129,7 +138,7 @@ describe('GameScreen', () => {
   it('BRD-6: when two players are left in a pod the main board stays, with the live opponent as a copy and the others folded', () => {
     const game = fourPlayerArena()
     const twoLeft = { ...game, players: game.players!.map((p) => (p.playerId === 'p3' || p.playerId === 'p4' ? { ...p, hasLeft: true, life: 0 } : p)) }
-    const { container } = show({ game: twoLeft, myPlayerId: 'p1', settings: spotlightSettings('v2') })
+    const { container } = show({ game: twoLeft, myPlayerId: 'p1', settings: spotlightSettings() })
     expect(container.querySelector('[data-testid="spotlight-copy-p2"]')).not.toBeNull()
     expect(container.querySelector('[data-testid="spotlight-copy-p3"]')).toBeNull()
     expect(container.querySelector('[data-testid="spotlight-copy-p4"]')).toBeNull()
@@ -141,10 +150,41 @@ describe('GameScreen', () => {
     const { container } = show({
       game: fourPlayerArena(),
       myPlayerId: 'p1',
-      settings: { ...initialState.settings, gameUi: 'v1', boardLayout: 'arena', boardSpotlight: false },
+      settings: { ...initialState.settings, boardSpotlight: false },
     })
     expect(container.querySelector('[data-testid="spotlight-board"]')).toBeNull()
     expect(container.querySelector('.arena-opp-row')).not.toBeNull()
+  })
+
+  it('BRD-32: the game screen has the one Arena chrome', () => {
+    const { container } = show()
+    expect(container.querySelector('.game--v2')).toBeNull()
+    expect(container.querySelector('.game-top--v2')).toBeNull()
+    expect(container.querySelector('[data-testid="side-panel"]')).toBeNull()
+    expect(container.querySelector('[data-testid="phase-dial"]')).toBeNull()
+    expect(container.querySelector('[data-testid="game-strip"]')).not.toBeNull()
+  })
+
+  it('PNL-10: opening the chat and log panel never resizes the board', async () => {
+    const { container, getByTestId, queryByTestId } = show()
+    const wrap = container.querySelector<HTMLElement>('.board-wrap')!
+    const before = { cls: wrap.className, style: wrap.getAttribute('style') }
+    await act(async () => { getByTestId('chatlog-toggle-log').click() })
+    expect(getByTestId('chatlog-panel').getAttribute('data-tab')).toBe('log')
+    expect(wrap.className).toBe(before.cls)
+    expect(wrap.getAttribute('style')).toBe(before.style)
+    expect(queryByTestId('drawer-tab-tracker')).toBeNull()
+    expect(queryByTestId('drawer-tab-log')).toBeNull()
+    expect(queryByTestId('drawer-tab-chat')).toBeNull()
+  })
+
+  it('HND-7: the hand column gives way to the fan while the chat and log panel is open', async () => {
+    const { container, getByTestId } = show({ settings: { ...initialState.settings, handRail: true } })
+    expect(container.querySelector('.has-hand-rail')).not.toBeNull()
+    await act(async () => { getByTestId('chatlog-toggle-chat').click() })
+    expect(container.querySelector('.has-hand-rail')).toBeNull()
+    await act(async () => { getByTestId('chatlog-toggle-chat').click() })
+    expect(container.querySelector('.has-hand-rail')).not.toBeNull()
   })
 
   it('applies the inverse of the UI scale so the board is not zoomed twice', () => {
@@ -172,17 +212,6 @@ describe('GameScreen', () => {
       setState({ game: { ...playerGameView, turn: 2, life: 19 } } as never)
     })
     expect(turn.classList.contains('turn-glow')).toBe(false)
-  })
-
-  it('glows the v2 top-bar turn number when the turn changes', async () => {
-    const { container } = show({ settings: { ...initialState.settings, gameUi: 'v2' } })
-    const turn = container.querySelector<HTMLElement>('.game-topbar-turn-num')!
-    expect(turn.classList.contains('turn-glow')).toBe(false)
-
-    await act(async () => {
-      setState({ game: { ...playerGameView, turn: 2 } } as never)
-    })
-    expect(turn.classList.contains('turn-glow')).toBe(true)
   })
 
   it('survives a stream of view updates', async () => {

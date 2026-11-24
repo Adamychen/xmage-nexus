@@ -10,7 +10,7 @@ fakeOnly()
 async function openTenCards(page: Page, prefix: string) {
   const { pageErrors } = await quickStartGame(page, { prefix })
   await waitCrossZonePlayable(page, 'Arc Trail', { timeoutMs: 30_000, minUntapped: 0 })
-  await page.locator('.ray-stack').click()
+  await page.getByTestId('pile-card-playable').click()
   await expect(page.locator('.cross-zone-overlay')).toBeVisible({ timeout: 10_000 })
   await expect(page.locator('.cross-zone-entry')).toHaveCount(10)
   await expect(page.locator('.cross-zone-overlay .zone-fan.is-measured')).toHaveCount(1)

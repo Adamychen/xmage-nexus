@@ -62,7 +62,6 @@ export const SETTINGS_INDEX: SettingEntry[] = [
   { id: 'phase-stops', section: 'gameplay', group: (t) => t('game', 'phase_stops_default_title'), label: (t) => t('game', 'phase_stops_default_title'), hint: (t) => t('game', 'phase_stops_default_hint') },
   { id: 'auto-answers', section: 'gameplay', group: (t) => t('game', 'auto_answers_title', { count: getState().settings.autoAnswers.length }), label: (t) => t('game', 'auto_answers_title', { count: getState().settings.autoAnswers.length }), hint: (t) => t('lobby', 'settings_auto_answers_how', { remember: t('game', 'auto_answer_remember') }) },
 
-  { id: 'board-layout', section: 'board', tab: 'layout', group: (t) => t('lobby', 'appearance_board_title'), label: (t) => t('lobby', 'appearance_board_title'), hint: (t) => t('lobby', 'appearance_board_hint') },
   { id: 'board-fill', section: 'board', tab: 'layout', group: fieldHand, label: (t) => t('lobby', 'board_fill_show'), hint: (t) => t('lobby', 'board_fill_show_hint') },
   { id: 'board-spotlight', section: 'board', tab: 'layout', group: fieldHand, label: (t) => t('lobby', 'board_spotlight_show'), hint: (t) => t('lobby', 'board_spotlight_show_hint') },
   { id: 'hand-rail', section: 'board', tab: 'layout', group: fieldHand, label: (t) => t('lobby', 'hand_rail_show'), hint: (t) => t('lobby', 'hand_rail_show_hint') },

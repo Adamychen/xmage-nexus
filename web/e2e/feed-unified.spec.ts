@@ -20,7 +20,7 @@ test.describe('Feed unificado con diseño carta', () => {
       await dismissInfoWindows(page)
 
       const feed = page.locator('.action-feed-list')
-      await expect(page.getByTestId('drawer-tab-chat')).toBeVisible({ timeout: 30_000 })
+      await expect(page.getByTestId('chatlog-toggle-chat')).toBeVisible({ timeout: 30_000 })
 
       const lines = [
         'feedp1 draws seven cards',

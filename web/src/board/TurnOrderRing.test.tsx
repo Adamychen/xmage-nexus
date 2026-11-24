@@ -2,7 +2,7 @@ import { act, cleanup, fireEvent, render } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
 import TurnOrderRing, { turnOrderSeats } from './TurnOrderRing'
 import { makePlayer } from '../__fixtures__/gameViews'
-import { setSeatPeek, setSetting } from '../state/store'
+import { setSeatPeek } from '../state/store'
 import type { PlayerView } from '../net/types'
 
 const me = makePlayer({ playerId: 'me', name: 'Adamysz', controlled: true })
@@ -35,46 +35,8 @@ describe('TurnOrderRing', () => {
     expect(getByTestId('tor-seat-me').getAttribute('role')).toBe('button')
   })
 
-  it('the walkway puts my seat last, whoever the server lists first', () => {
-    const a = turnOrderSeats([me, rival, third], true).map((p) => p.playerId)
-    const b = turnOrderSeats([third, me, rival], true).map((p) => p.playerId)
-    expect(a).toEqual(['rival', 'third', 'me'])
-    expect(b[b.length - 1]).toBe('me')
-    expect(b.length).toBe(3)
-  })
-
   it('the pod ring keeps the turn order (the reverse of the server list)', () => {
     expect(turnOrderSeats([me, rival, third]).map((p) => p.playerId)).toEqual(['third', 'rival', 'me'])
-  })
-
-  it('the walkway drops the life counter and the trailing arrow', () => {
-    const { container, getByTestId } = render(<TurnOrderRing lane players={[me, rival]} activePlayerId="rival" />)
-    const walkway = getByTestId('turn-lane')
-    const row = walkway.querySelector<HTMLElement>('.tor-seats-flow')
-    expect(walkway.classList.contains('lane')).toBe(true)
-    // The measured clones under .tor-measure-layer repeat the seats on purpose
-    // (they are how the walkway learns its natural width): count the real row.
-    expect(row?.querySelectorAll('.tor-seat').length).toBe(2)
-    expect(row?.querySelectorAll('.tor-seat-life').length).toBe(0)
-    expect(row?.querySelectorAll('.tor-arrow').length).toBe(1)
-    expect(container.querySelectorAll('.turn-order-ring').length).toBe(1)
-  })
-
-  it('the measurement clones carry no test id and never take part in the layout', () => {
-    const { container, getByTestId, getAllByTestId } = render(<TurnOrderRing lane players={[me, rival, third]} activePlayerId="rival" />)
-    const walkway = getByTestId('turn-lane')
-    const layer = walkway.querySelector<HTMLElement>('[data-measure]')
-    expect(layer).not.toBeNull()
-    expect(layer?.getAttribute('aria-hidden')).toBe('true')
-    expect(layer?.querySelectorAll('[data-testid]')).toHaveLength(0)
-    // one badge for the real active seat, nothing from the clones
-    expect(getAllByTestId('tor-active-badge')).toHaveLength(1)
-    // The full-width clone mirrors the row (seats *and* the arrows between
-    // them): measure less than the row needs and the walkway clips anyway.
-    const rulers = Array.from(container.querySelectorAll<HTMLElement>('[data-lane-measure]'))
-    expect(rulers.map((r) => r.dataset.laneMeasure)).toEqual(['full', 'solo', 'solo-dots'])
-    expect(rulers[0].querySelectorAll('.tor-seat').length).toBe(3)
-    expect(rulers[0].querySelectorAll('.tor-arrow').length).toBe(2)
   })
 
   it('turn and priority are separate markers and can be on the same seat', () => {
@@ -82,7 +44,7 @@ describe('TurnOrderRing', () => {
       withFlags(rival, { hasPriority: true }),
       withFlags(me, { hasPriority: true }),
     ]
-    const { getByTestId } = render(<TurnOrderRing lane players={players} activePlayerId="rival" />)
+    const { getByTestId } = render(<TurnOrderRing players={players} activePlayerId="rival" />)
     const rivalSeat = getByTestId('tor-seat-rival')
     const mySeat = getByTestId('tor-seat-me')
     expect(rivalSeat.classList.contains('is-active')).toBe(true)
@@ -94,19 +56,13 @@ describe('TurnOrderRing', () => {
   })
 
   it('my own active seat is named differently from somebody else being active', () => {
-    const rivalActive = render(<TurnOrderRing lane players={[me, withFlags(rival, { hasPriority: true })]} activePlayerId="rival" />)
+    const rivalActive = render(<TurnOrderRing players={[me, withFlags(rival, { hasPriority: true })]} activePlayerId="rival" />)
     const rivalBadge = rivalActive.getByTestId('tor-active-badge').textContent
     rivalActive.unmount()
-    const mineActive = render(<TurnOrderRing lane players={[withFlags(me, { hasPriority: true }), rival]} activePlayerId="me" />)
+    const mineActive = render(<TurnOrderRing players={[withFlags(me, { hasPriority: true }), rival]} activePlayerId="me" />)
     const myBadge = mineActive.getByTestId('tor-active-badge').textContent
     expect(myBadge).toBeTruthy()
     expect(myBadge).not.toBe(rivalBadge)
-  })
-
-  it('has no ruler outside the walkway: the ring and the FFA switcher are position-coded', () => {
-    const { container } = render(<TurnOrderRing players={[rival, me]} activePlayerId="rival" />)
-    expect(container.querySelector('[data-lane-measure]')).toBeNull()
-    expect(container.querySelector<HTMLElement>('.turn-order-ring')?.dataset.laneFit).toBeUndefined()
   })
 
   it('BRD-3: a live opponent pill is a button that reports its seat, my own pill is not', () => {
@@ -188,13 +144,9 @@ describe('TurnOrderRing', () => {
     expect(getByTestId('tor-seat-rival').classList.contains('is-peek')).toBe(false)
   })
 
-  it('BRD-37: noLife leaves the life out of every pill', () => {
-    setSetting('gameUi', 'v1')
-    const { container, rerender } = render(<TurnOrderRing players={[me, rival, third]} activePlayerId="me" />)
-    expect(container.querySelectorAll('.tor-seat-life').length).toBe(3)
-    rerender(<TurnOrderRing players={[me, rival, third]} activePlayerId="me" noLife />)
+  it('BRD-37: no pill carries the life', () => {
+    const { container } = render(<TurnOrderRing players={[me, rival, third]} activePlayerId="me" />)
     expect(container.querySelectorAll('.tor-seat-life').length).toBe(0)
     expect(container.querySelector('[data-testid="tor-active-badge"]')).not.toBeNull()
-    setSetting('gameUi', 'v2')
   })
 })

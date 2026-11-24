@@ -89,7 +89,8 @@ The Board section is split into four tabs: Layout, Cards, Overlays, and Table & 
 tab's settings a preview shows your own battlefield and hand drawn by the real board card
 (`CardSlot`) with your current choices: card style, tapped style, P/T badge, summoning sickness,
 keyword icons and effects, mana sources, hand costs and playmat; it changes as soon as a choice
-does. On the Layout tab the preview is the miniature of the current layout. A picker grid has as
+does. The Layout tab has no layout picker: there is one layout, Arena, and the tab holds its
+main board switch (BRD-6), the board fill and the hand options. A picker grid has as
 many columns as it has options, so no row is left with an orphan or an empty column, and every
 picker marks its selection the same way (brand border and check), the playmats included. An on/off
 option is a switch row with a small miniature of its current state, not two cards.

@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { describe, it, expect, afterEach, beforeEach } from 'vitest'
+import { describe, it, expect, afterEach } from 'vitest'
 import { cleanup, render } from '@testing-library/react'
 import BoardZone from './BoardZone'
 import { commanderInfoRule, makeCard, makeGameView, makePlayer } from '../__fixtures__/gameViews'
@@ -36,9 +36,7 @@ function renderOwn(player: PlayerView, extra: Record<string, unknown> = {}) {
 }
 
 describe('BoardZone on the own Arena board', () => {
-  beforeEach(() => setSetting('gameUi', 'v1'))
   afterEach(() => {
-    setSetting('gameUi', 'v2')
     setState({ game: null, gameId: null })
     cleanup()
   })

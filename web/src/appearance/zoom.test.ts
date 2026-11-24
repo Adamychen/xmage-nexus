@@ -67,12 +67,12 @@ describe('zoom helpers', () => {
 
 describe('zoom persistence', () => {
   it('round-trips a continuous value through storage', () => {
-    saveAppearanceSettings({ sleeveId: 'classic', boardLayout: 'standard', uiScale: 1.2, cjkBoost: true })
+    saveAppearanceSettings({ sleeveId: 'classic', uiScale: 1.2, cjkBoost: true })
     expect(loadAppearanceSettings().uiScale).toBe(1.2)
   })
 
   it('applies zoom to the document element', () => {
-    applyAppearanceToDocument({ sleeveId: 'classic', boardLayout: 'standard', uiScale: 1.3, cjkBoost: false })
+    applyAppearanceToDocument({ sleeveId: 'classic', uiScale: 1.3, cjkBoost: false })
     const root = document.documentElement
     expect(root.dataset.uiScale).toBe('1.3')
   })

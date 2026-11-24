@@ -1,4 +1,4 @@
-import { act, cleanup, fireEvent, render } from '@testing-library/react'
+import { cleanup, fireEvent, render } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import GameDrawer, { DrawerToggles, type DrawerTab } from './GameDrawer'
 import { setState } from '../state/store'
@@ -19,8 +19,6 @@ function Harness({ commanders = false, mechanics = false }: { commanders?: boole
   )
 }
 
-const chat = (id: number, text = 'hola') => ({ id, time: 0, from: 'Bob', text, channel: 'chat' as const })
-
 describe('GameDrawer', () => {
   beforeEach(() => {
     setState({ log: [], game: null })
@@ -30,21 +28,21 @@ describe('GameDrawer', () => {
     cleanup()
   })
 
-  it('arranca cerrado y alterna al pulsar el mismo botón', () => {
+  it('starts closed and the same button toggles it', () => {
     const { getByTestId, queryByTestId } = render(<Harness />)
     expect(queryByTestId('game-drawer')).toBeNull()
-    fireEvent.click(getByTestId('drawer-tab-log'))
-    expect(getByTestId('game-drawer').getAttribute('data-tab')).toBe('log')
-    expect(getByTestId('drawer-tab-log').getAttribute('aria-pressed')).toBe('true')
-    fireEvent.click(getByTestId('drawer-tab-log'))
+    fireEvent.click(getByTestId('drawer-tab-mechanics'))
+    expect(getByTestId('game-drawer').getAttribute('data-tab')).toBe('mechanics')
+    expect(getByTestId('drawer-tab-mechanics').getAttribute('aria-pressed')).toBe('true')
+    fireEvent.click(getByTestId('drawer-tab-mechanics'))
     expect(queryByTestId('game-drawer')).toBeNull()
   })
 
-  it('cambia de pestaña sin cerrar y el botón de cierre lo oculta', () => {
-    const { getByTestId, queryByTestId, getByRole } = render(<Harness />)
-    fireEvent.click(getByTestId('drawer-tab-log'))
-    fireEvent.click(getByTestId('drawer-tab-chat'))
-    expect(getByTestId('game-drawer').getAttribute('data-tab')).toBe('chat')
+  it('switches tab without closing, and its close button hides it', () => {
+    const { getByTestId, queryByTestId, getByRole } = render(<Harness commanders />)
+    fireEvent.click(getByTestId('drawer-tab-mechanics'))
+    fireEvent.click(getByTestId('drawer-tab-commander'))
+    expect(getByTestId('game-drawer').getAttribute('data-tab')).toBe('commander')
     fireEvent.click(getByRole('button', { name: /close|cerrar/i }))
     expect(queryByTestId('game-drawer')).toBeNull()
   })
@@ -68,20 +66,4 @@ describe('GameDrawer', () => {
     expect(getByTestId('drawer-tab-mechanics').querySelector('.active-mechanics')).not.toBeNull()
   })
 
-  it('cuenta los mensajes de chat no leídos y los limpia al abrir el chat', () => {
-    const { getByTestId, queryByTestId } = render(<Harness />)
-    expect(queryByTestId('chat-unread')).toBeNull()
-    act(() => setState({ log: [chat(1), chat(2)] }))
-    expect(getByTestId('chat-unread').textContent).toBe('2')
-    fireEvent.click(getByTestId('drawer-tab-chat'))
-    expect(queryByTestId('chat-unread')).toBeNull()
-    act(() => setState({ log: [chat(1), chat(2), chat(3)] }))
-    expect(queryByTestId('chat-unread')).toBeNull()
-  })
-
-  it('las líneas del sistema no cuentan como chat no leído', () => {
-    const { queryByTestId } = render(<Harness />)
-    act(() => setState({ log: [{ id: 1, time: 0, from: 'partida', text: 'Turno 3', channel: 'game' as const }] }))
-    expect(queryByTestId('chat-unread')).toBeNull()
-  })
 })

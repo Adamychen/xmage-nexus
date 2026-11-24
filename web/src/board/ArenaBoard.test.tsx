@@ -94,7 +94,6 @@ describe('ArenaBoard', () => {
   })
 
   it('keeps opponent mini-hands inside their columns', () => {
-    setSetting('gameUi', 'v1')
     const game = multiplayerGame({
       myPlayerId: 'p1',
       opponentHands: {
@@ -109,23 +108,6 @@ describe('ArenaBoard', () => {
     const { container } = render(<ArenaBoard game={game} />)
     expect(container.querySelectorAll('.arena-opp-cell .hand-card-slot').length).toBe(2)
     expect(container.querySelectorAll('.board-zone .hand-zone.compact').length).toBe(2)
-    setSetting('gameUi', 'v2')
-  })
-
-  it('HND-9: v2: a visible hand is opened from its badge instead of a face-down stack', () => {
-    setSetting('gameUi', 'v2')
-    const game = multiplayerGame({
-      myPlayerId: 'p1',
-      opponentHands: { Bob: { 'oh-1': { id: 'oh-1' } } },
-    })
-    const bob = game.players![1] as unknown as Record<string, unknown>
-    bob['handCount'] = 2
-    const { container, getAllByTestId } = render(<ArenaBoard game={game} />)
-    expect(container.querySelector('.arena-opp-cell [data-testid="opp-hand-stack"]')).toBeNull()
-    const badge = getAllByTestId('pp-hand-count').find((el) => el.classList.contains('is-viewable'))
-    expect(badge?.textContent).toContain('1/2')
-    fireEvent.click(badge as Element)
-    expect(container.ownerDocument.querySelector('[data-testid="hand-viewer"]')).not.toBeNull()
   })
 
   it('spectator: rivales arriba (hasta 3) y un jugador abajo, como los otros modos', () => {
@@ -220,7 +202,11 @@ describe('ArenaBoard', () => {
       expect(strip).not.toBeNull()
       expect(container.querySelector('.arena-opp-cell.seat-focus-shrunk [data-player-id="p3"]')).toBe(strip)
       expect(strip?.querySelector('.bz-band, .bz-permanents-row, .bz-creatures-row')).toBeNull()
-      expect(strip?.querySelector('[data-testid="pp-stats"]')).not.toBeNull()
+      expect(strip?.querySelector('.player-info-bar .life-value')).not.toBeNull()
+      const counts = strip?.querySelector('[data-testid="seat-strip-counts"]')
+      expect(counts?.querySelectorAll('.library-chip, .graveyard-chip, .exile-chip')).toHaveLength(3)
+      expect(strip?.querySelectorAll('.library-chip')).toHaveLength(1)
+      expect(strip?.querySelector('[data-testid="strip-hand-count"]')?.textContent).toBe(String(game.players!.find((p) => p.playerId === 'p3')!.handCount ?? 0))
       expect(getByTestId('seat-focus-all')).not.toBeNull()
     })
 
@@ -233,7 +219,7 @@ describe('ArenaBoard', () => {
       expect(strip?.querySelector('.hand-card-slot')).toBeNull()
       expect(strip?.querySelector('.card-slot')).toBeNull()
       expect(strip?.querySelector('.hand-zone')).toBeNull()
-      expect(strip?.querySelector('[data-testid="pp-hand-count"]')).not.toBeNull()
+      expect(strip?.querySelector('[data-testid="strip-hand-count"]')).not.toBeNull()
     })
 
     it('BRD-3: All boards restores the equal columns from the focused board', () => {

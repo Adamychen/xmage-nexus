@@ -11,7 +11,7 @@ test('setup wizard: aparece en contexto fresco, se completa y precarga el login'
   await next.click()
   await expect(page.getByTestId('setup-preset-official')).toBeVisible()
   await next.click()
-  await expect(page.getByTestId('settings-layout-arena')).toBeVisible()
+  await expect(page.getByTestId('option-switch-boardSpotlight')).toBeVisible()
   await next.click()
   await expect(page.getByTestId('settings-sound-card')).toBeVisible()
   await next.click()
@@ -38,33 +38,20 @@ for (const viewport of [{ width: 1366, height: 768 }, { width: 375, height: 812 
     await page.goto('/')
     await expect(page.getByTestId('setup-wizard')).toBeVisible({ timeout: 10_000 })
     for (let i = 0; i < 3; i++) await page.getByTestId('setup-next').click()
-    await expect(page.getByTestId('settings-layout-arena')).toBeVisible()
+    await expect(page.getByTestId('option-switch-boardSpotlight')).toBeVisible()
 
     const box = await page.getByTestId('setup-body').evaluate((body) => {
       const rect = (el: Element | null) => el!.getBoundingClientRect()
-      const cards = [...body.querySelectorAll('[data-testid^="settings-layout-"]')].map((c) => rect(c))
+      const rows = [...body.querySelectorAll('.settings-row')].map((c) => rect(c))
       return {
         body: rect(body),
-        cards: cards.map((c) => ({ width: c.width, top: c.top, bottom: c.bottom, right: c.right })),
-        preview: rect(body.querySelector('[data-testid="board-layout-preview"]')),
+        rows: rows.map((c) => ({ right: c.right, bottom: c.bottom })),
+        preview: rect(body.querySelector('[data-testid="board-live-preview"]')),
       }
     })
-    // The cards share each row evenly and every one is wide enough to read its description. How
-    // many fit in a row follows from how many layouts there are (`pickerColumns`), so what is
-    // asserted is the shape, not a column count: with the 2x2 pod gone there are three of them.
-    expect(box.cards.length).toBeGreaterThanOrEqual(3)
-    const rows = [...new Set(box.cards.map((c) => Math.round(c.top)))].sort((a, b) => a - b)
-    const perRow = box.cards.length / rows.length
-    expect(Number.isInteger(perRow)).toBe(true)
-    for (const card of box.cards) {
-      expect(card.width).toBeGreaterThan(box.body.width / perRow - 40)
-      expect(card.right).toBeLessThanOrEqual(box.body.right + 1)
-    }
-    for (let i = 1; i < rows.length; i++) {
-      expect(rows[i]).toBeGreaterThan(Math.max(...box.cards.filter((c) => Math.round(c.top) === rows[i - 1]).map((c) => c.top)))
-    }
-    // The preview sits under the options and inside the wizard.
-    expect(box.preview.top).toBeGreaterThan(Math.max(...box.cards.map((c) => c.bottom)))
+    expect(box.rows.length).toBeGreaterThan(0)
+    for (const row of box.rows) expect(row.right).toBeLessThanOrEqual(box.body.right + 1)
+    if (viewport.width < 820) expect(box.preview.top).toBeGreaterThanOrEqual(Math.max(...box.rows.map((c) => c.bottom)) - 1)
     expect(box.preview.right).toBeLessThanOrEqual(box.body.right + 1)
   })
 }

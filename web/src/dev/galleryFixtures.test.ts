@@ -266,14 +266,11 @@ describe('galería de estados (P3)', () => {
     expect(Object.values(meOf(entry(entries, 'anim:token-fade'))?.battlefield ?? {}).some((perm) => perm.isToken === true)).toBe(true)
     expect(Object.values(entry(entries, 'anim:spell-slam').game?.myHand ?? {}).some((card) => (card.manaValue ?? 0) >= 7)).toBe(true)
     expect(meOf(entry(entries, 'anim:timer-low'))?.hasPriority).toBe(true)
-    expect(entry(entries, 'anim:exile').gameUi).toBe('v1')
 
     const wipe = entry(entries, 'anim:phase-wipe')
-    expect(wipe.gameUi).toBe('v1')
     expect(wipe.action?.apply?.(wipe.game!).step).toBe('BEGIN_COMBAT')
 
     const commander = entry(entries, 'anim:commander-lethal')
-    expect(commander.gameUi).toBe('v1')
     const rules = (commander.game?.players ?? []).flatMap((p) => (p.commandList ?? []).flatMap((item) => (item as { rules?: string[] }).rules ?? []))
     expect(rules.some((rule) => rule.includes('did 18 combat damage to player'))).toBe(true)
 
@@ -302,7 +299,6 @@ describe('galería de estados (P3)', () => {
       const { base, next } = changeOf(id)
       expect(boardWipeIds(base, next).length, id).toBeGreaterThanOrEqual(BOARD_WIPE_MIN)
     }
-    expect(entry(entries, 'anim:board-wipe-table').boardLayout).toBe('arena')
 
     for (const [id, kind] of [['anim:morph-face-up', 'morph'], ['anim:manifest-face-up', 'manifest']] as const) {
       const { base, next } = changeOf(id)
@@ -355,9 +351,6 @@ describe('galería de estados (P3)', () => {
     }
     const pod = changeOf('anim:commander-to-command-table')
     expect(commanderReturns(pod.base, pod.next)[0].playerId).not.toBe((pod.base.players ?? []).find((p) => p.controlled)?.playerId)
-    expect(entry(entries, 'anim:commander-to-command').gameUi).toBe('v1')
-    expect(entry(entries, 'anim:commander-to-command-v2').gameUi).toBe('v2')
-    expect(entry(entries, 'anim:commander-to-command-table').boardLayout).toBe('arena')
 
     const cast = changeOf('anim:commander-cast')
     const [spellId, spell] = Object.entries(cast.next.stack ?? {})[0]
@@ -406,8 +399,6 @@ describe('galería de estados (P3)', () => {
       const after = next.players!.flatMap((p) => Object.entries(p.battlefield ?? {})).find(([pid]) => pid === shifts[0].id)![1]
       expect(permanentKind(before), id).not.toBe(permanentKind(after))
     }
-    expect(entry(entries, 'anim:land-animate').gameUi).toBe('v1')
-    expect(entry(entries, 'anim:land-animate-v2').gameUi).toBe('v2')
 
     const emblem = changeOf('anim:emblem')
     expect(commandArrivals(emblem.base, emblem.next).emblems).toHaveLength(1)
@@ -420,8 +411,6 @@ describe('galería de estados (P3)', () => {
       const { base, next } = changeOf(id)
       expect(handReveals(base, next).map((r) => r.cards.length), id).toEqual([3])
     }
-    expect(entry(entries, 'anim:hand-revealed').gameUi).toBe('v1')
-    expect(entry(entries, 'anim:hand-revealed-v2').gameUi).toBe('v2')
 
     const flip = changeOf('anim:flip-card')
     expect(pair(flip.base, flip.next).flatMap(([p, n]) => flippedChanges(p, n))).toHaveLength(1)
@@ -652,7 +641,6 @@ describe('galería de estados (P3)', () => {
     }
 
     const commander = entry(entries, 'board:table-commander')
-    expect(commander.boardLayout).toBe('arena')
     expect(commander.game?.players?.length).toBe(3)
     expect((commander.game?.players ?? []).every((p) => (p.commandList ?? []).length > 0)).toBe(true)
   })
@@ -665,7 +653,6 @@ describe('galería de estados (P3)', () => {
 
   it('el marco de prioridad pone la prioridad en un rival no activo y la rota por la mesa', () => {
     const e = entry(entries, 'board:priority-frame')
-    expect(e.boardLayout).toBe('arena')
     const game = e.game
     const holders = (game?.players ?? []).filter((p) => p.hasPriority)
     expect(holders).toHaveLength(1)
@@ -685,8 +672,6 @@ describe('galería de estados (P3)', () => {
   })
 
   it('cada variante de tablero declara su layout y el frame base conserva su campo', () => {
-    expect(entry(entries, 'board:table-4').boardLayout).toBe('arena')
-    expect(entry(entries, 'board:arena-4').boardLayout).toBe('arena')
     const base = recordedFrames.find((f) => f.file === 'gang-block.json')?.gameView
     const pod = entry(entries, 'board:table-4').game
     expect(pod?.myHand).toEqual(base?.myHand)
