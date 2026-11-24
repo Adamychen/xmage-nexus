@@ -170,7 +170,9 @@ function PanelHandle({ percent }: { percent: number }) {
     const body = ref.current?.closest('.spotlight-body')
     const rect = body?.getBoundingClientRect()
     if (!rect || rect.width <= 0) return null
-    return ((rect.right - clientX) / rect.width) * 100
+    // BRD-6/BRD-13: the panel grows rightwards from the left edge, so the pointer's distance from
+    // that edge is the width it is asking for.
+    return ((clientX - rect.left) / rect.width) * 100
   }
 
   const onPointerDown = (e: PointerEvent<HTMLDivElement>) => {
@@ -195,7 +197,7 @@ function PanelHandle({ percent }: { percent: number }) {
     if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return
     e.preventDefault()
     e.stopPropagation()
-    apply(percent + (e.key === 'ArrowLeft' ? 1 : -1))
+    apply(percent + (e.key === 'ArrowRight' ? 1 : -1))
   }
 
   return (
@@ -399,7 +401,6 @@ export default function SpotlightBoard({
       testId="spotlight-board"
       layout="spotlight"
       style={{
-        '--main-inset-right': `${panelPercent}%`,
         ...(cornerAnchor ? {
           '--spot-corner-lift': `${cornerAnchor.lift}px`,
           '--spot-switch-right': `${cornerAnchor.right}px`,
@@ -419,9 +420,8 @@ export default function SpotlightBoard({
     >
       {stripInDivider && <BoardDivider />}
       <div className="spotlight-body">
-        <div className="spotlight-main" data-testid="spotlight-main" data-main-seat={mainId} ref={mainRef}>
-          {seatBoard(mainId, true)}
-        </div>
+        {/* BRD-6: the panel sits on the left edge, where it leaves the stack, which rises on the
+            right, the whole side of the board it needs. */}
         <div
           className={`spotlight-panel${copyRatio ? ' has-copy-ratio' : ''}`}
           data-testid="spotlight-panel"
@@ -469,6 +469,9 @@ export default function SpotlightBoard({
               )
             })}
           </div>
+        </div>
+        <div className="spotlight-main" data-testid="spotlight-main" data-main-seat={mainId} ref={mainRef}>
+          {seatBoard(mainId, true)}
         </div>
       </div>
     </BoardShell>

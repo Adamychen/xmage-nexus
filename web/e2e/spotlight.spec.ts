@@ -455,7 +455,8 @@ for (const vp of VIEWPORTS) {
       const cy = (handle.top + handle.bottom) / 2
       await page.mouse.move(cx, cy)
       await page.mouse.down()
-      await page.mouse.move(cx - 120, cy, { steps: 12 })
+      // BRD-6: the panel grows rightwards now that it is the left column.
+      await page.mouse.move(cx + 120, cy, { steps: 12 })
       await page.mouse.up()
       await expect.poll(() => panelWidth(page)).toBeGreaterThan(widthBefore + 20)
       await expect.poll(() => copyScale(page, 'p2')).toBeGreaterThanOrEqual(scaleBefore)

@@ -829,7 +829,7 @@ export const de: TranslationSchema = {
     board_fill_show: 'Schlachtfeldkarten an den Platz anpassen',
     board_fill_show_hint: 'Karten so groß machen, wie der freie Platz erlaubt: wenige Permanents ergeben große Karten, ein volles Feld verkleinert sie',
     board_spotlight_show: 'Hauptbrett mit Seitenpanel',
-    board_spotlight_show_hint: 'Zeigt in Mehrspielerpartien auf den Layouts Arena und Tisch ein Brett in voller Größe und die Bretter der anderen Spieler als kleine Kopien in einem Panel rechts. Ein Klick auf eine Kopie holt sie in den Hauptbereich.',
+    board_spotlight_show_hint: 'Zeigt in Mehrspielerpartien auf den Layouts Arena und Tisch ein Brett in voller Größe und die Bretter der anderen Spieler als kleine Kopien in einem Panel links. Ein Klick auf eine Kopie holt sie in den Hauptbereich.',
     stack_caption_show: 'Typ und Effekt über der obersten Stapelkarte anzeigen',
     stack_caption_show_hint: 'Zeigt Art (ausgelöste Fähigkeit, Zauber, Kreatur …) und Regeltext über der obersten Stapelkarte im Bildmodus an. Ausschalten, wenn das Bild den Text unleserlich macht.',
     hand_rail_show: 'Hand als Spalte',

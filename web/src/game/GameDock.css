@@ -70,8 +70,8 @@
    steps aside entirely while that banner is on screen, which is the one thing that speaks louder. */
 .board-order-slot {
   position: absolute;
-  left: 0;
-  right: var(--order-inset-right, 0px);
+  left: var(--order-inset-left, 0px);
+  right: 0;
   top: 36%;
   display: flex;
   justify-content: center;

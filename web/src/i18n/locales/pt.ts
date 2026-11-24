@@ -829,7 +829,7 @@ export const pt: TranslationSchema = {
     board_fill_show: 'Ajustar as cartas do campo ao espaço',
     board_fill_show_hint: 'Faz as cartas tão grandes quanto o espaço livre permitir: com poucos permanentes ficam grandes, com muitos encolhem',
     board_spotlight_show: 'Campo principal com painel lateral',
-    board_spotlight_show_hint: 'Em partidas multijogador nos layouts Arena e Mesa, mostra um campo em tamanho real e os campos dos outros jogadores como cópias pequenas num painel à direita. Clicar numa cópia leva-a para a área principal.',
+    board_spotlight_show_hint: 'Em partidas multijogador nos layouts Arena e Mesa, mostra um campo em tamanho real e os campos dos outros jogadores como cópias pequenas num painel à esquerda. Clicar numa cópia leva-a para a área principal.',
     stack_caption_show: 'Mostrar o tipo e o efeito sobre a carta do topo da pilha',
     stack_caption_show_hint: 'Mostra o tipo (habilidade disparada, feitiço, criatura…) e o texto de regras sobre a carta do topo da pilha no modo imagem. Desative se a arte dificultar a leitura.',
     hand_rail_show: 'Mão em coluna',

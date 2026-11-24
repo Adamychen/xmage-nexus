@@ -829,7 +829,7 @@ export const it: TranslationSchema = {
     board_fill_show: 'Adatta le carte del campo allo spazio',
     board_fill_show_hint: 'Ingrandisce le carte quanto lo spazio libero consente: con pochi permanenti sono grandi, con un campo pieno si riducono',
     board_spotlight_show: 'Campo principale con pannello laterale',
-    board_spotlight_show_hint: 'Nelle partite multigiocatore con le disposizioni Arena e Tavolo, mostra un campo a grandezza piena e quelli degli altri giocatori come piccole copie in un pannello a destra. Un clic su una copia la porta nell\'area principale.',
+    board_spotlight_show_hint: 'Nelle partite multigiocatore con le disposizioni Arena e Tavolo, mostra un campo a grandezza piena e quelli degli altri giocatori come piccole copie in un pannello a sinistra. Un clic su una copia la porta nell\'area principale.',
     stack_caption_show: 'Mostra tipo ed effetto sulla carta in cima allo stack',
     stack_caption_show_hint: 'Mostra tipo (capacità innescata, incantesimo, creatura…) e testo delle regole sulla carta in cima allo stack in modalità immagine. Disattivalo se l\'illustrazione rende il testo illeggibile.',
     hand_rail_show: 'Mano in colonna',

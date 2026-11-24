@@ -829,7 +829,7 @@ export const zhs: TranslationSchema = {
     board_fill_show: '让战场卡牌适应可用空间',
     board_fill_show_hint: '在可用空间允许的范围内放大卡牌:永久物少时卡牌更大,战场拥挤时会缩小',
     board_spotlight_show: '主战场与侧边面板',
-    board_spotlight_show_hint: '在竞技场和桌面布局的多人对局中，一个战场以全尺寸显示，其他玩家的战场以缩小副本显示在右侧面板中。点击某个副本即可将其切换到主区域。',
+    board_spotlight_show_hint: '在竞技场和桌面布局的多人对局中，一个战场以全尺寸显示，其他玩家的战场以缩小副本显示在左侧面板中。点击某个副本即可将其切换到主区域。',
     stack_caption_show: '在堆叠顶部卡牌上显示类型与效果',
     stack_caption_show_hint: '在图片模式下，于堆叠顶部卡牌上方显示类型（触发式能力、法术、生物等）和规则文本。若画面使文字难以辨认，可关闭。',
     hand_rail_show: '手牌竖列',

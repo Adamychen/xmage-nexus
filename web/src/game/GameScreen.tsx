@@ -533,8 +533,8 @@ export default function GameScreen() {
               data-ui={v2 ? 'v2' : undefined}
               style={{
                 // PRM-18: the order is centred on the board being played on, so the side panel of
-                // the main board mode (BRD-6) does not push it off to the right.
-                '--order-inset-right': spotlightOn ? `${settings.boardSpotlightPanel}%` : '0px',
+                // the main board mode (BRD-6) does not push it off to one side.
+                '--order-inset-left': spotlightOn ? `${settings.boardSpotlightPanel}%` : '0px',
                 ...(v2 ? { '--chrome-l': `${chromeLeft}px`, '--chrome-r': `${chromeRight}px` } : null),
               } as React.CSSProperties}
             >
