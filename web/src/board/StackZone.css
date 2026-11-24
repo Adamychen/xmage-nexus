@@ -37,7 +37,9 @@
   transform: translateX(calc(100% - var(--sp-6)));
 }
 
-.stack-push {
+/* The grip is an IconButton, so its own rules name the element to outweigh the primitive's: at
+   equal specificity the look would be decided by which stylesheet the bundle happens to put last. */
+button.stack-push {
   --grip-w: 26px;
   --grip-h: 52px;
   position: relative;
@@ -57,8 +59,8 @@
   transition: background 0.15s ease, color 0.15s ease;
 }
 
-.stack-push:hover { background: rgb(var(--ink-2-rgb) / 0.95); color: var(--fg-hi); }
-.stack-push:focus-visible { outline: 2px solid var(--brand-fg); outline-offset: 2px; }
+button.stack-push:hover { background: rgb(var(--ink-2-rgb) / 0.95); color: var(--fg-hi); }
+button.stack-push:focus-visible { outline: 2px solid var(--brand-fg); outline-offset: 2px; }
 
 /* ── Header ── */
 .stack-header {

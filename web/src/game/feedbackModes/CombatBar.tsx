@@ -3,6 +3,7 @@ import { useTranslation } from '../../i18n'
 import { useStore } from '../../state/store'
 import type { UseFeedbackForm } from '../useFeedbackForm'
 import { DockPrompt, OrderPrompt, PromptAction } from '../GameDock'
+import { PromptActionKey, PromptSecondKey } from './PromptKeys'
 import './promptBars.css'
 
 export default function CombatBar({ form }: { form: UseFeedbackForm }) {
@@ -54,39 +55,20 @@ export default function CombatBar({ form }: { form: UseFeedbackForm }) {
       </span>
     </OrderPrompt>
     <PromptAction>
-      <button
-        type="button"
-        className={`prompt-action-btn ${goesAll ? 'is-go' : picked > 0 ? 'is-confirm' : 'is-leave'}`}
-        data-testid="prompt-action"
+      <PromptActionKey
+        tone={goesAll ? 'go' : picked > 0 ? 'confirm' : 'leave'}
+        label={goesAll ? t('game', 'combat_attack_all') : confirmLabel}
         disabled={busy}
         onClick={goesAll ? attackAll : confirm}
-      >
-        <span className="prompt-action-label">{goesAll ? t('game', 'combat_attack_all') : confirmLabel}</span>
-      </button>
+      />
     </PromptAction>
     <DockPrompt>
       <div className="action-prompt-bar combat-bar">
         <div className="action-prompt-actions">
           {picked > 0 ? (
-            <button
-              type="button"
-              className="prompt-second-btn"
-              data-testid="prompt-second"
-              disabled={busy}
-              onClick={clearPicks}
-            >
-              {clearLabel}
-            </button>
+            <PromptSecondKey label={clearLabel} disabled={busy} onClick={clearPicks} />
           ) : goesAll ? (
-            <button
-              type="button"
-              className="prompt-second-btn"
-              data-testid="prompt-second"
-              disabled={busy}
-              onClick={confirm}
-            >
-              {leaveLabel}
-            </button>
+            <PromptSecondKey label={leaveLabel} disabled={busy} onClick={confirm} />
           ) : null}
         </div>
       </div>

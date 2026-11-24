@@ -3,13 +3,13 @@ import * as cmds from '../../net/commands'
 import { setStoreError, useSettings, useStore } from '../../state/store'
 import FormattedText from '../FormattedText'
 import ManaPoolView, { type ManaPoolKey } from '../ManaPoolView'
-import Icon from '../../ui/Icon'
 import { useTranslation, dynamicT } from '../../i18n'
 import { localizeServerMessage } from '../serverMessageTranslation'
 import type { UseFeedbackForm } from '../useFeedbackForm'
 import type { FeedbackPrompt } from '../feedback'
 import { nextSmartManaAction, parseRemainingManaCost } from '../smartManaPayment'
 import { DockPrompt, OrderPrompt, PromptAction } from '../GameDock'
+import { PromptActionKey, PromptSecondKey } from './PromptKeys'
 import { usePromptCancelKey } from '../usePromptCancelKey'
 import './promptBars.css'
 
@@ -94,17 +94,14 @@ export default function ManaBar({ form }: { form: UseFeedbackForm }) {
     <PromptAction>
       {/* PRM-19: salir del pago es la acción que responde a este mensaje, y va donde el jugador ya
           mira para actuar: el sitio del botón de prioridad. */}
-      <button
-        type="button"
-        className="prompt-action-btn is-leave"
-        data-testid="prompt-action"
+      <PromptActionKey
+        tone="leave"
+        icon="x"
+        label={t('game', 'targeting_cancel')}
         disabled={busy}
         onClick={cancel}
-        aria-keyshortcuts="Escape"
-      >
-        <span className="prompt-action-icon" aria-hidden="true"><Icon name="x" size={15} /></span>
-        <span className="prompt-action-label">{t('game', 'targeting_cancel')}</span>
-      </button>
+        keyShortcut="Escape"
+      />
     </PromptAction>
     <DockPrompt>
       <div className="action-prompt-bar mana-prompt-bar">
@@ -119,15 +116,11 @@ export default function ManaBar({ form }: { form: UseFeedbackForm }) {
               onPay={(key) => void send(() => cmds.sendPlayerManaType(prompt.gameId, prompt.playerId as string, key.toUpperCase()), t('errors', 'send_failed_mana'))}
             />
           )}
-          <button
-            type="button"
-            className="prompt-second-btn"
-            data-testid="prompt-second"
+          <PromptSecondKey
+            label={t('game', 'mana_special')}
             disabled={busy}
             onClick={() => void send(() => cmds.sendPlayerString('special', prompt.gameId), t('errors', 'send_failed_special'))}
-          >
-            {t('game', 'mana_special')}
-          </button>
+          />
         </div>
       </div>
     </DockPrompt>

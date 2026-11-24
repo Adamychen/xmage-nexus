@@ -10,6 +10,7 @@ import { getActiveFlights, onFlightLanded, subscribeFlights, useActiveFlights } 
 import { stackArrivalPending } from './stackLinks'
 import { useTranslation } from '../i18n'
 import Icon from '../ui/Icon'
+import IconButton from '../ui/IconButton'
 import { clickableProps } from '../ui/clickable'
 import {
   getControllerInfo,
@@ -428,17 +429,16 @@ export default function StackZone({
       {/* The room the cascade may use, declared in CSS and measured here: a box of its own, so the
           measurement can never read back the size the cascade chose. */}
       <div ref={roomRef} className="stack-room" aria-hidden="true" />
-      <button
-        type="button"
+      <IconButton
         className="stack-push"
         data-testid="stack-push"
+        label={pushed ? t('game', 'stack_bring_back') : t('game', 'stack_push_aside')}
+        variant="ghost"
         aria-pressed={pushed}
-        title={pushed ? t('game', 'stack_bring_back') : t('game', 'stack_push_aside')}
-        aria-label={pushed ? t('game', 'stack_bring_back') : t('game', 'stack_push_aside')}
         onClick={() => setPushed((on) => !on)}
       >
         <Icon name={pushed ? 'chevronLeft' : 'chevronRight'} size={16} />
-      </button>
+      </IconButton>
 
       {/* STK-1: the stack is a cascade of cards, the one about to resolve in front and the rest
           peeking behind it by their title, the way a hand of cards lies over itself. */}

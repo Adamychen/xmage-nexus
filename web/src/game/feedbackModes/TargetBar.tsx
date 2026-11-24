@@ -1,11 +1,11 @@
 import FormattedText from '../FormattedText'
 import IconButton from '../../ui/IconButton'
-import Icon from '../../ui/Icon'
 import { useTranslation, dynamicT } from '../../i18n'
 import { localizeServerMessage } from '../serverMessageTranslation'
 import type { UseFeedbackForm } from '../useFeedbackForm'
 import { stripTargetProgress, targetProgressLabel } from '../feedback'
 import { DockPrompt, OrderPrompt, PromptAction } from '../GameDock'
+import { PromptActionKey } from './PromptKeys'
 import { usePromptCancelKey } from '../usePromptCancelKey'
 import './promptBars.css'
 
@@ -46,17 +46,14 @@ export default function TargetBar({ form, onExpand }: { form: UseFeedbackForm; o
     {prompt.required === false && (
       <PromptAction>
         {/* PRM-19: dejar el objetivo es la acción que responde, y va donde el jugador ya mira. */}
-        <button
-          type="button"
-          className={`prompt-action-btn ${prompt.cancelable ? 'is-leave' : 'is-done'}`}
-          data-testid="prompt-action"
+        <PromptActionKey
+          tone={prompt.cancelable ? 'leave' : 'done'}
+          icon={prompt.cancelable ? 'x' : 'check'}
+          label={prompt.cancelable ? t('game', 'targeting_cancel') : t('game', 'targeting_finish')}
           disabled={busy}
           onClick={finishOptionalTarget}
-          aria-keyshortcuts={prompt.cancelable ? 'Escape' : undefined}
-        >
-          <span className="prompt-action-icon" aria-hidden="true"><Icon name={prompt.cancelable ? 'x' : 'check'} size={15} /></span>
-          <span className="prompt-action-label">{prompt.cancelable ? t('game', 'targeting_cancel') : t('game', 'targeting_finish')}</span>
-        </button>
+          keyShortcut={prompt.cancelable ? 'Escape' : undefined}
+        />
       </PromptAction>
     )}
     {dockHasSomething && (
