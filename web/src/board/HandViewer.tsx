@@ -1,8 +1,7 @@
 import EmptyState from '../ui/EmptyState'
-import { useMemo, useState } from 'react'
-import type { CardView, PermanentView } from '../net/types'
+import { useMemo } from 'react'
+import type { CardView } from '../net/types'
 import CardSlot from './CardSlot'
-import FloatingCardPreview from './FloatingCardPreview'
 import ZoneViewer from './ZoneViewer'
 import { useTranslation } from '../i18n'
 
@@ -28,14 +27,6 @@ export default function HandViewer({
   const { t } = useTranslation()
   const targetSet = useMemo(() => targetIds ?? new Set<string>(), [targetIds])
   const playableSet = useMemo(() => playableIds ?? new Set<string>(), [playableIds])
-  const [hoverCard, setHoverCard] = useState<CardView | null>(null)
-  const [hoverRect, setHoverRect] = useState<DOMRect | null>(null)
-
-  const handleCardHover = (card: CardView | PermanentView | null, rect?: DOMRect) => {
-    setHoverCard(card ?? null)
-    setHoverRect(rect ?? null)
-  }
-
   const total = known.length + unknownCount
 
   return (
@@ -46,14 +37,6 @@ export default function HandViewer({
       testId="hand-viewer"
       itemCount={total}
       onClose={onClose}
-      after={(
-        <FloatingCardPreview
-          card={hoverCard}
-          anchorRect={hoverRect}
-          fixedSide="left"
-          inModal
-        />
-      )}
     >
           {known.map(([id, card], index) => {
             const clickable = (targetSet.has(id) || playableSet.has(id)) && onCardClick
@@ -61,8 +44,6 @@ export default function HandViewer({
               <div
                 key={id}
                 className="pile-card-wrapper zone-fan-item is-revealed"
-                onFocus={(e) => handleCardHover(card, (e.target as HTMLElement).getBoundingClientRect())}
-                onBlur={() => handleCardHover(null)}
               >
                 <div className="pile-position-badge">#{index + 1}</div>
                 <CardSlot
@@ -72,7 +53,6 @@ export default function HandViewer({
                   isTarget={targetSet.has(id)}
                   isPlayable={playableSet.has(id)}
                   onClick={clickable ? () => onCardClick!(id) : undefined}
-                  onHover={handleCardHover}
                 />
               </div>
             )

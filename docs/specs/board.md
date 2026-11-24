@@ -367,8 +367,8 @@ pointing at it lifts nothing.
 Pointing at a card lifts it in front of its neighbours, larger, but what lifts is a copy that takes
 no pointer: the cards underneath never move, so the card under the pointer is always the one whose
 slice it is on, and sweeping along the fan lifts every card in order without skipping the ones the
-lifted card covers. That lift is the only look at the card: pointing at a card in the viewer opens
-no side preview panel.
+lifted card covers. That lift is the only look at the card: pointing at or focusing a card in any of
+these viewers, the known hand included, opens no side preview panel.
 
 - Why: the user asked for the viewer to be MTG Arena's, fan and scroll included (23-nov-2026). The
   rule it replaces wrapped the cards into rows because one fixed 760 px row of full cards spread ten
@@ -379,8 +379,9 @@ no side preview panel.
   The cards out of the window first vanished, so nothing said a longer pile went on; the user
   asked for Arena's small heap at each side (same day). The side preview panel that also opened on
   hover was dropped at the user's request (24-nov-2026): the lifted copy already shows the card
-  large, and the panel beside it was a second, redundant copy.
-- Guard: `src/board/zoneFan.test.ts` · `src/board/PileOverlay.test.tsx` · `e2e/cross-zone-layout.spec.ts`
+  large, and the panel beside it was a second, redundant copy. The same day the user extended it to
+  every Arena-style viewer, the known hand too: the lifted card is large enough to read.
+- Guard: `src/board/zoneFan.test.ts` · `src/board/HandViewer.test.tsx` · `src/board/PileOverlay.test.tsx` · `e2e/cross-zone-layout.spec.ts`
 
 ### BRD-25 · The same board in the same window always looks the same
 Every card size, band width and number of lines on the board is a function of the game view, the

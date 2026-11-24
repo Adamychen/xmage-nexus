@@ -179,7 +179,7 @@ Every card shown inside a prompt can be seen enlarged, as on the board, and look
 the prompt: the card grid (scry, surveil, searching a library, looking at the top cards, picking from a
 list, choosing targets), the library order dialog, the piles to choose from, the London mulligan's bottom
 pick, and the revealed and looked-at cards inside a prompt. The zone viewers (graveyard, exile, library,
-the revealed and looked-at windows, the cards playable from other zones) are not prompts: their card is
+the revealed and looked-at windows, the known hand, the cards playable from other zones) are not prompts: their card is
 looked at by the lift of BRD-24 and they open no floating preview. A card that only shows (library order, piles, a revealed card nobody can play) is itself the preview
 control: pointing at it or focusing it shows the floating preview, a touch shows it and keeps it until the
 next touch (ACC-9), and a right click, a long press or Enter opens the card inspector. A card that is

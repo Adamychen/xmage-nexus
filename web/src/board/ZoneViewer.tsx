@@ -17,7 +17,6 @@ interface ZoneViewerProps {
   itemCount: number
   onClose: () => void
   children: ReactNode
-  after?: ReactNode
 }
 
 const THUMB_W = 52
@@ -224,7 +223,6 @@ export default function ZoneViewer({
   itemCount,
   onClose,
   children,
-  after,
 }: ZoneViewerProps) {
   const { t } = useTranslation()
   const fan = useFan(itemCount)
@@ -278,7 +276,6 @@ export default function ZoneViewer({
           </Button>
         </footer>
       </div>
-      {after}
     </div>,
     overlayRoot(),
   )
