@@ -6,17 +6,27 @@ import { findChoiceMemory } from '../../game/choiceMemory'
 import { isMulliganAsk, isStartingPlayerMessage, isVotingAsk } from '../../game/feedback/detect'
 import { localizeServerMessage } from '../../game/serverMessageTranslation'
 import { t as tStatic, dynamicT } from '../../i18n'
-import { setState, addLog } from '../state'
+import { getState, setState, addLog } from '../state'
 import { notifyFeedbackOpened } from '../../audio/promptSound'
 import { targetFirstId } from '../gameUtils'
 import type { Snapshot } from './context'
 import { isRollbackRequest, startIncomingRollbackVote } from '../rollbackVote'
+import { answerFromLibraryPlan, endLibraryPlan } from '../libraryPlanRunner'
+
+function answeredByLibraryPlan(method: string, gameId: string | null, data: unknown): boolean {
+  if (!getState().libraryPlan) return false
+  const feedback = gameId ? parseFeedback(method, gameId, data) : null
+  if (feedback) return answerFromLibraryPlan(feedback)
+  endLibraryPlan()
+  return false
+}
 
 export function handleGameTarget(method: string, data: unknown, objectId: string | null, s: Snapshot): void {
 
   const d = data as { message?: string; options?: { targets?: unknown }; gameId?: string } | null
   const question = d?.message ?? ''
   const currentGameId = objectId ?? d?.gameId ?? s.gameId
+  if (answeredByLibraryPlan(method, currentGameId, data)) return
   const isSpectator = !((s.game?.players ?? []) as { controlled?: boolean }[]).some((p) => p.controlled)
   if ((s.settings.autoStartingPlayer || isSpectator) && /starting player/i.test(question) && currentGameId) {
     const first = targetFirstId(data)
@@ -39,6 +49,7 @@ export function handleGameAsk(method: string, data: unknown, objectId: string | 
   const opts = d?.options && typeof d.options === 'object' && !Array.isArray(d.options) ? d.options as Record<string, unknown> : null
   const autoAnswerKey = typeof opts?.autoAnswerMessage === 'string' ? opts.autoAnswerMessage : undefined
   const currentGameId = objectId ?? d?.gameId ?? s.gameId
+  if (answeredByLibraryPlan(method, currentGameId, data)) return
   const isSpectator = !((s.game?.players ?? []) as { controlled?: boolean }[]).some((p) => p.controlled)
   if (isSpectator && /mulligan|keep your hand|keep hand/i.test(question)) {
     if (currentGameId) void cmds.sendPlayerBoolean(false, currentGameId)

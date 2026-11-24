@@ -1,6 +1,7 @@
 import type { OutReason } from '../../board/outReason'
 import type { CardView, DeckCardEntry, DeckJson, GameEndInfo, GameView, PermanentView } from '../../net/types'
 import type { FeedbackPrompt, FeedbackCard } from '../../game/feedback'
+import type { LibraryPlan } from '../../game/feedback/libraryPlan'
 import { loadActiveDeck } from '../persistence'
 import type { TurnRecap } from '../../game/turnRecap'
 import type { RollbackVote } from '../rollbackVote'
@@ -85,6 +86,8 @@ export interface GameSlice {
   gameEnd: GameEndInfo | null
   myDeck: DeckJson | null
   feedback: FeedbackPrompt | null
+  libraryPlan: LibraryPlan | null
+  libraryPrompt: FeedbackPrompt | null
   sideboard: DeckCardEntry[]
   sideboardScreen: SideboardScreenState | null
   /** Sideboard de la próxima partida (Bo3) recibido mientras aún se muestra el
@@ -132,6 +135,8 @@ export const initialGame: GameSlice = {
   gameEnd: null,
   myDeck: loadActiveDeck(),
   feedback: null,
+  libraryPlan: null,
+  libraryPrompt: null,
   sideboard: [],
   sideboardScreen: null,
   pendingSideboardScreen: null,

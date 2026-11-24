@@ -30,6 +30,7 @@ import { notifyStagingRoster } from './stagingSounds'
 import { perfMark } from '../system/perfProbe'
 import { isRollbackPending } from './actions'
 import { applyRollbackOutcome } from './rollbackVote'
+import { endLibraryPlan } from './libraryPlanRunner'
 
 export function handleMessage(msg: ProxyMessage) {
   switch (msg.type) {
@@ -198,10 +199,11 @@ function handleEvent(method: string, objectId: string | null, data: unknown, mes
   if (method !== 'GAME_UPDATE' && method !== 'GAME_UPDATE_AND_INFORM') {
     setState({ events: [...s.events, { method, time: Date.now() }].slice(-12) })
   }
+  if (/^GAME_(SELECT|PLAY_|CHOOSE_|GET_|TARGET_AMOUNT|OVER)/.test(method) && getState().libraryPlan) endLibraryPlan()
   if (/^GAME_(?:SELECT|ASK|TARGET|CHOOSE_|PLAY_|GET_)/.test(method) && getState().waitingFor) {
     setState({ waitingFor: null })
   }
-  if (method !== 'GAME_ASK') {
+  if (method !== 'GAME_ASK' && !(method === 'GAME_TARGET' && getState().libraryPlan)) {
     const feedback = parseFeedback(method, objectId ?? s.gameId, data)
     if (feedback && !applyChoiceMemory(feedback, objectId ?? s.gameId, s)) {
       notifyFeedbackOpened(feedback)
