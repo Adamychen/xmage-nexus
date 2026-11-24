@@ -101,7 +101,7 @@ afterEach(() => {
 })
 
 describe('ArenaLibraryPrompt', () => {
-  it('PRM-18: all prompt cards start in the library box in prompt order behind the deck back', () => {
+  it('PRM-20: all prompt cards start in the library box in prompt order behind the deck back', () => {
     render(<ArenaLibraryPrompt prompt={promptOf(['a', 'b', 'c'])} sending={false} />)
     expect(screen.getByRole('dialog', { name: t('dialogs', 'arena_surveil_title') }).getAttribute('data-testid')).toBe('arena-library-prompt')
     expect(zoneIds('top')).toEqual(['a', 'b', 'c'])
@@ -119,7 +119,7 @@ describe('ArenaLibraryPrompt', () => {
     expect(document.querySelector('.arena-prompt-aside [data-card-name="Nightveil Sprite"]')).not.toBeNull()
   })
 
-  it('PRM-18: clicking a card moves it to the other box', () => {
+  it('PRM-20: clicking a card moves it to the other box', () => {
     render(<ArenaLibraryPrompt prompt={promptOf(['a', 'b', 'c'])} sending={false} />)
     clickCard('b')
     expect(zoneIds('top')).toEqual(['a', 'c'])
@@ -129,7 +129,7 @@ describe('ArenaLibraryPrompt', () => {
     expect(zoneIds('away')).toEqual([])
   })
 
-  it('PRM-18: a card dropped on a box lands at the hovered slot', () => {
+  it('PRM-20: a card dropped on a box lands at the hovered slot', () => {
     render(<ArenaLibraryPrompt prompt={promptOf(['a', 'b', 'c'])} sending={false} />)
     const root = document.querySelector('.arena-library')!
     act(() => {
@@ -147,7 +147,7 @@ describe('ArenaLibraryPrompt', () => {
     expect(zoneIds('away')).toEqual(['a'])
   })
 
-  it('PRM-18: Done starts the plan with both boxes read left to right', () => {
+  it('PRM-20: Done starts the plan with both boxes read left to right', () => {
     const prompt = promptOf(['a', 'b', 'c', 'd'])
     render(<ArenaLibraryPrompt prompt={prompt} sending={false} />)
     clickCard('c')
@@ -157,7 +157,7 @@ describe('ArenaLibraryPrompt', () => {
     expect(start).toHaveBeenCalledWith(prompt, { mode: 'surveil', top: ['a', 'd'], away: ['c', 'b'] })
   })
 
-  it('PRM-18: while sending the cards take no pointer events and Done is disabled', () => {
+  it('PRM-20: while sending the cards take no pointer events and Done is disabled', () => {
     const prompt = promptOf(['a', 'b'])
     render(<ArenaLibraryPrompt prompt={prompt} sending />)
     expect(document.querySelector('.arena-library')!.classList.contains('is-sending')).toBe(true)
@@ -169,7 +169,7 @@ describe('ArenaLibraryPrompt', () => {
     expect(start).not.toHaveBeenCalled()
   })
 
-  it('PRM-18: a scry labels the boxes top and bottom of library', () => {
+  it('PRM-20: a scry labels the boxes top and bottom of library', () => {
     const prompt = promptOf(['a', 'b'], SCRY)
     render(<ArenaLibraryPrompt prompt={prompt} sending={false} />)
     expect(screen.getByRole('dialog', { name: t('dialogs', 'arena_scry_title') })).not.toBeNull()
@@ -183,20 +183,20 @@ describe('ArenaLibraryPrompt', () => {
 })
 
 describe('FeedbackDialog routing of a surveil or scry', () => {
-  it('PRM-18: a surveil pick opens the Arena overlay instead of the card grid', () => {
+  it('PRM-20: a surveil pick opens the Arena overlay instead of the card grid', () => {
     setState({ feedback: promptOf(['a', 'b']) })
     render(<FeedbackDialog />)
     expect(screen.getByTestId('arena-library-prompt')).not.toBeNull()
     expect(doneButton().disabled).toBe(false)
   })
 
-  it('PRM-18: a scry pick opens the Arena overlay', () => {
+  it('PRM-20: a scry pick opens the Arena overlay', () => {
     setState({ feedback: promptOf(['a', 'b'], SCRY) })
     render(<FeedbackDialog />)
     expect(screen.getByRole('dialog', { name: t('dialogs', 'arena_scry_title') })).not.toBeNull()
   })
 
-  it('PRM-18: the overlay keeps its arrangement and shows sending while the plan runs', () => {
+  it('PRM-20: the overlay keeps its arrangement and shows sending while the plan runs', () => {
     const prompt = promptOf(['a', 'b', 'c'])
     setState({ feedback: prompt })
     render(<FeedbackDialog />)
@@ -215,7 +215,7 @@ describe('FeedbackDialog routing of a surveil or scry', () => {
     expect(screen.queryByTestId('arena-library-prompt')).toBeNull()
   })
 
-  it('PRM-18: a re-sent pick opens with its already chosen cards in the graveyard box', () => {
+  it('PRM-20: a re-sent pick opens with its already chosen cards in the graveyard box', () => {
     const prompt = promptOf(['a', 'b', 'c'])
     prompt.chosenTargets = ['c', 'a']
     render(<ArenaLibraryPrompt prompt={prompt} sending={false} />)
@@ -225,7 +225,7 @@ describe('FeedbackDialog routing of a surveil or scry', () => {
     expect(start).toHaveBeenCalledWith(prompt, { mode: 'surveil', top: ['b'], away: ['a', 'c'] })
   })
 
-  it('PRM-18: a new surveil pick opens with a fresh arrangement', () => {
+  it('PRM-20: a new surveil pick opens with a fresh arrangement', () => {
     setState({ feedback: promptOf(['a', 'b']) })
     render(<FeedbackDialog />)
     clickCard('a')

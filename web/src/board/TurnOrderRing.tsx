@@ -1,6 +1,7 @@
 import type { PlayerView } from '../net/types'
 import { useTranslation } from '../i18n'
 import { isPlayerOut } from './boardShared'
+import { useRingFit } from './useLaneFit'
 import Icon from '../ui/Icon'
 import { setSeatPeek, useStore } from '../state/store'
 import './TurnOrderRing.css'
@@ -27,6 +28,9 @@ export default function TurnOrderRing({ players, activePlayerId, onSeatClick, se
   const peekId = useStore((s) => s.seatPeek)
   const ordered = turnOrderSeats(players)
   const count = ordered.length
+  const fitKey = `${ordered.map((p) => `${p.playerId}:${p.name}`).join('|')}|${activePlayerId}`
+  const ringOn = count > 1
+  const { ref: ringRef, fit: ringFit } = useRingFit(ringOn, fitKey)
   if (count === 0) return null
 
   const seatBody = (p: PlayerView, isActive: boolean, withName: boolean, withBadgeId = true) => (
@@ -110,14 +114,29 @@ export default function TurnOrderRing({ players, activePlayerId, onSeatClick, se
 
   return (
     <div
+      ref={ringRef}
       className={`turn-order-ring count-${count}`}
       data-testid="turn-order-ring"
       data-active-player={activePlayerId || undefined}
+      data-ring-fit={ringOn ? ringFit : undefined}
       role="navigation"
       aria-label={t('board', 'turn_order_label')}
     >
       <div className="tor-track" />
       <div className="tor-seats-flow">{seatGroups(false)}</div>
+      {ringOn && (
+        /* The ring's own ruler: the row as it is drawn, and the same row with its spacing
+           tightened. There is no clone for the last rung — dropping the names is the narrowest
+           thing the ring can do, so nothing is compared against it. */
+        <div className="tor-measure-layer" data-measure="true" aria-hidden="true">
+          <div className="tor-measure" data-lane-measure="full">
+            {seatGroups(true)}
+          </div>
+          <div className="tor-measure is-tight" data-lane-measure="tight">
+            {seatGroups(true)}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

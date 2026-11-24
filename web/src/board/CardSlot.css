@@ -1161,7 +1161,7 @@ html.fx-off .loyalty-badge .counter-tick {
   border-radius: 50%;
   /* The ring is the symbol's own gold, so the coin reads as one piece. */
   border: 1px solid var(--gold-300);
-  background: color-mix(in srgb, var(--ink-1) 92%, transparent);
+  background: rgb(var(--ink-rgb) / 0.92);
   box-shadow: 0 2px 6px var(--shade-4);
   pointer-events: auto;
 }

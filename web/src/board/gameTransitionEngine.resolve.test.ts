@@ -318,14 +318,26 @@ describe('gameTransitionEngine — stack resolution and feedback', () => {
     expect(getImpacts().some((fx) => fx.kind === 'transform')).toBe(true)
   })
 
-  it('FX-10: announces a banner on turn change only', () => {
+  it('FX-10: announces a banner on turn change only, naming the player whose turn it is', () => {
     detectAndAnimateTransitions(baseGame({ turn: 1 }), baseGame({ turn: 1 }))
     expect(getFeedbackFxState().banner).toBeNull()
 
     detectAndAnimateTransitions(baseGame({ turn: 1 }), baseGame({ turn: 2 }))
-    expect(getFeedbackFxState().banner).not.toBeNull()
-    expect(getFeedbackFxState().banner?.text).toContain('2')
-    expect(getFeedbackFxState().banner?.text).toContain('Alice')
+    const banner = getFeedbackFxState().banner
+    expect(banner).not.toBeNull()
+    // the name is the headline and "Turno de" the label over it; the turn number is the strip's job
+    expect(banner?.text).toBe('Alice')
+    expect(banner?.sub).toBeTruthy()
+    expect(banner?.own).toBeUndefined()
+  })
+
+  it('FX-10: my own turn is announced in the first person, and marked as mine', () => {
+    const mine = (turn: number) => baseGame({ turn, players: [player({ controlled: true })] })
+    detectAndAnimateTransitions(mine(2), mine(3))
+    const banner = getFeedbackFxState().banner
+    expect(banner?.own).toBe(true)
+    expect(banner?.sub).toBeUndefined()
+    expect(banner?.text).not.toContain('Alice')
   })
 
   it('a fizzled spell drifts apart on the stack and fires no projectile', async () => {

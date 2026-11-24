@@ -1,5 +1,5 @@
 import * as cmds from '../../net/commands'
-import type { GameEndInfo, GameView } from '../../net/types'
+import type { GameEndInfo, GameView, TableView } from '../../net/types'
 import { parseFeedback } from '../../game/feedback'
 import { manaPaymentActions } from '../../game/manaPayment'
 import { serverAutoAnswerActions } from '../../game/autoAnswers'
@@ -166,11 +166,35 @@ export function handleGameUpdate(method: string, objectId: string | null, data: 
   }
 }
 
-export function handleWatchGame(objectId: string | null): void {
-  const prevGameId = getState().gameId
+/**
+ * The table a WATCHGAME callback names, looked up in the lobby list. `currentTableId` is the
+ * table being watched; `parentTableId` covers a tournament sub-table, whose own id the lobby
+ * list does not carry.
+ */
+function watchedTableFrom(data: unknown): TableView | null {
+  const d = data as { currentTableId?: string; parentTableId?: string } | null
+  const tables = getState().lobby?.tables ?? []
+  for (const id of [d?.currentTableId, d?.parentTableId]) {
+    if (!id) continue
+    const found = tables.find((tb) => tb.tableId === id)
+    if (found) return found
+  }
+  return null
+}
+
+export function handleWatchGame(objectId: string | null, data?: unknown): void {
+  const s = getState()
+  const prevGameId = s.gameId
   if (objectId) {
     saveActiveGame(objectId, undefined, 'watcher')
-    void cmds.watchGame(objectId)
+    // Watching again the game we already watch is refused by the server
+    // (`GameController.watch` → false) and reaches the player as a bare
+    // «Command failed» over a waiting room that never opens. WATCHGAME can arrive
+    // twice for one watch: `watchUntilSpectating` retries the watchTable, and the
+    // proxy replays a callback that lagged behind an update flood.
+    const alreadyWatching = objectId === prevGameId
+      && (s.phase === 'game' || s.phase === 'spectating_pending')
+    if (!alreadyWatching) void cmds.watchGame(objectId)
     // Follow de Bo3/torneo: la vista en pantalla es de la partida ANTERIOR. Si se
     // conserva, el guard anti-stale (`isOlderThanCurrentGame` compara turno/paso
     // con el `gameId` ya actualizado) descarta el GAME_INIT de la nueva partida y
@@ -179,7 +203,10 @@ export function handleWatchGame(objectId: string | null): void {
     setState({
       phase: 'spectating_pending',
       gameId: objectId,
-      watchingTable: null,
+      // The waiting room this phase shows IS the table: without it the screen has no
+      // seats, no format and no name, and used to draw an invented duel (LBY-33).
+      // GAME_INIT/START_GAME clear it when the board takes over.
+      watchingTable: watchedTableFrom(data) ?? s.watchingTable,
       // El id de torneo resuelto (SHOW_TOURNAMENT) ya no hace falta: evita que al
       // volver del juego espectado el lobby reabra el cuadro solo.
       spectateTournament: null,

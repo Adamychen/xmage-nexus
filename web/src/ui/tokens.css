@@ -70,6 +70,13 @@
   --veil-7: rgb(255 255 255 / 0.6);
   --veil-8: rgb(255 255 255 / 0.85);
 
+  /* The white core of a glow: the light inside a coloured halo, and the bright middle of a rule
+     or a sweep. Brighter than a veil because it is light, not a film over something. */
+  --glow-core: rgb(255 255 255 / 0.5);
+
+  /* An opaque stop in a mask gradient: not a colour anyone sees, only "keep this part". */
+  --mask-opaque: #000;
+
   --shade-0: rgb(0 0 0 / 0.18);
   --shade-1: rgb(0 0 0 / 0.35);
   --shade-2: rgb(0 0 0 / 0.5);
@@ -121,6 +128,11 @@
   --surface-card: linear-gradient(180deg, rgba(24, 32, 51, 0.92) 0%, rgba(15, 21, 36, 0.92) 100%);
   --surface-raised: linear-gradient(180deg, #1b2439 0%, #131b2d 100%);
   --sheen: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  /* PRM-19: what makes a button of the corner read as a key — a light edge along its top border and
+     a sunken shadow along the bottom. The small variant is for the button above it, whose pill is
+     shorter and would read as a bar with the deep one. */
+  --keycap-relief: inset 0 1px 0 rgb(255 255 255 / 0.42), inset 0 -8px 14px rgb(0 0 0 / 0.26);
+  --keycap-relief-sm: inset 0 1px 0 rgb(255 255 255 / 0.42), inset 0 -6px 12px rgb(0 0 0 / 0.22);
   --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.5), 0 4px 14px rgba(0, 0, 0, 0.28);
   --shadow-2: 0 10px 30px rgba(0, 0, 0, 0.5), 0 2px 6px rgba(0, 0, 0, 0.4);
   --shadow-3: 0 30px 80px rgba(0, 0, 0, 0.7), 0 6px 18px rgba(0, 0, 0, 0.45);
@@ -199,6 +211,9 @@
   --r-xl: 16px;
   --r-pill: 999px;
 
+  /* The width a card assumes when it is drawn outside a board shell, which sets its own. */
+  --card-w-base: 100px;
+
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
   --ease-in: cubic-bezier(0.4, 0, 1, 1);
@@ -260,6 +275,12 @@
     --veil-6: rgb(15 23 42 / 0.3);
     --veil-7: rgb(15 23 42 / 0.6);
     --veil-8: rgb(15 23 42 / 0.85);
+
+    /* These two do not flip with the appearance: a glow's core is light in any theme (and the board
+       it is drawn on keeps the dark set, APR-2), and a mask stop is an alpha channel, not a colour
+       anyone sees. They are declared here so the light set stays complete (APR-1). */
+    --glow-core: rgb(255 255 255 / 0.5);
+    --mask-opaque: #000;
 
     --shade-0: rgb(255 255 255 / 0.18);
     --shade-1: rgb(255 255 255 / 0.35);
@@ -355,6 +376,12 @@
     --veil-6: rgb(15 23 42 / 0.3);
     --veil-7: rgb(15 23 42 / 0.6);
     --veil-8: rgb(15 23 42 / 0.85);
+
+    /* These two do not flip with the appearance: a glow's core is light in any theme (and the board
+       it is drawn on keeps the dark set, APR-2), and a mask stop is an alpha channel, not a colour
+       anyone sees. They are declared here so the light set stays complete (APR-1). */
+    --glow-core: rgb(255 255 255 / 0.5);
+    --mask-opaque: #000;
 
     --shade-0: rgb(255 255 255 / 0.18);
     --shade-1: rgb(255 255 255 / 0.35);

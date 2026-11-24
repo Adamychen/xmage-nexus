@@ -93,7 +93,7 @@ async function foreignUiSeen(page: Page): Promise<string[]> {
 }
 
 test.describe('Arena surveil and scry', { tag: '@prompts' }, () => {
-  test('PRM-18: a surveil arranged by drag is answered as one chain with no other prompt shown', async ({ page }) => {
+  test('PRM-20: a surveil arranged by drag is answered as one chain with no other prompt shown', async ({ page }) => {
     await withFakeServer(() => arenaSurveilScenario('surveil'), async () => {
       const { pageErrors } = await quickStartGame(page, { prefix: 'asv', skipAsks: true })
       const overlay = page.getByTestId('arena-library-prompt')
@@ -117,7 +117,7 @@ test.describe('Arena surveil and scry', { tag: '@prompts' }, () => {
     })
   })
 
-  test('PRM-18: a surveil putting every card in the graveyard closes at its last pick with no graveyard order asked', async ({ page }) => {
+  test('PRM-20: a surveil putting every card in the graveyard closes at its last pick with no graveyard order asked', async ({ page }) => {
     await withFakeServer(() => arenaSurveilScenario('surveil-binned'), async () => {
       const { pageErrors } = await quickStartGame(page, { prefix: 'asb', skipAsks: true })
       const overlay = page.getByTestId('arena-library-prompt')
@@ -139,7 +139,7 @@ test.describe('Arena surveil and scry', { tag: '@prompts' }, () => {
     })
   })
 
-  test('PRM-18: a scry answers the bottom order before the top order', async ({ page }) => {
+  test('PRM-20: a scry answers the bottom order before the top order', async ({ page }) => {
     await withFakeServer(() => arenaSurveilScenario('scry'), async () => {
       const { pageErrors } = await quickStartGame(page, { prefix: 'asc', skipAsks: true })
       const overlay = page.getByTestId('arena-library-prompt')
@@ -166,7 +166,7 @@ test.describe('Arena surveil and scry', { tag: '@prompts' }, () => {
     })
   })
 
-  test('PRM-18: a foreign prompt after the pick is shown normally and never answered', async ({ page }) => {
+  test('PRM-20: a foreign prompt after the pick is shown normally and never answered', async ({ page }) => {
     await withFakeServer(() => arenaSurveilScenario('foreign'), async () => {
       const { pageErrors } = await quickStartGame(page, { prefix: 'asf', skipAsks: true })
       const overlay = page.getByTestId('arena-library-prompt')

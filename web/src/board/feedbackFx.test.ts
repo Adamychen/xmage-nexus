@@ -115,4 +115,30 @@ describe('feedbackFx', () => {
     vi.advanceTimersByTime(2000)
     expect(getFeedbackFxState().banner).toBeNull()
   })
+
+  it('FX-10: the turn that is mine is marked as mine, the turn of a rival is not', () => {
+    announceBanner('Tu turno', undefined, { own: true })
+    expect(getFeedbackFxState().banner?.own).toBe(true)
+    announceBanner('Alice', 'Turno de')
+    const { banner } = getFeedbackFxState()
+    expect(banner?.own).toBeUndefined()
+    expect(banner?.sub).toBe('Turno de')
+  })
+
+  it('FX-10: a dialog over the board drops the banner instead of queueing it', () => {
+    const dialog = document.createElement('div')
+    dialog.setAttribute('role', 'dialog')
+    dialog.setAttribute('aria-modal', 'true')
+    document.body.appendChild(dialog)
+    try {
+      announceBanner('Alice', 'Turno de')
+      expect(getFeedbackFxState().banner).toBeNull()
+      dialog.remove()
+      // and nothing was held back for when it closed
+      vi.advanceTimersByTime(4000)
+      expect(getFeedbackFxState().banner).toBeNull()
+    } finally {
+      dialog.remove()
+    }
+  })
 })

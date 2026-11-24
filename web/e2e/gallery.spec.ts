@@ -171,7 +171,9 @@ test.describe('galería de estados (P3)', () => {
     const dialog = page.locator('.ask-prompt-bar')
     await expect(dialog).toBeVisible()
     await expect(dialog).not.toContainText('{this}')
+    // PRM-18: a question is not an order, so it stays in its bar
     await expect(dialog.locator('.action-prompt-msg')).toContainText('Slicer, Hired Muscle')
+    await expect(page.getByTestId('board-order')).toHaveCount(0)
   })
 
   test('los visores revelados se pintan por encima de la galería', async ({ page }) => {

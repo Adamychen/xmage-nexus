@@ -70,6 +70,9 @@ export default function AskBar({ form }: { form: UseFeedbackForm }) {
               <FormattedText text={prompt.sourceName} />
             </span>
           )}
+          {/* PRM-18: a question is not an order. It stays here, with its answers right under it:
+              the server echoes whole rules text into these, and seven lines of it across the board
+              would cover the very thing being asked about. */}
           {message && (
             <span className="action-prompt-msg" role="status" aria-live="polite">
               <FormattedText text={message} />

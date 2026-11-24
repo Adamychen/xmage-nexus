@@ -72,7 +72,7 @@ export async function dismissSetupWizard(page: Page): Promise<void> {
 }
 
 /**
- * SET-14 starts a player who has set nothing on the Simple preset: smart stops on, no stop of
+ * SET-15 starts a player who has set nothing on the Simple preset: smart stops on, no stop of
  * their own. The game specs drive priority themselves and the web's auto-pass competes with their
  * launch windows, so a session opened through `login` runs on the stops this suite has always
  * used. A spec about the defaults seeds nothing and reads them as a new player would.

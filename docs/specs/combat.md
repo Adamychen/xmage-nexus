@@ -123,7 +123,9 @@ influence.
 ### CMB-11 · The declaration window reads attackers vs blockers from the prompt, not from its translated title
 The combat declaration prompt carries its direction as structured data: `GAME_SELECT` with
 `options.possibleAttackers` sets `prompt.isDeclaringAttackers`, and the bar, the action button and
-any dialog read that flag — never the already-localized title. Attack windows show attacker labels
+any dialog read that flag — never the already-localized title. The confirm is the action button's
+(PRM-19); the bar reads the flag for its own labels and does not repeat it. What those buttons say and where
+they sit is CMB-13. Attack windows show attacker labels
 and block windows blocker labels in every locale.
 
 - Why: the old check looked for `atacan`/`attack` in `prompt.title`, which `feedback/parse.ts`
@@ -146,3 +148,21 @@ as in MTG Arena, where attacks and blocks are always confirmed by hand.
   multiplayer game reported they could not take it out of the attack (2026-11-12). The server
   only sends the empty list when a declaration is already under way, so this adds no stop.
 - Guard: `src/game/feedback.test.ts` · `src/state/store.test.ts` · `e2e/combat-undeclare.spec.ts`
+
+### CMB-13 · The declaration reads as going forward or stepping back, and the count is in the words
+While a declaration is open the corner holds two buttons and no more: going forward on the big one
+(PRM-19), stepping back on the smaller one above it. With nothing declared, going forward is
+declaring everything the server offers ("attack with everything", its special action) and stepping
+back is "no attacks", which ends the declaration with none. With something declared, going forward
+is "confirm N attackers", the count in the words and no icon beside them, and stepping back is
+"cancel attacks", which only unmarks what is marked: each declared creature is clicked again, one
+by one, and the declaration stays open. Blockers read the same way. Where the server offers no
+"attack with everything", there is nothing to step back from and the big button is the only way
+out.
+
+- Why: our corner confirmed "attackers" when none were declared, which is not what pressing it did,
+  and the only way to take a declaration back was to click every creature again with no button
+  saying so. The shape is the one every other client of this game uses (user request, with
+  screenshots, 24-nov-2026). Going to blockers is the player's decision, so cancelling never does
+  it: only "no attacks" and the confirm advance the game.
+- Guard: `src/game/feedbackModes/boardOrder.test.tsx`

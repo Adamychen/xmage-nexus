@@ -172,7 +172,23 @@ the scroll the previous step was left at.
   gameplay step opened scrolled to the middle (report of 2026-11-13).
 - Guard: `src/setup/SetupWizard.test.tsx` · `src/settings/settingsUi.test.tsx` · `e2e/setup-wizard.spec.ts`
 
-### SET-14 · A player who has set nothing starts on the Simple preset
+### SET-14 · The priority cue can follow the client's own stops
+The priority cue has a fourth mode, "When I stop", for a player with smart stops on: the cue stops
+being a read of the view the server sent and becomes the client's own decision, so it sounds on the
+windows the client keeps and never on the ones it passes by itself. It sounds for every reason the
+client keeps a window, a rollback vote in progress, a priority held for a controlled player, a
+combat selection still to make or a phase the player marked as a stop, with one exception: a stop
+that comes with a dialog stays silent, because the dialog already sounded its own cue and the two
+would land a frame apart. Each window is cued once, never again on the updates around it. With
+smart stops off there is no decision to hang the cue on and the mode behaves as "On priority". The
+other three modes are untouched and "Every prompt" is still the default.
+
+- Why: the cue was decided in the event handler by diffing the previous view against the new one, a
+  frame before `maybeAutoPass` ran, so it knew nothing about the stops and beeped on every window
+  the client went on to pass by itself (report of 2026-11-23).
+- Guard: `src/state/eventHandler.prioritySound.test.ts` · `src/settings/SoundFxControls.test.tsx` · `e2e/settings.spec.ts`
+
+### SET-15 · A player who has set nothing starts on the Simple preset
 A player who has never configured the automation plays on the **Simple** gameplay preset, and both
 the settings dialog and the setup wizard open with that card already picked: mana is paid for
 them, the smart stops decide where the game pauses and no step is stopped by hand. The preset

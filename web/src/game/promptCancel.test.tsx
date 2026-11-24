@@ -121,8 +121,9 @@ describe('PRM-13: backing out of a spell or ability being played', () => {
   it('PRM-13: an activation target says Cancel, not Finish, and Escape answers it', async () => {
     const finishOptionalTarget = vi.fn()
     const { container } = render(<TargetBar form={stubForm(activationTarget(), { finishOptionalTarget })} />)
-    const button = container.querySelector('.action-prompt-actions button')!
-    expect(button.textContent).toBe('Cancelar')
+    // PRM-19: ese botón es el principal; sin tablero que lo publique cae aquí mismo
+    const button = container.querySelector('[data-testid="prompt-action"]')!
+    expect(button.textContent).toContain('Cancelar')
     fireEvent.click(button)
     await pressEscape()
     expect(finishOptionalTarget).toHaveBeenCalledTimes(2)

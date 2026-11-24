@@ -69,8 +69,10 @@ describe('CombatBar attacker/blocker labels', () => {
   it('CMB-11: an attack window shows attacker labels whatever translation its title arrived in', () => {
     for (const title of ATTACK_TITLES) {
       const { container } = render(<CombatBar form={stubForm(combatPrompt(title, true))} />)
+      // PRM-19: el confirmar lo lleva el botón de prioridad (ActionButton.control.test.tsx), así
+      // que aquí se comprueba que la ventana se lee como de ataque, no que repita el botón.
       expect(container.textContent, `attack title: ${title}`).toContain('Declare Attackers')
-      expect(container.textContent, `attack title: ${title}`).toContain('Confirm Attackers')
+      expect(container.textContent, `attack title: ${title}`).not.toContain('Confirm Attackers')
       expect(container.textContent, `attack title: ${title}`).not.toContain('Declare Blockers')
       cleanup()
     }
@@ -79,7 +81,7 @@ describe('CombatBar attacker/blocker labels', () => {
   it('CMB-11: a block window shows blocker labels', () => {
     const { container } = render(<CombatBar form={stubForm(combatPrompt('Déclaration des bloqueurs', false))} />)
     expect(container.textContent).toContain('Declare Blockers')
-    expect(container.textContent).toContain('Confirm Blockers')
+    expect(container.textContent).not.toContain('Confirm Blockers')
     expect(container.textContent).not.toContain('Declare Attackers')
   })
 })

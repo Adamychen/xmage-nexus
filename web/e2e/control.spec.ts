@@ -81,8 +81,11 @@ test('control del turno ajeno: pasar, mano cambiada y jugables del controlado @c
 
     // Ventana de combate del controlado (GAME_SELECT con possibleAttackers):
     // el botón pasa a confirmar atacantes y sus criaturas son clicables.
-    await expect(actionBtn).toContainText(/Confirmar atacantes|Confirm Attackers/)
-    await expect(actionBtn).toBeEnabled()
+    // PRM-19 / CMB-13: the declaration is answered from the corner's key, with the count in its words.
+    const cornerKey = page.getByTestId('prompt-action').first()
+    // CMB-13: with nothing declared the key offers the special action, "Atacar con todos".
+    await expect(cornerKey).toContainText(/atacar|atacantes?|attack/i)
+    await expect(cornerKey).toBeEnabled()
     const creature = page.locator(`.opponent-zone [data-card-id="${CONTROL_CREATURE_ID}"]`)
     await expect(creature).toBeVisible()
     await creature.click()

@@ -1,6 +1,7 @@
 import * as cmds from '../net/commands'
 import type { ServerPreferences } from '../net/commands'
 import { serverPhaseStops } from '../game/phaseStops'
+import { buildAppearanceToken } from '../appearance/appearanceToken'
 import { getState } from './state'
 import type { AppState } from './state'
 
@@ -9,6 +10,8 @@ export function serverPreferences(settings: AppState['settings']): ServerPrefere
   return {
     phases: serverPhaseStops(settings.smartStops, settings.phaseStops),
     confirmEmptyManaPool: settings.manaPayment.confirmEmptyPool,
+    // The same object carries what the table is told about this player's own look (APR-6).
+    appearance: buildAppearanceToken({ sleeveId: settings.sleeveId }),
   }
 }
 

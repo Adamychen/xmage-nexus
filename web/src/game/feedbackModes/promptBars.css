@@ -93,11 +93,70 @@
   margin-top: var(--sp-0h);
 }
 
+/* PRM-19: what the big button cannot do is the same button one size down — same shape, same face,
+   same uppercase, a quieter colour, so the corner reads as one family instead of a panel of
+   leftovers. */
 .action-prompt-actions button {
   flex: 1 1 auto;
-  padding: var(--sp-1h) var(--sp-3);
-  font-size: var(--fs-2xs);
   white-space: nowrap;
+}
+
+.prompt-second-btn {
+  position: relative;
+  width: 100%;
+  min-height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-1);
+  padding: var(--sp-0h) var(--sp-2h);
+  border-radius: var(--r-base);
+  /* The same face as the priority button (ActionButton.css `.action-priority`), one size down:
+     colour included, so the two read as the same control and not as a button and its shadow. */
+  border: 1.5px solid var(--ok);
+  background: linear-gradient(135deg, var(--ok) 0%, var(--ok-surface) 100%);
+  box-shadow: 0 0 14px rgb(var(--ok-rgb) / 0.28), 0 4px 14px var(--shade-2);
+  cursor: pointer;
+  user-select: none;
+  font-family: var(--font-display, sans-serif);
+  font-size: var(--fs-xs);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--fg-hi);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.prompt-second-btn:hover:not(:disabled) {
+  background: var(--ok);
+  box-shadow: 0 0 20px rgb(var(--ok-rgb) / 0.45), 0 4px 14px var(--shade-2);
+  transform: translateY(-1px);
+}
+
+.prompt-second-btn:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.prompt-second-btn:focus-visible {
+  outline: 2px solid var(--gold-300);
+  outline-offset: 2px;
+}
+
+/* With the order on the board and the primary on the big button, these bars are no longer a panel:
+   they are the buttons themselves, stacked over the one below. The question keeps its panel, since
+   it carries a title, the card asking and the answers. */
+.action-prompt-bar:is(.mana-prompt-bar, .combat-bar, .targeting-bar) {
+  /* In the dock's own column, not floating beside it: the buttons line up with the big one and
+     take its width, so the corner is one stack. */
+  position: static;
+  width: 100%;
+  padding: 0;
+  gap: var(--sp-1);
+  background: none;
+  border: 0;
+  box-shadow: none;
+  backdrop-filter: none;
 }
 
 .mana-prompt-bar {
@@ -145,4 +204,20 @@
 
 .hand-pick-expand {
   flex: none;
+}
+
+/* CMB-13 / PRM-19: the keycap relief of the official client, kept with our own colours: a full
+   pill, a light edge, a highlight on the top border and a sunken shadow on the bottom one. The
+   relief is an overlay, so every mode keeps the colour and the glow it already had. */
+.prompt-second-btn {
+  border-radius: var(--r-pill);
+}
+
+.prompt-second-btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow: var(--keycap-relief-sm);
 }

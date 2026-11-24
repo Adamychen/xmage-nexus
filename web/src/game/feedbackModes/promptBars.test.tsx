@@ -30,7 +30,7 @@ function stubForm(prompt: FeedbackPrompt): UseFeedbackForm {
 }
 
 describe('prompt bars live hints', () => {
-  it('MNA-1: ManaBar announces the hint via role=status', () => {
+  it('MNA-1: ManaBar leaves the hint out: the cost is the order, read on the board', () => {
     const { container } = render(
       <ManaBar form={stubForm({
         method: 'GAME_PLAY_MANA',
@@ -43,12 +43,10 @@ describe('prompt bars live hints', () => {
         max: 0,
       })} />,
     )
-    const hint = container.querySelector('.action-prompt-hint')!
-    expect(hint.getAttribute('role')).toBe('status')
-    expect(hint.getAttribute('aria-live')).toBe('polite')
+    expect(container.querySelector('.action-prompt-hint'), 'the dock keeps no hint').toBeNull()
   })
 
-  it('TGT-1: TargetBar announces the hint via role=status', () => {
+  it('TGT-1: TargetBar leaves the hint out too, and keeps the count of targets picked', () => {
     const { container } = render(
       <TargetBar form={stubForm({
         method: 'GAME_TARGET',
@@ -61,9 +59,7 @@ describe('prompt bars live hints', () => {
         max: 1,
       })} />,
     )
-    const hint = container.querySelector('.action-prompt-hint')!
-    expect(hint.getAttribute('role')).toBe('status')
-    expect(hint.getAttribute('aria-live')).toBe('polite')
+    expect(container.querySelector('.action-prompt-hint'), 'the dock keeps no hint').toBeNull()
   })
 
   it('PRM-7: TargetBar hides every action when the target is required (sending false only makes the server re-ask)', () => {
@@ -101,9 +97,10 @@ describe('prompt bars live hints', () => {
         finishOptionalTarget,
       }} />,
     )
-    expect(container.querySelector('.action-prompt-actions .cancel-btn')).toBeNull()
-    const finish = Array.from(container.querySelectorAll('.action-prompt-actions button'))
-      .find((b) => b.textContent?.includes('Terminar'))!
+    expect(container.querySelector('.cancel-btn'), 'un objetivo opcional no se cancela, se termina').toBeNull()
+    // PRM-19: ese botón es ahora el principal, en el sitio del de prioridad
+    const finish = container.querySelector<HTMLButtonElement>('[data-testid="prompt-action"]')!
+    expect(finish.textContent).toContain('Terminar')
     fireEvent.click(finish)
     expect(finishOptionalTarget).toHaveBeenCalledTimes(1)
   })

@@ -60,6 +60,30 @@ function commanderGame() {
   }
 }
 
+/** Four seats with a commander each, a poison counter and a running clock: everything that competes
+ *  for the width of a rival's status row at once. */
+function podGame() {
+  const base = commanderGame()
+  const mkRival = (id: string, name: string) => ({
+    ...base.players[1],
+    playerId: id,
+    name,
+    counters: [{ name: 'poison', count: 5 }],
+    priorityTimeLeftSecs: 1800,
+    bufferTimeLeft: 15,
+    commandList: [{ id: `cmd-${id}`, name: `Commander ${name}`, mageObjectType: 'COMMANDER' }],
+  })
+  return {
+    ...base,
+    players: [
+      base.players[0],
+      mkRival('p2', 'Bartolomeo'),
+      mkRival('p3', 'Jemoer'),
+      mkRival('p4', 'Luxor'),
+    ],
+  }
+}
+
 test('arena layout: mi campo a ancho completo, rivales en columnas, mano overlay @arena', async ({ page }) => {
   fs.mkdirSync(SHOTS_DIR, { recursive: true })
   await page.goto('/')
@@ -100,4 +124,51 @@ test('arena layout: mi campo a ancho completo, rivales en columnas, mano overlay
 
   await page.waitForTimeout(400)
   fs.writeFileSync(path.join(SHOTS_DIR, 'arena-layout-commander.png'), await page.screenshot({ fullPage: true }))
+})
+
+/**
+ * BRD-36 + BRD-54: a rival's status row holds the chip, the hand, the commander and the piles, and
+ * it may not break. What gives way inside it is the chip, which hangs its clock and its counters
+ * under the photo; what may never happen is the piles dropping onto the battlefield or the name
+ * being trimmed to a letter. Measured, not budgeted: the assertions are "inside the row" and "not
+ * clipped", so a different font or a wider column cannot make this test lie.
+ */
+test('BRD-36: la fila de estado de un rival no se parte ni recorta su nombre @arena', async ({ page }) => {
+  await page.setViewportSize({ width: 1180, height: 820 })
+  await page.goto('/')
+  await dismissSetupWizard(page)
+  await expect(page.locator('body')).toBeVisible({ timeout: 10_000 })
+  await page.waitForTimeout(400)
+  await page.evaluate((gameView) => {
+    const store = (globalThis as unknown as { __mageStore?: { getState: () => Record<string, any>; setState: (s: unknown) => void } }).__mageStore
+    const st = store?.getState() as { settings: Record<string, unknown> }
+    store?.setState({ phase: 'game', settings: { ...st.settings, boardLayout: 'arena', boardLayoutManual: true, boardSpotlight: false }, game: gameView })
+  }, podGame())
+
+  await expect(page.locator('[data-testid="arena-board"]')).toBeVisible({ timeout: 10_000 })
+  await expect(page.locator('.arena-opp-cell')).toHaveCount(3)
+  await expect(page.locator('[data-testid="arena-opp-piles"]')).toHaveCount(3)
+  await page.waitForTimeout(400)
+
+  const cells = await page.evaluate<Array<{ name: string; clipped: boolean; pilesOutsideRow: number; countersUnderName: boolean }>>(`${RECT_OF}
+    (() => Array.from(document.querySelectorAll('.arena-opp-cell')).map((cell) => {
+      const row = cell.querySelector('.bz-status-row')
+      const piles = cell.querySelector('[data-testid="arena-opp-piles"]')
+      const name = cell.querySelector('.player-name')
+      const counters = cell.querySelector('.bare-counters')
+      if (!row || !piles || !name || !counters) throw new Error('fila, pilas, nombre o contadores no encontrados')
+      const r = rectOf(row), p = rectOf(piles), n = rectOf(name), c = rectOf(counters)
+      return {
+        name: name.textContent ?? '',
+        clipped: name.scrollWidth > name.clientWidth + 1,
+        pilesOutsideRow: Math.round(p.y + p.height - (r.y + r.height)),
+        countersUnderName: c.y >= n.y + n.height,
+      }
+    }))()`)
+
+  for (const cell of cells) {
+    expect(cell.pilesOutsideRow, `las pilas de ${cell.name} se quedan dentro de su fila de estado`).toBeLessThanOrEqual(0)
+    expect(cell.clipped, `el nombre de ${cell.name} no se recorta`).toBe(false)
+    expect(cell.countersUnderName, `los contadores de ${cell.name} cuelgan bajo el nombre`).toBe(true)
+  }
 })

@@ -8,6 +8,7 @@ import { Segmented, SettingsGroup, SettingsRow, SwitchRow } from './settingsUi'
 const PRIORITY_LABEL = {
   'every-prompt': 'sound_priority_every_prompt',
   'on-gain': 'sound_priority_on_gain',
+  'on-stop': 'sound_priority_on_stop',
   off: 'sound_priority_off',
 } as const
 

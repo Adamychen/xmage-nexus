@@ -1,12 +1,11 @@
 import FormattedText from '../FormattedText'
-import Button from '../../ui/Button'
 import IconButton from '../../ui/IconButton'
-import Icon, { type IconName } from '../../ui/Icon'
 import { useTranslation, dynamicT } from '../../i18n'
 import { localizeServerMessage } from '../serverMessageTranslation'
 import type { UseFeedbackForm } from '../useFeedbackForm'
 import { stripTargetProgress, targetProgressLabel } from '../feedback'
-import { DockPrompt } from '../GameDock'
+import { DockPrompt, OrderPrompt, PromptAction } from '../GameDock'
+import { PromptActionKey } from './PromptKeys'
 import { usePromptCancelKey } from '../usePromptCancelKey'
 import './promptBars.css'
 
@@ -24,31 +23,48 @@ export default function TargetBar({ form, onExpand }: { form: UseFeedbackForm; o
         ? t('game', 'library_order_title')
         : (prompt.sourceName ?? t('game', 'choose_target'))
   const localizedMessage = localizeServerMessage(stripTargetProgress(prompt.message), dynamicT(t))
-  // El servidor suele repetir el título ya localizado ("Select a card to
-  // discard"): una sola línea, no dos veces lo mismo.
-  const hintText = prompt.isStartingPlayer
-    ? t('game', 'starting_player_board_hint')
-    : !localizedMessage
-      ? t('game', 'targeting_hint')
-      : localizedMessage === titleText
-        ? null
-        : <FormattedText text={localizedMessage} />
+  // PRM-18: la orden dice qué hacer, así que es la frase del servidor ("Elige un objetivo para
+  // Rayo"); el nombre de la carta a secas no es una orden, es un sustantivo. Sin frase, el título.
+  // Y cuando la frase no nombra a quien pregunta, se añade detrás: hace falta saber de quién es el
+  // objetivo, y el nombre solo no basta como orden.
+  const sourceName = prompt.isStartingPlayer ? null : (prompt.sourceName ?? null)
+  const said = localizedMessage || titleText
+  const namesSource = !!sourceName && said.toLowerCase().includes(sourceName.toLowerCase())
+  const orderText = sourceName && !namesSource ? `${said} · ${sourceName}` : said
   const progressText = !prompt.isStartingPlayer && prompt.progress ? targetProgressLabel(prompt.progress, dynamicT(t)) : null
-  const icon: IconName = prompt.isStartingPlayer ? 'dice' : isDiscard ? 'trash' : 'target'
+  // PRM-18: with the order on the board and no hint left, a required target with nothing to press
+  // would leave an empty box in the corner. Nothing to say, nothing drawn.
+  const dockHasSomething = !!progressText || !!onExpand
 
   return (
+    <>
+    <OrderPrompt>
+      <span className="board-order" data-testid="board-order">
+        <FormattedText text={orderText} />
+      </span>
+    </OrderPrompt>
+    {prompt.required === false && (
+      <PromptAction>
+        {/* PRM-19: dejar el objetivo es la acción que responde, y va donde el jugador ya mira. */}
+        <PromptActionKey
+          tone={prompt.cancelable ? 'leave' : 'done'}
+          icon={prompt.cancelable ? 'x' : 'check'}
+          label={prompt.cancelable ? t('game', 'targeting_cancel') : t('game', 'targeting_finish')}
+          disabled={busy}
+          onClick={finishOptionalTarget}
+          keyShortcut={prompt.cancelable ? 'Escape' : undefined}
+        />
+      </PromptAction>
+    )}
+    {dockHasSomething && (
     <DockPrompt>
       <div className="action-prompt-bar targeting-bar">
-        <div className="action-prompt-info">
-          <span className="action-prompt-title">
-            <span className="action-prompt-icon" aria-hidden="true"><Icon name={icon} size={14} /></span>{' '}
-            <FormattedText text={titleText} />
-          </span>
-          <span className="action-prompt-hint" role="status" aria-live="polite">
-            {hintText}
-            {progressText && <span className="action-prompt-progress" data-testid="target-progress"> · {progressText}</span>}
-          </span>
-        </div>
+        {/* TGT-1: how many of the targets are picked is a count, not a hint: it stays. */}
+        {progressText && (
+          <div className="action-prompt-info">
+            <span className="action-prompt-progress" data-testid="target-progress">{progressText}</span>
+          </div>
+        )}
         <div className="action-prompt-actions">
           {onExpand && (
             <IconButton
@@ -61,13 +77,10 @@ export default function TargetBar({ form, onExpand }: { form: UseFeedbackForm; o
               onClick={onExpand}
             />
           )}
-          {prompt.required === false && (
-            <Button disabled={busy} onClick={finishOptionalTarget} aria-keyshortcuts={prompt.cancelable ? 'Escape' : undefined}>
-              {prompt.cancelable ? t('game', 'targeting_cancel') : t('game', 'targeting_finish')}
-            </Button>
-          )}
         </div>
       </div>
     </DockPrompt>
+    )}
+    </>
   )
 }

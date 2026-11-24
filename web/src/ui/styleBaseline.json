@@ -11,12 +11,6 @@
     "fontSizes": 1,
     "spacing": 0
   },
-  "board/BoardShell.css": {
-    "colors": 0,
-    "radii": 0,
-    "fontSizes": 1,
-    "spacing": 0
-  },
   "board/BoardZone.css": {
     "colors": 0,
     "radii": 0,
@@ -71,22 +65,10 @@
     "fontSizes": 0,
     "spacing": 2
   },
-  "game/CommanderDamageMatrix.css": {
-    "colors": 0,
-    "radii": 0,
-    "fontSizes": 1,
-    "spacing": 0
-  },
-  "game/HelpWikiModal.css": {
-    "colors": 0,
-    "radii": 0,
-    "fontSizes": 1,
-    "spacing": 2
-  },
   "game/MechanicsTray.css": {
     "colors": 0,
     "radii": 0,
-    "fontSizes": 3,
+    "fontSizes": 2,
     "spacing": 0
   },
   "game/SideboardScreen.css": {
@@ -128,13 +110,13 @@
   "lobby/LobbyScreen.css": {
     "colors": 0,
     "radii": 1,
-    "fontSizes": 2,
-    "spacing": 3
+    "fontSizes": 0,
+    "spacing": 2
   },
   "lobby/LoginScreen.css": {
     "colors": 0,
     "radii": 1,
-    "fontSizes": 1,
+    "fontSizes": 0,
     "spacing": 2
   },
   "lobby/SpectatorStagingScreen.css": {

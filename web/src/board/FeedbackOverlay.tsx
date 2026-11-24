@@ -20,10 +20,14 @@ export default function FeedbackOverlay() {
         <div
           key={banner.id}
           className="fx-banner fx-decorate"
+          data-own={banner.own ? '1' : undefined}
+          data-testid="fx-banner"
           style={{ animationDuration: `${banner.duration}ms` }}
         >
-          <span className="fx-banner-text">{banner.text}</span>
+          <span className="fx-banner-sweep" aria-hidden="true" />
+          {/* FX-10: who the turn belongs to is the headline; "Turno de" is the label above it. */}
           {banner.sub && <span className="fx-banner-sub">{banner.sub}</span>}
+          <span className="fx-banner-text">{banner.text}</span>
         </div>
       )}
     </div>

@@ -146,7 +146,20 @@ describe('TurnOrderRing', () => {
 
   it('BRD-37: no pill carries the life', () => {
     const { container } = render(<TurnOrderRing players={[me, rival, third]} activePlayerId="me" />)
-    expect(container.querySelectorAll('.tor-seat-life').length).toBe(0)
+    expect(container.querySelectorAll('.tor-seats-flow .tor-seat-life').length).toBe(0)
     expect(container.querySelector('[data-testid="tor-active-badge"]')).not.toBeNull()
+  })
+
+  it('BRD-37: the ring carries a ruler of its own and says which rung it is on', () => {
+    const { getByTestId, container } = render(<TurnOrderRing players={[me, rival, third]} activePlayerId="me" />)
+    const ring = getByTestId('turn-order-ring')
+    // jsdom measures nothing, so the rung is the widest one: the ring starts whole.
+    expect(ring.getAttribute('data-ring-fit')).toBe('full')
+    expect(container.querySelector('[data-lane-measure="full"]')).not.toBeNull()
+    expect(container.querySelector('[data-lane-measure="tight"]')).not.toBeNull()
+    expect(container.querySelectorAll('[data-lane-measure="tight"] .tor-seat').length).toBe(3)
+    cleanup()
+    const alone = render(<TurnOrderRing players={[me]} activePlayerId="me" />)
+    expect(alone.getByTestId('turn-order-ring').getAttribute('data-ring-fit')).toBeNull()
   })
 })

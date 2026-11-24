@@ -8,6 +8,7 @@ import { getActiveFlights, onFlightLanded, subscribeFlights, useActiveFlights } 
 import { stackArrivalPending } from './stackLinks'
 import { useTranslation } from '../i18n'
 import Icon from '../ui/Icon'
+import IconButton from '../ui/IconButton'
 import { clickableProps } from '../ui/clickable'
 import {
   getControllerInfo,
@@ -165,10 +166,13 @@ export default function StackZone({
   // the stack, so reading it here cannot feed back into anything it depends on.
   const [floor, setFloor] = useState(0)
   const cardRender = useStore((s) => s.settings.cardRender)
-  // STK-10: the bubble under the cascade is always open. It reads the card under the pointer, and
-  // goes back to the object about to resolve a moment after the pointer leaves the cascade and the
-  // bubble, so the pointer can cross the gap between the card and the bubble.
+  // STK-10: the bubble under the cascade. It comes open: what the object is about to do is the
+  // reason the stack is on screen, so it is read without asking for it, and the strip folds it
+  // away for whoever wants the board behind it. The pointer only chooses which object is read; it
+  // keeps reading the card last hovered for a moment after leaving, so the pointer can cross the
+  // gap between the card and the bubble.
   const [bubbleHover, setBubbleHover] = useState(false)
+  const [bubbleFolded, setBubbleFolded] = useState(false)
   const [reading, setReading] = useState(false)
   const [viewerOpen, setViewerOpen] = useState(false)
   const [bubblePlacement, setBubblePlacement] = useState<StackBubblePlacement>('below')
@@ -280,15 +284,23 @@ export default function StackZone({
 
   const topId = shownGroups[0]?.items[0]?.[0] ?? null
   const hoverId = hoverCard?.id ?? null
-  const pointing = bubbleHover || hoverId != null
+  const bubbleOpen = !bubbleFolded
+  const wantRead = bubbleHover || hoverId != null
   useEffect(() => {
-    if (pointing) {
+    if (wantRead) {
       setReading(true)
       return
     }
-    const release = setTimeout(() => setReading(false), BUBBLE_READ_MS)
-    return () => clearTimeout(release)
-  }, [pointing])
+    const back = setTimeout(() => setReading(false), BUBBLE_READ_MS)
+    return () => clearTimeout(back)
+  }, [wantRead])
+  // Pushed aside, or a stack that has run out: the next one comes open again, as a fresh one does.
+  useEffect(() => {
+    if (pushed) setBubbleFolded(false)
+  }, [pushed])
+  useEffect(() => {
+    if (groupCount === 0) setBubbleFolded(false)
+  }, [groupCount])
   // The card last hovered stays the one read while the pointer crosses to the bubble; once the
   // pointer is gone, it goes back to the object about to resolve.
   const [readId, setReadId] = useState<string | null>(null)
@@ -388,17 +400,16 @@ export default function StackZone({
           measurement can never read back the size the cascade chose. */}
       <div ref={roomRef} className="stack-room" aria-hidden="true" />
       <div className="stack-side">
-        <button
-          type="button"
+        <IconButton
           className="stack-push"
           data-testid="stack-push"
+          label={pushed ? t('game', 'stack_bring_back') : t('game', 'stack_push_aside')}
+          variant="ghost"
           aria-pressed={pushed}
-          title={pushed ? t('game', 'stack_bring_back') : t('game', 'stack_push_aside')}
-          aria-label={pushed ? t('game', 'stack_bring_back') : t('game', 'stack_push_aside')}
           onClick={() => setPushed((on) => !on)}
         >
           <Icon name={pushed ? 'chevronLeft' : 'chevronRight'} size={16} />
-        </button>
+        </IconButton>
         <button
           type="button"
           className="stack-view-all"
@@ -444,7 +455,7 @@ export default function StackZone({
                 onCardClick || count > 1 ? 'clickable' : '',
                 count > 1 ? 'is-group' : '',
                 openGroup ? 'is-open' : '',
-                reading && id === readingId ? 'is-reading' : '',
+                reading && bubbleOpen && id === readingId ? 'is-reading' : '',
                 `owner-${ownership}`,
               ].filter(Boolean).join(' ')}
               style={{ ['--i' as string]: gi, ['--seat' as string]: seatColorVar(seatIndexOf(players, ctrlInfo.id)) }}
@@ -480,7 +491,9 @@ export default function StackZone({
             card={readingCard}
             ctrl={readingCtrl}
             depth={Math.max(0, shownGroups.findIndex((g) => g.items[0][0] === readingId))}
+            open={bubbleOpen}
             placement={bubblePlacement}
+            onToggle={() => setBubbleFolded((folded) => !folded)}
             onEnter={() => setBubbleHover(true)}
             onLeave={() => setBubbleHover(false)}
           />

@@ -661,11 +661,18 @@
 /* BRD-54: the counters stack down the side of the chip, own or opponent's, in columns of what the
    chip holds under it (BRD-54), so a rival's status row keeps the height of its photo. */
 
-/* An opponent's chip never breaks into two lines: a second line would make its status row twice as
-   tall and drop that seat's board. It keeps one line, the name truncating if need be. */
+/* BRD-54: an opponent's chip breaks into lines like every other one, so its clock and its counters
+   hang under the photo instead of eating the width the name, the hand and the piles need. The name
+   still truncates before the chip grows. */
 .arena-opp-cell .bz-status-row > .player-info-bar.is-bare {
-  flex-wrap: nowrap;
   min-width: 0;
+}
+
+/* BRD-36: and the row itself never breaks, whatever it holds: a second line has nowhere to go but
+   over the battlefield, because the row is capped (`compact-pod`) and the board starts right under
+   it. This selector has to outweigh that cap, which is why it names the zone. */
+.arena-opp-cell .board-zone.compact-pod .bz-status-row {
+  flex-wrap: nowrap;
 }
 
 .arena-opp-cell .bz-status-row > .player-info-bar.is-bare .player-details {

@@ -80,3 +80,25 @@ Noto Sans JP and SC files are not bundled.
   Bundling Noto Sans JP and SC would add about 15 MB to the build and the desktop installer for fonts
   the systems that read those languages already have.
 - Guard: `src/system/webFonts.test.ts`
+
+### APR-6 · Every seat is drawn with the sleeve that player chose
+A card drawn face down carries the sleeve of the player who controls it, not the sleeve of
+whoever is looking: my own choice on my cards, and on another seat's cards the sleeve that
+player declared. A player declares one by sending the catalogue id of their sleeve in
+`userIdStr`, the one free string of XMage's `UserData`, which the server copies verbatim into
+the `PlayerView` every client already reads the avatar and the flag from (`nxs1;slv=nebula`,
+built and read by `appearanceToken.ts`). It rides with the server preferences, so it reaches
+the table on connecting, on sitting down and on changing sleeve mid-game, and the proxy keeps
+the avatar and the flag of the live connection on every such update instead of resetting them.
+A seat that declares nothing is drawn with the classic back, with no wait and no gap: that is
+every desktop client, every older build and every player who kept the default. So is a seat
+that declares a sleeve this client cannot draw, a `custom` image among them: a custom sleeve is
+an image only its owner holds, it is never sent anywhere, and it is never shown to anyone else.
+The library pile and the shuffle animation take the sleeve of the seat they belong to, by the
+same rule.
+
+- Why: the client already knew how to draw a sleeve per player and cut it off, so every
+  opponent's cards came out with the stock back (user request, 2026-11-23). The id travels
+  instead of the image because `UserData` is sent with every game view, for every player, and
+  because an image a player uploads cannot be shown to others without moderation nobody runs.
+- Guard: `src/appearance/appearanceToken.test.ts` · `src/board/CardSlot.sleeves.test.tsx`

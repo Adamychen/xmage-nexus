@@ -24,7 +24,7 @@ import SideboardScreen from './SideboardScreen'
 import GameMenu from './GameMenu'
 import PhaseLadder from './PhaseLadder'
 import ActionButton from './ActionButton'
-import GameDock, { PromptSlotProvider, useDockOffset } from './GameDock'
+import GameDock, { OrderSlot, PromptSlotProvider, useDockOffset } from './GameDock'
 import GameStrip from './GameStrip'
 import { useChangeFlag } from './useChangeFlag'
 import GameDrawer, { DrawerToggles, type DrawerTab } from './GameDrawer'
@@ -72,8 +72,6 @@ import { useTargetPick } from './useTargetPick'
 import './GameScreen.css'
 import './TournamentPanel.css'
 import { activeMechanicsCount } from './mechanicsState'
-import { usePriorityOrbs } from './usePriorityOrbs'
-import PriorityOrbLayer from './PriorityOrbLayer'
 
 /** El atajo global Space no debe disparar cuando el foco está en un control
  *  nativo (doble acción: el control + el pass). Cubre el caso en que el
@@ -139,6 +137,8 @@ export default function GameScreen() {
   const [promptSlot, setPromptSlot] = useState<HTMLElement | null>(null)
   const [dividerSlot, setDividerSlot] = useState<HTMLElement | null>(null)
   const [handPromptSlot, setHandPromptSlot] = useState<HTMLElement | null>(null)
+  const [orderSlot, setOrderSlot] = useState<HTMLElement | null>(null)
+  const [actionSlot, setActionSlot] = useState<HTMLElement | null>(null)
   const [busy, setBusy] = useState(false)
   const displayStack = useDisplayedStack(game, gameId)
   const stackCount = Object.keys(displayStack).length
@@ -172,8 +172,6 @@ export default function GameScreen() {
 
   const me = game?.players?.find((p) => p.controlled)
   const priorityPlayer = game?.players?.find((p) => p.hasPriority) ?? game?.players?.find((p) => p.isActive)
-  const priorityHolderId = game?.players?.find((p) => p.hasPriority)?.playerId ?? null
-  const { orbs: priorityOrbs, done: doneOrb } = usePriorityOrbs(gameId, priorityHolderId)
   const timerSecs = priorityPlayer?.priorityTimeLeftSecs ?? 0
   const isTimerTicking = !!priorityPlayer?.hasPriority
 
@@ -415,6 +413,13 @@ export default function GameScreen() {
       busy={busy}
     />
   )
+  // PRM-19: a mana payment or a target pick leaves the big button with nothing to do ("Loading…"),
+  // so the prompt's own action takes that place instead of opening a second box beside it.
+  const promptOwnsAction = feedback != null
+    && (feedback.mode === 'mana' || feedback.mode === 'combat' || feedback.method === 'GAME_TARGET')
+  const dockButton = promptOwnsAction
+    ? <div className="game-dock-action-slot" data-testid="game-dock-action-slot" ref={setActionSlot} />
+    : actionButton
   if (narrowScreen && isSpectator && !fullBoardOnNarrow) {
     return (
       <div className="game board-surface game--mobile-spectator" ref={gameRootRef} style={{ zoom: inverseZoom(settings.uiScale) }}>
@@ -424,7 +429,7 @@ export default function GameScreen() {
   }
 
   return (
-    <PromptSlotProvider value={promptSlot} hand={handPromptSlot} onHandSlot={setHandPromptSlot}>
+    <PromptSlotProvider value={promptSlot} hand={handPromptSlot} onHandSlot={setHandPromptSlot} order={orderSlot} actionSlot={actionSlot}>
       <ChromeActionsContext.Provider value={chromeActions}>
       <DividerSlotContext.Provider value={setDividerSlot}>
         <div
@@ -440,6 +445,11 @@ export default function GameScreen() {
               className="board-wrap"
               ref={boardWrapRef}
               data-playmat={playmatId}
+              style={{
+                // PRM-18: the order is centred on the board being played on, so the side panel of
+                // the main board mode (BRD-6) does not push it off to the right.
+                '--order-inset-right': spotlightOn ? `${settings.boardSpotlightPanel}%` : '0px',
+              } as React.CSSProperties}
             >
               {playmatId !== 'classic' && (
                 <div className="playmat-layer" data-playmat={playmatId} data-testid="playmat-layer" style={matStyle} aria-hidden="true" />
@@ -449,6 +459,8 @@ export default function GameScreen() {
               ) : (
                 <ArenaBoard {...boardProps} />
               )}
+              {/* PRM-18: the order being given is read here, across the middle of the board. */}
+              <OrderSlot onSlot={setOrderSlot} />
               <LowLifeVignette game={displayGame} />
               {settings.turnRecap && <TurnRecapStrip />}
               <FeedbackOverlay />
@@ -476,7 +488,7 @@ export default function GameScreen() {
               <GameDock
                 onPromptSlot={setPromptSlot}
                 rewind={(settings.boardRewind || rewind.replay) ? <RewindBar rewind={rewind} /> : null}
-                action={actionButton}
+                action={dockButton}
               />
             </div>
             <CombatArrowsOverlay
@@ -490,7 +502,6 @@ export default function GameScreen() {
             />
             <TournamentPanel />
           </div>
-          <PriorityOrbLayer orbs={priorityOrbs} onDone={doneOrb} />
           <FeedbackDialog />
           <UserRequestDialog />
           <RollbackDialog />

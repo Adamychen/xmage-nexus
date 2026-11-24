@@ -29,6 +29,15 @@ describe('SoundFxControls', () => {
     expect(isDisabled(container, 'volume-ui')).toBe(true)
   })
 
+  it('SET-14: the priority cue offers the four modes, each with its own label', () => {
+    const { container } = render(<SoundFxControls />)
+    const labels = [...container.querySelectorAll('[data-setting="priority-sound"] .settings-row-control button')]
+      .map((b) => b.textContent?.trim() ?? '')
+    expect(labels).toHaveLength(4)
+    expect(new Set(labels).size).toBe(4)
+    expect(labels.every((l) => l.length > 0)).toBe(true)
+  })
+
   it('SET-12: the music volume follows the music switch only', () => {
     setSetting('soundEnabled', true)
     setSetting('musicEnabled', false)

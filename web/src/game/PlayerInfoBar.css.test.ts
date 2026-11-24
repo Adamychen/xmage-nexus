@@ -33,7 +33,7 @@ describe("a player's counters", () => {
   it('BRD-54: the wave it sends out is a round halo, with no border to draw a rectangle', () => {
     const ring = block('.player-counter-badge .counter-change-ring, .player-badges .badge-speed .counter-change-ring')
     expect(ring, 'the ring has a rule').not.toBe('')
-    expect(ring).toMatch(/border-radius:\s*var\(--r-pill\)/)
+    expect(ring, 'the halo is a circle, by the pill token or the literal behind it').toMatch(/border-radius:\s*(999px|var\(--r-pill\))/)
     expect(ring).toMatch(/border:\s*0/)
     expect(ring).not.toMatch(/border:\s*\d+px solid/)
   })

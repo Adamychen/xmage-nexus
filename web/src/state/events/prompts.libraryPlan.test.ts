@@ -59,7 +59,7 @@ afterEach(() => {
 })
 
 describe('library plan runner', () => {
-  it('PRM-18: starting a plan answers the open surveil pick and hides it', () => {
+  it('PRM-20: starting a plan answers the open surveil pick and hides it', () => {
     const prompt = surveilPrompt(['a', 'b', 'c'])
     setState({ feedback: prompt })
     startLibraryPlan(prompt, { mode: 'surveil', top: ['a', 'c'], away: ['b'] })
@@ -69,7 +69,7 @@ describe('library plan runner', () => {
     expect(getState().libraryPrompt).toBe(prompt)
   })
 
-  it('PRM-18: the re-asked pick is answered with Done and stays hidden', () => {
+  it('PRM-20: the re-asked pick is answered with Done and stays hidden', () => {
     startLibraryPlan(surveilPrompt(['a', 'b', 'c']), { mode: 'surveil', top: ['a', 'c'], away: ['b'] })
     handleGameTarget('GAME_TARGET', surveilData(['a', 'b', 'c'], ['b']), 'g1', getState())
     expect(sendPlayerBoolean).toHaveBeenCalledWith(false, 'g1')
@@ -77,7 +77,7 @@ describe('library plan runner', () => {
     expect(getState().libraryPlan).not.toBeNull()
   })
 
-  it('PRM-18: a re-asked pick through the event handler never opens the dialog', () => {
+  it('PRM-20: a re-asked pick through the event handler never opens the dialog', () => {
     startLibraryPlan(surveilPrompt(['a', 'b', 'c']), { mode: 'surveil', top: ['a', 'c'], away: ['b'] })
     let opened = false
     const watch = () => { if (getState().feedback) opened = true }
@@ -92,7 +92,7 @@ describe('library plan runner', () => {
     expect(getState().feedback).toBeNull()
   })
 
-  it('PRM-18: a foreign prompt mid-chain is shown and ends the plan', () => {
+  it('PRM-20: a foreign prompt mid-chain is shown and ends the plan', () => {
     startLibraryPlan(surveilPrompt(['a', 'b', 'c']), { mode: 'surveil', top: ['a', 'c'], away: ['b'] })
     vi.clearAllMocks()
     handleGameTarget('GAME_TARGET', { message: 'Select target creature', targets: ['x'], min: 1, max: 1 }, 'g1', getState())
@@ -103,7 +103,7 @@ describe('library plan runner', () => {
     expect(getState().libraryPrompt).toBeNull()
   })
 
-  it('PRM-18: a plan never answers a prompt of another game', () => {
+  it('PRM-20: a plan never answers a prompt of another game', () => {
     startLibraryPlan(surveilPrompt(['a', 'b', 'c']), { mode: 'surveil', top: ['a', 'c'], away: ['b'] })
     vi.clearAllMocks()
     handleGameTarget('GAME_TARGET', surveilData(['a', 'b', 'c'], ['b']), 'g2', getState())
@@ -113,14 +113,14 @@ describe('library plan runner', () => {
     expect(getState().libraryPlan).toBeNull()
   })
 
-  it('PRM-18: a GAME_SELECT ends the plan', () => {
+  it('PRM-20: a GAME_SELECT ends the plan', () => {
     startLibraryPlan(surveilPrompt(['a', 'b', 'c']), { mode: 'surveil', top: ['a', 'c'], away: ['b'] })
     handleMessage({ type: 'event', method: 'GAME_SELECT', objectId: 'g1', data: { message: 'Play spells' } } as never)
     expect(getState().libraryPlan).toBeNull()
     expect(getState().libraryPrompt).toBeNull()
   })
 
-  it('PRM-18: a plan with no prompt for the idle time ends', () => {
+  it('PRM-20: a plan with no prompt for the idle time ends', () => {
     vi.useFakeTimers()
     startLibraryPlan(surveilPrompt(['a', 'b', 'c']), { mode: 'surveil', top: ['a', 'c'], away: ['b'] })
     vi.advanceTimersByTime(LIBRARY_PLAN_IDLE_MS - 1)
@@ -132,7 +132,7 @@ describe('library plan runner', () => {
     expect(getState().libraryPrompt).toBeNull()
   })
 
-  it('PRM-18: a settled plan ends right after its last answer', () => {
+  it('PRM-20: a settled plan ends right after its last answer', () => {
     vi.useFakeTimers()
     startLibraryPlan(surveilPrompt(['a', 'b', 'c']), { mode: 'surveil', top: ['a', 'c'], away: ['b'] })
     handleGameTarget('GAME_TARGET', surveilData(['a', 'b', 'c'], ['b']), 'g1', getState())
@@ -144,7 +144,7 @@ describe('library plan runner', () => {
     expect(getState().libraryPrompt).toBeNull()
   })
 
-  it('PRM-18: the graveyard order ask is answered by the plan before the auto-answer rules', () => {
+  it('PRM-20: the graveyard order ask is answered by the plan before the auto-answer rules', () => {
     setState({ settings: { ...getState().settings, autoAnswers: [{ id: 'auto-0', pattern: GRAVE_ASK.toLowerCase(), answer: false }] } })
     startLibraryPlan(surveilPrompt(['a', 'b', 'c']), { mode: 'surveil', top: ['a'], away: ['b', 'c'] })
     vi.clearAllMocks()
@@ -155,34 +155,34 @@ describe('library plan runner', () => {
     expect(getState().libraryPlan).not.toBeNull()
   })
 
-  it('PRM-18: ending the plan clears the plan and its prompt', () => {
+  it('PRM-20: ending the plan clears the plan and its prompt', () => {
     startLibraryPlan(surveilPrompt(['a', 'b', 'c']), { mode: 'surveil', top: ['a', 'c'], away: ['b'] })
     endLibraryPlan()
     expect(getState().libraryPlan).toBeNull()
     expect(getState().libraryPrompt).toBeNull()
   })
 
-  it('PRM-18: a disconnect ends a running plan', () => {
+  it('PRM-20: a disconnect ends a running plan', () => {
     startLibraryPlan(surveilPrompt(['a', 'b', 'c']), { mode: 'surveil', top: ['a', 'c'], away: ['b'] })
     handleMessage({ type: 'disconnected' } as never)
     expect(getState().libraryPlan).toBeNull()
     expect(getState().libraryPrompt).toBeNull()
   })
 
-  it('PRM-18: the start of another game ends a running plan', () => {
+  it('PRM-20: the start of another game ends a running plan', () => {
     startLibraryPlan(surveilPrompt(['a', 'b', 'c']), { mode: 'surveil', top: ['a', 'c'], away: ['b'] })
     handleMessage({ type: 'event', method: 'GAME_INIT', objectId: 'g2', data: {} } as never)
     expect(getState().libraryPlan).toBeNull()
     expect(getState().libraryPrompt).toBeNull()
   })
 
-  it('PRM-18: a START_GAME of another game ends a running plan', () => {
+  it('PRM-20: a START_GAME of another game ends a running plan', () => {
     startLibraryPlan(surveilPrompt(['a', 'b', 'c']), { mode: 'surveil', top: ['a', 'c'], away: ['b'] })
     handleMessage({ type: 'event', method: 'START_GAME', objectId: 'g2', data: {} } as never)
     expect(getState().libraryPlan).toBeNull()
   })
 
-  it('PRM-18: a GAME_INIT of the same game keeps the plan', () => {
+  it('PRM-20: a GAME_INIT of the same game keeps the plan', () => {
     startLibraryPlan(surveilPrompt(['a', 'b', 'c']), { mode: 'surveil', top: ['a', 'c'], away: ['b'] })
     handleMessage({ type: 'event', method: 'GAME_INIT', objectId: 'g1', data: {} } as never)
     expect(getState().libraryPlan).not.toBeNull()

@@ -35,7 +35,6 @@
    the end with air on both sides, so it is not read as one more card of the hand and nothing
    crowds it against what comes next in the row. */
 .hand-zone > .hand-zone-commander {
-  --hc-card-w: var(--card-w, 100px);
-  margin-left: calc(var(--hc-card-w) * 0.22);
-  margin-right: calc(var(--hc-card-w) * 0.3);
+  margin-left: calc(var(--card-w, var(--card-w-base)) * 0.22);
+  margin-right: calc(var(--card-w, var(--card-w-base)) * 0.3);
 }

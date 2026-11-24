@@ -36,36 +36,36 @@ function plan(arrangement: LibraryArrangement, cardIds: string[] = CARDS) {
 }
 
 describe('libraryPlan', () => {
-  it('PRM-18: the surveil pick answers each graveyard card, then Done', () => {
+  it('PRM-20: the surveil pick answers each graveyard card, then Done', () => {
     const p = plan({ mode: 'surveil', top: ['a'], away: ['b', 'c'] })
     expect(nextPlanAnswer(p, prompt('surveil-pick', { chosenTargets: [] }))?.answer).toEqual({ kind: 'uuid', value: 'b' })
     expect(nextPlanAnswer(p, prompt('surveil-pick', { chosenTargets: ['b'] }))?.answer).toEqual({ kind: 'uuid', value: 'c' })
     expect(nextPlanAnswer(p, prompt('surveil-pick', { chosenTargets: ['b', 'c'] }))?.answer).toEqual({ kind: 'boolean', value: false })
   })
 
-  it('PRM-18: the pick step reads chosenTargets, not a counter', () => {
+  it('PRM-20: the pick step reads chosenTargets, not a counter', () => {
     const p = plan({ mode: 'surveil', top: ['a'], away: ['b', 'c'] })
     expect(nextPlanAnswer(p, prompt('surveil-pick', { chosenTargets: ['c'] }))?.answer).toEqual({ kind: 'uuid', value: 'b' })
   })
 
-  it('PRM-18: a pick prompt holding a card the plan keeps on top is not the plan', () => {
+  it('PRM-20: a pick prompt holding a card the plan keeps on top is not the plan', () => {
     const p = plan({ mode: 'surveil', top: ['a'], away: ['b', 'c'] })
     expect(nextPlanAnswer(p, prompt('surveil-pick', { chosenTargets: ['a'] }))).toBeNull()
   })
 
-  it('PRM-18: the top order picks the bottom card first so the leftmost ends on top', () => {
+  it('PRM-20: the top order picks the bottom card first so the leftmost ends on top', () => {
     const p = plan({ mode: 'surveil', top: ['a', 'b', 'c'], away: [] })
     expect(nextPlanAnswer(p, prompt('top-order', { options: offered(['a', 'b', 'c']) }))?.answer).toEqual({ kind: 'uuid', value: 'c' })
     expect(nextPlanAnswer(p, prompt('top-order', { options: offered(['a', 'b']) }))?.answer).toEqual({ kind: 'uuid', value: 'b' })
     expect(nextPlanAnswer(p, prompt('top-order', { options: offered(['a', 'x']) }))).toBeNull()
   })
 
-  it('PRM-18: the scry bottom order picks left to right so the rightmost ends bottommost', () => {
+  it('PRM-20: the scry bottom order picks left to right so the rightmost ends bottommost', () => {
     const p = plan({ mode: 'scry', top: ['a'], away: ['b', 'c'] })
     expect(nextPlanAnswer(p, prompt('bottom-order', { options: offered(['b', 'c']) }))?.answer).toEqual({ kind: 'uuid', value: 'b' })
   })
 
-  it('PRM-18: the graveyard order is asked for and puts the rightmost card on top', () => {
+  it('PRM-20: the graveyard order is asked for and puts the rightmost card on top', () => {
     const p = plan({ mode: 'surveil', top: ['a'], away: ['b', 'c'] })
     expect(nextPlanAnswer(p, prompt('grave-order', { options: offered(['b', 'c']) }))?.answer).toEqual({ kind: 'uuid', value: 'b' })
     expect(nextPlanAnswer(p, prompt('grave-order-ask'))?.answer).toEqual({ kind: 'boolean', value: true })
@@ -73,7 +73,7 @@ describe('libraryPlan', () => {
     expect(nextPlanAnswer(single, prompt('grave-order-ask'))).toBeNull()
   })
 
-  it('PRM-18: a single card ends the chain at the pick step', () => {
+  it('PRM-20: a single card ends the chain at the pick step', () => {
     const one = { max: 1, chosenTargets: [], options: offered(['a']), cards: shown(['a']) }
     const kept = plan({ mode: 'surveil', top: ['a'], away: [] }, ['a'])
     const done = nextPlanAnswer(kept, prompt('surveil-pick', one))
@@ -85,7 +85,7 @@ describe('libraryPlan', () => {
     expect(pick?.plan.settled).toBe(true)
   })
 
-  it('PRM-18: a scry settles after its last bottom pick, a surveil at its last pick answer', () => {
+  it('PRM-20: a scry settles after its last bottom pick, a surveil at its last pick answer', () => {
     const scry = plan({ mode: 'scry', top: ['a'], away: ['b', 'c'] })
     expect(nextPlanAnswer(scry, prompt('bottom-order', { options: offered(['b', 'c']) }))?.plan.settled).toBe(true)
     expect(nextPlanAnswer(scry, prompt('scry-pick', { chosenTargets: ['b', 'c'] }))?.plan.settled).toBe(false)
@@ -101,7 +101,7 @@ describe('libraryPlan', () => {
     expect(nextPlanAnswer(kept, prompt('surveil-pick', { chosenTargets: ['c'] }))?.plan.settled).toBe(false)
   })
 
-  it('PRM-18: a pick over other cards is not the plan', () => {
+  it('PRM-20: a pick over other cards is not the plan', () => {
     const p = plan({ mode: 'surveil', top: ['a'], away: ['b', 'c'] })
     const later = { cards: shown(['x', 'y', 'z']), options: offered(['x', 'y', 'z']), chosenTargets: [] }
     expect(nextPlanAnswer(p, prompt('surveil-pick', later))).toBeNull()
@@ -111,26 +111,26 @@ describe('libraryPlan', () => {
     expect(nextPlanAnswer(p, prompt('surveil-pick', { cards: shown(['c', 'b', 'a']), chosenTargets: [] }))?.answer).toEqual({ kind: 'uuid', value: 'b' })
   })
 
-  it('PRM-18: an order over cards outside the plan is not the plan', () => {
+  it('PRM-20: an order over cards outside the plan is not the plan', () => {
     const p = plan({ mode: 'surveil', top: ['a', 'b'], away: ['c'] })
     expect(nextPlanAnswer(p, prompt('top-order', { options: offered(['a', 'b', 'x']) }))).toBeNull()
   })
 
-  it('PRM-18: the last top order pick settles the plan', () => {
+  it('PRM-20: the last top order pick settles the plan', () => {
     const p = plan({ mode: 'surveil', top: ['a', 'b', 'c'], away: [] })
     const first = nextPlanAnswer(p, prompt('top-order', { options: offered(['a', 'b', 'c']) }))
     expect(first?.plan.settled).toBe(false)
     expect(nextPlanAnswer(p, prompt('top-order', { options: offered(['a', 'b']) }))?.plan.settled).toBe(true)
   })
 
-  it('PRM-18: a prompt that is not this chain gets no answer', () => {
+  it('PRM-20: a prompt that is not this chain gets no answer', () => {
     const p = plan({ mode: 'surveil', top: ['a'], away: ['b', 'c'] })
     expect(nextPlanAnswer(p, prompt(undefined, { chosenTargets: [] }))).toBeNull()
     expect(nextPlanAnswer(p, prompt('scry-pick', { chosenTargets: [] }))).toBeNull()
     expect(nextPlanAnswer(p, prompt('surveil-pick', { gameId: 'game-2', chosenTargets: [] }))).toBeNull()
   })
 
-  it('PRM-18: answering never mutates the plan it was given', () => {
+  it('PRM-20: answering never mutates the plan it was given', () => {
     const p = plan({ mode: 'surveil', top: ['a', 'b'], away: [] })
     const snapshot = structuredClone(p)
     const next = nextPlanAnswer(p, prompt('top-order', { options: offered(['a', 'b']) }))

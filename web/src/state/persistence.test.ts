@@ -721,12 +721,12 @@ describe('persistence', () => {
   })
 
   describe('gameplay preset persistence', () => {
-    it('SET-14: a player who has configured no automation gets the simple preset', () => {
+    it('SET-15: a player who has configured no automation gets the simple preset', () => {
       expect(loadGameplayPreset()).toBe('simple')
       expect(DEFAULT_APPEARANCE.showHandCost).toBe(true)
     })
 
-    it('SET-14: automation set by hand is left alone, with no preset over it', () => {
+    it('SET-15: automation set by hand is left alone, with no preset over it', () => {
       mockStorage['mage-web-smart-stops'] = 'false'
       expect(loadGameplayPreset()).toBeNull()
     })

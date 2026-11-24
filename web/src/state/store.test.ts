@@ -110,7 +110,7 @@ describe('handleMessage', () => {
     handleMessage({ type: 'event', method: 'GAME_INIT', messageId: 1, objectId: 'g-stops', data: game })
     expect(getState().settings.phaseStops).toEqual(custom)
     expect('phaseStops' in getState()).toBe(false)
-    expect(updatePreferences).toHaveBeenCalledWith({ phases: custom, confirmEmptyManaPool: getState().settings.manaPayment.confirmEmptyPool })
+    expect(updatePreferences).toHaveBeenCalledWith({ phases: custom, confirmEmptyManaPool: getState().settings.manaPayment.confirmEmptyPool, appearance: expect.any(String) })
     setSetting('phaseStops', clonePhaseStops(DEFAULT_PHASE_STOPS))
     setSetting('smartStops', true)
   })
@@ -139,7 +139,7 @@ describe('handleMessage', () => {
     const next = togglePhaseStop(getState().settings.phaseStops, 'yourTurn', 'upkeep')
     setSetting('phaseStops', next)
     expect(loadPhaseStops().yourTurn.upkeep).toBe(false)
-    expect(updatePreferences).toHaveBeenCalledWith({ phases: next, confirmEmptyManaPool: getState().settings.manaPayment.confirmEmptyPool })
+    expect(updatePreferences).toHaveBeenCalledWith({ phases: next, confirmEmptyManaPool: getState().settings.manaPayment.confirmEmptyPool, appearance: expect.any(String) })
     setSetting('phaseStops', clonePhaseStops(DEFAULT_PHASE_STOPS))
     setSetting('smartStops', true)
   })
@@ -153,11 +153,11 @@ describe('handleMessage', () => {
     setSetting('phaseStops', stops)
     vi.mocked(updatePreferences).mockClear()
     setSetting('manaPayment', { ...getState().settings.manaPayment, confirmEmptyPool: false })
-    expect(updatePreferences).toHaveBeenCalledWith({ phases: stops, confirmEmptyManaPool: false })
+    expect(updatePreferences).toHaveBeenCalledWith({ phases: stops, confirmEmptyManaPool: false, appearance: expect.any(String) })
     vi.mocked(updatePreferences).mockClear()
     const more = togglePhaseStop(stops, 'yourTurn', 'endStep')
     setSetting('phaseStops', more)
-    expect(updatePreferences).toHaveBeenCalledWith({ phases: more, confirmEmptyManaPool: false })
+    expect(updatePreferences).toHaveBeenCalledWith({ phases: more, confirmEmptyManaPool: false, appearance: expect.any(String) })
     setSetting('manaPayment', { ...getState().settings.manaPayment, confirmEmptyPool: true })
     setSetting('phaseStops', clonePhaseStops(DEFAULT_PHASE_STOPS))
     setSetting('smartStops', true)
@@ -921,7 +921,7 @@ describe('phaseStops', () => {
     vi.clearAllMocks()
   })
 
-  it('SET-14: a player who has set nothing stops on no step by hand, and lets smart stops decide', () => {
+  it('SET-15: a player who has set nothing stops on no step by hand, and lets smart stops decide', () => {
     expect(getState().settings.gameplayPreset).toBe('simple')
     expect(getState().settings.smartStops).toBe(true)
     const stops = getState().settings.phaseStops
@@ -1676,6 +1676,7 @@ describe('applyGameplayPreset', () => {
     expect(updatePreferences).toHaveBeenCalledWith({
       phases: expect.objectContaining({ yourTurn: expect.objectContaining({ main1: true }) }),
       confirmEmptyManaPool: false,
+      appearance: expect.any(String),
     })
     expect(sendPlayerAction).toHaveBeenCalledWith('UNHOLD_PRIORITY', 'g-1')
     expect(loadGameplayPreset()).toBe('simple')

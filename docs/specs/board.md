@@ -412,8 +412,10 @@ reading another seat's applied size.
 ### BRD-26 · Bands that share a row share it by what they hold
 The bands of one row (creatures, marquee and commander in the creatures row; lands and other
 permanents in the other row) use one card size: the largest, up to
-the seat's cap, at which every band of the row fits its cards in at most three lines inside the
-row's width and height. Each band is then as wide as its cards need at that size, and the width
+the seat's cap, at which every band of the row fits its cards inside the row's width and height,
+going no deeper than three lines of classic cards would. How deep a band may go is that height, not
+a count of lines, so the compact tile (0.75 of its width against the printed card's 1.4) opens the
+lines that height holds: five of them, not three. Each band is then as wide as its cards need at that size, and the width
 left over is shared in proportion to that need, unless a band takes fewer lines than the row is
 tall for and grows its own cards into the room it leaves (BRD-50). So a band never shrinks to the floor or scrolls
 while a band beside it in the same row keeps room it does not use. Only when not even the floor
@@ -423,8 +425,12 @@ same seat may use different sizes.
 - Why: measured 2026-11-01 on a 4-seat Table board at 1000 px, the creatures band of the own seat
   was 38 px wide (the floor) for seven creatures, scrolling 294 px of content, while the marquee
   band beside it kept 122 px for one planeswalker: each band fitted itself inside a width that
-  flex had already handed out.
-- Guard: `src/board/layout/layoutEngine.test.ts` · `src/board/layout/solveBoardLayout.test.ts` · `e2e/board-resize.spec.ts` · `e2e/board-fill.spec.ts`
+  flex had already handed out. The depth was a count of lines, which is the same number for two
+  card shapes of very different height: measured on the showcase at 1024 px, the own lands band
+  drew its twelve piles in three lines of 52 px tiles, 108 px of a band 305 px tall, and could not
+  make them wider because a fourth line was not allowed (user report, 23-nov-2026). As a height it
+  is four lines of 74 px there, and the classic board is untouched.
+- Guard: `src/board/layout/layoutEngine.test.ts` · `src/board/layout/solveBoardLayout.test.ts` · `src/board/layout/solveRow.test.ts` · `e2e/board-resize.spec.ts` · `e2e/board-fill.spec.ts`
 
 ### BRD-27 · A band that scrolls takes no room for its scrollbar
 A band that cannot fit its cards even at the floor size scrolls sideways (wheel, drag, keyboard
@@ -613,16 +619,23 @@ its status row, instead of chips: each one half a card, smaller than the own pil
 with its name and count. The opponent's board is mirrored vertically, so the piles hang from the
 top edge with the caption under them, and the cards are turned round: the half that shows is the
 top of the card, upside down, as the rest of a mirrored board would be. The captions always use the
-short names ("Lib", "GY"): the same row also holds the chip, the hand and the commander (BRD-40),
-and three long captions push the piles onto a second line that eats the battlefield. A click opens the same
-viewer, and a pile glows in the same cases as the own (BRD-12). At phone width the columns keep
-their chips.
+short names ("Lib", "GY"), because the same row also holds the chip, the hand and the commander
+(BRD-40). That row never breaks into a second line: under it the battlefield starts straight away,
+so a second line has nowhere to go but over the cards. What gives way when the column is narrow is
+the chip, which spends height instead of width (its clock and its counters hang under the photo,
+BRD-32 and BRD-54) and truncates its name last of all; the piles stay at the right end of the row
+whatever it holds. A click opens the same viewer, and a pile glows in the same cases as the own
+(BRD-12). At phone width the columns keep their chips.
 
 - Why: the own board got its piles with captions (BRD-32); the user wanted the opponents to show
   theirs the same way, smaller, as long as they fit (2026-11-12, checked at 1920, 1366 and 390 px
   with three opponents). At 1366 a column with counters on the chip wrapped its status row and the
-  piles landed on the lands, hence the short names and no wrapping.
-- Guard: `src/board/BoardZone.arenaOwn.test.tsx`
+  piles landed on the lands, hence the short names and no wrapping. The column then forbade the
+  chip a second line, which was right while the counters stacked beside the photo and wrong as soon
+  as they moved under it (BRD-54, 23-nov-2026): the clock and the counters crowded one line, the
+  name came out as a letter and the piles fell onto the battlefield anyway. Reported on a
+  four-player Commander table (24-nov-2026): the cap belongs to the row, not to the chip.
+- Guard: `src/board/BoardZone.arenaOwn.test.tsx` · `e2e/arena-board.spec.ts`
 
 ### BRD-37 · The Arena layout shows the same turn order strip with and without the side panel
 The strip in the divider (or at the top of the board with the side
@@ -643,7 +656,19 @@ of their own (a spectator, whose pills do nothing, keeps it).
   user asked for one, without life (2026-11-13). A button on every column said what a click does
   but took the width the status row needed, while the pill said nothing at all, so the icon and the
   lit pair moved that offer to the strip, where there is room for it (2026-11-13).
-- Guard: `src/board/TurnOrderRing.test.tsx` · `src/board/ArenaBoard.test.tsx` · `e2e/seat-focus.spec.ts`
+
+The ring never clips a name. When the band gives the row less room than it needs it gives up, in
+order, its spacing and the size of its type (nothing is lost), and then the names of the seats that
+are not playing, which stay as their dot and their seat colour while the seat that is playing keeps
+its name whole. Which of those fits is measured against hidden rulers (`useRingFit`), never decided
+by a width.
+
+- Why: four seats with the 14-character names the server allows need more than the band has at
+  1366px, and the only thing that could shrink was the active seat's name, so the player's own name
+  read "Youxxxxxxxxx…" while the row spilled over the phase badges on its left. It is the same
+  promise the 1v1 walkway already makes, and for the same reason: the width a name needs is a
+  property of the font the platform resolves, not of the layout.
+- Guard: `src/board/TurnOrderRing.test.tsx` · `src/board/TurnOrderRing.css.test.ts` · `src/board/laneFit.test.ts` · `src/board/ArenaBoard.test.tsx` · `e2e/seat-focus.spec.ts`
 
 ### BRD-38 · Opponents' hands: tucked fan facing the player, full fan in the side panel mode
 An opponent's hidden hand is one pile of backs with its

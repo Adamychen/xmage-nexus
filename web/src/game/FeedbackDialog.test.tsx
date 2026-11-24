@@ -58,7 +58,7 @@ describe('FeedbackDialog (componente)', () => {
     })
   })
 
-  it('el diálogo de maná muestra el hint y los botones de reserva/pago', () => {
+  it('MNA-1: el pago de maná deja en el dock solo los botones, sin pista', () => {
     handleMessage({
       type: 'event',
       method: 'GAME_PLAY_MANA',
@@ -87,8 +87,9 @@ describe('FeedbackDialog (componente)', () => {
         },
       },
     } as never)
-    render(<FeedbackDialog />)
-    expect(screen.getByText(/Haz clic en tus fuentes de maná/)).toBeTruthy()
+    const { container } = render(<FeedbackDialog />)
+    expect(screen.queryByText(/Haz clic en tus fuentes de maná/), 'la pista se fue con PRM-18').toBeNull()
+    expect(container.querySelector('[data-testid="board-order"]')?.textContent, 'el coste es la orden').toContain('Pagar maná')
     expect(screen.getByTestId('mana-pay-R')).toBeTruthy()
     expect(screen.getByRole('button', { name: 'Acción especial' })).toBeTruthy()
   })
