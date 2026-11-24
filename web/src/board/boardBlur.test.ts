@@ -10,6 +10,7 @@ const ALLOWED: Record<string, string> = {
   'CardInspector.css': 'modal scrim behind the card inspector, chrome over the board',
   'FloatingCardPreview.css': 'floating card preview and its flip badge, controls that float over the board',
   'PileOverlay.css': 'modal scrim behind the pile dialog, chrome over the board',
+  'TurnOrderRing.css': 'turn order pill in the floating top strip, a control over the board edge, not battlefield content',
 }
 
 function cssFiles(dir: string): string[] {

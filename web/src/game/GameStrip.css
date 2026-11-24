@@ -15,9 +15,9 @@
   gap: var(--sp-1h);
   flex-shrink: 1;
   min-width: 0;
-  padding: 5px var(--sp-3);
+  padding: var(--sp-1) var(--sp-3);
   border-radius: var(--r-pill);
-  background: linear-gradient(180deg, rgb(var(--ink-2-rgb) / 0.72), rgb(var(--ink-1-rgb) / 0.92));
+  background: linear-gradient(180deg, rgb(var(--ink-2-rgb) / 0.72), rgb(var(--ink-rgb) / 0.92));
   border: 1px solid color-mix(in srgb, var(--gold-300) 28%, var(--line-2));
   box-shadow: inset 0 1px 0 var(--veil-2), 0 6px 18px rgb(var(--ink-rgb) / 0.48);
   backdrop-filter: blur(10px);
@@ -65,9 +65,9 @@
   align-items: center;
   gap: var(--sp-1);
   flex-shrink: 0;
-  padding: 3px var(--sp-1h);
+  padding: var(--sp-0h) var(--sp-1h);
   border-radius: var(--r-pill);
-  background: linear-gradient(180deg, rgb(var(--ink-2-rgb) / 0.72), rgb(var(--ink-1-rgb) / 0.92));
+  background: linear-gradient(180deg, rgb(var(--ink-2-rgb) / 0.72), rgb(var(--ink-rgb) / 0.92));
   border: 1px solid var(--line-2);
   box-shadow: inset 0 1px 0 var(--veil-2), 0 6px 18px rgb(var(--ink-rgb) / 0.48);
   backdrop-filter: blur(10px);

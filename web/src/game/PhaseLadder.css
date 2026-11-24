@@ -10,7 +10,7 @@
 }
 
 .phase-ladder-wrap.has-combat-docked {
-  padding-top: 46px;
+  padding-top: calc(var(--sp-6) + var(--sp-3h));
 }
 
 .phase-ladder {
@@ -263,7 +263,7 @@
   z-index: 2;
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: var(--sp-0h);
 }
 
 .phase-ladder-wrap:not(.has-combat-docked) .ladder-tooltip.is-above-flyout {
@@ -289,7 +289,7 @@
 .ladder-tooltip-turn {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--sp-1);
 }
 
 .ladder-tooltip-turn.is-on {
