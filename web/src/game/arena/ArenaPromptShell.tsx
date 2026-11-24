@@ -4,17 +4,32 @@ import { useTranslation } from '../../i18n'
 import './ArenaPromptShell.css'
 
 interface ArenaPromptShellProps {
-  title: string
-  instruction: string
+  title: ReactNode
+  instruction?: ReactNode
   aside?: ReactNode
   children: ReactNode
-  footer: ReactNode
+  footer?: ReactNode
   testId: string
+  backdropClassName?: string
+  dialogClassName?: string
+  onEscape?: () => void
+  trailing?: ReactNode
 }
 
 const PEEK_KEYS = new Set([' ', 'Enter'])
 
-export default function ArenaPromptShell({ title, instruction, aside, children, footer, testId }: ArenaPromptShellProps) {
+export default function ArenaPromptShell({
+  title,
+  instruction,
+  aside,
+  children,
+  footer,
+  testId,
+  backdropClassName = '',
+  dialogClassName = '',
+  onEscape,
+  trailing,
+}: ArenaPromptShellProps) {
   const { t } = useTranslation()
   const titleId = useId()
   const [peek, setPeek] = useState(false)
@@ -33,18 +48,20 @@ export default function ArenaPromptShell({ title, instruction, aside, children, 
 
   return (
     <Modal
-      backdropClassName={`arena-prompt board-surface${peek ? ' is-peek' : ''}`}
-      dialogClassName="arena-prompt-dialog"
+      backdropClassName={`arena-prompt board-surface${backdropClassName ? ` ${backdropClassName}` : ''}${peek ? ' is-peek' : ''}`}
+      dialogClassName={`arena-prompt-dialog${dialogClassName ? ` ${dialogClassName}` : ''}`}
       labelledBy={titleId}
       testId={testId}
+      onEscape={onEscape}
+      trailing={trailing}
     >
       <header className="arena-prompt-head">
         <h2 id={titleId}>{title}</h2>
-        <p>{instruction}</p>
+        {instruction != null && <p>{instruction}</p>}
       </header>
       <div className="arena-prompt-stage">
         {children}
-        <div className="arena-prompt-footer">{footer}</div>
+        {footer != null && <div className="arena-prompt-footer">{footer}</div>}
         {aside != null && <aside className="arena-prompt-aside">{aside}</aside>}
       </div>
       <button

@@ -70,6 +70,10 @@
   animation: arena-fan-lift calc(0.14s / var(--fx-speed, 1)) var(--ease-out) both;
 }
 
+.arena-lift.is-settled .arena-fan-land {
+  animation: none;
+}
+
 .arena-lift .arena-fan-card {
   scale: 1.12;
   filter: none;

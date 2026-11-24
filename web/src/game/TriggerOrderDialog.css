@@ -2,6 +2,13 @@
   pointer-events: none;
 }
 
+.arena-triggers .arena-fan,
+.arena-triggers .arena-fan.is-hot {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
 .arena-triggers .arena-triggers-zone {
   grid-column: 1 / 3;
   grid-row: 1;

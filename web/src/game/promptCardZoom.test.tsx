@@ -63,75 +63,33 @@ beforeEach(() => {
 
 afterEach(cleanup)
 
-describe('PRM-15: card grid (scry, surveil, search, look at the top cards, pick from a list)', () => {
-  it('PRM-15: pointing at a card with a mouse previews it without choosing it, and a click still chooses it', async () => {
+describe('PRM-15: Arena card-selection fan (search, look at cards, pick from a list)', () => {
+  it('PRM-15: hovering opens no redundant floating preview (the fan lift enlarges the card) and clicking still chooses it', async () => {
     const { container } = renderGrid()
     const bears = item(container, 'c-1')
     pointer(bears, 'pointerover', 'mouse')
-    expect(bears.classList.contains('is-previewing')).toBe(true)
-    expect(document.querySelector('.floating-card-preview')).not.toBeNull()
+    expect(document.querySelector('.floating-card-preview')).toBeNull()
     expect(sendPlayerUUID).not.toHaveBeenCalled()
     fireEvent.click(bears.querySelector('.card-grid-cell') as Element)
     await vi.waitFor(() => expect(sendPlayerUUID).toHaveBeenCalledWith('c-1', 'g-1'))
   })
 
-  it('PRM-15: a tap on the card chooses it and does not open a preview', () => {
+  it('PRM-15: right clicking a card opens the card inspector without choosing it', () => {
     const { container } = renderGrid()
     const bears = item(container, 'c-1')
-    pointer(bears.querySelector('.card-grid-cell') as Element, 'pointerover', 'touch')
-    expect(bears.classList.contains('is-previewing')).toBe(false)
-  })
-
-  it('PRM-15: the zoom button previews the card on a touch, keeps it until the next touch and never chooses it', () => {
-    const { container } = renderGrid()
-    const bears = item(container, 'c-1')
-    const zoom = bears.querySelector('.prompt-card-zoom') as HTMLElement
-    expect(zoom.getAttribute('aria-label')).toContain('Grizzly Bears')
-    pointer(zoom, 'pointerdown', 'touch')
-    fireEvent.click(zoom)
-    pointer(bears, 'pointerout', 'touch')
-    expect(bears.classList.contains('is-previewing')).toBe(true)
-    expect(getState().inspectedCard).toBeNull()
-    expect(sendPlayerUUID).not.toHaveBeenCalled()
-    pointer(container.querySelector('.card-grid-filter') as Element, 'pointerdown', 'touch')
-    expect(bears.classList.contains('is-previewing')).toBe(false)
-  })
-
-  it('PRM-15: a click, Enter or Space on the zoom button opens the card inspector without choosing the card', () => {
-    const { container } = renderGrid()
-    const zoom = item(container, 'c-1').querySelector('.prompt-card-zoom') as HTMLElement
-    pointer(zoom, 'pointerdown', 'mouse')
-    fireEvent.click(zoom)
-    expect((getState().inspectedCard as { name?: string } | null)?.name).toBe('Grizzly Bears')
-    setState({ inspectedCard: null })
-    // A button activated from the keyboard sends a click with no pointer press before it.
-    fireEvent.click(zoom)
+    fireEvent.contextMenu(bears)
     expect((getState().inspectedCard as { name?: string } | null)?.name).toBe('Grizzly Bears')
     expect(sendPlayerUUID).not.toHaveBeenCalled()
   })
 
-  it('PRM-15: keyboard focus on a card previews it and moving focus away hides it', () => {
-    const { container } = renderGrid()
-    const bears = item(container, 'c-1')
-    const cell = bears.querySelector('.card-grid-cell') as HTMLButtonElement
-    act(() => { cell.focus() })
-    expect(bears.classList.contains('is-previewing')).toBe(true)
-    // Moving to the card's own zoom button keeps the same preview.
-    act(() => { (bears.querySelector('.prompt-card-zoom') as HTMLElement).focus() })
-    expect(bears.classList.contains('is-previewing')).toBe(true)
-    act(() => { (container.querySelector('.card-grid-filter') as HTMLElement).focus() })
-    expect(bears.classList.contains('is-previewing')).toBe(false)
-  })
-
-  it('PRM-15: a card the prompt does not accept can still be looked at', () => {
+  it('PRM-15: a card the prompt does not accept can still be inspected with a right click', () => {
     const { container } = renderGrid()
     fireEvent.click(container.querySelector('.card-grid-scope-toggle') as Element)
     const bolt = item(container, 'c-2')
     expect((bolt.querySelector('.card-grid-cell') as HTMLButtonElement).disabled).toBe(true)
-    const zoom = bolt.querySelector('.prompt-card-zoom') as HTMLButtonElement
-    expect(zoom.disabled).toBe(false)
-    pointer(zoom, 'pointerdown', 'touch')
-    expect(bolt.classList.contains('is-previewing')).toBe(true)
+    fireEvent.contextMenu(bolt)
+    expect((getState().inspectedCard as { name?: string } | null)?.name).toBe('Lightning Bolt')
+    expect(sendPlayerUUID).not.toHaveBeenCalled()
   })
 })
 

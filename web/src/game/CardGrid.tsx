@@ -1,18 +1,20 @@
-import { useState, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Chip from '../ui/Chip'
 import ChipButton from '../ui/ChipButton'
 import CloseButton from '../ui/CloseButton'
 import EmptyState from '../ui/EmptyState'
 import CardSlot from '../board/CardSlot'
 import PeekHint from './PeekHint'
-import Icon, { type IconName } from '../ui/Icon'
-import DialogShell from '../ui/DialogShell'
+import Icon from '../ui/Icon'
+import Button from '../ui/Button'
+import ArenaFan from './arena/ArenaFan'
+import ArenaPromptShell from './arena/ArenaPromptShell'
+import type { CardView } from '../net/types'
 import { stripTargetProgress, targetProgressLabel, type FeedbackPrompt } from './feedback'
 import { useTranslation, dynamicT } from '../i18n'
 import { localizeServerMessage } from './serverMessageTranslation'
-import { PromptCardZoomable, usePromptCardPreview } from './promptCardPreview'
+import { setState } from '../state/store'
 import './CardGrid.css'
-import Button from '../ui/Button'
 
 interface CardGridProps {
   prompt: FeedbackPrompt
@@ -22,22 +24,32 @@ interface CardGridProps {
   busy: boolean
 }
 
+const DEAL_MS = 900
+
+function noop() {}
+
 export default function CardGrid({ prompt, selected, setSelected, send, busy }: CardGridProps) {
   const { t } = useTranslation()
   const [filter, setFilter] = useState('')
   const [showAll, setShowAll] = useState(false)
-  const cardPreview = usePromptCardPreview()
+  const [dealing, setDealing] = useState(true)
   const cards = prompt.cards ?? []
   const serverDriven = prompt.method === 'GAME_TARGET'
   const isMulti = !serverDriven && prompt.max > 1
   const chosen = serverDriven ? (prompt.chosenTargets ?? []) : selected
-  const selectable = new Set(prompt.options.map((option) => option.id))
+  const chosenSet = useMemo(() => new Set(chosen), [chosen])
+  const selectable = useMemo(() => new Set(prompt.options.map((option) => option.id)), [prompt.options])
 
-  // Pre-filtro por la petición del servidor: en GAME_TARGET las cartas legales
-  // llegan en options.possibleTargets (el filtro real del objetivo, p. ej.
-  // "artifact card"); el resto de cardsView1 son candidatas no elegibles. Las
-  // ya elegidas se mantienen visibles para poder deshacer la elección.
-  const validCards = cards.filter((card) => selectable.has(card.id) || chosen.includes(card.id))
+  useEffect(() => {
+    const timer = setTimeout(() => setDealing(false), DEAL_MS)
+    return () => clearTimeout(timer)
+  }, [])
+
+  // Pre-filter by the server's legal candidates (PRM-5); keep already chosen cards visible.
+  const validCards = useMemo(
+    () => cards.filter((card) => selectable.has(card.id) || chosenSet.has(card.id)),
+    [cards, selectable, chosenSet],
+  )
   const hiddenCount = cards.length - validCards.length
   const scoped = selectable.size > 0 && hiddenCount > 0 && !showAll ? validCards : cards
 
@@ -59,7 +71,7 @@ export default function CardGrid({ prompt, selected, setSelected, send, busy }: 
         ? current.filter((id) => id !== cardId)
         : current.length < prompt.max ? [...current, cardId] : current)
     } else {
-      void send(() => sendSingle(prompt, cardId), t('errors','send_failed_choice'))
+      void send(() => sendSingle(prompt, cardId), t('errors', 'send_failed_choice'))
     }
   }
 
@@ -72,7 +84,7 @@ export default function CardGrid({ prompt, selected, setSelected, send, busy }: 
         if (!result.ok) break
       }
       return result
-    }, t('errors','send_failed_choice'))
+    }, t('errors', 'send_failed_choice'))
   }
 
   const progressText = serverDriven && prompt.progress ? targetProgressLabel(prompt.progress, dynamicT(t)) : null
@@ -83,108 +95,142 @@ export default function CardGrid({ prompt, selected, setSelected, send, busy }: 
     : isDiscard
       ? t('game', 'choose_discard')
       : (prompt.sourceName ?? (prompt.method === 'GAME_TARGET' ? t('game', 'choose_target') : t('game', 'choose_cards')))
-  const kickerIcon: IconName = prompt.method === 'GAME_TARGET' ? (isDiscard ? 'trash' : 'target') : 'layers'
+
+  const renderCard = (cardView: CardView) => {
+    const id = cardView.id as string
+    const card = filtered.find((c) => c.id === id) ?? (cardView as unknown as NonNullable<FeedbackPrompt['cards']>[number])
+    const isChosen = chosenSet.has(id)
+    const isDisabled = busy || (serverDriven && selectable.size > 0 && !selectable.has(id) && !isChosen)
+    const label = card.displayName ?? card.name
+    return (
+      <div
+        className="card-grid-item"
+        onContextMenu={(e) => {
+          e.preventDefault()
+          setState({ inspectedCard: card as never })
+        }}
+      >
+        <button
+          type="button"
+          className={`card-grid-cell${isChosen ? ' selected' : ''}`}
+          disabled={isDisabled}
+          aria-pressed={serverDriven || isMulti ? isChosen : undefined}
+          onClick={() => toggle(id)}
+          title={`${label}${card.power && card.toughness ? ` (${card.power}/${card.toughness})` : ''}`}
+        >
+          <CardSlot card={card as never} cardId={id} isChosen={isChosen} />
+          {isChosen && (
+            <span className="card-grid-chosen-mark" aria-hidden="true">
+              <Icon name="check" size={13} />
+            </span>
+          )}
+          <span className="card-grid-sr-name">{label}</span>
+        </button>
+      </div>
+    )
+  }
 
   return (
-    <DialogShell
-      labelledBy="feedback-title"
-      titleId="feedback-title"
-      size="lg"
-      legacyBackdropClass="feedback-backdrop"
-      legacyPanelClass="feedback-dialog card-grid-dialog"
-      onEscape={prompt.cancelable && !busy ? () => void send(() => sendSingle(prompt, ''), t('errors','send_failed')) : undefined}
-      trailing={<><PeekHint />{cardPreview.preview}</>}
-      kickerIcon={kickerIcon}
-      kickerLabel={prompt.method === 'GAME_TARGET' ? t('dialogs','cardgrid_select_targets') : t('dialogs','cardgrid_select_cards')}
-      title={<>{cardGridTitle} <Chip tone="brand" size="md">
-        {filtered.length === cards.length
-          ? t('dialogs','cardgrid_count', { count: cards.length })
-          : `${filtered.length} / ${cards.length}`}
-      </Chip></>}
-      message={message ? localizeServerMessage(message, dynamicT(t)) : undefined}
-      search={(
-        <div className="card-grid-search">
-          <div className="card-grid-search-wrap">
-            <span className="card-grid-search-icon"><Icon name="search" size={14} /></span>
-            <input
-              className="card-grid-filter"
-              type="text"
-              aria-label={t('dialogs','cardgrid_search_placeholder')}
-              placeholder={t('dialogs','cardgrid_search_placeholder')}
-              value={filter}
-              onChange={(e) => setFilter(e.target.value)}
-              autoFocus
-            />
-            {filter && (
-              <CloseButton variant="plain" size="sm" className="card-grid-clear-btn" label={t('common','clear')} onClick={() => setFilter('')} />
+    <div className="arena-card-grid">
+      <ArenaPromptShell
+        testId="card-grid-prompt"
+        backdropClassName="feedback-backdrop"
+        dialogClassName="feedback-dialog card-grid-dialog"
+        onEscape={prompt.cancelable && !busy ? () => void send(() => sendSingle(prompt, ''), t('errors', 'send_failed')) : undefined}
+        trailing={<PeekHint />}
+        title={(
+          <span className="arena-card-grid-title">
+            <span>{cardGridTitle}</span>
+            <Chip tone="brand" size="md">
+              {filtered.length === cards.length
+                ? t('dialogs', 'cardgrid_count', { count: cards.length })
+                : `${filtered.length} / ${cards.length}`}
+            </Chip>
+          </span>
+        )}
+        instruction={message ? localizeServerMessage(message, dynamicT(t)) : undefined}
+        footer={(
+          <footer className="card-grid-actions">
+            {progressText && (
+              <span className="card-grid-progress" data-testid="card-grid-progress" role="status" aria-live="polite">
+                {progressText}
+              </span>
+            )}
+            {isMulti && (
+              <Button
+                className="arena-card-grid-done"
+                disabled={busy || selected.length < Math.max(prompt.min, 1)}
+                onClick={confirmMulti}
+              >
+                {t('dialogs', 'cardgrid_confirm', { selected: selected.length, max: prompt.max })}
+              </Button>
+            )}
+            {prompt.required === false && (
+              <Button
+                className="arena-card-grid-done"
+                disabled={busy}
+                onClick={() => {
+                  void send(() => sendSingle(prompt, ''), t('errors', 'send_failed'))
+                }}
+              >
+                {serverDriven && chosen.length > 0
+                  ? t('dialogs', 'cardgrid_done', { count: chosen.length })
+                  : prompt.cancelable ? t('game', 'targeting_cancel') : t('dialogs', 'cardgrid_finish')}
+              </Button>
+            )}
+          </footer>
+        )}
+      >
+        <section className="arena-prompt-zone arena-card-grid-zone">
+          <div className="card-grid-search">
+            <div className="card-grid-search-wrap">
+              <span className="card-grid-search-icon"><Icon name="search" size={14} /></span>
+              <input
+                className="card-grid-filter"
+                type="text"
+                aria-label={t('dialogs', 'cardgrid_search_placeholder')}
+                placeholder={t('dialogs', 'cardgrid_search_placeholder')}
+                value={filter}
+                onChange={(e) => setFilter(e.target.value)}
+                autoFocus
+              />
+              {filter && (
+                <CloseButton variant="plain" size="sm" className="card-grid-clear-btn" label={t('common', 'clear')} onClick={() => setFilter('')} />
+              )}
+            </div>
+            {selectable.size > 0 && hiddenCount > 0 && (
+              <ChipButton
+                size="sm"
+                active={!showAll}
+                icon={showAll ? 'eye' : 'filter'}
+                className="card-grid-scope-toggle"
+                onClick={() => setShowAll((value) => !value)}
+              >
+                {showAll
+                  ? t('dialogs', 'cardgrid_only_valid', { count: validCards.length })
+                  : t('dialogs', 'cardgrid_show_all', { count: cards.length })}
+              </ChipButton>
             )}
           </div>
-          {selectable.size > 0 && hiddenCount > 0 && (
-            <ChipButton
-              size="sm"
-              active={!showAll}
-              icon={showAll ? 'eye' : 'filter'}
-              className="card-grid-scope-toggle"
-              onClick={() => setShowAll((value) => !value)}
-            >
-              {showAll
-                ? t('dialogs','cardgrid_only_valid', { count: validCards.length })
-                : t('dialogs','cardgrid_show_all', { count: cards.length })}
-            </ChipButton>
-          )}
-        </div>
-      )}
-    >
-        <div className="card-grid-scroll-area">
-          <div className="card-grid">
-            {filtered.map((card) => (
-              <PromptCardZoomable key={card.id} preview={cardPreview} previewKey={card.id} card={card as never} className="card-grid-item">
-                <button type="button"
-                  className={`card-grid-cell ${chosen.includes(card.id) ? 'selected' : ''}`}
-                  disabled={busy || (serverDriven && selectable.size > 0 && !selectable.has(card.id) && !chosen.includes(card.id))}
-                  aria-pressed={serverDriven || isMulti ? chosen.includes(card.id) : undefined}
-                  onClick={() => toggle(card.id)}
-                  title={`${card.displayName ?? card.name}${card.power && card.toughness ? ` (${card.power}/${card.toughness})` : ''}`}
-                >
-                  <CardSlot
-                    card={card as never}
-                    cardId={card.id}
-                    isChosen={chosen.includes(card.id)}
-                  />
-                  <span className="card-grid-label">{card.displayName ?? card.name}</span>
-                </button>
-              </PromptCardZoomable>
-            ))}
-          </div>
 
-          {filtered.length === 0 && (
-            <EmptyState icon="search" iconSize={12}>{t('dialogs','cardgrid_empty', { filter })}</EmptyState>
+          {filtered.length > 0 ? (
+            <div className="card-grid">
+              <ArenaFan
+                zoneId="card-grid"
+                cards={filtered as unknown as CardView[]}
+                gapIndex={null}
+                dealing={dealing}
+                onCardPointerDown={noop}
+                renderCard={renderCard}
+                laneRef={noop}
+              />
+            </div>
+          ) : (
+            <EmptyState icon="search" iconSize={12}>{t('dialogs', 'cardgrid_empty', { filter })}</EmptyState>
           )}
-        </div>
-
-        <footer className="card-grid-actions">
-          {progressText && (
-            <span className="card-grid-progress" data-testid="card-grid-progress" role="status" aria-live="polite">{progressText}</span>
-          )}
-          {isMulti && (
-            <Button variant="primary"
-              disabled={busy || selected.length < Math.max(prompt.min, 1)}
-              onClick={confirmMulti}
-            >
-              {t('dialogs','cardgrid_confirm', { selected: selected.length, max: prompt.max })}
-            </Button>
-          )}
-          {prompt.required === false && (
-            <Button disabled={busy} onClick={() => {
-              void send(() => sendSingle(prompt, ''), t('errors','send_failed'))
-            }}>
-              {serverDriven && chosen.length > 0
-                ? t('dialogs','cardgrid_done', { count: chosen.length })
-                : prompt.cancelable ? t('game', 'targeting_cancel') : t('dialogs','cardgrid_finish')}
-            </Button>
-          )}
-        </footer>
-    </DialogShell>
+        </section>
+      </ArenaPromptShell>
+    </div>
   )
 }
 

@@ -246,4 +246,27 @@ describe('ArenaFan', () => {
     fireEvent.keyDown(thumb, { key: 'Home' })
     expect(Number(thumb.getAttribute('aria-valuenow'))).toBe(0)
   })
+
+  it('refreshes the lifted clone immediately when the hovered card re-renders (e.g. selected on click)', () => {
+    const renderCustom = (selected: boolean) => (c: CardView) => (
+      <button type="button" className={selected && c.id === 'c1' ? 'is-picked' : ''}>{c.name}</button>
+    )
+    const { container, rerender } = renderFan({ renderCard: renderCustom(false) })
+    const first = container.querySelector('[data-arena-card="c1"]')!
+    fireEvent.pointerOver(first)
+    expect(container.querySelector('.arena-lift .is-picked')).toBeNull()
+
+    rerender(
+      <ArenaFan
+        zoneId="top"
+        cards={CARDS}
+        gapIndex={null}
+        dealing={false}
+        onCardPointerDown={() => {}}
+        renderCard={renderCustom(true)}
+        laneRef={() => {}}
+      />,
+    )
+    expect(container.querySelector('.arena-lift .is-picked')).not.toBeNull()
+  })
 })

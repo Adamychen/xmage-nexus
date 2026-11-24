@@ -47,6 +47,7 @@ interface ArenaFanProps {
   onUnderCardPointerDown?: (e: PointerEvent, id: string) => void
   onCardHover?: (id: string) => void
   onCardContextMenu?: (e: MouseEvent, id: string) => void
+  renderCard?: (card: CardView, order: number) => ReactNode
   renderOverlay?: (card: CardView, order: number) => ReactNode
   laneRef: (el: HTMLDivElement | null) => void
 }
@@ -111,12 +112,13 @@ interface FanCardProps {
   angle: number
   zIndex: number
   dealDelay: number | null
+  customCard?: ReactNode
   overlay?: ReactNode
   onPointerDown: (e: PointerEvent, id: string) => void
   onContextMenu?: (e: MouseEvent, id: string) => void
 }
 
-function FanCard({ zoneId, side, under, piled, offFan, card, angle, zIndex, dealDelay, overlay, onPointerDown, onContextMenu }: FanCardProps) {
+function FanCard({ zoneId, side, under, piled, offFan, card, angle, zIndex, dealDelay, customCard, overlay, onPointerDown, onContextMenu }: FanCardProps) {
   const [version] = useState(() => ++versionSeq)
   const id = card.id as string
   const className = [
@@ -139,7 +141,7 @@ function FanCard({ zoneId, side, under, piled, offFan, card, angle, zIndex, deal
           onPointerDown={(e) => onPointerDown(e, id)}
           onContextMenu={onContextMenu ? (e) => onContextMenu(e, id) : undefined}
         >
-          <CardSlot card={card} cardId={`arena:${zoneId}:${id}:${version}`} />
+          {customCard ?? <CardSlot card={card} cardId={`arena:${zoneId}:${id}:${version}`} />}
           {overlay}
         </div>
       </div>
@@ -242,6 +244,7 @@ export default function ArenaFan({
   onUnderCardPointerDown,
   onCardHover,
   onCardContextMenu,
+  renderCard,
   renderOverlay,
   laneRef,
 }: ArenaFanProps) {
@@ -327,9 +330,35 @@ export default function ArenaFan({
     return () => root.removeEventListener('arena-fan-scroll', onEdgeScroll)
   }, [scrollable, totalSlots, visible])
 
+  const makeLiftClone = useCallback((slot: HTMLElement, animate: boolean) => {
+    const clone = slot.cloneNode(true) as HTMLElement
+    for (const el of [clone, ...Array.from(clone.querySelectorAll<HTMLElement>('*'))]) {
+      el.removeAttribute('data-arena-card')
+      el.removeAttribute('data-card-id')
+      el.removeAttribute('data-card-name')
+      el.removeAttribute('data-testid')
+      el.removeAttribute('id')
+    }
+    clone.classList.remove('is-lifted')
+    clone.classList.add('arena-lift')
+    if (!animate) clone.classList.add('is-settled')
+    clone.setAttribute('aria-hidden', 'true')
+    clone.style.zIndex = '9999'
+    return clone
+  }, [])
+
   const idsKey = [...under, ...cards].map((c) => c.id as string).join('|')
   useLayoutEffect(() => clearLift, [clearLift])
   useLayoutEffect(() => clearLift(), [idsKey, gapIndex, underGapIndex, currentScroll, clearLift])
+
+  // Keep the lifted visual clone in sync when a hovered card re-renders (e.g. selected glow on click).
+  useLayoutEffect(() => {
+    const lift = liftRef.current
+    if (!lift || !lift.slot.isConnected) return
+    const next = makeLiftClone(lift.slot, false)
+    lift.clone.replaceWith(next)
+    lift.clone = next
+  })
 
   const onPointerOver = (e: PointerEvent<HTMLDivElement>) => {
     const slot = (e.target as HTMLElement).closest<HTMLElement>('.arena-fan-slot[data-arena-card]')
@@ -341,17 +370,7 @@ export default function ArenaFan({
     const hoveredId = slot.getAttribute('data-arena-card')
     if (hoveredId) onCardHover?.(hoveredId)
     clearLift()
-    const clone = slot.cloneNode(true) as HTMLElement
-    for (const el of [clone, ...Array.from(clone.querySelectorAll<HTMLElement>('*'))]) {
-      el.removeAttribute('data-arena-card')
-      el.removeAttribute('data-card-id')
-      el.removeAttribute('data-card-name')
-      el.removeAttribute('data-testid')
-      el.removeAttribute('id')
-    }
-    clone.classList.add('arena-lift')
-    clone.setAttribute('aria-hidden', 'true')
-    clone.style.zIndex = '9999'
+    const clone = makeLiftClone(slot, true)
     slot.parentElement?.appendChild(clone)
     slot.classList.add('is-lifted')
     liftRef.current = { slot, clone }
@@ -461,6 +480,7 @@ export default function ArenaFan({
             angle={angle}
             zIndex={zFor(slotIndex, overZBase + order)}
             dealDelay={dealing ? (under.length + order) * DEAL_STAGGER_MS : null}
+            customCard={renderCard?.(card, order)}
             overlay={renderOverlay?.(card, order)}
             onPointerDown={(e, id) => handleCardPointerDown(e, id, piled, slotIndex, onCardPointerDown)}
             onContextMenu={onCardContextMenu}

@@ -1,199 +1,236 @@
+.arena-card-grid-title {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+}
 
+.arena-card-grid .arena-card-grid-zone {
+  grid-column: 1 / -1;
+  grid-row: 1;
+  justify-self: center;
+  width: min(1200px, 100%);
+  gap: var(--sp-2h);
+}
+
+.arena-card-grid .arena-prompt-footer {
+  grid-column: 1 / -1;
+  grid-row: 2;
+}
+
+.arena-card-grid .arena-fan {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.arena-card-grid .arena-fan-card {
+  cursor: pointer;
+}
 
 .card-grid-search {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+  width: min(560px, 100%);
+  align-self: center;
 }
 
 .card-grid-search-wrap {
   position: relative;
   display: flex;
   align-items: center;
-  width: 100%;
-  margin-top: var(--sp-2);
-}
-
-.card-grid-scope-toggle {
-  margin-top: var(--sp-2);
+  flex: 1 1 260px;
 }
 
 .card-grid-search-icon {
   position: absolute;
   left: 12px;
   font-size: var(--fs-md);
-  color: var(--text-dim, var(--fg-2));
+  color: var(--fg-2);
   pointer-events: none;
 }
 
 .card-grid-filter {
   width: 100%;
-  padding: var(--sp-2h) 36px var(--sp-2h) 34px;
-  border: 1px solid var(--border, var(--veil-3));
-  border-radius: var(--r-base);
-  background: var(--shade-1);
-  color: var(--text, var(--fg-1));
+  padding: var(--sp-2) 36px var(--sp-2) 34px;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-pill);
+  background: rgb(var(--ink-rgb) / 0.65);
+  color: var(--fg-hi);
   font-size: var(--fs-sm);
   outline: none;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition: border-color 140ms ease, box-shadow 140ms ease;
 }
 
 .card-grid-filter:focus {
-  border-color: var(--accent, var(--brand-fg));
-  box-shadow: 0 0 0 2px rgb(var(--brand-rgb) / 0.2);
+  border-color: var(--brand-fg);
+  box-shadow: var(--focus-ring);
 }
 
-.card-grid-clear-btn { position: absolute; right: 6px; }
-
-.card-grid-dialog {
-  display: flex;
-  flex-direction: column;
-}
-
-.card-grid-dialog .card-grid-actions {
-  flex-shrink: 0;
-}
-
-.card-grid-scroll-area {
-  flex: 1 1 auto;
-  min-height: 140px;
-  max-height: 54vh;
-  overflow-y: auto;
-  overflow-x: hidden;
-  margin-top: var(--sp-3h);
-  padding-right: var(--sp-1);
-}
-
-.card-grid-scroll-area::-webkit-scrollbar {
-  width: 7px;
-}
-
-.card-grid-scroll-area::-webkit-scrollbar-track {
-  background: var(--shade-1);
-  border-radius: var(--r-xs);
-}
-
-.card-grid-scroll-area::-webkit-scrollbar-thumb {
-  background: rgb(var(--brand-rgb) / 0.4);
-  border-radius: var(--r-xs);
-}
-
-.card-grid-scroll-area::-webkit-scrollbar-thumb:hover {
-  background: rgb(var(--brand-rgb) / 0.7);
+.card-grid-clear-btn {
+  position: absolute;
+  right: 6px;
 }
 
 .card-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(145px, 1fr));
-  gap: var(--sp-3h);
-  padding: var(--sp-1) var(--sp-0h);
+  width: 100%;
 }
 
 .card-grid-item {
-  display: flex;
-  border-radius: var(--r-md);
-  transition: transform 0.15s;
-}
-
-.card-grid-item:hover:not(:has(.card-grid-cell:disabled)) {
-  transform: translateY(-2px);
+  position: relative;
+  display: block;
+  width: 100%;
+  border-radius: 6% / 4.3%;
 }
 
 .card-grid-cell {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--sp-1h);
-  padding: var(--sp-1h) var(--sp-1);
-  border: 2px solid transparent;
-  border-radius: var(--r-md);
-  background: var(--veil-1);
+  position: relative;
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: 6% / 4.3%;
+  background: transparent;
   cursor: pointer;
-  transition: border-color 0.15s, background 0.15s;
+  transition: box-shadow 140ms ease, filter 140ms ease;
 }
 
-.card-grid-cell:hover:not(:disabled),
-.card-grid-item.is-previewing > .card-grid-cell {
-  background: var(--veil-2);
+.card-grid-cell:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
 }
 
+/* MTGA-style orange selection glow */
 .card-grid-cell.selected {
-  border-color: var(--accent, var(--brand-fg));
-  background: rgb(var(--brand-rgb) / 0.18);
-  box-shadow: 0 0 12px rgb(var(--brand-rgb) / 0.35);
+  box-shadow:
+    0 0 0 3px rgb(var(--ember-rgb) / 0.95),
+    0 0 22px rgb(var(--ember-rgb) / 0.7),
+    0 0 44px rgb(var(--ember-rgb) / 0.35);
 }
 
 .card-grid-cell:disabled {
-  opacity: 0.4;
+  opacity: 0.38;
+  filter: grayscale(0.55);
   cursor: not-allowed;
-  transform: none;
 }
 
-.card-grid-label {
-  font-size: var(--fs-2xs);
-  font-weight: 500;
-  color: var(--text-dim, var(--fg-2));
-  text-align: center;
-  line-height: 1.2;
-  max-width: 100%;
+.card-grid-chosen-mark {
+  position: absolute;
+  top: var(--sp-1h);
+  right: var(--sp-1h);
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--r-pill);
+  background: var(--ember, var(--gold-500));
+  color: var(--ink-0);
+  box-shadow: 0 2px 8px var(--shade-4);
+  pointer-events: none;
+}
+
+.card-grid-sr-name {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
   overflow: hidden;
-  text-overflow: ellipsis;
+  clip-path: inset(50%);
   white-space: nowrap;
+  border: 0;
 }
 
 .card-grid-actions {
-  flex-shrink: 0;
   display: flex;
-  gap: var(--sp-2h);
-  margin-top: var(--sp-3h);
-  padding-top: var(--sp-3);
-  border-top: 1px solid var(--veil-2);
-  justify-content: flex-end;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-3);
+  flex-wrap: wrap;
 }
 
 .card-grid-progress {
-  margin-right: auto;
-  align-self: center;
   font-size: var(--fs-sm);
-  font-weight: 600;
-  color: var(--text, var(--fg-1));
+  font-weight: 700;
+  color: var(--fg-hi);
+  text-shadow: var(--arena-text-shadow);
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .card-grid-filter,
-  .card-grid-item,
-  .card-grid-cell {
-    transition: none;
-  }
+.arena-card-grid-done {
+  min-width: clamp(130px, 10vw, 170px);
+  padding: var(--sp-2) calc(var(--sp-6) + var(--sp-2h));
+  border: 1px solid var(--brand-fg);
+  border-radius: var(--r-pill);
+  background: linear-gradient(180deg, var(--brand) 0%, var(--brand-strong) 100%);
+  color: var(--fg-hi);
+  font-family: var(--font-serif);
+  font-size: clamp(var(--fs-lg), 1.4vw, var(--fs-xl));
+  font-weight: 700;
+  text-shadow: 0 1px 3px rgb(var(--ink-rgb) / 0.8);
+  box-shadow:
+    0 0 0 1px rgb(var(--brand-rgb) / 0.75),
+    0 0 18px rgb(var(--brand-rgb) / 0.65),
+    0 0 44px rgb(var(--brand-rgb) / 0.35),
+    inset 0 1px 0 color-mix(in srgb, var(--fg-hi) 45%, transparent);
+  cursor: pointer;
+  transition: filter 120ms ease, transform 120ms ease;
+}
+
+.arena-card-grid-done:hover:not(:disabled) {
+  filter: brightness(1.12);
+  transform: translateY(-1px);
+}
+
+.arena-card-grid-done:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring), 0 0 18px rgb(var(--brand-rgb) / 0.75);
+}
+
+.arena-card-grid-done:disabled {
+  cursor: default;
+  filter: saturate(0.6) brightness(0.85);
 }
 
 .card-grid-peek-hint {
   position: fixed;
   top: var(--sp-3);
-  right: var(--sp-3);
+  left: var(--sp-3);
   display: inline-flex;
   align-items: center;
   gap: var(--sp-2);
   max-width: calc(100vw - 2 * var(--sp-3));
-  padding: var(--sp-2) var(--sp-3);
-  border: 1px solid var(--border, var(--veil-3));
-  border-radius: var(--r-base);
-  background: var(--dlg-bg);
-  box-shadow: var(--dlg-shadow);
+  padding: var(--sp-1h) var(--sp-3);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-pill);
+  background: rgb(var(--ink-rgb) / 0.65);
   color: var(--fg-1);
-  font-size: var(--fs-sm);
+  font-size: var(--fs-xs);
   pointer-events: none;
+  z-index: 2;
 }
 
-.card-grid-peek-hint-active { display: none; }
+.card-grid-peek-hint-active {
+  display: none;
+}
 
-.dlg-backdrop[data-peek='1'] .card-grid-peek-hint-idle { display: none; }
-.dlg-backdrop[data-peek='1'] .card-grid-peek-hint-active { display: inline; }
+.arena-prompt[data-peek='1'] .card-grid-peek-hint-idle {
+  display: none;
+}
 
-.dlg-backdrop[data-peek='1'] .card-grid-dialog {
-  animation: none;
-  opacity: 0;
-  pointer-events: none;
+.arena-prompt[data-peek='1'] .card-grid-peek-hint-active {
+  display: inline;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-grid-filter,
+  .card-grid-cell,
+  .arena-card-grid-done {
+    transition: none;
+  }
 }

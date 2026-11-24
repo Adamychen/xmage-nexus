@@ -3342,6 +3342,28 @@ export function buildGalleryEntries(): GalleryEntry[] {
         },
       },
       {
+        id: 'prompt:card-grid-multi',
+        label: 'Card selection (click to toggle orange glow, 15 cards)',
+        description: 'Interactive multi-select (up to 3 of 15 cards): click cards to toggle the orange selection glow and test horizontal scrolling.',
+        prompt: {
+          method: 'GAME_SELECT_CARDS',
+          gameId,
+          title: 'Gifts Ungiven',
+          message: 'Search your library for up to three cards with different names',
+          mode: 'uuid',
+          options: [],
+          min: 1,
+          max: 3,
+          required: false,
+          cards: [
+            ...LIBRARY_CARDS,
+            ...manyTriggers.map((c, i) => ({ ...c, id: `lib-extra-${i + 1}` })),
+            ...ARENA_LIBRARY_CARDS.map((c, i) => ({ ...c, id: `lib-arena-${i + 1}` })),
+          ],
+          sourceName: 'Gifts Ungiven',
+        },
+      },
+      {
         id: 'prompt:card-grid-filtered',
         label: 'Búsqueda filtrada (solo válidas)',
         description: 'Filtered search: the grid pre-filters to the cards the target accepts (options.possibleTargets) and a toggle reveals the remaining candidates.',
