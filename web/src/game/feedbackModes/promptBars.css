@@ -205,3 +205,21 @@
 .hand-pick-expand {
   flex: none;
 }
+
+/* CMB-13 / PRM-19: the keycap relief of the official client, kept with our own colours: a full
+   pill, a light edge, a highlight on the top border and a sunken shadow on the bottom one. The
+   relief is an overlay, so every mode keeps the colour and the glow it already had. */
+.prompt-second-btn {
+  border-radius: 999px;
+}
+
+.prompt-second-btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.42),
+    inset 0 -6px 12px rgb(0 0 0 / 0.22);
+}
