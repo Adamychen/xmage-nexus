@@ -49,9 +49,11 @@ test.describe('Fail to find (búsqueda declinable)', { tag: '@failtofind' }, () 
       expect(Number(libraryBefore), 'la biblioteca debe tener cartas antes de declinar').toBeGreaterThan(0)
       const handBefore = myHandEntries(lastGameView(parseFrames(frames))).map(([, card]) => card.name)
 
-      const bar = page.locator('.targeting-bar')
-      await expect(bar).toBeVisible({ timeout: 15_000 })
-      const finish = bar.locator('.action-prompt-actions').getByRole('button', { name: /Terminar|Finish/ })
+      // PRM-18 / PRM-19: the search says what to do across the board, and leaving it is the
+      // corner's key; the bar under the hand is drawn only when it has something else to hold.
+      const order = page.getByTestId('board-order')
+      await expect(order).toBeVisible({ timeout: 15_000 })
+      const finish = page.getByTestId('prompt-action').first()
       await expect(finish).toBeVisible()
       const declinesBefore = parseSent(sentOf(page)).filter((s) => s.action === 'sendPlayerBoolean' && s.args?.value === false).length
       await finish.click()
@@ -64,7 +66,8 @@ test.describe('Fail to find (búsqueda declinable)', { tag: '@failtofind' }, () 
         .toBeGreaterThan(declinesBefore)
 
       await waitFrame(page, (f) => f.method === 'GAME_PLAY_MANA', 'siguiente paso del cast tras declinar', 10_000)
-      await expect(bar).toBeHidden({ timeout: 10_000 })
+      // The search is over: what the board says next is the mana step, not the library.
+      await expect(order).not.toContainText(/Search your library|Busca en tu biblioteca/i, { timeout: 10_000 })
 
       await expect.poll(() => libraryChip.getAttribute('data-library-count'), { timeout: 10_000 }).toBe(libraryBefore)
       const handAfter = myHandEntries(lastGameView(parseFrames(frames))).map(([, card]) => card.name)

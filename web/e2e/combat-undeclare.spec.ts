@@ -23,7 +23,8 @@ async function clickCard(page: Page, id: string): Promise<void> {
   await page.locator(`[data-card-id="${id}"]`).first().click()
 }
 
-const mainButton = (page: Page) => page.locator('.big-action-btn').first()
+/** PRM-19: the declaration is answered from the corner's own key, not from the priority button. */
+const cornerKey = (page: Page) => page.getByTestId('prompt-action').first()
 
 test('CMB-1: a declared attacker is removed by clicking it again, as many times as the player wants', { tag: '@combat' }, async ({ page }) => {
   await withFakeServer(() => combatHumanAttackScenario(), async () => {
@@ -53,17 +54,18 @@ test('CMB-1, CMB-12: once every attacker is declared the window stays open, an a
       await waitScene(page, 'combat', (c) => c.chosen.includes(id), `attacker ${id} declared`)
     }
     await expect.poll(() => emptyDeclarations(page, 'possibleAttackers'), { message: 'the server lists nobody left to pick' }).toBe(1)
-    await expect(page.getByRole('button', { name: 'Confirmar atacantes', exact: true }).first()).toBeVisible()
-    await expect(mainButton(page)).toContainText(/Confirmar atacantes/i)
+    // CMB-13: the count is in the words, so the key reads "Confirmar 1 atacante" / "Confirmar N atacantes".
+    await expect(cornerKey(page)).toBeVisible()
+    await expect(cornerKey(page)).toContainText(/Confirmar \d+ atacantes?/i)
 
     await clickCard(page, ids[0])
     await waitScene(page, 'combat', (c) => c.active && !c.chosen.includes(ids[0]), 'attacker removed from a full declaration')
     await clickCard(page, ids[0])
     await waitScene(page, 'combat', (c) => c.chosen.includes(ids[0]), 'attacker declared again')
     await expect.poll(() => emptyDeclarations(page, 'possibleAttackers')).toBe(2)
-    await expect(mainButton(page)).toContainText(/Confirmar atacantes/i)
+    await expect(cornerKey(page)).toContainText(/Confirmar \d+ atacantes?/i)
 
-    await page.getByRole('button', { name: 'Confirmar atacantes', exact: true }).first().click()
+    await cornerKey(page).click()
     await expect(page.locator('.player-info-bar.opp .life-value')).toHaveText('19', { timeout: 20_000 })
     expect(pageErrors, `pageerrors: ${pageErrors.map(String).join(' | ')}`).toEqual([])
   })
@@ -79,8 +81,8 @@ test('CMB-1, CMB-12: once every blocker is declared the window stays open and a 
       await waitScene(page, 'combat', (c) => c.chosen.includes(id), `blocker ${id} declared`)
     }
     await expect.poll(() => emptyDeclarations(page, 'possibleBlockers'), { message: 'the server lists nobody left to pick' }).toBe(1)
-    await expect(page.getByRole('button', { name: 'Confirmar bloqueadores', exact: true }).first()).toBeVisible()
-    await expect(mainButton(page)).toContainText(/Confirmar bloqueadores/i)
+    await expect(cornerKey(page)).toBeVisible()
+    await expect(cornerKey(page)).toContainText(/Confirmar \d+ bloqueadoras?/i)
 
     const id = ids[0]
     const before = sentUUIDs(page, id)

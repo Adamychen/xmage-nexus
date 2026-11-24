@@ -25,7 +25,7 @@ test('combate multi-bloqueador: declaración de múltiples bloqueadores, orden d
     expect(await sceneClick(page, dreadmawId), 'clic para declarar atacante').toBeTruthy()
 
     // Confirmar atacantes
-    await page.getByRole('button', { name: 'Confirmar atacantes', exact: true }).click()
+    await page.getByTestId('prompt-action').first().click()
 
     // 2. Sim declara 2 bloqueadores (Grizzly Bears y Raging Goblin)
     // Captura 7: Flechas de bloqueo múltiples convergiendo en Colossal Dreadmaw
