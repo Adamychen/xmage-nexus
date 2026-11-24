@@ -117,7 +117,7 @@ describe('PRM-15: cards that only show (library order, piles)', () => {
     expect(sendPlayerString).not.toHaveBeenCalled()
   })
 
-  it('PRM-15: each card of a pile previews on a touch without choosing the pile', () => {
+  it('PRM-15: each card of a pile inspects on right click without opening a redundant preview or choosing the pile', () => {
     const p: FeedbackPrompt = {
       method: 'GAME_CHOOSE_PILE',
       gameId: 'g-1',
@@ -130,10 +130,11 @@ describe('PRM-15: cards that only show (library order, piles)', () => {
       pileCards: { pile1: [CARDS[0]], pile2: [CARDS[1]] },
     } as FeedbackPrompt
     const { container } = render(<PileDialog prompt={p} send={send as never} busy={false} />)
-    const thumb = container.querySelector('[data-testid="pile-column-2"] .prompt-card-thumb') as Element
-    pointer(thumb, 'pointerdown', 'touch')
-    fireEvent.click(thumb)
-    expect(thumb.classList.contains('is-previewing')).toBe(true)
+    const cardItem = container.querySelector('[data-testid="pile-column-2"] .pile-card-item') as Element
+    pointer(cardItem, 'pointerover', 'mouse')
+    expect(document.querySelector('.floating-card-preview')).toBeNull()
+    fireEvent.contextMenu(cardItem)
+    expect((getState().inspectedCard as { name?: string } | null)?.name).toBe('Lightning Bolt')
     expect(sendPlayerBoolean).not.toHaveBeenCalled()
   })
 })

@@ -73,7 +73,8 @@ test('interacciones completas de MTG: GAME_ASK, GAME_CHOOSE_COLOR, GAME_CHOOSE_P
     cursor = parsedLen(page)
     const lotusCard = cardGrid.locator('[data-card-id="c-lotus"]')
     await expect(lotusCard, 'Black Lotus en CardGrid').toBeVisible({ timeout: 10_000 })
-    await lotusCard.click()
+    // Cards overlap in the Arena fan: click the exposed left slice of the card button.
+    await cardGrid.locator('[data-arena-card="c-lotus"] .card-grid-cell').click({ position: { x: 30, y: 120 } })
 
     // ─────────────────────────────────────────────────────────────
     // 5. GAME_CHOOSE_CARDS_ORDER (Scry / Surveil / Reordenar biblioteca)
