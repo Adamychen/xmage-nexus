@@ -156,17 +156,21 @@ when another handler (rewind, a menu) already used the key.
 - Guard: `src/game/promptCancel.test.tsx` · `e2e/activated-ability-cancel.spec.ts`
 
 ### PRM-14 · Every trigger to order shows its source and the card it points at
-In the trigger order dialog each row shows the card the trigger comes from and, when the trigger
-points at objects (`CardView.targets`: its chosen targets or the card its effect follows, like
-Tergrid's "that card"), each of those cards next to it, named with the zone it is in now ("in
-Rival's graveyard"). The cards are looked up in the current game, so a card that already went to a
-graveyard, exile or the stack is still shown; the source is the live permanent when it is still in
-play. Every one of those cards has the same preview as the board: pointing at it or focusing it shows
-the floating preview, a touch shows it without placing the trigger and keeps it until the next touch,
-and a right click, a long press or Enter opens the card inspector. Rows of the same source repeat
-the same rule, so their object comes first and their rule takes one line. The server's "Related
+Ordering simultaneous triggers uses a full-screen Arena overlay laid out like the stack:
+one draggable horizontal fan of source cards with `Last` on the left (bottom of the stack, sent
+first) and `First` on the right (top of the stack, resolves first), a stack-style speech bubble
+on the right showing the active trigger's text and targets without shifting the fan height, and
+`Done` underneath to confirm and chain the engine's one-pick-at-a-time prompts. Each trigger shows the live source card
+(right click opens the live permanent in the inspector) and, when it points at objects
+(`CardView.targets`: chosen targets or the card its effect follows, like Tergrid's "that card"),
+each of those cards in the bubble named with the zone it is in now ("in Rival's graveyard").
+Triggers of the same source also carry a target badge on the fan card so duplicate sources are told
+apart at a glance. Every object card has the same preview as the board: pointing at it or focusing
+it shows the floating preview, a touch shows it without placing the trigger and keeps it until the
+next touch, and a right click, a long press or Enter opens the card inspector. The server's "Related
 objects" line is shown only when one of the objects is not in the view. Remembering an order (always
-first or last, by card or by text) is unchanged.
+first or last, by card or by text) and resetting saved rules stay available without leaving the
+overlay.
 
 - Why: with Tergrid, God of Fright and several opponents discarding at once, the dialog listed three
   identical Tergrid rows whose only difference was a card name in small print, and that card, already

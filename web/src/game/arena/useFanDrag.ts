@@ -60,6 +60,8 @@ export interface FanDragApi {
 const DRAG_THRESHOLD = 4
 const LIFT_SCALE = 1.12
 const HIT_PAD = 36
+const EDGE_SCROLL_PAD = 72
+const EDGE_SCROLL_SPEED = 0.14
 const FLIGHT = 'transform 360ms cubic-bezier(.2, 1.15, .4, 1)'
 
 let dragSeq = 0
@@ -130,6 +132,17 @@ export function useFanDrag({ zones, canDrag, onDrop, onClick }: FanDragOptions):
         p.rx += (clamp(-p.vy * 1.6, -28, 28) - p.rx) * 0.3
         p.rz += (clamp(-p.vx * 0.5, -12, 12) - p.rz) * 0.25
         paintDrag()
+        for (const zone of zones) {
+          const fan = byAttr(rootRef.current, 'data-arena-zone', zone)
+          if (!fan || !fan.hasAttribute('data-arena-max-scroll')) continue
+          const b = fan.getBoundingClientRect()
+          if (p.py < b.top - HIT_PAD || p.py > b.bottom + HIT_PAD) continue
+          if (p.px < b.left + EDGE_SCROLL_PAD && p.px > b.left - HIT_PAD) {
+            fan.dispatchEvent(new CustomEvent('arena-fan-scroll', { detail: { delta: -EDGE_SCROLL_SPEED } }))
+          } else if (p.px > b.right - EDGE_SCROLL_PAD && p.px < b.right + HIT_PAD) {
+            fan.dispatchEvent(new CustomEvent('arena-fan-scroll', { detail: { delta: EDGE_SCROLL_SPEED } }))
+          }
+        }
       }
       raf = requestAnimationFrame(loop)
     }
@@ -168,7 +181,11 @@ export function useFanDrag({ zones, canDrag, onDrop, onClick }: FanDragOptions):
         return { zone: hit.side === 'under' ? splitZone : zone, index: hit.index }
       }
       const leading = lane.querySelector('.arena-fan-back') != null
-      return { zone, index: fanIndexAt(x, lane.getBoundingClientRect(), cardW, cards.length, leading) }
+      const scrollAttr = fan.getAttribute('data-arena-scroll')
+      const visibleAttr = fan.getAttribute('data-arena-visible')
+      const scroll = scrollAttr != null ? Number(scrollAttr) : 0
+      const visible = visibleAttr != null ? Number(visibleAttr) : undefined
+      return { zone, index: fanIndexAt(x, lane.getBoundingClientRect(), cardW, cards.length, leading, scroll, visible) }
     }
     return null
   }

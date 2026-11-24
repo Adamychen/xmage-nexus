@@ -43,6 +43,13 @@ describe('fanIndexAt', () => {
     const shifted = { ...lane(2000), left: 500 } as DOMRect
     expect(fanIndexAt(centre + 500, shifted, cardW, 3, false)).toBe(1)
   })
+
+  it('adds the scroll offset when the fan is windowed', () => {
+    // 16 cards with a 6-card visible window scrolled to index 5 (slots 5..10): centre lands on 7.
+    expect(fanIndexAt(centre, lane(2000), cardW, 16, false, 5, 6)).toBe(7)
+    expect(fanIndexAt(0, lane(2000), cardW, 16, false, 5, 6)).toBe(0)
+    expect(fanIndexAt(2000, lane(2000), cardW, 16, false, 5, 6)).toBe(16)
+  })
 })
 
 describe('fanSplitAt', () => {
@@ -217,5 +224,26 @@ describe('ArenaFan', () => {
     const back = container.querySelector('.arena-fan-back')!
     expect(rotation(under)).toBeLessThan(rotation(gap))
     expect(rotation(gap)).toBeLessThan(rotation(back))
+  })
+
+  it('shows no scrollbar when all cards fit, and renders a working horizontal scrollbar on overflow', () => {
+    const small = renderFan()
+    expect(small.container.querySelector('[data-testid="arena-fan-scrollbar"]')).toBeNull()
+    small.unmount()
+
+    const many = Array.from({ length: 16 }, (_, i) => card(`m${i + 1}`, `Card ${i + 1}`))
+    const { container } = renderFan({ cards: many, startAtEnd: true })
+    const fan = container.querySelector('.arena-fan')!
+    expect(fan.classList.contains('is-scrollable')).toBe(true)
+    const bar = container.querySelector('[data-testid="arena-fan-scrollbar"]')!
+    const thumb = bar.querySelector('[role="scrollbar"]')!
+    const max = Number(thumb.getAttribute('aria-valuemax'))
+    expect(max).toBeGreaterThan(0)
+    expect(Number(thumb.getAttribute('aria-valuenow'))).toBe(max)
+
+    fireEvent.keyDown(thumb, { key: 'ArrowLeft' })
+    expect(Number(thumb.getAttribute('aria-valuenow'))).toBe(max - 1)
+    fireEvent.keyDown(thumb, { key: 'Home' })
+    expect(Number(thumb.getAttribute('aria-valuenow'))).toBe(0)
   })
 })

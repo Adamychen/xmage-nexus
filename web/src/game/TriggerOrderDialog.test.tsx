@@ -44,19 +44,14 @@ function touchDown(el: Element) {
   act(() => { el.dispatchEvent(event) })
 }
 
-function makeSend() {
-  return vi.fn((action: () => Promise<unknown>) => { void action() })
-}
-
 function makeSendNow() {
   return vi.fn(async (action: () => Promise<unknown>) => { await action(); return true })
 }
 
 function renderDialog(p: FeedbackPrompt, overrides: { sendNow?: ReturnType<typeof makeSendNow> } = {}) {
-  const send = makeSend()
   const sendNow = overrides.sendNow ?? makeSendNow()
-  const view = render(<TriggerOrderDialog prompt={p} send={send as never} sendNow={sendNow as never} busy={false} />)
-  return { ...view, send, sendNow }
+  const view = render(<TriggerOrderDialog prompt={p} sendNow={sendNow as never} busy={false} />)
+  return { ...view, sendNow }
 }
 
 beforeEach(() => {
@@ -80,35 +75,29 @@ beforeEach(() => {
 })
 
 describe('TriggerOrderDialog', () => {
-  it('renders one row per trigger with resolution numbers and actions', () => {
+  it('renders one fan card per trigger ordered Last to First with the active trigger in the bubble', () => {
     const { container } = renderDialog(prompt())
-    expect(container.querySelectorAll('.trigger-row').length).toBe(2)
-    expect(container.textContent).toContain('Soul Warden')
-    expect(container.textContent).toContain('Whenever another creature enters')
-    expect([...container.querySelectorAll('.trigger-index')].map((el) => el.textContent)).toEqual(['1', '2'])
+    const cards = [...container.querySelectorAll('[data-arena-card]')]
+    expect(cards.map((el) => el.getAttribute('data-arena-card'))).toEqual([T2, T1])
+    expect([...container.querySelectorAll('.trigger-fan-rank')].map((el) => el.textContent)).toEqual(['#2', '#1'])
+    const bubble = container.querySelector('[data-testid="trigger-bubble"]') as Element
+    expect(bubble.textContent).toContain('Soul Warden')
+    expect(bubble.textContent).toContain('Whenever another creature enters')
   })
 
-  it('answers a manual pick with the trigger uuid', () => {
+  it('apply sends the bottom of the stack first (leftmost card in the fan)', async () => {
     const { container } = renderDialog(prompt())
-    const firstRow = container.querySelector(`[data-testid="trigger-row-${T1}"]`) as Element
-    fireEvent.click(firstRow.querySelector('.ui-btn--primary') as Element)
-    expect(sendPlayerUUID).toHaveBeenCalledWith(T1, 'g1')
-  })
-
-  it('apply sends the bottom of the stack first (reverse resolution order)', async () => {
-    const { container } = renderDialog(prompt())
-    fireEvent.click(container.querySelector('.trigger-apply') as Element)
+    fireEvent.click(container.querySelector('[data-testid="trigger-order-done"]') as Element)
     await vi.waitFor(() => {
       expect(sendPlayerUUID.mock.calls.map((call) => call[0])).toEqual([T2])
     })
   })
 
-  it('move down changes the first applied pick', async () => {
+  it('moving the first trigger toward Last changes the first applied pick', async () => {
     const { container } = renderDialog(prompt())
-    const firstRow = container.querySelector(`[data-testid="trigger-row-${T1}"]`) as Element
-    const moveDown = firstRow.querySelectorAll('.trigger-move button')[1] as Element
-    fireEvent.click(moveDown)
-    fireEvent.click(container.querySelector('.trigger-apply') as Element)
+    const moveToLast = container.querySelectorAll('.trigger-bubble-tools button')[0] as Element
+    fireEvent.click(moveToLast)
+    fireEvent.click(container.querySelector('[data-testid="trigger-order-done"]') as Element)
     await vi.waitFor(() => {
       expect(sendPlayerUUID.mock.calls.map((call) => call[0])).toEqual([T1])
     })
@@ -117,61 +106,57 @@ describe('TriggerOrderDialog', () => {
   it('chains the remaining picks automatically across prompts', async () => {
     const sendNow = makeSendNow()
     const { container, rerender } = renderDialog(prompt(), { sendNow })
-    fireEvent.click(container.querySelector('.trigger-apply') as Element)
+    fireEvent.click(container.querySelector('[data-testid="trigger-order-done"]') as Element)
     await vi.waitFor(() => expect(sendPlayerUUID).toHaveBeenCalledWith(T2, 'g1'))
 
     const remaining = (prompt().cards ?? [])[0]
     const second = { ...prompt(), cards: [remaining], options: [prompt().options[0]] }
-    rerender(<TriggerOrderDialog prompt={second} send={makeSend() as never} sendNow={sendNow as never} busy={false} />)
+    rerender(<TriggerOrderDialog prompt={second} sendNow={sendNow as never} busy={false} />)
     await vi.waitFor(() => expect(sendPlayerUUID).toHaveBeenCalledWith(T1, 'g1'))
   })
 
-  it('shows the plan order with sent rows marked while chaining', async () => {
+  it('keeps the full fan visible and marks sent cards while chaining', async () => {
     const { container } = renderDialog(prompt())
-    fireEvent.click(container.querySelector('.trigger-apply') as Element)
+    fireEvent.click(container.querySelector('[data-testid="trigger-order-done"]') as Element)
     await vi.waitFor(() => {
-      expect(container.querySelectorAll('.trigger-row').length).toBe(2)
-      expect(container.querySelector('.trigger-row.is-sent, .trigger-row.is-next')).not.toBeNull()
+      expect(container.querySelectorAll('[data-arena-card]').length).toBe(2)
+      expect(container.querySelector('.trigger-fan-rank.is-sent')).not.toBeNull()
     })
   })
 
   it('denies a plan whose next pick vanished (falls back to manual)', async () => {
     const sendNow = makeSendNow()
     const { container, rerender } = renderDialog(prompt(), { sendNow })
-    fireEvent.click(container.querySelector('.trigger-apply') as Element)
+    fireEvent.click(container.querySelector('[data-testid="trigger-order-done"]') as Element)
     await vi.waitFor(() => expect(sendPlayerUUID).toHaveBeenCalled())
 
     const stranger = { ...prompt(), cards: [{ id: 'other', name: 'Other', rules: ['Whenever X, draw a card.'] }], options: [{ id: 'other', label: 'Other', value: 'other' }] }
     sendPlayerUUID.mockClear()
-    rerender(<TriggerOrderDialog prompt={stranger} send={makeSend() as never} sendNow={sendNow as never} busy={false} />)
+    rerender(<TriggerOrderDialog prompt={stranger} sendNow={sendNow as never} busy={false} />)
     expect(sendPlayerUUID).not.toHaveBeenCalled()
-    expect(container.querySelector('.trigger-apply')).not.toBeNull()
+    expect((container.querySelector('[data-testid="trigger-order-done"]') as HTMLButtonElement).disabled).toBe(false)
   })
 
   it('pin buttons remember a rule without placing the trigger', async () => {
-    const { container, send, sendNow } = renderDialog(prompt())
-    const firstRow = container.querySelector(`[data-testid="trigger-row-${T1}"]`) as Element
-    const btns = firstRow.querySelectorAll('.trigger-actions button')
-    fireEvent.click(btns[1] as Element)
+    const { container, sendNow } = renderDialog(prompt())
+    fireEvent.click(container.querySelector('[data-testid="trigger-pin-first"]') as Element)
     await vi.waitFor(() => {
       expect(sendTriggerAutoOrder).toHaveBeenCalledWith('TRIGGER_AUTO_ORDER_ABILITY_FIRST', 'g1', T1)
     })
     expect(sendPlayerUUID).not.toHaveBeenCalled()
-    fireEvent.click(btns[2] as Element)
+    fireEvent.click(container.querySelector('[data-testid="trigger-pin-last"]') as Element)
     await vi.waitFor(() => {
       expect(sendTriggerAutoOrder).toHaveBeenCalledWith('TRIGGER_AUTO_ORDER_ABILITY_LAST', 'g1', T1)
     })
     expect(sendPlayerUUID).not.toHaveBeenCalled()
-    expect(send).not.toHaveBeenCalled()
     expect(sendNow).not.toHaveBeenCalled()
   })
 
   it('name scope sends the rule text instead of the uuid', async () => {
     const { container } = renderDialog(prompt())
-    const scopeBtns = container.querySelectorAll('.trigger-scope [role="tab"]')
+    const scopeBtns = container.querySelectorAll('.arena-triggers-rules [role="tab"]')
     fireEvent.click(scopeBtns[1] as Element)
-    const firstRow = container.querySelector(`[data-testid="trigger-row-${T1}"]`) as Element
-    fireEvent.click(firstRow.querySelectorAll('.trigger-actions button')[1] as Element)
+    fireEvent.click(container.querySelector('[data-testid="trigger-pin-first"]') as Element)
     await vi.waitFor(() => {
       expect(sendTriggerAutoOrder).toHaveBeenCalledWith(
         'TRIGGER_AUTO_ORDER_NAME_FIRST',
@@ -182,34 +167,29 @@ describe('TriggerOrderDialog', () => {
   })
 
   it('reset sends RESET_ALL without answering', async () => {
-    const { container, send, sendNow } = renderDialog(prompt())
-    fireEvent.click(container.querySelector('.trigger-footer button') as Element)
+    const { container, sendNow } = renderDialog(prompt())
+    fireEvent.click(container.querySelector('.trigger-reset-btn') as Element)
     await vi.waitFor(() => {
       expect(sendTriggerAutoOrder).toHaveBeenCalledWith('TRIGGER_AUTO_ORDER_RESET_ALL', 'g1')
     })
-    expect(send).not.toHaveBeenCalled()
     expect(sendNow).not.toHaveBeenCalled()
   })
 
   it('a rejected rule is reported and leaves the pin unset', async () => {
     sendTriggerAutoOrder.mockResolvedValueOnce({ ok: false, error: 'rejected' })
     const { container } = renderDialog(prompt())
-    const firstRow = container.querySelector(`[data-testid="trigger-row-${T1}"]`) as Element
-    fireEvent.click(firstRow.querySelectorAll('.trigger-actions button')[1] as Element)
+    fireEvent.click(container.querySelector('[data-testid="trigger-pin-first"]') as Element)
     await vi.waitFor(() => expect(getState().error).toBe('rejected'))
   })
 
   it('hides the rule line when it is just the card name', () => {
     const p = prompt()
-    p.cards = [
-      ...(p.cards ?? []),
-      { id: 't3', name: 'Forest', displayName: 'Forest', rules: [] },
-    ]
-    p.options = [...p.options, { id: 't3', label: 'Forest', value: 't3' }]
+    p.cards = [{ id: 't3', name: 'Forest', displayName: 'Forest', rules: [] }]
+    p.options = [{ id: 't3', label: 'Forest', value: 't3' }]
     const { container } = renderDialog(p)
-    const row = container.querySelector('[data-testid="trigger-row-t3"]') as Element
-    expect(row.querySelector('.trigger-rule')).toBeNull()
-    expect(row.textContent).toContain('Forest')
+    const bubble = container.querySelector('[data-testid="trigger-bubble"]') as Element
+    expect(bubble.querySelector('.trigger-bubble-rule')).toBeNull()
+    expect(bubble.textContent).toContain('Forest')
   })
 
   it('PRM-14: shows the card each trigger points at, wherever it is now', () => {
@@ -263,26 +243,27 @@ describe('TriggerOrderDialog', () => {
       } as never)
     })
 
-    it('PRM-14: rows of one source are told apart by the graveyard card each one points at', () => {
+    it('PRM-14: sibling triggers are told apart on the fan and in the bubble by the graveyard card each points at', () => {
       const { container } = renderDialog(tergridPrompt())
-      const rows = [...container.querySelectorAll('.trigger-row')]
-      expect(rows.every((row) => row.classList.contains('is-sibling'))).toBe(true)
-      expect(rows.map((row) => row.querySelector('.trigger-object-name')?.textContent)).toEqual(['Llanowar Elves', 'Sol Ring'])
-      expect(rows[0].querySelector('.trigger-object-zone')?.textContent).toContain('Rival')
+      const badges = [...container.querySelectorAll('.trigger-fan-target')].map((el) => el.textContent)
+      expect(badges).toEqual(['→ Sol Ring', '→ Llanowar Elves'])
+      const bubble = container.querySelector('[data-testid="trigger-bubble"]') as Element
+      expect(bubble.querySelector('.trigger-object-name')?.textContent).toBe('Llanowar Elves')
+      expect(bubble.querySelector('.trigger-object-zone')?.textContent).toContain('Rival')
       // The object chips already name the card: the server's "Related objects" line is not repeated.
       expect(container.querySelector('.trigger-related')).toBeNull()
     })
 
-    it('PRM-14: the source thumbnail opens the live permanent in the inspector', () => {
+    it('PRM-14: right clicking a fan card opens the live permanent in the inspector', () => {
       const { container } = renderDialog(tergridPrompt())
-      const source = container.querySelector(`[data-testid="trigger-row-${T1}"] .trigger-art`) as Element
-      fireEvent.contextMenu(source)
+      const cardFace = container.querySelector(`[data-arena-card="${T1}"] .arena-fan-card`) as Element
+      fireEvent.contextMenu(cardFace)
       expect((getState().inspectedCard as { power?: string } | null)?.power).toBe('4')
     })
 
     it('PRM-14: pointing at the object card previews it and a right click opens it in the inspector', () => {
       const { container } = renderDialog(tergridPrompt())
-      const thumb = container.querySelector(`[data-testid="trigger-row-${T1}"] .trigger-object-art`) as Element
+      const thumb = container.querySelector('.trigger-object-art') as Element
       fireEvent.mouseEnter(thumb)
       expect(thumb.classList.contains('is-previewing')).toBe(true)
       fireEvent.mouseLeave(thumb)
@@ -294,13 +275,13 @@ describe('TriggerOrderDialog', () => {
 
     it('PRM-14: a touch previews the card without choosing the trigger and stays until the next touch', () => {
       const { container } = renderDialog(tergridPrompt())
-      const thumb = container.querySelector(`[data-testid="trigger-row-${T1}"] .trigger-object-art`) as Element
+      const thumb = container.querySelector('.trigger-object-art') as Element
       touchDown(thumb)
       fireEvent.mouseLeave(thumb)
       fireEvent.click(thumb)
       expect(thumb.classList.contains('is-previewing')).toBe(true)
       expect(sendPlayerUUID).not.toHaveBeenCalled()
-      touchDown(container.querySelector('.trigger-name') as Element)
+      touchDown(container.querySelector('.trigger-bubble-name') as Element)
       expect(thumb.classList.contains('is-previewing')).toBe(false)
     })
 
@@ -316,6 +297,6 @@ describe('TriggerOrderDialog', () => {
   it('has no Cancel button (the server only re-asks)', () => {
     const { container } = renderDialog(prompt())
     expect(container.textContent).not.toContain('Cancelar')
-    expect(container.querySelectorAll('.trigger-footer button').length).toBe(2)
+    expect(container.querySelectorAll('[data-testid="trigger-order-done"]').length).toBe(1)
   })
 })

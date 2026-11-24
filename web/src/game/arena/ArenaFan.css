@@ -6,7 +6,10 @@
   position: relative;
   min-height: calc(var(--arena-fan-h) * 1.42);
   display: flex;
+  flex-direction: column;
+  justify-content: center;
   align-items: center;
+  gap: var(--sp-2);
   box-sizing: border-box;
   padding: calc(var(--arena-fan-w) * 0.14) var(--sp-3h);
   border: 1.5px solid var(--arena-fan-line);
@@ -76,6 +79,61 @@
 
 .arena-fan-slot.is-under .arena-fan-card {
   filter: brightness(0.84);
+}
+
+.arena-fan-slot.is-piled .arena-fan-card {
+  cursor: pointer;
+  filter: brightness(0.72);
+}
+
+.arena-fan-slot.is-off-fan {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.arena-fan-scrollbar {
+  position: relative;
+  z-index: 60;
+  width: min(420px, 75%);
+  height: 22px;
+  flex-shrink: 0;
+  cursor: pointer;
+  touch-action: none;
+}
+
+.arena-fan-scrollbar::before {
+  content: '';
+  position: absolute;
+  inset: 50% 0 auto;
+  height: 2px;
+  translate: 0 -50%;
+  border-radius: var(--r-pill);
+  background: linear-gradient(90deg, transparent, var(--veil-5) 12%, var(--veil-5) 88%, transparent);
+}
+
+.arena-fan-thumb {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--r-pill);
+  color: var(--fg-1);
+  background: linear-gradient(180deg, var(--veil-7) 0%, var(--veil-4) 100%);
+  border: 1px solid var(--veil-6);
+  box-shadow: 0 2px 8px var(--shade-3), inset 0 1px 0 var(--veil-6);
+  cursor: grab;
+}
+
+.arena-fan-thumb:active {
+  cursor: grabbing;
+}
+
+.arena-fan-thumb:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
 }
 
 @keyframes arena-fan-lift {

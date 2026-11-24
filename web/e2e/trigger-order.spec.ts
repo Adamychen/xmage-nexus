@@ -17,30 +17,7 @@ fakeOnly()
 const WARDEN = '11111111-1111-1111-1111-111111111111'
 const ARTIST = '22222222-2222-2222-2222-222222222222'
 
-test.describe('Trigger order dialog', { tag: '@triggers' }, () => {
-  test('renders one row per trigger and picks them one by one', async ({ page }) => {
-    await withFakeServer(triggerOrderScenario, async () => {
-      const { pageErrors } = await quickStartGame(page, {
-        prefix: 'trg',
-        skipAsks: true,
-      })
-      expect(pageErrors).toEqual([])
-      const dialog = page.locator('.trigger-dialog')
-      await expect(dialog).toBeVisible()
-      await expect(dialog.locator('.trigger-row')).toHaveCount(2)
-      await expect(dialog).toContainText('Soul Warden')
-      await expect(dialog).toContainText('Blood Artist')
-
-      await dialog.locator(`[data-testid="trigger-row-${WARDEN}"] .ui-btn--primary`).click()
-      // The server re-asks with the remaining ability.
-      await expect(dialog.locator('.trigger-row')).toHaveCount(1)
-      await expect(dialog).toContainText('Blood Artist')
-      await dialog.locator(`[data-testid="trigger-row-${ARTIST}"] .ui-btn--primary`).click()
-      await expect(dialog).toBeHidden({ timeout: 5000 })
-      expect(TRIGGER_PICKS).toEqual([WARDEN, ARTIST])
-    })
-  })
-
+test.describe('Trigger order overlay', { tag: '@triggers' }, () => {
   test('apply chains the whole order (bottom of the stack first)', async ({ page }) => {
     await withFakeServer(triggerOrderScenario, async () => {
       const { pageErrors } = await quickStartGame(page, {
@@ -48,16 +25,36 @@ test.describe('Trigger order dialog', { tag: '@triggers' }, () => {
         skipAsks: true,
       })
       expect(pageErrors).toEqual([])
-      const dialog = page.locator('.trigger-dialog')
-      await expect(dialog).toBeVisible()
-      await dialog.locator('.trigger-apply').click()
-      // The chain answers the second prompt on its own; the dialog only hides
+      const overlay = page.locator('[data-testid="trigger-order-prompt"]')
+      await expect(overlay).toBeVisible()
+      await expect(overlay.locator('[data-arena-card]')).toHaveCount(2)
+      await expect(overlay.locator('[data-testid="trigger-bubble"]')).toContainText('Soul Warden')
+
+      await overlay.locator('[data-testid="trigger-order-done"]').click()
+      // The chain answers the second prompt on its own; the overlay only hides
       // after the server's final prompt is gone.
       await expect.poll(() => TRIGGER_PICKS.length, { timeout: 5000 }).toBe(2)
-      await expect(dialog).toBeHidden({ timeout: 5000 })
-      // Display order is resolution order: the last one resolves first, so it is
-      // the first UUID the server receives.
+      await expect(overlay).toBeHidden({ timeout: 5000 })
+      // Leftmost (Last) goes onto the stack first; rightmost (First) resolves first.
       expect(TRIGGER_PICKS).toEqual([ARTIST, WARDEN])
+    })
+  })
+
+  test('reordering changes the applied stack order', async ({ page }) => {
+    await withFakeServer(triggerOrderScenario, async () => {
+      const { pageErrors } = await quickStartGame(page, {
+        prefix: 'trg',
+        skipAsks: true,
+      })
+      expect(pageErrors).toEqual([])
+      const overlay = page.locator('[data-testid="trigger-order-prompt"]')
+      await expect(overlay).toBeVisible()
+      // Soul Warden starts as #1 (First / rightmost). Move it toward Last so Blood Artist resolves first.
+      await overlay.locator('.trigger-bubble-tools button').first().click()
+      await overlay.locator('[data-testid="trigger-order-done"]').click()
+      await expect.poll(() => TRIGGER_PICKS.length, { timeout: 5000 }).toBe(2)
+      await expect(overlay).toBeHidden({ timeout: 5000 })
+      expect(TRIGGER_PICKS).toEqual([WARDEN, ARTIST])
     })
   })
 
@@ -69,12 +66,11 @@ test.describe('Trigger order dialog', { tag: '@triggers' }, () => {
         skipAsks: true,
       })
       expect(pageErrors).toEqual([])
-      const dialog = page.locator('.trigger-dialog')
-      await expect(dialog).toBeVisible()
-      const row = dialog.locator(`[data-testid="trigger-row-${WARDEN}"]`)
-      await row.locator('.trigger-actions button').nth(1).click()
-      await expect(row.locator('.trigger-saved')).toBeVisible()
-      await expect(dialog).toBeVisible()
+      const overlay = page.locator('[data-testid="trigger-order-prompt"]')
+      await expect(overlay).toBeVisible()
+      await overlay.locator('[data-testid="trigger-pin-first"]').click()
+      await expect(overlay.locator('.trigger-saved')).toBeVisible()
+      await expect(overlay).toBeVisible()
       expect(TRIGGER_PICKS).toEqual([])
       expect(TRIGGER_ACTIONS).toContain('TRIGGER_AUTO_ORDER_ABILITY_FIRST')
     })
@@ -87,18 +83,20 @@ test.describe('Trigger order dialog', { tag: '@triggers' }, () => {
         skipAsks: true,
       })
       expect(pageErrors).toEqual([])
-      const dialog = page.locator('.trigger-dialog')
-      await expect(dialog).toBeVisible()
-      await expect(dialog.locator('.trigger-row')).toHaveCount(4)
-      // Three rows of one source, told apart by the card each one points at.
-      await expect(dialog.locator('.trigger-row.is-sibling')).toHaveCount(3)
-      const names = (id: string) => dialog.locator(`[data-testid="trigger-row-${id}"] .trigger-object-name`)
-      await expect(names(TERGRID_ELVES)).toHaveText('Llanowar Elves')
-      await expect(names(TERGRID_SOL_RING)).toHaveText('Sol Ring')
-      await expect(names(TERGRID_SIGNET)).toHaveText('Arcane Signet')
-      await expect(dialog.locator(`[data-testid="trigger-row-${WASTE_NOT_TRIGGER}"] .trigger-object`)).toHaveCount(0)
+      const overlay = page.locator('[data-testid="trigger-order-prompt"]')
+      await expect(overlay).toBeVisible()
+      await expect(overlay.locator('[data-arena-card]')).toHaveCount(4)
+      // Three sibling triggers of Tergrid carry target badges on the fan; Waste Not has none.
+      await expect(overlay.locator(`[data-arena-card="${TERGRID_ELVES}"] .trigger-fan-target`)).toHaveText('→ Llanowar Elves')
+      await expect(overlay.locator(`[data-arena-card="${TERGRID_SOL_RING}"] .trigger-fan-target`)).toHaveText('→ Sol Ring')
+      await expect(overlay.locator(`[data-arena-card="${TERGRID_SIGNET}"] .trigger-fan-target`)).toHaveText('→ Arcane Signet')
+      await expect(overlay.locator(`[data-arena-card="${WASTE_NOT_TRIGGER}"] .trigger-fan-target`)).toHaveCount(0)
 
-      const elves = dialog.locator(`[data-testid="trigger-row-${TERGRID_ELVES}"] .trigger-object-art`)
+      // The first trigger (Tergrid → Llanowar Elves) is active in the bubble, with its target card at full size beside it.
+      const bubble = overlay.locator('[data-testid="trigger-bubble"]')
+      await expect(bubble.locator('.trigger-object-name')).toHaveText('Llanowar Elves')
+
+      const elves = overlay.locator('.trigger-object-art')
       await elves.hover()
       await expect(elves).toHaveClass(/is-previewing/)
       await elves.click({ button: 'right' })
@@ -107,12 +105,12 @@ test.describe('Trigger order dialog', { tag: '@triggers' }, () => {
       await expect(inspector).toContainText('Llanowar Elves')
       await page.keyboard.press('Escape')
       await expect(inspector).toBeHidden()
-      await expect(dialog).toBeVisible()
+      await expect(overlay).toBeVisible()
       expect(TRIGGER_PICKS).toEqual([])
 
-      await dialog.locator(`[data-testid="trigger-row-${TERGRID_SOL_RING}"] .ui-btn--primary`).click()
-      await expect(dialog.locator('.trigger-row')).toHaveCount(3)
-      expect(TRIGGER_PICKS).toEqual([TERGRID_SOL_RING])
+      await overlay.locator('[data-testid="trigger-order-done"]').click()
+      await expect.poll(() => TRIGGER_PICKS.length, { timeout: 5000 }).toBe(4)
+      await expect(overlay).toBeHidden({ timeout: 5000 })
     })
   })
 })

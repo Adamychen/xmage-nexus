@@ -2950,6 +2950,117 @@ export function buildGalleryEntries(): GalleryEntry[] {
         rules: [`Whenever ${sourceName} or another creature enters the battlefield, you gain 1 life.`],
       }
     })
+    const manyTriggers: FeedbackCard[] = [
+      {
+        id: 'trg-many-1',
+        name: 'Smothering Tithe',
+        expansionSetCode: 'RNA',
+        cardNumber: '22',
+        rules: ['Whenever an opponent draws a card, that player may pay {2}. If the player doesn’t, you create a Treasure token. (It’s an artifact with “{T}, Sacrifice this artifact: Add one mana of any color.”)'],
+      },
+      {
+        id: 'trg-many-2',
+        name: 'Rhystic Study',
+        expansionSetCode: 'PCY',
+        cardNumber: '45',
+        rules: ['Whenever an opponent casts a spell, you may draw a card unless that player pays {1}.'],
+      },
+      {
+        id: 'trg-many-3',
+        name: 'Sheoldred, the Apocalypse',
+        expansionSetCode: 'DMU',
+        cardNumber: '107',
+        rules: ['Whenever you draw a card, you gain 2 life. Whenever an opponent draws a card, they lose 2 life.'],
+      },
+      {
+        id: 'trg-many-4',
+        name: 'Atraxa, Grand Unifier',
+        expansionSetCode: 'ONE',
+        cardNumber: '196',
+        rules: ['When Atraxa, Grand Unifier enters, reveal the top ten cards of your library. For each card type, you may put a card of that type from among the revealed cards into your hand. Put the rest on the bottom of your library in a random order.'],
+      },
+      {
+        id: 'trg-many-5',
+        name: 'The Great Henge',
+        expansionSetCode: 'ELD',
+        cardNumber: '161',
+        rules: ['Whenever a nontoken creature you control enters, put a +1/+1 counter on it and draw a card.'],
+      },
+      {
+        id: 'trg-many-6',
+        name: 'Sun Titan',
+        expansionSetCode: 'M11',
+        cardNumber: '35',
+        rules: ['Whenever Sun Titan enters or attacks, you may return target permanent card with mana value 3 or less from your graveyard to the battlefield.'],
+      },
+    ]
+    const tergridSource: FeedbackCard['sourceCard'] = {
+      id: 'gal-perm-tergrid',
+      name: 'Tergrid, God of Fright',
+      expansionSetCode: 'KHM',
+      cardNumber: '112',
+    } as FeedbackCard['sourceCard']
+    const tergridTriggers: FeedbackCard[] = [
+      {
+        id: 'trg-tergrid-1',
+        name: 'Tergrid, God of Fright',
+        sourceCard: tergridSource,
+        expansionSetCode: 'KHM',
+        cardNumber: '112',
+        rules: [
+          'Whenever an opponent sacrifices a nontoken permanent or discards a permanent card, you may put that card from a graveyard onto the battlefield under your control.',
+          '<i>Related objects: [Llanowar Elves]</i>',
+        ],
+        targets: ['gal-gy-elves'],
+      },
+      {
+        id: 'trg-tergrid-2',
+        name: 'Tergrid, God of Fright',
+        sourceCard: tergridSource,
+        expansionSetCode: 'KHM',
+        cardNumber: '112',
+        rules: [
+          'Whenever an opponent sacrifices a nontoken permanent or discards a permanent card, you may put that card from a graveyard onto the battlefield under your control.',
+          '<i>Related objects: [Sol Ring]</i>',
+        ],
+        targets: ['gal-gy-sol-ring'],
+      },
+      {
+        id: 'trg-tergrid-3',
+        name: 'Tergrid, God of Fright',
+        sourceCard: tergridSource,
+        expansionSetCode: 'KHM',
+        cardNumber: '112',
+        rules: [
+          'Whenever an opponent sacrifices a nontoken permanent or discards a permanent card, you may put that card from a graveyard onto the battlefield under your control.',
+          '<i>Related objects: [Arcane Signet]</i>',
+        ],
+        targets: ['gal-gy-signet'],
+      },
+      {
+        id: 'trg-tergrid-4',
+        name: 'Waste Not',
+        expansionSetCode: 'M15',
+        cardNumber: '122',
+        rules: ['Whenever an opponent discards a creature card, create a 2/2 black Zombie creature token. Whenever an opponent discards a land card, add {B}{B}. Whenever an opponent discards a noncreature, nonland card, draw a card.'],
+      },
+    ]
+    const tergridGame: GameView = {
+      ...game,
+      players: (game.players ?? []).map((p, idx) =>
+        idx === 1
+          ? {
+            ...p,
+            graveyard: {
+              ...p.graveyard,
+              'gal-gy-elves': { id: 'gal-gy-elves', name: 'Llanowar Elves', expansionSetCode: 'DOM', cardNumber: '168', manaValue: 1 } as CardView,
+              'gal-gy-sol-ring': { id: 'gal-gy-sol-ring', name: 'Sol Ring', expansionSetCode: 'CMD', cardNumber: '261', manaValue: 1 } as CardView,
+              'gal-gy-signet': { id: 'gal-gy-signet', name: 'Arcane Signet', expansionSetCode: 'ELD', cardNumber: '331', manaValue: 2 } as CardView,
+            },
+          }
+          : p,
+      ),
+    }
     const myHandCards = Object.entries(game.myHand ?? {}).map(([id, card]) => ({
       id: card.id ?? id,
       name: card.name ?? id,
@@ -3334,6 +3445,65 @@ export function buildGalleryEntries(): GalleryEntry[] {
           min: 1,
           max: 1,
           cards: triggers,
+          isTriggerOrder: true,
+        },
+      },
+      {
+        id: 'prompt:trigger-order-many',
+        label: 'Order triggers (6 cards, long text)',
+        description: 'Six simultaneous triggers with multi-sentence rules text and mana symbols.',
+        prompt: {
+          method: 'GAME_TARGET',
+          gameId,
+          title: 'Order triggered abilities',
+          message: 'Choose the order of triggered abilities',
+          mode: 'uuid',
+          options: manyTriggers.map((c) => ({ id: c.id, label: c.name, value: c.id })),
+          min: 1,
+          max: 1,
+          cards: manyTriggers,
+          isTriggerOrder: true,
+        },
+      },
+      {
+        id: 'prompt:trigger-order-tergrid',
+        label: 'Order triggers (Tergrid + targets)',
+        description: 'Three duplicate Tergrid triggers pointing at different graveyard cards plus Waste Not (PRM-14).',
+        prompt: {
+          method: 'GAME_TARGET',
+          gameId,
+          title: 'Order triggered abilities',
+          message: 'Choose the order of triggered abilities',
+          mode: 'uuid',
+          options: tergridTriggers.map((c) => ({ id: c.id, label: c.name, value: c.id })),
+          min: 1,
+          max: 1,
+          cards: tergridTriggers,
+          isTriggerOrder: true,
+        },
+        game: tergridGame,
+      },
+      {
+        id: 'prompt:trigger-order-overflow',
+        label: 'Order triggers (16 cards, scrollable)',
+        description: 'Sixteen simultaneous triggers: ArenaFan shows the horizontal slider, wheel scroll and edge auto-scroll while dragging.',
+        prompt: {
+          method: 'GAME_TARGET',
+          gameId,
+          title: 'Order triggered abilities',
+          message: 'Choose the order of triggered abilities',
+          mode: 'uuid',
+          options: Array.from({ length: 16 }, (_, i) => {
+            const base = manyTriggers[i % manyTriggers.length]
+            const id = `trg-ovf-${i + 1}`
+            return { id, label: `${base.name} #${i + 1}`, value: id }
+          }),
+          min: 1,
+          max: 1,
+          cards: Array.from({ length: 16 }, (_, i) => {
+            const base = manyTriggers[i % manyTriggers.length]
+            return { ...base, id: `trg-ovf-${i + 1}` }
+          }),
           isTriggerOrder: true,
         },
       },

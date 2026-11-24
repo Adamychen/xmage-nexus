@@ -159,7 +159,7 @@ Arena as possible.
 | Phone strip | At 390 px the phase bar, the turn-order ring and the strip buttons overlap in the one strip; the v2 top bar used to serve phones |
 | 5+ players hint | A game of five or more forces the side panel (BRD-6); the switch's hint does not say so yet (needs the nine translations) |
 | Hand column with the chat and log panel open | The column hides while the panel is open and the fan returns (`BoardShell`); a slim strip would keep the hand in place but needs its own card render |
-| Arena prompt overlays | Surveil and scry of your own are done (`ArenaLibraryPrompt`, PRM-18). Next, one design each: mulligan, trigger order, library search, piles, modes, yes/no, and the other one-pick-at-a-time library orderings (Ponder, Brainstorm-like) that still use the dock prompts. Open on the surveil/scry overlay: keyboard users cannot move cards yet, and it has no phone-width layout |
+| Arena prompt overlays | Surveil, scry (`ArenaLibraryPrompt`, PRM-20) and trigger order (`TriggerOrderDialog`, PRM-14) are done. Next, one design each: mulligan, library search, piles, modes, yes/no, and the other one-pick-at-a-time library orderings (Ponder, Brainstorm-like) that still use the dock prompts. Open on the surveil/scry overlay: keyboard users cannot move cards yet, and it has no phone-width layout |
 
 ### 4.3d Keyword effects: known gaps
 

@@ -1,153 +1,211 @@
-.trigger-scope {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-2);
-  margin-bottom: var(--sp-3);
-  font-size: var(--fs-sm);
+.arena-triggers.is-sending .arena-fan-card {
+  pointer-events: none;
 }
 
-.trigger-scope-label {
-  color: var(--fg-2);
+.arena-triggers .arena-triggers-zone {
+  grid-column: 1 / 3;
+  grid-row: 1;
 }
 
-.trigger-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  overflow-y: auto;
+.arena-triggers .arena-prompt-footer {
+  grid-column: 1 / -1;
+  grid-row: 2;
+}
+
+.arena-triggers .arena-prompt-aside {
+  grid-column: 3;
+  grid-row: 1;
+  position: relative;
+  width: min(360px, 100%);
+  justify-self: stretch;
+  align-self: stretch;
+  margin-top: 0;
+}
+
+.trigger-aside-stack {
+  position: absolute;
+  inset: 0;
   display: flex;
   flex-direction: column;
+  align-items: center;
+  justify-content: center;
   gap: var(--sp-2h);
 }
 
-.trigger-row {
+.arena-triggers-labels {
   display: flex;
-  align-items: center;
-  gap: var(--sp-3);
-  border: 1px solid var(--ink-4);
-  border-radius: var(--r-mid);
-  padding: var(--sp-2) var(--sp-3) var(--sp-2) var(--sp-2);
-  background: var(--veil-1);
+  justify-content: space-between;
+  align-items: baseline;
+  padding: var(--sp-2) var(--sp-2) 0;
 }
 
-.trigger-row.is-sent {
-  opacity: 0.55;
-  border-color: var(--ok-line);
+.arena-triggers-label {
+  font-family: var(--font-ui);
+  font-size: clamp(var(--fs-lg), 1.45vw, var(--fs-xl));
+  font-weight: 700;
+  font-style: italic;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--fg-hi);
+  text-shadow: var(--arena-text-shadow);
 }
 
-.trigger-row.is-next {
-  border-color: var(--brand-line);
-  box-shadow: 0 0 0 1px var(--brand-soft);
-}
-
-.trigger-row.is-dragging {
-  opacity: 0.4;
-}
-
-.trigger-order-cell {
-  flex: 0 0 auto;
+/* StackBubble-style parchment speech bubble on the right; capped to the fan height so nothing shifts. */
+.trigger-bubble {
+  --bubble-paper: var(--card-paper);
+  --bubble-ink: var(--card-ink);
+  --bubble-edge: color-mix(in srgb, var(--card-ink) 45%, transparent);
+  --bubble-rule: color-mix(in srgb, var(--card-ink) 16%, transparent);
+  width: 100%;
+  max-height: 100%;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: var(--sp-1);
-  min-width: 26px;
+  border-radius: var(--r-md);
+  background: var(--bubble-paper);
+  color: var(--bubble-ink);
+  border: 1px solid var(--bubble-edge);
+  box-shadow: 0 8px 22px var(--shade-3);
 }
 
-.trigger-index {
+.trigger-bubble-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  padding: var(--sp-1h) var(--sp-3);
+  border-bottom: 1px solid var(--bubble-rule);
+}
+
+.trigger-bubble-title {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1h);
+  min-width: 0;
+  font-family: var(--font-display);
+  font-size: var(--fs-md);
+  font-weight: 700;
+  color: var(--bubble-ink);
+}
+
+.trigger-bubble-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.trigger-bubble-rank {
+  flex: 0 0 auto;
+  padding: 0 var(--sp-1h);
+  border-radius: var(--r-pill);
+  border: 1px solid var(--bubble-edge);
+  font-family: var(--font-ui);
   font-size: var(--fs-xs);
   font-weight: 700;
-  color: var(--fg-hi);
   font-variant-numeric: tabular-nums;
 }
 
-.trigger-move {
+.trigger-bubble-rank.is-first {
+  background: var(--brand-strong);
+  border-color: var(--brand-strong);
+  color: var(--fg-hi);
+}
+
+.trigger-bubble-tools {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-0h);
+  flex: 0 0 auto;
+}
+
+.trigger-tool-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--bubble-rule);
+  background: transparent;
+  color: var(--bubble-ink);
+  cursor: pointer;
+}
+
+.trigger-tool-btn:hover:not(:disabled) {
+  background: var(--bubble-rule);
+}
+
+.trigger-tool-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.trigger-bubble-body {
   display: flex;
   flex-direction: column;
-  gap: var(--sp-0h);
+  gap: var(--sp-1h);
+  padding: var(--sp-2) var(--sp-3);
+  font-size: var(--fs-sm);
+  line-height: 1.4;
 }
 
-.trigger-move .ui-btn {
-  min-width: 0;
-  padding: var(--sp-0h) var(--sp-1h);
+.trigger-bubble-rule {
+  margin: 0;
+  color: var(--bubble-ink);
 }
 
-.trigger-cards {
-  flex: 0 0 auto;
+.trigger-related {
+  margin: 0;
+  font-size: var(--fs-xs);
+  color: color-mix(in srgb, var(--bubble-ink) 75%, transparent);
+  font-style: italic;
+}
+
+.trigger-bubble-object-labels {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: var(--sp-1);
+  padding-top: var(--sp-1h);
+  border-top: 1px solid var(--bubble-rule);
 }
 
-.trigger-art {
-  flex: 0 0 54px;
-  width: 54px;
+.trigger-target-cards {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--sp-2);
 }
 
-.trigger-art .card-slot {
+.trigger-object-art {
+  --card-w: var(--arena-card-w);
+  flex: 0 0 var(--arena-card-w);
+  width: var(--arena-card-w);
+  border-radius: 6% / 4.3%;
+  box-shadow:
+    0 0 0 2px rgb(var(--brand-rgb) / 0.85),
+    0 0 22px rgb(var(--brand-rgb) / 0.45),
+    0 10px 26px var(--shade-4);
+}
+
+.trigger-object-art .card-slot {
   width: 100%;
   height: auto;
   aspect-ratio: 63 / 88;
 }
 
-/* Keep the text column aligned when only some rows have an object thumbnail. */
-.trigger-list.has-object-art .trigger-cards {
-  min-width: calc(2 * 54px + 14px + 2 * var(--sp-1));
-}
-
-.trigger-arrow {
-  color: var(--fg-2);
-}
-
-/* The object a trigger points at is what tells sibling rows apart: it gets the accent ring. */
-.trigger-object-art {
-  border-radius: var(--r-sm);
-  box-shadow: 0 0 0 1px var(--brand-line);
-}
-
-.trigger-text {
-  flex: 1 1 auto;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-0h);
-}
-
-.trigger-name {
-  font-weight: 700;
-  font-size: var(--fs-md);
-  color: var(--fg-hi);
-}
-
-.trigger-rule {
-  font-size: var(--fs-xs);
-  color: var(--fg-2);
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.trigger-related {
-  font-size: var(--fs-xs);
-  color: var(--fg-3, var(--fg-2));
-  font-style: italic;
-}
-
-.trigger-objects {
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-0h);
-}
-
 .trigger-object {
-  display: block;
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-1);
   min-width: 0;
   font-size: var(--fs-sm);
-  color: var(--brand-fg);
+  color: var(--bubble-ink);
 }
 
-.trigger-object > svg {
-  margin-right: var(--sp-1);
+.trigger-object.is-player {
+  font-weight: 700;
 }
 
 .trigger-object-name {
@@ -161,36 +219,23 @@
 }
 
 .trigger-object-zone {
-  color: var(--fg-2);
+  color: color-mix(in srgb, var(--bubble-ink) 72%, transparent);
   font-size: var(--fs-xs);
-}
-
-/* Rows of the same source repeat the same rule: one line is enough, the object comes first. */
-.trigger-row.is-sibling .trigger-rule {
-  -webkit-line-clamp: 1;
 }
 
 .trigger-saved {
   font-size: var(--fs-xs);
-  color: var(--ok);
-}
-
-.trigger-actions {
-  flex: 0 0 auto;
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-1);
-  align-items: stretch;
+  font-weight: 700;
+  color: var(--brand-strong);
 }
 
 .trigger-state {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
   gap: var(--sp-1);
   font-size: var(--fs-xs);
-  color: var(--fg-2);
-  white-space: nowrap;
+  font-weight: 700;
+  color: var(--bubble-ink);
 }
 
 .trigger-state.is-sent {
@@ -198,45 +243,124 @@
 }
 
 .trigger-state.is-next {
+  color: var(--brand-strong);
+}
+
+.arena-triggers-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-2h);
+}
+
+.arena-triggers-done {
+  min-width: clamp(130px, 10vw, 170px);
+  padding: var(--sp-2) calc(var(--sp-6) + var(--sp-2h));
+  border: 1px solid var(--brand-fg);
+  border-radius: var(--r-pill);
+  background: linear-gradient(180deg, var(--brand) 0%, var(--brand-strong) 100%);
+  color: var(--fg-hi);
+  font-family: var(--font-serif);
+  font-size: clamp(var(--fs-lg), 1.4vw, var(--fs-xl));
+  font-weight: 700;
+  text-shadow: 0 1px 3px rgb(var(--ink-rgb) / 0.8);
+  box-shadow:
+    0 0 0 1px rgb(var(--brand-rgb) / 0.75),
+    0 0 18px rgb(var(--brand-rgb) / 0.65),
+    0 0 44px rgb(var(--brand-rgb) / 0.35),
+    inset 0 1px 0 color-mix(in srgb, var(--fg-hi) 45%, transparent);
+  cursor: pointer;
+  transition: filter 120ms ease, transform 120ms ease;
+}
+
+.arena-triggers-done:hover:not(:disabled) {
+  filter: brightness(1.12);
+  transform: translateY(-1px);
+}
+
+.arena-triggers-done:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring), 0 0 18px rgb(var(--brand-rgb) / 0.75);
+}
+
+.arena-triggers-done:disabled {
+  cursor: default;
+  filter: saturate(0.6) brightness(0.85);
+}
+
+.arena-triggers-rules {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-size: var(--fs-xs);
+  opacity: 0.82;
+}
+
+.arena-triggers-rules-label {
+  color: var(--fg-2);
+}
+
+.trigger-fan-rank {
+  position: absolute;
+  top: var(--sp-1h);
+  left: var(--sp-1h);
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  padding: var(--sp-0h) var(--sp-1h);
+  border-radius: var(--r-pill);
+  border: 1px solid var(--line-2);
+  background: rgb(var(--ink-rgb) / 0.85);
+  color: var(--fg-hi);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+
+.trigger-fan-rank.is-first {
+  border-color: var(--brand-fg);
+  background: var(--brand-strong);
+}
+
+.trigger-fan-rank.is-active {
+  box-shadow: 0 0 0 2px rgb(var(--brand-rgb) / 0.7);
+}
+
+.trigger-fan-rank.is-sent {
+  border-color: var(--ok-line);
+  color: var(--ok);
+}
+
+.trigger-fan-target {
+  position: absolute;
+  left: var(--sp-1h);
+  right: var(--sp-1h);
+  bottom: var(--sp-1h);
+  z-index: 2;
+  padding: var(--sp-0h) var(--sp-1h);
+  border-radius: var(--r-sm);
+  border: 1px solid var(--brand-line);
+  background: rgb(var(--ink-rgb) / 0.88);
   color: var(--brand-fg);
+  font-size: var(--fs-2xs);
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
 }
 
 .trigger-empty {
+  text-align: center;
   color: var(--fg-2);
   font-size: var(--fs-md);
 }
 
-.trigger-footer {
-  display: flex;
-  justify-content: space-between;
-  gap: var(--sp-2);
-  margin-top: var(--sp-3h);
-}
-
-/* Phone width: the actions move under the cards and text instead of squeezing them. */
-@media (max-width: 560px) {
-  .trigger-row {
-    flex-wrap: wrap;
-    gap: var(--sp-2);
-  }
-
-  .trigger-art {
-    flex-basis: 46px;
-    width: 46px;
-  }
-
-  .trigger-list.has-object-art .trigger-cards {
-    min-width: calc(2 * 46px + 14px + 2 * var(--sp-1));
-  }
-
-  .trigger-text {
-    flex-basis: calc(100% - 26px - 2 * 46px - 3 * var(--sp-2) - 20px);
-  }
-
-  .trigger-actions {
-    flex: 1 1 100%;
-    flex-direction: row;
-    justify-content: flex-end;
-    flex-wrap: wrap;
+@media (prefers-reduced-motion: reduce) {
+  .arena-triggers-done {
+    transition: none;
   }
 }
