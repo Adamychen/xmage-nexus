@@ -178,8 +178,9 @@ first or last, by card or by text) is unchanged.
 Every card shown inside a prompt can be seen enlarged, as on the board, and looking at it never answers
 the prompt: the card grid (scry, surveil, searching a library, looking at the top cards, picking from a
 list, choosing targets), the library order dialog, the piles to choose from, the London mulligan's bottom
-pick, the revealed and looked-at cards inside a prompt, and the revealed, looked-at and zone viewers. A
-card that only shows (library order, piles, a revealed card nobody can play) is itself the preview
+pick, and the revealed and looked-at cards inside a prompt. The zone viewers (graveyard, exile, library,
+the revealed and looked-at windows, the cards playable from other zones) are not prompts: their card is
+looked at by the lift of BRD-24 and they open no floating preview. A card that only shows (library order, piles, a revealed card nobody can play) is itself the preview
 control: pointing at it or focusing it shows the floating preview, a touch shows it and keeps it until the
 next touch (ACC-9), and a right click, a long press or Enter opens the card inspector. A card that is
 chosen or played by a click keeps that click, on a tap too; pointing at it with a mouse or reaching it
@@ -191,6 +192,8 @@ accept (the full list of a grid) can still be looked at. A face-down card nobody
   grid and the library order dialog, so a player searching a library or scrying could not read the cards
   (reported 2026-11-12). A tap on a grid card already answers the prompt, so on a touch screen the preview
   needs its own control; the mouse and the keyboard reach the preview without one, as on the board.
+  The zone viewers lost their preview at the user's request (24-nov-2026): the lifted copy already
+  shows the card large and the side panel was a second, redundant copy.
 - Guard: `src/game/promptCardZoom.test.tsx`
 
 ### PRM-16 · The only decision the client answers for you at the start of a game is who plays first

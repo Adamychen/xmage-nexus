@@ -4,7 +4,6 @@ import CardGrid from './CardGrid'
 import LibraryOrderDialog from './LibraryOrderDialog'
 import PileDialog from './PileDialog'
 import MulliganDialog from './MulliganDialog'
-import PileOverlay from '../board/PileOverlay'
 import type { FeedbackPrompt } from './feedback'
 import type { CardView } from '../net/types'
 import { getState, setState } from '../state/store'
@@ -211,20 +210,5 @@ describe('PRM-15: cards that are chosen or played by a click (London mulligan, r
     expect(wrap.classList.contains('is-chosen')).toBe(true)
     expect(sendPlayerUUID).not.toHaveBeenCalled()
     setState({ game: null })
-  })
-
-  it('PRM-15: revealed and looked-at cards zoom from their button; an unknown face-down card has none', () => {
-    const cards: Record<string, CardView> = {
-      r1: { id: 'r1', name: 'Counterspell', manaValue: 2, expansionSetCode: 'MH2', cardNumber: '267' } as CardView,
-      r2: { id: 'r2', name: '', manaValue: 0, expansionSetCode: '', cardNumber: '0', faceDown: true } as CardView,
-    }
-    render(<PileOverlay title="Revealed" cards={cards} onClose={vi.fn()} flipIn />)
-    const wrappers = document.body.querySelectorAll('.pile-card-wrapper')
-    const zoom = wrappers[0].querySelector('.prompt-card-zoom') as HTMLElement
-    pointer(zoom, 'pointerdown', 'touch')
-    expect(wrappers[0].querySelector('.prompt-card-zoomable')?.classList.contains('is-previewing')).toBe(true)
-    // The card keeps its own id, so the board and its tests still find it.
-    expect(wrappers[0].querySelector('[data-card-id="r1"]')).not.toBeNull()
-    expect(wrappers[1].querySelector('.prompt-card-zoom')).toBeNull()
   })
 })

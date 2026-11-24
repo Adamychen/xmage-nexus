@@ -24,6 +24,21 @@ describe('PileOverlay', () => {
     expect(onClose).toHaveBeenCalled()
   })
 
+  it('BRD-24: pointing at a card opens no side preview panel', () => {
+    render(
+      <PileOverlay
+        title="Cementerio"
+        cards={{ 'c-1': { id: 'c-1', name: 'Lightning Bolt', manaValue: 1 } }}
+        onClose={vi.fn()}
+      />
+    )
+    const card = document.querySelector('.zone-fan-item .pile-card') as HTMLElement
+    fireEvent.mouseEnter(card)
+    fireEvent.mouseOver(card)
+    expect(document.querySelector('.floating-card-preview')).toBeNull()
+    expect(document.querySelector('.prompt-card-zoomable')).toBeNull()
+  })
+
   it('uses singular for a single card', () => {
     const { getByText } = render(
       <PileOverlay

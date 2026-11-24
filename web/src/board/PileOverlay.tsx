@@ -3,7 +3,6 @@ import { useMemo, type CSSProperties } from 'react'
 import type { CardView } from '../net/types'
 import CardSlot from './CardSlot'
 import Icon from '../ui/Icon'
-import { PromptCardZoomable, usePromptCardPreview } from '../game/promptCardPreview'
 import ZoneViewer from './ZoneViewer'
 import { useTranslation, plural } from '../i18n'
 
@@ -35,7 +34,6 @@ export default function PileOverlay({
   const entries = Object.entries(cards)
   const playableSet = useMemo(() => playableIds ?? new Set<string>(), [playableIds])
   const targetSet = useMemo(() => targetIds ?? new Set<string>(), [targetIds])
-  const cardPreview = usePromptCardPreview({ fixedSide: 'left' })
 
   const knownCount = entries.filter(([, c]) => !c.faceDown).length
 
@@ -51,7 +49,6 @@ export default function PileOverlay({
       className={isLibrary ? 'library-overlay' : ''}
       itemCount={entries.length}
       onClose={onClose}
-      after={cardPreview.preview}
     >
           {entries.map(([id, card], index) => {
             const isTop = isLibrary && index === 0
@@ -76,17 +73,15 @@ export default function PileOverlay({
                     {isRevealed && <span className="revealed-icon"><Icon name="eye" size={10} /></span>}
                   </div>
                 )}
-                <PromptCardZoomable preview={cardPreview} previewKey={id} card={card}>
-                  <CardSlot
-                    cardId={id}
-                    card={card}
-                    faceDown={card.faceDown === true}
-                    className="pile-card"
-                    isPlayable={isPlayableCard}
-                    isTarget={isTargetCard}
-                    onClick={cardOnClick}
-                  />
-                </PromptCardZoomable>
+                <CardSlot
+                  cardId={id}
+                  card={card}
+                  faceDown={card.faceDown === true}
+                  className="pile-card"
+                  isPlayable={isPlayableCard}
+                  isTarget={isTargetCard}
+                  onClick={cardOnClick}
+                />
               </div>
             )
           })}
