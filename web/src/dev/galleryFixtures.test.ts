@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
-import { buildGalleryEntries, recordedFrames, type GalleryEntry } from './galleryFixtures'
+import { buildGalleryEntries, nextLadderStep, recordedFrames, type GalleryEntry } from './galleryFixtures'
+import { makeGameView, makePlayer } from '../__fixtures__/gameViews'
 import { getState, setState } from '../state/state'
 import { STORAGE_KEY as CREATE_TABLE_STORAGE_KEY } from '../lobby/CreateTable/constants'
 import { BOARD_WIPE_MIN, boardWipeIds } from '../board/boardWipe'
@@ -735,5 +736,37 @@ describe('galería de estados (P3)', () => {
     expect(ja.cjkBoost).toBe(true)
     expect(entry(entries, 'global:zoom-lobby-125').uiScale).toBe(1.25)
     expect(entry(entries, 'global:reconnecting').connecting).toBe(true)
+  })
+})
+
+describe('phase ladder walk-through', () => {
+  const players = [makePlayer({ playerId: 'me', name: 'Alice', controlled: true }), makePlayer({ playerId: 'o1', name: 'Bob' })]
+
+  it('BRD-62: Next step moves to the following step of the same turn', () => {
+    const next = nextLadderStep(makeGameView({ players, activePlayerId: 'me', step: 'PRECOMBAT_MAIN', turn: 3 }))
+    expect(next.step).toBe('BEGIN_COMBAT')
+    expect(next.activePlayerId).toBe('me')
+    expect(next.turn).toBe(3)
+  })
+
+  it('BRD-62: past the end step the turn goes to the next player, at upkeep', () => {
+    const next = nextLadderStep(makeGameView({ players, activePlayerId: 'me', step: 'END_TURN', turn: 3 }))
+    expect(next.step).toBe('UPKEEP')
+    expect(next.activePlayerId).toBe('o1')
+    expect(next.turn).toBe(4)
+  })
+
+  it('BRD-62: ten steps walk a whole turn into the opponent upkeep', () => {
+    let game = makeGameView({ players, activePlayerId: 'me', step: 'UPKEEP', turn: 1 })
+    for (let i = 0; i < 10; i++) game = nextLadderStep(game)
+    expect(game.step).toBe('UPKEEP')
+    expect(game.activePlayerId).toBe('o1')
+  })
+
+  it('BRD-62: the gallery has a phase ladder entry driven by Next step', () => {
+    const e = entry(buildGalleryEntries(), 'board:phase-ladder')
+    expect(e.game?.step).toBe('UPKEEP')
+    expect(e.game?.activePlayerId).toBe(e.game?.players?.find((p) => p.controlled)?.playerId)
+    expect(e.action?.apply?.(e.game!).step).toBe('DRAW')
   })
 })

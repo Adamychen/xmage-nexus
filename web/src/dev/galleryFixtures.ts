@@ -1,6 +1,7 @@
 import { getState, setState } from '../state/state'
 import { parseFeedback, type FeedbackCard, type FeedbackPrompt } from '../game/feedback'
 import { TOP_CARD_PEEK_NAME } from '../game/topCardPeek'
+import { LADDER, ladderIndex } from '../game/ladderSteps'
 import { landTapColor } from '../board/compactCard'
 import type { AuraKeyword } from '../board/keywordAura'
 import { forgetCoinFlip } from '../board/coinFlipFx'
@@ -2900,6 +2901,23 @@ const WIZARD_DRAFT_FORM = JSON.stringify({
   seatConfigs: Array.from({ length: 7 }, () => ({ type: 'SIM', deckName: '', skill: 2 })),
 })
 
+export function nextLadderStep(game: GameView): GameView {
+  const at = ladderIndex(game.step)
+  if (at >= 0 && at < LADDER.length - 1) return { ...game, step: LADDER[at + 1].key }
+  if (at < 0) return { ...game, step: LADDER[0].key }
+  const players = game.players ?? []
+  const current = players.findIndex((p) => p.playerId === game.activePlayerId)
+  const next = players[(current + 1) % Math.max(players.length, 1)]
+  return {
+    ...game,
+    step: LADDER[0].key,
+    phase: 'BEGINNING',
+    activePlayerId: next?.playerId ?? game.activePlayerId,
+    activePlayerName: next?.name ?? game.activePlayerName,
+    turn: (game.turn ?? 0) + 1,
+  }
+}
+
 export function buildGalleryEntries(): GalleryEntry[] {
   const entries: GalleryEntry[] = recordedFrames.map((frame) => ({
     id: `frame:${frame.mechanic}`,
@@ -5653,6 +5671,21 @@ export function buildGalleryEntries(): GalleryEntry[] {
     phase: 'game',
     screen: 'help',
   })
+
+  const ladderBase = GANG_BLOCK_FRAME?.gameView
+  const ladderMe = ladderBase?.players?.find((p) => p.controlled)
+  if (ladderBase && ladderMe) {
+    entries.push({
+      id: 'board:phase-ladder',
+      group: 'Tablero',
+      label: 'Phase ladder: walk a turn',
+      description: 'BRD-62: the phase icons above the action button. "Next step" walks the turn step by step and, past the end step, hands it to the opponent; the row takes the active seat colour. The combat steps rise over the combat icon during combat or on hover. Click an icon to toggle the stop of the turn shown (notch below), right click for the other turn (dot at the corner).',
+      phase: 'game',
+      game: { ...ladderBase, step: 'UPKEEP', phase: 'BEGINNING', activePlayerId: ladderMe.playerId, activePlayerName: ladderMe.name },
+      gameId: GANG_BLOCK_FRAME?.gameId ?? null,
+      action: { label: 'Next step', apply: nextLadderStep },
+    })
+  }
 
   // Variantes de tablero: settings.boardLayout real decide el layout efectivo
   // (`effectiveBoardLayout`: pod/arena solo con rivales; >4 jugadores ⇒ standard).

@@ -323,14 +323,14 @@ describe('CombatArrowsOverlay — stacking', () => {
   }
 
   it("TGT-10: an arrow is drawn over every layer of the board's own chrome", () => {
-    // The board's chrome: the zones and their piles, the seat strip, the phase strip, the player
+    // The board's chrome: the zones and their piles, the seat strip, the phase ladder, the player
     // chips. A ghost or an overlay is not chrome, it is an effect painted over the board on
     // purpose, and the arrows share that range with it.
     const chrome = [
       './BoardZone.css',
       './ArenaBoard.css',
       './BoardShell.css',
-      '../game/PhaseBar.css',
+      '../game/PhaseLadder.css',
       '../game/PlayerInfoBar.css',
     ]
       .flatMap(layers)

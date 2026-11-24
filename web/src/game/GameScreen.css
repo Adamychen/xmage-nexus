@@ -13,10 +13,22 @@
 }
 
 .game-turn {
-  color: var(--gold-500);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1h);
+  color: var(--gold-300);
   white-space: nowrap;
   font-weight: 700;
+  letter-spacing: 0.05em;
   font-family: 'Cinzel', 'Merriweather', Georgia, serif;
+  text-shadow: 0 1px 8px rgb(var(--gold-rgb) / 0.32);
+}
+
+.game-turn::before {
+  content: '◆';
+  font-size: 0.65em;
+  color: var(--gold-400, var(--gold-300));
+  text-shadow: 0 0 8px rgb(var(--gold-rgb) / 0.7);
 }
 
 .game-turn.turn-glow {

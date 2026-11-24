@@ -43,15 +43,25 @@ export const DividerSlotContext = createContext<((el: HTMLElement | null) => voi
  *  portaled; the game screen owns the element state. */
 export const HandPromptSlotContext = createContext<((el: HTMLElement | null) => void) | null>(null)
 
-/** Divisor horizontal unificado (diamante púrpura/dorado) compartido por los
- *  tres modos. `labels` añade las etiquetas flanking del pod. Si la pantalla de
- *  juego publica un hueco (`DividerSlotContext`), el divisor pasa a ser la
- *  franja de control (turno, fases, iconos) y se pinta ahí por portal. */
-export function BoardDivider({ labels = false }: { labels?: boolean }) {
+/** Floating top row that hosts the game control strip (turn badge, turn order
+ *  ring, log/chat/drawer/menu) above every board without a divider line. */
+export function BoardTopStrip() {
   const setSlot = useContext(DividerSlotContext)
-  const cls = ['board-shell-divider', labels && !setSlot ? 'with-labels' : '', setSlot ? 'has-strip' : ''].filter(Boolean).join(' ')
   return (
-    <div className={cls} ref={setSlot ?? undefined}>
+    <div
+      className={`board-shell-top-strip${setSlot ? ' has-strip' : ''}`}
+      data-testid="board-top-strip"
+      ref={setSlot ?? undefined}
+    />
+  )
+}
+
+/** Divisor horizontal unificado (diamante púrpura/dorado) entre rivales y tu
+ *  lado. `labels` añade las etiquetas flanking del pod. */
+export function BoardDivider({ labels = false }: { labels?: boolean }) {
+  const cls = ['board-shell-divider', labels ? 'with-labels' : ''].filter(Boolean).join(' ')
+  return (
+    <div className={cls}>
       <span className="board-shell-divider-diamond">◆</span>
     </div>
   )

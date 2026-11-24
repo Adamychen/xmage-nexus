@@ -26,7 +26,7 @@ picks a colour by appearance itself.
 ### APR-2 · The game screen stays dark in both appearances
 The game screen keeps the dark token set whatever the system appearance: the battlefield (zones, hand,
 stack, the turn ring and the play mat), the overlays drawn over it (piles, the card inspector, the
-cross-zone overlay) and the in-game chrome around it (phase bar, player bars, priority dock, log). The
+cross-zone overlay) and the in-game chrome around it (phase ladder, player bars, priority dock, log). The
 game screen is the root element that carries the `board-surface` class. Dialogs and panels drawn inside
 that tree (the question dialogs, the sideboard, the tournament and side panels) carry the
 `chrome-surface` class, which re-applies the appearance-dependent tokens, so they follow APR-1 even

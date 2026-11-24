@@ -19,7 +19,7 @@ test('CMB-5, TGT-10: the game menu (⋯) paints over the dock and over the comba
     // 1. La franja de control (que porta el menú ⋯ y el cajón) pinta por encima
     //    del dock: el botón de acción no debe tapar su popup de configuración.
     const dockZ = await zOf(page, '.game-dock')
-    const stripZ = await zOf(page, '.board-shell-divider.has-strip')
+    const stripZ = await zOf(page, '.board-shell-top-strip.has-strip')
     expect(dockZ, 'el dock queda bajo la franja de control').toBeLessThan(stripZ)
 
     // 2. TGT-10: las flechas se dibujan sobre la propia chrome del tablero, sin

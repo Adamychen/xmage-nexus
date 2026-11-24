@@ -201,14 +201,16 @@ readable without swapping.
   already knows targets and attackers.
 - Guard: `src/board/CombatArrowsOverlay.test.tsx`
 
-### BRD-11 · The phase strip sits on top of the board
-In the main board mode the turn and phase strip is drawn at the top of the board area instead of
-between the opponents and the own board; the main area takes the full height below it and the panel
-runs from the strip to the bottom edge.
+### BRD-11 · The control strip floats in its own top row above every board
+The turn counter, the turn-order ring and the right-hand controls (log/chat, drawers, menu) sit in
+their own top row (`.board-shell-top-strip`) above every board — both Arena and Spotlight — as
+floating glass pills with no divider bar or bottom line behind them. The horizontal divider between
+opponents and the own board stays a slim decorative line.
 
-- Why: with one board in the main area there is no row between boards to put the strip in, and the
-  issue asked for the strip on top so the main board gets the full height.
-- Guard: `src/board/SpotlightBoard.test.tsx` · `e2e/spotlight.spec.ts`
+- Why: with the phase ladder moved above the action button (BRD-62), the user asked for the
+  remaining divider controls to move to the top of the board as a floating row of capsules with no
+  line behind them (24-nov-2026), unifying Arena and Spotlight.
+- Guard: `src/game/GameStrip.test.tsx` · `src/board/SpotlightBoard.test.tsx` · `e2e/spotlight.spec.ts`
 
 ### BRD-12 · Library, graveyard and exile are cards in the corner of each board
 In the main board mode each board, main and copies, shows its library, graveyard and exile as
@@ -1032,3 +1034,38 @@ opening the card.
   had to right-click every one of them to tell (user report, 23-nov-2026).
 - Guard: `src/board/designations.test.ts` · `src/board/CardSlot.test.tsx`
 
+
+### BRD-62 · The phase ladder sits above the action button
+The turn's steps are a row of icons right above the action button in the bottom-right corner, as in
+MTG Arena, and nowhere else: the top bar has no phase strip. At rest the row holds six icons, as wide
+as the button: upkeep, draw, the first main phase, combat, the second main phase and the end step;
+the two main phases are the biggest and carry distinct I / II diamond glyphs, with a progress rail
+behind the row filling up to the current slot. Cleanup lights the end step icon. The five combat
+steps (begin, attackers, blockers, damage, end) fold into the combat icon: they rise above it in a
+bubble while the pointer or the keyboard focus is on it, while a combat step is being played, and
+after a tap on it until the next tap, Escape or a click outside; during combat or while pinned the
+ladder reserves space above the row so dock prompts never overlap the combat steps. The step being
+played is lit in the active player's seat colour and briefly swells when it changes, the steps
+already played are dimmed, and a step the ladder does not show (untap) lights nothing; both combat
+damage steps light the damage icon. The row always speaks about the turn being played: a click on a
+step toggles its stop for that turn (on an opponent's turn, the opponent-turn stop), and a right
+click (or a touch long-press) toggles the other turn's stop. Each icon shows both turns at once: a
+aligned notch under it when the turn shown stops there, and a corner dot in the other seat's colour
+when the other turn does; the combat icon shows them when any combat step has a stop. A step with no
+stop (attackers, blockers, damage) lights up as a non-interactive indicator (`is-static`) and takes
+no click, and a spectator, who has no stops, sees the row but cannot change it. The icons carry no
+text code: hovering or focusing a step opens an instant styled tooltip with the step's name, both
+turns' stops and a stop/smart-stop hint, and the accessible name carries the same information. The
+stops are the one `phaseStops` setting (SET-11).
+
+- Why: the user asked for the phase selector to be MTG Arena's, over the action button, with SVG
+  icons, and for the top strip to go (24-nov-2026). Arena's row edits the stops of the turn on
+  screen, so the right click keeps the other turn one gesture away. The first version showed the
+  other turn's dot only when the turn shown had no stop, so with every stop on (the default) a right
+  click changed nothing visible and read as broken; the user also found the eleven-icon row too small
+  and asked for the combat steps to rise on hover to make room for bigger icons (same day). A
+  follow-up polish (24-nov-2026) docked the combat bubble above the row during combat/pin so it never
+  collides with dock prompts, aligned stop notches on one baseline with a progress rail, coloured the
+  other-turn dot by seat, distinguished Main I/II and non-stoppable combat steps, added touch
+  long-press, and replaced slow native `title` tooltips with an instant hover/focus tooltip.
+- Guard: `src/game/ladderSteps.test.ts` · `src/game/PhaseLadder.test.tsx` · `src/dev/galleryFixtures.test.ts` · `e2e/phase-stops.spec.ts`

@@ -1,7 +1,7 @@
 import { Fragment, useMemo } from 'react'
 import OpponentZone from './OpponentZone'
 import PlayerZone from './PlayerZone'
-import BoardShell, { BoardColDivider, BoardDivider } from './BoardShell'
+import BoardShell, { BoardColDivider, BoardDivider, BoardTopStrip } from './BoardShell'
 import { useBoardPresenter, useBoardPlayers } from './useBoardPresenter'
 import { opponentRevealedCards } from './revealedCards'
 import { isPlayerOut, MAX_BOARD_PLAYERS, spectatorHomeSeat, useSeatStates, useSpectatorBottomHand, useSwitchedHand, type BoardProps } from './boardShared'
@@ -95,6 +95,7 @@ export default function ArenaBoard({
         onTrailingClick: handleCardClick,
       } : null}
     >
+      <BoardTopStrip />
       <div className="arena-opp-row">
         {oppRow.map((opp, i) => {
           const state = seatState(opp)

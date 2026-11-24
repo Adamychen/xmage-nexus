@@ -4,7 +4,7 @@ import { useTranslation } from '../i18n'
 import type { PlayerView } from '../net/types'
 import OpponentZone from './OpponentZone'
 import PlayerZone from './PlayerZone'
-import BoardShell, { BoardDivider } from './BoardShell'
+import BoardShell, { BoardTopStrip } from './BoardShell'
 import { useBoardPresenter, useBoardPlayers } from './useBoardPresenter'
 import { opponentRevealedCards } from './revealedCards'
 import { isPlayerDefeated, isPlayerOut, useSeatStates, useSpectatorBottomHand, useSwitchedHand, type BoardProps } from './boardShared'
@@ -414,7 +414,7 @@ export default function SpotlightBoard({
         onTrailingClick: handleCardClick,
       } : null}
     >
-      <BoardDivider />
+      <BoardTopStrip />
       <div className="spotlight-body">
         <div className="spotlight-main" data-testid="spotlight-main" data-main-seat={mainId} ref={mainRef}>
           {seatBoard(mainId)}

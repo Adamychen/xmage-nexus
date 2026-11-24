@@ -3,13 +3,14 @@ import { createPortal } from 'react-dom'
 import { useState } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import GameStrip from './GameStrip'
-import { BoardDivider, DividerSlotContext } from '../board/BoardShell'
+import { BoardDivider, BoardTopStrip, DividerSlotContext } from '../board/BoardShell'
 
 function Harness({ withSlot }: { withSlot: boolean }) {
   const [slot, setSlot] = useState<HTMLElement | null>(null)
   return (
     <DividerSlotContext.Provider value={withSlot ? setSlot : null}>
       <div className="board-shell">
+        <BoardTopStrip />
         <BoardDivider labels />
       </div>
       {slot &&
@@ -21,29 +22,32 @@ function Harness({ withSlot }: { withSlot: boolean }) {
   )
 }
 
-describe('GameStrip y hueco del divisor', () => {
+describe('GameStrip y hueco superior flotante', () => {
   afterEach(() => {
     cleanup()
   })
 
-  it('el divisor publica su hueco y aloja la franja con sus cuatro zonas', () => {
+  it('BRD-11: la fila superior publica su hueco y aloja la franja con sus cuatro zonas, mientras el divisor sigue siendo decorativo', () => {
     const { getByTestId, container } = render(<Harness withSlot />)
+    const topStrip = container.querySelector('.board-shell-top-strip') as HTMLElement
     const divider = container.querySelector('.board-shell-divider') as HTMLElement
-    expect(divider.className).toContain('has-strip')
-    expect(divider.className).not.toContain('with-labels')
+    expect(topStrip.className).toContain('has-strip')
+    expect(divider.className).not.toContain('has-strip')
+    expect(divider.className).toContain('with-labels')
     const strip = getByTestId('game-strip')
-    expect(divider.contains(strip)).toBe(true)
+    expect(topStrip.contains(strip)).toBe(true)
     expect(strip.querySelector('.game-strip-left')?.contains(getByTestId('left'))).toBe(true)
     expect(strip.querySelector('.game-strip-center')?.contains(getByTestId('center'))).toBe(true)
     expect(strip.querySelector('.game-strip-right')?.contains(getByTestId('right'))).toBe(true)
     expect(strip.querySelector('.game-strip-right')?.contains(getByTestId('dropdown'))).toBe(true)
   })
 
-  it('sin hueco publicado el divisor conserva sus etiquetas decorativas', () => {
+  it('sin hueco publicado la fila superior queda vacía y el divisor conserva sus etiquetas decorativas', () => {
     const { container, queryByTestId } = render(<Harness withSlot={false} />)
+    const topStrip = container.querySelector('.board-shell-top-strip') as HTMLElement
     const divider = container.querySelector('.board-shell-divider') as HTMLElement
+    expect(topStrip.className).not.toContain('has-strip')
     expect(divider.className).toContain('with-labels')
-    expect(divider.className).not.toContain('has-strip')
     expect(queryByTestId('game-strip')).toBeNull()
   })
 
@@ -99,7 +103,7 @@ describe('GameStrip: colocación del desplegable mientras el layout se asienta',
       <DividerSlotContext.Provider value={setSlot}>
         <div className="board-shell">
           <div className="oz-top-row" />
-          <BoardDivider />
+          <BoardTopStrip />
         </div>
         {slot && createPortal(<GameStrip left={null} center={null} right={null} dropdown={<span />} />, slot)}
       </DividerSlotContext.Provider>

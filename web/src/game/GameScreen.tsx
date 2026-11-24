@@ -22,7 +22,7 @@ import CardInspector from '../board/CardInspector'
 import InfoWindows from './InfoWindows'
 import SideboardScreen from './SideboardScreen'
 import GameMenu from './GameMenu'
-import PhaseBar, { PhaseName } from './PhaseBar'
+import PhaseLadder from './PhaseLadder'
 import ActionButton from './ActionButton'
 import GameDock, { PromptSlotProvider, useDockOffset } from './GameDock'
 import GameStrip from './GameStrip'
@@ -373,8 +373,6 @@ export default function GameScreen() {
             >
               {t('game', 'turn')} {game.turn}
             </span>
-            <PhaseName step={game.step ?? ''} />
-            <PhaseBar step={game.step ?? ''} />
           </div>
         )
       }
@@ -476,6 +474,7 @@ export default function GameScreen() {
                 onPromptSlot={setPromptSlot}
                 rewind={(settings.boardRewind || rewind.replay) ? <RewindBar rewind={rewind} /> : null}
                 action={actionButton}
+                phases={<PhaseLadder game={game} />}
               />
             </div>
             <CombatArrowsOverlay

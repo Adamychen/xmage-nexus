@@ -342,7 +342,7 @@ describe('SpotlightBoard', () => {
   it('BRD-11: the phase strip slot is the first row of the board, above the main area and the panel', () => {
     const { getByTestId } = render(<SpotlightBoard game={fourPlayerGame()} homeId="p1" mainId="p2" onSelectSeat={() => {}} />)
     const board = getByTestId('spotlight-board')
-    expect(board.firstElementChild?.classList.contains('board-shell-divider')).toBe(true)
+    expect(board.firstElementChild?.classList.contains('board-shell-top-strip')).toBe(true)
     const body = board.querySelector('.spotlight-body')
     expect(body).not.toBeNull()
     expect(body!.contains(getByTestId('spotlight-main'))).toBe(true)
