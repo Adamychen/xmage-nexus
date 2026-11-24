@@ -68,6 +68,7 @@ import { crossZonePlayables } from '../board/crossZone'
 import { resolveTargetHits, targetZoneKindOf } from '../board/targetZones'
 import { combatActorsFrom } from '../state/gameUtils'
 import { effectiveBoardLayout } from '../board/boardLayout'
+import { isPlainBooleanAsk } from './handPick'
 import { MAX_BOARD_PLAYERS, spectatorHomeSeat } from '../board/boardShared'
 import { useOverlayGutters } from './useOverlayGutters'
 import { useTranslation } from '../i18n'
@@ -468,7 +469,8 @@ export default function GameScreen() {
   // so the prompt's own action takes that place instead of opening a second box beside it. Combat
   // is not in the list because the button already carries that confirmation itself (ActionButton).
   const promptOwnsAction = feedback != null
-    && (feedback.mode === 'mana' || feedback.mode === 'combat' || feedback.method === 'GAME_TARGET')
+    && (feedback.mode === 'mana' || feedback.mode === 'combat' || feedback.method === 'GAME_TARGET'
+      || isPlainBooleanAsk(feedback))
   const dockButton = promptOwnsAction
     ? <div className="game-dock-action-slot" data-testid="game-dock-action-slot" ref={setActionSlot} />
     : actionButton

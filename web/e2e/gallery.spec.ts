@@ -171,9 +171,12 @@ test.describe('galería de estados (P3)', () => {
     const dialog = page.locator('.ask-prompt-bar')
     await expect(dialog).toBeVisible()
     await expect(dialog).not.toContainText('{this}')
-    // PRM-18: a question is not an order, so it stays in its bar
-    await expect(dialog.locator('.action-prompt-msg')).toContainText('Slicer, Hired Muscle')
-    await expect(page.getByTestId('board-order')).toHaveCount(0)
+    // PRM-18: the question is read across the board, and a message that is the ability's whole text
+    // becomes a question about its source (the text itself is on the stack).
+    const order = page.getByTestId('board-order')
+    await expect(order).toContainText('Slicer, Hired Muscle')
+    await expect(order).not.toContainText('{this}')
+    await expect(dialog).not.toContainText('upkeep')
   })
 
   test('los visores revelados se pintan por encima de la galería', async ({ page }) => {

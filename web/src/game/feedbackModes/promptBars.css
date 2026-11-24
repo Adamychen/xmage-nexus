@@ -221,3 +221,42 @@
   pointer-events: none;
   box-shadow: var(--keycap-relief-sm);
 }
+
+/* KEY-7/KEY-8: the digit that answers, on the key that answers, in the cap the pass button wears. */
+.prompt-action-btn .prompt-key-shortcut,
+.prompt-second-btn .prompt-key-shortcut {
+  font-size: var(--fs-3xs);
+  font-weight: 600;
+  font-family: monospace;
+  padding: var(--sp-0h) var(--sp-1h);
+  border-radius: var(--r-xs);
+  background: var(--shade-1);
+  border: 1px solid var(--veil-5);
+  color: var(--fg-hi);
+  flex-shrink: 0;
+  margin-left: var(--sp-2);
+}
+
+/* PRM-19: the answer that says no wears the crimson, so the pair reads as yes and no at a glance
+   and not as one control and its shadow. */
+.prompt-second-btn.is-deny {
+  border-color: var(--err);
+  background: var(--err);
+  box-shadow: 0 0 14px rgb(var(--err-rgb) / 0.28), 0 4px 14px var(--shade-2);
+}
+
+.prompt-second-btn.is-deny:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--err) 88%, white);
+  box-shadow: 0 0 20px rgb(var(--err-rgb) / 0.45), 0 4px 14px var(--shade-2);
+}
+
+/* PRM-18/PRM-19: with the question across the board and the answers in the corner, this bar holds
+   two things — the key that says no and the "always answer this" box — so it stops being a panel:
+   a titled box with the text in it was the very thing the question left behind. */
+.action-prompt-bar.is-keys-only {
+  background: none;
+  border: 0;
+  box-shadow: none;
+  padding: 0;
+  gap: var(--sp-1h);
+}

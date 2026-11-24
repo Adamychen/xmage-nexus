@@ -1182,6 +1182,7 @@ export const es: TranslationSchema = {
     feedback_kicker_pile: 'ELIGE UN MONTÓN',
     feedback_kicker_choice: 'TOMA UNA DECISIÓN',
     feedback_kicker_confirm: 'CONFIRMACIÓN',
+    ask_use_source: '¿Usar {name}?',
     feedback_kicker_required: 'ACCIÓN REQUERIDA',
     targeting_hint: 'Haz clic en el objetivo en el tablero',
     targeting_finish: 'Terminar',

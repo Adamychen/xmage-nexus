@@ -1182,6 +1182,7 @@ export const ru: TranslationSchema = {
     feedback_kicker_pile: 'ВЫБЕРИТЕ СТОПКУ',
     feedback_kicker_choice: 'ПРИМИТЕ РЕШЕНИЕ',
     feedback_kicker_confirm: 'ПОДТВЕРЖДЕНИЕ',
+    ask_use_source: 'Использовать {name}?',
     feedback_kicker_required: 'ТРЕБУЕТСЯ ДЕЙСТВИЕ',
     targeting_hint: 'Нажмите на цель на поле',
     targeting_finish: 'Завершить',

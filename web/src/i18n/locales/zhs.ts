@@ -1182,6 +1182,7 @@ export const zhs: TranslationSchema = {
     feedback_kicker_pile: '选择牌堆',
     feedback_kicker_choice: '做出选择',
     feedback_kicker_confirm: '确认',
+    ask_use_source: '使用{name}？',
     feedback_kicker_required: '需要操作',
     targeting_hint: '点击场上的目标',
     targeting_finish: '完成',

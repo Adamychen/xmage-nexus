@@ -1180,6 +1180,7 @@ export const en = {
     feedback_kicker_pile: 'CHOOSE A PILE',
     feedback_kicker_choice: 'MAKE A DECISION',
     feedback_kicker_confirm: 'CONFIRMATION',
+    ask_use_source: 'Use {name}?',
     feedback_kicker_required: 'ACTION REQUIRED',
     targeting_hint: 'Click a target on the board',
     targeting_finish: 'Finish',

@@ -1182,6 +1182,7 @@ export const de: TranslationSchema = {
     feedback_kicker_pile: 'STAPEL WÄHLEN',
     feedback_kicker_choice: 'ENTSCHEIDUNG TREFFEN',
     feedback_kicker_confirm: 'BESTÄTIGUNG',
+    ask_use_source: '{name} einsetzen?',
     feedback_kicker_required: 'AKTION ERFORDERLICH',
     targeting_hint: 'Klicke ein Ziel auf dem Spielfeld an',
     targeting_finish: 'Fertig',

@@ -5378,6 +5378,30 @@ export function buildGalleryEntries(): GalleryEntry[] {
     }
   }
 
+  // PRM-18/PRM-19: a "you may" question is a trigger resolving, and the recorded frame proves the
+  // server has it on the stack while it asks (may-trigger.json: one TRIGGERED_NONMANA "Ability" with
+  // Solemn's whole rules text). The hand-made state showed the question with an empty stack, which
+  // read as if it came from nowhere; this entry asks over the board that really goes with it.
+  const mayTriggerFrame = recordedFrames.find((frame) => frame.file === 'may-trigger.json')
+  const mayTriggerAsk = mayTriggerFrame
+    ? parseFeedback('GAME_ASK', mayTriggerFrame.gameId, {
+        message: 'Search your library for a basic land card?',
+        options: { secondMessage: 'Solemn Simulacrum' },
+      })
+    : null
+  if (mayTriggerFrame && mayTriggerAsk) {
+    entries.push({
+      id: 'prompt:ask-trigger',
+      group: 'Prompts',
+      label: 'GAME_ASK (disparo en la pila)',
+      description: 'La pregunta de un disparo opcional con su habilidad en la pila, como llega del servidor: la orden en la barra y las dos respuestas en la esquina.',
+      phase: 'game',
+      game: mayTriggerFrame.gameView,
+      gameId: mayTriggerFrame.gameId,
+      feedback: mayTriggerAsk,
+    })
+  }
+
   const slicerFrame = recordedFrames.find((frame) => frame.file === 'slicer.json')
   const slicerAsk = slicerFrame
     ? parseFeedback('GAME_ASK', slicerFrame.gameId, {

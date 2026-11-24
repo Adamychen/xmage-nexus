@@ -14,13 +14,15 @@ test.describe('Auto-answers', { tag: '@autoanswers' }, () => {
       })
       expect(pageErrors).toEqual([])
 
-      const dialog = page.locator('.feedback-dialog')
+      // PRM-18/PRM-19: the ask is a bare strip with the second key and the remember box now.
+      const dialog = page.locator('.ask-prompt-bar')
       await expect(dialog).toBeVisible()
-      await expect(dialog).toContainText('Would you like to draw a card?')
+      // PRM-18: the question itself is read across the board now, not inside the bar.
+      await expect(page.getByTestId('board-order')).toContainText('Would you like to draw a card?')
       const remember = dialog.locator('.feedback-remember-answer input')
       await expect(remember).toBeVisible()
       await remember.check()
-      await dialog.locator('.feedback-choice-card').first().click()
+      await page.getByTestId('prompt-action').click()
 
       await expect(dialog).toBeHidden({ timeout: 5000 })
       await page.waitForTimeout(1500)

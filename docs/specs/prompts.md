@@ -226,9 +226,12 @@ the stack and what can be clicked is lit on the board. The line steps aside whil
 banner is up (FX-10), and it is drawn over the stack and over the arrows (TGT-10), because an arrow
 crossing the letters makes the order unreadable; it takes no clicks, so nothing it covers becomes
 unreachable. Where there is no board to lay it over, a prompt that stands as a dialog of its own, the
-line falls back into the dock, so nothing of it is lost. A yes/no is not an order either: its
-question stays in its own bar, above the answers, because the server echoes whole rules text into
-those and a paragraph of it across the board would cover the very thing it asks about.
+line falls back into the dock, so nothing of it is lost. A yes/no is an order like any other: its
+question is read across the board, with its two answers in the corner (PRM-19) and no copy of it in
+the bar. What the server sends as that question is sometimes the whole rules text of the ability it
+is asking about, which the stack already shows while it resolves; a paragraph of that in the display
+face would cover the board, so a message too long to read there (over 120 characters) stays in the
+bar and the board names the source instead.
 
 - Why: the dock carried the order, the hint, the source and the controls in one corner panel, so
   the sentence that matters most was the smallest text on the screen and sat furthest from where
@@ -237,19 +240,25 @@ those and a paragraph of it across the board would cover the very thing it asks 
   board underneath is what the order is about. Asks went to the board too at first and came back:
   Slicer's trigger read as seven lines of display caps over the whole table (measured in the
   gallery, 24-nov-2026).
-- Guard: `src/game/feedbackModes/boardOrder.test.tsx`
+- Guard: `src/game/feedbackModes/boardOrder.test.tsx` · `src/game/feedbackModes/AskBar.test.tsx`
 
 ### PRM-19 · One primary in the corner: the prompt's action takes the big button
 While a prompt is open the big action button has nothing of its own to do — it reads "Loading…" or
 waits — so the one action that answers the prompt stands there instead of opening a second box
 beside it: leaving a mana payment, finishing or cancelling an optional target. What the button
 already carries, it keeps: a combat declaration is confirmed on the button itself (CMB-11), and the
-bar does not repeat it. Whatever the button cannot do stays in the bar, as real buttons and not as
-links: the special action of a payment, "attack with everything", the grid expander, and the
-numbered answers of a question, which are a choice and not one action. The corner never shows two
-primaries.
+bar does not repeat it. A plain yes/no answers from there too: its two answers are the same pair
+the corner holds everywhere, the first one on the big key and the second on the small one above it
+(CMB-13), each with the digit that presses it on its cap (KEY-7, KEY-8), while the question itself
+stays in its bar (PRM-18). A question with more than two answers keeps them listed in the bar, where
+a choice belongs. Whatever the button cannot do stays there as well, as real buttons and not as
+links: the special action of a payment, "attack with everything" and the grid expander. The corner
+never shows two primaries.
 
 - Why: with the order moved to the board (PRM-18) the corner was a box of leftovers beside a button
   that said "Loading…", and a combat declaration showed "Confirm attackers" twice, once in each
-  (user report, with a screenshot, 24-nov-2026).
-- Guard: `src/game/feedbackModes/boardOrder.test.tsx`
+  (user report, with a screenshot, 24-nov-2026). A yes/no was left out of that first pass and the
+  button went on saying "Loading…" beside the two answers it could have carried (second report,
+  also with a screenshot, 24-nov-2026): two answers are not a choice to scan, they are the forward
+  and the way back this corner is built for.
+- Guard: `src/game/feedbackModes/boardOrder.test.tsx` · `src/game/feedbackModes/AskBar.test.tsx`

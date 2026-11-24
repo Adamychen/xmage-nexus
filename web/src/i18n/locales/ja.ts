@@ -1182,6 +1182,7 @@ export const ja: TranslationSchema = {
     feedback_kicker_pile: '束を選ぶ',
     feedback_kicker_choice: '選択する',
     feedback_kicker_confirm: '確認',
+    ask_use_source: '{name}を使いますか？',
     feedback_kicker_required: '操作が必要',
     targeting_hint: '盤面の対象をクリック',
     targeting_finish: '完了',
