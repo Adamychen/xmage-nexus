@@ -466,7 +466,7 @@ export default function GameScreen() {
   )
   // PRM-19: a mana payment or a target pick leaves the big button with nothing to do ("Loading…"),
   // so the prompt's own action takes that place instead of opening a second box beside it. Combat
-  // is not in the list because the button already carries its confirm (ActionButton).
+  // is not in the list because the button already carries that confirmation itself (ActionButton).
   const promptOwnsAction = feedback != null
     && (feedback.mode === 'mana' || feedback.mode === 'combat' || feedback.method === 'GAME_TARGET')
   const dockButton = promptOwnsAction

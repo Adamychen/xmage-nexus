@@ -134,6 +134,14 @@
   pointer-events: none;
 }
 
+/* ACC-1: whoever asked for less transparency gets the wash alone, with the art behind it sharp. */
+@media (prefers-reduced-transparency: reduce) {
+  .board-order::before {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+
 /* The rule under it: what makes it read as engraved on the table instead of dropped on it. */
 .board-order::after {
   content: '';
