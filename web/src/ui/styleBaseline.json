@@ -65,12 +65,6 @@
     "fontSizes": 1,
     "spacing": 0
   },
-  "dev/ArenaSurveilMock.css": {
-    "colors": 33,
-    "radii": 3,
-    "fontSizes": 1,
-    "spacing": 22
-  },
   "game/CardGrid.css": {
     "colors": 0,
     "radii": 0,

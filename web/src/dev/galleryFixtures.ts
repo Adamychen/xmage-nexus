@@ -89,8 +89,6 @@ export type GalleryScreenName =
   | 'cards'
   | 'projectile'
   | 'glyphs'
-  | 'arena-surveil'
-  | 'arena-scry'
 
 /** Acción de dev de una entrada: un botón en el sidebar que modifica el estado de la galería. */
 export interface GalleryAction {
@@ -212,6 +210,13 @@ const LIBRARY_CARDS: FeedbackCard[] = [
   { id: 'g4', name: 'Counterspell', expansionSetCode: 'MH2', cardNumber: '267', cardTypes: ['Instant'] },
   { id: 'g5', name: 'Elvish Mystic', expansionSetCode: 'M14', cardNumber: '169', cardTypes: ['Creature'] },
   { id: 'g6', name: 'Forest', expansionSetCode: 'M21', cardNumber: '277', cardTypes: ['Land'] },
+]
+
+const ARENA_LIBRARY_CARDS: FeedbackCard[] = [
+  { id: 'asv-1', name: 'Lightning Bolt', expansionSetCode: 'M10', cardNumber: '146', cardTypes: ['Instant'] },
+  { id: 'asv-2', name: 'Counterspell', expansionSetCode: 'MH2', cardNumber: '267', cardTypes: ['Instant'] },
+  { id: 'asv-3', name: 'Opt', expansionSetCode: 'M21', cardNumber: '59', cardTypes: ['Instant'] },
+  { id: 'asv-4', name: 'Elvish Mystic', expansionSetCode: 'M14', cardNumber: '169', cardTypes: ['Creature'] },
 ]
 
 // ─── Pantallas nuevas (P3 núcleo, 2026-09-17): lobby, editor, draft, construct, torneo ──
@@ -3273,6 +3278,44 @@ export function buildGalleryEntries(): GalleryEntry[] {
         },
       },
       {
+        id: 'arena:surveil',
+        label: 'Surveil 3 (Arena)',
+        description: 'Arena-style full-screen surveil: drag cards between the top of the library and the graveyard, then Done answers the whole chain.',
+        prompt: {
+          method: 'GAME_TARGET',
+          gameId,
+          title: 'Surveil',
+          message: 'Select card(s) to PUT into your GRAVEYARD (Surveil)',
+          mode: 'uuid',
+          options: ARENA_LIBRARY_CARDS.slice(0, 3).map((c) => ({ id: c.id, label: c.name, value: c.id })),
+          min: 0,
+          max: 3,
+          required: false,
+          cards: ARENA_LIBRARY_CARDS.slice(0, 3),
+          sourceName: 'Discovery // Dispersal',
+          libraryStep: 'surveil-pick',
+        },
+      },
+      {
+        id: 'arena:scry',
+        label: 'Scry 4 (Arena)',
+        description: 'Arena-style full-screen scry: drag cards between the top and the bottom of the library, then Done answers the whole chain.',
+        prompt: {
+          method: 'GAME_TARGET',
+          gameId,
+          title: 'Scry',
+          message: 'Select up to 4 cards to PUT on the BOTTOM of your library (Scry)',
+          mode: 'uuid',
+          options: ARENA_LIBRARY_CARDS.map((c) => ({ id: c.id, label: c.name, value: c.id })),
+          min: 0,
+          max: 4,
+          required: false,
+          cards: ARENA_LIBRARY_CARDS,
+          sourceName: 'Preordain',
+          libraryStep: 'scry-pick',
+        },
+      },
+      {
         id: 'prompt:choose-pile',
         label: 'Elegir montón (Fact or Fiction)',
         description: 'Two piles to choose from; each card zooms without choosing its pile (PRM-15).',
@@ -3327,28 +3370,6 @@ export function buildGalleryEntries(): GalleryEntry[] {
       },
     ]
 
-    entries.push(
-      {
-        id: 'arena:surveil',
-        group: 'Arena prompts (mockup)',
-        label: 'Surveil 3 (drag)',
-        description: 'Throwaway mockup: Arena-style full-screen surveil with 3D drag between top of library and graveyard.',
-        screen: 'arena-surveil',
-        phase: 'game',
-        game,
-        gameId,
-      },
-      {
-        id: 'arena:scry',
-        group: 'Arena prompts (mockup)',
-        label: 'Scry 4 (drag)',
-        description: 'Throwaway mockup: Arena-style full-screen scry with 3D drag between top and bottom of library.',
-        screen: 'arena-scry',
-        phase: 'game',
-        game,
-        gameId,
-      },
-    )
     for (const p of prompts) {
       entries.push({
         id: p.id,
