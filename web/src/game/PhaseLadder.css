@@ -1,0 +1,254 @@
+.phase-ladder-wrap {
+  --ladder-tint: var(--gold-300);
+  --ladder-other-tint: var(--fg-2);
+  --ladder-your-tint: var(--seat-0);
+  --ladder-opp-tint: var(--seat-1);
+  --ladder-progress: 0%;
+  position: relative;
+  width: auto;
+  flex-shrink: 0;
+}
+
+.phase-ladder {
+  position: relative;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: auto;
+  gap: var(--sp-0h);
+  padding: var(--sp-0h) var(--sp-2);
+  border-radius: var(--r-pill);
+  background: linear-gradient(180deg, rgb(var(--ink-2-rgb) / 0.68), rgb(var(--ink-2-rgb) / 0.94));
+  border: 1px solid var(--line-2);
+  box-shadow: inset 0 1px 0 var(--veil-2), 0 6px 18px rgb(var(--ink-rgb) / 0.45);
+  backdrop-filter: blur(6px);
+  pointer-events: auto;
+  user-select: none;
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .phase-ladder,
+  .ladder-tooltip {
+    backdrop-filter: none;
+    background: rgb(var(--ink-2-rgb));
+  }
+}
+
+.ladder-rail {
+  position: absolute;
+  left: 18px;
+  right: 18px;
+  top: 50%;
+  height: 2px;
+  translate: 0 -50%;
+  border-radius: var(--r-pill);
+  background: rgb(var(--fg-rgb, 255 255 255) / 0.1);
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.ladder-rail-fill {
+  display: block;
+  width: var(--ladder-progress);
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--ladder-tint) 35%, transparent), color-mix(in srgb, var(--ladder-tint) 85%, transparent));
+  transition: width var(--dur-base) var(--ease-out);
+}
+
+.ladder-combat-group {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-0h);
+  padding: 0 var(--sp-1);
+  border-radius: var(--r-pill);
+  background: rgb(var(--ink-rgb) / 0.34);
+  border: 1px solid var(--veil-2);
+  transition: border-color var(--dur-fast) var(--ease-out), background-color var(--dur-fast) var(--ease-out);
+}
+
+.ladder-combat-group.is-active {
+  border-color: color-mix(in srgb, var(--ladder-tint) 42%, var(--line-2));
+  background: color-mix(in srgb, var(--ladder-tint) 8%, rgb(var(--ink-rgb) / 0.45));
+}
+
+.ladder-step {
+  position: relative;
+  z-index: 1;
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 26px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-pill);
+  background: transparent;
+  color: var(--fg-3);
+  cursor: pointer;
+  transition: color var(--dur-fast) var(--ease-out), opacity var(--dur-fast) var(--ease-out), transform var(--dur-fast) var(--ease-out), background-color var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out);
+}
+
+.ladder-step.is-big {
+  width: 32px;
+  height: 28px;
+  color: var(--fg-2);
+}
+
+.ladder-step:not(:disabled):not(.is-static):hover {
+  color: var(--fg-1);
+  background: rgb(var(--fg-rgb, 255 255 255) / 0.07);
+  transform: translateY(-1px);
+}
+
+.ladder-step.is-static {
+  cursor: default;
+  opacity: 0.72;
+}
+
+.ladder-step.is-static:hover {
+  color: var(--fg-2);
+}
+
+.ladder-step:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 1px;
+}
+
+.ladder-step:disabled {
+  cursor: default;
+}
+
+.ladder-step.is-past {
+  opacity: 0.38;
+}
+
+.ladder-step.is-current {
+  color: var(--ladder-tint);
+  opacity: 1;
+  background: color-mix(in srgb, var(--ladder-tint) 18%, rgb(var(--ink-2-rgb) / 0.85));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ladder-tint) 58%, transparent), 0 0 10px color-mix(in srgb, var(--ladder-tint) 36%, transparent);
+}
+
+.ladder-step.is-current.is-static {
+  opacity: 1;
+}
+
+.ladder-step.is-sweeping {
+  animation: ladder-sweep var(--dur-slow) var(--ease-out);
+}
+
+@keyframes ladder-sweep {
+  0% { transform: scale(0.76); opacity: 0.5; }
+  60% { transform: scale(1.14); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.ladder-stop-notch {
+  position: absolute;
+  left: 50%;
+  bottom: -1px;
+  width: 10px;
+  height: 2.5px;
+  translate: -50% 0;
+  border-radius: var(--r-pill);
+  background: color-mix(in srgb, var(--ladder-tint) 70%, var(--fg-2));
+  opacity: 0.85;
+}
+
+.ladder-step.is-current .ladder-stop-notch {
+  background: var(--ladder-tint);
+  opacity: 1;
+  box-shadow: 0 0 6px var(--ladder-tint);
+}
+
+.ladder-stop-dot {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 5px;
+  height: 5px;
+  border-radius: var(--r-pill);
+  background: var(--ladder-other-tint);
+  box-shadow: 0 0 0 1.5px rgb(var(--ink-2-rgb));
+}
+
+.ladder-tooltip {
+  position: absolute;
+  left: 0;
+  top: calc(100% + var(--sp-2));
+  min-width: 170px;
+  max-width: 248px;
+  padding: var(--sp-1h) var(--sp-2h);
+  border-radius: var(--r-md);
+  background: rgb(var(--ink-2-rgb) / 0.96);
+  border: 1px solid var(--line-2);
+  box-shadow: inset 0 1px 0 var(--veil-2), 0 8px 22px rgb(var(--ink-rgb) / 0.6);
+  backdrop-filter: blur(8px);
+  pointer-events: none;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-0h);
+}
+
+.ladder-tooltip-title {
+  font-family: var(--font-display, sans-serif);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  color: var(--fg-1);
+  letter-spacing: 0.02em;
+}
+
+.ladder-tooltip-stops {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-size: var(--fs-2xs);
+  color: var(--fg-3);
+}
+
+.ladder-tooltip-turn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+}
+
+.ladder-tooltip-turn.is-on {
+  color: var(--fg-1);
+  font-weight: 600;
+}
+
+.ladder-tooltip-swatch {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--r-pill);
+  flex: none;
+}
+
+.ladder-tooltip-swatch.is-yours {
+  background: var(--ladder-your-tint);
+}
+
+.ladder-tooltip-swatch.is-opp {
+  background: var(--ladder-opp-tint);
+}
+
+.ladder-tooltip-hint {
+  font-size: var(--fs-3xs);
+  color: var(--fg-3);
+  line-height: 1.25;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ladder-rail-fill,
+  .ladder-combat-group {
+    transition: none;
+  }
+  .ladder-step.is-sweeping {
+    animation: none;
+  }
+}

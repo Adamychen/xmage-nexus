@@ -9,13 +9,11 @@ import CustomSleeveTile from '../appearance/CustomSleeveTile'
 import CustomCardArtManager from '../appearance/CustomCardArtManager'
 import BoardDemo from './BoardDemo'
 import BoardLivePreview from './BoardLivePreview'
-import LayoutDemo from './LayoutDemo'
 import OptionPreview, { type OptionPreviewKind } from './OptionPreview'
 import PlaymatPicker from '../appearance/PlaymatPicker'
 import { ZOOM_PRESETS, isZoomPreset, stepZoom, zoomPercent } from '../appearance/zoom'
 import SoundFxControls from './SoundFxControls'
 import PresetPicker from './PresetPicker'
-import { boardLayoutChoiceOf, chooseBoardLayout, type BoardLayoutChoice } from './boardLayoutChoice'
 import { HAND_RAIL_MAX_W, HAND_RAIL_MIN_W, KEYWORD_AURA_MODES, PT_BADGE_MODES, SICKNESS_STYLES } from '../board/cardOverlays'
 import Button from '../ui/Button'
 import Select from '../ui/Select'
@@ -34,12 +32,6 @@ import '../game/GameMenu.css'
 import '../game/PhaseStopSelector.css'
 import './SettingsModal.css'
 import '../appearance/SleevePickerModal.css'
-
-export const LAYOUTS: Array<{ id: BoardLayoutChoice; labelKey: string; descKey: string }> = [
-  { id: 'standard', labelKey: 'board_standard', descKey: 'board_standard_desc' },
-  { id: 'arena', labelKey: 'board_arena', descKey: 'board_arena_desc' },
-  { id: 'table', labelKey: 'board_table', descKey: 'board_table_desc' },
-]
 
 export function LanguageSection() {
   const { t, lang, setLanguage, languages, cardLang, setCardLanguage, cardLanguages } = useTranslation()
@@ -265,20 +257,6 @@ function LayoutTab() {
   const settings = useSettings()
   return (
     <>
-      <Picker
-        settingId="board-layout"
-        title={t('lobby', 'appearance_board_title')}
-        hint={t('lobby', 'appearance_board_hint')}
-        value={boardLayoutChoiceOf(settings)}
-        onPick={chooseBoardLayout}
-        options={LAYOUTS.map((l) => ({
-          id: l.id,
-          label: t('lobby', l.labelKey as 'board_standard'),
-          desc: t('lobby', l.descKey as 'board_standard_desc'),
-          demo: <LayoutDemo layout={l.id} />,
-          testId: `settings-layout-${l.id}`,
-        }))}
-      />
       <SettingsGroup title={t('lobby', 'settings_group_field_hand')}>
         <OptionSwitch id="board-fill" kind="boardFill" label={t('lobby', 'board_fill_show')} hint={t('lobby', 'board_fill_show_hint')}
           value={settings.boardFill} onChange={(v) => setSetting('boardFill', v)} />
@@ -468,7 +446,6 @@ const TAB_LABEL: Record<BoardTab, 'settings_board_tab_layout' | 'settings_board_
 /** SET-7: four tabs next to a live preview. Controlled by the settings dialog (search jumps to a tab), uncontrolled in the setup wizard. */
 export function BoardSection({ tab, onTabChange }: { tab?: BoardTab; onTabChange?: (tab: BoardTab) => void } = {}) {
   const { t } = useTranslation()
-  const settings = useSettings()
   const [ownTab, setOwnTab] = useState<BoardTab>('layout')
   const current = tab ?? ownTab
   const pick = onTabChange ?? setOwnTab
@@ -490,15 +467,7 @@ export function BoardSection({ tab, onTabChange }: { tab?: BoardTab; onTabChange
           {current === 'table' && <TableTab />}
         </div>
         <aside className="settings-board-preview">
-          {current === 'layout' ? (
-            <figure className="board-live-preview" data-testid="board-layout-preview">
-              <figcaption className="settings-group-title">{t('lobby', 'settings_live_preview')}</figcaption>
-              <LayoutDemo layout={boardLayoutChoiceOf(settings)} />
-              <p className="settings-group-hint">{t('lobby', LAYOUTS.find((l) => l.id === boardLayoutChoiceOf(settings))!.descKey as 'board_standard_desc')}</p>
-            </figure>
-          ) : (
-            <BoardLivePreview />
-          )}
+          <BoardLivePreview />
         </aside>
       </div>
     </div>

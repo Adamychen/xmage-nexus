@@ -20,7 +20,8 @@ describe('CrossZoneOverlay', () => {
     expect(container.querySelector('.pile-overlay-backdrop')).toBeNull()
     const backdrop = document.body.querySelector(':scope > .board-surface > .pile-overlay-backdrop')
     expect(backdrop).not.toBeNull()
-    expect(backdrop!.querySelector('h3')!.textContent).toBe(`${t('game', 'cross_zone_title')} (1)`)
+    expect(backdrop!.querySelector('h3')!.textContent).toBe(t('game', 'cross_zone_title'))
+    expect(backdrop!.querySelector('.zone-viewer-count')!.textContent).toMatch(/^1 /)
     expect(backdrop!.querySelector('.cross-zone-source')!.textContent).toBe(t('board', 'pile_graveyard'))
   })
 

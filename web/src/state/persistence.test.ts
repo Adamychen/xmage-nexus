@@ -534,6 +534,22 @@ describe('persistence', () => {
       expect(loaded.keywordAura).toBe('subtle')
     })
 
+    it('BRD-6: a stored layout and interface choice is dropped on load and the main board switch is kept', () => {
+      mockStorage['mage-web-appearance'] = JSON.stringify({
+        sleeveId: 'classic', boardLayout: 'standard', boardLayoutManual: true, gameUi: 'v2', uiScale: 1, cjkBoost: true, boardSpotlight: true,
+      })
+      const loaded = loadAppearanceSettings()
+      expect('gameUi' in loaded).toBe(false)
+      expect('boardLayout' in loaded).toBe(false)
+      expect('boardLayoutManual' in loaded).toBe(false)
+      expect(loaded.boardSpotlight).toBe(true)
+    })
+
+    it('BRD-6: without a stored main board switch the column view is the default', () => {
+      mockStorage['mage-web-appearance'] = JSON.stringify({ sleeveId: 'classic', gameUi: 'v1', uiScale: 1, cjkBoost: true })
+      expect(loadAppearanceSettings().boardSpotlight).toBe(false)
+    })
+
     it('BRD-47: a stored icon set is ignored now that there is only one', () => {
       mockStorage['mage-web-appearance'] = JSON.stringify({
         sleeveId: 'classic', boardLayout: 'standard', uiScale: 1, cjkBoost: true,

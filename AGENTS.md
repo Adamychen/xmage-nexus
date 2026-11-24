@@ -373,10 +373,10 @@ for `mechanics.spec.ts`, so a fixture change must be checked against every spec 
   `localhost` in fake mode.
 - **A pixel budget is a platform assertion wearing layout's clothes.** A fixed `max-width`, a
   hard-coded gap, or an e2e expectation built on one machine's font metrics only tests that
-  machine (`turn-lane.spec.ts` was green on macOS and red on Linux CI: the walkway's
+  machine (the old Standard duel's turn walkway was green on macOS and red on Linux CI: its
   `max-width: 96px` fitted this Mac's font by 1.1 px and truncated the same 14-char name under
   Linux's system-ui fallback). Drive the layout from a runtime measurement of content vs available
-  width (`web/src/board/laneFit.ts` + `useLaneFit.ts`, precedent `boardFit.ts` / `useBandFit.ts`)
+  width (the board's layout engine, `web/src/board/layout/layoutEngine.ts`, measures that way)
   and assert the *contract* in the spec ("no visible name is clipped", "the row never overflows
   its band"), never a number. Then **verify the guard can fail**: put the old constant back and
   watch the spec go red. `--font-ui` (`web/src/ui/tokens.css`) exists so a test can inject a wider

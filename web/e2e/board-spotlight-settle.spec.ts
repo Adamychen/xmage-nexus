@@ -82,12 +82,12 @@ async function writesInWindow(page: import('@playwright/test').Page): Promise<nu
 for (const style of ['classic', 'compact'] as CardStyle[]) {
   test(`BRD-21: the spotlight board with pile cards and ${style} cards keeps every size once drawn and after resizing 1600 -> 1000 -> 1600 px`, async ({ page }) => {
     test.setTimeout(180_000)
-    const settings = { ...LAYOUT_SETTINGS.table, boardFill: true, boardSpotlight: true, cardStyle: style }
+    const settings = { ...LAYOUT_SETTINGS.panel, boardFill: true, boardSpotlight: true, cardStyle: style }
     await page.setViewportSize({ width: RESIZE_PATH[0], height: 900 })
     await page.goto('/')
     await dismissSetupWizard(page)
     await drawBoard(page, boardGame(4, DENSE), settings)
-    await expect(page.getByTestId('pile-corner').first()).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByTestId('arena-own-piles').first()).toBeVisible({ timeout: 10_000 })
     await page.mouse.move(1, 1)
     await installCounter(page)
     const notes: string[] = []

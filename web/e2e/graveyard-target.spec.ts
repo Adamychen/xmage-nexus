@@ -54,9 +54,8 @@ test(
         'targeting with GRAVEYARD zone',
       )
       expect(targeting.ids).toContain(REANIMATE_GRIZZLY_ID)
-      // [data-graveyard-count] exists for me and the opponent: ours is the
-      // only one with 1 card (Grizzly Bears).
-      const graveyardStack = page.locator('[data-graveyard-count="1"]')
+      // Ours is the only graveyard pile with 1 card (Grizzly Bears).
+      const graveyardStack = page.locator('[data-testid="pile-card-graveyard"][data-count="1"]')
       await expect(graveyardStack, 'the graveyard pile should be highlighted').toHaveClass(
         /target-zone/,
         { timeout: 10_000 },

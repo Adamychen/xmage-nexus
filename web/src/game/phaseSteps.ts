@@ -1,6 +1,3 @@
-import { useCallback } from 'react'
-import type { MouseEvent } from 'react'
-import { setSetting, useStore } from '../state/store'
 import type { TranslationSchema } from '../i18n/types'
 
 export interface StepDef {
@@ -24,54 +21,6 @@ export const STEPS: StepDef[] = [
   { key: 'CLEANUP',           label: 'CL',  nameKey: 'step_cleanup',        group: 'e' },
 ]
 
-export interface DialPhase {
-  key: string
-  label: string
-  nameKey: keyof TranslationSchema['game']
-  steps: string[]
-  stopKeys: string[]
-}
-
-export const DIAL_PHASES: DialPhase[] = [
-  { key: 'UPKEEP',         label: 'UPK', nameKey: 'step_upkeep',  steps: ['UPKEEP'],         stopKeys: ['upkeep'] },
-  { key: 'DRAW',           label: 'DRW', nameKey: 'step_draw',    steps: ['DRAW'],           stopKeys: ['draw'] },
-  { key: 'PRECOMBAT_MAIN', label: 'M1',  nameKey: 'step_main1',   steps: ['PRECOMBAT_MAIN'], stopKeys: ['main1'] },
-  {
-    key: 'COMBAT',
-    label: 'CMB',
-    nameKey: 'phase_combat',
-    steps: ['BEGIN_COMBAT', 'DECLARE_ATTACKERS', 'DECLARE_BLOCKERS', 'FIRST_COMBAT_DAMAGE', 'COMBAT_DAMAGE', 'END_COMBAT'],
-    stopKeys: ['beginCombat', 'endCombat'],
-  },
-  { key: 'POSTCOMBAT_MAIN', label: 'M2',  nameKey: 'step_main2',  steps: ['POSTCOMBAT_MAIN'], stopKeys: ['main2'] },
-  { key: 'END_TURN',        label: 'END', nameKey: 'step_end_step', steps: ['END_TURN', 'CLEANUP'], stopKeys: ['endStep'] },
-]
-
-export interface DialCombatStep {
-  key: string
-  label: string
-  nameKey: keyof TranslationSchema['game']
-  steps: string[]
-  stopKey?: string
-}
-
-export const DIAL_COMBAT_STEPS: DialCombatStep[] = [
-  { key: 'BEGIN_COMBAT',      label: 'BC',  nameKey: 'step_begin_combat',  steps: ['BEGIN_COMBAT'],                             stopKey: 'beginCombat' },
-  { key: 'DECLARE_ATTACKERS', label: 'AT',  nameKey: 'step_attackers',     steps: ['DECLARE_ATTACKERS'] },
-  { key: 'DECLARE_BLOCKERS',  label: 'BL',  nameKey: 'step_blockers',      steps: ['DECLARE_BLOCKERS'] },
-  { key: 'COMBAT_DAMAGE',     label: 'DM',  nameKey: 'step_combat_damage', steps: ['FIRST_COMBAT_DAMAGE', 'COMBAT_DAMAGE'] },
-  { key: 'END_COMBAT',        label: 'EC',  nameKey: 'step_end_combat',    steps: ['END_COMBAT'],                               stopKey: 'endCombat' },
-]
-
-export function activeCombatIndex(step: string): number {
-  return DIAL_COMBAT_STEPS.findIndex((s) => s.steps.includes(step))
-}
-
-export function activeDialIndex(step: string): number {
-  const idx = DIAL_PHASES.findIndex((p) => p.steps.includes(step))
-  return idx >= 0 ? idx : 0
-}
-
 export const STEP_GROUPS = ['b', 'm1', 'c', 'm2', 'e']
 
 const DAMAGE_STEPS: ReadonlySet<string> = new Set(['FIRST_COMBAT_DAMAGE', 'COMBAT_DAMAGE'])
@@ -84,41 +33,4 @@ export function activeStepIndex(step: string): number {
   const key = isDamageStep(step) ? 'DECLARE_BLOCKERS' : step
   const idx = STEPS.findIndex((s) => s.key === key)
   return idx >= 0 ? idx : 0
-}
-
-/** The board edits the same stops as Settings (STP-1): one store field, persisted and pushed by `setSetting`. */
-export function usePhaseStopToggles() {
-  const phaseStops = useStore((s) => s.settings.phaseStops)
-
-  const toggleStop = useCallback((stopKey?: string | string[], e?: MouseEvent) => {
-    const keys = Array.isArray(stopKey) ? stopKey : stopKey ? [stopKey] : []
-    if (keys.length === 0 || !phaseStops) return
-    e?.preventDefault()
-    e?.stopPropagation()
-
-    const currentYour = keys.some((k) => !!phaseStops.yourTurn?.[k])
-    const currentOpp = keys.some((k) => !!phaseStops.opponentTurn?.[k])
-
-    const nextYour = e?.shiftKey ? currentYour : !currentYour
-    const nextOpp = e?.shiftKey ? !currentOpp : currentOpp
-
-    const yourTurn = { ...(phaseStops.yourTurn ?? {}) }
-    const opponentTurn = { ...(phaseStops.opponentTurn ?? {}) }
-    for (const k of keys) {
-      yourTurn[k] = nextYour
-      opponentTurn[k] = nextOpp
-    }
-    setSetting('phaseStops', { yourTurn, opponentTurn })
-  }, [phaseStops])
-
-  const toggleOpponentStop = useCallback((stopKey?: string | string[]) => {
-    const keys = Array.isArray(stopKey) ? stopKey : stopKey ? [stopKey] : []
-    if (keys.length === 0 || !phaseStops) return
-    const cur = keys.some((k) => !!phaseStops.opponentTurn?.[k])
-    const opponentTurn = { ...(phaseStops.opponentTurn ?? {}) }
-    for (const k of keys) opponentTurn[k] = !cur
-    setSetting('phaseStops', { ...phaseStops, opponentTurn })
-  }, [phaseStops])
-
-  return { phaseStops, toggleStop, toggleOpponentStop }
 }

@@ -69,15 +69,17 @@ test(
 
     const passBtn = page.locator('.big-action-btn.interactive')
 
-    // --- Configurar phaseStops por la UI REAL del PhaseBar --------------------
+    // --- Configurar phaseStops por la UI REAL de la fila de fases (BRD-62) ------
     // Deja SOLO "mi upkeep" marcado para detenerse; apaga todo lo demás (mi
     // turno y el del rival) para que el engine autopase en silencio el resto.
-    for (const step of YOUR_TURN_OFF) {
-      await page.getByTestId(`phase-bar-step-${step}`).click()
+    const mine = (await page.getByTestId('phase-ladder').getAttribute('data-shown-turn')) === 'yourTurn'
+    const yourButton = mine ? 'left' : 'right'
+    const oppButton = mine ? 'right' : 'left'
+    const clickStep = async (step: string, button: 'left' | 'right') => {
+      await page.getByTestId(`phase-ladder-step-${step}`).click({ button })
     }
-    for (const step of ALL_STOP_STEPS) {
-      await page.getByTestId(`phase-bar-step-${step}`).click({ modifiers: ['Shift'] })
-    }
+    for (const step of YOUR_TURN_OFF) await clickStep(step, yourButton)
+    for (const step of ALL_STOP_STEPS) await clickStep(step, oppButton)
     await expect
       .poll(() => page.evaluate(() => (globalThis as any).__mageStore?.getState?.()?.settings?.phaseStops))
       .toMatchObject({

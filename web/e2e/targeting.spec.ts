@@ -130,7 +130,7 @@ test('TGT-1: casting Lightning Bolt marks its legal targets on the board, player
   // evidencia visual (no es aserción): captura del tablero post-resolución
   fs.mkdirSync(SHOTS_DIR, { recursive: true })
   const resolved = path.join(SHOTS_DIR, 'targeting-resolved.png')
-  await page.locator('.game-board').screenshot({ path: resolved })
+  await page.locator('.arena-board').first().screenshot({ path: resolved })
 
   // (k) cero pageerrors
   expect(pageErrors, `pageerrors: ${pageErrors.map(String).join(' | ')}`).toEqual([])

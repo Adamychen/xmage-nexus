@@ -63,14 +63,8 @@ test.describe('Visual preset & playmat pickers', { tag: '@site' }, () => {
       const demo = (kind: string, value: string) => page.getByTestId(`board-demo-${kind}-${value}`)
       const tab = (id: string) => page.getByTestId(`settings-board-tab-${id}`).click()
 
-      for (const [layout, zones] of [['standard', 2], ['arena', 4], ['table', 4]] as const) {
-        const miniature = page.getByTestId(`settings-layout-${layout}`).getByTestId(`layout-demo-${layout}`)
-        await expect(miniature).toBeVisible()
-        await expect(miniature.getByTestId('layout-demo-zone')).toHaveCount(zones)
-        await expect(miniature.locator('.layout-demo-zone.is-mine')).toHaveCount(1)
-      }
-      await expect(page.getByTestId('board-layout-preview').locator('.layout-demo')).toBeVisible()
-      await expectAllImagesLoaded(page, '.settings-cards [data-testid^="layout-demo-"] img.layout-demo-tile', 12)
+      await expect(page.getByTestId('settings-layout-arena')).toHaveCount(0)
+      await expect(page.getByTestId('board-live-preview')).toBeVisible()
       await page.screenshot({ path: shot('layouts.png') })
       for (const kind of ['boardFill', 'boardSpotlight', 'handRail', 'handRow'] as const) {
         await expect(page.getByTestId(`option-switch-${kind}`)).toBeVisible()

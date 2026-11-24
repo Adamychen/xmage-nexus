@@ -128,14 +128,9 @@ desktop's shape, although the 1.4.62 engine never sends it (nothing calls `fireP
 - Guard: `src/game/feedbackModes/GenericDialog.test.tsx` · `src/game/feedback.test.ts`
 
 ### MNA-11 · In the v2 table, an opponent's floating mana shows in their panel
-While an opponent has mana in their pool, their v2 player panel shows it below the life total, one
-pip and count per colour holding mana (MNA-3's view, never clickable). With an empty pool the
-section is not drawn. The classic interface already shows every player's pool in its resource bar.
+Retired 2026-11-23: the Table (v2) interface was removed when every game moved to the one Arena layout; every player's pool shows in their resource bar, and over a copy in the side panel (MNA-12).
 
-- Why: floating mana tells you what an opponent can still cast or activate this step, and the v2
-  panel only showed your own pool. Hiding it when empty keeps every opponent panel free of a
-  permanent "—" for something that is empty almost all the time.
-- Guard: `src/board/BoardZone.oppPool.test.tsx`
+- Guard: none yet (retired)
 
 ### MNA-12 · In the Arena panel, an opponent's floating mana is drawn over its copy
 With the side panel open, each seat's copy is scaled to fit its slot, which leaves the pool inside

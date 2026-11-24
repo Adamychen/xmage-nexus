@@ -34,7 +34,7 @@ beforeEach(() => {
   vi.mocked(cmds.sendPlayerAction).mockClear()
   setState({
     ...initialState,
-    settings: { ...initialState.settings, gameUi: 'v1' },
+    settings: { ...initialState.settings },
     conn: { serverHost: 'localhost', port: 17171, username: 'tester', wsHost: 'localhost', proxyPort: 8787 },
     gameId: 'game-1',
     game: playerGameView,

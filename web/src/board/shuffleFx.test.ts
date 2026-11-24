@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { clearShuffles, getShuffles, parseShuffle, sniffShuffle, spawnShuffle } from './shuffleFx'
+import { clearShuffles, getShuffles, libraryElement, parseShuffle, sniffShuffle, spawnShuffle } from './shuffleFx'
 import { soundManager } from '../audio/soundManager'
 import { getState, setState } from '../state/state'
 import { makeGameView, makePlayer } from '../__fixtures__/gameViews'
@@ -95,5 +95,18 @@ describe('shuffle effect', () => {
     setState({ settings: { ...getState().settings, effects: true } })
     document.body.innerHTML = ''
     expect(spawnShuffle('p-alice')).toBeNull()
+  })
+})
+
+describe('libraryElement', () => {
+  afterEach(() => {
+    document.body.innerHTML = ''
+  })
+
+  it('finds the library pile card of the Arena bottom row as a pile', () => {
+    document.body.innerHTML = '<div data-player-id="p1"><button data-testid="pile-card-library"></button></div>'
+    const pile = document.querySelector<HTMLElement>('[data-testid="pile-card-library"]')!
+    pile.getBoundingClientRect = () => ({ left: 0, top: 0, right: 80, bottom: 56, width: 80, height: 56, x: 0, y: 0, toJSON: () => ({}) }) as DOMRect
+    expect(libraryElement('p1')).toEqual({ el: pile, mode: 'pile' })
   })
 })

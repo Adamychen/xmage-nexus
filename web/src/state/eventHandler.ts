@@ -30,6 +30,7 @@ import { notifyStagingRoster } from './stagingSounds'
 import { perfMark } from '../system/perfProbe'
 import { isRollbackPending } from './actions'
 import { applyRollbackOutcome } from './rollbackVote'
+import { endLibraryPlan } from './libraryPlanRunner'
 
 export function handleMessage(msg: ProxyMessage) {
   switch (msg.type) {
@@ -43,6 +44,7 @@ export function handleMessage(msg: ProxyMessage) {
       break
     }
     case 'disconnected':
+      endLibraryPlan()
       setState({ link: 'ok', linkAttempt: 0, phase: 'idle', connecting: false, game: null, gameId: null, gameChatId: null, tableChatId: null, tableChatTableId: null, tournamentChatId: null, tournamentChatTournamentId: null, playableIds: [], playableWindow: null, combat: null, feedback: null, lobby: null, roomChatId: null, sideboardScreen: null, pendingSideboardScreen: null, rollbackPendingFor: null, rollbackPendingAt: null, rollbackVote: null, resumingGameId: null, turnRecap: null, enteredThisTurn: {}, elimination: null })
       break
     case 'info':
@@ -115,6 +117,8 @@ function handleEvent(method: string, objectId: string | null, data: unknown, mes
   if (awayFromTheGame && isGameEvent && !restoringGame && method !== 'START_GAME' && method !== 'WATCHGAME') {
     return
   }
+
+  if ((method === 'START_GAME' || method === 'GAME_INIT') && objectId && s.libraryPlan && objectId !== s.libraryPlan.gameId) endLibraryPlan()
 
   const embeddedGame = gameViewFrom(data)
   if (embeddedGame) {
@@ -198,10 +202,11 @@ function handleEvent(method: string, objectId: string | null, data: unknown, mes
   if (method !== 'GAME_UPDATE' && method !== 'GAME_UPDATE_AND_INFORM') {
     setState({ events: [...s.events, { method, time: Date.now() }].slice(-12) })
   }
+  if (/^GAME_(SELECT|PLAY_|CHOOSE_|GET_|TARGET_AMOUNT|OVER)/.test(method) && getState().libraryPlan) endLibraryPlan()
   if (/^GAME_(?:SELECT|ASK|TARGET|CHOOSE_|PLAY_|GET_)/.test(method) && getState().waitingFor) {
     setState({ waitingFor: null })
   }
-  if (method !== 'GAME_ASK') {
+  if (method !== 'GAME_ASK' && !(method === 'GAME_TARGET' && getState().libraryPlan)) {
     const feedback = parseFeedback(method, objectId ?? s.gameId, data)
     if (feedback && !applyChoiceMemory(feedback, objectId ?? s.gameId, s)) {
       notifyFeedbackOpened(feedback)

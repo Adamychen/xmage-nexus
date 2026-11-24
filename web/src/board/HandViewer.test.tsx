@@ -26,6 +26,14 @@ describe('HandViewer', () => {
     )
   }
 
+  it('BRD-24: pointing at or focusing a known card opens no side preview panel', () => {
+    openViewer()
+    const card = document.querySelector('[data-testid="hand-viewer"] .zone-fan-item.is-revealed .pile-card') as HTMLElement
+    fireEvent.mouseEnter(card)
+    fireEvent.focus(card)
+    expect(document.querySelector('.floating-card-preview')).toBeNull()
+  })
+
   it('HND-9: renders in a portal with known cards face-up and the backs stack', () => {
     openViewer()
     const viewer = document.body.querySelector('[data-testid="hand-viewer"]')

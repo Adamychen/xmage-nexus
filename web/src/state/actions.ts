@@ -430,15 +430,15 @@ type SettingsKey = keyof AppState['settings']
 const FX_KEYS: SettingsKey[] = ['effects', 'animationSpeed']
 const AUDIO_KEYS: SettingsKey[] = ['soundEnabled', 'masterVolume', 'sfxVolume', 'uiVolume', 'prioritySound']
 const MUSIC_KEYS: SettingsKey[] = ['musicEnabled', 'musicVolume']
-const APPEARANCE_KEYS: SettingsKey[] = ['appearance', 'sleeveId', 'boardLayout', 'boardLayoutManual', 'uiScale', 'cjkBoost', 'transparentDialogs', 'playmatId', 'cardStyle', 'tapStyle', 'showHandCost', 'showManaSource', 'ptBadgeMode', 'sicknessStyle', 'keywordAura', 'cardRender', 'handRail', 'handRailWidth', 'handRow', 'boardFill', 'boardSpotlight', 'boardSpotlightPanel', 'stackCaption', 'gameUi', 'cardPreviewScale']
+const APPEARANCE_KEYS: SettingsKey[] = ['appearance', 'sleeveId', 'uiScale', 'cjkBoost', 'transparentDialogs', 'playmatId', 'cardStyle', 'tapStyle', 'showHandCost', 'showManaSource', 'ptBadgeMode', 'sicknessStyle', 'keywordAura', 'cardRender', 'handRail', 'handRailWidth', 'handRow', 'boardFill', 'boardSpotlight', 'boardSpotlightPanel', 'stackCaption', 'cardPreviewScale']
 
 function persistClientSettings(next: AppState['settings'], prev: AppState['settings']) {
   const changed = (keys: SettingsKey[]) => keys.some((key) => next[key] !== prev[key])
-  const { effects, animationSpeed, soundEnabled, masterVolume, sfxVolume, uiVolume, prioritySound, musicEnabled, musicVolume, appearance, sleeveId, playmatId, cardStyle, tapStyle, showHandCost, showManaSource, ptBadgeMode, sicknessStyle, keywordAura, cardRender, handRail, handRailWidth, handRow, boardFill, boardSpotlight, boardSpotlightPanel, stackCaption, gameUi, cardPreviewScale, boardLayout, boardLayoutManual, uiScale, cjkBoost, transparentDialogs, autoAnswers, choiceMemory, manaPayment, phaseStops, smartStops } = next
+  const { effects, animationSpeed, soundEnabled, masterVolume, sfxVolume, uiVolume, prioritySound, musicEnabled, musicVolume, appearance, sleeveId, playmatId, cardStyle, tapStyle, showHandCost, showManaSource, ptBadgeMode, sicknessStyle, keywordAura, cardRender, handRail, handRailWidth, handRow, boardFill, boardSpotlight, boardSpotlightPanel, stackCaption, cardPreviewScale, uiScale, cjkBoost, transparentDialogs, autoAnswers, choiceMemory, manaPayment, phaseStops, smartStops } = next
   if (changed(FX_KEYS)) saveFxSettings({ effects, animationSpeed })
   if (changed(AUDIO_KEYS)) saveAudioSettings({ soundEnabled, masterVolume, sfxVolume, uiVolume, prioritySound })
   if (changed(MUSIC_KEYS)) saveMusicSettings({ musicEnabled, musicVolume })
-  if (changed(APPEARANCE_KEYS)) saveAppearanceSettings({ appearance, sleeveId, boardLayout, boardLayoutManual, uiScale, cjkBoost, transparentDialogs, playmatId, cardStyle, tapStyle, showHandCost, showManaSource, ptBadgeMode, sicknessStyle, keywordAura, cardRender, handRail, handRailWidth, handRow, boardFill, boardSpotlight, boardSpotlightPanel, stackCaption, gameUi, cardPreviewScale })
+  if (changed(APPEARANCE_KEYS)) saveAppearanceSettings({ appearance, sleeveId, uiScale, cjkBoost, transparentDialogs, playmatId, cardStyle, tapStyle, showHandCost, showManaSource, ptBadgeMode, sicknessStyle, keywordAura, cardRender, handRail, handRailWidth, handRow, boardFill, boardSpotlight, boardSpotlightPanel, stackCaption, cardPreviewScale })
   if (changed(['autoAnswers'])) saveAutoAnswers(autoAnswers.map(({ pattern, answer, key }) => (key ? { pattern, answer, key } : { pattern, answer })))
   if (changed(['choiceMemory'])) saveChoiceMemory(choiceMemory.map(({ pattern, value }) => ({ pattern, value })))
   if (changed(['manaPayment'])) saveManaPayment({ ...manaPayment })
@@ -455,8 +455,8 @@ function persistClientSettings(next: AppState['settings'], prev: AppState['setti
 }
 
 function applyRuntimeSettings(settings: AppState['settings']) {
-  const { sleeveId, boardLayout, uiScale, cjkBoost, transparentDialogs, soundEnabled, masterVolume, sfxVolume, uiVolume, musicEnabled, musicVolume } = settings
-  try { applyAppearanceToDocument({ sleeveId, boardLayout, uiScale, cjkBoost, transparentDialogs }, getLanguage()) } catch {}
+  const { sleeveId, uiScale, cjkBoost, transparentDialogs, soundEnabled, masterVolume, sfxVolume, uiVolume, musicEnabled, musicVolume } = settings
+  try { applyAppearanceToDocument({ sleeveId, uiScale, cjkBoost, transparentDialogs }, getLanguage()) } catch {}
   soundManager.setSettings({ soundEnabled, masterVolume, sfxVolume, uiVolume })
   soundManager.setMusicVolume(musicEnabled ? musicVolume : 0)
 }
@@ -500,7 +500,6 @@ export function watchAppearanceStorage(): () => void {
 export function setSetting<K extends keyof AppState['settings']>(key: K, value: AppState['settings'][K]) {
   const prev = getState().settings
   const next = { ...prev, [key]: value }
-  if (key === 'boardLayout') next.boardLayoutManual = true
   if (key === 'handRow' && value === true) next.handRail = false
   if (key === 'handRail' && value === true) next.handRow = false
   if (PRESET_OWNED_KEYS.has(key) && next.gameplayPreset) {

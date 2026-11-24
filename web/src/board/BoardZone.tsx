@@ -25,6 +25,7 @@ import { groupStackables, TOKEN_PILE_FAN_DELAY_MS } from './stackGroups'
 import type { StackGroup } from './stackGroups'
 import StackPile from './StackPile'
 import { isMarqueePermanent } from './marquee'
+import { chipReserve } from './chipReserve'
 import { bandFill, bandShares, permanentKind } from './bandWeights'
 import { EMPTY_TARGET_ZONES, type TargetZoneKind } from './targetZones'
 import { isPlayerDefeated, isPlayerOut } from './boardShared'
@@ -33,7 +34,6 @@ import { useBattlefieldPulse } from './seatFocus'
 import { pileCornerReaches } from './pileCorner'
 import { useSeatColor } from './seatColor'
 import './BoardZone.css'
-import './PortraitBoard.css'
 import './targetZone.css'
 
 export interface BoardZoneProps {
@@ -145,8 +145,7 @@ export default function BoardZone({
   const isTop = effectivePosition === 'top'
 
   const rendered = useStore((s) => s.settings.cardRender) === 'rendered'
-  const portrait = useStore((s) => s.settings.gameUi) === 'v2'
-  const arenaBottom = arenaOwn && !portrait && !isTop && !compactPod
+  const arenaBottom = arenaOwn && !isTop && !compactPod
   const pileCards = pileCardsProp && !arenaBottom
   // BRD-32: the commander follows the hand in every chrome, so the zone on the board keeps only
   // what a hand cannot hold (emblems, planes, dungeons).
@@ -163,7 +162,7 @@ export default function BoardZone({
   const handDrawnHere = showHand && !statusOnly && !compactPod && !isTop && (!stackHand || seatDrawnBig)
   const commanderToHand = !isTop && (effectiveControlled || handDrawnHere) && commanderFollowsHand
   const seatCommander = useHandCommander(player, commanderToHand && !effectiveControlled, effectiveControlled ? helperEmblems : undefined)
-  const arenaOppPiles = bareChip && !portrait && !effectiveControlled && !statusOnly
+  const arenaOppPiles = bareChip && !effectiveControlled && !statusOnly
   const seatColor = useSeatColor(player?.playerId)
   const isTurnZone = useStore((s) => (s.game?.activePlayerId ? s.game.activePlayerId === player?.playerId : !!player?.isActive))
   const cardStyle = useStore((s) => s.settings.cardStyle)
@@ -188,31 +187,49 @@ export default function BoardZone({
       zoneEl.style.removeProperty('--arena-chip-w')
       return
     }
-    const sync = () => {
+    let reservedFor: string | null = null
+    let lastKey = ''
+    let stableFrames = 0
+    let frame: number | null = null
+    const sync = (fromFrame = false) => {
       const chipW = `${arenaChipEl.offsetWidth}px`
       if (zoneEl.style.getPropertyValue('--arena-chip-w') !== chipW) zoneEl.style.setProperty('--arena-chip-w', chipW)
       const row = zoneEl.querySelector<HTMLElement>(':scope > .bz-creatures-row')
       if (!row) return
-      const chipBottom = arenaChipEl.getBoundingClientRect().bottom
       const cards = Array.from(row.querySelectorAll<HTMLElement>('.bz-band > *'))
+      const signature = `${zoneEl.clientWidth}x${zoneEl.clientHeight}|${arenaChipEl.offsetWidth}x${arenaChipEl.offsetHeight}|${cards.length}`
       const cardsTop = cards.reduce((top, el) => Math.min(top, el.getBoundingClientRect().top), Infinity)
-      const reserved = zoneEl.hasAttribute('data-chip-reserve')
-      const margin = reserved ? arenaChipEl.offsetHeight * 0.5 : 0
-      const needed = Number.isFinite(cardsTop) && cardsTop < chipBottom + margin
-      if (needed !== reserved) zoneEl.toggleAttribute('data-chip-reserve', needed)
+      const key = `${signature}|${Math.round(cardsTop)}`
+      if (key !== lastKey) stableFrames = 0
+      else if (fromFrame) stableFrames++
+      lastKey = key
+      const next = chipReserve({ reservedFor, signature, cardsTop, chipBottom: arenaChipEl.getBoundingClientRect().bottom, stableFrames })
+      reservedFor = next.reservedFor
+      if (next.reserve !== zoneEl.hasAttribute('data-chip-reserve')) zoneEl.toggleAttribute('data-chip-reserve', next.reserve)
+      if (next.recheck && frame === null && typeof requestAnimationFrame !== 'undefined') {
+        frame = requestAnimationFrame(() => {
+          frame = null
+          sync(true)
+        })
+      }
     }
+    zoneEl.removeAttribute('data-chip-reserve')
     sync()
     if (typeof ResizeObserver === 'undefined') return
-    const ro = new ResizeObserver(sync)
+    const ro = new ResizeObserver(() => sync())
     ro.observe(arenaChipEl)
     ro.observe(zoneEl)
     const row = zoneEl.querySelector<HTMLElement>(':scope > .bz-creatures-row')
-    if (row) ro.observe(row)
-    const mo = typeof MutationObserver === 'undefined' ? null : new MutationObserver(sync)
+    if (row) {
+      ro.observe(row)
+      row.querySelectorAll<HTMLElement>(':scope > .bz-band').forEach((band) => ro.observe(band))
+    }
+    const mo = typeof MutationObserver === 'undefined' ? null : new MutationObserver(() => sync())
     mo?.observe(zoneEl, { attributes: true, attributeFilter: ['style'] })
     return () => {
       ro.disconnect()
       mo?.disconnect()
+      if (frame !== null) cancelAnimationFrame(frame)
       zoneEl.removeAttribute('data-chip-reserve')
     }
   }, [zoneEl, arenaChipEl])
@@ -642,7 +659,6 @@ export default function BoardZone({
     </button>
   )
 
-  const oppFloating = !effectiveControlled && Object.values(player.manaPool ?? {}).some((n) => (n ?? 0) > 0)
 
   const commandZone = (
     <CommandZone
@@ -670,7 +686,7 @@ export default function BoardZone({
         player={player}
         side={statusSide}
         compact={compactPod}
-        bare={bareChip && !portrait}
+        bare={bareChip}
         onClick={onCardClick ? () => onCardClick(player.playerId) : undefined}
         isTarget={targetIds.has(player.playerId)}
         onHover={onCardHover}
@@ -678,27 +694,6 @@ export default function BoardZone({
           e.preventDefault()
           setState({ playerMenu: { playerId: player.playerId, x: e.clientX, y: e.clientY } })
         }}
-        stats={portrait ? (
-          <>
-          <ResourceBar
-            player={player}
-            side={statusSide}
-            compact
-            stats
-            noPiles={pileCards}
-            crossZonePlayables={effectiveControlled ? crossZonePlayables : undefined}
-            onPlayCrossZone={effectiveControlled ? onPlayCrossZone : undefined}
-            onCardHover={onCardHover}
-            targetIds={targetIds}
-            targetZone={targetZone}
-            targetZones={targetZones}
-            onTargetClick={onCardClick}
-          />
-          {compactPod && (effectiveControlled || oppFloating) && <ResourceBar player={player} side={statusSide} poolOnly />}
-          </>
-        ) : undefined}
-        handView={portrait && handViewable ? { known: knownHandEntries.length, onOpen: () => setHandViewerOpen(true) } : undefined}
-        pool={portrait && !compactPod && (effectiveControlled || oppFloating) ? <ResourceBar player={player} side={statusSide} poolOnly /> : undefined}
       />
       {seatFocus && !seatFocus.inStrip && (
         <button
@@ -730,7 +725,7 @@ export default function BoardZone({
           {t('board', 'seat_focus_all')}
         </button>
       )}
-      {!statusOnly && showHand && (!portrait || handTargeted || effectiveControlled || seatDrawnBig) && (
+      {!statusOnly && showHand && (
         <HandZone
           cards={stackedHand}
           onCardClick={onHandCardClick ?? onCardClick}
@@ -741,7 +736,7 @@ export default function BoardZone({
           compact={isTop || compactPod || stackHand}
           stackBacks={compactPod || stackHand}
           alwaysStack={stackHand}
-          backsStyle={arenaOppPiles ? 'half-fan' : stackHand && !portrait ? 'fan' : 'stack'}
+          backsStyle={arenaOppPiles ? 'half-fan' : stackHand ? 'fan' : 'stack'}
           viewable={handViewable}
           viewKnownCount={knownHandEntries.length}
           onViewHand={() => setHandViewerOpen(true)}
@@ -758,12 +753,12 @@ export default function BoardZone({
         (shellEl
           ? createPortal(handSwitchButton, shellEl)
           : handSwitchButton)}
-      {!portrait && <ResourceBar
+      <ResourceBar
         player={player}
         side={statusSide}
         compact
         micro={compactPod}
-        noPiles={pileCards || arenaOppPiles}
+        noPiles={pileCards || arenaOppPiles || statusOnly}
         crossZonePlayables={effectiveControlled ? crossZonePlayables : undefined}
         onPlayCrossZone={effectiveControlled ? onPlayCrossZone : undefined}
         onCardHover={onCardHover}
@@ -771,7 +766,7 @@ export default function BoardZone({
         targetZone={targetZone}
         targetZones={targetZones}
         onTargetClick={onCardClick}
-      />}
+      />
       {arenaOppPiles && (
         <div className="arena-opp-piles" data-testid="arena-opp-piles">
           <ResourceBar
@@ -889,6 +884,23 @@ export default function BoardZone({
       >
         {pulseTick > 0 && <span key={pulseTick} className="seat-strip-pulse" aria-hidden="true" />}
         {statusRow}
+        <div className="seat-strip-counts" data-testid="seat-strip-counts">
+          <span className="resource-chip hand-chip" data-testid="strip-hand-count" title={t('game', 'hand')}>
+            <span className="chip-icon"><Icon name="hand" size={12} /></span>
+            <span className="chip-count">{player.handCount ?? 0}</span>
+          </span>
+          <ResourceBar
+            player={player}
+            side={statusSide}
+            compact
+            stats
+            onCardHover={onCardHover}
+            targetIds={targetIds}
+            targetZone={targetZone}
+            targetZones={targetZones}
+            onTargetClick={onCardClick}
+          />
+        </div>
       </div>
     )
   }
@@ -1042,7 +1054,6 @@ export default function BoardZone({
       items: marqueeEntries.map(([id, perm]) => cardItem(id, perm)),
       minWidthCards: 1,
       maxWidthNeed: true,
-      frameW: arenaBottom ? 0 : 3,
       ...(arenaBottom ? { fixedLines: marqueeEntries.length === 1 ? 1 : 2, extraHeight: arenaPermSpan } : null),
     })
   }

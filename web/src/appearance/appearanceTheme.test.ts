@@ -141,7 +141,6 @@ describe('appearance: theme token sets', () => {
       'LimitedDeckDialog.tsx',
       'SideboardScreen.tsx',
       'TournamentPanel.tsx',
-      'SidePanel.tsx',
     ]
     const missing = inGameTree.filter((name) => !read(`../game/${name}`).includes('chrome-surface'))
     expect(missing).toEqual([])

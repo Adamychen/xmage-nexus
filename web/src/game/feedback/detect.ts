@@ -1,4 +1,4 @@
-import type { FeedbackOption } from './types'
+import type { FeedbackOption, LibraryStep } from './types'
 
 export function isMulliganAsk(message: string): boolean {
   return /mulligan|keep your hand|keep hand/i.test(message)
@@ -30,7 +30,22 @@ export function isLondonBottoming(message: string): boolean {
  * cualquier otro GAME_TARGET de una sola carta y marcarlo daría falsos positivos.
  */
 export function isLibraryOrderPick(message: string): boolean {
-  return /select a card order to put on the (top|bottom) of (your|the) library.*last one chosen will be topmost/i.test(message)
+  return /select a card order to put on the (top|bottom) of (your|the) library.*last one chosen will be (topmost|bottommost)/i.test(message)
+}
+
+const LIBRARY_CHAIN_STEPS: ReadonlyArray<readonly [RegExp, LibraryStep]> = [
+  [/put into your graveyard \(surveil\)/i, 'surveil-pick'],
+  [/put on the bottom of your library \(scry\)/i, 'scry-pick'],
+  [/card order to put on the top of your library/i, 'top-order'],
+  [/card order to put on the bottom of your library/i, 'bottom-order'],
+  [/card to put on the top of your graveyard/i, 'grave-order'],
+  [/choose the order in which the cards go to the graveyard/i, 'grave-order-ask'],
+]
+
+export function libraryChainStep(message: string): LibraryStep | null {
+  const text = message.replace(/<[^>]*>/g, '').trim()
+  for (const [pattern, step] of LIBRARY_CHAIN_STEPS) if (pattern.test(text)) return step
+  return null
 }
 
 export function isTriggerOrderPick(message: string, queryType?: string): boolean {

@@ -48,8 +48,9 @@ export default function GameStrip({ left, center, right, dropdown }: GameStripPr
     // El abanico de la mano del rival y las bandas se animan al cargar y la
     // fila superior mide más de lo que acabará midiendo: pasar a `down` con esa
     // altura provisional abre el cajón sobre mi zona y lo salta a `up` al
-    // asentarse. Solo se baja si la geometría lleva SETTLE_MS sin cambiar.
-    if (!settled && !up && fitRef.current.up) {
+    // asentarse. Solo se baja si la geometría lleva SETTLE_MS sin cambiar, salvo
+    // cuando la franja vive arriba del tablero (sin espacio real por encima).
+    if (!settled && !up && fitRef.current.up && above >= 40) {
       settleTimer.current = window.setTimeout(() => run(true), SETTLE_MS)
       return
     }

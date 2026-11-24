@@ -47,3 +47,21 @@ test('HND-11: focusing a hand card that peeks below the edge never scrolls the b
     expect(pageErrors).toEqual([])
   })
 })
+
+test('HND-11: focusing an own pile card that peeks below the edge never scrolls the board @hand-bar', async ({ page }) => {
+  await page.setViewportSize({ width: 1600, height: 900 })
+  await withFakeServer(() => spellsScenario('blaze'), async () => {
+    const { pageErrors } = await quickStartGame(page, { prefix: 'bsp', skipAsks: true })
+    const piles = page.locator('[data-testid="arena-own-piles"]')
+    await expect(piles).toBeVisible({ timeout: 30_000 })
+    await page.addStyleTag({ content: '[data-testid="arena-own-piles"] { translate: 0 120px !important }' })
+    const pile = piles.locator('button, [tabindex]').first()
+    const box = await pile.boundingBox()
+    expect(box && box.y + box.height).toBeGreaterThan(900)
+    await pile.focus()
+    expect(await scrolledBoxes(page)).toEqual([])
+    for (let i = 0; i < 6; i++) await page.keyboard.press('Tab')
+    expect(await scrolledBoxes(page)).toEqual([])
+    expect(pageErrors).toEqual([])
+  })
+})

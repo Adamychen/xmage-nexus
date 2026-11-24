@@ -93,16 +93,16 @@ test('interacciones completas de MTG: GAME_ASK, GAME_CHOOSE_COLOR, GAME_CHOOSE_P
     // 6. Zona de Comando: Comandante con Impuesto de Comandante (+2)
     // ─────────────────────────────────────────────────────────────
     await waitFrame(page, (f) => f.method === 'GAME_SELECT', 'GAME_SELECT de fase principal', 15_000, cursor)
-    const commanderZone = page.locator('.command-zone.my')
-    await expect(commanderZone, 'zona de comando visible').toBeVisible({ timeout: 15_000 })
+    const commanderZone = page.locator('[data-testid="hand-bar"] [data-testid="hand-trailing"]').first()
+    await expect(commanderZone, 'comandante con la mano (BRD-34)').toBeVisible({ timeout: 15_000 })
     await page.waitForTimeout(300)
     fs.writeFileSync(path.join(SHOTS_DIR, 'interaction-06-commander-cast-tax.png'), await page.screenshot({ fullPage: true }))
 
     // ─────────────────────────────────────────────────────────────
     // 7. Hover en Carta con Desglose de Palabras Clave (MTG Keywords)
     // ─────────────────────────────────────────────────────────────
-    const commanderCard = commanderZone.locator('.card-slot, .commander-slot').first()
-    await commanderCard.hover()
+    const keywordCard = page.locator('.board-zone .card-slot:has(.keyword-badges):visible').first()
+    await keywordCard.hover()
     const floatingKeywords = page.locator('.floating-card-keywords')
     await expect(floatingKeywords, 'panel de keywords flotante en hover').toBeVisible({ timeout: 10_000 })
     await page.waitForTimeout(400)

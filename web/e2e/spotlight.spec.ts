@@ -94,22 +94,22 @@ function asSpectator(game: ReturnType<typeof fourPlayerGame>) {
   }
 }
 
-async function loadSpotlight(page: Page, options: { gameUi?: 'v1' | 'v2'; spotlight?: boolean; spectator?: boolean } = {}) {
-  const { gameUi = 'v2', spotlight = true, spectator = false } = options
+async function loadSpotlight(page: Page, options: { spotlight?: boolean; spectator?: boolean } = {}) {
+  const { spotlight = true, spectator = false } = options
   await page.goto('/')
   await dismissSetupWizard(page)
   await expect(page.locator('body')).toBeVisible({ timeout: 10_000 })
   await page.waitForTimeout(400)
-  await page.evaluate(({ gameView, gameUi, spotlight }: { gameView: object; gameUi: 'v1' | 'v2'; spotlight: boolean }) => {
+  await page.evaluate(({ gameView, spotlight }: { gameView: object; spotlight: boolean }) => {
     const store = (globalThis as unknown as { __mageStore?: { getState: () => Record<string, any>; setState: (s: unknown) => void } }).__mageStore
     const st = store?.getState() as { settings: Record<string, unknown> }
     store?.setState({
       phase: 'game',
       gameId: 'g1',
-      settings: { ...st.settings, boardLayout: 'arena', gameUi, boardFill: true, boardSpotlight: spotlight },
+      settings: { ...st.settings, boardFill: true, boardSpotlight: spotlight },
       game: gameView,
     })
-  }, { gameView: spectator ? asSpectator(fourPlayerGame()) : fourPlayerGame(), gameUi, spotlight })
+  }, { gameView: spectator ? asSpectator(fourPlayerGame()) : fourPlayerGame(), spotlight })
   if (spotlight) {
     await expect(page.getByTestId('spotlight-board')).toBeVisible({ timeout: 10_000 })
   } else {
@@ -152,56 +152,8 @@ function intersects(a: { left: number; top: number; right: number; bottom: numbe
   return a.left < b.right - 0.5 && b.left < a.right - 0.5 && a.top < b.bottom - 0.5 && b.top < a.bottom - 0.5
 }
 
-async function pileReport(page: Page, scope: string) {
-  return page.evaluate((scope: string) => {
-    const box = (el: Element) => {
-      const r = el.getBoundingClientRect()
-      return { left: r.left, top: r.top, right: r.right, bottom: r.bottom }
-    }
-    const corner = document.querySelector(`${scope} [data-testid="pile-corner"]`)
-    const zone = document.querySelector(`${scope} .board-zone`)
-    if (!corner || !zone) return null
-    return {
-      corner: box(corner),
-      zone: box(zone),
-      kids: Array.from(document.querySelectorAll(`${scope} .bz-status-row > *`)).map(box),
-      hand: Array.from(document.querySelectorAll('[data-testid="hand-bar"] .hand-card-slot')).map(box),
-    }
-  }, scope)
-}
 
-async function expectPilesFlush(page: Page, scope: string) {
-  const report = await pileReport(page, scope)
-  expect(report).not.toBeNull()
-  const { corner, zone, kids, hand } = report!
-  expect(hand.filter((card) => intersects(corner, card))).toEqual([])
-  for (const kid of kids) expect(intersects(corner, kid)).toBe(false)
-  if (Math.abs(corner.bottom - zone.bottom) <= 2) return
-  const height = corner.bottom - corner.top
-  const atRest = { left: corner.left, right: corner.right, top: zone.bottom - height, bottom: zone.bottom }
-  const blocking = hand.filter((card) => intersects(atRest, card))
-  expect(blocking.length, 'a corner lifted off the bottom edge must clear a hand card it would overlap').toBeGreaterThan(0)
-  expect(corner.bottom).toBeLessThanOrEqual(Math.min(...blocking.map((card) => card.top)) + 2)
-}
 
-async function cornerOverlaps(page: Page): Promise<string[]> {
-  const corner = await rect(page, '[data-testid="spotlight-main"] [data-testid="pile-corner"]')
-  const others = await page.evaluate(() => {
-    const grab = (sel: string) => Array.from(document.querySelectorAll<HTMLElement>(sel))
-      .filter((el) => !el.closest('.bz-pile-corner') && el.getBoundingClientRect().width > 0)
-      .map((el) => {
-        const r = el.getBoundingClientRect()
-        return { sel, left: r.left, top: r.top, right: r.right, bottom: r.bottom }
-      })
-    return [
-      ...grab('.spotlight-board .card-slot'),
-      ...grab('.spotlight-board .bz-status-row > *'),
-      ...grab('[data-testid="hand-bar"] .hand-card-slot'),
-      ...grab('.hand-switch-btn'),
-    ]
-  })
-  return others.filter((o: { sel: string; left: number; top: number; right: number; bottom: number }) => intersects(corner, o)).map((o: { sel: string }) => o.sel)
-}
 
 for (const vp of VIEWPORTS) {
   test.describe(vp.name, () => {
@@ -339,7 +291,7 @@ for (const vp of VIEWPORTS) {
     })
 
     test('BRD-6: an opponent hand in the main area is a stack of backs that never sits under the own hand bar (classic interface) @spotlight', async ({ page }) => {
-      await loadSpotlight(page, { gameUi: 'v1' })
+      await loadSpotlight(page)
       await clickCopy(page, 'p3')
       await expect(page.getByTestId('spotlight-main')).toHaveAttribute('data-main-seat', 'p3')
       const stack = page.getByTestId('spotlight-main').locator('[data-testid="opp-hand-stack"]')
@@ -361,42 +313,29 @@ for (const vp of VIEWPORTS) {
       await expect(stack).toBeVisible()
     })
 
-    for (const gameUi of ['v2', 'v1'] as const) {
-      test(`BRD-11: the phase strip is above the main area and the panel (${gameUi}) @spotlight`, async ({ page }) => {
-        await loadSpotlight(page, { gameUi })
-        const strip = await rect(page, gameUi === 'v2' ? '[data-testid="game-topbar"]' : '[data-testid="game-strip"]')
-        const main = await rect(page, '[data-testid="spotlight-main"]')
-        const panel = await rect(page, '[data-testid="spotlight-panel"]')
-        expect(strip.bottom).toBeLessThanOrEqual(main.top + 1)
-        expect(strip.bottom).toBeLessThanOrEqual(panel.top + 1)
-      })
-    }
-
-    test('BRD-12: every board shows library, graveyard and exile as cards in its corner, clicking one opens the viewer @spotlight', async ({ page }) => {
+    test('BRD-11: the phase strip is above the main area and the panel @spotlight', async ({ page }) => {
       await loadSpotlight(page)
-      await expect(page.getByTestId('pile-corner')).toHaveCount(4)
+      const strip = await rect(page, '[data-testid="game-strip"]')
+      const main = await rect(page, '[data-testid="spotlight-main"]')
+      const panel = await rect(page, '[data-testid="spotlight-panel"]')
+      expect(strip.bottom).toBeLessThanOrEqual(main.top + 1)
+      expect(strip.bottom).toBeLessThanOrEqual(panel.top + 1)
+    })
+
+    test('BRD-12: every board shows library, graveyard and exile as cards in its bottom row, clicking one opens the viewer @spotlight', async ({ page }) => {
+      await loadSpotlight(page)
+      await expect(page.getByTestId('arena-own-piles')).toHaveCount(4)
       for (const pile of ['library', 'graveyard', 'exile']) {
-        await expect(page.getByTestId(`pile-corner`).locator(`[data-testid="pile-card-${pile}"]`)).toHaveCount(4)
+        await expect(page.getByTestId('arena-own-piles').locator(`[data-testid="pile-card-${pile}"]`)).toHaveCount(4)
       }
       await page.locator('[data-testid="spotlight-main"] [data-testid="pile-card-graveyard"]').click()
       await expect(page.locator('.pile-overlay').first()).toBeVisible()
       await dismissInfoWindows(page)
     })
 
-    for (const gameUi of ['v2', 'v1'] as const) {
-      for (const main of ['own', 'opponent'] as const) {
-        if (gameUi === 'v1') continue
-        test(`BRD-12: the pile corner overlaps no card, no status row and no hand (${gameUi}, ${main} board main) @spotlight`, async ({ page }) => {
-          await loadSpotlight(page, { gameUi })
-          if (main === 'opponent') await clickCopy(page, 'p2')
-          await expect(page.getByTestId('spotlight-main')).toHaveAttribute('data-main-seat', main === 'own' ? 'p1' : 'p2')
-          await expect.poll(() => cornerOverlaps(page)).toEqual([])
-        })
-      }
-    }
 
-    for (const main of ['own', 'opponent'] as const) test(`BRD-32, BRD-39: on a v1 board in the main area the bottom row overlaps no card and no hand, and the chip no card (${main} board main) @spotlight`, async ({ page }) => {
-      await loadSpotlight(page, { gameUi: 'v1' })
+    for (const main of ['own', 'opponent'] as const) test(`BRD-32, BRD-39: on the board in the main area the bottom row overlaps no card and no hand, and the chip no card (${main} board main) @spotlight`, async ({ page }) => {
+      await loadSpotlight(page)
       if (main === 'opponent') await clickCopy(page, 'p2')
       await expect(page.getByTestId('spotlight-main')).toHaveAttribute('data-main-seat', main === 'own' ? 'p1' : 'p2')
       await expect(page.locator('[data-testid="spotlight-main"] [data-testid="arena-own-row"] [data-testid="pile-caption"]')).toHaveCount(3)
@@ -416,14 +355,6 @@ for (const vp of VIEWPORTS) {
       })).toEqual([])
     })
 
-    for (const board of ['own main', 'opponent main', 'spectator main', 'copy'] as const) {
-      test(`BRD-12: the piles sit flush with the bottom edge of their board, beside the status row (${board}) @spotlight`, async ({ page }) => {
-        await loadSpotlight(page, { spectator: board === 'spectator main' })
-        if (board === 'opponent main') await clickCopy(page, 'p2')
-        const scope = board === 'copy' ? '[data-testid="spotlight-copy-p2"]' : '[data-testid="spotlight-main"]'
-        await expectPilesFlush(page, scope)
-      })
-    }
 
     test('BRD-8: a copy rings while the prompt can target a card on its board @spotlight', async ({ page }) => {
       await loadSpotlight(page)

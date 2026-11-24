@@ -36,7 +36,7 @@ defines none below 10 px.
 - Why: Apple's Accessibility guidance sets the minimum at 10 pt on macOS and 11 pt on iOS; 9 px is below
   both. The review counted 26 uses of the 9 px token, and two decorative `8px` literals in the lobby and
   login stylesheets.
-- Guard: `src/a11yStyle.test.ts` · `e2e/game-chrome-phone.spec.ts`
+- Guard: `src/a11yStyle.test.ts`
 
 ### ACC-4 · No new 10 px text outside the battlefield
 Text that is not on the battlefield (`web/src/board/`, `web/src/game/`) is 11 px (`--fs-2xs`) or larger.
@@ -57,7 +57,7 @@ layout does not move. A primary icon button (`variant="primary"`) reaches 44 × 
 - Why: Apple's Accessibility guidance sets the default control size at 44 pt and the minimum at 28 pt on
   iOS. The review found 12 uses of the `xs` and `sm` sizes (20 and 24 px) on screens that also run on
   phones.
-- Guard: `src/a11yStyle.test.ts` · `e2e/game-chrome-phone.spec.ts`
+- Guard: `src/a11yStyle.test.ts`
 
 ### ACC-6 · Fixed chrome on a screen edge clears the safe area
 A `position: fixed` element pinned to a screen edge (the app attribution footer, toasts, the chat button)

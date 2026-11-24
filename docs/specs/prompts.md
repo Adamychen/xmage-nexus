@@ -178,8 +178,9 @@ first or last, by card or by text) is unchanged.
 Every card shown inside a prompt can be seen enlarged, as on the board, and looking at it never answers
 the prompt: the card grid (scry, surveil, searching a library, looking at the top cards, picking from a
 list, choosing targets), the library order dialog, the piles to choose from, the London mulligan's bottom
-pick, the revealed and looked-at cards inside a prompt, and the revealed, looked-at and zone viewers. A
-card that only shows (library order, piles, a revealed card nobody can play) is itself the preview
+pick, and the revealed and looked-at cards inside a prompt. The zone viewers (graveyard, exile, library,
+the revealed and looked-at windows, the known hand, the cards playable from other zones) are not prompts: their card is
+looked at by the lift of BRD-24 and they open no floating preview. A card that only shows (library order, piles, a revealed card nobody can play) is itself the preview
 control: pointing at it or focusing it shows the floating preview, a touch shows it and keeps it until the
 next touch (ACC-9), and a right click, a long press or Enter opens the card inspector. A card that is
 chosen or played by a click keeps that click, on a tap too; pointing at it with a mouse or reaching it
@@ -191,6 +192,8 @@ accept (the full list of a grid) can still be looked at. A face-down card nobody
   grid and the library order dialog, so a player searching a library or scrying could not read the cards
   (reported 2026-11-12). A tap on a grid card already answers the prompt, so on a touch screen the preview
   needs its own control; the mouse and the keyboard reach the preview without one, as on the board.
+  The zone viewers lost their preview at the user's request (24-nov-2026): the lifted copy already
+  shows the card large and the side panel was a second, redundant copy.
 - Guard: `src/game/promptCardZoom.test.tsx`
 
 ### PRM-16 · The only decision the client answers for you at the start of a game is who plays first
@@ -262,3 +265,28 @@ never shows two primaries.
   also with a screenshot, 24-nov-2026): two answers are not a choice to scan, they are the forward
   and the way back this corner is built for.
 - Guard: `src/game/feedbackModes/boardOrder.test.tsx` · `src/game/feedbackModes/AskBar.test.tsx`
+
+### PRM-20 · Surveil and scry are one screen; the client answers the engine's chain from it
+A surveil or scry is decided on one screen. A surveil shows two boxes (graveyard on the left, library
+on the right); the leftmost card of the library box ends on top of the library and the rightmost card of
+the graveyard box ends on top of the graveyard. A scry shows one box with the library card back in the
+middle and `Bottom` / `Top` under its corners: cards placed to the left of the card back tuck under the
+library (the leftmost card ends at the very bottom) and cards placed to the right sit on top of it (the
+rightmost card ends on top of the library). Done turns the arrangement into a plan, and the client
+answers each prompt of the engine's chain from it as the prompt arrives, one answer per prompt (PRM-17):
+the cards to move, the yes to ordering the graveyard, and one pick per card for each order. A pick over
+cards other than the ones on screen, or for a card the prompt does not offer, is not the plan. A surveil
+that leaves at most one card on top is over at its last pick answer, whatever goes to the graveyard; a
+graveyard-order question arriving after that is shown normally. A prompt the plan does not recognise is
+shown normally and ends the plan.
+
+- Why: XMage asks one Arena decision as a chain: a pick of the cards to move, then one order pick per
+  card but the last for each pile, each "last one chosen will be topmost/bottommost"
+  (`docs/plans/2026-11-24-arena-surveil-design.md`, 2026-11-24). Scry uses one stack around the deck
+  back instead of two piles so putting cards underneath the library matches MTG Arena directly
+  (user request, 2026-11-24). The graveyard-order question
+  comes only with the user data's `askMoveToGraveOrder` on (fork `PlayerImpl.java`), which
+  `Mage.Proxy` never sets, so waiting for it left a dead "Sending…" overlay up for seconds; and a
+  plan still running when a later surveil arrived answered it with a card it did not offer, which
+  the engine ignores and asks again, forever (2026-11-24).
+- Guard: `src/game/feedback/libraryPlan.test.ts` · `src/state/events/prompts.libraryPlan.test.ts` · `src/game/ArenaLibraryPrompt.test.tsx` · `e2e/arena-surveil.spec.ts`

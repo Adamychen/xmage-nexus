@@ -43,6 +43,18 @@
   background-size: 240px 240px;
 }
 
+/* ── Fila superior (turno, fases, orden de turno, controles) ───────────── */
+.board-shell-top-strip {
+  position: relative;
+  height: 44px;
+  flex-shrink: 0;
+  z-index: 30;
+  background: linear-gradient(180deg, rgb(var(--ink-rgb) / 0.72), rgb(var(--ink-2-rgb) / 0.42));
+  border-bottom: 1px solid color-mix(in srgb, var(--gold-300) 24%, var(--line-2));
+  box-shadow: 0 1px 0 rgb(var(--ink-rgb) / 0.6);
+  pointer-events: none;
+}
+
 /* ── Divisor horizontal unificado (diamante púrpura/dorado) ───────────── */
 .board-shell-divider {
   height: 18px;
@@ -60,25 +72,6 @@
   );
   box-shadow: 0 0 10px rgb(var(--brand-rgb) / 0.12);
   position: relative;
-}
-
-.board-shell-divider.has-strip {
-  height: 36px;
-  z-index: 30;
-  background:
-    linear-gradient(
-      90deg,
-      transparent 0%,
-      rgb(var(--brand-rgb) / 0.12) 20%,
-      rgb(var(--gold-rgb) / 0.32) 50%,
-      rgb(var(--brand-rgb) / 0.12) 80%,
-      transparent 100%
-    ),
-    rgb(var(--ink-rgb) / 0.55);
-}
-
-.board-shell-divider.has-strip .board-shell-divider-diamond {
-  display: none;
 }
 
 .board-shell-divider-diamond {

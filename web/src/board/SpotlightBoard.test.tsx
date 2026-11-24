@@ -340,23 +340,14 @@ describe('SpotlightBoard', () => {
   })
 
   it('BRD-11: the phase strip slot is the first row of the board, above the main area and the panel', () => {
-    setSetting('gameUi', 'v1')
     const { getByTestId } = render(<SpotlightBoard game={fourPlayerGame()} homeId="p1" mainId="p2" onSelectSeat={() => {}} />)
     const board = getByTestId('spotlight-board')
-    expect(board.firstElementChild?.classList.contains('board-shell-divider')).toBe(true)
+    expect(board.firstElementChild?.classList.contains('board-shell-top-strip')).toBe(true)
     const body = board.querySelector('.spotlight-body')
     expect(body).not.toBeNull()
     expect(body!.contains(getByTestId('spotlight-main'))).toBe(true)
     expect(body!.contains(getByTestId('spotlight-panel'))).toBe(true)
     expect(board.firstElementChild!.nextElementSibling).toBe(body)
-  })
-
-  it('BRD-11: the board divider takes no room when no strip is portaled into it', () => {
-    setSetting('gameUi', 'v2')
-    const { getByTestId, container } = render(<SpotlightBoard game={fourPlayerGame()} homeId="p1" mainId="p2" onSelectSeat={() => {}} />)
-    expect(container.querySelector('.board-shell-divider')).toBeNull()
-    expect(getByTestId('spotlight-board').firstElementChild?.classList.contains('spotlight-body')).toBe(true)
-    setSetting('gameUi', 'v1')
   })
 
   it('BRD-13: dragging the panel edge sets the panel width setting within 15 to 35 percent', () => {
@@ -444,20 +435,14 @@ describe('SpotlightBoard', () => {
   })
 
   it('BRD-12: every board in the main board mode shows its piles as cards in its corner and no pile chips', () => {
-    setSetting('gameUi', 'v2')
-    try {
-      const { container } = render(<SpotlightBoard game={fourPlayerGame()} homeId="p1" mainId="p2" onSelectSeat={() => {}} />)
-      const corners = container.querySelectorAll('[data-testid="pile-corner"]')
-      expect(corners.length).toBe(4)
-      corners.forEach((corner) => expect(corner.querySelectorAll('[data-testid^="pile-card-"]').length).toBe(3))
-      expect(container.querySelectorAll('.library-chip, .graveyard-chip, .exile-chip, .library-stack, .graveyard-stack, .exile-stack').length).toBe(0)
-    } finally {
-      setSetting('gameUi', 'v1')
-    }
+    const { container } = render(<SpotlightBoard game={fourPlayerGame()} homeId="p1" mainId="p2" onSelectSeat={() => {}} />)
+    const corners = container.querySelectorAll('[data-testid="arena-own-piles"]')
+    expect(corners.length).toBe(4)
+    corners.forEach((corner) => expect(corner.querySelectorAll('[data-testid^="pile-card-"]').length).toBe(3))
+    expect(container.querySelectorAll('.library-chip, .graveyard-chip, .exile-chip, .library-stack, .graveyard-stack, .exile-stack').length).toBe(0)
   })
 
   it('BRD-39: with the v1 chrome every board, main and copies, gets the Arena frame with captioned piles', () => {
-    setSetting('gameUi', 'v1')
     const { container } = render(<SpotlightBoard game={fourPlayerGame()} homeId="p1" mainId="p2" onSelectSeat={() => {}} />)
     const rows = container.querySelectorAll('[data-testid="arena-own-row"]')
     expect(rows.length).toBe(4)

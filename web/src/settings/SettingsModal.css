@@ -481,10 +481,6 @@
   top: 0;
 }
 
-.settings-board-preview .layout-demo {
-  height: 180px;
-}
-
 @container settings (max-width: 820px) {
   .settings-board-body { flex-direction: column-reverse; align-items: stretch; }
   .settings-board-preview { position: static; width: auto; }

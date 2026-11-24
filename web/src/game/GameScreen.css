@@ -13,13 +13,25 @@
 }
 
 .game-turn {
-  color: var(--gold-500);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1h);
+  color: var(--gold-300);
   white-space: nowrap;
   font-weight: 700;
+  letter-spacing: 0.05em;
   font-family: 'Cinzel', 'Merriweather', Georgia, serif;
+  text-shadow: 0 1px 8px rgb(var(--gold-rgb) / 0.32);
 }
 
-.game-turn.turn-glow, .game-topbar-turn-num.turn-glow {
+.game-turn::before {
+  content: '◆';
+  font-size: 0.65em;
+  color: var(--gold-400, var(--gold-300));
+  text-shadow: 0 0 8px rgb(var(--gold-rgb) / 0.7);
+}
+
+.game-turn.turn-glow {
   animation: turnGlow calc(0.4s / var(--fx-speed, 1)) cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
@@ -29,12 +41,12 @@
   100% { transform: scale(1); text-shadow: 0 0 0 rgb(var(--gold-rgb) / 0); }
 }
 
-html.fx-off .game-turn.turn-glow, html.fx-off .game-topbar-turn-num.turn-glow {
+html.fx-off .game-turn.turn-glow {
   animation: none !important;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .game-turn.turn-glow, .game-topbar-turn-num.turn-glow {
+  .game-turn.turn-glow {
     animation: turnFade 400ms ease-out;
   }
 }
@@ -78,18 +90,5 @@ html.fx-off .game-turn.turn-glow, html.fx-off .game-topbar-turn-num.turn-glow {
 
 .game-log-text {
   color: var(--fg-2);
-}
-
-.board-wrap[data-ui='v2'] {
-  box-sizing: border-box;
-  padding-left: var(--chrome-l, 0px);
-  padding-right: var(--chrome-r, 0px);
-  transition: padding 0.3s var(--ease-out);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .board-wrap[data-ui='v2'] {
-    transition: none;
-  }
 }
 

@@ -109,8 +109,20 @@
 }
 
 .game-strip-right[data-dropdown-side='down'] .game-drawer {
-  top: calc(100% + 6px);
+  top: calc(100% + 8px);
   bottom: auto;
+  animation-name: drawerInDown;
+}
+
+@keyframes drawerInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .game-drawer[data-tab='stack'] {

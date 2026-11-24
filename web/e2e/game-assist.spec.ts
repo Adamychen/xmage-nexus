@@ -90,7 +90,7 @@ async function enableTurnRecap(page: Page) {
 test('SET-2: the turn recap strip is off by default and never mounts, while the board marks still apply @gamefeel', async ({ page }) => {
   await withFakeServer(recapScenario, async () => {
     const { pageErrors } = await quickStartGame(page, { prefix: 'recapoff', skipAsks: true })
-    await expect(page.locator('.game-board')).toBeVisible({ timeout: 20_000 })
+    await expect(page.locator('.arena-board').first()).toBeVisible({ timeout: 20_000 })
 
     await playOpponentTurn(page)
 
@@ -106,7 +106,7 @@ test('turn recap: a long summary with many departures wraps by word, not by lett
   await enableTurnRecap(page)
   await withFakeServer(recapScenario, async () => {
     const { pageErrors } = await quickStartGame(page, { prefix: 'recapwrap', skipAsks: true })
-    await expect(page.locator('.game-board')).toBeVisible({ timeout: 20_000 })
+    await expect(page.locator('.arena-board').first()).toBeVisible({ timeout: 20_000 })
 
     const names = ['Jeeves the Unshakeable', 'Jay0707', 'Alicia Masterson', 'Bartholomew Quickfingers', 'Seraphina']
     const departures = Array.from({ length: 16 }, (_, i) => ({
@@ -162,7 +162,7 @@ test('turn recap: strip summarises the opponent turn and marks new permanents @g
   await enableTurnRecap(page)
   await withFakeServer(recapScenario, async () => {
     const { pageErrors } = await quickStartGame(page, { prefix: 'recap', skipAsks: true })
-    await expect(page.locator('.game-board')).toBeVisible({ timeout: 20_000 })
+    await expect(page.locator('.arena-board').first()).toBeVisible({ timeout: 20_000 })
 
     await playOpponentTurn(page)
 
@@ -186,7 +186,7 @@ test('turn recap: strip summarises the opponent turn and marks new permanents @g
 test('waiting state: the action button names who holds priority and counts up @gamefeel', async ({ page }) => {
   await withFakeServer(recapScenario, async () => {
     const { pageErrors } = await quickStartGame(page, { prefix: 'wait', skipAsks: true })
-    await expect(page.locator('.game-board')).toBeVisible({ timeout: 20_000 })
+    await expect(page.locator('.arena-board').first()).toBeVisible({ timeout: 20_000 })
 
     await push(page, recapView({ mine: false, turn: 2 }))
     const btn = page.locator('.big-action-btn.action-waiting')
@@ -205,7 +205,7 @@ test('waiting state: the action button names who holds priority and counts up @g
 test('P/T tint, summoning sickness and entered-this-turn glow @gamefeel', async ({ page }) => {
   await withFakeServer(recapScenario, async () => {
     const { pageErrors } = await quickStartGame(page, { prefix: 'ptm', skipAsks: true })
-    await expect(page.locator('.game-board')).toBeVisible({ timeout: 20_000 })
+    await expect(page.locator('.arena-board').first()).toBeVisible({ timeout: 20_000 })
 
     const base = (v: number) => ({ baseValue: v, modifiedBaseValue: v, boostedValue: v, cardValue: String(v) }) as never
     const pumped = { ...knight, power: '4', toughness: '3', originalPower: base(2), originalToughness: base(1) }
@@ -234,7 +234,7 @@ test('P/T tint, summoning sickness and entered-this-turn glow @gamefeel', async 
 test('attention alerts: hidden tab gets a title badge on my turn, cleared when visible @gamefeel', async ({ page }) => {
   await withFakeServer(recapScenario, async () => {
     const { pageErrors } = await quickStartGame(page, { prefix: 'attn', skipAsks: true })
-    await expect(page.locator('.game-board')).toBeVisible({ timeout: 20_000 })
+    await expect(page.locator('.arena-board').first()).toBeVisible({ timeout: 20_000 })
     const baseTitle = await page.title()
 
     await page.evaluate(() => {
@@ -257,7 +257,7 @@ test('attention alerts: hidden tab gets a title badge on my turn, cleared when v
 test('smart stops: passes mana-only windows and stops when a spell is castable @gamefeel', async ({ page }) => {
   await withFakeServer(recapScenario, async () => {
     const { pageErrors } = await quickStartGame(page, { prefix: 'smart', skipAsks: true })
-    await expect(page.locator('.game-board')).toBeVisible({ timeout: 20_000 })
+    await expect(page.locator('.arena-board').first()).toBeVisible({ timeout: 20_000 })
 
     await page.locator('[data-testid="pass-split-toggle"]').click()
     await page.getByTestId('smart-stops-toggle').click()

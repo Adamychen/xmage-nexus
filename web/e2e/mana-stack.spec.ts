@@ -10,7 +10,7 @@ test.describe('Mana permanents next to a land pile', () => {
     await withFakeServer(manaStackScenario, async () => {
       const { pageErrors } = await quickStartGame(page, { prefix: 'ms' })
       const myZone = page.locator('.player-zone:not(.mirrored)')
-      const pile = myZone.locator('.stack-group[data-stack-name="Plains"]')
+      const pile = myZone.locator('.stack-group[data-stack-name="Plains"][data-count="3"]')
       await expect(pile).toHaveCount(1, { timeout: 30_000 })
       await page.mouse.move(2, 2)
       await pile.hover()

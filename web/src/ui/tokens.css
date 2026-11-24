@@ -90,6 +90,7 @@
   --brand-soft: rgb(var(--brand-rgb) / 0.14);
   --brand-line: rgb(var(--brand-rgb) / 0.42);
   --brand-fg: #a9c8ff;
+  --arena-glow-rgb: 120 200 255;
 
   --gold-rgb: 226 178 74;
   --gold-500: #e2b24a;
@@ -173,6 +174,7 @@
      resolves to a face ~7 % wider than macOS's, and a layout that only fits
      the narrow one is a layout bug, not a test bug. */
   --font-ui: 'Twemoji Country Flags', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --font-serif: 'Twemoji Country Flags', 'Merriweather', Georgia, serif;
 
   --fs-3xs: 0.625rem;
   --fs-2xs: 0.688rem;
@@ -291,6 +293,7 @@
     --brand: #1d5fd1;
     --brand-strong: #1748b0;
     --brand-fg: #1d4ed8;
+    --arena-glow-rgb: 2 132 199;
 
     --gold-rgb: 138 90 0;
     --gold-500: #8a5a00;
@@ -391,6 +394,7 @@
     --brand: #1d5fd1;
     --brand-strong: #1748b0;
     --brand-fg: #1d4ed8;
+    --arena-glow-rgb: 2 132 199;
 
     --gold-rgb: 138 90 0;
     --gold-500: #8a5a00;

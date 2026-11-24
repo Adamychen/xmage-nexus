@@ -64,9 +64,9 @@ test('commander 1v1 enfocada: la zona del jugador activo brilla con etiqueta de 
   await page.evaluate((gv) => {
     const store = (globalThis as unknown as { __mageStore?: { getState: () => Record<string, unknown>; setState: (s: unknown) => void } }).__mageStore
     const st = store?.getState() as { settings: Record<string, unknown> }
-    store?.setState({ phase: 'game', settings: { ...st.settings, boardLayout: 'standard' }, game: gv })
+    store?.setState({ phase: 'game', settings: { ...st.settings }, game: gv })
   }, commanderDuel('p2'))
-  await expect(page.locator('[data-testid="game-board"]')).toBeVisible({ timeout: 10_000 })
+  await expect(page.getByTestId('arena-board')).toBeVisible({ timeout: 10_000 })
 
   const bobBar = page.locator('.player-info-bar.opp.is-turn')
   await expect(bobBar).toBeVisible()

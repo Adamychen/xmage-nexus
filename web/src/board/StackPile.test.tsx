@@ -42,6 +42,91 @@ describe('StackPile', () => {
     expect(relayoutEvents(spy)).toBeGreaterThan(0)
   })
 
+  it('BRD-23: a pile fans into the free room of its row up to the next band, not only inside its own band', () => {
+    const rect = (left: number, width: number) => () => ({ left, right: left + width, top: 0, bottom: 100, width, height: 100, x: left, y: 0, toJSON: () => ({}) }) as DOMRect
+    const { container } = render(
+      <div className="bz-permanents-row">
+        <div className="bz-band lands-band">
+          <StackPile className="stack-group" name="Plains" count={3} cardIds={['a', 'b', 'c']}>
+            <div className="card-slot" />
+            <div className="card-slot" />
+            <div className="card-slot" />
+          </StackPile>
+        </div>
+        <div className="bz-band others-band" />
+      </div>,
+    )
+    const row = container.querySelector<HTMLElement>('.bz-permanents-row')!
+    const lands = container.querySelector<HTMLElement>('.lands-band')!
+    const others = container.querySelector<HTMLElement>('.others-band')!
+    const pile = container.querySelector<HTMLElement>('.stack-group')!
+    const cards = Array.from(pile.querySelectorAll<HTMLElement>('.card-slot'))
+    row.getBoundingClientRect = rect(0, 1600)
+    lands.getBoundingClientRect = rect(0, 200)
+    others.getBoundingClientRect = rect(1200, 300)
+    pile.getBoundingClientRect = rect(0, 100)
+    cards.forEach((card, i) => { card.getBoundingClientRect = rect(i * 20, 100) })
+    fireEvent.pointerEnter(pile)
+    const offsets = cards.map((card) => parseFloat(card.style.getPropertyValue('--spread-x')))
+    expect(offsets[2]).toBeGreaterThanOrEqual(2 * 106 - 40 - 1)
+  })
+
+  it('BRD-23: a pile with no room on its right opens left into the empty part of the band before it', () => {
+    const rect = (left: number, width: number) => () => ({ left, right: left + width, top: 0, bottom: 100, width, height: 100, x: left, y: 0, toJSON: () => ({}) }) as DOMRect
+    const { container } = render(
+      <div className="bz-permanents-row">
+        <div className="bz-band lands-band"><div className="card-slot land" /></div>
+        <div className="bz-band others-band">
+          <StackPile className="stack-group" name="Treasure" count={3} cardIds={['a', 'b', 'c']}>
+            <div className="card-slot" />
+            <div className="card-slot" />
+            <div className="card-slot" />
+          </StackPile>
+        </div>
+      </div>,
+    )
+    const lands = container.querySelector<HTMLElement>('.lands-band')!
+    const land = container.querySelector<HTMLElement>('.land')!
+    const others = container.querySelector<HTMLElement>('.others-band')!
+    const pile = container.querySelector<HTMLElement>('.stack-group')!
+    const cards = Array.from(pile.querySelectorAll<HTMLElement>('.card-slot'))
+    lands.getBoundingClientRect = rect(0, 1400)
+    land.getBoundingClientRect = rect(0, 100)
+    others.getBoundingClientRect = rect(1400, 100)
+    pile.getBoundingClientRect = rect(1400, 100)
+    cards.forEach((card, i) => { card.getBoundingClientRect = rect(1400 + i * 20, 100) })
+    fireEvent.pointerEnter(pile)
+    const lefts = cards.map((card, i) => 1400 + i * 20 + parseFloat(card.style.getPropertyValue('--spread-x')))
+    expect(lefts[1] - lefts[0]).toBeGreaterThanOrEqual(100)
+    expect(lefts[0]).toBeGreaterThanOrEqual(100)
+  })
+
+  it('BRD-23: the first band of a row opens left into the empty row before it', () => {
+    const rect = (left: number, width: number) => () => ({ left, right: left + width, top: 0, bottom: 100, width, height: 100, x: left, y: 0, toJSON: () => ({}) }) as DOMRect
+    const { container } = render(
+      <div className="bz-permanents-row">
+        <div className="bz-band others-band">
+          <StackPile className="stack-group" name="Treasure" count={3} cardIds={['a', 'b', 'c']}>
+            <div className="card-slot" />
+            <div className="card-slot" />
+            <div className="card-slot" />
+          </StackPile>
+        </div>
+      </div>,
+    )
+    const row = container.querySelector<HTMLElement>('.bz-permanents-row')!
+    const others = container.querySelector<HTMLElement>('.others-band')!
+    const pile = container.querySelector<HTMLElement>('.stack-group')!
+    const cards = Array.from(pile.querySelectorAll<HTMLElement>('.card-slot'))
+    row.getBoundingClientRect = rect(0, 1500)
+    others.getBoundingClientRect = rect(1400, 100)
+    pile.getBoundingClientRect = rect(1400, 100)
+    cards.forEach((card, i) => { card.getBoundingClientRect = rect(1400 + i * 20, 100) })
+    fireEvent.pointerEnter(pile)
+    const lefts = cards.map((card, i) => 1400 + i * 20 + parseFloat(card.style.getPropertyValue('--spread-x')))
+    expect(lefts[1] - lefts[0]).toBeGreaterThanOrEqual(100)
+  })
+
   it('announces again once the pushed neighbours finish their 0.25s slide', () => {
     const { container } = render(
       <div className="permanents-band">

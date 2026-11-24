@@ -43,11 +43,11 @@ test.describe('Recorded real frames (anti-drift smoke)', { tag: '@recorded' }, (
           await expect(page.locator('.player-zone .card-slot')).toHaveCount(0)
         } else if (entry.assert === 'firstMulliganFreeSecondCostsCard') {
           // Justo tras el mulligan (turno 1): mano final de 6 (dos mulligans
-          // con el primero gratis: 7 − 1 carta al fondo) y el comandante en
-          // la zona de mando (el único card-slot del player-zone).
+          // con el primero gratis: 7 − 1 carta al fondo) y el comandante
+          // dibujado con la mano (BRD-34).
           await expect(page.locator('[data-testid="game-status"]')).toBeVisible()
           await expect(page.getByTestId('hand-bar')).toHaveAttribute('data-hand-count', '6')
-          await expect(page.locator('.player-zone .card-slot[data-card-name="Krenko, Mob Boss"]')).toHaveCount(1)
+          await expect(page.locator('[data-testid="hand-bar"] [data-card-name="Krenko, Mob Boss"]')).toHaveCount(1)
         } else if (entry.assert === 'hasKarnRestart' || entry.assert === 'hasLandDropWindow') {
           // Reinicio de Karn / primera ventana con tierra: mesa vacía pero mano llena.
           await expect(page.locator('.hand-zone .card-slot').first()).toBeVisible()
@@ -91,7 +91,7 @@ test.describe('Recorded real frames (anti-drift smoke)', { tag: '@recorded' }, (
           expect(box!.y + box!.height).toBeLessThanOrEqual(viewport!.height)
         }
         if (entry.assert === 'hasPlaneswalker') {
-          const marquee = page.locator('.pz-marquee')
+          const marquee = page.locator('.player-zone [data-testid="marquee-band"]')
           await expect(marquee).toBeVisible()
           const stackPanel = page.locator('.stack-zone')
           await expect(stackPanel).toBeVisible()
@@ -184,7 +184,7 @@ test.describe('Recorded real frames (anti-drift smoke)', { tag: '@recorded' }, (
           await page.locator('.pile-overlay-close').last().click()
           await page.locator('.pile-overlay-close').last().click()
           await expect(page.locator('.pile-overlay')).toHaveCount(0)
-          await page.locator('.ray-stack').click()
+          await page.getByTestId('pile-card-playable').click()
           const rayOverlay = page.locator('.cross-zone-overlay')
           await expect(rayOverlay).toBeVisible()
           await expect(rayOverlay.locator('.card-slot[data-card-name="Lurrus of the Dream-Den"]')).toBeVisible()
@@ -261,13 +261,10 @@ test.describe('Recorded real frames (anti-drift smoke)', { tag: '@recorded' }, (
           ).toHaveCount(1)
         }
         if (entry.assert === 'hasFfaSix') {
-          // 5+ jugadores (decisión §9.1): standard con switcher, NO pod (que
-          // recorta a MAX_BOARD_PLAYERS=4).
-          await expect(page.locator('[data-testid="game-board"]')).toBeVisible()
-          await expect(page.locator('[data-testid="pod-board"]')).toHaveCount(0)
-          const bar = page.locator('.opponent-switcher-bar')
-          await expect(bar).toBeVisible()
-          await expect(bar.locator('.opp-pill')).toHaveCount(6)
+          // BRD-6: five or more players always get the main board with every other seat in the panel.
+          await expect(page.getByTestId('spotlight-board')).toBeVisible()
+          await expect(page.locator('[data-testid^="spotlight-head-"]')).toHaveCount(5)
+          await expect(page.locator('[data-testid^="tor-seat-"]')).toHaveCount(6)
         }
         if (entry.assert === 'hasCascade') {
           await expect(page.locator('.player-zone .card-slot[data-card-name="Bloodbraid Elf"]')).toBeVisible()
@@ -302,7 +299,7 @@ test.describe('Recorded real frames (anti-drift smoke)', { tag: '@recorded' }, (
           ) as { gameView?: { players?: Array<{ controlled?: boolean; topCard?: { name?: string } }> } }
           const topName = raw.gameView?.players?.find((p) => p?.controlled)?.topCard?.name ?? ''
           expect(topName, 'the frame carries a revealed top card').not.toBe('')
-          const library = page.locator('.library-stack.has-top-revealed, .library-chip.has-top-revealed').first()
+          const library = page.locator('.player-zone [data-testid="pile-card-library"]').first()
           await expect(library).toBeVisible()
           // Both variants of the library control name the revealed card in their
           // tooltip; the compact one has no room for the card itself.

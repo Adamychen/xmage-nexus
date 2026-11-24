@@ -69,15 +69,15 @@ test('control del turno ajeno: pasar, mano cambiada y jugables del controlado @c
     await page.getByTestId('hand-switch-btn').click()
     await expect(bar.locator(`[data-card-id="${CONTROL_HUMAN_HAND_ID}"]`)).toBeVisible()
 
-    // Space regression: after clicking the log drawer toggle the button keeps
-    // focus; Space must still pass priority and must not re-toggle the drawer.
-    await page.getByTestId('drawer-tab-log').click()
-    await expect(page.getByTestId('game-drawer')).toHaveAttribute('data-tab', 'log')
+    // Space regression: after clicking the log toggle the button keeps
+    // focus; Space must still pass priority and must not re-toggle the panel.
+    await page.getByTestId('chatlog-toggle-log').click()
+    await expect(page.getByTestId('chatlog-panel')).toHaveAttribute('data-tab', 'log')
     await page.keyboard.press('Space')
     await expect
       .poll(() => parseSent(sentOf(page)).some((f) => f.action === 'sendPlayerBoolean'))
       .toBe(true)
-    await expect(page.getByTestId('game-drawer')).toHaveAttribute('data-tab', 'log')
+    await expect(page.getByTestId('chatlog-panel')).toHaveAttribute('data-tab', 'log')
 
     // Ventana de combate del controlado (GAME_SELECT con possibleAttackers):
     // el botón pasa a confirmar atacantes y sus criaturas son clicables.

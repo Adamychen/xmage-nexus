@@ -161,7 +161,7 @@ looked-at/companion/top-library/sideboard) · `GamePanel#displayStack/showReveal
 
 | Desktop | Web | Estado |
 |---|---|---|
-| Tablero por jugador, layouts 1v1/pod/arena/espectador, agrupación tierras, auras/mutate anidadas, overlay derrotado, anillo orden, switcher con orden | `board/*` (37 ficheros): `GameBoard/PodBoard/ArenaBoard` sobre `BoardShell+BoardZone`, `HandBar/HandZone`, `CommandZone`, `PileOverlay`, `TurnOrderRing`, `OpponentSwitcherBar` | ✅ (supera en layouts) |
+| Tablero por jugador (one Arena layout since 2026-11-23, with or without the main board side panel; duel, pod, 5+ and spectator), agrupación tierras, auras/mutate anidadas, overlay derrotado, anillo orden | `board/*`: `ArenaBoard/SpotlightBoard` sobre `BoardShell+BoardZone`, `HandBar/HandZone`, `CommandZone`, `PileOverlay`, `TurnOrderRing` | ✅ (supera en layouts) |
 | Bordes estado jugador (verde/rojo/amarillo: prioridad/turno/target) + avatar targeteable | Glow prioridad + glow turno `is-turn` + etiqueta (`PlayerInfoBar`) + click target en barra | ✅ |
 | Pool maná en panel jugador + cementerio/exilio resaltados si jugables | `ResourceBar` (desglose WUBRGC + dot jugable) + `CrossZoneOverlay` | ✅ |
 | Contadores (vida/veneno/energía/exp/rad/ticket + counts biblioteca/cementerio/exilio/mano) | `PlayerInfoBar` + `ResourceBar` | ✅ |

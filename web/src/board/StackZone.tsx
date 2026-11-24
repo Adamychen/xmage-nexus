@@ -1,8 +1,6 @@
 import { Fragment, useLayoutEffect, useRef, useState, useCallback, useEffect } from 'react'
 import type { ReactNode } from 'react'
 import type { CardView, PlayerView } from '../net/types'
-import { useCardImageUrl } from '../cards/useCardImageUrl'
-import { useLocalizedCardName } from '../cards/cardLocalization'
 import FloatingCardPreview from './FloatingCardPreview'
 import { useStore, isBlockingModal } from '../state/store'
 import { recordCardPosition } from './cardPositionRegistry'
@@ -18,7 +16,8 @@ import {
   isStackAbility,
 } from './stackEntries'
 import StackBubble, { type StackBubblePlacement } from './StackBubble'
-import RenderedCard from '../cards/rendered/RenderedCard'
+import { StackCardFace, StackEntryCardName } from './StackCardFace'
+import StackViewer from './StackViewer'
 import { seatColorVar, seatIndexOf } from './seatColor'
 import { stackCascadeFit, type CascadeFit } from './stackCascadeFit'
 import { BOARD_RELAYOUT_EVENT } from './layout/relayout'
@@ -35,42 +34,9 @@ interface StackZoneProps {
   onFocusIds?: (ids: ReadonlySet<string> | null) => void
 }
 
-/** STK-1: the face of one object on the stack, drawn as the card it is. */
-function StackCardFace({ card, rendered }: { card: CardView; rendered: boolean }) {
-  const imgUrl = useCardImageUrl(card)
-  if (rendered) return <RenderedCard card={card} className="stack-thumb-img" />
-  return (
-    <div className="stack-thumb">
-      {imgUrl ? (
-        /* The whole card, not a crop of its art: the one in front is the one you read, and its
-           own printed title is the name, so nothing above it repeats that name. */
-        <img src={imgUrl} alt="" className="stack-thumb-img" draggable={false} />
-      ) : (
-        <div className="stack-thumb-placeholder">
-          <Icon name={isStackAbility(card) ? 'zap' : 'layers'} size={18} />
-          <StackEntryCardName card={card} />
-        </div>
-      )}
-    </div>
-  )
-}
 
-export function StackEntryCardName({ card }: { card: CardView }) {
-  const { displayName, originalName } = useLocalizedCardName(card)
-  const isTranslated = displayName !== originalName
-
-  return (
-    <span
-      className="stack-tl-name"
-      title={isTranslated ? `${originalName} (${displayName})` : undefined}
-    >
-      {displayName}
-    </span>
-  )
-}
-
-/** How long the bubble stays open after the pointer leaves the cascade and the bubble. */
-const BUBBLE_FOLD_MS = 220
+/** How long the bubble keeps reading the hovered card after the pointer leaves the cascade and the bubble. */
+const BUBBLE_READ_MS = 220
 /** The gap the bubble's tail crosses between the card and the bubble. */
 const BUBBLE_GAP = 12
 /** Under this much room between the cascade and the dock, the bubble lies over the front card: a
@@ -208,6 +174,7 @@ export default function StackZone({
   const [bubbleHover, setBubbleHover] = useState(false)
   const [bubbleFolded, setBubbleFolded] = useState(false)
   const [reading, setReading] = useState(false)
+  const [viewerOpen, setViewerOpen] = useState(false)
   const [bubblePlacement, setBubblePlacement] = useState<StackBubblePlacement>('below')
   const [bubbleMax, setBubbleMax] = useState<number | null>(null)
 
@@ -324,7 +291,7 @@ export default function StackZone({
       setReading(true)
       return
     }
-    const back = setTimeout(() => setReading(false), BUBBLE_FOLD_MS)
+    const back = setTimeout(() => setReading(false), BUBBLE_READ_MS)
     return () => clearTimeout(back)
   }, [wantRead])
   // Pushed aside, or a stack that has run out: the next one comes open again, as a fresh one does.
@@ -335,7 +302,7 @@ export default function StackZone({
     if (groupCount === 0) setBubbleFolded(false)
   }, [groupCount])
   // The card last hovered stays the one read while the pointer crosses to the bubble; once the
-  // bubble folds, it goes back to the object about to resolve.
+  // pointer is gone, it goes back to the object about to resolve.
   const [readId, setReadId] = useState<string | null>(null)
   useEffect(() => {
     if (hoverId != null) setReadId(String(hoverId))
@@ -371,6 +338,9 @@ export default function StackZone({
   // front card's lower half when there is not: it never lies over the button the player is about to
   // press, nor over the board.
   const hasEntries = entries.length > 0
+  useEffect(() => {
+    if (!hasEntries) setViewerOpen(false)
+  }, [hasEntries])
   useLayoutEffect(() => {
     const cascade = cascadeRef.current
     const zone = zoneRef.current
@@ -388,7 +358,7 @@ export default function StackZone({
     measure()
     window.addEventListener('resize', measure)
     return () => window.removeEventListener('resize', measure)
-  }, [hasEntries, fit, floor, bubbleOpen])
+  }, [hasEntries, fit, floor])
 
   // STK-2: an empty stack draws nothing at all; it is a layer over the board, not a panel that
   // stays behind saying it is empty. It is read after the hooks above, never before them: an
@@ -429,16 +399,29 @@ export default function StackZone({
       {/* The room the cascade may use, declared in CSS and measured here: a box of its own, so the
           measurement can never read back the size the cascade chose. */}
       <div ref={roomRef} className="stack-room" aria-hidden="true" />
-      <IconButton
-        className="stack-push"
-        data-testid="stack-push"
-        label={pushed ? t('game', 'stack_bring_back') : t('game', 'stack_push_aside')}
-        variant="ghost"
-        aria-pressed={pushed}
-        onClick={() => setPushed((on) => !on)}
-      >
-        <Icon name={pushed ? 'chevronLeft' : 'chevronRight'} size={16} />
-      </IconButton>
+      <div className="stack-side">
+        <IconButton
+          className="stack-push"
+          data-testid="stack-push"
+          label={pushed ? t('game', 'stack_bring_back') : t('game', 'stack_push_aside')}
+          variant="ghost"
+          aria-pressed={pushed}
+          onClick={() => setPushed((on) => !on)}
+        >
+          <Icon name={pushed ? 'chevronLeft' : 'chevronRight'} size={16} />
+        </IconButton>
+        <button
+          type="button"
+          className="stack-view-all"
+          data-testid="stack-open-viewer"
+          title={t('game', 'stack_view_all')}
+          aria-label={`${t('game', 'stack_view_all')} (${entries.length})`}
+          onClick={() => setViewerOpen(true)}
+        >
+          <Icon name="layers" size={14} />
+          <span className="stack-view-all-count">{entries.length}</span>
+        </button>
+      </div>
 
       {/* STK-1: the stack is a cascade of cards, the one about to resolve in front and the rest
           peeking behind it by their title, the way a hand of cards lies over itself. */}
@@ -516,6 +499,16 @@ export default function StackZone({
           />
         )}
       </div>
+      {viewerOpen && (
+        <StackViewer
+          entries={entries}
+          players={players}
+          myPlayerId={myPlayerId}
+          targetIds={targetIds}
+          onCardClick={onCardClick}
+          onClose={() => setViewerOpen(false)}
+        />
+      )}
 
       <FloatingCardPreview
         card={hoverCard}

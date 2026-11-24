@@ -14,8 +14,8 @@ function rulesFor(selector: string): string[] {
 
 describe('the turn order ring of a pod', () => {
   it('BRD-37: a seat name has no cap it could be cut at, and a seat cannot be squeezed under it', () => {
-    expect(rulesFor('.turn-order-ring:not(.lane):not(.is-portrait) .tor-seat-name').join('\n')).toMatch(/max-width:\s*none/)
-    expect(rulesFor('.turn-order-ring:not(.lane):not(.is-portrait) .tor-seat').join('\n')).toMatch(/min-width:\s*max-content/)
+    expect(rulesFor('.turn-order-ring .tor-seat-name').join('\n')).toMatch(/max-width:\s*none/)
+    expect(rulesFor('.turn-order-ring .tor-seat').join('\n')).toMatch(/min-width:\s*max-content/)
   })
 
   it('BRD-37: the tightened rung is declared once for the row and for the ruler that measures it', () => {

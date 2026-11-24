@@ -203,7 +203,7 @@ for (const layout of LAYOUTS) {
           await drawBoard(page, game, settings)
           await page.mouse.move(1, 1)
           await settleAndCount(page)
-          const cappedByOwn = layout === 'arena' || layout === 'table'
+          const cappedByOwn = layout === 'arena'
           const found = violations(await measure(page, cappedByOwn), layout)
           expect(found, 'rows whose cards could be larger but no band fills its room').toEqual([])
         })

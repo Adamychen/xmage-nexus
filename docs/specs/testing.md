@@ -94,8 +94,8 @@ four-player table on turn 11, built from cards of those decks: your main phase w
 crowded boards with counters, tokens and equipment, a commander in the command zone and a full
 graveyard. Two cards come from outside them, a battle and a saga on your board, because no precon
 of those years has either and a table that leaves a permanent type or a chapter track out cannot
-show how they are drawn. The table keeps the viewer's layout settings, so Arena, Table and Standard
-can be compared on it.
+show how they are drawn. The table keeps the viewer's board settings, so the column view and the main
+board with side panel can be compared on it.
 
 - Why: the dev decks were land-only or built for one deterministic test, so manual checks and
   screenshots of the board showed nearly empty tables; the board rework needed a real, advanced

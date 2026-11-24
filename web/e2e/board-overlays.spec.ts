@@ -82,7 +82,7 @@ test.describe('capas sobre la carta @board', () => {
         prefix: 'ovl',
         skipAsks: true,
       })
-      const slots = page.locator('.hand-bar .hand-card-slot')
+      const slots = page.locator('.hand-bar .hand-card-slot:not(.hand-trailing)')
       await expect(slots).toHaveCount(2, { timeout: 30_000 })
       await expect(slots.nth(0).locator('.hand-card-cost img').first()).toBeVisible()
       const geometry = await slots.evaluateAll((els) =>

@@ -78,7 +78,7 @@ test('LBY-12: a reload with a saved session and an unfinished wizard reopens the
       prefix: 'rel',
       skipAsks: true,
     })
-    await expect(page.locator('.game-board')).toBeVisible({ timeout: 30_000 })
+    await expect(page.locator('.arena-board').first()).toBeVisible({ timeout: 30_000 })
 
     // the device state of the bug: session stored, wizard never completed
     await page.evaluate(() => window.localStorage.removeItem('nexus_setup_v'))
@@ -91,7 +91,7 @@ test('LBY-12: a reload with a saved session and an unfinished wizard reopens the
     await expect
       .poll(() => parseSent(sentOf(page)).slice(sentBefore).some((f) => f.action === 'connect'), { timeout: 20_000 })
       .toBe(true)
-    await expect(page.locator('.game-board')).toBeVisible({ timeout: 30_000 })
+    await expect(page.locator('.arena-board').first()).toBeVisible({ timeout: 30_000 })
     await expect(page.getByTestId('setup-wizard')).toBeHidden({ timeout: 10_000 })
 
     expect(session.pageErrors, `pageerrors: ${session.pageErrors.map(String).join(' | ')}`).toEqual([])

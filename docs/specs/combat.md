@@ -49,14 +49,13 @@ text merely mentions it ("create a token with vigilance").
 ### CMB-4 · Each attack arrow lands on the defender the server names
 Every attacker draws an arrow to the defender its combat group names: a player's avatar (not the
 middle of their zone), or the planeswalker or battle card being attacked. Every blocker draws an
-arrow to the attacker it blocks. In the Table layout the arrow takes the attacker's seat colour
-and ends on the defender's edge. Arrows that start or end on a player who has left the game are
+arrow to the attacker it blocks. Arrows that start or end on a player who has left the game are
 not drawn.
 
 - Why: aiming at the player's zone root put the arrow head in the lands band (`6fecaa53fd`,
   `web/INTERACTION_COVERAGE.md` §F); in a pod the arrow must follow the frame's defender, not the
-  first non-active player (`e2e/recorded.spec.ts`, `pod-combat.json`). Seat colours came with the
-  Table layout (`3392950fb4`).
+  first non-active player (`e2e/recorded.spec.ts`, `pod-combat.json`). The seat-coloured attack
+  arrows of the Table layout (`3392950fb4`) went with it on 2026-11-23.
 - Guard: `src/board/CombatArrowsOverlay.test.tsx` (blocker arrows, a planeswalker or battle
   defender and the left-player case are not asserted there)
 

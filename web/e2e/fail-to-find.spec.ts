@@ -43,9 +43,9 @@ test.describe('Fail to find (búsqueda declinable)', { tag: '@failtofind' }, () 
       )
       expect(targetIdsOf(target), 'la búsqueda debe listar possibleTargets').toEqual(SEARCH_TARGETS)
 
-      const libraryChip = page.locator('.resource-bar.my [data-library-count]')
+      const libraryChip = page.locator('.player-zone [data-testid="pile-card-library"]').first()
       await expect(libraryChip).toBeVisible()
-      const libraryBefore = await libraryChip.getAttribute('data-library-count')
+      const libraryBefore = await libraryChip.getAttribute('data-count')
       expect(Number(libraryBefore), 'la biblioteca debe tener cartas antes de declinar').toBeGreaterThan(0)
       const handBefore = myHandEntries(lastGameView(parseFrames(frames))).map(([, card]) => card.name)
 
@@ -69,7 +69,7 @@ test.describe('Fail to find (búsqueda declinable)', { tag: '@failtofind' }, () 
       // The search is over: what the board says next is the mana step, not the library.
       await expect(order).not.toContainText(/Search your library|Busca en tu biblioteca/i, { timeout: 10_000 })
 
-      await expect.poll(() => libraryChip.getAttribute('data-library-count'), { timeout: 10_000 }).toBe(libraryBefore)
+      await expect.poll(() => libraryChip.getAttribute('data-count'), { timeout: 10_000 }).toBe(libraryBefore)
       const handAfter = myHandEntries(lastGameView(parseFrames(frames))).map(([, card]) => card.name)
       expect(handAfter.filter((name) => !handBefore.includes(name)), 'declinar no debe añadir cartas a la mano').toEqual([])
       expect(pageErrors, `pageerrors: ${pageErrors.map(String).join(' | ')}`).toEqual([])

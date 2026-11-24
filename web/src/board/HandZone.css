@@ -149,9 +149,9 @@
 .hand-back-stack.is-half-fan {
   --fan-step: calc(var(--card-w, 100px) * 0.28);
   width: calc(var(--card-w, 100px) + (var(--fan-n, 1) - 1) * var(--fan-step));
-  height: calc(var(--card-w, 100px) * 0.7);
+  height: calc(var(--card-w, 100px) * 0.85);
   border-radius: 0;
-  clip-path: inset(0 -100px 0 -100px);
+  clip-path: inset(-100px -100px 0 -100px);
   transform: rotate(180deg);
   align-self: flex-start;
 }

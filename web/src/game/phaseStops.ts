@@ -46,7 +46,7 @@ export function togglePhaseStop(stops: PhaseStops, turn: PhaseTurn, key: string)
   return next
 }
 
-/** Mapa de `GameView.step` (wire real del servidor) al `stopKey` configurable de PhaseBar/PhaseStopSelector. */
+/** Maps the server's `GameView.step` to the configurable `stopKey` of PhaseLadder/PhaseStopSelector. */
 const STEP_STOP_KEY: Record<string, string> = {
   UPKEEP: 'upkeep',
   DRAW: 'draw',

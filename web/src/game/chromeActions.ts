@@ -1,8 +1,6 @@
 import { createContext, useContext } from 'react'
-import type { SidePanelTab } from './SidePanel'
 
 export interface ChromeActions {
-  openPanel: (tab: SidePanelTab) => void
   sidePanelOpen: boolean
 }
 

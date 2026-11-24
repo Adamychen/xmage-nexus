@@ -1,7 +1,8 @@
 import { useEffect, useState, useMemo, useCallback } from 'react'
 import { BOARD_RELAYOUT_EVENT } from './layout/relayout'
 import { isPlayerOut } from './boardShared'
-import type { GameView } from '../net/types'
+import type { CardView, GameView } from '../net/types'
+import { stackTargetIds } from './stackEntries'
 import { seatColorVar, seatIndexOf } from './seatColor'
 import './CombatArrowsOverlay.css'
 
@@ -28,7 +29,6 @@ interface CombatArrowsOverlayProps {
   combatChosen?: string[]
   combatMode?: 'attack' | 'block' | null
   stackFocusIds?: ReadonlySet<string> | null
-  variant?: 'v1' | 'v2'
 }
 
 const EMPTY_ARRAY: string[] = []
@@ -95,7 +95,6 @@ export default function CombatArrowsOverlay({
   combatChosen = EMPTY_ARRAY,
   combatMode,
   stackFocusIds = null,
-  variant = 'v1',
 }: CombatArrowsOverlayProps) {
   const [arrows, setArrows] = useState<ArrowItem[]>([])
 
@@ -180,34 +179,9 @@ export default function CombatArrowsOverlay({
       return null
     }
 
-    const seated = variant === 'v2'
-    const controllerOf = (cardId: string): string | undefined => {
-      for (const p of game.players ?? []) {
-        if (cardId in (p.battlefield ?? {})) return p.playerId
-      }
-      const onStack = (game.stack as Record<string, { controllerId?: string }> | undefined)?.[cardId]
-      if (onStack?.controllerId) return String(onStack.controllerId)
-      if (cardId in (game.myHand ?? {})) return me?.playerId
-      return undefined
-    }
-
     const makeArrow = (id: string, from: { x: number; y: number; rect: DOMRect }, to: { x: number; y: number; rect: DOMRect }, type: ArrowItem['type'], fromId = '', toId = ''): ArrowItem => {
       // TGT-12: out of the source's top edge, into the target's bottom edge.
       const { a, b } = arrowAnchors(from, to)
-      if (seated) {
-        return {
-          id,
-          x1: Math.round(a.x),
-          y1: Math.round(a.y),
-          x2: Math.round(b.x),
-          y2: Math.round(b.y),
-          type,
-          fromId,
-          toId,
-          path: arrowPath(a, b, boardRect.height),
-          color: seatColorVar(seatIndexOf(game.players, controllerOf(fromId) ?? me?.playerId)),
-        }
-      }
       // Whole pixels at both ends: with integer input the dart sits identically between sessions.
       const end = (v: number) => Math.round(v)
       return {
@@ -324,12 +298,7 @@ export default function CombatArrowsOverlay({
         if (!sourceCenter) return
 
         const cardObj = stackCard as unknown as Record<string, unknown>
-        const targets = cardObj.targets ?? cardObj.targetIds ?? cardObj.chosenTargets ?? []
-        const targetList: string[] = Array.isArray(targets)
-          ? targets.map((t: unknown) => typeof t === 'string' ? t : (t as { id?: string } | null)?.id).filter((id): id is string => !!id)
-          : typeof targets === 'object' && targets !== null
-          ? Object.keys(targets)
-          : []
+        const targetList = stackTargetIds(stackCard as CardView)
 
         // Both ends on the stack: the objects lie over each other, so a straight line between them
         // is a stub hidden under the cards. Those arrows loop out past the cascade's left edge and
@@ -366,7 +335,7 @@ export default function CombatArrowsOverlay({
     }
 
     return newArrows
-  }, [game, boardRef, targetSourceId, chosenTargetIds, combatChosen, combatMode, me, opp, stackFocusIds, variant])
+  }, [game, boardRef, targetSourceId, chosenTargetIds, combatChosen, combatMode, me, opp, stackFocusIds])
 
   useEffect(() => {
     const update = () => {

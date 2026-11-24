@@ -144,19 +144,20 @@ fakeOnly()
     })
     await expect(page.locator('.game-chat-player').first()).toContainText('player-1', { timeout: 5_000 })
 
-    // The chat and quick reactions stay inside the drawer, which sits above the action button
+    // PNL-10: the chat and quick reactions stay inside the floating panel, which never covers the action button
     const layout = await page.evaluate(() => {
-      const drawer = document.querySelector('.game-drawer')
+      const panel = document.querySelector('.chatlog-panel')
       const reactions = document.querySelector('.quick-reactions')
       const action = document.querySelector('.action-button-container')
-      if (!drawer || !reactions || !action) return null
-      const drawerBottom = drawer.getBoundingClientRect().bottom
+      if (!panel || !reactions || !action) return null
+      const p = panel.getBoundingClientRect()
+      const a = action.getBoundingClientRect()
       return {
-        reactionsInsideDrawer: reactions.getBoundingClientRect().bottom <= drawerBottom + 1,
-        drawerAboveAction: drawerBottom <= action.getBoundingClientRect().top,
+        reactionsInsidePanel: reactions.getBoundingClientRect().bottom <= p.bottom + 1,
+        panelClearOfAction: p.right <= a.left || p.bottom <= a.top || p.left >= a.right || p.top >= a.bottom,
       }
     })
-    expect(layout).toEqual({ reactionsInsideDrawer: true, drawerAboveAction: true })
+    expect(layout).toEqual({ reactionsInsidePanel: true, panelClearOfAction: true })
   },
 )
 

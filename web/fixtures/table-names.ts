@@ -56,6 +56,7 @@ export const TABLE = {
   planeswalker: 'planeswalker-test',
   triggerOrder: 'trigger-order-test',
   autoAnswers: 'auto-answers-test',
+  arenaSurveil: 'arena-surveil-test',
   manaPayment: 'mana-payment-test',
   deckIssues: 'deck-issues-test',
   playerMenu: 'player-menu-test',

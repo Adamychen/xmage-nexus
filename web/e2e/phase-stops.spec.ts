@@ -74,12 +74,16 @@ test.describe('Phase stops', { tag: '@phasestops' }, () => {
       expect(seeded.opponentTurn.main1).toBe(true)
 
       // board -> Settings: the change is saved and pushed to the running game
-      const m1 = page.getByTestId('phase-bar-step-PRECOMBAT_MAIN')
-      await expect(m1).toBeVisible()
-      await expect(m1.locator('.stop-dot-you')).toHaveCount(0)
+      const ladder = page.getByTestId('phase-ladder')
+      await expect(ladder).toBeVisible()
+      const mine = (await ladder.getAttribute('data-shown-turn')) === 'yourTurn'
+      const yourButton = mine ? 'left' : 'right'
+      const yourMark = mine ? '.ladder-stop-notch' : '.ladder-stop-dot'
+      const m1 = page.getByTestId('phase-ladder-step-PRECOMBAT_MAIN')
+      await expect(m1.locator(yourMark)).toHaveCount(0)
       let before = PHASE_PREFS.length
-      await m1.click()
-      await expect(m1.locator('.stop-dot-you')).toHaveCount(1)
+      await m1.click({ button: yourButton })
+      await expect(m1.locator(yourMark)).toHaveCount(1)
       await expect.poll(() => PHASE_PREFS.length, { timeout: 5000 }).toBeGreaterThan(before)
       expect((PHASE_PREFS[PHASE_PREFS.length - 1] as { yourTurn: Record<string, boolean> }).yourTurn.main1).toBe(true)
       const stored = await page.evaluate(() => window.localStorage.getItem('mage-web-phase-stops'))
@@ -97,7 +101,35 @@ test.describe('Phase stops', { tag: '@phasestops' }, () => {
       await expect.poll(() => PHASE_PREFS.length, { timeout: 5000 }).toBeGreaterThan(before)
       expect((PHASE_PREFS[PHASE_PREFS.length - 1] as { yourTurn: Record<string, boolean> }).yourTurn.main1).toBe(false)
       await page.getByTestId('settings-close').click()
-      await expect(m1.locator('.stop-dot-you')).toHaveCount(0)
+      await expect(m1.locator(yourMark)).toHaveCount(0)
+    })
+  })
+
+  test('BRD-62: the ladder sits inline beside the turn counter in the top strip with combat steps directly clickable', async ({ page }) => {
+    await withFakeServer(manaPaymentScenario, async () => {
+      await quickStartGame(page, { prefix: 'psl', skipAsks: true })
+      const ladder = page.getByTestId('phase-ladder')
+      await expect(ladder).toBeVisible()
+      await expect(page.locator('.phase-bar')).toHaveCount(0)
+      const status = page.getByTestId('game-status')
+      await expect(status).toBeVisible()
+      const l = (await ladder.boundingBox())!
+      const s = (await status.boundingBox())!
+      expect(l.x).toBeGreaterThanOrEqual(s.x + s.width - 1)
+      expect(Math.abs((l.y + l.height / 2) - (s.y + s.height / 2))).toBeLessThan(8)
+      expect(await page.locator('.ladder-step.is-current').count()).toBe(1)
+
+      const combat = page.getByTestId('phase-ladder-combat-steps')
+      await expect(combat).toBeVisible()
+      const c = (await combat.boundingBox())!
+      expect(Math.abs((c.y + c.height / 2) - (l.y + l.height / 2))).toBeLessThan(4)
+      const begin = page.getByTestId('phase-ladder-step-BEGIN_COMBAT')
+      const mine = (await ladder.getAttribute('data-shown-turn')) === 'yourTurn'
+      const before = await page.evaluate(() => JSON.parse(window.localStorage.getItem('mage-web-phase-stops') ?? '{}'))
+      await begin.click({ button: 'right' })
+      const other = mine ? 'opponentTurn' : 'yourTurn'
+      await expect.poll(async () => (await page.evaluate(() => JSON.parse(window.localStorage.getItem('mage-web-phase-stops') ?? '{}')))[other]?.beginCombat)
+        .toBe(!before[other]?.beginCombat)
     })
   })
 
@@ -122,14 +154,14 @@ test.describe('Phase stops', { tag: '@phasestops' }, () => {
     })
     await withFakeServer(rejoinScenario, async () => {
       await quickStartGame(page, { prefix: 'psr', skipAsks: true })
-      const bar = page.locator('.phase-bar, .phase-dial').first()
+      const bar = page.getByTestId('phase-ladder')
       await expect(bar).toBeVisible()
-      await expect(page.locator('.stop-dot')).toHaveCount(0)
+      await expect(page.locator('.ladder-stop-notch, .ladder-stop-dot')).toHaveCount(0)
 
       await page.reload({ waitUntil: 'domcontentloaded' })
-      await expect(page.locator('.game-board')).toBeVisible({ timeout: 30_000 })
+      await expect(page.locator('.arena-board').first()).toBeVisible({ timeout: 30_000 })
       await expect(bar).toBeVisible()
-      await expect(page.locator('.stop-dot')).toHaveCount(0)
+      await expect(page.locator('.ladder-stop-notch, .ladder-stop-dot')).toHaveCount(0)
     })
   })
 })

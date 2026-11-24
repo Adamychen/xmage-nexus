@@ -1,12 +1,11 @@
 import type { PlayerView } from '../net/types'
 import { useStore } from '../state/store'
-import { MAX_BOARD_PLAYERS } from './boardShared'
 
 export const SEAT_COUNT = 4
 
 export function seatIndexOf(players: PlayerView[] | undefined, playerId: string | undefined): number {
   if (!players || !playerId) return 0
-  const seated = players.slice(0, MAX_BOARD_PLAYERS)
+  const seated = players
   const at = seated.findIndex((p) => p.playerId === playerId)
   if (at < 0) return 0
   if (seated[at].controlled) return 0

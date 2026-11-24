@@ -1,6 +1,7 @@
 import { getState, setState } from '../state/state'
 import { parseFeedback, type FeedbackCard, type FeedbackPrompt } from '../game/feedback'
 import { TOP_CARD_PEEK_NAME } from '../game/topCardPeek'
+import { LADDER, ladderIndex } from '../game/ladderSteps'
 import { landTapColor } from '../board/compactCard'
 import type { AuraKeyword } from '../board/keywordAura'
 import { forgetCoinFlip } from '../board/coinFlipFx'
@@ -30,7 +31,6 @@ import type { RollbackVote } from '../state/rollbackVote'
 import { STORAGE_KEY as CREATE_TABLE_STORAGE_KEY } from '../lobby/CreateTable/constants'
 import manifest from '../../fixtures/recorded/manifest.json'
 import { replayProjectileDemo } from './projectileDemo'
-import type { GameUi } from '../game/gameUi'
 import { handleChatMessage } from '../state/events/chat'
 import { STEPS } from '../game/phaseSteps'
 import { observeTurnRecap, resetTurnRecap, type TurnRecap } from '../game/turnRecap'
@@ -130,12 +130,9 @@ export interface GalleryEntry {
   /** Deck in play (`myDeck` in the store); omitted = keep the current one. */
   myDeck?: Deck | null
   chatMessages?: ChatMessageEvent[]
-  boardLayout?: 'standard' | 'arena'
   /** Main board with side panel (`boardSpotlight`, BRD-6); omitted = the viewer's setting. */
   boardSpotlight?: boolean
   seatFocus?: string
-  /** Table interface for this state; omitted = the viewer's setting. */
-  gameUi?: GameUi
   /** Rollback vote dialog state (`rollbackVote` in the store). */
   rollbackVote?: RollbackVote | null
   uiScale?: number
@@ -213,6 +210,13 @@ const LIBRARY_CARDS: FeedbackCard[] = [
   { id: 'g4', name: 'Counterspell', expansionSetCode: 'MH2', cardNumber: '267', cardTypes: ['Instant'] },
   { id: 'g5', name: 'Elvish Mystic', expansionSetCode: 'M14', cardNumber: '169', cardTypes: ['Creature'] },
   { id: 'g6', name: 'Forest', expansionSetCode: 'M21', cardNumber: '277', cardTypes: ['Land'] },
+]
+
+const ARENA_LIBRARY_CARDS: FeedbackCard[] = [
+  { id: 'asv-1', name: 'Lightning Bolt', expansionSetCode: 'M10', cardNumber: '146', cardTypes: ['Instant'] },
+  { id: 'asv-2', name: 'Counterspell', expansionSetCode: 'MH2', cardNumber: '267', cardTypes: ['Instant'] },
+  { id: 'asv-3', name: 'Opt', expansionSetCode: 'M21', cardNumber: '59', cardTypes: ['Instant'] },
+  { id: 'asv-4', name: 'Elvish Mystic', expansionSetCode: 'M14', cardNumber: '169', cardTypes: ['Creature'] },
 ]
 
 // ─── Pantallas nuevas (P3 núcleo, 2026-09-17): lobby, editor, draft, construct, torneo ──
@@ -2892,6 +2896,23 @@ const WIZARD_DRAFT_FORM = JSON.stringify({
   seatConfigs: Array.from({ length: 7 }, () => ({ type: 'SIM', deckName: '', skill: 2 })),
 })
 
+export function nextLadderStep(game: GameView): GameView {
+  const at = ladderIndex(game.step)
+  if (at >= 0 && at < LADDER.length - 1) return { ...game, step: LADDER[at + 1].key }
+  if (at < 0) return { ...game, step: LADDER[0].key }
+  const players = game.players ?? []
+  const current = players.findIndex((p) => p.playerId === game.activePlayerId)
+  const next = players[(current + 1) % Math.max(players.length, 1)]
+  return {
+    ...game,
+    step: LADDER[0].key,
+    phase: 'BEGINNING',
+    activePlayerId: next?.playerId ?? game.activePlayerId,
+    activePlayerName: next?.name ?? game.activePlayerName,
+    turn: (game.turn ?? 0) + 1,
+  }
+}
+
 export function buildGalleryEntries(): GalleryEntry[] {
   const entries: GalleryEntry[] = recordedFrames.map((frame) => ({
     id: `frame:${frame.mechanic}`,
@@ -3245,6 +3266,44 @@ export function buildGalleryEntries(): GalleryEntry[] {
         },
       },
       {
+        id: 'arena:surveil',
+        label: 'Surveil 3 (Arena)',
+        description: 'Arena-style full-screen surveil: drag cards between the top of the library and the graveyard, then Done answers the whole chain.',
+        prompt: {
+          method: 'GAME_TARGET',
+          gameId,
+          title: 'Surveil',
+          message: 'Select card(s) to PUT into your GRAVEYARD (Surveil)',
+          mode: 'uuid',
+          options: ARENA_LIBRARY_CARDS.slice(0, 3).map((c) => ({ id: c.id, label: c.name, value: c.id })),
+          min: 0,
+          max: 3,
+          required: false,
+          cards: ARENA_LIBRARY_CARDS.slice(0, 3),
+          sourceName: 'Discovery // Dispersal',
+          libraryStep: 'surveil-pick',
+        },
+      },
+      {
+        id: 'arena:scry',
+        label: 'Scry 4 (Arena)',
+        description: 'Arena-style full-screen scry: drag cards between the top and the bottom of the library, then Done answers the whole chain.',
+        prompt: {
+          method: 'GAME_TARGET',
+          gameId,
+          title: 'Scry',
+          message: 'Select up to 4 cards to PUT on the BOTTOM of your library (Scry)',
+          mode: 'uuid',
+          options: ARENA_LIBRARY_CARDS.map((c) => ({ id: c.id, label: c.name, value: c.id })),
+          min: 0,
+          max: 4,
+          required: false,
+          cards: ARENA_LIBRARY_CARDS,
+          sourceName: 'Preordain',
+          libraryStep: 'scry-pick',
+        },
+      },
+      {
         id: 'prompt:choose-pile',
         label: 'Elegir montón (Fact or Fiction)',
         description: 'Two piles to choose from; each card zooms without choosing its pile (PRM-15).',
@@ -3351,8 +3410,6 @@ export function buildGalleryEntries(): GalleryEntry[] {
       description: 'Three identical instants from the same controller: three cards on the stack, not one with a count, because each one resolves on its own (STK-4).',
       phase: 'game',
       // The cascade lives in the Arena layout: pin it so the entry shows the stack it is about.
-      gameUi: 'v1',
-      boardLayout: 'arena',
       boardSpotlight: true,
       game: withIdenticalSpellPile(game),
       gameId,
@@ -3364,8 +3421,6 @@ export function buildGalleryEntries(): GalleryEntry[] {
       description: 'Each press puts a new spell in front of the cascade, easing in from the right. Press it to replay the entry animation.',
       phase: 'game',
       // The cascade lives in the Arena layout: pin it so the entry shows the stack it is about.
-      gameUi: 'v1',
-      boardLayout: 'arena',
       boardSpotlight: true,
       game: withIdenticalSpellPile(game),
       gameId,
@@ -3378,8 +3433,6 @@ export function buildGalleryEntries(): GalleryEntry[] {
       description: 'Press it: three Bolts go on the stack and then leave in a single update. They resolve one after another (FX-7), each flying to its graveyard while the cascade closes up behind it.',
       phase: 'game',
       // The cascade lives in the Arena layout: pin it so the entry shows the stack it is about.
-      gameUi: 'v1',
-      boardLayout: 'arena',
       boardSpotlight: true,
       game: withIdenticalSpellPile(game),
       gameId,
@@ -3392,8 +3445,6 @@ export function buildGalleryEntries(): GalleryEntry[] {
       description: 'A real chain: Soul Warden triggers, a Path to Exile aims at a creature on the board, and the opponent answers with a Counterspell aimed at the Path. Only the front card and the hovered one draw their target arrow (STK-3).',
       phase: 'game',
       // The cascade lives in the Arena layout: pin it so the entry shows the stack it is about.
-      gameUi: 'v1',
-      boardLayout: 'arena',
       boardSpotlight: true,
       game: withMixedStackKinds(game),
       gameId,
@@ -3404,8 +3455,6 @@ export function buildGalleryEntries(): GalleryEntry[] {
       label: 'Stack: bubble with modes, a long trigger and X',
       description: 'STK-10: the bubble under the cascade, folded until the pointer reaches the stack. The front Command shows only its chosen modes, the trigger behind it scrolls, and the Fireball ends with X = 4.',
       phase: 'game',
-      gameUi: 'v1',
-      boardLayout: 'arena',
       boardSpotlight: true,
       game: withBubbleTexts(game),
       gameId,
@@ -3747,7 +3796,6 @@ export function buildGalleryEntries(): GalleryEntry[] {
       phase: 'game',
       game: animBase,
       gameId,
-      gameUi: 'v2',
       action: { label: 'Replay', run: announceShuffle(meOfBase) },
     })
     entries.push({
@@ -3758,7 +3806,6 @@ export function buildGalleryEntries(): GalleryEntry[] {
       phase: 'game',
       game: animBase,
       gameId,
-      gameUi: 'v2',
       action: { label: 'Replay', run: announceShuffle(opponentOfBase) },
     })
     entries.push({
@@ -3769,7 +3816,6 @@ export function buildGalleryEntries(): GalleryEntry[] {
       phase: 'game',
       game: animBase,
       gameId,
-      gameUi: 'v2',
       action: { label: 'Replay', run: announce(`${logName(meOfBase?.name ?? 'You')} scries 2 (source: <font color='#6495ED'>Opt</font>)`) },
     })
     entries.push({
@@ -3780,7 +3826,6 @@ export function buildGalleryEntries(): GalleryEntry[] {
       phase: 'game',
       game: animBase,
       gameId,
-      gameUi: 'v2',
       action: { label: 'Replay', run: announce(`${logName(opponentOfBase?.name ?? 'Opponent')} surveils 3 (source: <font color='#6495ED'>Thoughtbound Phantasm</font>)`) },
     })
     entries.push({
@@ -3791,7 +3836,6 @@ export function buildGalleryEntries(): GalleryEntry[] {
       phase: 'game',
       game: animBase,
       gameId,
-      gameUi: 'v1',
       action: { label: 'Replay', run: announceShuffle(meOfBase) },
     })
     const meName = meOfBase?.name ?? 'You'
@@ -3890,7 +3934,6 @@ export function buildGalleryEntries(): GalleryEntry[] {
         phase: 'game',
         game: podBase,
         gameId,
-        boardLayout: 'arena',
         action: { label: 'Replay', run: replayQuiet(podBase, gameId, (g) => withPlayerOut(g, podVictim.playerId)) },
       })
       entries.push({
@@ -3901,7 +3944,6 @@ export function buildGalleryEntries(): GalleryEntry[] {
         phase: 'game',
         game: podBase,
         gameId,
-        boardLayout: 'arena',
         action: { label: 'Replay', run: replayQuietWithLog(podBase, gameId, () => `${logName(podVictim.name)} has conceded.`, (g) => withPlayerOut(g, podVictim.playerId)) },
       })
     }
@@ -3915,7 +3957,6 @@ export function buildGalleryEntries(): GalleryEntry[] {
         phase: 'game',
         game: fourPlayers,
         gameId,
-        boardLayout: 'arena',
         seatFocus: opponentOfFour,
         action: { label: 'Replay', run: replayQuiet(fourPlayers, gameId, (g) => withPermanentOn(g, seatShrunk.playerId, 'gallery-seat-land')) },
       })
@@ -3930,7 +3971,6 @@ export function buildGalleryEntries(): GalleryEntry[] {
         phase: 'game',
         game: fourPlayers,
         gameId,
-        boardLayout: 'arena',
         boardSpotlight: true,
         action: { label: 'Replay', run: replayQuiet(fourPlayers, gameId, (g) => withPermanentOn(g, copySeat.playerId, 'gallery-copy-land')) },
       })
@@ -3942,7 +3982,6 @@ export function buildGalleryEntries(): GalleryEntry[] {
         phase: 'game',
         game: animBase,
         gameId,
-        boardLayout: 'arena',
         boardSpotlight: true,
       })
       entries.push({
@@ -3953,7 +3992,6 @@ export function buildGalleryEntries(): GalleryEntry[] {
         phase: 'game',
         game: fourPlayers,
         gameId,
-        boardLayout: 'arena',
         boardSpotlight: true,
         action: { label: 'Replay', run: replayQuiet(fourPlayers, gameId, (g) => withPlayerOut(g, copySeat.playerId)) },
       })
@@ -3965,7 +4003,6 @@ export function buildGalleryEntries(): GalleryEntry[] {
         phase: 'game',
         game: fourPlayers,
         gameId,
-        boardLayout: 'arena',
         boardSpotlight: true,
         action: { label: 'Replay', run: replayQuietWithLog(fourPlayers, gameId, () => `${logName(copySeat.name)} has conceded.`, (g) => withPlayerLeft(g, copySeat.playerId)) },
       })
@@ -4056,7 +4093,6 @@ export function buildGalleryEntries(): GalleryEntry[] {
       phase: 'game',
       game: dayBase,
       gameId,
-      gameUi: 'v2',
       action: { label: 'Replay', run: replayQuiet(dayBase, gameId, (g) => withDayNight(g, true)) },
     })
     const nightBase = withDayNight(animBase, true)
@@ -4068,7 +4104,6 @@ export function buildGalleryEntries(): GalleryEntry[] {
       phase: 'game',
       game: nightBase,
       gameId,
-      gameUi: 'v1',
       action: { label: 'Replay', run: replayQuiet(nightBase, gameId, (g) => withDayNight(g, false)) },
     })
     entries.push({
@@ -4226,7 +4261,6 @@ export function buildGalleryEntries(): GalleryEntry[] {
       phase: 'game',
       game: fourPlayers,
       gameId,
-      boardLayout: 'arena',
       feedback: targetPlayerPrompt(fourPlayers, gameId, opponentOfFour, true),
     })
     entries.push({
@@ -4237,7 +4271,6 @@ export function buildGalleryEntries(): GalleryEntry[] {
       phase: 'game',
       game: fourPlayers,
       gameId,
-      boardLayout: 'arena',
       feedback: targetPlayerPrompt(fourPlayers, gameId, opponentOfFour, false),
     })
     const lungeBase = withStep(untapPermanent(animBase, mystic), 'COMBAT', 'BEGIN_COMBAT')
@@ -4277,7 +4310,6 @@ export function buildGalleryEntries(): GalleryEntry[] {
       phase: 'game',
       game: oppFloats(animBase),
       gameId,
-      gameUi: 'v2',
       action: { label: 'Replay', run: replayQuiet(animBase, gameId, oppFloats) },
     })
     const goadBase = withCardIcons(animBase, mystic, [])
@@ -4378,7 +4410,6 @@ export function buildGalleryEntries(): GalleryEntry[] {
       phase: 'game',
       game: lowLibraryBase,
       gameId,
-      gameUi: 'v2',
       action: { label: 'Replay', run: replayQuiet(lowLibraryBase, gameId, (g) => withLibraryCount(g, meOfBase?.playerId, 3)) },
     })
     const lastCardBase = withLibraryCount(animBase, meOfBase?.playerId, 1)
@@ -4390,7 +4421,6 @@ export function buildGalleryEntries(): GalleryEntry[] {
       phase: 'game',
       game: lastCardBase,
       gameId,
-      gameUi: 'v2',
       action: { label: 'Replay', run: replayQuiet(lastCardBase, gameId, (g) => withLibraryCount(g, meOfBase?.playerId, 0)) },
     })
     entries.push({
@@ -4401,7 +4431,6 @@ export function buildGalleryEntries(): GalleryEntry[] {
       phase: 'game',
       game: lastCardBase,
       gameId,
-      gameUi: 'v1',
       action: { label: 'Replay', run: replayQuiet(lastCardBase, gameId, (g) => withLibraryCount(g, meOfBase?.playerId, 0)) },
     })
     const attackedBase = withOpponentAttacker(animBase, mystic)
@@ -4620,7 +4649,6 @@ export function buildGalleryEntries(): GalleryEntry[] {
       phase: 'game',
       game: animBase,
       gameId,
-      gameUi: 'v1',
       action: { label: 'Replay', run: replayQuiet(animBase, gameId, (g) => sendToExile(g, mystic)) },
     })
     entries.push({
@@ -4663,7 +4691,6 @@ export function buildGalleryEntries(): GalleryEntry[] {
       phase: 'game',
       game: animBase,
       gameId,
-      gameUi: 'v2',
       action: { label: 'Replay', run: replayQuiet(animBase, gameId, (g) => sendToExile(g, mystic)) },
     })
     const ptGame = untapPermanent(animBase, mystic)
@@ -4795,7 +4822,6 @@ export function buildGalleryEntries(): GalleryEntry[] {
       phase: 'game',
       game: wipePodBase,
       gameId,
-      boardLayout: 'arena',
       action: { label: 'Replay', run: replayQuiet(wipePodBase, gameId, resolveWrath) },
     })
     const faceUpLabels: Record<GalleryFaceDown, { label: string; description: string }> = {
@@ -4855,7 +4881,6 @@ export function buildGalleryEntries(): GalleryEntry[] {
       phase: 'game',
       game: podPoisonBase,
       gameId,
-      boardLayout: 'arena',
       action: { label: 'Replay', run: replayQuiet(podPoisonBase, gameId, (g) => withPlayerCounter(g, podPoisoned, 'poison', 5)) },
     })
     const energyBase = withPlayerCounter(animBase, myIdOfBase, 'energy', 1)
@@ -4926,7 +4951,6 @@ export function buildGalleryEntries(): GalleryEntry[] {
         phase: 'game',
         game: podBase,
         gameId,
-        boardLayout: 'arena',
         action: { label: 'Replay', run: replayQuiet(podBase, gameId, (g) => withControl(g, podStolenId, podThief.playerId)) },
       })
     }
@@ -4938,7 +4962,6 @@ export function buildGalleryEntries(): GalleryEntry[] {
       phase: 'game',
       game: animBase,
       gameId,
-      gameUi: 'v2',
       action: { label: 'Replay', run: replayQuiet(animBase, gameId, (g) => tuckPermanent(g, mystic)) },
     })
     entries.push({
@@ -4949,7 +4972,6 @@ export function buildGalleryEntries(): GalleryEntry[] {
       phase: 'game',
       game: animBase,
       gameId,
-      gameUi: 'v1',
       action: { label: 'Replay', run: replayQuiet(animBase, gameId, (g) => tuckPermanent(g, mystic)) },
     })
     entries.push({
@@ -4972,7 +4994,6 @@ export function buildGalleryEntries(): GalleryEntry[] {
         phase: 'game',
         game: oppPutBackBase,
         gameId,
-        gameUi: 'v1',
         action: { label: 'Replay', run: replayQuiet(oppPutBackBase, gameId, (g) => opponentPutBack(g, opponentOfBase, 2)) },
       })
     }
@@ -4995,7 +5016,6 @@ export function buildGalleryEntries(): GalleryEntry[] {
       phase: 'game',
       game: rancorBase,
       gameId,
-      gameUi: 'v1',
       action: { label: 'Replay', run: replayQuiet(rancorBase, gameId, resolveRancor) },
     })
     const mutateBase = withMyPriority(withMutateOnStack(animBase))
@@ -5030,7 +5050,6 @@ export function buildGalleryEntries(): GalleryEntry[] {
       phase: 'game',
       game: villageBase,
       gameId,
-      gameUi: 'v1',
       action: { label: 'Replay', run: replayQuiet(villageBase, gameId, (g) => withAnimatedLand(g, manland, true)) },
     })
     entries.push({
@@ -5041,7 +5060,6 @@ export function buildGalleryEntries(): GalleryEntry[] {
       phase: 'game',
       game: villageBase,
       gameId,
-      gameUi: 'v2',
       action: { label: 'Replay', run: replayQuiet(villageBase, gameId, (g) => withAnimatedLand(g, manland, true)) },
     })
     entries.push({
@@ -5115,7 +5133,6 @@ export function buildGalleryEntries(): GalleryEntry[] {
       phase: 'game',
       game: animBase,
       gameId,
-      gameUi: 'v1',
       action: { label: 'Replay', run: replayQuiet(animBase, gameId, (g) => withWatchedHand(g, opponentOfBase)) },
     })
     entries.push({
@@ -5126,7 +5143,6 @@ export function buildGalleryEntries(): GalleryEntry[] {
       phase: 'game',
       game: animBase,
       gameId,
-      gameUi: 'v2',
       action: { label: 'Replay', run: replayQuiet(animBase, gameId, (g) => withWatchedHand(g, opponentOfBase)) },
     })
     const bushiBase = withFlipCard(untapPermanent(animBase, mystic), mystic, false)
@@ -5190,7 +5206,6 @@ export function buildGalleryEntries(): GalleryEntry[] {
       phase: 'game',
       game: wipeBase,
       gameId,
-      gameUi: 'v1',
       action: { label: 'Next step', apply: advanceStep },
     })
     if (opponentOfBase) {
@@ -5294,7 +5309,6 @@ export function buildGalleryEntries(): GalleryEntry[] {
         phase: 'game',
         game: cmdBase,
         gameId: COMMANDER_FRAME.gameId,
-        gameUi: 'v1',
         action: {
           label: 'Replay',
           run: () => {
@@ -5323,7 +5337,6 @@ export function buildGalleryEntries(): GalleryEntry[] {
         phase: 'game',
         game: onField,
         gameId: cmdGameId,
-        gameUi: 'v1',
         action: { label: 'Replay', run: replayQuiet(onField, cmdGameId, back) },
       })
       entries.push({
@@ -5334,7 +5347,6 @@ export function buildGalleryEntries(): GalleryEntry[] {
         phase: 'game',
         game: onField,
         gameId: cmdGameId,
-        gameUi: 'v2',
         action: { label: 'Replay', run: replayQuiet(onField, cmdGameId, back) },
       })
       entries.push({
@@ -5372,7 +5384,6 @@ export function buildGalleryEntries(): GalleryEntry[] {
         phase: 'game',
         game: rivalOnField,
         gameId: COMMANDER_FRAME.gameId,
-        boardLayout: 'arena',
         action: { label: 'Replay', run: replayQuiet(rivalOnField, COMMANDER_FRAME.gameId, () => ({ ...podCmd })) },
       })
     }
@@ -5718,6 +5729,21 @@ export function buildGalleryEntries(): GalleryEntry[] {
     screen: 'help',
   })
 
+  const ladderBase = GANG_BLOCK_FRAME?.gameView
+  const ladderMe = ladderBase?.players?.find((p) => p.controlled)
+  if (ladderBase && ladderMe) {
+    entries.push({
+      id: 'board:phase-ladder',
+      group: 'Tablero',
+      label: 'Phase ladder: walk a turn',
+      description: 'BRD-62: the ten phase icons inline beside the turn counter in the top strip. "Next step" walks the turn step by step and, past the end step, hands it to the opponent; the row takes the active seat colour. Click an icon to toggle the stop of the turn shown (notch below), right click for the other turn (dot at the corner).',
+      phase: 'game',
+      game: { ...ladderBase, step: 'UPKEEP', phase: 'BEGINNING', activePlayerId: ladderMe.playerId, activePlayerName: ladderMe.name },
+      gameId: GANG_BLOCK_FRAME?.gameId ?? null,
+      action: { label: 'Next step', apply: nextLadderStep },
+    })
+  }
+
   // Variantes de tablero: settings.boardLayout real decide el layout efectivo
   // (`effectiveBoardLayout`: pod/arena solo con rivales; >4 jugadores ⇒ standard).
   entries.push({
@@ -5728,7 +5754,6 @@ export function buildGalleryEntries(): GalleryEntry[] {
     phase: 'game',
     game: FOUR_PLAYER_GAME,
     gameId: GANG_BLOCK_FRAME?.gameId ?? null,
-    boardLayout: 'arena',
   })
   if (FOUR_PLAYER_GAME) {
     const fourGameId = GANG_BLOCK_FRAME?.gameId ?? 'gallery-4p'
@@ -5793,7 +5818,6 @@ export function buildGalleryEntries(): GalleryEntry[] {
         phase: 'game',
         game: FOUR_PLAYER_GAME,
         gameId: fourGameId,
-        boardLayout: 'arena',
         rollbackVote: e.vote,
       })
     }
@@ -5806,7 +5830,6 @@ export function buildGalleryEntries(): GalleryEntry[] {
     phase: 'game',
     game: FOUR_PLAYER_GAME,
     gameId: GANG_BLOCK_FRAME?.gameId ?? null,
-    boardLayout: 'arena',
   })
   const focusOpp = FOUR_PLAYER_GAME ? opponentPlayer(FOUR_PLAYER_GAME) : undefined
   entries.push({
@@ -5817,7 +5840,6 @@ export function buildGalleryEntries(): GalleryEntry[] {
     phase: 'game',
     game: FOUR_PLAYER_GAME,
     gameId: GANG_BLOCK_FRAME?.gameId ?? null,
-    boardLayout: 'arena',
     seatFocus: focusOpp?.playerId,
   })
   entries.push({
@@ -5828,7 +5850,6 @@ export function buildGalleryEntries(): GalleryEntry[] {
     phase: 'game',
     game: FOUR_PLAYER_GAME ? withPriorityOnRival(FOUR_PLAYER_GAME) : null,
     gameId: GANG_BLOCK_FRAME?.gameId ?? null,
-    boardLayout: 'arena',
     action: { label: 'Pasar prioridad', apply: rotatePriority },
   })
   entries.push({
@@ -5839,7 +5860,6 @@ export function buildGalleryEntries(): GalleryEntry[] {
     phase: 'game',
     game: CROWDED_POD_GAME,
     gameId: GANG_BLOCK_FRAME?.gameId ?? null,
-    boardLayout: 'arena',
   })
   entries.push({
     id: 'board:arena-4-crowded',
@@ -5849,7 +5869,6 @@ export function buildGalleryEntries(): GalleryEntry[] {
     phase: 'game',
     game: CROWDED_POD_GAME,
     gameId: GANG_BLOCK_FRAME?.gameId ?? null,
-    boardLayout: 'arena',
   })
   entries.push({
     id: 'board:arena-kind-columns',
@@ -5859,7 +5878,6 @@ export function buildGalleryEntries(): GalleryEntry[] {
     phase: 'game',
     game: KIND_COLUMNS_GAME,
     gameId: GANG_BLOCK_FRAME?.gameId ?? null,
-    boardLayout: 'arena',
   })
   const showcase = commanderShowcaseGameView()
   entries.push({
@@ -5880,7 +5898,6 @@ export function buildGalleryEntries(): GalleryEntry[] {
     phase: 'game',
     game: THREE_PLAYER_COMMANDER,
     gameId: COMMANDER_FRAME?.gameId ?? null,
-    boardLayout: 'arena',
   })
   entries.push({
     id: 'game:hand-3',

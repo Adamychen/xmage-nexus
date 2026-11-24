@@ -422,6 +422,20 @@ export async function runRecorder(driver) {
   // de quemar los 300 s de maxMs.
   let lastGameEventAt = 0
   let cheatArmedAt = 0
+  const PROMPTS_OUT = driver.promptsOutFile ? `${OUT_DIR}/prompts/${driver.promptsOutFile}` : null
+  const prompts = []
+  function recordPrompt(m) {
+    if (!PROMPTS_OUT || (m.method !== 'GAME_TARGET' && m.method !== 'GAME_ASK')) return
+    const data = { ...(m.data ?? {}) }
+    delete data.gameView
+    prompts.push({ method: m.method, objectId: m.objectId ?? null, data })
+    try {
+      fs.mkdirSync(path.dirname(PROMPTS_OUT), { recursive: true })
+      fs.writeFileSync(PROMPTS_OUT, JSON.stringify({ recordedAt: new Date().toISOString(), gameId: gameId ? String(gameId) : null, prompts }, null, 2))
+    } catch (e) {
+      log('error writing prompts', String(e))
+    }
+  }
   // Chat de partida: sin joinChat el proxy NO reenvía los INFO del motor
   // (p. ej. "<carta> has been fizzled."), que viajan como CHATMESSAGE GAME.
   // Unirse permite capturarlos con REC_DUMP_EVENTS=1 como evidencia real.
@@ -768,7 +782,9 @@ export async function runRecorder(driver) {
     finished = true
     clearInterval(stallTimer)
     try {
-      if (recorded) {
+      if (recorded && driver.outFile === false) {
+        log('captured', driver.name, '(prompts only)')
+      } else if (recorded) {
         fs.mkdirSync(path.dirname(OUT), { recursive: true })
         fs.writeFileSync(OUT, JSON.stringify(recorded, null, 2))
         log('escrito', OUT)
@@ -886,6 +902,7 @@ export async function runRecorder(driver) {
         })
       }
       if (m.data?.gameView) lastGV = m.data.gameView
+      recordPrompt(m)
       handleEvent(m)
       // P4 (2026-09-17): la captura se evalúa DESPUÉS de handleEvent y sobre
       // cualquier evento con gameView (no solo GAME_UPDATE): hay estados que

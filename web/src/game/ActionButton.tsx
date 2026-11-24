@@ -19,7 +19,6 @@ interface ActionButtonProps {
   onPass: () => void
   onSkip: (action: string) => void
   busy?: boolean
-  variant?: 'bar' | 'dial'
 }
 
 const SHORTCUT_HINT = /\s*[(（][^)）]*[)）]\s*$/
@@ -69,7 +68,6 @@ export default function ActionButton({
   onPass,
   onSkip,
   busy = false,
-  variant = 'bar',
 }: ActionButtonProps) {
   const { t } = useTranslation()
   const [menuOpen, setMenuOpen] = useState(false)
@@ -168,7 +166,7 @@ export default function ActionButton({
   const isInteractive = canPass && !busy && modeClass !== 'action-waiting'
 
   return (
-    <div className={`action-button-container${variant === 'dial' ? ' action-button-container--dial' : ''}`} ref={containerRef}>
+    <div className="action-button-container" ref={containerRef}>
       <div className={`big-action-split ${activeSkip ? 'has-skip' : ''}`}>
         <button
           type="button"

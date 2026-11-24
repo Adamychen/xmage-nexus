@@ -5,8 +5,7 @@ import Icon, { type IconName } from '../ui/Icon'
 import { useSettings } from '../state/store'
 import { useTranslation } from '../i18n'
 import { zoomPercent } from '../appearance/zoom'
-import { LanguageSection, InterfaceSection, BoardSection, SoundSection, GameplaySection, LAYOUTS } from './sections'
-import { boardLayoutChoiceOf } from './boardLayoutChoice'
+import { LanguageSection, InterfaceSection, BoardSection, SoundSection, GameplaySection } from './sections'
 import { GAMEPLAY_PRESETS } from './gameplayPresets'
 import { SECTION_ORDER, searchSettings, sectionDescription, sectionTitle, type BoardTab, type SettingsSection } from './settingsIndex'
 import '../ui/DialogShell.css'
@@ -31,10 +30,9 @@ function useSectionValues(): Partial<Record<SettingsSection, string>> {
   const { t, lang, languages } = useTranslation()
   const settings = useSettings()
   const preset = GAMEPLAY_PRESETS.find((p) => p.id === settings.gameplayPreset)
-  const layout = LAYOUTS.find((l) => l.id === boardLayoutChoiceOf(settings))
   return {
     gameplay: preset ? t('game', preset.labelKey) : undefined,
-    board: layout ? t('lobby', layout.labelKey as 'board_standard') : undefined,
+    board: settings.boardSpotlight ? t('lobby', 'board_spotlight_show') : undefined,
     interface: `${t('lobby', `scheme_${settings.appearance}`)} · ${zoomPercent(settings.uiScale)}%`,
     language: languages.find((l) => l.code === lang)?.name,
   }

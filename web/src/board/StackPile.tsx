@@ -28,8 +28,11 @@ function spread(pile: HTMLElement): void {
     (right, el) => Math.max(right, el.getBoundingClientRect().right - (parseFloat(getComputedStyle(el).left) || 0) * scale),
     pileRect.right,
   )
-  const room = Math.max(0, bandRect.right - edge - restRight)
-  const layout = spreadLayout(collapsed, SPREAD_GAP * scale, pileRect.right + room)
+  const contained = band.hasAttribute('data-band-overflow')
+  const limit = contained ? bandRect.right : fanLimit(band, bandRect)
+  const floor = contained ? bandRect.left : fanFloor(pile, band, bandRect)
+  const room = Math.max(0, limit - edge - restRight)
+  const layout = spreadLayout(collapsed, SPREAD_GAP * scale, pileRect.right + room, floor + edge)
   items.forEach((el, i) => el.style.setProperty('--spread-x', `${layout.dx[i] / scale}px`))
   pile.style.setProperty('--spread-l', `${(layout.stripLeft - pileRect.left) / scale}px`)
   pile.style.setProperty('--spread-w', `${layout.stripWidth / scale}px`)
@@ -39,6 +42,24 @@ function spread(pile: HTMLElement): void {
     el.style.setProperty('--spread-push', `${push}px`)
   }
   pile.dataset.spread = ''
+}
+
+function fanLimit(band: HTMLElement, bandRect: DOMRect): number {
+  const next = band.nextElementSibling as HTMLElement | null
+  if (!next) return bandRect.right
+  const left = next.getBoundingClientRect().left
+  return left > bandRect.right ? left : bandRect.right
+}
+
+function fanFloor(pile: HTMLElement, band: HTMLElement, bandRect: DOMRect): number {
+  const before = pile.previousElementSibling as HTMLElement | null
+  if (before) return before.getBoundingClientRect().right
+  const prev = band.previousElementSibling as HTMLElement | null
+  if (!prev) return Math.min(bandRect.left, band.parentElement?.getBoundingClientRect().left ?? bandRect.left)
+  const items = Array.from(prev.children) as HTMLElement[]
+  const prevRect = prev.getBoundingClientRect()
+  const contentRight = items.reduce((right, el) => Math.max(right, el.getBoundingClientRect().right), prevRect.left)
+  return Math.min(bandRect.left, contentRight)
 }
 
 function announceRelayout(): void {

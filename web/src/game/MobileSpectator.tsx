@@ -9,7 +9,7 @@ import type { PlayerView } from '../net/types'
 import ActionFeed from './ActionFeed'
 import GameChat from './GameChat'
 import GameMenu from './GameMenu'
-import { PhaseName } from './PhaseBar'
+import { PhaseName } from './PhaseName'
 import './MobileSpectator.css'
 
 type Pane = 'stack' | 'log' | 'chat'

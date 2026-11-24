@@ -16,7 +16,7 @@ test.describe('Pila, Disparos y Prioridad Avanzada (Bloque B)', () => {
         prefix: 'stk',
       })
 
-      const board = page.locator('.game-board')
+      const board = page.locator('.arena-board').first()
       await expect(board).toBeVisible({ timeout: 10_000 })
 
       // ─────────────────────────────────────────────────────────────
@@ -68,7 +68,7 @@ test.describe('Pila, Disparos y Prioridad Avanzada (Bloque B)', () => {
       // 2.2 Seleccionar el orden y validar resolución de vida (humano 21, rival 19)
       await choiceBtn.click()
 
-      const humanLife = page.locator('.pz-bottom-row .life-value')
+      const humanLife = page.locator('.player-zone .player-info-bar .life-value').first()
       await expect(humanLife).toContainText('21', { timeout: 10_000 })
 
       // ─────────────────────────────────────────────────────────────

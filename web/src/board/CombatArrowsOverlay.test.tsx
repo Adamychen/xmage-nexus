@@ -179,41 +179,6 @@ describe('CombatArrowsOverlay', () => {
     boardDiv.remove()
   })
 
-  it('CMB-4: v2 colours an attack arrow by the attacker\'s seat and lands it on the defender\'s edge', () => {
-    const boardDiv = document.createElement('div')
-    document.body.appendChild(boardDiv)
-    const rect = (left: number, top: number, width: number, height: number) =>
-      () => ({ left, top, width, height, right: left + width, bottom: top + height, x: left, y: top, toJSON: () => {} } as DOMRect)
-    const attCard = document.createElement('div')
-    attCard.setAttribute('data-card-id', 'opp-goblin')
-    attCard.getBoundingClientRect = rect(100, 100, 100, 70)
-    const meAvatar = document.createElement('div')
-    meAvatar.setAttribute('data-player-id', 'p-me')
-    meAvatar.getBoundingClientRect = rect(100, 600, 76, 76)
-    boardDiv.appendChild(attCard)
-    boardDiv.appendChild(meAvatar)
-    boardDiv.getBoundingClientRect = rect(0, 0, 1000, 800)
-    const game = {
-      step: 'DECLARE_BLOCKERS',
-      combat: [{ attackers: { 'opp-goblin': {} }, defenderId: 'p-me' }],
-      players: [
-        { playerId: 'p-me', name: 'Me', controlled: true, battlefield: {} },
-        { playerId: 'p-opp', name: 'Opp', controlled: false, battlefield: { 'opp-goblin': {} } },
-      ],
-    }
-    const { container, unmount } = render(<CombatArrowsOverlay game={game as any} boardRef={{ current: boardDiv }} variant="v2" />)
-    const path = container.querySelector('.arrow-group--v2 .arrow-path.arrow-v2') as SVGPathElement | null
-    expect(path).not.toBeNull()
-    expect(path!.style.stroke).toBe('var(--seat-1)')
-    const d = path!.getAttribute('d')!
-    // TGT-12: out of the attacker's top edge (y 100), in under the portrait's bottom edge (y 676).
-    expect(d).toMatch(/^M 150 100 C /)
-    expect(d.endsWith(' 138 676')).toBe(true)
-    expect(container.querySelector('.arrow-shadow')).toBeNull()
-    unmount()
-    boardDiv.remove()
-  })
-
   it('TGT-12: every arrow leaves its source through the top edge and comes into its target through the bottom edge', () => {
     const box = (x: number, y: number, w: number, h: number) =>
       ({ x, y, rect: { width: w, height: h } as DOMRect })
@@ -358,15 +323,14 @@ describe('CombatArrowsOverlay — stacking', () => {
   }
 
   it("TGT-10: an arrow is drawn over every layer of the board's own chrome", () => {
-    // The board's chrome: the zones and their piles, the seat strip, the phase strip, the player
+    // The board's chrome: the zones and their piles, the seat strip, the phase ladder, the player
     // chips. A ghost or an overlay is not chrome, it is an effect painted over the board on
     // purpose, and the arrows share that range with it.
     const chrome = [
       './BoardZone.css',
       './ArenaBoard.css',
       './BoardShell.css',
-      '../game/PhaseBar.css',
-      '../game/PhaseDial.css',
+      '../game/PhaseLadder.css',
       '../game/PlayerInfoBar.css',
     ]
       .flatMap(layers)

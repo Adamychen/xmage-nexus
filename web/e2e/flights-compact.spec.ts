@@ -41,7 +41,7 @@ test('an ability leaving a compact tile flies as its art crop, not the middle of
         prefix: 'flc',
         skipAsks: true,
       })
-      await expect(page.locator('.game-board')).toBeVisible({ timeout: 20_000 })
+      await expect(page.locator('.arena-board').first()).toBeVisible({ timeout: 20_000 })
       await page.evaluate(() => (globalThis as any).__mageStore.setSetting('cardStyle', 'compact'))
 
       const setup = await page.evaluate(() => {

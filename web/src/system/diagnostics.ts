@@ -36,7 +36,6 @@ export interface DiagnosticBundle {
   /** What the client actually renders on the stack, including spells still resolving. */
   stackHold: StackHoldSnapshot
   settings: {
-    boardLayout: string
     uiScale: unknown
     soundEnabled: boolean
     effects: boolean
@@ -85,7 +84,6 @@ export function buildDiagnosticBundle(): DiagnosticBundle {
       : null,
     stackHold: stackHoldSnapshot(),
     settings: {
-      boardLayout: s.settings.boardLayout,
       uiScale: s.settings.uiScale,
       soundEnabled: s.settings.soundEnabled,
       effects: s.settings.effects,

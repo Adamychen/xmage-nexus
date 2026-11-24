@@ -10,7 +10,6 @@ export interface BandRegistration {
   items: ItemKind[]
   minWidthCards?: number
   maxWidthNeed?: boolean
-  frameW?: number
   maxLines?: number
   fixedLines?: number
   extraHeight?: number
@@ -49,7 +48,7 @@ function tokenOf(el: Element | null): number {
 }
 
 export function registrationSignature(reg: SeatRegistration): string {
-  const band = (b: BandRegistration) => [b.id, tokenOf(b.el), b.items, b.minWidthCards, b.maxWidthNeed, b.frameW, b.maxLines, b.fixedLines, b.extraHeight, b.preferOneLine, b.evenLines]
+  const band = (b: BandRegistration) => [b.id, tokenOf(b.el), b.items, b.minWidthCards, b.maxWidthNeed, b.maxLines, b.fixedLines, b.extraHeight, b.preferOneLine, b.evenLines]
   return JSON.stringify([
     tokenOf(reg.seat),
     tokenOf(reg.creaturesRow),
@@ -95,7 +94,6 @@ function rowSpec(bands: BandRegistration[], reg: SeatRegistration): RowSpec {
       minWidthCards: b.minWidthCards,
       maxWidthNeed: b.maxWidthNeed,
       padX: (num(styles[i].paddingLeft) + num(styles[i].paddingRight)) / 2,
-      frameW: b.frameW,
       maxLines: b.maxLines,
       fixedLines: b.fixedLines,
       extraHeight: b.extraHeight,

@@ -22,7 +22,7 @@ number does not carry better.
 - Why: the stack was a list of rows with a header and a tab in the drawer, which said what was on
   the stack but never showed it. BRD-54 had already paid for the measurement trap on the player's
   counter stack, and the cascade walked into it twice more before the room became a box.
-- Guard: `src/board/stackCascadeFit.test.ts` · `src/board/StackZone.test.tsx` · `e2e/game-ui-v2.spec.ts`
+- Guard: `src/board/stackCascadeFit.test.ts` · `src/board/StackZone.test.tsx` · `e2e/arena-chrome.spec.ts`
 
 ### STK-2 · It is a layer over the board, and it can be pushed aside
 An empty stack draws nothing at all: no box, no panel, no line saying it is empty. A stack with
@@ -37,7 +37,7 @@ is about to press is not a card they can look at later.
 - Why: a stack you have to open is a stack you read after the moment has passed. The grip is what
   pays for always being in view, and it stands clear of the turned cards' corners so it never sits
   on one.
-- Guard: `src/board/StackZone.test.tsx` · `src/game/GameDrawer.test.tsx` · `e2e/game-ui-v2.spec.ts`
+- Guard: `src/board/StackZone.test.tsx` · `src/game/GameDrawer.test.tsx` · `e2e/arena-chrome.spec.ts`
 
 ### STK-3 · Only two objects point at their targets
 The object about to resolve always draws its target arrows, and so does the one under the pointer.
@@ -138,3 +138,33 @@ board, never the dock.
   already looking at. Under the cascade it is as wide as the card, so it stays out of the middle of
   the board.
 - Guard: `src/board/StackZone.test.tsx` · `src/board/StackZone.css.test.ts`
+
+### STK-11 · The whole stack opens in the zone viewer
+Beside the cascade, under the grip that pushes it aside, a button with the number of objects on the
+stack opens all of them in the zone viewer of the graveyard and the exile (BRD-24), in the order the
+cascade shows them: the object about to resolve at the right and on top, marked #1, and the ones
+that resolve later to its left, each with its position and the name of its controller (and a mark
+when it is an ability). The cascade only draws as many cards as fit; the viewer
+draws every one, and when its fan cannot hold them all it opens slid to the right end, on #1, with
+the objects that resolve later in the pile at its left. An object the prompt can target is ringed there and a click on it chooses it, as in
+the cascade. The button stays on screen while the stack is pushed aside, and the viewer closes when
+the stack empties.
+
+- Why: a long stack folds behind the "+N" of its front card and the cards it does draw only show
+  their title strip, so a deep chain could not be read; the user asked for a button to see it like
+  the graveyard (24-nov-2026).
+- Guard: `src/board/StackZone.test.tsx`
+
+### STK-12 · The stack viewer says what the object being read does and aims at
+Beside the fan of the stack viewer (STK-11), over the dimmed board, a panel reads one object: the
+one about to resolve when the viewer opens, then the one under the pointer or the keyboard focus.
+It shows the object's name and the server's text, as the bubble does (STK-10), and, under
+"Targets", what it aims at, the way MTG Arena shows a spell's target beside it: a card on the
+battlefield or in any other zone is drawn as that card; a player is named in their seat colour; an
+object on the stack is named by its place ("#2 · on the stack") and ringed in the fan. The fan keeps
+clear of the panel, so no card slides under it.
+
+- Why: the arrows that say what a stack object aims at are drawn over the board, which the viewer
+  dims and covers; the user asked to see the target card beside it, as MTG Arena does, or marked
+  when it is on the stack (24-nov-2026).
+- Guard: `src/board/StackZone.test.tsx`
