@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render } from '@testing-library/react'
-import ArenaFan, { fanIndexAt } from './ArenaFan'
+import ArenaFan, { fanIndexAt, fanSplitAt } from './ArenaFan'
 import type { CardView } from '../../net/types'
 
 vi.mock('../../board/cardPositionRegistry', () => ({
@@ -42,6 +42,24 @@ describe('fanIndexAt', () => {
   it('is offset by the lane left edge', () => {
     const shifted = { ...lane(2000), left: 500 } as DOMRect
     expect(fanIndexAt(centre + 500, shifted, cardW, 3, false)).toBe(1)
+  })
+})
+
+describe('fanSplitAt', () => {
+  const cardW = 100
+  const centre = 1000
+
+  it('splits left of the deck back to under and right of the deck back to over', () => {
+    expect(fanSplitAt(0, lane(2000), cardW, 0, 2)).toEqual({ side: 'under', index: 0 })
+    expect(fanSplitAt(centre, lane(2000), cardW, 0, 2)).toEqual({ side: 'over', index: 0 })
+    expect(fanSplitAt(centre + 44, lane(2000), cardW, 0, 2)).toEqual({ side: 'over', index: 1 })
+    expect(fanSplitAt(2000, lane(2000), cardW, 0, 2)).toEqual({ side: 'over', index: 2 })
+  })
+
+  it('maps slots across both sides when under cards are present', () => {
+    expect(fanSplitAt(0, lane(2000), cardW, 2, 1)).toEqual({ side: 'under', index: 0 })
+    expect(fanSplitAt(centre, lane(2000), cardW, 2, 1)).toEqual({ side: 'under', index: 2 })
+    expect(fanSplitAt(2000, lane(2000), cardW, 2, 1)).toEqual({ side: 'over', index: 1 })
   })
 })
 
@@ -154,5 +172,50 @@ describe('ArenaFan', () => {
     renderFan({ laneRef })
     expect(laneRef).toHaveBeenCalledWith(expect.any(HTMLDivElement))
     expect((laneRef.mock.calls[0][0] as HTMLElement).classList.contains('arena-fan-lane')).toBe(true)
+  })
+
+  it('tucks underCards behind the deck back and places over cards in front of it', () => {
+    const onUnder = vi.fn()
+    const onOver = vi.fn()
+    const { container } = renderFan({
+      splitZoneId: 'away',
+      underCards: [CARDS[0]],
+      cards: [CARDS[1], CARDS[2]],
+      leadingBack: card('deck', 'Library'),
+      onCardPointerDown: onOver,
+      onUnderCardPointerDown: onUnder,
+    })
+    const fan = container.querySelector('.arena-fan')!
+    expect(fan.getAttribute('data-arena-split')).toBe('away')
+    const under = container.querySelector<HTMLElement>('[data-arena-card="c1"]')!
+    const back = container.querySelector<HTMLElement>('.arena-fan-back')!
+    const over = container.querySelector<HTMLElement>('[data-arena-card="c2"]')!
+    expect(under.classList.contains('is-under')).toBe(true)
+    expect(under.getAttribute('data-arena-side')).toBe('away')
+    expect(over.getAttribute('data-arena-side')).toBe('top')
+    expect(rotation(under)).toBeLessThan(rotation(back))
+    expect(rotation(back)).toBeLessThan(rotation(over))
+    expect(Number(under.style.zIndex)).toBeLessThan(Number(back.style.zIndex))
+    expect(Number(back.style.zIndex)).toBeLessThan(Number(over.style.zIndex))
+    fireEvent.pointerDown(under.querySelector('.arena-fan-card')!)
+    expect(onUnder).toHaveBeenCalledTimes(1)
+    expect(onUnder.mock.calls[0][1]).toBe('c1')
+    expect(onOver).not.toHaveBeenCalled()
+  })
+
+  it('opens a gap on the under side to the left of the deck back', () => {
+    const { container } = renderFan({
+      splitZoneId: 'away',
+      underCards: [CARDS[0]],
+      cards: [CARDS[1]],
+      leadingBack: card('deck', 'Library'),
+      underGapIndex: 1,
+    })
+    expect(container.querySelector('.arena-fan')!.classList.contains('is-hot')).toBe(true)
+    const under = container.querySelector('[data-arena-card="c1"]')!
+    const gap = container.querySelector('.arena-fan-gap')!
+    const back = container.querySelector('.arena-fan-back')!
+    expect(rotation(under)).toBeLessThan(rotation(gap))
+    expect(rotation(gap)).toBeLessThan(rotation(back))
   })
 })

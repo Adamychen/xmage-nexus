@@ -37,6 +37,39 @@
   filter: saturate(0.6) brightness(0.85);
 }
 
+.arena-library.is-scry .arena-library-scry-zone {
+  grid-column: 1 / 3;
+  grid-row: 1;
+}
+
+.arena-library.is-scry .arena-prompt-footer {
+  grid-column: 1 / -1;
+  grid-row: 2;
+}
+
+.arena-library.is-scry .arena-prompt-aside {
+  align-self: center;
+  margin-top: 0;
+}
+
+.arena-scry-labels {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: var(--sp-2) var(--sp-2) 0;
+}
+
+.arena-scry-label {
+  font-family: var(--font-ui);
+  font-size: clamp(var(--fs-lg), 1.45vw, var(--fs-xl));
+  font-weight: 700;
+  font-style: italic;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--fg-hi);
+  text-shadow: var(--arena-text-shadow);
+}
+
 .arena-library .arena-prompt-aside {
   border-radius: 6% / 4.3%;
   box-shadow:

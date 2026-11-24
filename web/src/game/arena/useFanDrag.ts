@@ -2,7 +2,7 @@ import { createElement as h, useEffect, useLayoutEffect, useRef, useState, type 
 import CardSlot from '../../board/CardSlot'
 import { fxMotionAllowed } from '../../board/fx'
 import type { CardView } from '../../net/types'
-import { fanIndexAt } from './ArenaFan'
+import { fanIndexAt, fanSplitAt } from './ArenaFan'
 import './ArenaFan.css'
 
 export interface FanDrag {
@@ -159,9 +159,16 @@ export function useFanDrag({ zones, canDrag, onDrop, onClick }: FanDragOptions):
       if (!fan || !lane) continue
       const b = fan.getBoundingClientRect()
       if (x < b.left - HIT_PAD || x > b.right + HIT_PAD || y < b.top - HIT_PAD * 2 || y > b.bottom + HIT_PAD * 2) continue
-      const count = Array.from(lane.querySelectorAll('[data-arena-card]')).filter((el) => el.getAttribute('data-arena-card') !== draggedId).length
+      const cards = Array.from(lane.querySelectorAll('[data-arena-card]')).filter((el) => el.getAttribute('data-arena-card') !== draggedId)
+      const splitZone = fan.getAttribute('data-arena-split')
+      if (splitZone) {
+        const underCount = cards.filter((el) => el.getAttribute('data-arena-side') === splitZone).length
+        const overCount = cards.length - underCount
+        const hit = fanSplitAt(x, lane.getBoundingClientRect(), cardW, underCount, overCount)
+        return { zone: hit.side === 'under' ? splitZone : zone, index: hit.index }
+      }
       const leading = lane.querySelector('.arena-fan-back') != null
-      return { zone, index: fanIndexAt(x, lane.getBoundingClientRect(), cardW, count, leading) }
+      return { zone, index: fanIndexAt(x, lane.getBoundingClientRect(), cardW, cards.length, leading) }
     }
     return null
   }

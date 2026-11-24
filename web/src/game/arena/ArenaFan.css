@@ -69,8 +69,13 @@
 
 .arena-lift .arena-fan-card {
   scale: 1.12;
+  filter: none;
   animation: none !important;
   box-shadow: 0 18px 40px var(--shade-5), 0 0 0 1px var(--shade-2);
+}
+
+.arena-fan-slot.is-under .arena-fan-card {
+  filter: brightness(0.84);
 }
 
 @keyframes arena-fan-lift {

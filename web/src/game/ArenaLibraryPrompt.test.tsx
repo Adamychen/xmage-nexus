@@ -169,16 +169,24 @@ describe('ArenaLibraryPrompt', () => {
     expect(start).not.toHaveBeenCalled()
   })
 
-  it('PRM-20: a scry labels the boxes top and bottom of library', () => {
-    const prompt = promptOf(['a', 'b'], SCRY)
+  it('PRM-20: a scry uses one box around the deck back with bottom/top labels and reads outer edges as bottommost/topmost', () => {
+    const prompt = promptOf(['a', 'b', 'c', 'd'], SCRY)
     render(<ArenaLibraryPrompt prompt={prompt} sending={false} />)
     expect(screen.getByRole('dialog', { name: t('dialogs', 'arena_scry_title') })).not.toBeNull()
+    expect(document.querySelectorAll('.arena-fan')).toHaveLength(1)
+    expect(document.querySelector('.arena-fan')!.getAttribute('data-arena-split')).toBe('away')
+    expect(document.querySelector('.arena-fan-back')).not.toBeNull()
     expect(screen.getByText(t('dialogs', 'arena_zone_top'))).not.toBeNull()
     expect(screen.getByText(t('dialogs', 'arena_zone_bottom'))).not.toBeNull()
     expect(screen.getByText(t('dialogs', 'arena_scry_hint'))).not.toBeNull()
     clickCard('a')
+    clickCard('c')
+    const sideIds = (side: string) =>
+      [...document.querySelectorAll(`.arena-fan-lane > [data-arena-card][data-arena-side="${side}"]`)].map((el) => el.getAttribute('data-arena-card')!)
+    expect(sideIds('away')).toEqual(['a', 'c'])
+    expect(sideIds('top')).toEqual(['b', 'd'])
     fireEvent.click(doneButton())
-    expect(start).toHaveBeenCalledWith(prompt, { mode: 'scry', top: ['b'], away: ['a'] })
+    expect(start).toHaveBeenCalledWith(prompt, { mode: 'scry', top: ['d', 'b'], away: ['c', 'a'] })
   })
 })
 

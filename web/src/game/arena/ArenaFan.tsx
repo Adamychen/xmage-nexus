@@ -14,9 +14,13 @@ interface ArenaFanProps {
   zoneId: string
   cards: CardView[]
   leadingBack?: CardView
+  splitZoneId?: string
+  underCards?: CardView[]
+  underGapIndex?: number | null
   gapIndex: number | null
   dealing: boolean
   onCardPointerDown: (e: PointerEvent, id: string) => void
+  onUnderCardPointerDown?: (e: PointerEvent, id: string) => void
   laneRef: (el: HTMLDivElement | null) => void
 }
 
@@ -47,20 +51,35 @@ export function fanIndexAt(x: number, lane: DOMRect, cardW: number, count: numbe
   return clamp(slot - first, 0, count)
 }
 
+export function fanSplitAt(x: number, lane: DOMRect, cardW: number, underCount: number, overCount: number): { side: 'under' | 'over'; index: number } {
+  const total = underCount + overCount + 2
+  const geo = fanGeometry(lane.width, cardW, total)
+  const slot = clamp(Math.ceil((x - (lane.left + lane.width / 2)) / geo.slicePx + geo.mid - 0.5), 0, total - 1)
+  if (slot <= underCount) return { side: 'under', index: slot }
+  return { side: 'over', index: slot - underCount - 1 }
+}
+
 interface FanCardProps {
   zoneId: string
+  side?: string
+  under?: boolean
   card: CardView
   angle: number
-  order: number
+  zIndex: number
   dealDelay: number | null
   onPointerDown: (e: PointerEvent, id: string) => void
 }
 
-function FanCard({ zoneId, card, angle, order, dealDelay, onPointerDown }: FanCardProps) {
+function FanCard({ zoneId, side, under, card, angle, zIndex, dealDelay, onPointerDown }: FanCardProps) {
   const [version] = useState(() => ++versionSeq)
   const id = card.id as string
   return (
-    <div className="arena-fan-slot" data-arena-card={id} style={{ rotate: `${angle}deg`, zIndex: 10 + order }}>
+    <div
+      className={under ? 'arena-fan-slot is-under' : 'arena-fan-slot'}
+      data-arena-card={id}
+      data-arena-side={side}
+      style={{ rotate: `${angle}deg`, zIndex }}
+    >
       <div className="arena-fan-land">
         <div
           className="arena-fan-card"
@@ -74,7 +93,19 @@ function FanCard({ zoneId, card, angle, order, dealDelay, onPointerDown }: FanCa
   )
 }
 
-export default function ArenaFan({ zoneId, cards, leadingBack, gapIndex, dealing, onCardPointerDown, laneRef }: ArenaFanProps) {
+export default function ArenaFan({
+  zoneId,
+  cards,
+  leadingBack,
+  splitZoneId,
+  underCards,
+  underGapIndex = null,
+  gapIndex,
+  dealing,
+  onCardPointerDown,
+  onUnderCardPointerDown,
+  laneRef,
+}: ArenaFanProps) {
   const laneEl = useRef<HTMLDivElement | null>(null)
   const probeRef = useRef<HTMLDivElement>(null)
   const laneRefLatest = useRef(laneRef)
@@ -113,9 +144,10 @@ export default function ArenaFan({ zoneId, cards, leadingBack, gapIndex, dealing
     liftRef.current = null
   }, [])
 
-  const idsKey = cards.map((c) => c.id as string).join('|')
+  const under = underCards ?? []
+  const idsKey = [...under, ...cards].map((c) => c.id as string).join('|')
   useLayoutEffect(() => clearLift, [clearLift])
-  useLayoutEffect(() => clearLift(), [idsKey, gapIndex, clearLift])
+  useLayoutEffect(() => clearLift(), [idsKey, gapIndex, underGapIndex, clearLift])
 
   const onPointerOver = (e: PointerEvent<HTMLDivElement>) => {
     const slot = (e.target as HTMLElement).closest<HTMLElement>('.arena-fan-slot[data-arena-card]')
@@ -137,42 +169,74 @@ export default function ArenaFan({ zoneId, cards, leadingBack, gapIndex, dealing
     liftRef.current = { slot, clone }
   }
 
-  const first = leadingBack ? 1 : 0
-  const gap = gapIndex == null ? null : clamp(gapIndex, 0, cards.length)
-  const geo = fanGeometry(size.laneW, size.cardW, cards.length + first + (gap == null ? 0 : 1))
+  const backCount = leadingBack ? 1 : 0
+  const underGap = underGapIndex == null ? null : clamp(underGapIndex, 0, under.length)
+  const overGap = underGap == null && gapIndex != null ? clamp(gapIndex, 0, cards.length) : null
+  const hasGap = underGap != null || overGap != null
+  const geo = fanGeometry(size.laneW, size.cardW, under.length + backCount + cards.length + (hasGap ? 1 : 0))
   const angleOf = (slot: number) => Math.round((slot - geo.mid) * geo.stepDeg * 100) / 100 || 0
 
-  let slot = first
-  const placed = cards.map((card, order) => {
-    if (gap != null && slot === gap + first) slot++
+  let slot = 0
+  const placedUnder = under.map((card, order) => {
+    if (underGap != null && slot === underGap) slot++
+    const angle = angleOf(slot)
+    slot++
+    return { card, angle, order }
+  })
+  if (underGap != null && slot === underGap) slot++
+
+  const backSlot = slot
+  if (leadingBack) slot++
+
+  const overStart = slot
+  const placedOver = cards.map((card, order) => {
+    if (overGap != null && slot === overStart + overGap) slot++
     const angle = angleOf(slot)
     slot++
     return { card, angle, order }
   })
 
+  const gapSlot = underGap != null ? underGap : overGap != null ? overStart + overGap : null
+  const backZ = splitZoneId != null ? 10 + under.length : 1
+  const overZBase = splitZoneId != null ? 10 + under.length + 1 : 10
+
   const laneStyle = { '--fan-radius': `${fanRadius(size.cardW)}px` } as CSSProperties
-  const className = ['arena-fan', gap != null ? 'is-hot' : '', dealing ? 'is-dealing' : ''].filter(Boolean).join(' ')
+  const className = ['arena-fan', hasGap ? 'is-hot' : '', dealing ? 'is-dealing' : '', splitZoneId != null ? 'is-split' : ''].filter(Boolean).join(' ')
 
   return (
-    <div className={className} data-arena-zone={zoneId}>
+    <div className={className} data-arena-zone={zoneId} data-arena-split={splitZoneId}>
       <div className="arena-fan-probe" ref={probeRef} aria-hidden="true" />
       <div className="arena-fan-lane" ref={setLane} style={laneStyle} onPointerOver={onPointerOver} onPointerLeave={clearLift}>
+        {placedUnder.map(({ card, angle, order }) => (
+          <FanCard
+            key={card.id as string}
+            zoneId={splitZoneId ?? zoneId}
+            side={splitZoneId}
+            under
+            card={card}
+            angle={angle}
+            zIndex={10 + order}
+            dealDelay={dealing ? order * DEAL_STAGGER_MS : null}
+            onPointerDown={onUnderCardPointerDown ?? onCardPointerDown}
+          />
+        ))}
         {leadingBack && (
-          <div className="arena-fan-slot arena-fan-back" aria-hidden="true" style={{ rotate: `${angleOf(0)}deg`, zIndex: 1 }}>
+          <div className="arena-fan-slot arena-fan-back" aria-hidden="true" style={{ rotate: `${angleOf(backSlot)}deg`, zIndex: backZ }}>
             <div className="arena-fan-card">
               <CardSlot card={leadingBack} cardId={`arena:${zoneId}:back`} faceDown />
             </div>
           </div>
         )}
-        {gap != null && <div className="arena-fan-slot arena-fan-gap" style={{ rotate: `${angleOf(gap + first)}deg` }} />}
-        {placed.map(({ card, angle, order }) => (
+        {gapSlot != null && <div className="arena-fan-slot arena-fan-gap" style={{ rotate: `${angleOf(gapSlot)}deg` }} />}
+        {placedOver.map(({ card, angle, order }) => (
           <FanCard
             key={card.id as string}
             zoneId={zoneId}
+            side={splitZoneId != null ? zoneId : undefined}
             card={card}
             angle={angle}
-            order={order}
-            dealDelay={dealing ? order * DEAL_STAGGER_MS : null}
+            zIndex={overZBase + order}
+            dealDelay={dealing ? (under.length + order) * DEAL_STAGGER_MS : null}
             onPointerDown={onCardPointerDown}
           />
         ))}

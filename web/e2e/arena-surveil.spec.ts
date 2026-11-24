@@ -64,8 +64,15 @@ async function clickCard(page: Page, id: string): Promise<void> {
 }
 
 async function zoneIds(page: Page, zone: 'top' | 'away'): Promise<string[]> {
-  return page.locator(`[data-arena-zone="${zone}"] .arena-fan-lane > [data-arena-card]`).evaluateAll((els) =>
-    els.map((el) => el.getAttribute('data-arena-card') ?? ''))
+  return page.evaluate((z) => {
+    const split = document.querySelector<HTMLElement>('.arena-fan[data-arena-split]')
+    if (split) {
+      return [...split.querySelectorAll(`.arena-fan-lane > [data-arena-card][data-arena-side="${z}"]`)].map((el) => el.getAttribute('data-arena-card') ?? '')
+    }
+    const fan = document.querySelector<HTMLElement>(`[data-arena-zone="${z}"]`)
+    if (!fan) return []
+    return [...fan.querySelectorAll('.arena-fan-lane > [data-arena-card]')].map((el) => el.getAttribute('data-arena-card') ?? '')
+  }, zone)
 }
 
 async function watchForeignUi(page: Page): Promise<void> {
@@ -139,14 +146,16 @@ test.describe('Arena surveil and scry', { tag: '@prompts' }, () => {
     })
   })
 
-  test('PRM-20: a scry answers the bottom order before the top order', async ({ page }) => {
+  test('PRM-20: a scry tucks cards behind the deck back and answers bottom order before top order', async ({ page }) => {
     await withFakeServer(() => arenaSurveilScenario('scry'), async () => {
       const { pageErrors } = await quickStartGame(page, { prefix: 'asc', skipAsks: true })
       const overlay = page.getByTestId('arena-library-prompt')
       await expect(overlay).toBeVisible()
+      await expect(page.locator('.arena-fan')).toHaveCount(1)
       await expect.poll(() => zoneIds(page, 'top')).toEqual([ELVES, BOLT, COUNTER, RITUAL])
 
-      await clickCard(page, BOLT)
+      const laneBox = (await page.locator('.arena-fan-lane').boundingBox())!
+      await dragCard(page, BOLT, { x: laneBox.x + 24, y: laneBox.y + laneBox.height / 2 })
       await expect.poll(() => zoneIds(page, 'away')).toEqual([BOLT])
       await clickCard(page, RITUAL)
       await expect.poll(() => zoneIds(page, 'away')).toEqual([BOLT, RITUAL])
@@ -156,7 +165,7 @@ test.describe('Arena surveil and scry', { tag: '@prompts' }, () => {
       await page.getByTestId('arena-library-done').click()
       await expect.poll(() => ARENA_SURVEIL_ANSWERS.length, { timeout: 5000 }).toBe(5)
       await expect(overlay).toBeHidden({ timeout: 5000 })
-      expect(ARENA_SURVEIL_ANSWERS).toEqual([BOLT, RITUAL, false, BOLT, COUNTER])
+      expect(ARENA_SURVEIL_ANSWERS).toEqual([RITUAL, BOLT, false, RITUAL, ELVES])
       const bottom = ARENA_SURVEIL_ANSWERED.indexOf(BOTTOM_ORDER)
       const top = ARENA_SURVEIL_ANSWERED.indexOf(TOP_ORDER)
       expect(bottom).toBeGreaterThan(-1)

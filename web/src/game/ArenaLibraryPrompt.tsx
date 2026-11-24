@@ -66,38 +66,64 @@ export default function ArenaLibraryPrompt({ prompt, sending }: ArenaLibraryProm
 
   const submit = () => {
     if (sending) return
-    startLibraryPlan(prompt, { mode, top: [...zones.top], away: [...zones.away] })
+    if (mode === 'scry') {
+      startLibraryPlan(prompt, { mode: 'scry', top: [...zones.top].reverse(), away: [...zones.away].reverse() })
+    } else {
+      startLibraryPlan(prompt, { mode: 'surveil', top: [...zones.top], away: [...zones.away] })
+    }
   }
 
   const labels: Record<Zone, string> = mode === 'surveil'
     ? { top: t('dialogs', 'arena_zone_library'), away: t('dialogs', 'arena_zone_graveyard') }
     : { top: t('dialogs', 'arena_zone_top'), away: t('dialogs', 'arena_zone_bottom') }
 
-  const renderZone = (zone: Zone) => {
-    const shown = zones[zone]
+  const visible = (zone: Zone) =>
+    zones[zone]
       .filter((id) => !(drag?.started && drag.id === id))
       .map((id) => byId.get(id))
       .filter((card): card is CardView => card != null)
-    return (
-      <section className="arena-prompt-zone arena-library-zone">
-        <h3 className="arena-prompt-zone-label">{labels[zone]}</h3>
-        <ArenaFan
-          zoneId={zone}
-          cards={shown}
-          leadingBack={zone === 'top' ? back : undefined}
-          gapIndex={drag?.started && hover?.zone === zone ? hover.index : null}
-          dealing={dealing}
-          onCardPointerDown={(e, id) => startDrag(e, id, zone)}
-          laneRef={noLane}
-        />
-      </section>
-    )
-  }
+
+  const renderZone = (zone: Zone) => (
+    <section className="arena-prompt-zone arena-library-zone">
+      <h3 className="arena-prompt-zone-label">{labels[zone]}</h3>
+      <ArenaFan
+        zoneId={zone}
+        cards={visible(zone)}
+        leadingBack={zone === 'top' ? back : undefined}
+        gapIndex={drag?.started && hover?.zone === zone ? hover.index : null}
+        dealing={dealing}
+        onCardPointerDown={(e, id) => startDrag(e, id, zone)}
+        laneRef={noLane}
+      />
+    </section>
+  )
+
+  const renderScry = () => (
+    <section className="arena-prompt-zone arena-library-zone arena-library-scry-zone">
+      <ArenaFan
+        zoneId="top"
+        splitZoneId="away"
+        underCards={visible('away')}
+        cards={visible('top')}
+        leadingBack={back}
+        underGapIndex={drag?.started && hover?.zone === 'away' ? hover.index : null}
+        gapIndex={drag?.started && hover?.zone === 'top' ? hover.index : null}
+        dealing={dealing}
+        onCardPointerDown={(e, id) => startDrag(e, id, 'top')}
+        onUnderCardPointerDown={(e, id) => startDrag(e, id, 'away')}
+        laneRef={noLane}
+      />
+      <div className="arena-scry-labels">
+        <span className="arena-scry-label">{labels.away}</span>
+        <span className="arena-scry-label">{labels.top}</span>
+      </div>
+    </section>
+  )
 
   const dragged = drag?.started ? byId.get(drag.id) ?? null : null
 
   return (
-    <div {...bindRoot} className={`arena-library${sending ? ' is-sending' : ''}`}>
+    <div {...bindRoot} className={`arena-library${mode === 'scry' ? ' is-scry' : ''}${sending ? ' is-sending' : ''}`}>
       <ArenaPromptShell
         title={t('dialogs', mode === 'surveil' ? 'arena_surveil_title' : 'arena_scry_title')}
         instruction={t('dialogs', mode === 'surveil' ? 'arena_surveil_hint' : 'arena_scry_hint')}
@@ -109,8 +135,14 @@ export default function ArenaLibraryPrompt({ prompt, sending }: ArenaLibraryProm
         }
         testId="arena-library-prompt"
       >
-        {renderZone('away')}
-        {renderZone('top')}
+        {mode === 'scry' ? (
+          renderScry()
+        ) : (
+          <>
+            {renderZone('away')}
+            {renderZone('top')}
+          </>
+        )}
         {dragLayer(dragged)}
       </ArenaPromptShell>
     </div>

@@ -200,4 +200,42 @@ describe('useFanDrag', () => {
     expect(land.closest('[data-arena-zone]')?.getAttribute('data-arena-zone')).toBe('away')
     expect(land.style.transition).toContain('360ms')
   })
+
+  it('dragging across a split fan reports the split zone left of the deck back and the main zone right of it', () => {
+    function SplitHarness() {
+      const api = useFanDrag({ zones: ['away', 'top'], canDrag: true, onDrop, onClick })
+      latest = api
+      return h(
+        'div',
+        { ...api.bindRoot, 'data-testid': 'root' },
+        h(
+          'div',
+          { className: 'arena-fan', 'data-arena-zone': 'top', 'data-arena-split': 'away' },
+          h(
+            'div',
+            { className: 'arena-fan-lane' },
+            ...zones.top
+              .filter((id) => !(api.drag?.started && api.drag.id === id))
+              .map((id) =>
+                h(
+                  'div',
+                  { key: id, 'data-arena-card': id, 'data-arena-side': 'top' },
+                  h('div', { className: 'arena-fan-land' }, h('div', { className: 'arena-fan-card', 'data-testid': `card-${id}`, onPointerDown: (e: PointerEvent) => api.startDrag(e, id, 'top') })),
+                ),
+              ),
+          ),
+        ),
+        api.dragLayer(api.drag?.started ? CARD : null),
+      )
+    }
+    const { getByTestId } = render(h(SplitHarness))
+    fireEvent.pointerDown(getByTestId('card-c1'), { button: 0, pointerId: 1, clientX: 350, clientY: 150 })
+    fireEvent.pointerMove(getByTestId('root'), { pointerId: 1, clientX: 50, clientY: 150 })
+    expect(latest.hover).toEqual({ zone: 'away', index: 0 })
+    fireEvent.pointerMove(getByTestId('root'), { pointerId: 1, clientX: 950, clientY: 150 })
+    expect(latest.hover).toEqual({ zone: 'top', index: 2 })
+    fireEvent.pointerMove(getByTestId('root'), { pointerId: 1, clientX: 50, clientY: 150 })
+    fireEvent.pointerUp(getByTestId('root'), { pointerId: 1, clientX: 50, clientY: 150 })
+    expect(onDrop).toHaveBeenCalledWith('c1', 'away', 0)
+  })
 })
