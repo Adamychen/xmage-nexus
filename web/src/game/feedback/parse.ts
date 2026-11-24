@@ -13,6 +13,7 @@ import {
   detectPlaneswalkerChoice,
   isDiscardMessage,
   isLibraryOrderPick,
+  libraryChainStep,
   isLondonBottoming,
   isMulliganAsk,
   isStartingPlayerMessage,
@@ -142,6 +143,7 @@ export function parseFeedback(
       // la fuente sustituido por "{this}"): REQUEST_AUTO_ANSWER_TEXT_YES/NO.
       const autoAnswerKey = stringValue(rawOpts.autoAnswerMessage)
       if (autoAnswerKey) ask.autoAnswerKey = autoAnswerKey
+      if (libraryChainStep(message) === 'grave-order-ask') ask.libraryStep = 'grave-order-ask'
       return ask
     }
     case 'GAME_TARGET': {
@@ -168,6 +170,8 @@ export function parseFeedback(
       const fp = prompt(method, gameId, title, message, 'uuid', targetOptions(data, (index, id) => t('game', 'target_fallback', { index: String(index + 1), id: id.slice(0, 8) })), bounds, undefined, undefined, data.flag !== false && data.flag !== 'false', secondMessageOf(data), chosenTargets, undefined, cards, undefined, isMulliganLondon, isStartingPlayer, isVoting, undefined, undefined, isTriggerOrder, undefined, undefined, undefined, undefined, isOrderPick)
       const progress = targetProgress(message, chosenTargets)
       if (progress) fp.progress = progress
+      const libraryStep = libraryChainStep(message)
+      if (libraryStep && cards && cards.length > 0) fp.libraryStep = libraryStep
       const targetZone = targetZoneOf(data)
       if (targetZone) fp.targetZone = targetZone
       if (fp.required === false && !stringValue(asRecord(data.options)['UI.right.btn.text'])) fp.cancelable = true
