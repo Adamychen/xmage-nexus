@@ -105,26 +105,24 @@ test.describe('Phase stops', { tag: '@phasestops' }, () => {
     })
   })
 
-  test('BRD-62: the top bar has no phase strip, the ladder sits above the action button and combat rises on hover', async ({ page }) => {
+  test('BRD-62: the ladder sits inline beside the turn counter in the top strip with combat steps directly clickable', async ({ page }) => {
     await withFakeServer(manaPaymentScenario, async () => {
       await quickStartGame(page, { prefix: 'psl', skipAsks: true })
       const ladder = page.getByTestId('phase-ladder')
       await expect(ladder).toBeVisible()
       await expect(page.locator('.phase-bar')).toHaveCount(0)
-      const action = page.locator('.big-action-btn').first()
-      await expect(action).toBeVisible()
+      const status = page.getByTestId('game-status')
+      await expect(status).toBeVisible()
       const l = (await ladder.boundingBox())!
-      const a = (await action.boundingBox())!
-      expect(l.y + l.height).toBeLessThanOrEqual(a.y + 1)
-      expect(Math.min(l.x + l.width, a.x + a.width) - Math.max(l.x, a.x)).toBeGreaterThan(0)
+      const s = (await status.boundingBox())!
+      expect(l.x).toBeGreaterThanOrEqual(s.x + s.width - 1)
+      expect(Math.abs((l.y + l.height / 2) - (s.y + s.height / 2))).toBeLessThan(8)
       expect(await page.locator('.ladder-step.is-current').count()).toBe(1)
 
-      const flyout = page.getByTestId('phase-ladder-combat-steps')
-      await expect(flyout).toBeHidden()
-      await page.getByTestId('phase-ladder-step-COMBAT').hover()
-      await expect(flyout).toBeVisible()
-      const f = (await flyout.boundingBox())!
-      expect(f.y + f.height).toBeLessThanOrEqual(l.y + 1)
+      const combat = page.getByTestId('phase-ladder-combat-steps')
+      await expect(combat).toBeVisible()
+      const c = (await combat.boundingBox())!
+      expect(Math.abs((c.y + c.height / 2) - (l.y + l.height / 2))).toBeLessThan(4)
       const begin = page.getByTestId('phase-ladder-step-BEGIN_COMBAT')
       const mine = (await ladder.getAttribute('data-shown-turn')) === 'yourTurn'
       const before = await page.evaluate(() => JSON.parse(window.localStorage.getItem('mage-web-phase-stops') ?? '{}'))
@@ -132,8 +130,6 @@ test.describe('Phase stops', { tag: '@phasestops' }, () => {
       const other = mine ? 'opponentTurn' : 'yourTurn'
       await expect.poll(async () => (await page.evaluate(() => JSON.parse(window.localStorage.getItem('mage-web-phase-stops') ?? '{}')))[other]?.beginCombat)
         .toBe(!before[other]?.beginCombat)
-      await page.mouse.move(5, 5)
-      await expect(flyout).toBeHidden()
     })
   })
 

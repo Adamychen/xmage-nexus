@@ -43,13 +43,15 @@
   background-size: 240px 240px;
 }
 
-/* ── Fila superior flotante (turno, orden de turno, controles) ───────────── */
+/* ── Fila superior (turno, fases, orden de turno, controles) ───────────── */
 .board-shell-top-strip {
   position: relative;
   height: 44px;
   flex-shrink: 0;
   z-index: 30;
-  background: transparent;
+  background: linear-gradient(180deg, rgb(var(--ink-rgb) / 0.72), rgb(var(--ink-2-rgb) / 0.42));
+  border-bottom: 1px solid color-mix(in srgb, var(--gold-300) 24%, var(--line-2));
+  box-shadow: 0 1px 0 rgb(var(--ink-rgb) / 0.6);
   pointer-events: none;
 }
 

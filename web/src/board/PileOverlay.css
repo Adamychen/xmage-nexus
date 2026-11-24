@@ -310,13 +310,13 @@ html.fx-off .zone-fan-lift {
   min-width: 220px;
   padding-block: var(--sp-2h);
   border-radius: var(--r-pill);
-  border-color: rgb(var(--ember-rgb) / 0.9);
-  background: linear-gradient(180deg, rgb(var(--ember-rgb)) 0%, rgb(var(--ember-rgb) / 0.78) 100%);
+  border-color: var(--brand-fg);
+  background: linear-gradient(180deg, var(--brand) 0%, var(--brand-strong) 100%);
   font-family: var(--font-display);
   font-size: var(--fs-lg);
   letter-spacing: 0.04em;
   text-shadow: 0 1px 2px var(--shade-4);
-  box-shadow: var(--sheen), 0 0 24px rgb(var(--ember-rgb) / 0.55), 0 8px 22px var(--shade-3);
+  box-shadow: var(--sheen), 0 0 24px rgb(var(--brand-rgb) / 0.55), 0 8px 22px var(--shade-3);
 }
 
 /* Revealed / looked-at cards: each turns face up in turn as the viewer opens. */

@@ -12,16 +12,28 @@
 .game-strip-left {
   display: flex;
   align-items: center;
-  gap: var(--sp-1h);
+  gap: var(--sp-2);
   flex-shrink: 1;
   min-width: 0;
+  pointer-events: none;
+}
+
+.game-strip-left > * {
+  pointer-events: auto;
+}
+
+.game-strip-left > .game-state {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1h);
+  flex-shrink: 0;
+  white-space: nowrap;
   padding: var(--sp-1) var(--sp-3);
   border-radius: var(--r-pill);
   background: linear-gradient(180deg, rgb(var(--ink-2-rgb) / 0.72), rgb(var(--ink-rgb) / 0.92));
   border: 1px solid color-mix(in srgb, var(--gold-300) 28%, var(--line-2));
   box-shadow: inset 0 1px 0 var(--veil-2), 0 6px 18px rgb(var(--ink-rgb) / 0.48);
   backdrop-filter: blur(10px);
-  pointer-events: auto;
 }
 
 .game-strip-left:empty {
@@ -93,7 +105,7 @@
 }
 
 @media (prefers-reduced-transparency: reduce) {
-  .game-strip-left,
+  .game-strip-left > .game-state,
   .game-strip-right {
     backdrop-filter: none;
     background: rgb(var(--ink-2-rgb));

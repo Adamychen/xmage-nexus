@@ -82,30 +82,24 @@ describe('PhaseLadder', () => {
     expect(step(container, 'PRECOMBAT_MAIN').querySelector('.ladder-stop-notch')).not.toBeNull()
   })
 
-  it('BRD-62: the combat steps fold under one combat icon that opens on hover and during combat', () => {
+  it('BRD-62: all five combat steps sit inline inside the combat group and highlight during combat', () => {
     const { container, rerender } = render(<PhaseLadder game={game('PRECOMBAT_MAIN', 'me')} />)
-    const combat = container.querySelector('.ladder-combat') as HTMLElement
-    const flyout = combat.querySelector('[data-testid="phase-ladder-combat-steps"]') as HTMLElement
-    expect(flyout.querySelectorAll('.ladder-step')).toHaveLength(5)
-    expect(combat.classList.contains('is-open')).toBe(false)
-    fireEvent.mouseEnter(combat)
-    expect(combat.classList.contains('is-open')).toBe(true)
-    fireEvent.mouseLeave(combat)
-    expect(combat.classList.contains('is-open')).toBe(false)
+    const combat = container.querySelector('[data-testid="phase-ladder-combat-steps"]') as HTMLElement
+    expect(combat.querySelectorAll('.ladder-step')).toHaveLength(5)
+    expect(combat.classList.contains('is-active')).toBe(false)
     rerender(<PhaseLadder game={game('DECLARE_BLOCKERS', 'me')} />)
-    expect(combat.classList.contains('is-open')).toBe(true)
-    expect(step(container, 'COMBAT').classList.contains('is-current')).toBe(true)
+    expect(combat.classList.contains('is-active')).toBe(true)
     expect(step(container, 'DECLARE_BLOCKERS').classList.contains('is-current')).toBe(true)
   })
 
-  it('BRD-62: the combat icon carries a notch when the shown turn stops in combat', () => {
+  it('BRD-62: begin and end combat steps show their own stop marks directly in the row', () => {
     const s = clonePhaseStops(DEFAULT_PHASE_STOPS)
     s.yourTurn.beginCombat = false
-    s.yourTurn.endCombat = false
     setSetting('phaseStops', s)
     const { container } = render(<PhaseLadder game={game('UPKEEP', 'me')} />)
-    expect(step(container, 'COMBAT').querySelector('.ladder-stop-notch')).toBeNull()
-    expect(step(container, 'COMBAT').querySelector('.ladder-stop-dot')).not.toBeNull()
+    expect(step(container, 'BEGIN_COMBAT').querySelector('.ladder-stop-notch')).toBeNull()
+    expect(step(container, 'BEGIN_COMBAT').querySelector('.ladder-stop-dot')).not.toBeNull()
+    expect(step(container, 'END_COMBAT').querySelector('.ladder-stop-notch')).not.toBeNull()
   })
 
   it('BRD-62: cleanup lights the end step icon', () => {
@@ -123,27 +117,6 @@ describe('PhaseLadder', () => {
     fireEvent.click(atk)
     fireEvent.contextMenu(atk)
     expect(JSON.stringify(getState().settings.phaseStops)).toBe(before)
-  })
-
-  it('BRD-62: combat docks space above the ladder during combat or while pinned, and unpins on Escape or outside click', () => {
-    const { container, rerender } = render(<PhaseLadder game={game('PRECOMBAT_MAIN', 'me')} />)
-    const wrap = container.querySelector('.phase-ladder-wrap') as HTMLElement
-    expect(wrap.classList.contains('has-combat-docked')).toBe(false)
-
-    fireEvent.click(step(container, 'COMBAT'))
-    expect(wrap.classList.contains('has-combat-docked')).toBe(true)
-    expect(step(container, 'COMBAT').classList.contains('is-pinned')).toBe(true)
-
-    fireEvent.keyDown(document, { key: 'Escape' })
-    expect(wrap.classList.contains('has-combat-docked')).toBe(false)
-
-    fireEvent.click(step(container, 'COMBAT'))
-    expect(wrap.classList.contains('has-combat-docked')).toBe(true)
-    fireEvent.pointerDown(document.body)
-    expect(wrap.classList.contains('has-combat-docked')).toBe(false)
-
-    rerender(<PhaseLadder game={game('DECLARE_BLOCKERS', 'me')} />)
-    expect(wrap.classList.contains('has-combat-docked')).toBe(true)
   })
 
   it('BRD-62: hovering a step opens an instant tooltip with step name, stops and smart-stop hint', () => {

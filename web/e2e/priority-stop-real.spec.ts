@@ -76,7 +76,6 @@ test(
     const yourButton = mine ? 'left' : 'right'
     const oppButton = mine ? 'right' : 'left'
     const clickStep = async (step: string, button: 'left' | 'right') => {
-      if (step === 'BEGIN_COMBAT' || step === 'END_COMBAT') await page.getByTestId('phase-ladder-step-COMBAT').hover()
       await page.getByTestId(`phase-ladder-step-${step}`).click({ button })
     }
     for (const step of YOUR_TURN_OFF) await clickStep(step, yourButton)

@@ -5724,7 +5724,7 @@ export function buildGalleryEntries(): GalleryEntry[] {
       id: 'board:phase-ladder',
       group: 'Tablero',
       label: 'Phase ladder: walk a turn',
-      description: 'BRD-62: the phase icons above the action button. "Next step" walks the turn step by step and, past the end step, hands it to the opponent; the row takes the active seat colour. The combat steps rise over the combat icon during combat or on hover. Click an icon to toggle the stop of the turn shown (notch below), right click for the other turn (dot at the corner).',
+      description: 'BRD-62: the ten phase icons inline beside the turn counter in the top strip. "Next step" walks the turn step by step and, past the end step, hands it to the opponent; the row takes the active seat colour. Click an icon to toggle the stop of the turn shown (notch below), right click for the other turn (dot at the corner).',
       phase: 'game',
       game: { ...ladderBase, step: 'UPKEEP', phase: 'BEGINNING', activePlayerId: ladderMe.playerId, activePlayerName: ladderMe.name },
       gameId: GANG_BLOCK_FRAME?.gameId ?? null,

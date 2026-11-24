@@ -5,12 +5,8 @@
   --ladder-opp-tint: var(--seat-1);
   --ladder-progress: 0%;
   position: relative;
-  width: 100%;
-  transition: padding-top var(--dur-base) var(--ease-out);
-}
-
-.phase-ladder-wrap.has-combat-docked {
-  padding-top: calc(var(--sp-6) + var(--sp-3h));
+  width: auto;
+  flex-shrink: 0;
 }
 
 .phase-ladder {
@@ -19,9 +15,9 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  width: 100%;
+  width: auto;
   gap: var(--sp-0h);
-  padding: var(--sp-1) var(--sp-2h);
+  padding: var(--sp-0h) var(--sp-2);
   border-radius: var(--r-pill);
   background: linear-gradient(180deg, rgb(var(--ink-2-rgb) / 0.68), rgb(var(--ink-2-rgb) / 0.94));
   border: 1px solid var(--line-2);
@@ -33,7 +29,6 @@
 
 @media (prefers-reduced-transparency: reduce) {
   .phase-ladder,
-  .ladder-flyout,
   .ladder-tooltip {
     backdrop-filter: none;
     background: rgb(var(--ink-2-rgb));
@@ -42,8 +37,8 @@
 
 .ladder-rail {
   position: absolute;
-  left: 26px;
-  right: 26px;
+  left: 18px;
+  right: 18px;
   top: 50%;
   height: 2px;
   translate: 0 -50%;
@@ -62,14 +57,32 @@
   transition: width var(--dur-base) var(--ease-out);
 }
 
+.ladder-combat-group {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-0h);
+  padding: 0 var(--sp-1);
+  border-radius: var(--r-pill);
+  background: rgb(var(--ink-rgb) / 0.34);
+  border: 1px solid var(--veil-2);
+  transition: border-color var(--dur-fast) var(--ease-out), background-color var(--dur-fast) var(--ease-out);
+}
+
+.ladder-combat-group.is-active {
+  border-color: color-mix(in srgb, var(--ladder-tint) 42%, var(--line-2));
+  background: color-mix(in srgb, var(--ladder-tint) 8%, rgb(var(--ink-rgb) / 0.45));
+}
+
 .ladder-step {
   position: relative;
   z-index: 1;
   display: inline-grid;
   place-items: center;
   flex: none;
-  width: 32px;
-  height: 36px;
+  width: 26px;
+  height: 28px;
   padding: 0;
   border: 0;
   border-radius: var(--r-pill);
@@ -80,8 +93,8 @@
 }
 
 .ladder-step.is-big {
-  width: 38px;
-  height: 36px;
+  width: 32px;
+  height: 28px;
   color: var(--fg-2);
 }
 
@@ -137,8 +150,8 @@
 .ladder-stop-notch {
   position: absolute;
   left: 50%;
-  bottom: -2px;
-  width: 12px;
+  bottom: -1px;
+  width: 10px;
   height: 2.5px;
   translate: -50% 0;
   border-radius: var(--r-pill);
@@ -156,101 +169,17 @@
   position: absolute;
   top: 2px;
   right: 2px;
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
   border-radius: var(--r-pill);
   background: var(--ladder-other-tint);
   box-shadow: 0 0 0 1.5px rgb(var(--ink-2-rgb));
 }
 
-.ladder-combat {
-  position: static;
-  display: inline-flex;
-  flex: none;
-}
-
-.ladder-combat-toggle.is-pinned:not(.is-current) {
-  color: var(--fg-1);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ladder-tint) 50%, var(--line-2));
-  background: rgb(var(--fg-rgb, 255 255 255) / 0.08);
-}
-
-.ladder-flyout {
-  position: absolute;
-  right: 0;
-  bottom: calc(100% + var(--sp-1h));
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--sp-1);
-  padding: var(--sp-1) var(--sp-2);
-  border-radius: var(--r-pill);
-  background: linear-gradient(180deg, rgb(var(--ink-2-rgb) / 0.82), rgb(var(--ink-2-rgb) / 0.96));
-  border: 1px solid color-mix(in srgb, var(--ladder-tint) 42%, var(--line-2));
-  box-shadow: inset 0 1px 0 var(--veil-2), 0 8px 22px rgb(var(--ink-rgb) / 0.55);
-  backdrop-filter: blur(6px);
-  translate: 0 var(--sp-1h);
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-  transition: translate var(--dur-base) var(--ease-spring), opacity var(--dur-fast) var(--ease-out), visibility 0s linear var(--dur-base);
-}
-
-.ladder-flyout::before {
-  content: '';
-  position: absolute;
-  right: 88px;
-  top: 100%;
-  width: 8px;
-  height: 8px;
-  translate: 50% -50%;
-  rotate: 45deg;
-  background: rgb(var(--ink-2-rgb) / 0.96);
-  border-right: 1px solid color-mix(in srgb, var(--ladder-tint) 42%, var(--line-2));
-  border-bottom: 1px solid color-mix(in srgb, var(--ladder-tint) 42%, var(--line-2));
-  pointer-events: none;
-}
-
-.ladder-flyout::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 100%;
-  height: calc(var(--sp-2) + 4px);
-}
-
-.ladder-combat.is-open .ladder-flyout {
-  translate: 0 0;
-  opacity: 1;
-  visibility: visible;
-  pointer-events: auto;
-  transition: translate var(--dur-base) var(--ease-spring), opacity var(--dur-fast) var(--ease-out), visibility 0s;
-}
-
-.ladder-flyout .ladder-step {
-  width: 30px;
-  height: 30px;
-}
-
-.ladder-flyout .ladder-stop-notch {
-  bottom: -1px;
-  width: 10px;
-}
-
-.ladder-flyout .ladder-stop-dot {
-  top: 1px;
-  right: 1px;
-}
-
-.ladder-combat.is-open .ladder-combat-toggle:not(.is-current) {
-  color: var(--fg-1);
-}
-
 .ladder-tooltip {
   position: absolute;
-  right: 0;
-  bottom: calc(100% + var(--sp-2));
+  left: 0;
+  top: calc(100% + var(--sp-2));
   min-width: 170px;
   max-width: 248px;
   padding: var(--sp-1h) var(--sp-2h);
@@ -260,14 +189,10 @@
   box-shadow: inset 0 1px 0 var(--veil-2), 0 8px 22px rgb(var(--ink-rgb) / 0.6);
   backdrop-filter: blur(8px);
   pointer-events: none;
-  z-index: 2;
+  z-index: 3;
   display: flex;
   flex-direction: column;
   gap: var(--sp-0h);
-}
-
-.phase-ladder-wrap:not(.has-combat-docked) .ladder-tooltip.is-above-flyout {
-  bottom: calc(100% + 48px);
 }
 
 .ladder-tooltip-title {
@@ -319,10 +244,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .phase-ladder-wrap,
   .ladder-rail-fill,
-  .ladder-flyout,
-  .ladder-combat.is-open .ladder-flyout {
+  .ladder-combat-group {
     transition: none;
   }
   .ladder-step.is-sweeping {

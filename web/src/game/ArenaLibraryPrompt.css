@@ -5,19 +5,19 @@
 .arena-library-done {
   min-width: clamp(130px, 10vw, 170px);
   padding: var(--sp-2) calc(var(--sp-6) + var(--sp-2h));
-  border: 0;
+  border: 1px solid var(--brand-fg);
   border-radius: var(--r-pill);
-  background: linear-gradient(180deg, rgb(var(--ember-rgb) / 0.85) 0%, rgb(var(--ember-rgb)) 48%, color-mix(in srgb, rgb(var(--ember-rgb)) 70%, rgb(var(--ink-rgb))) 100%);
+  background: linear-gradient(180deg, var(--brand) 0%, var(--brand-strong) 100%);
   color: var(--fg-hi);
   font-family: var(--font-serif);
   font-size: clamp(var(--fs-lg), 1.4vw, var(--fs-xl));
   font-weight: 700;
   text-shadow: 0 1px 3px rgb(var(--ink-rgb) / 0.8);
   box-shadow:
-    0 0 0 1.5px rgb(var(--ember-rgb) / 0.8),
-    0 0 18px rgb(var(--ember-rgb) / 0.75),
-    0 0 46px rgb(var(--ember-rgb) / 0.45),
-    inset 0 1px 0 color-mix(in srgb, var(--fg-hi) 55%, transparent);
+    0 0 0 1px rgb(var(--brand-rgb) / 0.75),
+    0 0 18px rgb(var(--brand-rgb) / 0.65),
+    0 0 44px rgb(var(--brand-rgb) / 0.35),
+    inset 0 1px 0 color-mix(in srgb, var(--fg-hi) 45%, transparent);
   cursor: pointer;
   transition: filter 120ms ease, transform 120ms ease;
 }
@@ -29,7 +29,7 @@
 
 .arena-library-done:focus-visible {
   outline: none;
-  box-shadow: var(--focus-ring), 0 0 18px rgb(var(--ember-rgb) / 0.75);
+  box-shadow: var(--focus-ring), 0 0 18px rgb(var(--brand-rgb) / 0.75);
 }
 
 .arena-library-done:disabled {

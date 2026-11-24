@@ -366,14 +366,17 @@ export default function GameScreen() {
     <GameStrip
       left={
         game && (
-          <div className="game-state" data-testid="game-status">
-            <span
-              className={`game-turn${turnGlow ? ' turn-glow' : ''}`}
-              onAnimationEnd={turnGlow ? clearTurnGlow : undefined}
-            >
-              {t('game', 'turn')} {game.turn}
-            </span>
-          </div>
+          <>
+            <div className="game-state" data-testid="game-status">
+              <span
+                className={`game-turn${turnGlow ? ' turn-glow' : ''}`}
+                onAnimationEnd={turnGlow ? clearTurnGlow : undefined}
+              >
+                {t('game', 'turn')} {game.turn}
+              </span>
+            </div>
+            <PhaseLadder game={game} />
+          </>
         )
       }
       center={stripCenter}
@@ -474,7 +477,6 @@ export default function GameScreen() {
                 onPromptSlot={setPromptSlot}
                 rewind={(settings.boardRewind || rewind.replay) ? <RewindBar rewind={rewind} /> : null}
                 action={actionButton}
-                phases={<PhaseLadder game={game} />}
               />
             </div>
             <CombatArrowsOverlay

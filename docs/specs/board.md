@@ -201,15 +201,17 @@ readable without swapping.
   already knows targets and attackers.
 - Guard: `src/board/CombatArrowsOverlay.test.tsx`
 
-### BRD-11 · The control strip floats in its own top row above every board
-The turn counter, the turn-order ring and the right-hand controls (log/chat, drawers, menu) sit in
-their own top row (`.board-shell-top-strip`) above every board — both Arena and Spotlight — as
-floating glass pills with no divider bar or bottom line behind them. The horizontal divider between
-opponents and the own board stays a slim decorative line.
+### BRD-11 · The control strip sits in its own top bar above every board
+The turn counter, the phase ladder (BRD-62), the turn-order ring and the right-hand controls
+(log/chat, drawers, menu) sit in their own top row (`.board-shell-top-strip`) above every board —
+both Arena and Spotlight — as floating glass pills over a subtle top bar with a bottom separator
+line dividing it from the board below. The horizontal divider between opponents and the own board
+stays a slim decorative line.
 
-- Why: with the phase ladder moved above the action button (BRD-62), the user asked for the
-  remaining divider controls to move to the top of the board as a floating row of capsules with no
-  line behind them (24-nov-2026), unifying Arena and Spotlight.
+- Why: the user asked for the divider controls to move to the top of the board (24-nov-2026),
+  unifying Arena and Spotlight, then asked for the phase ladder to sit beside the turn counter and
+  for a visual separator along the bottom of that top row so the opponent's tucked hand peeks cleanly
+  from beneath it (same day).
 - Guard: `src/game/GameStrip.test.tsx` · `src/board/SpotlightBoard.test.tsx` · `e2e/spotlight.spec.ts`
 
 ### BRD-12 · Library, graveyard and exile are cards in the corner of each board
@@ -643,13 +645,15 @@ of their own (a spectator, whose pills do nothing, keeps it).
   lit pair moved that offer to the strip, where there is room for it (2026-11-13).
 - Guard: `src/board/TurnOrderRing.test.tsx` · `src/board/ArenaBoard.test.tsx` · `e2e/seat-focus.spec.ts`
 
-### BRD-38 · Opponents' hands: half a card facing the player, a fan in the side panel mode
+### BRD-38 · Opponents' hands: tucked fan facing the player, full fan in the side panel mode
 An opponent's hidden hand is one pile of backs with its
 count, drawn as a small fan of up to ten backs, each turned a little, with the count on it.
-Without the side panel the opponent faces the player, so the fan is turned round and only its top
-half shows, hanging from the top edge of the column, at the size of that seat's piles (a narrow
-column closes it to almost one card). It never takes its size from the status row's height, which
-grows with the chip's counters and would leave one seat's hand much larger than another's.
+Without the side panel the opponent faces the player, so the fan is turned round and tucked flush
+under the top strip's bottom separator (`.board-shell-top-strip`), with its upper edge hidden behind
+the bar and never bleeding into it, at the size of that seat's piles (a narrow column closes it to
+almost one card). It never takes its size
+from the status row's height, which grows with the chip's counters and would leave one seat's hand
+much larger than another's.
 With the side panel (BRD-6) the fan sits upright in the bottom row of that board (BRD-39). On a
 copy in the panel it is tucked like the own resting hand (HND-1), seven tenths of the card, so it
 covers nothing; in the main area it is drawn whole and nothing clips it, because that board has
@@ -658,7 +662,10 @@ still opens the hand viewer.
 
 - Why: a whole card back took a column's height for a number, and a stacked pile read less like a
   hand than a fan (user request, 2026-11-13). The tuck was then a sliver of about a seventh of the
-  card, which in the main area read as a cut, not as a hand (user report, 23-nov-2026).
+  card, which in the main area read as a cut, not as a hand (user report, 23-nov-2026). Once the top
+  strip moved above the opponents' row (BRD-11), keeping `.arena-opp-row` flush with the top bar's
+  separator lets the tucked fan emerge cleanly from beneath the bar without a mid-air gap (user
+  report, 24-nov-2026).
 - Guard: `src/board/HandZone.test.tsx`
 
 ### BRD-39 · With the side panel every board is drawn like the own Arena board
@@ -1035,37 +1042,29 @@ opening the card.
 - Guard: `src/board/designations.test.ts` · `src/board/CardSlot.test.tsx`
 
 
-### BRD-62 · The phase ladder sits above the action button
-The turn's steps are a row of icons right above the action button in the bottom-right corner, as in
-MTG Arena, and nowhere else: the top bar has no phase strip. At rest the row holds six icons, as wide
-as the button: upkeep, draw, the first main phase, combat, the second main phase and the end step;
-the two main phases are the biggest and carry distinct I / II diamond glyphs, with a progress rail
-behind the row filling up to the current slot. Cleanup lights the end step icon. The five combat
-steps (begin, attackers, blockers, damage, end) fold into the combat icon: they rise above it in a
-bubble while the pointer or the keyboard focus is on it, while a combat step is being played, and
-after a tap on it until the next tap, Escape or a click outside; during combat or while pinned the
-ladder reserves space above the row so dock prompts never overlap the combat steps. The step being
-played is lit in the active player's seat colour and briefly swells when it changes, the steps
-already played are dimmed, and a step the ladder does not show (untap) lights nothing; both combat
-damage steps light the damage icon. The row always speaks about the turn being played: a click on a
-step toggles its stop for that turn (on an opponent's turn, the opponent-turn stop), and a right
-click (or a touch long-press) toggles the other turn's stop. Each icon shows both turns at once: a
-aligned notch under it when the turn shown stops there, and a corner dot in the other seat's colour
-when the other turn does; the combat icon shows them when any combat step has a stop. A step with no
-stop (attackers, blockers, damage) lights up as a non-interactive indicator (`is-static`) and takes
-no click, and a spectator, who has no stops, sees the row but cannot change it. The icons carry no
-text code: hovering or focusing a step opens an instant styled tooltip with the step's name, both
-turns' stops and a stop/smart-stop hint, and the accessible name carries the same information. The
-stops are the one `phaseStops` setting (SET-11).
+### BRD-62 · The phase ladder sits inline beside the turn counter in the top strip
+The turn's steps are a single horizontal row of ten icons beside the turn counter at the left of the
+top control strip (BRD-11), and nowhere else: there is no text phase strip and no second ladder above
+the action button. All ten steps sit inline in one row: upkeep, draw, the first main phase, the five
+combat steps (begin, attackers, blockers, damage, end) grouped together in an inline combat pill so
+nothing drops down over the opponent's hand, the second main phase and the end step; the two main
+phases are the biggest and carry distinct I / II diamond glyphs, with a progress rail behind the row
+filling up to the current step. Cleanup lights the end step icon. The step being played is lit in the
+active player's seat colour and briefly swells when it changes, the steps already played are dimmed,
+and a step the ladder does not show (untap) lights nothing; both combat damage steps light the damage
+icon. The row always speaks about the turn being played: a click on a step toggles its stop for that
+turn (on an opponent's turn, the opponent-turn stop), and a right click (or a touch long-press)
+toggles the other turn's stop. Each icon shows both turns at once: an aligned notch under it when the
+turn shown stops there, and a corner dot in the other seat's colour when the other turn does. A step
+with no stop (attackers, blockers, damage) lights up as a non-interactive indicator (`is-static`) and
+takes no click, and a spectator, who has no stops, sees the row but cannot change it. The icons carry
+no text code: hovering or focusing a step opens an instant styled tooltip below the ladder with the
+step's name, both turns' stops and a stop/smart-stop hint, and the accessible name carries the same
+information. The stops are the one `phaseStops` setting (SET-11).
 
-- Why: the user asked for the phase selector to be MTG Arena's, over the action button, with SVG
-  icons, and for the top strip to go (24-nov-2026). Arena's row edits the stops of the turn on
-  screen, so the right click keeps the other turn one gesture away. The first version showed the
-  other turn's dot only when the turn shown had no stop, so with every stop on (the default) a right
-  click changed nothing visible and read as broken; the user also found the eleven-icon row too small
-  and asked for the combat steps to rise on hover to make room for bigger icons (same day). A
-  follow-up polish (24-nov-2026) docked the combat bubble above the row during combat/pin so it never
-  collides with dock prompts, aligned stop notches on one baseline with a progress rail, coloured the
-  other-turn dot by seat, distinguished Main I/II and non-stoppable combat steps, added touch
-  long-press, and replaced slow native `title` tooltips with an instant hover/focus tooltip.
+- Why: the user asked for the phase selector to be MTG Arena's SVG icon ladder with no text strip
+  (24-nov-2026), moved it beside the turn counter in the top strip, and then asked for all steps
+  including combat to run inline in one row so no combat flyout covers the opponent's hand below it
+  (same day). Arena's row edits the stops of the turn on screen, so the right click keeps the other
+  turn one gesture away.
 - Guard: `src/game/ladderSteps.test.ts` · `src/game/PhaseLadder.test.tsx` · `src/dev/galleryFixtures.test.ts` · `e2e/phase-stops.spec.ts`
