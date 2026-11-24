@@ -10,15 +10,20 @@ optional auto-tap solver is `web/src/game/smartManaPayment.ts`. That the payment
 never blocks the board is PRM-1 (`prompts.md`). The guiding principle: **the server decides what
 pays; the client sends what the player clicked, and only taps on its own when it is sure.**
 
-### MNA-1 · You pay by clicking your sources; the bar names the cost
-The mana bar shows the remaining cost (localised) and a hint naming what can be clicked: mana
-sources, creatures for Convoke, artifacts for Improvise. The hint is announced to screen readers.
-The bar has no colour buttons of its own: the player taps lands, rocks and creatures on the board.
+### MNA-1 · You pay by clicking your sources; the order names the cost
+The remaining cost (localised) is the order read across the board (PRM-18), and it is what gets
+announced to screen readers. The dock keeps the buttons and nothing else: no hint naming what can
+be clicked, and no colour buttons of its own, because the player taps lands, rocks and creatures on
+the board.
 
 - Why: `GAME_PLAY_MANA` carries only `queryType: PLAY_MANA`, never the colours that would pay, so
   the bar has nothing to build colour buttons from; the official client also pays by clicking
-  the sources.
-- Guard: `src/game/feedback.test.ts` · `src/game/feedbackModes/promptBars.test.tsx`
+  the sources. The hint ("click your mana sources, creatures for Convoke, artifacts for Improvise")
+  went with the move to the board: whatever is asking for the payment is on the stack and its legal
+  sources are lit, so the sentence repeated what the board was already showing (user request,
+  23-nov-2026). What it taught, that creatures and artifacts can be clicked for Convoke and
+  Improvise, is lost with it.
+- Guard: `src/game/feedback.test.ts` · `src/game/feedbackModes/promptBars.test.tsx` · `src/game/FeedbackDialog.test.tsx`
 
 ### MNA-2 · During a payment every permanent you click reaches the server
 While a mana prompt is open, a click on any permanent is sent to the server even when the server

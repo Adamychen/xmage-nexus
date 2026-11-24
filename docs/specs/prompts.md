@@ -80,8 +80,8 @@ as chosen. The grid never collects several targets behind a Confirm button.
 
 ### PRM-7 · A required prompt has no cancel
 A required prompt shows no cancel button, in a card grid or on the targeting bar; an optional one
-shows a finish button instead of cancel, unless declining it backs out of the spell or ability being
-played, where the same button says Cancel (PRM-13).
+shows a finish button instead of cancel, in the big button's place (PRM-19), unless declining it
+backs out of the spell or ability being played, where the same button says Cancel (PRM-13).
 
 - Why: answering a required prompt with "cancel" makes the server ask again, so the button looked
   broken.
@@ -219,16 +219,37 @@ or rejects the pick.
 ### PRM-18 · The order is read across the board, the controls stay in the dock
 What the player is being told to do is one line, drawn over the middle of the board in the display
 face, with nothing around it: no box, no border, and no click of its own. It is the most specific
-thing the server said — the cost for a mana payment, the question for a yes/no, the card that is
-asking for a target, "declare attackers" for combat — and the bar in the dock no longer repeats it,
-keeping the hint that says how and the buttons that answer. The line steps aside while the turn
-banner is up (FX-10), and it lies under the stack, which is cards to read rather than a line to
-glance at. Where there is no board to lay it over, a prompt that stands as a dialog of its own, the
-line falls back into the dock, so nothing of it is lost.
+thing the server said — the cost for a mana payment, what to choose for a target, "declare
+attackers" for combat — and the dock keeps the buttons that answer it
+and nothing else: not the order again, and no hint explaining it, since whatever is asking is on
+the stack and what can be clicked is lit on the board. The line steps aside while the turn
+banner is up (FX-10), and it is drawn over the stack and over the arrows (TGT-10), because an arrow
+crossing the letters makes the order unreadable; it takes no clicks, so nothing it covers becomes
+unreachable. Where there is no board to lay it over, a prompt that stands as a dialog of its own, the
+line falls back into the dock, so nothing of it is lost. A yes/no is not an order either: its
+question stays in its own bar, above the answers, because the server echoes whole rules text into
+those and a paragraph of it across the board would cover the very thing it asks about.
 
 - Why: the dock carried the order, the hint, the source and the controls in one corner panel, so
   the sentence that matters most was the smallest text on the screen and sat furthest from where
   the player was looking. Every other client of this game puts that sentence across the middle of
   the table (user request, with screenshots, 23-nov-2026). It is text and not a panel because the
-  board underneath is what the order is about.
+  board underneath is what the order is about. Asks went to the board too at first and came back:
+  Slicer's trigger read as seven lines of display caps over the whole table (measured in the
+  gallery, 24-nov-2026).
+- Guard: `src/game/feedbackModes/boardOrder.test.tsx`
+
+### PRM-19 · One primary in the corner: the prompt's action takes the big button
+While a prompt is open the big action button has nothing of its own to do — it reads "Loading…" or
+waits — so the one action that answers the prompt stands there instead of opening a second box
+beside it: leaving a mana payment, finishing or cancelling an optional target. What the button
+already carries, it keeps: a combat declaration is confirmed on the button itself (CMB-11), and the
+bar does not repeat it. Whatever the button cannot do stays in the bar, as real buttons and not as
+links: the special action of a payment, "attack with everything", the grid expander, and the
+numbered answers of a question, which are a choice and not one action. The corner never shows two
+primaries.
+
+- Why: with the order moved to the board (PRM-18) the corner was a box of leftovers beside a button
+  that said "Loading…", and a combat declaration showed "Confirm attackers" twice, once in each
+  (user report, with a screenshot, 24-nov-2026).
 - Guard: `src/game/feedbackModes/boardOrder.test.tsx`

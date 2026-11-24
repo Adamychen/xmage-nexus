@@ -10,10 +10,11 @@ block and how card grids pick are in `prompts.md` (PRM-1, PRM-4 to PRM-7); the z
 pile that opens by itself are PRM-8.
 
 ### TGT-1 · A target choice without a card list is made on the board
-A `GAME_TARGET` that carries no card list opens no dialog: a bar in the dock names the source
-(the spell or ability asking), says what to choose and, for multi-target choices, how many are
-picked so far; the hint is announced to screen readers. The legal targets are marked on the board
-and a click on one answers the prompt. When the targeting ends, nothing stays marked.
+A `GAME_TARGET` that carries no card list opens no dialog: what to choose is the order read across
+the board (PRM-18), in the words the server sent, and it is what gets announced to screen readers.
+The dock keeps the buttons and, for multi-target choices, how many are picked so far, which is a
+count and not a hint. The legal targets are marked on the board and a click on one answers the
+prompt. When the targeting ends, nothing stays marked.
 
 - Why: the player reads the board to choose a target, so the board stays the picker
   (`5378774879`, non-modal action bars for mana and targeting; PRM-1 keeps plain targeting

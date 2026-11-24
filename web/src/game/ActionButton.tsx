@@ -82,6 +82,7 @@ export default function ActionButton({
   const stackItems = Object.keys(game?.stack ?? {}).length
   const activeSkip = activeSkipOf(me)
   const control = controlInfo(game)
+  const combatChosen = useStore((s) => s.combat?.chosen) ?? []
 
   useEffect(() => {
     if (!menuOpen) return
@@ -126,11 +127,20 @@ export default function ActionButton({
     modeClass = 'action-resolve'
     modeIcon = 'zap'
   } else if (feedback?.mode === 'combat') {
+    // CMB-11, PRM-19: the button says what pressing it does right now. With nothing declared that
+    // is "no attacks", and the count of what is declared is the sublabel, as the official client
+    // reads: the player never confirms "attackers" when there are none.
     const isAtk = feedback.isDeclaringAttackers === true
-    label = isAtk
-      ? t('game', 'confirm_attackers')
-      : t('game', 'confirm_blockers')
-    modeClass = 'action-combat'
+    const picked = combatChosen.length
+    label = picked === 0
+      ? (isAtk ? t('game', 'combat_no_attacks') : t('game', 'combat_no_blocks'))
+      : (isAtk ? t('game', 'confirm_attackers') : t('game', 'confirm_blockers'))
+    if (picked > 0) {
+      sublabel = isAtk
+        ? t('game', 'combat_attackers_count', { count: picked })
+        : t('game', 'combat_blockers_count', { count: picked })
+    }
+    modeClass = picked === 0 ? 'action-combat-empty' : 'action-combat'
     modeIcon = 'swords'
   } else if (me?.hasPriority) {
     label = passLabel

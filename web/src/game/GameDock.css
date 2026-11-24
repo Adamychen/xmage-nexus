@@ -63,49 +63,194 @@
   border-top: 0;
 }
 
-/* PRM-18: the order being given, read across the middle of the board. It is text over the table and
-   nothing else: no box to draw, no click to take, and the controls that answer it stay in the dock
-   where the hand is. It sits above the middle so it clears the turn banner's band, and it steps
-   aside entirely while that banner is on screen, which is the one thing that speaks louder. */
+/* PRM-18: the order being given, read across the middle of the table. Engraved on it and nothing
+   else: no box to draw, no click to take, and the controls that answer it stay in the dock where
+   the hand is. It is centred on the board the player is playing on, not on the window, so the side
+   panel does not push it off; it sits above the middle so it clears the turn banner's band, and it
+   steps aside entirely while that banner is on screen, which is the one thing that speaks louder. */
 .board-order-slot {
   position: absolute;
   left: 0;
-  right: 0;
-  top: 42%;
+  right: var(--order-inset-right, 0px);
+  top: 36%;
   display: flex;
   justify-content: center;
   padding-inline: var(--sp-5);
   pointer-events: none;
-  /* Under the stack (38), which is a pile of cards to read, and over the board itself. */
-  z-index: 34;
+  /* Over the arrow layer (TGT-10, 40) and the stack (38): an arrow crossing the letters makes the
+     order unreadable, and the order is one of the things that are deliberately in front of the
+     board. It takes no clicks, so nothing underneath becomes unreachable. */
+  z-index: 41;
   transition: opacity 0.2s ease;
 }
 
+/* Not a flex container: what goes inside is a sentence with mana symbols in it, and in a column
+   flex box every word and every symbol becomes a line of its own. It is one line of text that
+   wraps like text, with the rule drawn under it. */
 .board-order {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--sp-1h);
+  position: relative;
+  display: inline-block;
   max-width: min(42rem, 100%);
+  padding-bottom: calc(var(--sp-1) + 2px);
   text-align: center;
   font-family: var(--font-display);
-  font-size: clamp(1rem, 0.78rem + 0.9vw, 1.6rem);
-  font-weight: 600;
-  line-height: 1.25;
-  letter-spacing: 0.01em;
-  color: var(--fg-hi);
+  /* Named once, because the mana symbols are sized from it: `em` inside the badge would resolve
+     against the badge's own small font, not against the order's. */
+  --order-fs: clamp(1.05rem, 0.78rem + 1.15vw, 1.9rem);
+  font-size: var(--order-fs);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gold-300);
   text-shadow:
     0 1px 2px rgb(var(--ink-rgb) / 0.95),
     0 2px 10px rgb(var(--ink-rgb) / 0.9),
-    0 0 26px rgb(var(--ink-rgb) / 0.8);
+    0 0 24px rgb(var(--gold-rgb) / 0.35);
 }
 
-.board-order-icon {
+/* Something behind it, the way the table's own rail carries the sentence in the official client:
+   a wash of the board's ink that fades out on all four sides, wider than the words, so the letters
+   keep their contrast over cards and art without a box being drawn around them. */
+.board-order::before {
+  content: '';
+  position: absolute;
+  inset: -0.42em -5.5em;
+  z-index: -1;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgb(var(--ink-rgb) / 0.74) 20%,
+    rgb(var(--ink-rgb) / 0.92) 50%,
+    rgb(var(--ink-rgb) / 0.74) 80%,
+    transparent 100%
+  );
+  /* Over a card's own art a wash alone is not enough: the picture behind is blurred as well, the
+     way the rail of the official client sits on the table. */
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 22%, #000 78%, transparent 100%);
+  mask-image: linear-gradient(180deg, transparent 0%, #000 22%, #000 78%, transparent 100%);
+  pointer-events: none;
+}
+
+/* The rule under it: what makes it read as engraved on the table instead of dropped on it. */
+.board-order::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  width: 72%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgb(var(--gold-rgb) / 0.6), transparent);
+}
+
+/* The mana symbols sit on the line of the words and follow their size, the way the cost row of a
+   card does (`.rc .mana-badge`), with air around each one instead of glued to the next. */
+.board-order .mana-badge {
+  width: calc(var(--order-fs) * 0.88);
+  height: calc(var(--order-fs) * 0.88);
+  margin-inline: calc(var(--order-fs) * 0.1);
+  vertical-align: calc(var(--order-fs) * -0.1);
+}
+
+.board-order-slot.is-yielding {
+  opacity: 0;
+}
+
+/* PRM-19: the action that answers the prompt, standing where the big button stands, because while
+   a prompt is open that button has nothing of its own to do. Same shape and weight as it, so the
+   corner keeps one primary and never two. */
+.game-dock-action-slot {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+}
+
+.prompt-action-btn {
+  position: relative;
+  width: 100%;
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-1h);
+  padding: var(--sp-1h) var(--sp-3);
+  border-radius: var(--r-base);
+  border: 1.5px solid transparent;
+  cursor: pointer;
+  user-select: none;
+  font-family: var(--font-display, sans-serif);
+  font-size: var(--fs-md);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  box-shadow: 0 8px 24px var(--shade-3);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.prompt-action-btn:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+/* Every one of these is opaque: a translucent button over a card lets the art read through the
+   letters, which is what it looked like. */
+
+/* Leaving (cancel, no attacks): cool, like the official client's own way out. */
+.prompt-action-btn.is-leave {
+  color: var(--fg-hi);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--brand) 92%, white 8%), var(--brand));
+  border-color: var(--brand-fg);
+}
+
+.prompt-action-btn.is-leave:hover:not(:disabled) {
+  background: var(--brand);
+  box-shadow: 0 0 24px rgb(var(--brand-rgb) / 0.45), 0 8px 24px var(--shade-3);
+}
+
+/* Done with it, and going on with the declaration: the colours of the button they replace. */
+.prompt-action-btn.is-done {
+  color: var(--fg-hi);
+  background: linear-gradient(135deg, var(--ok) 0%, var(--ok-surface) 100%);
+  border-color: var(--ok);
+}
+
+.prompt-action-btn.is-done:hover:not(:disabled) {
+  background: var(--ok);
+  box-shadow: 0 0 24px rgb(var(--ok-rgb) / 0.5), 0 8px 24px var(--shade-3);
+}
+
+/* Declaring everything is the same forward step as confirming, so it wears the same crimson: the
+   small button above keeps the gold of the priority button, and the two never read as one. */
+.prompt-action-btn.is-go {
+  color: var(--fg-hi);
+  background: var(--err);
+  border-color: var(--err);
+}
+
+.prompt-action-btn.is-go:hover:not(:disabled) {
+  box-shadow: 0 0 24px rgb(var(--err-rgb) / 0.55), 0 8px 24px var(--shade-3);
+}
+
+/* Confirming a declaration: the crimson the action button already used for it. */
+.prompt-action-btn.is-confirm {
+  color: var(--fg-hi);
+  background: var(--err);
+  border-color: var(--err);
+}
+
+.prompt-action-btn.is-confirm:hover:not(:disabled) {
+  box-shadow: 0 0 24px rgb(var(--err-rgb) / 0.55), 0 8px 24px var(--shade-3);
+}
+
+.prompt-action-btn:focus-visible {
+  outline: 2px solid var(--gold-300);
+  outline-offset: 2px;
+}
+
+.prompt-action-icon {
   display: inline-flex;
   flex: none;
-  color: var(--gold-300);
-  filter: drop-shadow(0 1px 2px rgb(var(--ink-rgb) / 0.9));
-}
-
-.board-wrap:has(.fx-banner) .board-order-slot {
-  opacity: 0;
 }

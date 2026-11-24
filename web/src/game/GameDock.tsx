@@ -2,6 +2,7 @@ import { createContext, useContext, useLayoutEffect } from 'react'
 import type { ReactNode, RefObject } from 'react'
 import { createPortal } from 'react-dom'
 import { HandPromptSlotContext } from '../board/BoardShell'
+import { useFeedbackFx } from '../board/feedbackFx'
 import './GameDock.css'
 
 const DOCK_GAP = 8
@@ -18,6 +19,9 @@ const HandPromptContext = createContext<HTMLElement | null>(null)
 /** PRM-18: the slot across the middle of the board, where the order being given is read. */
 const OrderPromptContext = createContext<HTMLElement | null>(null)
 
+/** PRM-19: the slot the big action button sits in, which a prompt takes over with its own action. */
+const ActionPromptContext = createContext<HTMLElement | null>(null)
+
 interface PromptSlotProviderProps {
   value: HTMLElement | null
   /** Slot above the own hand, published by the board through `onHandSlot`. */
@@ -25,17 +29,21 @@ interface PromptSlotProviderProps {
   onHandSlot?: ((el: HTMLElement | null) => void) | null
   /** PRM-18: slot across the middle of the board, for the order being given. */
   order?: HTMLElement | null
+  /** PRM-19: slot of the big action button, when a prompt owns it. */
+  actionSlot?: HTMLElement | null
   children: ReactNode
 }
 
-export function PromptSlotProvider({ value, hand = null, onHandSlot = null, order = null, children }: PromptSlotProviderProps) {
+export function PromptSlotProvider({ value, hand = null, onHandSlot = null, order = null, actionSlot = null, children }: PromptSlotProviderProps) {
   return (
     <PromptSlotContext.Provider value={value}>
+      <ActionPromptContext.Provider value={actionSlot}>
       <OrderPromptContext.Provider value={order}>
         <HandPromptContext.Provider value={hand}>
           <HandPromptSlotContext.Provider value={onHandSlot}>{children}</HandPromptSlotContext.Provider>
         </HandPromptContext.Provider>
       </OrderPromptContext.Provider>
+      </ActionPromptContext.Provider>
     </PromptSlotContext.Provider>
   )
 }
@@ -53,6 +61,16 @@ export function DockPrompt({ children }: { children: ReactNode }) {
 export function OrderPrompt({ children }: { children: ReactNode }) {
   const slot = useContext(OrderPromptContext)
   return slot ? createPortal(children, slot) : <DockPrompt>{children}</DockPrompt>
+}
+
+/**
+ * PRM-19: the one action a prompt is answered with takes the place of the big button, which has
+ * nothing to do while the prompt is open anyway. With no slot (the button is carrying the prompt's
+ * action itself, as combat does), it falls back into the bar.
+ */
+export function PromptAction({ children }: { children: ReactNode }) {
+  const slot = useContext(ActionPromptContext)
+  return slot ? createPortal(children, slot) : <>{children}</>
 }
 
 /** Prompt about the own hand: floats above the fan when the board publishes
@@ -112,6 +130,25 @@ interface GameDockProps {
   action: ReactNode
   rewind?: ReactNode
   onPromptSlot: (el: HTMLElement | null) => void
+}
+
+/**
+ * PRM-18 / FX-10: the slot the order is read in. It yields the rail while the turn banner is up,
+ * which is the one thing that speaks louder, so the two are never on screen together. The banner
+ * is read from the FX store and not from the DOM, so the handover is decided, not guessed.
+ */
+export function OrderSlot({ onSlot }: { onSlot: (el: HTMLElement | null) => void }) {
+  const { banner } = useFeedbackFx()
+  return (
+    <div
+      className={`board-order-slot${banner ? ' is-yielding' : ''}`}
+      data-testid="board-order-slot"
+      data-yielding={banner ? '1' : undefined}
+      ref={onSlot}
+      role="status"
+      aria-live="polite"
+    />
+  )
 }
 
 export default function GameDock({ action, rewind = null, onPromptSlot }: GameDockProps) {

@@ -4,6 +4,7 @@ import { cleanup, render } from '@testing-library/react'
 import ActionButton from './ActionButton'
 import { makeGameView, makePlayer } from '../__fixtures__/gameViews'
 import { setLanguage } from '../i18n'
+import { setState } from '../state/state'
 import type { FeedbackPrompt } from './feedback'
 
 const SIM_NAME = 'sim-000040'
@@ -95,7 +96,24 @@ describe('ActionButton con prioridad controlada', () => {
         onSkip={vi.fn()}
       />,
     )
-    expect(getByRole('button', { name: /Confirm Attackers/ })).not.toBeNull()
-    expect(queryByRole('button', { name: /Confirm Blockers/ })).toBeNull()
+    // CMB-11: con nada declarado el botón es la salida ("No attacks"), no el confirmar
+    expect(getByRole('button', { name: /No attacks/i })).not.toBeNull()
+    expect(queryByRole('button', { name: /Confirm/i })).toBeNull()
+
+    setState({ combat: { mode: 'attack', selectable: [], special: false, chosen: ['c-1'] } })
+    cleanup()
+    const picked = render(
+      <ActionButton
+        game={game}
+        feedback={feedback}
+        gameId="g-1"
+        canPass
+        onPass={vi.fn()}
+        onSkip={vi.fn()}
+      />,
+    )
+    expect(picked.getByRole('button', { name: /Confirm Attackers/ })).not.toBeNull()
+    expect(picked.queryByRole('button', { name: /Confirm Blockers/ })).toBeNull()
+    setState({ combat: null })
   })
 })

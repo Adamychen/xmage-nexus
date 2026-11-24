@@ -145,7 +145,7 @@ for when the dialog closes.
   not land as an announcement; the user asked for the shape every other client of this game uses,
   where the name is the headline (user request, 23-nov-2026). Queueing it behind a dialog would
   announce a turn that had already moved on, so a covered board gets no banner at all.
-- Guard: `src/board/gameTransitionEngine.resolve.test.ts` · `src/board/gameTransitionEngine.timers.test.tsx` · `src/board/coinFlipFx.test.ts` · `src/board/feedbackFx.test.ts` · `src/board/FeedbackOverlay.test.tsx`
+- Guard: `src/board/gameTransitionEngine.resolve.test.ts` · `src/board/gameTransitionEngine.timers.test.tsx` · `src/board/coinFlipFx.test.ts` · `src/board/feedbackFx.test.ts` · `src/board/FeedbackOverlay.test.tsx` · `src/game/feedbackModes/boardOrder.test.tsx`
 
 ### FX-11 · Board effects stay inside the style system
 FX colours come from `web/src/ui/tokens.css` (`--mana-*-rgb`, `--ember-rgb`, …), never from

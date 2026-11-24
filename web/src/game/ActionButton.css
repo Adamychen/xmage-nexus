@@ -177,6 +177,19 @@
   transform: translateY(-2px);
 }
 
+/* CMB-11: nothing declared yet, so the button is the quiet way out of the declaration, not the
+   crimson confirm. */
+.big-action-btn.action-combat-empty {
+  background: linear-gradient(180deg, rgb(var(--brand-rgb) / 0.42), rgb(var(--brand-rgb) / 0.24));
+  border-color: rgb(var(--brand-rgb) / 0.6);
+  box-shadow: 0 0 16px rgb(var(--brand-rgb) / 0.3), 0 8px 24px var(--shade-3);
+}
+.big-action-btn.action-combat-empty:hover {
+  background: linear-gradient(180deg, rgb(var(--brand-rgb) / 0.56), rgb(var(--brand-rgb) / 0.32));
+  box-shadow: 0 0 24px rgb(var(--brand-rgb) / 0.45), 0 8px 24px var(--shade-3);
+  transform: translateY(-2px);
+}
+
 /* Priority pass mode: Gold / Emerald */
 .big-action-btn.action-priority {
   background: linear-gradient(135deg, var(--ok) 0%, var(--ok-surface) 100%);

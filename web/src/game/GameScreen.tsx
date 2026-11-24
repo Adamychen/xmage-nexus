@@ -26,7 +26,7 @@ import SideboardScreen from './SideboardScreen'
 import GameMenu from './GameMenu'
 import PhaseBar, { PhaseName } from './PhaseBar'
 import ActionButton from './ActionButton'
-import GameDock, { PromptSlotProvider, useDockOffset } from './GameDock'
+import GameDock, { OrderSlot, PromptSlotProvider, useDockOffset } from './GameDock'
 import GameStrip from './GameStrip'
 import { useChangeFlag } from './useChangeFlag'
 import GameDrawer, { DrawerToggles, type DrawerTab } from './GameDrawer'
@@ -149,6 +149,7 @@ export default function GameScreen() {
   const [dividerSlot, setDividerSlot] = useState<HTMLElement | null>(null)
   const [handPromptSlot, setHandPromptSlot] = useState<HTMLElement | null>(null)
   const [orderSlot, setOrderSlot] = useState<HTMLElement | null>(null)
+  const [actionSlot, setActionSlot] = useState<HTMLElement | null>(null)
   const [busy, setBusy] = useState(false)
   const displayStack = useDisplayedStack(game, gameId)
   const stackCount = Object.keys(displayStack).length
@@ -467,10 +468,18 @@ export default function GameScreen() {
       variant={v2 ? 'dial' : 'bar'}
     />
   )
+  // PRM-19: a mana payment or a target pick leaves the big button with nothing to do ("Loading…"),
+  // so the prompt's own action takes that place instead of opening a second box beside it. Combat
+  // is not in the list because the button already carries its confirm (ActionButton).
+  const promptOwnsAction = feedback != null
+    && (feedback.mode === 'mana' || feedback.mode === 'combat' || feedback.method === 'GAME_TARGET')
+  const dockButton = promptOwnsAction
+    ? <div className="game-dock-action-slot" data-testid="game-dock-action-slot" ref={setActionSlot} />
+    : actionButton
   const dockAction = v2 ? (
-    <PhaseDial step={game?.step ?? ''} mine={!!me?.hasPriority && stackCount === 0} action={actionButton} />
+    <PhaseDial step={game?.step ?? ''} mine={!!me?.hasPriority && stackCount === 0} action={dockButton} />
   ) : (
-    actionButton
+    dockButton
   )
   const topBar = (
     <GameTopBar
@@ -501,7 +510,7 @@ export default function GameScreen() {
   }
 
   return (
-    <PromptSlotProvider value={promptSlot} hand={handPromptSlot} onHandSlot={setHandPromptSlot} order={orderSlot}>
+    <PromptSlotProvider value={promptSlot} hand={handPromptSlot} onHandSlot={setHandPromptSlot} order={orderSlot} actionSlot={actionSlot}>
       <ChromeActionsContext.Provider value={v2 ? chromeActions : null}>
       <DividerSlotContext.Provider value={setDividerSlot}>
         <div
@@ -526,7 +535,12 @@ export default function GameScreen() {
               ref={boardWrapRef}
               data-playmat={playmatId}
               data-ui={v2 ? 'v2' : undefined}
-              style={v2 ? ({ '--chrome-l': `${chromeLeft}px`, '--chrome-r': `${chromeRight}px` } as React.CSSProperties) : undefined}
+              style={{
+                // PRM-18: the order is centred on the board being played on, so the side panel of
+                // the main board mode (BRD-6) does not push it off to the right.
+                '--order-inset-right': spotlightOn ? `${settings.boardSpotlightPanel}%` : '0px',
+                ...(v2 ? { '--chrome-l': `${chromeLeft}px`, '--chrome-r': `${chromeRight}px` } : null),
+              } as React.CSSProperties}
             >
               {playmatId !== 'classic' && (
                 <div className="playmat-layer" data-playmat={playmatId} data-testid="playmat-layer" style={matStyle} aria-hidden="true" />
@@ -541,7 +555,7 @@ export default function GameScreen() {
                 <GameBoard {...boardProps} focusedOpponentId={currentOpp?.playerId} />
               )}
               {/* PRM-18: the order being given is read here, across the middle of the board. */}
-              <div className="board-order-slot" data-testid="board-order-slot" ref={setOrderSlot} role="status" aria-live="polite" />
+              <OrderSlot onSlot={setOrderSlot} />
               <LowLifeVignette game={displayGame} />
               {settings.turnRecap && <TurnRecapStrip />}
               <FeedbackOverlay />

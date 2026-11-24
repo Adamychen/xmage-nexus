@@ -2,15 +2,14 @@ import { useEffect, useRef, useState } from 'react'
 import * as cmds from '../../net/commands'
 import { setStoreError, useSettings, useStore } from '../../state/store'
 import FormattedText from '../FormattedText'
-import Icon from '../../ui/Icon'
 import ManaPoolView, { type ManaPoolKey } from '../ManaPoolView'
+import Icon from '../../ui/Icon'
 import { useTranslation, dynamicT } from '../../i18n'
 import { localizeServerMessage } from '../serverMessageTranslation'
 import type { UseFeedbackForm } from '../useFeedbackForm'
 import type { FeedbackPrompt } from '../feedback'
 import { nextSmartManaAction, parseRemainingManaCost } from '../smartManaPayment'
-import Button from '../../ui/Button'
-import { DockPrompt, OrderPrompt } from '../GameDock'
+import { DockPrompt, OrderPrompt, PromptAction } from '../GameDock'
 import { usePromptCancelKey } from '../usePromptCancelKey'
 import './promptBars.css'
 
@@ -84,21 +83,35 @@ export default function ManaBar({ form }: { form: UseFeedbackForm }) {
 
   if (!prompt) return null
   const localizedManaMsg = localizeServerMessage(prompt.message, dynamicT(t))
+  const hasFloating = Object.values(poolOf(game)).some((n) => n > 0)
   return (
     <>
     <OrderPrompt>
       <span className="board-order" data-testid="board-order">
-        <span className="board-order-icon" aria-hidden="true"><Icon name="zap" size={16} /></span>
         <FormattedText text={localizedManaMsg} />
       </span>
     </OrderPrompt>
+    <PromptAction>
+      {/* PRM-19: salir del pago es la acción que responde a este mensaje, y va donde el jugador ya
+          mira para actuar: el sitio del botón de prioridad. */}
+      <button
+        type="button"
+        className="prompt-action-btn is-leave"
+        data-testid="prompt-action"
+        disabled={busy}
+        onClick={cancel}
+        aria-keyshortcuts="Escape"
+      >
+        <span className="prompt-action-icon" aria-hidden="true"><Icon name="x" size={15} /></span>
+        <span className="prompt-action-label">{t('game', 'targeting_cancel')}</span>
+      </button>
+    </PromptAction>
     <DockPrompt>
       <div className="action-prompt-bar mana-prompt-bar">
-        <div className="action-prompt-info">
-          <span className="action-prompt-hint" role="status" aria-live="polite">{t('game', 'mana_hint')}</span>
-        </div>
         <div className="action-prompt-actions">
-          {prompt.playerId && (
+          {/* PRM-19: la reserva solo aparece cuando hay maná flotante que gastar; vacía era un
+              guion suelto encima de los botones. */}
+          {prompt.playerId && hasFloating && (
             <ManaPoolView
               pool={poolOf(game)}
               size={18}
@@ -106,12 +119,15 @@ export default function ManaBar({ form }: { form: UseFeedbackForm }) {
               onPay={(key) => void send(() => cmds.sendPlayerManaType(prompt.gameId, prompt.playerId as string, key.toUpperCase()), t('errors', 'send_failed_mana'))}
             />
           )}
-          <Button disabled={busy} onClick={() => void send(() => cmds.sendPlayerString('special', prompt.gameId), t('errors', 'send_failed_special'))}>
+          <button
+            type="button"
+            className="prompt-second-btn"
+            data-testid="prompt-second"
+            disabled={busy}
+            onClick={() => void send(() => cmds.sendPlayerString('special', prompt.gameId), t('errors', 'send_failed_special'))}
+          >
             {t('game', 'mana_special')}
-          </Button>
-          <Button variant="subtle" disabled={busy} onClick={cancel} className="cancel-btn" aria-keyshortcuts="Escape">
-            {t('game', 'targeting_cancel')}
-          </Button>
+          </button>
         </div>
       </div>
     </DockPrompt>
