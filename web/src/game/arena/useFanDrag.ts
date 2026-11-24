@@ -238,8 +238,8 @@ export function useFanDrag({ zones, canDrag, onDrop, onClick }: FanDragOptions):
     if (target) onDrop(d.id, target.zone, target.index)
   }
 
-  const onLostPointerCapture = (e: PointerEvent<HTMLDivElement>) => {
-    if (physics.current?.pointerId === e.pointerId && dragRef.current) onPointerUp(e)
+  const onPointerCancel = (e: PointerEvent<HTMLDivElement>) => {
+    if (physics.current?.pointerId === e.pointerId && dragRef.current) endDrag()
   }
 
   const dragLayer = (card: CardView | null): ReactNode => {
@@ -259,7 +259,7 @@ export function useFanDrag({ zones, canDrag, onDrop, onClick }: FanDragOptions):
   return {
     drag,
     hover,
-    bindRoot: { ref: rootRef, onPointerMove, onPointerUp, onPointerCancel: onPointerUp, onLostPointerCapture },
+    bindRoot: { ref: rootRef, onPointerMove, onPointerUp, onPointerCancel, onLostPointerCapture: onPointerCancel },
     startDrag,
     dragLayer,
   }

@@ -159,12 +159,30 @@ describe('useFanDrag', () => {
     expect(latest.drag).toBeNull()
   })
 
-  it('losing the pointer capture mid-drag ends the drag as a drop', () => {
+  it('losing the pointer capture mid-drag ends the drag with the card where it was', () => {
     const { getByTestId } = mount()
     fireEvent.pointerDown(getByTestId('card-c1'), { button: 0, pointerId: 1, clientX: 350, clientY: 150 })
     fireEvent.pointerMove(getByTestId('root'), { pointerId: 1, clientX: 1700, clientY: 200 })
     fireEvent.lostPointerCapture(getByTestId('root'), { pointerId: 1 })
-    expect(onDrop).toHaveBeenCalledWith('c1', 'away', 0)
+    expect(onDrop).not.toHaveBeenCalled()
+    expect(onClick).not.toHaveBeenCalled()
+    expect(latest.drag).toBeNull()
+    expect(latest.hover).toBeNull()
+  })
+
+  it('a cancelled or lost pointer before the threshold is not a click', () => {
+    const { getByTestId } = mount()
+    fireEvent.pointerDown(getByTestId('card-c1'), { button: 0, pointerId: 1, clientX: 350, clientY: 150 })
+    fireEvent.pointerCancel(getByTestId('root'), { pointerId: 1, clientX: 351, clientY: 150 })
+    expect(latest.drag).toBeNull()
+    fireEvent.pointerDown(getByTestId('card-c2'), { button: 0, pointerId: 2, clientX: 450, clientY: 150 })
+    fireEvent.lostPointerCapture(getByTestId('root'), { pointerId: 2 })
+    expect(latest.drag).toBeNull()
+    fireEvent.pointerDown(getByTestId('card-c3'), { button: 0, pointerId: 3, clientX: 550, clientY: 150 })
+    fireEvent.pointerMove(getByTestId('root'), { pointerId: 3, clientX: 1700, clientY: 200 })
+    fireEvent.pointerCancel(getByTestId('root'), { pointerId: 3, clientX: 1700, clientY: 200 })
+    expect(onClick).not.toHaveBeenCalled()
+    expect(onDrop).not.toHaveBeenCalled()
     expect(latest.drag).toBeNull()
   })
 
