@@ -778,18 +778,6 @@ function drawOneCard(game: GameView): GameView {
   }
 }
 
-function passPriority(game: GameView): GameView {
-  const all = players(game)
-  const holder = all.find((p) => p.hasPriority)
-  const next = all.find((p) => p !== holder)
-  if (!next) return game
-  return {
-    ...game,
-    priorityPlayerName: next.name,
-    players: all.map((p) => (p === holder ? { ...p, hasPriority: false } : p === next ? { ...p, hasPriority: true } : p)),
-  }
-}
-
 function rotatePriority(game: GameView): GameView {
   const all = players(game)
   const from = all.findIndex((p) => p.hasPriority)
@@ -3334,16 +3322,6 @@ export function buildGalleryEntries(): GalleryEntry[] {
       game,
       gameId,
       action: { label: 'Robar carta', apply: drawOneCard },
-    })
-    entries.push({
-      id: 'anim:priority-orb',
-      group: 'Animaciones',
-      label: 'Prioridad: orbe',
-      description: 'Pulsa "Pasar prioridad": el orbe dorado debe viajar del avatar que tenía prioridad al nuevo.',
-      phase: 'game',
-      game,
-      gameId,
-      action: { label: 'Pasar prioridad', apply: passPriority },
     })
     entries.push({
       id: 'anim:target-damage',

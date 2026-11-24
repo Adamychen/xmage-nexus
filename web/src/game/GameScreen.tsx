@@ -80,8 +80,6 @@ import { useTargetPick } from './useTargetPick'
 import './GameScreen.css'
 import './TournamentPanel.css'
 import { activeMechanicsCount } from './mechanicsState'
-import { usePriorityOrbs } from './usePriorityOrbs'
-import PriorityOrbLayer from './PriorityOrbLayer'
 
 /** El atajo global Space no debe disparar cuando el foco está en un control
  *  nativo (doble acción: el control + el pass). Cubre el caso en que el
@@ -183,8 +181,6 @@ export default function GameScreen() {
 
   const me = game?.players?.find((p) => p.controlled)
   const priorityPlayer = game?.players?.find((p) => p.hasPriority) ?? game?.players?.find((p) => p.isActive)
-  const priorityHolderId = game?.players?.find((p) => p.hasPriority)?.playerId ?? null
-  const { orbs: priorityOrbs, done: doneOrb } = usePriorityOrbs(gameId, priorityHolderId)
   const timerSecs = priorityPlayer?.priorityTimeLeftSecs ?? 0
   const isTimerTicking = !!priorityPlayer?.hasPriority
 
@@ -609,7 +605,6 @@ export default function GameScreen() {
             />
             <TournamentPanel />
           </div>
-          <PriorityOrbLayer orbs={priorityOrbs} onDone={doneOrb} />
           <FeedbackDialog />
           <UserRequestDialog />
           <RollbackDialog />
