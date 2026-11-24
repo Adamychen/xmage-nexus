@@ -12,7 +12,7 @@
   font-family: var(--font-ui);
   color: var(--fg-hi);
   background:
-    radial-gradient(ellipse 55% 60% at 50% 48%, rgb(var(--brand-rgb) / 0.12), transparent 70%),
+    radial-gradient(ellipse 55% 60% at 50% 48%, rgb(var(--arena-glow-rgb) / 0.12), transparent 70%),
     linear-gradient(180deg, rgb(var(--ink-rgb) / 0.72), rgb(var(--ink-rgb) / 0.55) 45%, rgb(var(--ink-rgb) / 0.7));
   backdrop-filter: blur(2px) saturate(0.8);
   transition: background 180ms ease, backdrop-filter 180ms ease;

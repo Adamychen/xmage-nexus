@@ -31,7 +31,11 @@ export default function ArenaLibraryPrompt({ prompt, sending }: ArenaLibraryProm
   const mode = prompt.libraryStep === 'scry-pick' ? 'scry' : 'surveil'
   const cards = useMemo(() => (prompt.cards ?? []) as unknown as CardView[], [prompt.cards])
   const byId = useMemo(() => new Map(cards.map((card) => [card.id as string, card])), [cards])
-  const [zones, setZones] = useState<Record<Zone, string[]>>(() => ({ top: cards.map((card) => card.id as string), away: [] }))
+  const [zones, setZones] = useState<Record<Zone, string[]>>(() => {
+    const chosen = new Set(prompt.chosenTargets ?? [])
+    const ids = cards.map((card) => card.id as string)
+    return { top: ids.filter((id) => !chosen.has(id)), away: ids.filter((id) => chosen.has(id)) }
+  })
   const [dealing, setDealing] = useState(true)
   const back = useMemo(() => nameOnlyCard('arena-library-back', ''), [])
   const source = useMemo(() => (prompt.sourceName ? nameOnlyCard('arena-library-source', prompt.sourceName) : null), [prompt.sourceName])

@@ -207,10 +207,22 @@ describe('FeedbackDialog routing of a surveil or scry', () => {
     expect(zoneIds('top')).toEqual(['a', 'c'])
     expect(zoneIds('away')).toEqual(['b'])
     expect(doneButton().disabled).toBe(true)
+    expect(document.querySelector('[data-prompt-method]')).toBeNull()
+    expect(document.querySelector('[data-library-plan]')).not.toBeNull()
     act(() => {
       setState({ libraryPlan: null, libraryPrompt: null })
     })
     expect(screen.queryByTestId('arena-library-prompt')).toBeNull()
+  })
+
+  it('PRM-18: a re-sent pick opens with its already chosen cards in the graveyard box', () => {
+    const prompt = promptOf(['a', 'b', 'c'])
+    prompt.chosenTargets = ['c', 'a']
+    render(<ArenaLibraryPrompt prompt={prompt} sending={false} />)
+    expect(zoneIds('top')).toEqual(['b'])
+    expect(zoneIds('away')).toEqual(['a', 'c'])
+    fireEvent.click(doneButton())
+    expect(start).toHaveBeenCalledWith(prompt, { mode: 'surveil', top: ['b'], away: ['a', 'c'] })
   })
 
   it('PRM-18: a new surveil pick opens with a fresh arrangement', () => {

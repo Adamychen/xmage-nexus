@@ -29,7 +29,7 @@ export default function FeedbackDialog() {
   if (libraryPlan && libraryPrompt) {
     return (
       <div className="chrome-surface">
-        <span data-prompt-method={libraryPrompt.method} data-prompt-mode={libraryPrompt.mode} hidden aria-hidden="true" />
+        <span data-library-plan={libraryPlan.mode} hidden aria-hidden="true" />
         <ArenaLibraryPrompt key={promptKey(libraryPrompt)} prompt={libraryPrompt} sending />
       </div>
     )
