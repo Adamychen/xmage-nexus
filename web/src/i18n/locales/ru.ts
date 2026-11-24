@@ -1666,6 +1666,7 @@ export const ru: TranslationSchema = {
     mulligan_btn: 'Mulligan',
     mulligan_concede: 'Сдаться',
     mulligan_view_board: 'Посмотреть поле битвы',
+    arena_view_battlefield: 'Посмотреть поле битвы',
     mulligan_back_to_hand: 'Вернуться к руке',
     mulligan_count: 'Мулиганы: {count}',
     mulligan_eval_colors_label: 'Цвета (T1–T2)',

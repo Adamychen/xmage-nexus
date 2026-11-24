@@ -1666,6 +1666,7 @@ export const ja: TranslationSchema = {
     mulligan_btn: 'Mulligan',
     mulligan_concede: '投了',
     mulligan_view_board: '戦場を見る',
+    arena_view_battlefield: '戦場を見る',
     mulligan_back_to_hand: '手札に戻る',
     mulligan_count: 'マリガン: {count}',
     mulligan_eval_colors_label: 'カラー (T1–T2)',

@@ -1666,6 +1666,7 @@ export const de: TranslationSchema = {
     mulligan_btn: 'Mulligan',
     mulligan_concede: 'Aufgeben',
     mulligan_view_board: 'Schlachtfeld ansehen',
+    arena_view_battlefield: 'Schlachtfeld ansehen',
     mulligan_back_to_hand: 'Zurück zur Hand',
     mulligan_count: 'Mulligans: {count}',
     mulligan_eval_colors_label: 'Farben (T1–T2)',

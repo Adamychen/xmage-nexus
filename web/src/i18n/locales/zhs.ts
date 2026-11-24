@@ -1666,6 +1666,7 @@ export const zhs: TranslationSchema = {
     mulligan_btn: 'Mulligan',
     mulligan_concede: '认输',
     mulligan_view_board: '查看战场',
+    arena_view_battlefield: '查看战场',
     mulligan_back_to_hand: '返回手牌',
     mulligan_count: '调度次数：{count}',
     mulligan_eval_colors_label: '颜色 (T1–T2)',

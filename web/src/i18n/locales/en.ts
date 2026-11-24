@@ -1664,6 +1664,7 @@ export const en = {
     mulligan_btn: 'Mulligan',
     mulligan_concede: 'Concede',
     mulligan_view_board: 'View Battlefield',
+    arena_view_battlefield: 'View Battlefield',
     mulligan_back_to_hand: 'Back to hand',
     mulligan_count: 'Mulligans taken: {count}',
     mulligan_eval_colors_label: 'Colors (T1–T2)',

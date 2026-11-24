@@ -1,0 +1,170 @@
+.arena-fan {
+  --arena-fan-w: var(--arena-card-w, clamp(150px, min(13.5vw, 25vh), 270px));
+  --arena-fan-h: calc(var(--arena-fan-w) * 1.39344);
+  --arena-fan-line: color-mix(in srgb, var(--fg-hi) 42%, transparent);
+  --card-w: var(--arena-fan-w);
+  position: relative;
+  min-height: calc(var(--arena-fan-h) * 1.42);
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  padding: calc(var(--arena-fan-w) * 0.14) var(--sp-3h);
+  border: 1.5px solid var(--arena-fan-line);
+  border-radius: var(--r-2xs);
+  background: rgb(var(--ink-rgb) / 0.22);
+  transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
+}
+
+.arena-fan.is-hot {
+  border-color: rgb(var(--brand-rgb) / 0.95);
+  background: rgb(var(--brand-rgb) / 0.08);
+  box-shadow: 0 0 24px rgb(var(--brand-rgb) / 0.45), inset 0 0 30px rgb(var(--brand-rgb) / 0.18);
+}
+
+.arena-fan-probe {
+  position: absolute;
+  width: var(--arena-fan-w);
+  height: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.arena-fan-lane {
+  position: relative;
+  width: 100%;
+  height: calc(var(--arena-fan-h) + var(--sp-4));
+}
+
+.arena-fan-slot {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: var(--arena-fan-w);
+  margin-left: calc(var(--arena-fan-w) / -2);
+  transform-origin: 50% var(--fan-radius, 2000px);
+  transition: rotate var(--dur-med) var(--ease-out);
+}
+
+.arena-fan-card {
+  position: relative;
+  border-radius: 6% / 4.3%;
+  cursor: grab;
+  transform-origin: 50% 75%;
+  box-shadow: -6px 8px 22px var(--shade-3), 0 0 0 1px var(--shade-2);
+}
+
+.arena-fan-slot.is-lifted .arena-fan-card {
+  opacity: 0;
+}
+
+.arena-lift {
+  pointer-events: none;
+  transition: none;
+}
+
+.arena-lift .arena-fan-land {
+  translate: 0 calc(var(--sp-5) * -1);
+  animation: arena-fan-lift calc(0.14s / var(--fx-speed, 1)) var(--ease-out) both;
+}
+
+.arena-lift .arena-fan-card {
+  scale: 1.12;
+  animation: none !important;
+  box-shadow: 0 18px 40px var(--shade-5), 0 0 0 1px var(--shade-2);
+}
+
+@keyframes arena-fan-lift {
+  from {
+    translate: 0 0;
+  }
+}
+
+.arena-fan.is-dealing .arena-fan-slot:not(.arena-fan-back) .arena-fan-card {
+  animation: arena-fan-deal 520ms cubic-bezier(0.2, 0.9, 0.25, 1.1) backwards;
+}
+
+@keyframes arena-fan-deal {
+  from {
+    opacity: 0;
+    transform: translate(-6vw, -18vh) rotate(-8deg) scale(0.7);
+  }
+}
+
+.arena-fan-back {
+  pointer-events: none;
+}
+
+.arena-fan-back .arena-fan-card {
+  cursor: default;
+  filter: brightness(0.8);
+  box-shadow: 3px 3px 0 -1px rgb(var(--ash-rgb) / 1), 6px 6px 0 -2px var(--ink-0), -6px 8px 22px var(--shade-3);
+}
+
+.arena-fan-gap {
+  height: var(--arena-fan-h);
+  box-sizing: border-box;
+  border-radius: 6% / 4.3%;
+  border: 2px solid rgb(var(--brand-rgb) / 0.8);
+  background: rgb(var(--brand-rgb) / 0.1);
+  box-shadow: 0 0 22px rgb(var(--brand-rgb) / 0.45);
+  z-index: 40;
+  pointer-events: none;
+}
+
+.arena-drag {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 1000;
+  width: var(--arena-card-w, clamp(150px, min(13.5vw, 25vh), 270px));
+  --card-w: var(--arena-card-w, clamp(150px, min(13.5vw, 25vh), 270px));
+  pointer-events: none;
+  will-change: transform;
+}
+
+.arena-drag-card {
+  --lift: 1;
+  --speed: 0;
+  --gx: 50%;
+  --gy: 40%;
+  position: relative;
+  border-radius: 6% / 4.3%;
+  transform-origin: 50% 40%;
+  box-shadow:
+    calc(-10px - var(--speed) * 14px) calc(14px + var(--lift) * 34px + var(--speed) * 12px) calc(18px + var(--lift) * 40px) rgb(var(--ink-rgb) / calc(0.45 + var(--lift) * 0.25)),
+    0 0 0 calc(var(--lift) * 2px) rgb(var(--brand-rgb) / 0.9),
+    0 0 calc(var(--lift) * 30px) rgb(var(--brand-rgb) / 0.55);
+  will-change: transform;
+}
+
+.arena-drag-glare {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(circle at var(--gx, 50%) var(--gy, 40%), color-mix(in srgb, var(--fg-hi) 30%, transparent), transparent 45%);
+  mix-blend-mode: soft-light;
+}
+
+.is-arena-dragging,
+.is-arena-dragging * {
+  cursor: grabbing !important;
+}
+
+html.fx-off .arena-fan-slot,
+html.fx-off .arena-lift .arena-fan-land,
+html.fx-off .arena-fan.is-dealing .arena-fan-slot .arena-fan-card {
+  transition: none;
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .arena-fan-slot {
+    transition: none;
+  }
+
+  .arena-lift .arena-fan-land,
+  .arena-fan.is-dealing .arena-fan-slot .arena-fan-card {
+    animation: none;
+  }
+}
