@@ -58,7 +58,7 @@
 .arena-prompt-head h2 {
   margin: 0;
   padding-bottom: var(--sp-1h);
-  font-family: var(--font-display);
+  font-family: var(--font-serif);
   font-size: clamp(var(--fs-2xl), 2.6vw, 2.625rem);
   font-weight: 700;
   letter-spacing: 0;
@@ -121,9 +121,9 @@
   display: flex;
   align-items: flex-end;
   padding: 0 calc(var(--sp-6) - var(--sp-1)) var(--sp-1h);
-  font-family: var(--font-display);
+  font-family: var(--font-serif);
   font-size: clamp(var(--fs-lg), 1.45vw, var(--fs-xl));
-  font-weight: 600;
+  font-weight: 700;
   text-shadow: var(--arena-text-shadow);
   background: linear-gradient(90deg, transparent, var(--arena-line) 12%, var(--arena-line) 88%, transparent) bottom / 100% 1px no-repeat;
 }
@@ -138,9 +138,9 @@
   border: 2px solid color-mix(in srgb, var(--fg-hi) 90%, transparent);
   background: rgb(var(--ink-rgb) / 0.55);
   color: var(--fg-hi);
-  font-family: var(--font-display);
+  font-family: var(--font-serif);
   font-size: var(--fs-base);
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
   transition: background 140ms ease;
 }

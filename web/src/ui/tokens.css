@@ -161,6 +161,7 @@
      resolves to a face ~7 % wider than macOS's, and a layout that only fits
      the narrow one is a layout bug, not a test bug. */
   --font-ui: 'Twemoji Country Flags', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --font-serif: 'Twemoji Country Flags', 'Merriweather', Georgia, serif;
 
   --fs-3xs: 0.625rem;
   --fs-2xs: 0.688rem;
