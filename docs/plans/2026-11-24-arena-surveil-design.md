@@ -42,7 +42,9 @@ mockup (`web/src/dev/ArenaSurveilMock.tsx`, `#/gallery` → "Arena prompts (mock
   (`tryToAutoChoose`) and skip a round trip.
   - Two or more to the graveyard, and the user data's `askMoveToGraveOrder` on: a yes/no "Choose the
     order in which the cards go to the graveyard?", then one pick per card but the last, "card to put
-    on the top of your graveyard (last one chosen will be topmost)".
+    on the top of your graveyard (last one chosen will be topmost)". Only reachable with that
+    preference on: `Mage.Proxy` always sends `UserData.getDefaultUserDataView()`, where it is off, so
+    through this proxy a surveil never asks it and the plan settles at its last pick answer.
   - Two or more left on top: one pick per card but the last, "card ORDER to put on the TOP of your
     library (last one chosen will be topmost)"; the card left over goes on last, so it ends on top.
 - **Scry N** (`scry`): the same, with "to PUT on the BOTTOM of your library (Scry)" first, then the

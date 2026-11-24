@@ -117,6 +117,28 @@ test.describe('Arena surveil and scry', { tag: '@prompts' }, () => {
     })
   })
 
+  test('PRM-18: a surveil putting every card in the graveyard closes at its last pick with no graveyard order asked', async ({ page }) => {
+    await withFakeServer(() => arenaSurveilScenario('surveil-binned'), async () => {
+      const { pageErrors } = await quickStartGame(page, { prefix: 'asb', skipAsks: true })
+      const overlay = page.getByTestId('arena-library-prompt')
+      await expect(overlay).toBeVisible()
+      await expect.poll(() => zoneIds(page, 'top')).toEqual([ELVES, BOLT])
+
+      await clickCard(page, ELVES)
+      await expect.poll(() => zoneIds(page, 'away')).toEqual([ELVES])
+      await clickCard(page, BOLT)
+      await expect.poll(() => zoneIds(page, 'away')).toEqual([ELVES, BOLT])
+
+      await watchForeignUi(page)
+      await page.getByTestId('arena-library-done').click()
+      await expect.poll(() => ARENA_SURVEIL_ANSWERS.length, { timeout: 2000 }).toBe(2)
+      await expect(overlay).toBeHidden({ timeout: 1500 })
+      expect(ARENA_SURVEIL_ANSWERS).toEqual([ELVES, BOLT])
+      expect(await foreignUiSeen(page)).toEqual([])
+      expect(pageErrors).toEqual([])
+    })
+  })
+
   test('PRM-18: a scry answers the bottom order before the top order', async ({ page }) => {
     await withFakeServer(() => arenaSurveilScenario('scry'), async () => {
       const { pageErrors } = await quickStartGame(page, { prefix: 'asc', skipAsks: true })

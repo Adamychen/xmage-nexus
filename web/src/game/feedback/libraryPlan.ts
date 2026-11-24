@@ -31,12 +31,19 @@ function settle(plan: LibraryPlan, answer: PlanAnswer, settled: boolean): Step {
   return { answer, plan: { ...plan, settled: plan.settled || settled } }
 }
 
+function sameCards(plan: LibraryPlan, prompt: FeedbackPrompt): boolean {
+  const ids = new Set((prompt.cards ?? []).map((card) => card.id))
+  return ids.size === plan.cardIds.length && plan.cardIds.every((id) => ids.has(id))
+}
+
 function pickStep(plan: LibraryPlan, prompt: FeedbackPrompt): Step | null {
+  if (!sameCards(plan, prompt)) return null
   const chosen = prompt.chosenTargets ?? []
   if (chosen.some((id) => !plan.away.includes(id))) return null
-  const lastOfChain = plan.away.length < 2 && plan.top.length < 2
+  const lastOfChain = plan.top.length < 2 && (plan.mode === 'surveil' || plan.away.length < 2)
   const next = plan.away.find((id) => !chosen.includes(id))
   if (next === undefined) return settle(plan, { kind: 'boolean', value: false }, lastOfChain)
+  if (!prompt.options.some((option) => option.id === next)) return null
   const completes = prompt.max > 0 && chosen.length + 1 >= prompt.max
   return settle(plan, { kind: 'uuid', value: next }, lastOfChain && completes)
 }

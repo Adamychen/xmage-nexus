@@ -6,7 +6,7 @@ import type { CardView, GameView, PlayerView } from '../../src/net/types'
 import { makeCard } from '../../src/__fixtures__/gameViews'
 import { GAME_ID, TABLE_ID, SIM_NAME, HUMAN_NAME, HUMAN_PLAYER_ID, SIM_PLAYER_ID } from '../humanGameConstants'
 
-export type ArenaSurveilVariant = 'surveil' | 'scry' | 'foreign'
+export type ArenaSurveilVariant = 'surveil' | 'surveil-binned' | 'scry' | 'foreign'
 
 export const SURVEIL_PICK = 'Select card(s) to PUT into your GRAVEYARD (Surveil)'
 export const SCRY_PICK = 'Select up to 4 cards to PUT on the BOTTOM of your library (Scry)'
@@ -42,7 +42,8 @@ export function arenaSurveilScenario(variant: ArenaSurveilVariant): Scenario {
   const gameId = GAME_ID
   const tableId = TABLE_ID
   const scry = variant === 'scry'
-  const cards = ARENA_CARDS.slice(0, scry ? 4 : 3).map((c) => c.id as string)
+  const binned = variant === 'surveil-binned'
+  const cards = ARENA_CARDS.slice(0, scry ? 4 : binned ? 2 : 3).map((c) => c.id as string)
   const pickMessage = scry ? SCRY_PICK : SURVEIL_PICK
   let activeConn: FakeConn | null = null
   let stage: Stage = { kind: 'pick', chosen: [] }
@@ -84,6 +85,7 @@ export function arenaSurveilScenario(variant: ArenaSurveilVariant): Scenario {
 
   const finish = () => {
     stage = { kind: 'done' }
+    if (binned) return
     activeConn?.broadcast('GAME_UPDATE', { gameView: getGameView() }, gameId)
     activeConn?.broadcast('GAME_SELECT', { message: 'Priority', gameView: getGameView() }, gameId)
   }
