@@ -60,6 +60,7 @@ describe('galería de estados (P3)', () => {
     expect(new Set(ids).size).toBe(ids.length)
     expect([...new Set(entries.map((entry) => entry.group))]).toEqual([
       'Frames reales',
+      'Arena prompts (mockup)',
       'Prompts',
       'Animaciones',
       'Pila',

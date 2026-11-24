@@ -89,6 +89,8 @@ export type GalleryScreenName =
   | 'cards'
   | 'projectile'
   | 'glyphs'
+  | 'arena-surveil'
+  | 'arena-scry'
 
 /** Acción de dev de una entrada: un botón en el sidebar que modifica el estado de la galería. */
 export interface GalleryAction {
@@ -3325,6 +3327,28 @@ export function buildGalleryEntries(): GalleryEntry[] {
       },
     ]
 
+    entries.push(
+      {
+        id: 'arena:surveil',
+        group: 'Arena prompts (mockup)',
+        label: 'Surveil 3 (drag)',
+        description: 'Throwaway mockup: Arena-style full-screen surveil with 3D drag between top of library and graveyard.',
+        screen: 'arena-surveil',
+        phase: 'game',
+        game,
+        gameId,
+      },
+      {
+        id: 'arena:scry',
+        group: 'Arena prompts (mockup)',
+        label: 'Scry 4 (drag)',
+        description: 'Throwaway mockup: Arena-style full-screen scry with 3D drag between top and bottom of library.',
+        screen: 'arena-scry',
+        phase: 'game',
+        game,
+        gameId,
+      },
+    )
     for (const p of prompts) {
       entries.push({
         id: p.id,

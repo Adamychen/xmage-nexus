@@ -1,0 +1,374 @@
+.asv {
+  --asv-label-h: clamp(38px, 3.4vw, 48px);
+  --asv-serif: 'Beleren', 'Merriweather', Georgia, 'Times New Roman', serif;
+  --asv-card-w: clamp(150px, min(13.5vw, 25vh), 270px);
+  --card-w: var(--asv-card-w);
+  --asv-line: rgb(255 255 255 / 0.42);
+  --asv-glow-rgb: 120 200 255;
+  position: absolute;
+  inset: 0;
+  z-index: 900;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+  font-family: var(--font-ui);
+  color: #fff;
+}
+
+.asv-scrim {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 55% 60% at 50% 48%, rgb(var(--asv-glow-rgb) / 0.12), transparent 70%),
+    linear-gradient(180deg, rgb(0 0 0 / 0.72), rgb(0 0 0 / 0.55) 45%, rgb(0 0 0 / 0.7));
+  backdrop-filter: blur(2px) saturate(0.8);
+  transition: opacity 180ms ease;
+}
+
+.asv-probe {
+  position: absolute;
+  width: var(--asv-card-w);
+  height: 0;
+  visibility: hidden;
+}
+
+.asv-content {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(10px, 3vh, 36px);
+  padding: clamp(56px, 8vh, 80px) 0 clamp(20px, 4vh, 48px);
+  transition: opacity 180ms ease;
+}
+
+.asv.is-peek .asv-scrim,
+.asv.is-peek .asv-content {
+  opacity: 0;
+}
+
+.asv-head {
+  width: min(860px, 70%);
+  text-align: center;
+  animation: asv-fade-down 360ms cubic-bezier(.2, .9, .3, 1) both;
+}
+
+.asv-head h2 {
+  margin: 0;
+  padding-bottom: 6px;
+  font-family: var(--asv-serif);
+  font-size: clamp(26px, 2.6vw, 42px);
+  font-weight: 600;
+  letter-spacing: 0;
+  font-weight: 700;
+  text-shadow: 0 2px 14px rgb(0 0 0 / 0.9);
+  background:
+    linear-gradient(90deg, transparent, var(--asv-line) 15%, var(--asv-line) 85%, transparent) bottom / 100% 1px no-repeat;
+}
+
+.asv-head p {
+  max-width: 440px;
+  margin: 8px auto 0;
+  color: rgb(255 255 255 / 0.85);
+  font-size: clamp(13px, 1vw, 15px);
+  line-height: 1.35;
+  text-shadow: 0 1px 6px rgb(0 0 0 / 0.9);
+}
+
+.asv-peek {
+  position: absolute;
+  top: clamp(14px, 3vh, 30px);
+  right: clamp(16px, 3vw, 48px);
+  z-index: 2;
+  padding: 7px 18px;
+  border-radius: 999px;
+  border: 2px solid rgb(255 255 255 / 0.9);
+  background: rgb(0 0 0 / 0.55);
+  color: #fff;
+  font-family: var(--asv-serif);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 140ms ease;
+}
+
+.asv-peek:hover {
+  background: rgb(255 255 255 / 0.12);
+}
+
+.asv-stage {
+  flex: 0 0 auto;
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1.6fr 1fr;
+  align-items: start;
+  gap: clamp(16px, 2.6vw, 52px);
+  padding: 0 clamp(24px, 4.5vw, 80px);
+}
+
+.asv-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(14px, 3vh, 34px);
+}
+
+.asv-zone {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+
+.asv-zone-label {
+  align-self: center;
+  margin: 0;
+  height: var(--asv-label-h);
+  box-sizing: border-box;
+  display: flex;
+  align-items: flex-end;
+  padding: 0 28px 6px;
+  font-family: var(--asv-serif);
+  font-size: clamp(16px, 1.45vw, 22px);
+  font-weight: 600;
+  text-shadow: 0 2px 10px rgb(0 0 0 / 0.9);
+  background:
+    linear-gradient(90deg, transparent, var(--asv-line) 12%, var(--asv-line) 88%, transparent) bottom / 100% 1px no-repeat;
+}
+
+.asv-box {
+  position: relative;
+  border: 1.5px solid var(--asv-line);
+  border-radius: 3px;
+  background: rgb(0 0 0 / 0.22);
+  padding: calc(var(--asv-card-w) * 0.14) 14px;
+  transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
+}
+
+.asv-box {
+  min-height: calc(var(--asv-card-w) * 1.39344 * 1.42);
+  display: flex;
+  align-items: center;
+}
+
+.asv-zone.is-hot .asv-box {
+  border-color: rgb(var(--asv-glow-rgb) / 0.95);
+  background: rgb(var(--asv-glow-rgb) / 0.08);
+  box-shadow: 0 0 24px rgb(var(--asv-glow-rgb) / 0.45), inset 0 0 30px rgb(var(--asv-glow-rgb) / 0.18);
+}
+
+.asv-lane {
+  position: relative;
+  width: 100%;
+  height: calc(var(--asv-card-w) * 1.39344 + 16px);
+}
+
+.asv-slot {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: var(--asv-card-w);
+  margin-left: calc(var(--asv-card-w) / -2);
+  transform-origin: 50% var(--fan-radius, 2000px);
+  transition: rotate 0.22s var(--ease-out, ease-out);
+}
+
+.asv-card {
+  position: relative;
+  border-radius: 6% / 4.3%;
+  cursor: grab;
+  transform-origin: 50% 75%;
+  box-shadow: -6px 8px 22px rgb(0 0 0 / 0.65), 0 0 0 1px rgb(0 0 0 / 0.5);
+}
+
+.asv-slot.is-lifted .asv-card {
+  opacity: 0;
+}
+
+.asv-lift {
+  pointer-events: none;
+  transition: none;
+}
+
+.asv-lift .asv-land {
+  translate: 0 calc(var(--sp-5, 24px) * -1);
+  animation: asv-lift calc(0.14s / var(--fx-speed, 1)) var(--ease-out, ease-out) both;
+}
+
+.asv-lift .asv-card {
+  scale: 1.12;
+  animation: none !important;
+  box-shadow: 0 18px 40px rgb(0 0 0 / 0.85), 0 0 0 1px rgb(0 0 0 / 0.5);
+}
+
+@keyframes asv-lift {
+  from {
+    translate: 0 0;
+  }
+}
+
+.asv.is-dealing .asv-slot:not(.asv-deck) .asv-card {
+  animation: asv-deal 520ms cubic-bezier(.2, .9, .25, 1.1) backwards;
+}
+
+.asv-deck .asv-card {
+  cursor: default;
+  filter: brightness(0.8);
+  box-shadow: 3px 3px 0 -1px #2a1d10, 6px 6px 0 -2px #1c140b, -6px 8px 22px rgb(0 0 0 / 0.6);
+}
+
+.asv-gap {
+  height: calc(var(--asv-card-w) * 1.39344);
+  border-radius: 6% / 4.3%;
+  border: 2px solid rgb(var(--asv-glow-rgb) / 0.8);
+  background: rgb(var(--asv-glow-rgb) / 0.1);
+  box-shadow: 0 0 22px rgb(var(--asv-glow-rgb) / 0.45);
+  z-index: 40;
+}
+
+.asv-glare {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(circle at var(--gx, 50%) var(--gy, 40%), rgb(255 255 255 / 0.3), transparent 45%);
+  mix-blend-mode: soft-light;
+}
+
+.asv-done {
+  min-width: clamp(130px, 10vw, 170px);
+  padding: 8px 34px 9px;
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #ffb35c 0%, #f47a1f 48%, #d4500d 100%);
+  color: #fff;
+  font-family: var(--asv-serif);
+  font-size: clamp(17px, 1.4vw, 22px);
+  font-weight: 600;
+  text-shadow: 0 1px 3px rgb(90 30 0 / 0.8);
+  box-shadow:
+    0 0 0 1.5px rgb(255 220 170 / 0.8),
+    0 0 18px rgb(255 130 40 / 0.75),
+    0 0 46px rgb(255 100 20 / 0.45),
+    inset 0 1px 0 rgb(255 255 255 / 0.55);
+  cursor: pointer;
+  animation: asv-fade-up 420ms 200ms cubic-bezier(.2, .9, .3, 1) both;
+  transition: filter 120ms ease, transform 120ms ease;
+}
+
+.asv-done:hover {
+  filter: brightness(1.12);
+  transform: translateY(-1px);
+}
+
+.asv-source {
+  --card-w: var(--asv-card-w);
+  justify-self: center;
+  align-self: start;
+  margin-top: calc(var(--asv-label-h) + var(--asv-card-w) * 1.39344 * 0.21);
+  border-radius: 6% / 4.3%;
+  box-shadow:
+    0 0 0 2px rgb(var(--asv-glow-rgb) / 0.9),
+    0 0 26px rgb(var(--asv-glow-rgb) / 0.6),
+    0 0 60px rgb(var(--asv-glow-rgb) / 0.25);
+  animation: asv-source-in 480ms 120ms cubic-bezier(.2, .9, .3, 1.1) both;
+}
+
+.asv.is-sent .asv-zone-top .asv-card {
+  animation: asv-to-library 480ms cubic-bezier(.5, 0, .7, .4) forwards;
+}
+
+.asv.is-sent .asv-zone-away .asv-card {
+  animation: asv-to-grave 480ms cubic-bezier(.5, 0, .7, .4) forwards;
+}
+
+.asv-drag {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 1000;
+  width: var(--asv-card-w);
+  pointer-events: none;
+  will-change: transform;
+}
+
+.asv-drag-card {
+  --lift: 1;
+  --speed: 0;
+  --gx: 50%;
+  --gy: 40%;
+  position: relative;
+  border-radius: 6% / 4.3%;
+  transform-origin: 50% 40%;
+  box-shadow:
+    calc(-10px - var(--speed) * 14px) calc(14px + var(--lift) * 34px + var(--speed) * 12px) calc(18px + var(--lift) * 40px) rgb(0 0 0 / calc(0.45 + var(--lift) * 0.25)),
+    0 0 0 calc(var(--lift) * 2px) rgb(var(--asv-glow-rgb) / 0.9),
+    0 0 calc(var(--lift) * 30px) rgb(var(--asv-glow-rgb) / 0.55);
+  will-change: transform;
+}
+
+.asv.is-dragging,
+.asv.is-dragging * {
+  cursor: grabbing !important;
+}
+
+@keyframes asv-deal {
+  from {
+    opacity: 0;
+    transform: translate(-6vw, -18vh) rotate(-8deg) scale(0.7);
+  }
+}
+
+@keyframes asv-fade-down {
+  from {
+    opacity: 0;
+    transform: translateY(-14px);
+  }
+}
+
+@keyframes asv-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+
+@keyframes asv-source-in {
+  from {
+    opacity: 0;
+    transform: translateX(40px) scale(0.92);
+  }
+}
+
+@keyframes asv-to-library {
+  to {
+    opacity: 0;
+    transform: perspective(800px) translate(-6vw, 45vh) rotateX(60deg) scale(0.4);
+  }
+}
+
+@keyframes asv-to-grave {
+  to {
+    opacity: 0;
+    transform: perspective(800px) translate(-20vw, 40vh) rotateX(60deg) rotateZ(-14deg) scale(0.4);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .asv-card,
+  .asv-head,
+  .asv-done,
+  .asv-source {
+    animation: none;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .asv-scrim {
+    backdrop-filter: none;
+    background: rgb(4 6 10 / 0.92);
+  }
+}
