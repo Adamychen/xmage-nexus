@@ -617,16 +617,23 @@ its status row, instead of chips: each one half a card, smaller than the own pil
 with its name and count. The opponent's board is mirrored vertically, so the piles hang from the
 top edge with the caption under them, and the cards are turned round: the half that shows is the
 top of the card, upside down, as the rest of a mirrored board would be. The captions always use the
-short names ("Lib", "GY"): the same row also holds the chip, the hand and the commander (BRD-40),
-and three long captions push the piles onto a second line that eats the battlefield. A click opens the same
-viewer, and a pile glows in the same cases as the own (BRD-12). At phone width the columns keep
-their chips.
+short names ("Lib", "GY"), because the same row also holds the chip, the hand and the commander
+(BRD-40). That row never breaks into a second line: under it the battlefield starts straight away,
+so a second line has nowhere to go but over the cards. What gives way when the column is narrow is
+the chip, which spends height instead of width (its clock and its counters hang under the photo,
+BRD-32 and BRD-54) and truncates its name last of all; the piles stay at the right end of the row
+whatever it holds. A click opens the same viewer, and a pile glows in the same cases as the own
+(BRD-12). At phone width the columns keep their chips.
 
 - Why: the own board got its piles with captions (BRD-32); the user wanted the opponents to show
   theirs the same way, smaller, as long as they fit (2026-11-12, checked at 1920, 1366 and 390 px
   with three opponents). At 1366 a column with counters on the chip wrapped its status row and the
-  piles landed on the lands, hence the short names and no wrapping.
-- Guard: `src/board/BoardZone.arenaOwn.test.tsx`
+  piles landed on the lands, hence the short names and no wrapping. The column then forbade the
+  chip a second line, which was right while the counters stacked beside the photo and wrong as soon
+  as they moved under it (BRD-54, 23-nov-2026): the clock and the counters crowded one line, the
+  name came out as a letter and the piles fell onto the battlefield anyway. Reported on a
+  four-player Commander table (24-nov-2026): the cap belongs to the row, not to the chip.
+- Guard: `src/board/BoardZone.arenaOwn.test.tsx` · `e2e/arena-board.spec.ts`
 
 ### BRD-37 · The Arena layout shows the same turn order strip with and without the side panel
 On the Arena layout with the v1 chrome, the strip in the divider (or in the top bar with the side
