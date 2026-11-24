@@ -115,20 +115,21 @@ already says them.
   line rather than a number guessed into the sentence.
 - Guard: `src/cards/frame/stackCardText.test.ts`
 
-### STK-10 · The text hangs under the cascade in a bubble, folded until it is asked for
-Under the cascade hangs a speech bubble whose tail points at the front card. Folded, it is a single
-strip: the controller chip, an ability mark, a "Copy" chip, the object's name and a chevron that says
-it opens. It opens while the pointer is on the cascade or on the bubble, on the card under the
-pointer (a card behind the front one is read too), and a click or a key on the strip keeps it open
-until the next one; it folds a moment after the pointer leaves, so the pointer can cross from the
-card to the bubble, and while it is open it keeps reading the card last hovered. The card being read
-is ringed and the tail slides to point at it, so it is plain which card the text belongs to. Its height is the
-room measured between the cascade and the dock, never a number; past that it scrolls. When there is
-no room for it there, it lies over the front card's own lower half instead, because the only part of
-the screen it may cover is the stack itself: never the board, never the dock.
+### STK-10 · The text hangs under the cascade in a bubble that is always open
+Under the cascade hangs a speech bubble whose tail points at a card of the stack. It is always open:
+a strip with the controller chip, an ability mark, a "Copy" chip and the object's name heads the
+server's text, and nothing folds it. It reads the object about to resolve; while the pointer is on
+a card of the cascade (a card behind the front one too) it reads that card, and it keeps reading it
+while the pointer crosses to the bubble, going back to the front object a moment after the pointer
+leaves both. The card being read under the pointer is ringed and the tail slides to point at it, so
+it is plain which card the text belongs to. Its height is the room measured between the cascade and
+the dock, never a number; past that it scrolls. When there is no room for it there, it lies over the
+front card's own lower half instead, because the only part of the screen it may cover is the stack
+itself: never the board, never the dock.
 
 - Why: the user liked the bubble of the mockup but not that it covered the board, and asked for it
   to read as folded and open on hover; they chose it under the cascade rather than beside it
   (2026-11-23). Under the cascade it is as wide as the card, so it stays out of the middle of the
-  board.
+  board. The next day the user asked for it to be always open: folded, the player had to point at
+  the stack to read what was about to resolve (24-nov-2026).
 - Guard: `src/board/StackZone.test.tsx` · `src/board/StackZone.css.test.ts`

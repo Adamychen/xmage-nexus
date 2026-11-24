@@ -1079,8 +1079,6 @@ export const en = {
     stack_empty: 'Stack is empty',
     stack_push_aside: 'Push the stack aside',
     stack_bring_back: 'Bring the stack back',
-    stack_text_show: 'Show what it does',
-    stack_text_hide: 'Hide the text',
     combat_damage_title: 'Combat damage',
     stack_empty_desc: 'Cast spells and activated abilities will appear here to resolve.',
     controller: 'Controller',

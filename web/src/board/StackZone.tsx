@@ -68,8 +68,8 @@ export function StackEntryCardName({ card }: { card: CardView }) {
   )
 }
 
-/** How long the bubble stays open after the pointer leaves the cascade and the bubble. */
-const BUBBLE_FOLD_MS = 220
+/** How long the bubble keeps reading the hovered card after the pointer leaves the cascade and the bubble. */
+const BUBBLE_READ_MS = 220
 /** The gap the bubble's tail crosses between the card and the bubble. */
 const BUBBLE_GAP = 12
 /** Under this much room between the cascade and the dock, the bubble lies over the front card: a
@@ -199,12 +199,11 @@ export default function StackZone({
   // the stack, so reading it here cannot feed back into anything it depends on.
   const [floor, setFloor] = useState(0)
   const cardRender = useStore((s) => s.settings.cardRender)
-  // STK-10: the bubble under the cascade. It opens while the pointer is on the cascade or on the
-  // bubble itself, or after a click on its strip, and closes a moment after the pointer leaves, so
-  // the pointer can cross the gap between the card and the bubble without it folding.
+  // STK-10: the bubble under the cascade is always open. It reads the card under the pointer, and
+  // goes back to the object about to resolve a moment after the pointer leaves the cascade and the
+  // bubble, so the pointer can cross the gap between the card and the bubble.
   const [bubbleHover, setBubbleHover] = useState(false)
-  const [bubblePinned, setBubblePinned] = useState(false)
-  const [bubbleOpen, setBubbleOpen] = useState(false)
+  const [reading, setReading] = useState(false)
   const [bubblePlacement, setBubblePlacement] = useState<StackBubblePlacement>('below')
   const [bubbleMax, setBubbleMax] = useState<number | null>(null)
 
@@ -314,27 +313,24 @@ export default function StackZone({
 
   const topId = shownGroups[0]?.items[0]?.[0] ?? null
   const hoverId = hoverCard?.id ?? null
-  const wantBubble = bubblePinned || bubbleHover || hoverId != null
+  const pointing = bubbleHover || hoverId != null
   useEffect(() => {
-    if (wantBubble) {
-      setBubbleOpen(true)
+    if (pointing) {
+      setReading(true)
       return
     }
-    const fold = setTimeout(() => setBubbleOpen(false), BUBBLE_FOLD_MS)
-    return () => clearTimeout(fold)
-  }, [wantBubble])
-  useEffect(() => {
-    if (pushed) setBubblePinned(false)
-  }, [pushed])
+    const release = setTimeout(() => setReading(false), BUBBLE_READ_MS)
+    return () => clearTimeout(release)
+  }, [pointing])
   // The card last hovered stays the one read while the pointer crosses to the bubble; once the
-  // bubble folds, it goes back to the object about to resolve.
+  // pointer is gone, it goes back to the object about to resolve.
   const [readId, setReadId] = useState<string | null>(null)
   useEffect(() => {
     if (hoverId != null) setReadId(String(hoverId))
   }, [hoverId])
   useEffect(() => {
-    if (!bubbleOpen) setReadId(null)
-  }, [bubbleOpen])
+    if (!reading) setReadId(null)
+  }, [reading])
 
   // TGT-7: a stack object the player is being asked to target brings the stack back; it is always
   // in view now, but it may have been pushed aside.
@@ -380,7 +376,7 @@ export default function StackZone({
     measure()
     window.addEventListener('resize', measure)
     return () => window.removeEventListener('resize', measure)
-  }, [hasEntries, fit, floor, bubbleOpen])
+  }, [hasEntries, fit, floor])
 
   // STK-2: an empty stack draws nothing at all; it is a layer over the board, not a panel that
   // stays behind saying it is empty. It is read after the hooks above, never before them: an
@@ -465,7 +461,7 @@ export default function StackZone({
                 onCardClick || count > 1 ? 'clickable' : '',
                 count > 1 ? 'is-group' : '',
                 openGroup ? 'is-open' : '',
-                bubbleOpen && id === readingId ? 'is-reading' : '',
+                reading && id === readingId ? 'is-reading' : '',
                 `owner-${ownership}`,
               ].filter(Boolean).join(' ')}
               style={{ ['--i' as string]: gi, ['--seat' as string]: seatColorVar(seatIndexOf(players, ctrlInfo.id)) }}
@@ -501,9 +497,7 @@ export default function StackZone({
             card={readingCard}
             ctrl={readingCtrl}
             depth={Math.max(0, shownGroups.findIndex((g) => g.items[0][0] === readingId))}
-            open={bubbleOpen}
             placement={bubblePlacement}
-            onToggle={() => setBubblePinned((on) => !on)}
             onEnter={() => setBubbleHover(true)}
             onLeave={() => setBubbleHover(false)}
           />

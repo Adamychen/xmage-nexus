@@ -1081,8 +1081,6 @@ export const fr: TranslationSchema = {
     stack_empty: 'La pile est vide',
     stack_push_aside: 'Écarter la pile',
     stack_bring_back: 'Ramener la pile',
-    stack_text_show: 'Montrer ce qu’il fait',
-    stack_text_hide: 'Masquer le texte',
     combat_damage_title: 'Dégâts de combat',
     stack_empty_desc: 'Les sorts et capacités joués apparaîtront ici.',
     controller: 'Contrôleur',

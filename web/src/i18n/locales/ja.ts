@@ -1081,8 +1081,6 @@ export const ja: TranslationSchema = {
     stack_empty: 'スタックは空です',
     stack_push_aside: 'スタックを横にどける',
     stack_bring_back: 'スタックを戻す',
-    stack_text_show: '効果を表示',
-    stack_text_hide: 'テキストを隠す',
     combat_damage_title: '戦闘ダメージ',
     stack_empty_desc: '唱えた呪文や能力がここに表示されます。',
     controller: 'コントローラー',

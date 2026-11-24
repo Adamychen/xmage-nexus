@@ -1081,8 +1081,6 @@ export const es: TranslationSchema = {
     stack_empty: 'Pila vacía',
     stack_push_aside: 'Aparta la pila',
     stack_bring_back: 'Trae la pila de vuelta',
-    stack_text_show: 'Muestra lo que hace',
-    stack_text_hide: 'Oculta el texto',
     combat_damage_title: 'Daño de combate',
     stack_empty_desc: 'Los hechizos y habilidades jugados aparecerán aquí para resolver.',
     controller: 'Controlador',

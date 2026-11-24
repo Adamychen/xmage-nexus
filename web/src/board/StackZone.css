@@ -845,9 +845,8 @@ html.fx-off .stack-card-face {
   pointer-events: none;
 }
 
-/* STK-10: what the object being read will do hangs under the cascade as a speech bubble. Folded it
-   is one strip, the chips the front card used to carry over its own art, with a chevron saying
-   there is more; open, the same strip heads the server's text. Its height is the room measured
+/* STK-10: what the object being read will do hangs under the cascade as a speech bubble, always
+   open: the chips the front card used to carry over its own art head the server's text. Its height is the room measured
    between the cascade and the dock, never a number; with no room there it lies over the front
    card's own lower half, which is the one part of the screen it may cover. */
 .stack-bubble {
@@ -930,12 +929,6 @@ html.fx-off .stack-card-face {
   color: inherit;
   font: inherit;
   text-align: left;
-  cursor: pointer;
-}
-
-.stack-bubble-tab:focus-visible {
-  outline: 2px solid var(--brand-fg);
-  outline-offset: 2px;
 }
 
 .stack-bubble-name {
@@ -955,32 +948,10 @@ html.fx-off .stack-card-face {
   opacity: 0.75;
 }
 
-/* The chevron is what says the strip opens: it nods once when the bubble first appears, and turns
-   when the text is open. */
-.stack-bubble-chevron {
-  display: inline-grid;
-  place-items: center;
-  width: 22px;
-  height: 22px;
-  flex: none;
-  border-radius: var(--r-pill);
-  background: var(--bubble-rule);
-}
-
-.stack-bubble-tab:hover .stack-bubble-chevron { background: var(--bubble-edge); }
-
 @media (prefers-reduced-motion: no-preference) {
-  html:not(.fx-off) .stack-bubble:not(.is-open) .stack-bubble-chevron {
-    animation: stack-bubble-nod 0.9s ease 0.4s 2;
-  }
   html:not(.fx-off) .stack-bubble.is-open .stack-bubble-body {
     animation: stack-bubble-open 0.18s ease-out;
   }
-}
-
-@keyframes stack-bubble-nod {
-  0%, 100% { transform: translateY(0); }
-  40% { transform: translateY(3px); }
 }
 
 @keyframes stack-bubble-open {
@@ -997,8 +968,6 @@ html.fx-off .stack-card-face {
   font-size: var(--fs-sm);
   line-height: 1.35;
 }
-
-.stack-bubble-body[hidden] { display: none; }
 
 .stack-bubble-body p { margin: 0 0 var(--sp-1); text-wrap: pretty; }
 .stack-bubble-body p:last-child { margin-bottom: 0; }

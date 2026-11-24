@@ -1081,8 +1081,6 @@ export const de: TranslationSchema = {
     stack_empty: 'Stapel ist leer',
     stack_push_aside: 'Stapel zur Seite schieben',
     stack_bring_back: 'Stapel zurückholen',
-    stack_text_show: 'Zeigen, was es tut',
-    stack_text_hide: 'Text ausblenden',
     combat_damage_title: 'Kampfschaden',
     stack_empty_desc: 'Gespielte Sprüche und Fähigkeiten erscheinen hier.',
     controller: 'Beherrscher',
