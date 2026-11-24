@@ -218,3 +218,18 @@ or rejects the pick.
   re-ask had arrived before the second acknowledgement, so PRM-9 kept it. The discard bar and the
   highlighted hand stayed until a reload (reported 2026-11-16).
 - Guard: `src/game/useTargetPick.test.ts`
+
+### PRM-18 · Surveil and scry are one screen; the client answers the engine's chain from it
+A surveil or scry is decided on one screen: the player drags each card into the library box or the
+graveyard box (the bottom box for a scry), and the position in each box is the order. The leftmost
+card of the library box ends on top of the library, the rightmost card of the graveyard box ends on
+top of the graveyard, and the rightmost card of the bottom box ends at the very bottom. Done turns the
+arrangement into a plan, and the client answers each prompt of the engine's chain from it as the
+prompt arrives, one answer per prompt (PRM-17): the cards to move, the yes to ordering the graveyard,
+and one pick per card for each order. A prompt the plan does not recognise is shown normally and ends
+the plan.
+
+- Why: XMage asks one Arena decision as a chain: a pick of the cards to move, then one order pick per
+  card but the last for each pile, each "last one chosen will be topmost/bottommost"
+  (`docs/plans/2026-11-24-arena-surveil-design.md`, 2026-11-24).
+- Guard: `src/game/feedback/libraryPlan.test.ts`
