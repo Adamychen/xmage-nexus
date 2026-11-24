@@ -1,7 +1,9 @@
-import { act, fireEvent, render } from '@testing-library/react'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { act, cleanup, fireEvent, render } from '@testing-library/react'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import StackZone from './StackZone'
 import type { CardView, PlayerView } from '../net/types'
+import { setState } from '../state/state'
+import { makeGameView, makePermanent, makePlayer } from '../__fixtures__/gameViews'
 
 vi.mock('../cards/cardImages', async (importOriginal) => ({
   ...(await importOriginal<typeof import('../cards/cardImages')>()),
@@ -338,5 +340,133 @@ describe('StackZone, the preview the pointer opens', () => {
 
     rerender(<StackZone stack={stackOf(spell('spell-2', 'Counterspell'), bolt)} />)
     expect(preview(container)).not.toBeNull()
+  })
+})
+
+describe('StackZone, the whole stack in the zone viewer', () => {
+  beforeEach(cleanup)
+  afterEach(cleanup)
+  const three = () => stackOf(
+    spell('spell-3', 'Fireball'),
+    spell('spell-2', 'Counterspell'),
+    spell('spell-1', 'Lightning Bolt'),
+  )
+  const viewer = () => document.body.querySelector<HTMLElement>('[data-testid="stack-viewer"]')
+  const items = () => [...document.body.querySelectorAll<HTMLElement>('[data-testid="stack-viewer"] .zone-fan-item')]
+
+  it('STK-11: a button beside the stack opens every object in the zone viewer, in the cascade order with the one resolving next at the right', () => {
+    const { getByTestId } = render(<StackZone stack={three()} />)
+    const button = getByTestId('stack-open-viewer')
+    expect(button.textContent).toContain('3')
+    expect(viewer()).toBeNull()
+    fireEvent.click(button)
+    expect(viewer()).not.toBeNull()
+    expect(items().map((el) => el.getAttribute('data-card-id'))).toEqual(['spell-1', 'spell-2', 'spell-3'])
+    expect(items()[2].textContent).toContain('#1')
+    expect(items()[2].classList.contains('is-top-card')).toBe(true)
+    expect(items()[0].textContent).toContain('#3')
+    fireEvent.keyDown(document, { key: 'Escape' })
+    expect(viewer()).toBeNull()
+  })
+
+  it('STK-11: an object the prompt can target is chosen from the viewer too', () => {
+    const onCardClick = vi.fn()
+    const { getByTestId } = render(<StackZone stack={three()} targetIds={new Set(['spell-2'])} onCardClick={onCardClick} />)
+    fireEvent.click(getByTestId('stack-open-viewer'))
+    const target = items()[1].querySelector<HTMLElement>('.stack-viewer-card')!
+    expect(target.classList.contains('targetable')).toBe(true)
+    fireEvent.click(target)
+    expect(onCardClick).toHaveBeenCalledWith('spell-2')
+  })
+
+  it('STK-11: the viewer button stays reachable while the stack is pushed aside', () => {
+    const { getByTestId } = render(<StackZone stack={three()} />)
+    fireEvent.click(getByTestId('stack-push'))
+    fireEvent.click(getByTestId('stack-open-viewer'))
+    expect(viewer()).not.toBeNull()
+  })
+})
+
+describe('StackZone, a stack longer than the viewer fan', () => {
+  afterEach(() => {
+    cleanup()
+    vi.restoreAllMocks()
+  })
+
+  it('STK-11: the viewer opens on the object about to resolve, even when the fan cannot hold every object', () => {
+    vi.spyOn(HTMLElement.prototype, 'offsetWidth', 'get').mockImplementation(function (this: HTMLElement) {
+      return this.classList.contains('zone-fan-item') ? 100 : 0
+    })
+    vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockImplementation(function (this: HTMLElement) {
+      return this.classList.contains('zone-fan-item') ? 140 : 0
+    })
+    vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockImplementation(function (this: HTMLElement) {
+      return this.classList.contains('zone-fan') ? 500 : 0
+    })
+    const many = stackOf(...Array.from({ length: 14 }, (_, i) => spell(`s-${i}`, `Spell ${i}`)))
+    const { getByTestId } = render(<StackZone stack={many} />)
+    fireEvent.click(getByTestId('stack-open-viewer'))
+    const fanItems = [...document.body.querySelectorAll<HTMLElement>('[data-testid="stack-viewer"] .zone-fan-item')]
+    const first = fanItems.find((el) => el.getAttribute('data-card-id') === 's-0')!
+    const last = fanItems.find((el) => el.getAttribute('data-card-id') === 's-13')!
+    expect(first.classList.contains('is-piled') || first.classList.contains('is-off-fan'), 'the object about to resolve is on the fan').toBe(false)
+    expect(last.classList.contains('is-piled') || last.classList.contains('is-off-fan'), 'the one resolving last waits in the left pile').toBe(true)
+  })
+})
+
+describe('StackZone viewer, what the object being read does and what it aims at', () => {
+  afterEach(() => {
+    cleanup()
+    setState({ game: null })
+  })
+
+  const elf = makePermanent({ name: 'Elvish Mystic', parentId: 'perm-elf' })
+  const bolt = spell('spell-bolt', 'Lightning Bolt', { rules: ['Lightning Bolt deals 3 damage to any target.'], targets: ['p-bob'] })
+  const path = spell('spell-path', 'Path to Exile', { rules: ['Exile target creature.'], targets: ['perm-elf'] })
+  const counter = spell('spell-counter', 'Counterspell', { rules: ['Counter target spell.'], targets: ['spell-path'] })
+  const stack = stackOf(counter, path, bolt)
+  const seat = () => setState({
+    game: makeGameView({
+      players: [
+        makePlayer({ playerId: 'p-me', name: 'Alice', controlled: true, battlefield: { 'perm-elf': elf } }),
+        makePlayer({ playerId: 'p-bob', name: 'Bob' }),
+      ],
+      stack,
+    }),
+  })
+  const panel = () => document.body.querySelector<HTMLElement>('[data-testid="stack-viewer-aside"]')!
+  const item = (id: string) => document.body.querySelector<HTMLElement>(`[data-testid="stack-viewer"] .zone-fan-item[data-card-id="${id}"]`)!
+  const open = () => {
+    seat()
+    const view = render(<StackZone stack={stack} />)
+    fireEvent.click(view.getByTestId('stack-open-viewer'))
+    return view
+  }
+
+  it('STK-12: it opens reading the object about to resolve, its text beside the fan', () => {
+    open()
+    expect(panel().textContent).toContain('Counterspell')
+    expect(panel().textContent).toContain('Counter target spell.')
+  })
+
+  it('STK-12: a target on the stack is ringed in the fan and named by its place', () => {
+    open()
+    expect(item('spell-path').classList.contains('is-targeted')).toBe(true)
+    expect(item('spell-bolt').classList.contains('is-targeted')).toBe(false)
+    expect(panel().querySelector('[data-testid="stack-viewer-target"]')?.textContent).toContain('#2')
+  })
+
+  it('STK-12: pointing at another object reads it, and a target elsewhere is drawn as its card beside the fan', () => {
+    open()
+    fireEvent.mouseEnter(item('spell-path'))
+    expect(panel().textContent).toContain('Exile target creature.')
+    expect(panel().querySelector('[data-card-id="perm-elf"]'), 'the targeted creature is drawn as a card').not.toBeNull()
+    expect(item('spell-path').classList.contains('is-targeted')).toBe(false)
+  })
+
+  it('STK-12: a player target is named', () => {
+    open()
+    fireEvent.mouseEnter(item('spell-bolt'))
+    expect(panel().querySelector('[data-testid="stack-viewer-target"]')?.textContent).toContain('Bob')
   })
 })

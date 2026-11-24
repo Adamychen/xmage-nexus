@@ -15,6 +15,10 @@ interface ZoneViewerProps {
   className?: string
   testId?: string
   itemCount: number
+  /** Open slid to the last card, for a pile read from its right end (the stack). */
+  startAtEnd?: boolean
+  /** Drawn beside the fan, over the dimmed board: what the card being read does and aims at. */
+  aside?: ReactNode
   onClose: () => void
   children: ReactNode
 }
@@ -28,11 +32,11 @@ interface FanGeometry {
   roomW: number
 }
 
-function useFan(itemCount: number) {
+function useFan(itemCount: number, startAtEnd: boolean) {
   const fanRef = useRef<HTMLDivElement>(null)
   const trackRef = useRef<HTMLDivElement>(null)
   const [geo, setGeo] = useState<FanGeometry>({ cardW: 0, cardH: 0, roomW: 0 })
-  const [scroll, setScroll] = useState(0)
+  const [scroll, setScroll] = useState(startAtEnd ? Number.POSITIVE_INFINITY : 0)
 
   useLayoutEffect(() => {
     const fan = fanRef.current
@@ -221,11 +225,13 @@ export default function ZoneViewer({
   className = '',
   testId,
   itemCount,
+  startAtEnd = false,
+  aside,
   onClose,
   children,
 }: ZoneViewerProps) {
   const { t } = useTranslation()
-  const fan = useFan(itemCount)
+  const fan = useFan(itemCount, startAtEnd)
   const lift = useHoverLift(fan.fanRef, fan.scroll)
   useEscape(onClose)
 
@@ -263,6 +269,7 @@ export default function ZoneViewer({
         >
           <div ref={fan.trackRef} className="zone-fan-track">{children}</div>
         </div>
+        {aside}
         <FanScrollbar scroll={fan.scroll} maxScroll={fan.maxScroll} onScroll={fan.scrollTo} label={title} />
         <footer className="zone-viewer-footer">
           <Button

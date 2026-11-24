@@ -352,8 +352,8 @@ the fan inside it; any other band lets the fan show outside its box while it is 
 - Guard: `src/board/stackSpread.test.ts` · `src/board/StackPile.test.tsx` · `e2e/land-fan.spec.ts` · `e2e/stack-groups.spec.ts`
 
 ### BRD-24 · A zone viewer is a fan of cards on an arc, slid along it with a thumb
-The viewers of a graveyard, an exile, a library, a known hand, the revealed and looked-at windows and
-the cards playable from other zones are one full-screen viewer, laid out like MTG Arena's: the board
+The viewers of a graveyard, an exile, a library, a known hand, the revealed and looked-at windows,
+the cards playable from other zones and the whole stack (STK-11) are one full-screen viewer, laid out like MTG Arena's: the board
 dims behind it, the zone's name and card count sit on top, the cards are fanned like a hand of cards
 held up, each turned `FAN_STEP_DEG` further than the one before around a pivot below the row, so the
 outer cards lean out and sit lower, and one Done button closes it. Neighbouring cards overlap by the

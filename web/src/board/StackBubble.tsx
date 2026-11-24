@@ -21,6 +21,17 @@ interface StackBubbleProps {
   onLeave: () => void
 }
 
+/** STK-9: the name and the server's text of a stack object, localized, as the bubble and the viewer read it. */
+export function useStackText(card: CardView) {
+  const ability = isStackAbility(card)
+  const face = ability && card.sourceCard ? card.sourceCard : card
+  const { text: localized } = useLocalizedCardText(face)
+  const { displayName } = useLocalizedCardName(face)
+  const { lines, xLine } = useMemo(() => stackCardText(card, ability ? null : localized?.rules), [card, ability, localized])
+  const name = displayName || card.displayName || card.name || ''
+  return { name, lines, xLine, hasText: lines.length > 0 || !!xLine }
+}
+
 /**
  * STK-10: what the object being read will do, in a bubble hanging from the cascade, always open: the
  * strip of chips the front card used to carry over its art heads the server's text.
@@ -29,12 +40,7 @@ export default function StackBubble({ card, ctrl, depth, placement, onEnter, onL
   const { t } = useTranslation()
   const ability = isStackAbility(card)
   const copy = isCopyCard(card)
-  const face = ability && card.sourceCard ? card.sourceCard : card
-  const { text: localized } = useLocalizedCardText(face)
-  const { displayName } = useLocalizedCardName(face)
-  const { lines, xLine } = useMemo(() => stackCardText(card, ability ? null : localized?.rules), [card, ability, localized])
-  const name = displayName || card.displayName || card.name || ''
-  const hasText = lines.length > 0 || !!xLine
+  const { name, lines, xLine, hasText } = useStackText(card)
   return (
     <div
       className={`stack-bubble is-${placement}${hasText ? ' is-open' : ''}`}

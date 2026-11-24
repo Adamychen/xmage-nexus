@@ -1,7 +1,8 @@
 import { useEffect, useState, useMemo, useCallback } from 'react'
 import { BOARD_RELAYOUT_EVENT } from './layout/relayout'
 import { isPlayerOut } from './boardShared'
-import type { GameView } from '../net/types'
+import type { CardView, GameView } from '../net/types'
+import { stackTargetIds } from './stackEntries'
 import { seatColorVar, seatIndexOf } from './seatColor'
 import './CombatArrowsOverlay.css'
 
@@ -297,12 +298,7 @@ export default function CombatArrowsOverlay({
         if (!sourceCenter) return
 
         const cardObj = stackCard as unknown as Record<string, unknown>
-        const targets = cardObj.targets ?? cardObj.targetIds ?? cardObj.chosenTargets ?? []
-        const targetList: string[] = Array.isArray(targets)
-          ? targets.map((t: unknown) => typeof t === 'string' ? t : (t as { id?: string } | null)?.id).filter((id): id is string => !!id)
-          : typeof targets === 'object' && targets !== null
-          ? Object.keys(targets)
-          : []
+        const targetList = stackTargetIds(stackCard as CardView)
 
         // Both ends on the stack: the objects lie over each other, so a straight line between them
         // is a stub hidden under the cards. Those arrows loop out past the cascade's left edge and
