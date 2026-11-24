@@ -1155,6 +1155,8 @@ function makeCounterspellDriver() {
 }
 
 const REGISTRY = {
+  'surveil-chain': () => makeLibraryChainDriver({ name: 'surveil-chain', spell: 'Discovery // Dispersal', alternative: 'Notion Rain', pick: 'none' }),
+  'scry-chain': () => makeLibraryChainDriver({ name: 'scry-chain', spell: 'Preordain', pick: 'all' }),
   mutate: makeMutateDriver,
   creature: makeCreatureDriver,
   combat: makeCombatDriver,
@@ -2794,6 +2796,108 @@ function makeScryDriver() {
     captureWhen(gv) {
       const me = (gv.players ?? []).find((p) => p?.controlled)
       return Object.values(me?.graveyard ?? {}).some((c) => /opt/i.test(String(c?.name ?? '')))
+    },
+  }
+}
+
+function libraryTargetIds(data) {
+  const pt = data?.options?.possibleTargets ?? data?.targets ?? []
+  return Array.isArray(pt)
+    ? pt.map((o) => (typeof o === 'string' ? o : o?.id)).filter(Boolean)
+    : Object.keys(pt ?? {})
+}
+
+function makeLibraryChainDriver({ name, spell, alternative, pick }) {
+  return {
+    name,
+    outFile: false,
+    promptsOutFile: `${name}.json`,
+    deck: {
+      name: `Mage Web ${name} rec`,
+      cards: [{ cardName: 'Island', setCode: 'iko', cardNumber: '265', amount: 60 }],
+      sideboard: [],
+    },
+    gameType: 'Constructed - Pioneer',
+    maxMs: 300_000,
+    _acted: false,
+    _cheated: false,
+    _spell: spell,
+    _picked: 0,
+    _ordered: false,
+    onSelect(ctx) {
+      const gv = ctx.gv
+      const me = ctx.me
+      if (!me || me.hasPriority !== true) return
+      const isMyMain = me.isActive === true && (gv.phase === 'PRECOMBAT_MAIN' || gv.phase === 'POSTCOMBAT_MAIN')
+      if (!isMyMain) {
+        ctx.pass()
+        return
+      }
+      if (!this._acted) {
+        if (ctx.playLand()) {
+          this._acted = true
+          ctx.log('onSelect: first land')
+        } else ctx.pass()
+        return
+      }
+      if (!this._cheated) {
+        this._cheated = true
+        ctx.log(`onSelect: cheatSetup (${this._spell} to hand, Island to battlefield, Mountain over Plains on top)`)
+        void ctx.cheatSetup({ hand: [this._spell], battlefield: this._spell === alternative ? ['Island', 'Swamp'] : ['Island'], library: ['Plains', 'Mountain'] }).then((r) => {
+          if (!r?.ok && alternative && this._spell !== alternative) {
+            ctx.log(`cheatSetup failed with ${this._spell}; retrying with ${alternative}`)
+            this._spell = alternative
+            this._cheated = false
+          }
+        })
+        return
+      }
+      if (ctx.cardInHand(this._spell.split(' // ')[0])) {
+        ctx.log('onSelect: cast', this._spell)
+        ctx.playCardByName(this._spell.split(' // ')[0])
+        return
+      }
+      ctx.pass()
+    },
+    onChooseAbility(opts) {
+      const half = this._spell.split(' // ')[0]
+      return (opts.find((o) => new RegExp(half, 'i').test(o.label)) ?? opts[0])?.value
+    },
+    onTarget(ctx, question, data) {
+      const q = String(question ?? '')
+      const ids = libraryTargetIds(data)
+      if (/discard/i.test(q)) {
+        const hand = ctx.gv?.myHand ?? ctx.gv?.hand ?? {}
+        return Object.keys(hand)[0] ?? ids[0]
+      }
+      if (/\((surveil|scry)\)/i.test(q)) {
+        if (pick === 'none' || this._picked >= 2) {
+          ctx.log('onTarget: pick done')
+          return false
+        }
+        const chosen = new Set((Array.isArray(data?.options?.chosenTargets) ? data.options.chosenTargets : []).map(String))
+        const next = ids.find((id) => !chosen.has(id))
+        if (!next) return false
+        this._picked += 1
+        ctx.log('onTarget: pick', this._picked)
+        return next
+      }
+      if (/card order to put/i.test(q)) {
+        this._ordered = true
+        ctx.log('onTarget: order')
+        return ids[0]
+      }
+      return undefined
+    },
+    captureWhen(gv) {
+      const me = (gv.players ?? []).find((p) => p?.controlled)
+      const half = this._spell.split(' // ')[0].toLowerCase()
+      const done = this._ordered && Object.values(me?.graveyard ?? {}).some((c) => String(c?.name ?? '').toLowerCase().includes(half))
+      if (done) {
+        const drawn = Object.values(gv.myHand ?? {}).map((c) => c?.name).filter((n) => n !== 'Island')
+        console.log(`[record] ${name}: non-Island cards in hand after resolving: ${drawn.join(', ') || '(none)'}`)
+      }
+      return done
     },
   }
 }

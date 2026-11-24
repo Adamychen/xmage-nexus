@@ -1,0 +1,772 @@
+{
+  "recordedAt": "2026-11-24T15:52:05.671Z",
+  "gameId": "129f9233-103d-483b-92f5-42d9cc4e0caf",
+  "prompts": [
+    {
+      "method": "GAME_ASK",
+      "objectId": "129f9233-103d-483b-92f5-42d9cc4e0caf",
+      "data": {
+        "cardsView1": null,
+        "cardsView2": null,
+        "message": "Mulligan <font color=#ffff00>down to 6 cards</font>?",
+        "flag": false,
+        "targets": null,
+        "min": 0,
+        "max": 0,
+        "options": {
+          "UI.right.btn.text": "Keep",
+          "UI.left.btn.text": "Mulligan",
+          "queryType": "ASK"
+        },
+        "choice": null,
+        "messages": null
+      }
+    },
+    {
+      "method": "GAME_TARGET",
+      "objectId": "129f9233-103d-483b-92f5-42d9cc4e0caf",
+      "data": {
+        "cardsView1": {
+          "1dca05c3-c4a3-4e09-978f-a8db809c5ad6": {
+            "parentId": null,
+            "controllerId": null,
+            "controllerName": null,
+            "name": "Mountain",
+            "displayName": "Mountain",
+            "displayFullName": "Mountain",
+            "rules": [
+              "{T}: Add {R}."
+            ],
+            "power": "0",
+            "toughness": "0",
+            "loyalty": "",
+            "defense": "",
+            "startingLoyalty": "",
+            "startingDefense": "",
+            "cardTypes": [
+              "LAND"
+            ],
+            "subTypes": [
+              "MOUNTAIN"
+            ],
+            "superTypes": [
+              "BASIC"
+            ],
+            "color": {
+              "white": false,
+              "blue": false,
+              "black": false,
+              "red": false,
+              "green": false
+            },
+            "frameColor": {
+              "white": false,
+              "blue": false,
+              "black": false,
+              "red": true,
+              "green": false
+            },
+            "frameStyle": "M15_NORMAL",
+            "manaCostLeftStr": [],
+            "manaCostRightStr": [],
+            "manaValue": 0,
+            "rarity": "LAND",
+            "mageObjectType": "CARD",
+            "isAbility": false,
+            "abilityType": null,
+            "isToken": false,
+            "ability": null,
+            "imageFileName": "",
+            "imageNumber": 0,
+            "extraDeckCard": false,
+            "transformable": false,
+            "secondCardFace": null,
+            "transformed": false,
+            "flipCard": false,
+            "faceDown": false,
+            "alternateName": null,
+            "isSplitCard": false,
+            "leftSplitName": null,
+            "leftSplitCostsStr": null,
+            "leftSplitRules": null,
+            "leftSplitTypeLine": null,
+            "rightSplitName": null,
+            "rightSplitCostsStr": null,
+            "rightSplitRules": null,
+            "rightSplitTypeLine": null,
+            "rightSplitSpellType": null,
+            "isDoubleFacedCard": false,
+            "artRect": "NORMAL",
+            "targets": null,
+            "pairedCard": null,
+            "bandedCards": null,
+            "paid": false,
+            "counters": null,
+            "controlledByOwner": true,
+            "zone": "LIBRARY",
+            "rotate": false,
+            "hideInfo": false,
+            "canAttack": false,
+            "canBlock": false,
+            "inViewerOnly": false,
+            "cardIcons": [],
+            "originalPower": {
+              "baseValue": 0,
+              "modifiedBaseValue": 0,
+              "boostedValue": 0,
+              "cardValue": "0"
+            },
+            "originalToughness": {
+              "baseValue": 0,
+              "modifiedBaseValue": 0,
+              "boostedValue": 0,
+              "cardValue": "0"
+            },
+            "originalColorIdentity": "{R}",
+            "originalIsCopy": false,
+            "id": "1dca05c3-c4a3-4e09-978f-a8db809c5ad6",
+            "expansionSetCode": "KTK",
+            "cardNumber": "262",
+            "usesVariousArt": true,
+            "gameObject": true,
+            "isChoosable": false,
+            "isSelected": false,
+            "playableStats": {
+              "basicManaAbilities": [],
+              "basicPlayAbilities": [],
+              "basicCastAbilities": [],
+              "other": []
+            }
+          },
+          "19bffd5d-dc55-4522-b77d-342f25ba561f": {
+            "parentId": null,
+            "controllerId": null,
+            "controllerName": null,
+            "name": "Plains",
+            "displayName": "Plains",
+            "displayFullName": "Plains",
+            "rules": [
+              "{T}: Add {W}."
+            ],
+            "power": "0",
+            "toughness": "0",
+            "loyalty": "",
+            "defense": "",
+            "startingLoyalty": "",
+            "startingDefense": "",
+            "cardTypes": [
+              "LAND"
+            ],
+            "subTypes": [
+              "PLAINS"
+            ],
+            "superTypes": [
+              "BASIC"
+            ],
+            "color": {
+              "white": false,
+              "blue": false,
+              "black": false,
+              "red": false,
+              "green": false
+            },
+            "frameColor": {
+              "white": true,
+              "blue": false,
+              "black": false,
+              "red": false,
+              "green": false
+            },
+            "frameStyle": "M15_NORMAL",
+            "manaCostLeftStr": [],
+            "manaCostRightStr": [],
+            "manaValue": 0,
+            "rarity": "LAND",
+            "mageObjectType": "CARD",
+            "isAbility": false,
+            "abilityType": null,
+            "isToken": false,
+            "ability": null,
+            "imageFileName": "",
+            "imageNumber": 0,
+            "extraDeckCard": false,
+            "transformable": false,
+            "secondCardFace": null,
+            "transformed": false,
+            "flipCard": false,
+            "faceDown": false,
+            "alternateName": null,
+            "isSplitCard": false,
+            "leftSplitName": null,
+            "leftSplitCostsStr": null,
+            "leftSplitRules": null,
+            "leftSplitTypeLine": null,
+            "rightSplitName": null,
+            "rightSplitCostsStr": null,
+            "rightSplitRules": null,
+            "rightSplitTypeLine": null,
+            "rightSplitSpellType": null,
+            "isDoubleFacedCard": false,
+            "artRect": "NORMAL",
+            "targets": null,
+            "pairedCard": null,
+            "bandedCards": null,
+            "paid": false,
+            "counters": null,
+            "controlledByOwner": true,
+            "zone": "LIBRARY",
+            "rotate": false,
+            "hideInfo": false,
+            "canAttack": false,
+            "canBlock": false,
+            "inViewerOnly": false,
+            "cardIcons": [],
+            "originalPower": {
+              "baseValue": 0,
+              "modifiedBaseValue": 0,
+              "boostedValue": 0,
+              "cardValue": "0"
+            },
+            "originalToughness": {
+              "baseValue": 0,
+              "modifiedBaseValue": 0,
+              "boostedValue": 0,
+              "cardValue": "0"
+            },
+            "originalColorIdentity": "{W}",
+            "originalIsCopy": false,
+            "id": "19bffd5d-dc55-4522-b77d-342f25ba561f",
+            "expansionSetCode": "KTK",
+            "cardNumber": "250",
+            "usesVariousArt": true,
+            "gameObject": true,
+            "isChoosable": false,
+            "isSelected": false,
+            "playableStats": {
+              "basicManaAbilities": [],
+              "basicPlayAbilities": [],
+              "basicCastAbilities": [],
+              "other": []
+            }
+          }
+        },
+        "cardsView2": null,
+        "message": "Select cards to PUT on the BOTTOM of your library (Scry) (selected 0 of 2)",
+        "flag": false,
+        "targets": null,
+        "min": 0,
+        "max": 0,
+        "options": {
+          "UI.right.btn.text": "Done",
+          "chosenTargets": [],
+          "possibleTargets": [
+            "1dca05c3-c4a3-4e09-978f-a8db809c5ad6",
+            "19bffd5d-dc55-4522-b77d-342f25ba561f"
+          ],
+          "targetZone": "LIBRARY",
+          "secondMessage": "<font color='#87CEFA' object_id='dd57f98a-91c1-4cbb-89b0-9930df89297c'>Preordain</font> [dd5]",
+          "queryType": "PICK_TARGET"
+        },
+        "choice": null,
+        "messages": null
+      }
+    },
+    {
+      "method": "GAME_TARGET",
+      "objectId": "129f9233-103d-483b-92f5-42d9cc4e0caf",
+      "data": {
+        "cardsView1": {
+          "1dca05c3-c4a3-4e09-978f-a8db809c5ad6": {
+            "parentId": null,
+            "controllerId": null,
+            "controllerName": null,
+            "name": "Mountain",
+            "displayName": "Mountain",
+            "displayFullName": "Mountain",
+            "rules": [
+              "{T}: Add {R}."
+            ],
+            "power": "0",
+            "toughness": "0",
+            "loyalty": "",
+            "defense": "",
+            "startingLoyalty": "",
+            "startingDefense": "",
+            "cardTypes": [
+              "LAND"
+            ],
+            "subTypes": [
+              "MOUNTAIN"
+            ],
+            "superTypes": [
+              "BASIC"
+            ],
+            "color": {
+              "white": false,
+              "blue": false,
+              "black": false,
+              "red": false,
+              "green": false
+            },
+            "frameColor": {
+              "white": false,
+              "blue": false,
+              "black": false,
+              "red": true,
+              "green": false
+            },
+            "frameStyle": "M15_NORMAL",
+            "manaCostLeftStr": [],
+            "manaCostRightStr": [],
+            "manaValue": 0,
+            "rarity": "LAND",
+            "mageObjectType": "CARD",
+            "isAbility": false,
+            "abilityType": null,
+            "isToken": false,
+            "ability": null,
+            "imageFileName": "",
+            "imageNumber": 0,
+            "extraDeckCard": false,
+            "transformable": false,
+            "secondCardFace": null,
+            "transformed": false,
+            "flipCard": false,
+            "faceDown": false,
+            "alternateName": null,
+            "isSplitCard": false,
+            "leftSplitName": null,
+            "leftSplitCostsStr": null,
+            "leftSplitRules": null,
+            "leftSplitTypeLine": null,
+            "rightSplitName": null,
+            "rightSplitCostsStr": null,
+            "rightSplitRules": null,
+            "rightSplitTypeLine": null,
+            "rightSplitSpellType": null,
+            "isDoubleFacedCard": false,
+            "artRect": "NORMAL",
+            "targets": null,
+            "pairedCard": null,
+            "bandedCards": null,
+            "paid": false,
+            "counters": null,
+            "controlledByOwner": true,
+            "zone": "LIBRARY",
+            "rotate": false,
+            "hideInfo": false,
+            "canAttack": false,
+            "canBlock": false,
+            "inViewerOnly": false,
+            "cardIcons": [],
+            "originalPower": {
+              "baseValue": 0,
+              "modifiedBaseValue": 0,
+              "boostedValue": 0,
+              "cardValue": "0"
+            },
+            "originalToughness": {
+              "baseValue": 0,
+              "modifiedBaseValue": 0,
+              "boostedValue": 0,
+              "cardValue": "0"
+            },
+            "originalColorIdentity": "{R}",
+            "originalIsCopy": false,
+            "id": "1dca05c3-c4a3-4e09-978f-a8db809c5ad6",
+            "expansionSetCode": "KTK",
+            "cardNumber": "262",
+            "usesVariousArt": true,
+            "gameObject": true,
+            "isChoosable": false,
+            "isSelected": false,
+            "playableStats": {
+              "basicManaAbilities": [],
+              "basicPlayAbilities": [],
+              "basicCastAbilities": [],
+              "other": []
+            }
+          },
+          "19bffd5d-dc55-4522-b77d-342f25ba561f": {
+            "parentId": null,
+            "controllerId": null,
+            "controllerName": null,
+            "name": "Plains",
+            "displayName": "Plains",
+            "displayFullName": "Plains",
+            "rules": [
+              "{T}: Add {W}."
+            ],
+            "power": "0",
+            "toughness": "0",
+            "loyalty": "",
+            "defense": "",
+            "startingLoyalty": "",
+            "startingDefense": "",
+            "cardTypes": [
+              "LAND"
+            ],
+            "subTypes": [
+              "PLAINS"
+            ],
+            "superTypes": [
+              "BASIC"
+            ],
+            "color": {
+              "white": false,
+              "blue": false,
+              "black": false,
+              "red": false,
+              "green": false
+            },
+            "frameColor": {
+              "white": true,
+              "blue": false,
+              "black": false,
+              "red": false,
+              "green": false
+            },
+            "frameStyle": "M15_NORMAL",
+            "manaCostLeftStr": [],
+            "manaCostRightStr": [],
+            "manaValue": 0,
+            "rarity": "LAND",
+            "mageObjectType": "CARD",
+            "isAbility": false,
+            "abilityType": null,
+            "isToken": false,
+            "ability": null,
+            "imageFileName": "",
+            "imageNumber": 0,
+            "extraDeckCard": false,
+            "transformable": false,
+            "secondCardFace": null,
+            "transformed": false,
+            "flipCard": false,
+            "faceDown": false,
+            "alternateName": null,
+            "isSplitCard": false,
+            "leftSplitName": null,
+            "leftSplitCostsStr": null,
+            "leftSplitRules": null,
+            "leftSplitTypeLine": null,
+            "rightSplitName": null,
+            "rightSplitCostsStr": null,
+            "rightSplitRules": null,
+            "rightSplitTypeLine": null,
+            "rightSplitSpellType": null,
+            "isDoubleFacedCard": false,
+            "artRect": "NORMAL",
+            "targets": null,
+            "pairedCard": null,
+            "bandedCards": null,
+            "paid": false,
+            "counters": null,
+            "controlledByOwner": true,
+            "zone": "LIBRARY",
+            "rotate": false,
+            "hideInfo": false,
+            "canAttack": false,
+            "canBlock": false,
+            "inViewerOnly": false,
+            "cardIcons": [],
+            "originalPower": {
+              "baseValue": 0,
+              "modifiedBaseValue": 0,
+              "boostedValue": 0,
+              "cardValue": "0"
+            },
+            "originalToughness": {
+              "baseValue": 0,
+              "modifiedBaseValue": 0,
+              "boostedValue": 0,
+              "cardValue": "0"
+            },
+            "originalColorIdentity": "{W}",
+            "originalIsCopy": false,
+            "id": "19bffd5d-dc55-4522-b77d-342f25ba561f",
+            "expansionSetCode": "KTK",
+            "cardNumber": "250",
+            "usesVariousArt": true,
+            "gameObject": true,
+            "isChoosable": false,
+            "isSelected": false,
+            "playableStats": {
+              "basicManaAbilities": [],
+              "basicPlayAbilities": [],
+              "basicCastAbilities": [],
+              "other": []
+            }
+          }
+        },
+        "cardsView2": null,
+        "message": "Select cards to PUT on the BOTTOM of your library (Scry) (selected 1 of 2)",
+        "flag": false,
+        "targets": null,
+        "min": 0,
+        "max": 0,
+        "options": {
+          "UI.right.btn.text": "Done",
+          "chosenTargets": [
+            "1dca05c3-c4a3-4e09-978f-a8db809c5ad6"
+          ],
+          "possibleTargets": [
+            "19bffd5d-dc55-4522-b77d-342f25ba561f"
+          ],
+          "targetZone": "LIBRARY",
+          "secondMessage": "<font color='#87CEFA' object_id='dd57f98a-91c1-4cbb-89b0-9930df89297c'>Preordain</font> [dd5]",
+          "queryType": "PICK_TARGET"
+        },
+        "choice": null,
+        "messages": null
+      }
+    },
+    {
+      "method": "GAME_TARGET",
+      "objectId": "129f9233-103d-483b-92f5-42d9cc4e0caf",
+      "data": {
+        "cardsView1": {
+          "1dca05c3-c4a3-4e09-978f-a8db809c5ad6": {
+            "parentId": null,
+            "controllerId": null,
+            "controllerName": null,
+            "name": "Mountain",
+            "displayName": "Mountain",
+            "displayFullName": "Mountain",
+            "rules": [
+              "{T}: Add {R}."
+            ],
+            "power": "0",
+            "toughness": "0",
+            "loyalty": "",
+            "defense": "",
+            "startingLoyalty": "",
+            "startingDefense": "",
+            "cardTypes": [
+              "LAND"
+            ],
+            "subTypes": [
+              "MOUNTAIN"
+            ],
+            "superTypes": [
+              "BASIC"
+            ],
+            "color": {
+              "white": false,
+              "blue": false,
+              "black": false,
+              "red": false,
+              "green": false
+            },
+            "frameColor": {
+              "white": false,
+              "blue": false,
+              "black": false,
+              "red": true,
+              "green": false
+            },
+            "frameStyle": "M15_NORMAL",
+            "manaCostLeftStr": [],
+            "manaCostRightStr": [],
+            "manaValue": 0,
+            "rarity": "LAND",
+            "mageObjectType": "CARD",
+            "isAbility": false,
+            "abilityType": null,
+            "isToken": false,
+            "ability": null,
+            "imageFileName": "",
+            "imageNumber": 0,
+            "extraDeckCard": false,
+            "transformable": false,
+            "secondCardFace": null,
+            "transformed": false,
+            "flipCard": false,
+            "faceDown": false,
+            "alternateName": null,
+            "isSplitCard": false,
+            "leftSplitName": null,
+            "leftSplitCostsStr": null,
+            "leftSplitRules": null,
+            "leftSplitTypeLine": null,
+            "rightSplitName": null,
+            "rightSplitCostsStr": null,
+            "rightSplitRules": null,
+            "rightSplitTypeLine": null,
+            "rightSplitSpellType": null,
+            "isDoubleFacedCard": false,
+            "artRect": "NORMAL",
+            "targets": null,
+            "pairedCard": null,
+            "bandedCards": null,
+            "paid": false,
+            "counters": null,
+            "controlledByOwner": true,
+            "zone": "LIBRARY",
+            "rotate": false,
+            "hideInfo": false,
+            "canAttack": false,
+            "canBlock": false,
+            "inViewerOnly": false,
+            "cardIcons": [],
+            "originalPower": {
+              "baseValue": 0,
+              "modifiedBaseValue": 0,
+              "boostedValue": 0,
+              "cardValue": "0"
+            },
+            "originalToughness": {
+              "baseValue": 0,
+              "modifiedBaseValue": 0,
+              "boostedValue": 0,
+              "cardValue": "0"
+            },
+            "originalColorIdentity": "{R}",
+            "originalIsCopy": false,
+            "id": "1dca05c3-c4a3-4e09-978f-a8db809c5ad6",
+            "expansionSetCode": "KTK",
+            "cardNumber": "262",
+            "usesVariousArt": true,
+            "gameObject": true,
+            "isChoosable": false,
+            "isSelected": false,
+            "playableStats": {
+              "basicManaAbilities": [],
+              "basicPlayAbilities": [],
+              "basicCastAbilities": [],
+              "other": []
+            }
+          },
+          "19bffd5d-dc55-4522-b77d-342f25ba561f": {
+            "parentId": null,
+            "controllerId": null,
+            "controllerName": null,
+            "name": "Plains",
+            "displayName": "Plains",
+            "displayFullName": "Plains",
+            "rules": [
+              "{T}: Add {W}."
+            ],
+            "power": "0",
+            "toughness": "0",
+            "loyalty": "",
+            "defense": "",
+            "startingLoyalty": "",
+            "startingDefense": "",
+            "cardTypes": [
+              "LAND"
+            ],
+            "subTypes": [
+              "PLAINS"
+            ],
+            "superTypes": [
+              "BASIC"
+            ],
+            "color": {
+              "white": false,
+              "blue": false,
+              "black": false,
+              "red": false,
+              "green": false
+            },
+            "frameColor": {
+              "white": true,
+              "blue": false,
+              "black": false,
+              "red": false,
+              "green": false
+            },
+            "frameStyle": "M15_NORMAL",
+            "manaCostLeftStr": [],
+            "manaCostRightStr": [],
+            "manaValue": 0,
+            "rarity": "LAND",
+            "mageObjectType": "CARD",
+            "isAbility": false,
+            "abilityType": null,
+            "isToken": false,
+            "ability": null,
+            "imageFileName": "",
+            "imageNumber": 0,
+            "extraDeckCard": false,
+            "transformable": false,
+            "secondCardFace": null,
+            "transformed": false,
+            "flipCard": false,
+            "faceDown": false,
+            "alternateName": null,
+            "isSplitCard": false,
+            "leftSplitName": null,
+            "leftSplitCostsStr": null,
+            "leftSplitRules": null,
+            "leftSplitTypeLine": null,
+            "rightSplitName": null,
+            "rightSplitCostsStr": null,
+            "rightSplitRules": null,
+            "rightSplitTypeLine": null,
+            "rightSplitSpellType": null,
+            "isDoubleFacedCard": false,
+            "artRect": "NORMAL",
+            "targets": null,
+            "pairedCard": null,
+            "bandedCards": null,
+            "paid": false,
+            "counters": null,
+            "controlledByOwner": true,
+            "zone": "LIBRARY",
+            "rotate": false,
+            "hideInfo": false,
+            "canAttack": false,
+            "canBlock": false,
+            "inViewerOnly": false,
+            "cardIcons": [],
+            "originalPower": {
+              "baseValue": 0,
+              "modifiedBaseValue": 0,
+              "boostedValue": 0,
+              "cardValue": "0"
+            },
+            "originalToughness": {
+              "baseValue": 0,
+              "modifiedBaseValue": 0,
+              "boostedValue": 0,
+              "cardValue": "0"
+            },
+            "originalColorIdentity": "{W}",
+            "originalIsCopy": false,
+            "id": "19bffd5d-dc55-4522-b77d-342f25ba561f",
+            "expansionSetCode": "KTK",
+            "cardNumber": "250",
+            "usesVariousArt": true,
+            "gameObject": true,
+            "isChoosable": false,
+            "isSelected": false,
+            "playableStats": {
+              "basicManaAbilities": [],
+              "basicPlayAbilities": [],
+              "basicCastAbilities": [],
+              "other": []
+            }
+          }
+        },
+        "cardsView2": null,
+        "message": "Select a card ORDER to put on the BOTTOM of your library (last one chosen will be bottommost)",
+        "flag": true,
+        "targets": null,
+        "min": 0,
+        "max": 0,
+        "options": {
+          "chosenTargets": [],
+          "possibleTargets": [
+            "1dca05c3-c4a3-4e09-978f-a8db809c5ad6",
+            "19bffd5d-dc55-4522-b77d-342f25ba561f"
+          ],
+          "targetZone": "ALL",
+          "queryType": "PICK_TARGET"
+        },
+        "choice": null,
+        "messages": null
+      }
+    }
+  ]
+}
