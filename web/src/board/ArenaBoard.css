@@ -599,8 +599,11 @@
 }
 
 /* BRD-38: the seat drawn at full size has the room, so its hand is drawn whole and nothing clips
-   it: a watched board shows the cards it holds the way its owner would see them. */
-.spotlight-main .arena-own-row > .arena-opp-hand .hand-back-stack.is-fan {
+   it: a watched board shows the cards it holds the way its owner would see them. That is the main
+   area with the side panel and the board at the bottom without it (BRD-32), which is where a
+   spectator's fan came out cut in half. */
+.spotlight-main .arena-own-row > .arena-opp-hand .hand-back-stack.is-fan,
+.arena-board > .board-zone.arena-own .arena-own-row > .arena-opp-hand .hand-back-stack.is-fan {
   height: calc(var(--card-w, 60px) * 1.4);
   overflow: visible;
 }

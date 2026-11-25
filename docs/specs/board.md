@@ -583,7 +583,9 @@ creatures keep their own size.
 On the own board of the Arena layout (BRD-32) the commander and the companion in the command zone
 are drawn with the hand, which is where their owner looks for something to cast: the last cards of
 the fan, apart from it by a gap of 0.4 of a card and with a gold edge; under the hand column,
-behind a line of its own; at the end of the hand row, past a gap. They follow the hand in every
+behind a line of its own; at the end of the hand row, past a gap. In the fan it is read the way the
+piles beside it are (BRD-32): the top half of a card, on a card a third wider than the hand's, so
+its art and its name carry at a glance without the fan giving up the room a whole card would take. They follow the hand in every
 hand layout, because the question they answer is the same in all of them. A seat drawn
 at full size that is not mine, the main area of the main-board mode (BRD-6), carries its hand the
 same way: the backs of the cards it holds, with its uncast commander at the end of them, instead
@@ -602,7 +604,7 @@ too: the hand has no room to spare at that width.
   not read against the gold edge, and a separate "+N" still had to be added up by eye. It was the
   fanned hand of the v1 chrome only until the user asked for it everywhere (2026-11-21): with the
   v2 chrome the commander sat in the left column and read as one more thing on the board.
-- Guard: `src/board/HandBar.test.tsx` · `src/board/commanders.test.ts` · `src/board/BoardZone.arenaOwn.test.tsx` · `src/board/HandRail.test.tsx` · `src/board/HandRow.test.tsx` · `src/board/SpotlightBoard.test.tsx`
+- Guard: `src/board/HandBar.test.tsx` · `src/board/HandBar.css.test.ts` · `src/board/commanders.test.ts` · `src/board/BoardZone.arenaOwn.test.tsx` · `src/board/HandRail.test.tsx` · `src/board/HandRow.test.tsx` · `src/board/SpotlightBoard.test.tsx`
 
 ### BRD-35 · A band in several lines holds the same count on each line
 A band that wraps into several lines puts the same number of items on each line, or fewer on the
@@ -658,14 +660,17 @@ Every pill whose click does something carries the board icon, dim at rest and li
 pointed at, focused by the keyboard or already focused, where it turns into the icon that brings
 all the boards back; its tooltip names the action after the player and the life. Pointing at a pill
 lights its opponent's column, and pointing at that column lights the pill, so the strip reads as
-the control of the boards above it. The pill is the only way in: those boards draw no focus button
-of their own (a spectator, whose pills do nothing, keeps it).
+the control of the boards above it. The pill is the only way in, for whoever is reading those boards:
+a spectator gets the same pills and the same lit pair, and no board draws a focus button of its own.
 
 - Why: without the side panel the strip was the opponent switcher of the Standard layout (with
   life and paging arrows) and with it the turn order ring, so the same layout read two ways; the
   user asked for one, without life (2026-11-13). A button on every column said what a click does
   but took the width the status row needed, while the pill said nothing at all, so the icon and the
-  lit pair moved that offer to the strip, where there is room for it (2026-11-13).
+  lit pair moved that offer to the strip, where there is room for it (2026-11-13). A spectator kept the button
+  because their pills did nothing, which left one seat focused from two different controls and the
+  button back on the boards for anyone watching (user report, 25-nov-2026): the pills answer for
+  them too now, since focusing a board is reading it, not playing it.
 
 The ring never clips a name. When the band gives the row less room than it needs it gives up, in
 order, its spacing and the size of its type (nothing is lost), and then the names of the seats that
@@ -691,8 +696,10 @@ from the status row's height, which grows with the chip's counters and would lea
 much larger than another's.
 With the side panel (BRD-6) the fan sits upright in the bottom row of that board (BRD-39). On a
 copy in the panel it is tucked like the own resting hand (HND-1), seven tenths of the card, so it
-covers nothing; in the main area it is drawn whole and nothing clips it, because that board has
-the room and its cards are the ones the watcher came to read. A known card still shows face up and the pile
+covers nothing; on the board drawn at full size it is whole and nothing clips it, because that board
+has the room and its cards are the ones the watcher came to read. That board is the main area with
+the panel and the one at the bottom without it (BRD-32): a spectator watching the columns view read
+its fan cut in half. A known card still shows face up and the pile
 still opens the hand viewer.
 
 - Why: a whole card back took a column's height for a number, and a stacked pile read less like a
