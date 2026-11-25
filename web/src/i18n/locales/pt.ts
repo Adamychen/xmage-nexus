@@ -1623,6 +1623,7 @@ export const pt: TranslationSchema = {
     top_card_peek_anon: 'Carta do topo do seu grimório (só você a vê)',
     revealed_window_plain: 'Reveladas',
     companion_window_plain: 'Companheiro',
+    reveal_toast_expand: 'Ver',
     spectator_game_changed: 'O jogo mudou: a mesa começou uma nova partida.',
     follow_game: 'Seguir partida',
   },
@@ -2179,6 +2180,7 @@ export const pt: TranslationSchema = {
     card_not_found: 'O servidor rejeita o deck: contém cards ausentes do banco de dados dele',
   },
   board: {
+    pile_fan_toggle: 'Abrir as {count} {name}',
     zone_hand: 'Mão',
     zone_battlefield: 'Campo de Batalha',
     zone_library: 'Grimório',

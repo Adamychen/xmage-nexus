@@ -1623,6 +1623,7 @@ export const de: TranslationSchema = {
     top_card_peek_anon: 'Oberste Karte deiner Bibliothek (nur du siehst sie)',
     revealed_window_plain: 'Aufgedeckt',
     companion_window_plain: 'Gefährte',
+    reveal_toast_expand: 'Ansehen',
     spectator_game_changed: 'Das Spiel hat sich geändert: Der Tisch hat ein neues Spiel begonnen.',
     follow_game: 'Spiel folgen',
   },
@@ -2179,6 +2180,7 @@ export const de: TranslationSchema = {
     card_not_found: 'Der Server lehnt das Deck ab: Es enthält Karten, die in seiner Datenbank fehlen',
   },
   board: {
+    pile_fan_toggle: 'Die {count} {name} auffächern',
     zone_hand: 'Hand',
     zone_battlefield: 'Schlachtfeld',
     zone_library: 'Bibliothek',

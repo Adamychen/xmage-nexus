@@ -170,4 +170,58 @@ describe('libraryPlan', () => {
     expect(second?.answer).toEqual({ kind: 'uuid', value: 'b' })
     expect(second?.plan.settled).toBe(true)
   })
+
+  describe('PRM-6: a multi-card target pick (Kodama\'s Reach)', () => {
+    const grid = (chosenTargets: string[], extra: Partial<FeedbackPrompt> = {}): FeedbackPrompt => ({
+      method: 'GAME_TARGET',
+      gameId: GAME,
+      title: '',
+      message: `Select basic land cards (selected ${chosenTargets.length} of 2)`,
+      mode: 'uuid',
+      options: offered(CARDS.filter((id) => !chosenTargets.includes(id))),
+      min: 0,
+      max: 0,
+      cards: shown(CARDS),
+      chosenTargets,
+      progress: { selected: chosenTargets.length, max: 2 },
+      ...extra,
+    })
+
+    it('PRM-6: answers each chosen card on its own re-ask and settles on the card that fills the pick', () => {
+      let p = plan({ mode: 'pick', top: [], away: ['c', 'a'] })
+      const first = nextPlanAnswer(p, grid([]))!
+      expect(first.answer).toEqual({ kind: 'uuid', value: 'c' })
+      expect(first.plan.settled).toBe(false)
+      p = first.plan
+      const second = nextPlanAnswer(p, grid(['c']))!
+      expect(second.answer).toEqual({ kind: 'uuid', value: 'a' })
+      expect(second.plan.settled).toBe(true)
+    })
+
+    it('PRM-6: fewer cards than the most allowed end with Done', () => {
+      const p = plan({ mode: 'pick', top: [], away: ['b'] })
+      const first = nextPlanAnswer(p, grid([]))!
+      expect(first.answer).toEqual({ kind: 'uuid', value: 'b' })
+      expect(first.plan.settled).toBe(false)
+      const done = nextPlanAnswer(first.plan, grid(['b']))!
+      expect(done.answer).toEqual({ kind: 'boolean', value: false })
+      expect(done.plan.settled).toBe(false)
+      const again = nextPlanAnswer(done.plan, grid(['b']))!
+      expect(again.answer, 'a library search asks for Done a second time').toEqual({ kind: 'boolean', value: false })
+      expect(again.plan.settled).toBe(true)
+      expect(nextPlanAnswer(again.plan, grid(['b'])), 'never a third time').toBeNull()
+    })
+
+    it('PRM-6: the next prompt of the spell (another pick over other cards) is not the plan', () => {
+      const p = plan({ mode: 'pick', top: [], away: ['a', 'b'] })
+      const after = grid([], { message: 'Select a card to put on the battlefield tapped', cards: shown(['a', 'b']), options: offered(['a', 'b']), progress: undefined })
+      expect(nextPlanAnswer(p, after)).toBeNull()
+    })
+
+    it('PRM-6: a library chain prompt or a card the prompt does not offer is not the plan', () => {
+      const p = plan({ mode: 'pick', top: [], away: ['a', 'b'] })
+      expect(nextPlanAnswer(p, grid([], { libraryStep: 'scry-pick' }))).toBeNull()
+      expect(nextPlanAnswer(p, grid([], { options: offered(['b', 'c']) }))).toBeNull()
+    })
+  })
 })

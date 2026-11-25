@@ -1623,6 +1623,7 @@ export const es: TranslationSchema = {
     top_card_peek_anon: 'Carta superior de tu biblioteca (solo tú la ves)',
     revealed_window_plain: 'Reveladas',
     companion_window_plain: 'Compañero',
+    reveal_toast_expand: 'Ver',
     spectator_game_changed: 'La partida cambió: la mesa ha empezado una nueva partida.',
     follow_game: 'Seguir partida',
   },
@@ -2179,6 +2180,7 @@ export const es: TranslationSchema = {
     card_not_found: 'El servidor rechaza el mazo: contiene cartas que no existen en su base de datos',
   },
   board: {
+    pile_fan_toggle: 'Desplegar las {count} {name}',
     zone_hand: 'Mano',
     zone_battlefield: 'Campo de Batalla',
     zone_library: 'Biblioteca',

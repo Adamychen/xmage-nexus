@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, type ReactNode } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { spreadLayout } from './stackSpread'
 import { PILE_FAN_MAX } from './stackGroups'
 import { BOARD_RELAYOUT_EVENT } from './layout/relayout'
+import { useTranslation } from '../i18n'
 
 const SPREAD_GAP = 6
 const BAND_EDGE = 4
@@ -104,6 +105,8 @@ interface StackPileProps {
   cardIds: string[]
   landName?: string
   fanDelayMs?: number
+  /** BRD-20: the pile fans out only from its count badge (land piles), never on hover. */
+  fanOnBadge?: boolean
   onFanChange?: (fanned: boolean) => void
   children: ReactNode
 }
@@ -117,8 +120,10 @@ interface StackPileProps {
  * the fan reaches past the pile, so a mana rock beside a land pile is never
  * covered.
  */
-export default function StackPile({ className, name, count, cardIds, landName, fanDelayMs = 0, onFanChange, children }: StackPileProps) {
+export default function StackPile({ className, name, count, cardIds, landName, fanDelayMs = 0, fanOnBadge = false, onFanChange, children }: StackPileProps) {
+  const { t } = useTranslation()
   const ref = useRef<HTMLDivElement>(null)
+  const [open, setOpen] = useState(false)
   const fanTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const cardKey = cardIds.join('|')
 
@@ -142,6 +147,7 @@ export default function StackPile({ className, name, count, cardIds, landName, f
     (pile: HTMLElement) => {
       cancelFan()
       stopWatching()
+      setOpen(false)
       if (leave(pile)) onFanChangeRef.current?.(false)
     },
     [cancelFan, stopWatching],
@@ -154,6 +160,7 @@ export default function StackPile({ className, name, count, cardIds, landName, f
       // copies the game asks the player to pick leave the pile anyway (groupStackables).
       if (count > PILE_FAN_MAX) return
       spread(pile)
+      setOpen(true)
       announceSettledRelayout()
       onFanChangeRef.current?.(true)
       stopWatching()
@@ -196,6 +203,7 @@ export default function StackPile({ className, name, count, cardIds, landName, f
       data-land-name={landName}
       title={`${name} (×${count})`}
       onPointerEnter={(e) => {
+        if (fanOnBadge) return
         const pile = e.currentTarget
         cancelFan()
         if (fanDelayMs > 0 && e.pointerType === 'mouse') {
@@ -208,7 +216,26 @@ export default function StackPile({ className, name, count, cardIds, landName, f
       onMouseLeave={(e) => close(e.currentTarget)}
     >
       {children}
-      <span className="stack-group-badge land-group-badge">×{count}</span>
+      {fanOnBadge && count <= PILE_FAN_MAX ? (
+        <button
+          type="button"
+          className="stack-group-badge land-group-badge is-toggle"
+          aria-label={t('board', 'pile_fan_toggle', { count, name })}
+          aria-expanded={open}
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={(e) => {
+            e.stopPropagation()
+            const pile = ref.current
+            if (!pile) return
+            if (pile.dataset.spread !== undefined) close(pile)
+            else fan(pile)
+          }}
+        >
+          ×{count}
+        </button>
+      ) : (
+        <span className="stack-group-badge land-group-badge">×{count}</span>
+      )}
     </div>
   )
 }

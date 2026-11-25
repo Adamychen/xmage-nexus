@@ -448,6 +448,23 @@
   opacity: 0;
 }
 
+/* BRD-20: a land pile opens from its count, so the count is a button that stays up while open. */
+.stack-group-badge.is-toggle {
+  pointer-events: auto;
+  cursor: pointer;
+  z-index: 30;
+}
+
+.stack-group-badge.is-toggle:hover,
+.stack-group-badge.is-toggle:focus-visible {
+  border-color: var(--gold-300);
+  outline: none;
+}
+
+.stack-group[data-spread] .stack-group-badge.is-toggle {
+  opacity: 1;
+}
+
 /* ── Compact Pod Layout (Commander 4-Player 2x2 grid & Arena) ─────── */
 .board-zone.compact-pod,
 .opponent-zone.compact-pod,

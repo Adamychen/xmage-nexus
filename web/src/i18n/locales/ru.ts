@@ -1623,6 +1623,7 @@ export const ru: TranslationSchema = {
     top_card_peek_anon: 'Верхняя карта вашей библиотеки (видите только вы)',
     revealed_window_plain: 'Открыто',
     companion_window_plain: 'Компаньон',
+    reveal_toast_expand: 'Показать',
     spectator_game_changed: 'Игра изменилась: за столом началась новая игра.',
     follow_game: 'Следить за игрой',
   },
@@ -2179,6 +2180,7 @@ export const ru: TranslationSchema = {
     card_not_found: 'Сервер отклоняет колоду: она содержит карты, отсутствующие в его базе данных',
   },
   board: {
+    pile_fan_toggle: 'Развернуть {name} ({count})',
     zone_hand: 'Рука',
     zone_battlefield: 'Поле битвы',
     zone_library: 'Библиотека',

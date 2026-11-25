@@ -11,7 +11,7 @@ import { withFakeServer } from './support/fake-backend'
 import { quickStartGame } from './support/start-game'
 import { parseSent, sentOf } from './support/frames'
 
-test('info windows: lookedAt y companion se abren solos con sus cartas', { tag: '@game' }, async ({ page }) => {
+test('BRD-66: info windows: the look is a corner notice and the companion opens its viewer', { tag: '@game' }, async ({ page }) => {
   await withFakeServer(() => infoWindowsScenario(), async () => {
     const { pageErrors } = await quickStartGame(page, {
       prefix: 'infow',
@@ -19,8 +19,17 @@ test('info windows: lookedAt y companion se abren solos con sus cartas', { tag: 
 
     const overlays = page.locator('.pile-overlay')
     await expect(overlays.first()).toBeVisible({ timeout: 15_000 })
-    await expect(page.locator('.pile-overlay', { hasText: 'Scry Card' })).toBeVisible()
     await expect(page.locator('.pile-overlay', { hasText: 'Lurrus of the Dream-Den' })).toBeVisible()
+
+    // BRD-66: the look asks nothing of the player, so it is a corner notice, not a viewer.
+    const notice = page.getByTestId('reveal-toast')
+    await expect(notice).toBeVisible()
+    await expect(notice.getByRole('button', { name: 'Scry Card' })).toBeVisible()
+    await expect(page.locator('.pile-overlay', { hasText: 'Scry Card' })).toHaveCount(0)
+    const box = await notice.boundingBox()
+    const viewport = page.viewportSize()!
+    expect(box!.x + box!.width, 'the notice sits in the left part of the table').toBeLessThan(viewport.width / 2)
+    expect(box!.y, 'the notice sits in the top part of the table').toBeLessThan(viewport.height / 2)
 
     // G12-4: el permanente faseado no se pinta; el resto sí.
     const myZone = page.locator('.board-zone.player-zone')

@@ -57,6 +57,7 @@ export const TABLE = {
   triggerOrder: 'trigger-order-test',
   autoAnswers: 'auto-answers-test',
   arenaSurveil: 'arena-surveil-test',
+  kodamasReach: 'kodamas-reach-test',
   manaPayment: 'mana-payment-test',
   deckIssues: 'deck-issues-test',
   playerMenu: 'player-menu-test',

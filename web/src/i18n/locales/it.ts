@@ -1623,6 +1623,7 @@ export const it: TranslationSchema = {
     top_card_peek_anon: 'Prima carta del tuo grimorio (la vedi solo tu)',
     revealed_window_plain: 'Rivelate',
     companion_window_plain: 'Compagno',
+    reveal_toast_expand: 'Vedi',
     spectator_game_changed: 'La partita è cambiata: il tavolo ha iniziato una nuova partita.',
     follow_game: 'Segui la partita',
   },
@@ -2179,6 +2180,7 @@ export const it: TranslationSchema = {
     card_not_found: 'Il server rifiuta il mazzo: contiene carte assenti dal suo database',
   },
   board: {
+    pile_fan_toggle: 'Apri i {count} {name}',
     zone_hand: 'Mano',
     zone_battlefield: 'Campo di Battaglia',
     zone_library: 'Grimorio',

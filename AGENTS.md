@@ -306,9 +306,10 @@ complement of each other; a local run with no `E2E_LANE` is the whole suite as a
 a second false breaks the test window).
 
 A viewer that latches open covers the board and silently breaks specs that are not about it:
-`infoWindowState` opens a `.pile-overlay` for a looked-at/revealed/companion group and keeps it
-until closed, so a spec that hovers or clicks the board beneath must call
-`dismissInfoWindows(page)` (`e2e/support/info-windows.ts`) first. The failure looks unrelated
+`infoWindowState` opens a `.pile-overlay` for a companion group, and for a looked-at/revealed group
+whose cards can be played or targeted, and keeps it until closed (any other look or reveal is a
+corner notice that leaves by itself, BRD-66), so a spec that hovers or clicks the board beneath must
+call `dismissInfoWindows(page)` (`e2e/support/info-windows.ts`) first. The failure looks unrelated
 (`locator.click` timing out "waiting for element to be visible, enabled and stable", or a 120 s
 timeout in a spec about badges) — read the failure screenshot before blaming flake. Shared
 fixtures are the other half: `mechanics`/`podGame` publish a `revealed` group that is load-bearing

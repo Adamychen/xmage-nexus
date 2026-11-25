@@ -3496,12 +3496,13 @@ export function buildGalleryEntries(): GalleryEntry[] {
       {
         id: 'prompt:card-grid-multi',
         label: 'Card selection (click to toggle orange glow, 15 cards)',
-        description: 'Interactive multi-select (up to 3 of 15 cards): click cards to toggle the orange selection glow and test horizontal scrolling.',
+        description: 'PRM-6: a pick of up to 3 of 15 cards: clicks mark cards locally and Confirm sends them, one per re-ask.',
         prompt: {
           method: 'GAME_TARGET',
           gameId,
           title: 'Gifts Ungiven',
-          message: 'Search your library for up to three cards with different names',
+          message: 'Search your library for up to three cards with different names (selected 0 of 3)',
+          progress: { selected: 0, max: 3 },
           mode: 'uuid',
           options: [
             ...LIBRARY_CARDS,

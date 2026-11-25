@@ -1623,6 +1623,7 @@ export const fr: TranslationSchema = {
     top_card_peek_anon: 'Carte du dessus de ta bibliothèque (toi seul la vois)',
     revealed_window_plain: 'Cartes révélées',
     companion_window_plain: 'Compagnon',
+    reveal_toast_expand: 'Voir',
     spectator_game_changed: 'La partie a changé : la table a commencé une nouvelle partie.',
     follow_game: 'Suivre la partie',
   },
@@ -2179,6 +2180,7 @@ export const fr: TranslationSchema = {
     card_not_found: 'Le serveur refuse le deck : il contient des cartes absentes de sa base de données',
   },
   board: {
+    pile_fan_toggle: 'Étaler les {count} {name}',
     zone_hand: 'Main',
     zone_battlefield: 'Champ de bataille',
     zone_library: 'Bibliothèque',

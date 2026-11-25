@@ -355,4 +355,53 @@ describe('StackPile', () => {
       expect(pile.dataset.spread).toBeDefined()
     })
   })
+
+  describe('BRD-20: a land pile opens only from its count', () => {
+    function renderLandPile(count = 3) {
+      const ids = Array.from({ length: count }, (_, i) => `l-${i}`)
+      const { container } = render(
+        <div className="permanents-band">
+          <StackPile className="stack-group land-group" name="Island" count={count} cardIds={ids} landName="Island" fanOnBadge>
+            {ids.map((id) => <div key={id} className="card-slot" />)}
+          </StackPile>
+        </div>,
+      )
+      return container.querySelector<HTMLElement>('.stack-group')!
+    }
+
+    it('BRD-20: passing the pointer over a land pile leaves it closed', () => {
+      const pile = renderLandPile()
+      pointerEnter(pile, 'mouse')
+      vi.advanceTimersByTime(2000)
+      expect(pile.dataset.spread).toBeUndefined()
+      pointerEnter(pile, 'touch')
+      expect(pile.dataset.spread).toBeUndefined()
+    })
+
+    it('BRD-20: the count opens the pile and closes it again', () => {
+      const pile = renderLandPile()
+      const badge = pile.querySelector<HTMLButtonElement>('button.stack-group-badge')!
+      expect(badge.getAttribute('aria-expanded')).toBe('false')
+      fireEvent.click(badge)
+      expect(pile.dataset.spread).toBeDefined()
+      expect(badge.getAttribute('aria-expanded')).toBe('true')
+      fireEvent.click(badge)
+      expect(pile.dataset.spread).toBeUndefined()
+      expect(badge.getAttribute('aria-expanded')).toBe('false')
+    })
+
+    it('BRD-20: an open land pile closes when the pointer leaves it', () => {
+      const pile = renderLandPile()
+      fireEvent.click(pile.querySelector('button.stack-group-badge')!)
+      expect(pile.dataset.spread).toBeDefined()
+      fireEvent.pointerLeave(pile)
+      expect(pile.dataset.spread).toBeUndefined()
+    })
+
+    it('BRD-20: a land pile too big to fan keeps a plain count', () => {
+      const pile = renderLandPile(PILE_FAN_MAX + 1)
+      expect(pile.querySelector('button.stack-group-badge')).toBeNull()
+      expect(pile.querySelector('.stack-group-badge')?.textContent).toBe(`×${PILE_FAN_MAX + 1}`)
+    })
+  })
 })

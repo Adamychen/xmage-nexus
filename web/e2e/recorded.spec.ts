@@ -191,14 +191,17 @@ test.describe('Recorded real frames (anti-drift smoke)', { tag: '@recorded' }, (
           await expect(rayOverlay.locator('.cross-zone-source')).toContainText(/compañero|companion/i)
         }
         if (entry.assert === 'hasLookedAt') {
-          // Mirar la mano del rival abre el visor temporal (G12-2).
-          await expect(page.locator('.pile-overlay')).toBeVisible()
+          // Mirar la mano del rival abre su aviso en la esquina (G12-2, BRD-66).
+          await expect(page.getByTestId('reveal-toast').first()).toBeVisible()
         }
         if (entry.assert === 'hasOpponentReveal') {
           // Issue #1: el revelado de una búsqueda del RIVAL (Trinket Mage)
-          // llega en `revealed` y el visor debe pintarlo con la carta revelada.
+          // llega en `revealed` y el aviso de la esquina la pinta (BRD-66); «Ver» abre el visor.
+          const revealNotice = page.getByTestId('reveal-toast').filter({ hasText: 'Trinket Mage' })
+          await expect(revealNotice).toBeVisible()
+          await expect(revealNotice.getByRole('button', { name: 'Aether Vial' })).toBeVisible()
+          await revealNotice.locator('.reveal-toast-expand').click()
           const revealWindow = page.locator('.pile-overlay', { hasText: 'Trinket Mage' })
-          await expect(revealWindow).toBeVisible()
           await expect(revealWindow.locator('.card-slot[data-card-name="Aether Vial"]')).toBeVisible()
         }
         if (entry.assert === 'hasMultikicker') {

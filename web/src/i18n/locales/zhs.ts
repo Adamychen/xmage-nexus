@@ -1623,6 +1623,7 @@ export const zhs: TranslationSchema = {
     top_card_peek_anon: '你牌库顶的牌（只有你能看到）',
     revealed_window_plain: '已展示',
     companion_window_plain: '伙伴',
+    reveal_toast_expand: '查看',
     spectator_game_changed: '对局已改变：该桌已开始新的对局。',
     follow_game: '跟随对局',
   },
@@ -2179,6 +2180,7 @@ export const zhs: TranslationSchema = {
     card_not_found: '服务器拒绝该套牌：包含其数据库中不存在的卡牌',
   },
   board: {
+    pile_fan_toggle: '展开 {count} 张 {name}',
     zone_hand: '手牌',
     zone_battlefield: '战场',
     zone_library: '牌库',

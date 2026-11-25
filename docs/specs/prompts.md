@@ -70,13 +70,24 @@ already chosen stays visible even when it is no longer selectable.
   non-artifact in an "artifact card" tutor), and picking one did nothing (`6fccc8e84a`).
 - Guard: `src/game/CardGrid.test.tsx`
 
-### PRM-6 · Target picks go one card per click
-For `GAME_TARGET`, each click sends one card and the server re-asks; picks already made come back
-as chosen. The grid never collects several targets behind a Confirm button.
+### PRM-6 · A pick of several cards is chosen on the grid and sent once, with Confirm
+A `GAME_TARGET` card grid whose message states a maximum above one ("Select basic land cards
+(selected 0 of 2)") collects the player's picks on the grid: a click marks or unmarks a card, no
+more than the maximum, the progress line counts the marked cards, and nothing goes to the server
+until Confirm. Confirm turns the picks into a plan that answers the engine's re-asks one card per
+prompt, the same runner as PRM-20: the next marked card the prompt does not list as chosen, and Done
+once every marked card is in when fewer than the maximum were marked. A library search asks for
+Done twice (`TargetCardInLibrary.choose` wraps the pick in a second loop), so the plan answers Done
+at most twice; a prompt over other cards, or one that does not offer the next card, is shown
+normally and ends the plan. A grid with no stated maximum above one still sends a card per click.
 
-- Why: the engine keeps only the latest answer that arrives while it is busy and re-asks after
-  every picked card, so a batched confirm lost every pick but the last (`df969dee61`).
-- Guard: `src/game/CardGrid.test.tsx`
+- Why: each click went to the server at once and the engine closes the pick when the last card
+  fits, so the second land of a Kodama's Reach was gone before the player could look at the pair,
+  and a player who wanted one land had to press Done twice (play report, 2026-11-25). A single
+  batched confirm is still wrong: the engine keeps only the latest answer that arrives while it is
+  busy (`df969dee61`), which is why the plan sends one card per re-ask. Checked live against the
+  local server: one land and two lands both resolve with no extra question.
+- Guard: `src/game/CardGrid.test.tsx` · `src/game/feedback/libraryPlan.test.ts` · `fixtures/recordedPrompts.test.ts` · `e2e/kodamas-reach.spec.ts`
 
 ### PRM-7 · A required prompt has no cancel
 A required prompt shows no cancel button, in a card grid or on the targeting bar; an optional one

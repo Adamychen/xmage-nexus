@@ -9,7 +9,7 @@ const ARENA = { gameUi: 'v2', boardLayout: 'arena', boardLayoutManual: true }
 const ZONE = '.player-zone:not(.mirrored)'
 
 test.describe('Land piles fan out beside the lands they sit on', () => {
-  test('BRD-23: a land pile at the band edge fans to the right and never covers the tapped lands before it @fullflow', async ({ page }) => {
+  test('BRD-20, BRD-23: a land pile at the band edge opens from its count, fans to the right and never covers the tapped lands before it @fullflow', async ({ page }) => {
     await withFakeServer(landFanScenario, async () => {
       const { pageErrors } = await quickStartGame(page, { prefix: 'lf' })
       const myZone = page.locator(ZONE)
@@ -37,7 +37,10 @@ test.describe('Land piles fan out beside the lands they sit on', () => {
 
       await page.mouse.move(2, 2)
       await page.waitForTimeout(300)
-      await forest.hover()
+      await forest.locator('.card-slot').last().hover()
+      await page.waitForTimeout(600)
+      await expect(forest, 'BRD-20: crossing a land pile leaves it closed').not.toHaveAttribute('data-spread')
+      await forest.getByRole('button', { name: /5/ }).click()
       await expect(forest).toHaveAttribute('data-spread', '', { timeout: 2_000 })
       await page.waitForTimeout(700)
 

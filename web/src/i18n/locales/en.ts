@@ -1621,6 +1621,7 @@ export const en = {
     top_card_peek_anon: 'Top card of your library (only you can see it)',
     revealed_window_plain: 'Revealed',
     companion_window_plain: 'Companion',
+    reveal_toast_expand: 'View',
     spectator_game_changed: 'The game changed: the table has started a new game.',
     follow_game: 'Follow game',
   },
@@ -2177,6 +2178,7 @@ export const en = {
     card_not_found: 'The server rejects the deck: it contains cards missing from its database',
   },
   board: {
+    pile_fan_toggle: 'Spread the {count} {name}',
     zone_hand: 'Hand',
     zone_battlefield: 'Battlefield',
     zone_library: 'Library',

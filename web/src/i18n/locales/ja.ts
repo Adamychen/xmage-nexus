@@ -1623,6 +1623,7 @@ export const ja: TranslationSchema = {
     top_card_peek_anon: 'あなたのライブラリーの一番上のカード（あなただけが見られます）',
     revealed_window_plain: '公開されたカード',
     companion_window_plain: '相棒',
+    reveal_toast_expand: '表示',
     spectator_game_changed: 'ゲームが変わりました：テーブルで新しいゲームが始まりました。',
     follow_game: 'ゲームを追跡',
   },
@@ -2179,6 +2180,7 @@ export const ja: TranslationSchema = {
     card_not_found: 'サーバーがデッキを拒否しました: データベースに存在しないカードが含まれています',
   },
   board: {
+    pile_fan_toggle: '{name}（{count}枚）を広げる',
     zone_hand: '手札',
     zone_battlefield: '戦場',
     zone_library: 'ライブラリー',

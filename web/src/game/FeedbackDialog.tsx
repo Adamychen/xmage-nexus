@@ -29,7 +29,11 @@ export default function FeedbackDialog() {
     return (
       <div className="chrome-surface">
         <span data-library-plan={libraryPlan.mode} hidden aria-hidden="true" />
-        <ArenaLibraryPrompt key={promptKey(libraryPrompt)} prompt={libraryPrompt} sending />
+        {libraryPlan.mode === 'pick' ? (
+          <CardGrid prompt={libraryPrompt} selected={libraryPlan.away} setSelected={noop} send={noop} busy />
+        ) : (
+          <ArenaLibraryPrompt key={promptKey(libraryPrompt)} prompt={libraryPrompt} sending />
+        )}
       </div>
     )
   }
@@ -126,6 +130,8 @@ function renderPrompt(form: UseFeedbackForm, handPick: boolean, onExpandHandPick
 
   return <GenericDialog form={form} />
 }
+
+function noop() {}
 
 const promptKeys = new WeakMap<FeedbackPrompt, number>()
 let promptKeySeq = 0
