@@ -694,12 +694,10 @@ the bar and never bleeding into it, at the size of that seat's piles (a narrow c
 almost one card). It never takes its size
 from the status row's height, which grows with the chip's counters and would leave one seat's hand
 much larger than another's.
-With the side panel (BRD-6) the fan sits upright in the bottom row of that board (BRD-39). On a
-copy in the panel it is tucked like the own resting hand (HND-1), seven tenths of the card, so it
-covers nothing; on the board drawn at full size it is whole and nothing clips it, because that board
-has the room and its cards are the ones the watcher came to read. That board is the main area with
-the panel and the one at the bottom without it (BRD-32): a spectator watching the columns view read
-its fan cut in half. A known card still shows face up and the pile
+With the side panel (BRD-6) the fan sits upright in the bottom row of that board (BRD-39), drawn
+whole wherever that row is: the main area, the board at the bottom without the panel (BRD-32) and
+every copy in the panel, which is a miniature of the main area and must read like one. Nothing
+clips it. A known card still shows face up and the pile
 still opens the hand viewer.
 
 - Why: a whole card back took a column's height for a number, and a stacked pile read less like a
@@ -707,8 +705,10 @@ still opens the hand viewer.
   card, which in the main area read as a cut, not as a hand (user report, 23-nov-2026). Once the top
   strip moved above the opponents' row (BRD-11), keeping `.arena-opp-row` flush with the top bar's
   separator lets the tucked fan emerge cleanly from beneath the bar without a mid-air gap (user
-  report, 24-nov-2026).
-- Guard: `src/board/HandZone.test.tsx`
+  report, 24-nov-2026). Tucking it on a panel copy read as a cut there too: measured at 1600×900 the
+  copy's fan box was 19 px tall around cards 30 px tall, so each back lost 7 px at the waist (user
+  report, 25-nov-2026). Whole, the box is 27 px and the backs are painted entire.
+- Guard: `src/board/HandZone.test.tsx` · `src/board/ArenaBoard.css.test.ts`
 
 ### BRD-39 · With the side panel every board is drawn like the own Arena board
 With the side panel on (BRD-6), every player's board, the one

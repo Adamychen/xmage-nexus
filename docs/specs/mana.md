@@ -140,9 +140,10 @@ seat with an empty pool shows nothing. The count of a colour sits against its ow
 air between one colour and the next than inside the pair, so a number is never read as belonging to
 the symbol beside it.
 
-The own board draws its own pool in the strip it leaves between the lands and the piles, one line
-of pips over the pile captions, where it takes no room from anything: it is anchored to the top of
-the status row, so it rides that gap at any size.
+The own board draws its own pool in the strip it leaves between the lands and the piles: a line of
+its own right above the pile captions, which it never covers at any size. The line is laid out
+rather than floated over them, and both it and the piles hug the bottom of the status row, so the
+pips take the room the board already left empty and the row grows only where there is none.
 
 - Why: measured on the four-player board at 1920 and 1366 with the panel open, an opponent's pips
   came out 6 px wide inside the copy, against 22 px for the player's own pool on the board
@@ -152,5 +153,9 @@ the status row, so it rides that gap at any size.
   panel, the topmost element over it is the pool itself; it was 362 px wide across the bottom of the board,
   between the piles and the hand, and the user asked whether it fitted between the lands and the
   piles: it does, in a line 292 px wide and 24 px tall, with the gap measuring 32 px at 1920 and
-  51 px at 1366.
-- Guard: `src/board/SpotlightBoard.test.tsx`
+  51 px at 1366. Floating it over that gap only held while a hand bar reserved the row's height:
+  watching a board (no hand bar, so the row is as tall as its piles) left 5 px of clearance at
+  1600×900 and none on the user's board, where the pips landed on "LIBRARY 84" (report of
+  25-nov-2026). Laid out as its own line the clearance is 12 px at every reserve measured (194 px
+  with a hand, 120 px watched, 90 px tight).
+- Guard: `src/board/SpotlightBoard.test.tsx` · `src/board/ArenaBoard.css.test.ts`
