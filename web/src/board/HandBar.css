@@ -269,7 +269,7 @@
    the room a whole card would take. The box is half, the card inside keeps its height and is
    clipped at the waist, the same trick the piles use. */
 .hand-bar .hand-card-slot.hand-trailing {
-  --cmd-w: calc(var(--card-w, 136px) * 1.3);
+  --cmd-w: calc(var(--card-w, 136px) * 1.15);
   /* The bar sizes itself for one card per slot, so a wider one is the item a tight row shrinks:
      it came out 23 px wide with the card spilling out of it. It keeps its width instead. */
   flex: 0 0 var(--cmd-w);

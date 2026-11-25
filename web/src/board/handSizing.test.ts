@@ -10,6 +10,7 @@ import {
   computeCostPipLayout,
   computeCostPipSize,
   handLandsGap,
+  handTrailingRatio,
   handRestHeight,
   handRestStripWidth,
   HAND_BAR_REST_SINK_K,
@@ -289,5 +290,27 @@ describe('hand rest reserve', () => {
   it('BRD-16: HandBar.css sinks a resting card by the same factor the reserve assumes', () => {
     const css = readFileSync(fileURLToPath(new URL('./HandBar.css', import.meta.url)), 'utf8')
     expect(css).toContain(`var(--hand-sink-k, ${HAND_BAR_REST_SINK_K})`)
+  })
+})
+
+describe('BRD-34: the commander at the end of the fan', () => {
+  it('BRD-34: its own width is part of what the bar fits, so the fan leaves room for it', () => {
+    const plain = computeHandBarSizing(300, 6)
+    const withCommander = computeHandBarSizing(300, 6, handTrailingRatio(1))
+    expect(withCommander.cardW).toBeLessThan(plain.cardW)
+    const fanW = withCommander.cardW + 5 * (withCommander.cardW * (1 - HAND_BAR_REST_OVERLAP_RATIO) + withCommander.gap)
+    const wholeW = fanW + withCommander.cardW * handTrailingRatio(1)
+    expect(wholeW).toBeLessThanOrEqual(300)
+  })
+
+  it('BRD-34: a hand of one card with a commander still leaves it room', () => {
+    const one = computeHandBarSizing(300, 1, handTrailingRatio(1))
+    expect(one.cardW * (1 + handTrailingRatio(1))).toBeLessThanOrEqual(300)
+  })
+
+  it('BRD-34: the ratio counts each commander and the gap the first one opens', () => {
+    expect(handTrailingRatio(0)).toBe(0)
+    expect(handTrailingRatio(1)).toBeCloseTo(1.55, 5)
+    expect(handTrailingRatio(2)).toBeCloseTo(2.7, 5)
   })
 })

@@ -636,8 +636,13 @@ are drawn with the hand, which is where their owner looks for something to cast:
 the fan, apart from it by a gap of 0.4 of a card and with a gold edge; under the hand column,
 behind a line of its own; at the end of the hand row, past a gap. Wherever the hand draws it, the fan of the own hand and
 the zone a watched seat or a panel copy draws, it is read the way the
-piles beside it are (BRD-32): the top half of a card, on a card a third wider than that hand's, so
-its art and its name carry at a glance without the hand giving up the room a whole card would take. They follow the hand in every
+piles beside it are (BRD-32): the top half of a card, on a card a seventh wider than that hand's, so
+its art and its name carry at a glance without the hand giving up the room a whole card would take.
+That width is part of what the bar fits its cards in, not one more card of the fan, so the
+commander is drawn whole and inside the bar instead of past its edge. The hand's band keeps clear
+of the game dock before anything else, because the dock takes the clicks and the hover and a card
+under it can be neither read nor picked; when there is not room for everything, what gives way is
+the piles row, half cards the fan may lean over, and the cards shrink to what is left. They follow the hand in every
 hand layout, because the question they answer is the same in all of them. A seat drawn
 at full size that is not mine, the main area of the main-board mode (BRD-6), carries its hand the
 same way: the backs of the cards it holds, with its uncast commander at the end of them, instead
@@ -651,7 +656,17 @@ command zone on the board, which is what a hand cannot hold. A phone keeps the c
 too: the hand has no room to spare at that width.
 
 - Why: in the middle of the board the uncast commander took room from the creatures; the user
-  asked for MTG Arena's Brawl arrangement, the commander as a hand card set apart (2026-11-12). The
+  asked for MTG Arena's Brawl arrangement, the commander as a hand card set apart (2026-11-12).
+  The bar counted the commander as about two cards of the fan while it draws it 1.55 cards wide, so
+  at 1024x768 with the side panel the slot ran from x 890 to x 1093 in a window 1024 wide: half of
+  it off screen and the rest under the dock, where its hover barely opened (user report,
+  25-nov-2026, who also asked for it a little smaller: a seventh wider than a hand card, not a
+  third). Underneath that, the reserve the bar asks for (the piles on one side, the dock on the
+  other) came to more than the bar's whole width and the measurement simply gave up, leaving the
+  bar with the size it starts with and no reserve at all, which is what drew the commander out of
+  the window. Measured after: the slot ends at 737 px with the dock starting at 754, nothing off
+  screen, and the cards at that width come down to their minimum, which is what fits between the
+  panel and the dock. The
   tax drawn in the card's corner sat below the board edge in the hand, a "+" drawn next to a pip did
   not read against the gold edge, and a separate "+N" still had to be added up by eye. It was the
   fanned hand of the v1 chrome only until the user asked for it everywhere (2026-11-21): with the
@@ -665,7 +680,7 @@ too: the hand has no room to spare at that width.
   drawn as a zone, which is what a watched seat and every copy in the panel use, still drew a whole
   card, and the user, watching a game, saw his own seat's commander whole while the opponents'
   read right (same day).
-- Guard: `src/board/HandBar.test.tsx` · `src/board/HandBar.css.test.ts` · `src/board/handCommander.css.test.ts` · `src/board/commanders.test.ts` · `src/board/BoardZone.arenaOwn.test.tsx` · `src/board/HandRail.test.tsx` · `src/board/HandRow.test.tsx` · `src/board/SpotlightBoard.test.tsx`
+- Guard: `src/board/HandBar.test.tsx` · `src/board/HandBar.css.test.ts` · `src/board/handCommander.css.test.ts` · `src/board/commanders.test.ts` · `src/board/BoardZone.arenaOwn.test.tsx` · `src/board/HandRail.test.tsx` · `src/board/HandRow.test.tsx` · `src/board/SpotlightBoard.test.tsx` · `src/board/handSizing.test.ts`
 
 ### BRD-35 · A band in several lines holds the same count on each line
 A band that wraps into several lines puts the same number of items on each line, or fewer on the
@@ -1233,3 +1248,22 @@ its footprint (BRD-20).
   margins then answer to two card sizes at once; with no animation they always answer to the same
   one, so the pile's footprint is right in whatever frame it is drawn.
 - Guard: `src/board/CardSlot.css.test.ts`
+
+### BRD-67 · A seat is solved before the paint that shows its new contents
+When a seat's contents change, the layout is solved and written before the browser paints that
+change, in a microtask after the commit that registered it, so every seat of that render is counted
+in the one solve. The engine still watches sizes with its observer and still coalesces those into
+one animation frame (BRD-25); what does not wait for a frame is the solve a new set of cards asks
+for. Until it is written the seat's cards are laid out at the card size the previous contents were
+given, and a pile is the worst of it: every card's overlap is a share of that stale size, so the
+error adds along the pile and its tail is drawn far outside the band, which clips it.
+
+- Why: the other half of the sliced-lands report of BRD-66. Measured in the gallery on
+  `frame:mass-tokens` reached from another board, six runs each way: solving on the next frame drew
+  45 of the 51-card pile outside their band every run, the furthest 5839 px out; solving before the
+  paint, none in any run. A window with no frames to spare (hidden or covered, where
+  `requestAnimationFrame` nearly stops) holds that first frame on screen, which is how a player
+  comes to screenshot a board with a card cut down the middle. Solving inside the commit instead of
+  after it was tried first and broke the settle sweep: it solves the board once per seat and writes
+  sizes the next seat changes.
+- Guard: `src/board/layout/BoardLayoutProvider.test.tsx`

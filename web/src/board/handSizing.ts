@@ -21,6 +21,17 @@ export const HAND_LANDS_GAP_VH_RATIO = 0.015
 export const HAND_LANDS_GAP_MIN_PX = 6
 export const HAND_LANDS_GAP_MAX_PX = 16
 
+/** BRD-34: what the commander at the end of the fan takes, in card widths, as `HandBar.css` draws
+ *  it: `--cmd-w` for its width plus the gap the first one opens before itself. The bar sizes its
+ *  cards from this, so a hand with a commander fits inside the bar instead of spilling past it. */
+export const HAND_TRAILING_W_RATIO = 1.15
+export const HAND_TRAILING_GAP_RATIO = 0.4
+
+export function handTrailingRatio(count: number): number {
+  if (count <= 0) return 0
+  return count * HAND_TRAILING_W_RATIO + HAND_TRAILING_GAP_RATIO
+}
+
 export const HAND_HOVER_TARGET_W = 260
 export const HAND_HOVER_MAX_VIEWPORT_H_RATIO = 0.55
 export const HAND_HOVER_MIN_SCALE = 1.15
@@ -108,7 +119,7 @@ export function computeHandSideReserve(band: HandSpan, panels: HandSpan[]): Hand
   return reserve
 }
 
-export function computeHandBarSizing(availW: number, count: number): HandBarSizing {
+export function computeHandBarSizing(availW: number, count: number, trailingRatio = 0): HandBarSizing {
   if (count <= 0 || availW <= 0) {
     return {
       cardW: HAND_BAR_MAX_CARD_W,
@@ -120,18 +131,22 @@ export function computeHandBarSizing(availW: number, count: number): HandBarSizi
   const usableW = Math.max(0, Math.min(availW - HAND_BAR_PADDING_X, HAND_BAR_MAX_SPAN))
 
   if (count === 1 || usableW <= 0) {
-    const cardW = Math.min(HAND_BAR_MAX_CARD_W, Math.max(HAND_BAR_MIN_CARD_W, usableW))
+    const cardW = Math.min(HAND_BAR_MAX_CARD_W, Math.max(HAND_BAR_MIN_CARD_W, Math.floor(usableW / (1 + trailingRatio))))
     return { cardW, gap: 0, barHeight: cardW * HAND_CARD_ASPECT * HAND_BAR_PEEK_RATIO + HAND_BAR_PADDING_Y }
   }
 
   // Cards keep their size while the row still fits at the maximum overlap; past that they shrink.
-  const fitW = usableW / (1 + (count - 1) * HAND_BAR_MIN_VISIBLE_RATIO)
+  // The commander at the end is not one more card of the fan: it takes its own width (BRD-34).
+  // BRD-21: whole pixels, so the answer does not depend on the path that reached this width. A
+  // fraction here is remembered by the bar's hysteresis, and a board resized away and back then
+  // drew sizes a hair off the ones it had.
+  const fitW = Math.floor(usableW / (1 + (count - 1) * HAND_BAR_MIN_VISIBLE_RATIO + trailingRatio))
   const cardW = Math.min(HAND_BAR_MAX_CARD_W, Math.max(HAND_BAR_MIN_CARD_W, fitW))
 
   // The rendered pitch is the rest strip (cardW * (1 - rest overlap)) plus the gap.
   // The gap spreads the row over the usable width, bounded by the maximum overlap
   // and by the compact fan's max gap.
-  const pitch = (usableW - cardW) / (count - 1)
+  const pitch = (usableW - cardW * (1 + trailingRatio)) / (count - 1)
   const minGap = -(HAND_BAR_REST_OVERLAP_RATIO - HAND_BAR_MIN_VISIBLE_RATIO) * cardW
   const gap = Math.min(HAND_BAR_MAX_GAP, Math.max(minGap, pitch - cardW * (1 - HAND_BAR_REST_OVERLAP_RATIO)))
 

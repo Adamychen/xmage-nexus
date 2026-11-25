@@ -13,9 +13,11 @@ import {
   handLandsGap,
   handRestHeight,
   handRestStripWidth,
+  handTrailingRatio,
   type HandSideReserve,
   HAND_ARC_PLAYABLE_RISE_PX,
   HAND_BAR_MAX_CARD_W,
+  HAND_BAR_MIN_CARD_W,
   HAND_BAR_PANEL_GAP_PX,
   HAND_BAR_PEEK_RATIO,
   HAND_BAR_REST_OVERLAP_RATIO,
@@ -36,10 +38,10 @@ const NO_TRAILING: HandTrailingCard[] = []
 const HAND_SIDE_PANELS = '.pz-bottom-row:not(.arena-own-row), [data-testid="game-dock"], .spotlight-panel, .hand-side-panel'
 const SCALED_COPY = '.spotlight-copy'
 /** BRD-21: the bar's card size feeds the reserve it leaves the board, which feeds the width it
- *  measures itself from, so two answers close together chase each other. Half a pixel was not
- *  enough: at 1366x900 on a compact Arena board the bar went 156 -> 153.733 -> 154.25 px, and that
- *  last step of 0.517 px slipped through. A pixel and a half, the same the seat keeps (BRD-21). */
-const CARD_W_HYSTERESIS_PX = 1.5
+ *  measures itself from, so two answers close together chase each other. The sizes are whole pixels
+ *  now (`computeHandBarSizing`), which is what stops the chase without giving the bar a memory of
+ *  the path it came by; half a pixel of slack is enough to absorb a rounding of the measurement. */
+const CARD_W_HYSTERESIS_PX = 0.5
 const RESERVE_HYSTERESIS_PX = 1
 const SPOTLIGHT_MAIN_ROW = '.spotlight-main .pz-bottom-row'
 import { BOARD_RELAYOUT_EVENT } from './layout/relayout'
@@ -157,6 +159,7 @@ export default function HandBar({
   const [gap, setGap] = useState(0)
   const [sideReserve, setSideReserve] = useState<HandSideReserve>({ left: 0, right: 0 })
   const clearRef = useRef<HandSideReserve>({ left: 0, right: 0 })
+  const clearPassesRef = useRef(0)
   const panelRectsRef = useRef<DOMRect[]>([])
   const measureRef = useRef<(() => void) | null>(null)
   const [hoverScale, setHoverScale] = useState(1.5)
@@ -195,14 +198,18 @@ export default function HandBar({
       const barRect = el.getBoundingClientRect()
       const panels = Array.from(scope.querySelectorAll<HTMLElement>(HAND_SIDE_PANELS))
         .filter((panel) => !panel.closest(SCALED_COPY) && !panel.matches(SPOTLIGHT_MAIN_ROW))
-        .map((panel) => panel.getBoundingClientRect())
-        .filter((r) => r.width > 0 && r.top < barRect.bottom && r.bottom > barRect.top)
+        .filter((panel) => {
+          const r = panel.getBoundingClientRect()
+          return r.width > 0 && r.top < barRect.bottom && r.bottom > barRect.top
+        })
+      const dockPanel = panels.map((panel) => panel.dataset.testid === 'game-dock')
+      const panelRects = panels.map((panel) => panel.getBoundingClientRect())
       // BRD-6: with a side panel the hand belongs to the board being played on, so its band is the
       // main area and the panel falls outside it instead of eating the fan's width from one side.
       const area = scope.querySelector<HTMLElement>('.spotlight-main')
       const areaRect = area?.getBoundingClientRect()
       const band = areaRect && areaRect.width > 0 ? areaRect : hostRect
-      const base = computeHandSideReserve({ left: band.left, right: band.right }, panels)
+      const base = computeHandSideReserve({ left: band.left, right: band.right }, panelRects)
       const spill = handFanSpill(entries.length, HAND_BAR_MAX_CARD_W)
       const trailingSpill = trailing.length > 0 ? Math.ceil(HAND_BAR_MAX_CARD_W * 0.2) : 0
       const outside = { left: Math.max(0, band.left - hostRect.left), right: Math.max(0, hostRect.right - band.right) }
@@ -210,10 +217,30 @@ export default function HandBar({
         left: outside.left + (base.left > 0 ? base.left + spill + clearRef.current.left : 0),
         right: outside.right + (base.right > 0 ? base.right + (trailing.length > 0 ? trailingSpill : spill) + clearRef.current.right : 0),
       }
-      panelRectsRef.current = panels
-      const availW = hostRect.width - reserve.left - reserve.right
+      panelRectsRef.current = panelRects
+      // BRD-34: at a narrow window with the side panel the piles on one side and the dock on the
+      // other ask for more room than the bar has. Bailing out left the bar with the size it starts
+      // with, 156 px cards and no reserve at all, and the commander at its end was drawn past the
+      // window's edge and under the dock. The dock is the one that must be kept clear, because it
+      // takes the clicks and the hover; the piles are a row of half cards the fan may lean over.
+      const MIN_BAND_W = HAND_BAR_MIN_CARD_W * 2
+      let availW = hostRect.width - reserve.left - reserve.right
+      if (availW < MIN_BAND_W) {
+        // The dock keeps its room whatever happens: it takes the clicks and the hover, and a card
+        // under it cannot be read or picked. What gives way is the piles row, half cards the fan
+        // may lean over, and the cards shrink to what is left.
+        const docked = computeHandSideReserve({ left: band.left, right: band.right }, panelRects.filter((_, i) => dockPanel[i]))
+        reserve.left = outside.left + (docked.left > 0 ? docked.left : 0)
+        reserve.right = outside.right + (docked.right > 0 ? docked.right : 0)
+        availW = hostRect.width - reserve.left - reserve.right
+      }
+      if (availW < MIN_BAND_W) {
+        reserve.left = outside.left
+        reserve.right = outside.right
+        availW = hostRect.width - reserve.left - reserve.right
+      }
       if (availW <= 0) return
-      const sizing = computeHandBarSizing(availW, entries.length + (trailing.length > 0 ? trailing.length + 1 : 0))
+      const sizing = computeHandBarSizing(availW, entries.length, handTrailingRatio(trailing.length))
       setSideReserve(reserve)
       setCardW((prev) => (Math.abs(prev - sizing.cardW) < CARD_W_HYSTERESIS_PX ? prev : sizing.cardW))
       setGap(sizing.gap)
@@ -221,9 +248,18 @@ export default function HandBar({
       setViewportH(window.innerHeight)
     }
 
+    // BRD-21: the clearances the fan adds (below) are a refinement of one layout, not a fact about
+    // the hand: carried across a resize they made the board path-dependent, so a window taken to
+    // 1000 px and back to 1600 drew narrower bands than it had at 1600. Each new width starts over.
+    const remeasure = () => {
+      clearRef.current = { left: 0, right: 0 }
+      clearPassesRef.current = 0
+      measure()
+    }
+
     measureRef.current = measure
     measure()
-    window.addEventListener('resize', measure)
+    window.addEventListener('resize', remeasure)
     // BRD-21: the width the bar fits its cards in comes from the board's own layout, so it measures
     // again as soon as the board has solved. Waiting for a resize or a stray mutation instead left
     // the bar a couple of pixels wide of its size until something else nudged it, after the board
@@ -237,7 +273,7 @@ export default function HandBar({
     const mo = typeof MutationObserver === 'undefined' ? null : new MutationObserver(measure)
     mo?.observe(scope, { childList: true })
     return () => {
-      window.removeEventListener('resize', measure)
+      window.removeEventListener('resize', remeasure)
       window.removeEventListener(BOARD_RELAYOUT_EVENT, measure)
       ro?.disconnect()
       mo?.disconnect()
@@ -247,7 +283,6 @@ export default function HandBar({
   // BRD-32: the outer cards of the drawn fan (rotation, overlap, the commander's gap) must clear the
   // side panels. Once the fan has settled (its slide lasts 0.25 s) an overlap still measured widens
   // that side's reserve by it, at most a few times per hand.
-  const clearPassesRef = useRef(0)
   useEffect(() => {
     clearRef.current = { left: 0, right: 0 }
     clearPassesRef.current = 0
