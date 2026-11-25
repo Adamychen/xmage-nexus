@@ -2,9 +2,11 @@ import * as cmds from '../../net/commands'
 import IconButton from '../../ui/IconButton'
 import Checkbox from '../../ui/Checkbox'
 import EmptyState from '../../ui/EmptyState'
+import CardSlot from '../../board/CardSlot'
+import type { CardView } from '../../net/types'
 import { CHOOSE_OPTION_CANCEL_ID, type FeedbackOption, type FeedbackPrompt } from '../feedback'
 import FormattedText from '../FormattedText'
-import DialogShell from '../../ui/DialogShell'
+import ArenaPromptShell from '../arena/ArenaPromptShell'
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation, dynamicT } from '../../i18n'
 import { setSetting, useStore } from '../../state/store'
@@ -14,35 +16,46 @@ import { addChoiceMemory } from '../choiceMemory'
 import { isPlainBooleanAsk } from '../handPick'
 import { localizeOptionLabel, localizeServerMessage } from '../serverMessageTranslation'
 import type { UseFeedbackForm } from '../useFeedbackForm'
-import Icon, { type IconName } from '../../ui/Icon'
+import Icon from '../../ui/Icon'
 import Button from '../../ui/Button'
 import ClaimedInfoCards from './ClaimedInfoCards'
 import './GenericDialog.css'
 
 const GRID_SEARCH_THRESHOLD = 7
 
+const COLOR_MAP: Record<string, { symbol: string; cls: string }> = {
+  white: { symbol: '{W}', cls: 'is-mana-w' },
+  blanco: { symbol: '{W}', cls: 'is-mana-w' },
+  w: { symbol: '{W}', cls: 'is-mana-w' },
+  blue: { symbol: '{U}', cls: 'is-mana-u' },
+  azul: { symbol: '{U}', cls: 'is-mana-u' },
+  u: { symbol: '{U}', cls: 'is-mana-u' },
+  black: { symbol: '{B}', cls: 'is-mana-b' },
+  negro: { symbol: '{B}', cls: 'is-mana-b' },
+  b: { symbol: '{B}', cls: 'is-mana-b' },
+  red: { symbol: '{R}', cls: 'is-mana-r' },
+  rojo: { symbol: '{R}', cls: 'is-mana-r' },
+  r: { symbol: '{R}', cls: 'is-mana-r' },
+  green: { symbol: '{G}', cls: 'is-mana-g' },
+  verde: { symbol: '{G}', cls: 'is-mana-g' },
+  g: { symbol: '{G}', cls: 'is-mana-g' },
+}
+
+function manaColorMeta(option: FeedbackOption): { symbol: string; cls: string } | null {
+  const key = option.value.trim().toLowerCase()
+  const labelKey = option.label.trim().toLowerCase()
+  return COLOR_MAP[key] ?? COLOR_MAP[labelKey] ?? null
+}
+
+function nameOnlyCard(id: string, name: string): CardView {
+  return { id, name, manaValue: 0, expansionSetCode: '', cardNumber: '0' } as unknown as CardView
+}
+
 function resolveTypedChoice(query: string, filtered: FeedbackOption[]): string | null {
   const q = query.trim().toLowerCase()
   const exact = filtered.find((opt) => opt.value.toLowerCase() === q || opt.label.toLowerCase() === q)
   if (exact) return exact.value
   return filtered.length === 1 && filtered[0] ? filtered[0].value : null
-}
-
-function getFeedbackKicker(prompt: FeedbackPrompt, t: (ns: 'game' | 'dialogs' | 'common' | 'errors', key: string) => string): { icon: IconName; label: string } {
-  if (prompt.isStartingPlayer) return { icon: 'dice', label: t('game', 'who_starts') }
-  if (prompt.method === 'GAME_CHOOSE_MODE') return { icon: 'sparkles', label: t('game', 'feedback_kicker_mode') }
-  if (prompt.method === 'GAME_CHOOSE_ABILITY') return { icon: 'zap', label: t('game', 'feedback_kicker_ability') }
-  if (prompt.method === 'GAME_CHOOSE_COLOR') return { icon: 'palette', label: t('game', 'feedback_kicker_color') }
-  if (prompt.method === 'GAME_CHOOSE_STRING') return { icon: 'tag', label: t('game', 'feedback_kicker_name') }
-  if (prompt.method === 'GAME_CHOOSE_NUMBER' || prompt.method === 'GAME_GET_AMOUNT' || prompt.method === 'GAME_PLAY_XMANA') {
-    return { icon: 'hash', label: t('game', 'feedback_kicker_amount') }
-  }
-  if (prompt.method === 'GAME_GET_MULTI_AMOUNT') return { icon: 'chart', label: t('game', 'feedback_kicker_multi') }
-  if (prompt.method === 'GAME_SELECT_PLAYER' || prompt.method === 'GAME_TARGET_PLAYER') return { icon: 'user', label: t('game', 'feedback_kicker_player') }
-  if (prompt.method === 'GAME_CHOOSE_PILE') return { icon: 'package', label: t('game', 'feedback_kicker_pile') }
-  if (prompt.method === 'GAME_CHOOSE_CHOICE') return { icon: 'scale', label: t('game', 'feedback_kicker_choice') }
-  if (prompt.method === 'GAME_ASK') return { icon: 'info', label: t('game', 'feedback_kicker_confirm') }
-  return { icon: 'swords', label: t('game', 'feedback_kicker_required') }
 }
 
 function getLocalizedTitle(prompt: FeedbackPrompt, t: (ns: 'game' | 'dialogs' | 'common' | 'errors', key: string) => string): string {
@@ -131,9 +144,26 @@ export default function GenericDialog({ form }: { form: UseFeedbackForm }) {
   useEffect(() => {
     setActiveIdx((i) => Math.min(i, Math.max(gridOptionsLength - 1, 0)))
   }, [gridOptionsLength])
+
+  const sourceCard = useMemo(
+    () => (prompt?.sourceName ? nameOnlyCard('generic-source', prompt.sourceName) : null),
+    [prompt?.sourceName],
+  )
+
   if (!prompt) return null
   const isGridBranch = prompt.mode !== 'integer' && prompt.mode !== 'multiString' && prompt.mode !== 'string'
   const isMultiGrid = prompt.mode === 'uuid' && prompt.max > 1
+  const isColorChoice =
+    prompt.method === 'GAME_CHOOSE_COLOR' ||
+    (prompt.options.length >= 2 &&
+      prompt.options.length <= 5 &&
+      prompt.options.every((opt) => manaColorMeta(opt) !== null))
+  const isModeCards =
+    !isColorChoice &&
+    isGridBranch &&
+    prompt.options.length >= 2 &&
+    prompt.options.length <= 5
+
   const chooseActive = () => {
     const opt = gridOptions[activeIdx]
     if (!opt || busy) return
@@ -145,7 +175,7 @@ export default function GenericDialog({ form }: { form: UseFeedbackForm }) {
       setActiveIdx((i) => Math.max(0, Math.min(i + 1, gridOptions.length - 1)))
     } else if (e.key === 'ArrowUp') {
       e.preventDefault()
-      setActiveIdx((i) => Math.max(i - 1, 0))
+      setActiveIdx((i) => Math.max(0, i - 1))
     } else if (e.key === 'Enter') {
       e.preventDefault()
       chooseActive()
@@ -176,7 +206,7 @@ export default function GenericDialog({ form }: { form: UseFeedbackForm }) {
       chooseActive()
     }
   }
-  const kicker = getFeedbackKicker(prompt, dynamicT(t))
+
   const title = getLocalizedTitle(prompt, dynamicT(t))
   const autoAnswerable = isPlainBooleanAsk(prompt)
   const chooseBoolean = (option: { value: string }) => {
@@ -208,265 +238,340 @@ export default function GenericDialog({ form }: { form: UseFeedbackForm }) {
         ? () => selectOption(serverCancelOption)
         : undefined
 
-  return (
-    <DialogShell
-      labelledBy="feedback-title"
-      titleId="feedback-title"
-      legacyBackdropClass="feedback-backdrop"
-      legacyPanelClass="feedback-dialog"
-      onEscape={onEscape}
-      kickerIcon={kicker.icon}
-      kickerLabel={kicker.label}
-      title={<FormattedText text={title} />}
-      sourceName={prompt.sourceName && prompt.sourceName !== title
-        ? <FormattedText text={prompt.sourceName} />
-        : undefined}
-      message={<FormattedText text={localizeServerMessage(prompt.message, dynamicT(t))} />}
-      search={isGridBranch && prompt.options.length > GRID_SEARCH_THRESHOLD ? (
-        <div className="feedback-input-box">
-          <span className="feedback-input-icon"><Icon name="tag" size={13} /></span>
-          <input
-            aria-label={t('common', 'search')}
-            type="text"
-            value={gridQuery}
-            placeholder={t('game', 'grid_search_placeholder')}
-            onChange={(event) => setGridQuery(event.target.value)}
-            onKeyDown={onGridKeyDown}
-          />
-        </div>
-      ) : undefined}
-    >
-      <ClaimedInfoCards
-        playableIds={playableIdSet}
-        onPlayCard={playClaimedCard}
-        targetIds={targetIdSet}
-        onTargetClick={targetClaimedCard}
-      />
-      {/* string/integer/multiString: cancel manda sendPlayerBoolean(false), una respuesta de
-          tipo incorrecto para estos métodos (CHOICE/AMOUNT/MULTI_AMOUNT esperan string/integer/
-          multi-amount) — solo mostrar Cancelar cuando el propio prompt se declaró opcional
-          (prompt.required === false), igual que ya hace el bloque de targets de abajo. */}
-      {prompt.mode === 'string' && (
-        <div className="feedback-string-wrap">
-          {prompt.choiceSearch !== false && (
-          <div className="feedback-input-box">
-            <span className="feedback-input-icon"><Icon name="tag" size={13} /></span>
-            <input
-              aria-label={t('common', 'search')}
-              type="text"
-              value={textValue}
-              placeholder={t('game', 'string_placeholder')}
-              autoFocus
-              onChange={(event) => setTextValue(event.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !busy) {
-                  sendChoiceFromInput()
-                }
-              }}
-            />
-          </div>
+  const renderFooter = () => {
+    if (prompt.mode === 'string') {
+      return (
+        <div className="feedback-dialog-actions">
+          <Button
+            className="arena-generic-primary"
+            variant="primary"
+            disabled={busy || typedValue === null}
+            onClick={sendChoiceFromInput}
+          >
+            {t('game', 'string_confirm')}
+          </Button>
+          {prompt.required === false && (
+            <Button variant="subtle" disabled={busy} onClick={cancel} className="cancel-btn">{t('game', 'string_cancel')}</Button>
           )}
-          {filteredStringOptions.length > 0 && (
-            <div className="feedback-options feedback-options-wrap">
-              <div
-                className={`feedback-options-grid ${filteredStringOptions.length <= 4 ? 'compact-grid' : ''}`}
-                onKeyDown={(e) => {
-                  if (e.key >= '1' && e.key <= '9' && !busy) {
-                    const opt = filteredStringOptions[Number(e.key) - 1]
-                    if (opt) {
-                      e.preventDefault()
-                      sendChoice(opt.value)
-                    }
-                  }
-                }}
+        </div>
+      )
+    }
+    if (prompt.mode === 'integer') {
+      return (
+        <div className="feedback-dialog-actions">
+          <Button className="arena-generic-primary" variant="primary" disabled={busy || !amountValid} onClick={confirmAmount}>
+            {t('game', 'integer_confirm')}
+          </Button>
+          {prompt.required === false && (
+            <Button variant="subtle" disabled={busy} onClick={cancel} className="cancel-btn">{t('game', 'string_cancel')}</Button>
+          )}
+        </div>
+      )
+    }
+    if (prompt.mode === 'multiString') {
+      return null
+    }
+    const hasActions = (prompt.mode === 'uuid' && prompt.max > 1) || prompt.required === false || prompt.cancelable
+    if (!hasActions && !autoAnswerable) return null
+    return (
+      <div className="arena-generic-footer-stack">
+        {hasActions && (
+          <div className="feedback-dialog-actions">
+            {prompt.mode === 'uuid' && prompt.max > 1 && (
+              <Button
+                className="arena-generic-primary"
+                variant="primary"
+                disabled={busy || selected.length < Math.max(prompt.min, 1)}
+                onClick={confirmSelected}
               >
-                {filteredStringOptions.map((option, idx) => (
-                  <button type="button"
-                    key={option.id}
-                    className="feedback-choice-card"
-                    disabled={busy}
-                    title={prompt.choiceHints?.[option.id] ?? prompt.choiceHints?.[option.value]}
-                    aria-keyshortcuts={idx < 9 ? String(idx + 1) : undefined}
-                    onClick={() => sendChoice(option.value)}
+                {t('game', 'selected_count', { count: selected.length })}
+              </Button>
+            )}
+            {(prompt.required === false || prompt.cancelable) && (
+              <Button variant="subtle" disabled={busy} onClick={finishOptionalTarget} className="cancel-btn" aria-keyshortcuts={prompt.cancelable ? 'Escape' : undefined}>
+                {prompt.cancelable ? t('game', 'targeting_cancel') : t('game', 'targeting_finish')}
+              </Button>
+            )}
+          </div>
+        )}
+        {autoAnswerable && (
+          <Checkbox
+            className="feedback-remember-answer"
+            checked={rememberAnswer}
+            disabled={busy}
+            onChange={setRememberAnswer}
+            label={t('game', 'auto_answer_remember')}
+          />
+        )}
+      </div>
+    )
+  }
+
+  const rootClass = `arena-generic${sourceCard ? ' has-source' : ''}${isColorChoice ? ' is-color' : ''}${isModeCards ? ' is-modes' : ''}`
+
+  return (
+    <div className={rootClass}>
+      <ArenaPromptShell
+        title={<span id="feedback-title"><FormattedText text={title} /></span>}
+        instruction={<FormattedText text={localizeServerMessage(prompt.message, dynamicT(t))} />}
+        backdropClassName="feedback-backdrop"
+        dialogClassName="feedback-dialog"
+        onEscape={onEscape}
+        aside={sourceCard && <CardSlot card={sourceCard} cardId="generic-source" />}
+        footer={renderFooter()}
+        testId="generic-prompt"
+      >
+        <section className="arena-prompt-zone arena-generic-zone">
+          <ClaimedInfoCards
+            playableIds={playableIdSet}
+            onPlayCard={playClaimedCard}
+            targetIds={targetIdSet}
+            onTargetClick={targetClaimedCard}
+          />
+
+          {isGridBranch && prompt.options.length > GRID_SEARCH_THRESHOLD && (
+            <div className="feedback-input-box">
+              <span className="feedback-input-icon"><Icon name="tag" size={13} /></span>
+              <input
+                aria-label={t('common', 'search')}
+                type="text"
+                value={gridQuery}
+                placeholder={t('game', 'grid_search_placeholder')}
+                onChange={(event) => setGridQuery(event.target.value)}
+                onKeyDown={onGridKeyDown}
+              />
+            </div>
+          )}
+
+          {prompt.mode === 'string' && (
+            <div className="feedback-string-wrap">
+              {prompt.choiceSearch !== false && (
+                <div className="feedback-input-box">
+                  <span className="feedback-input-icon"><Icon name="tag" size={13} /></span>
+                  <input
+                    aria-label={t('common', 'search')}
+                    type="text"
+                    value={textValue}
+                    placeholder={t('game', 'string_placeholder')}
+                    autoFocus
+                    onChange={(event) => setTextValue(event.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !busy) {
+                        sendChoiceFromInput()
+                      }
+                    }}
+                  />
+                </div>
+              )}
+              {filteredStringOptions.length > 0 && (
+                <div className="feedback-options feedback-options-wrap">
+                  <div
+                    className={`feedback-options-grid ${isColorChoice ? 'is-color-row' : filteredStringOptions.length <= 4 ? 'compact-grid' : ''}`}
+                    onKeyDown={(e) => {
+                      if (e.key >= '1' && e.key <= '9' && !busy) {
+                        const opt = filteredStringOptions[Number(e.key) - 1]
+                        if (opt) {
+                          e.preventDefault()
+                          sendChoice(opt.value)
+                        }
+                      }
+                    }}
                   >
-                    <span className="choice-number">{idx + 1}</span>
-                    <span className="choice-text"><FormattedText text={localizeOptionLabel(option.label, dynamicT(t))} /></span>
-                  </button>
-                ))}
+                    {filteredStringOptions.map((option, idx) => {
+                      const color = isColorChoice ? manaColorMeta(option) : null
+                      return (
+                        <button
+                          type="button"
+                          key={option.id}
+                          className={`feedback-choice-card${color ? ` is-color-medallion ${color.cls}` : ''}`}
+                          disabled={busy}
+                          title={prompt.choiceHints?.[option.id] ?? prompt.choiceHints?.[option.value]}
+                          aria-keyshortcuts={idx < 9 ? String(idx + 1) : undefined}
+                          onClick={() => sendChoice(option.value)}
+                        >
+                          {color ? (
+                            <>
+                              <span className="mana-medallion-glyph"><FormattedText text={color.symbol} /></span>
+                              <span className="choice-text"><FormattedText text={localizeOptionLabel(option.label, dynamicT(t))} /></span>
+                            </>
+                          ) : (
+                            <>
+                              <span className="choice-number">{idx + 1}</span>
+                              <span className="choice-text"><FormattedText text={localizeOptionLabel(option.label, dynamicT(t))} /></span>
+                            </>
+                          )}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
+              {prompt.choiceSpecial && (
+                <Checkbox
+                  className="feedback-remember-answer"
+                  checked={rememberAnswer}
+                  disabled={busy}
+                  onChange={setRememberAnswer}
+                  label={t('game', 'choice_remember')}
+                />
+              )}
+            </div>
+          )}
+
+          {prompt.mode === 'integer' && (
+            <div className="feedback-amount-wrap">
+              <div className="feedback-amount-stepper">
+                <IconButton
+                  label={t('game', 'amount_decrease')}
+                  size="xl"
+                  round
+                  disabled={busy || amount <= prompt.min}
+                  onClick={() => setAmount((v) => Number.isNaN(v) ? prompt.min : Math.max(prompt.min, v - 1))}
+                >
+                  −
+                </IconButton>
+                <div className="stepper-display">
+                  <input
+                    aria-label={t('game', 'amount_value')}
+                    type="number"
+                    min={prompt.min}
+                    max={prompt.max}
+                    value={Number.isNaN(amount) ? '' : amount}
+                    aria-invalid={amountValid ? undefined : true}
+                    onChange={(event) => setAmount(event.target.value === '' ? Number.NaN : Number(event.target.value))}
+                    className="stepper-input"
+                  />
+                  {amountValid
+                    ? <span className="stepper-range">{t('game', 'amount_range', { min: prompt.min, max: prompt.max })}</span>
+                    : <span className="ui-field-error" role="alert">{t('game', 'amount_range', { min: prompt.min, max: prompt.max })}</span>}
+                </div>
+                <IconButton
+                  label={t('game', 'amount_increase')}
+                  size="xl"
+                  round
+                  disabled={busy || amount >= prompt.max}
+                  onClick={() => setAmount((v) => Number.isNaN(v) ? prompt.min : Math.min(prompt.max, v + 1))}
+                >
+                  +
+                </IconButton>
+              </div>
+              {prompt.min !== prompt.max && (
+                <div className="stepper-quick-row">
+                  <Button
+                    variant="subtle"
+                    size="sm"
+                    disabled={busy || amount === prompt.min}
+                    onClick={() => setAmount(prompt.min)}
+                  >
+                    {t('game', 'amount_min', { min: prompt.min })}
+                  </Button>
+                  <Button
+                    variant="subtle"
+                    size="sm"
+                    disabled={busy || amount === prompt.max}
+                    onClick={() => setAmount(prompt.max)}
+                  >
+                    {t('game', 'amount_max', { max: prompt.max })}
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {prompt.mode === 'multiString' && (
+            <div className="feedback-multi-amount-wrap">
+              <div className="feedback-multi-list">
+                {(prompt.items ?? []).map((item) => {
+                  const cur = multiAmounts[item.id] ?? item.defaultValue ?? item.min
+                  return (
+                    <div key={item.id} className="multi-amount-row">
+                      <span className="multi-amount-label"><FormattedText text={item.label} /></span>
+                      <div className="multi-stepper">
+                        <IconButton
+                          label={`${item.label} — ${t('game', 'amount_decrease')}`}
+                          round
+                          disabled={busy || cur <= item.min}
+                          onClick={() => setMultiAmounts((s) => ({ ...s, [item.id]: Math.max(item.min, cur - 1) }))}
+                        >
+                          −
+                        </IconButton>
+                        <span className="multi-stepper-val" role="status" aria-live="polite" aria-label={`${item.label}: ${cur}`}>{cur}</span>
+                        <IconButton
+                          label={`${item.label} — ${t('game', 'amount_increase')}`}
+                          round
+                          disabled={busy || cur >= item.max}
+                          onClick={() => setMultiAmounts((s) => ({ ...s, [item.id]: Math.min(item.max, cur + 1) }))}
+                        >
+                          +
+                        </IconButton>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+              <div className="feedback-dialog-actions">
+                <Button className="arena-generic-primary" variant="primary" disabled={busy} onClick={confirmMultiAmount}>
+                  {t('game', 'multi_confirm')}
+                </Button>
+                {prompt.required === false && (
+                  <Button variant="subtle" disabled={busy} onClick={cancel} className="cancel-btn">{t('game', 'string_cancel')}</Button>
+                )}
               </div>
             </div>
           )}
-          {prompt.choiceSpecial && (
-            <Checkbox
-              className="feedback-remember-answer"
-              checked={rememberAnswer}
-              disabled={busy}
-              onChange={setRememberAnswer}
-              label={t('game', 'choice_remember')}
-            />
-          )}
-          <div className="feedback-dialog-actions">
-            <Button variant="primary"
-              disabled={busy || typedValue === null}
-              onClick={sendChoiceFromInput}
-            >
-              {t('game', 'string_confirm')}
-            </Button>
-            {prompt.required === false && (
-              <Button variant="subtle" disabled={busy} onClick={cancel} className="cancel-btn">{t('game', 'string_cancel')}</Button>
-            )}
-          </div>
-        </div>
-      )}
 
-      {prompt.mode === 'integer' && (
-        <div className="feedback-amount-wrap">
-          <div className="feedback-amount-stepper">
-            <IconButton label={t('game', 'amount_decrease')} size="xl" round
-              disabled={busy || amount <= prompt.min}
-              onClick={() => setAmount((v) => Number.isNaN(v) ? prompt.min : Math.max(prompt.min, v - 1))}>
-              −
-            </IconButton>
-            <div className="stepper-display">
-              <input
-                aria-label={t('game', 'amount_value')}
-                type="number"
-                min={prompt.min}
-                max={prompt.max}
-                value={Number.isNaN(amount) ? '' : amount}
-                aria-invalid={amountValid ? undefined : true}
-                onChange={(event) => setAmount(event.target.value === '' ? Number.NaN : Number(event.target.value))}
-                className="stepper-input"
-              />
-              {amountValid
-                ? <span className="stepper-range">{t('game', 'amount_range', { min: prompt.min, max: prompt.max })}</span>
-                : <span className="ui-field-error" role="alert">{t('game', 'amount_range', { min: prompt.min, max: prompt.max })}</span>}
-            </div>
-            <IconButton label={t('game', 'amount_increase')} size="xl" round
-              disabled={busy || amount >= prompt.max}
-              onClick={() => setAmount((v) => Number.isNaN(v) ? prompt.min : Math.min(prompt.max, v + 1))}>
-              +
-            </IconButton>
-          </div>
-          {prompt.min !== prompt.max && (
-            <div className="stepper-quick-row">
-              <Button variant="subtle" size="sm"
-                disabled={busy || amount === prompt.min}
-                onClick={() => setAmount(prompt.min)}>
-                {t('game', 'amount_min', { min: prompt.min })}
-              </Button>
-              <Button variant="subtle" size="sm"
-                disabled={busy || amount === prompt.max}
-                onClick={() => setAmount(prompt.max)}>
-                {t('game', 'amount_max', { max: prompt.max })}
-              </Button>
+          {isGridBranch && (
+            <div className="feedback-options feedback-options-wrap">
+              <div
+                className={`feedback-options-grid ${isColorChoice ? 'is-color-row' : isModeCards ? 'is-mode-row' : prompt.options.length <= 4 ? 'compact-grid' : ''}`}
+                onKeyDown={onOptionsKeyDown}
+              >
+                {gridOptions.map((option, idx) => {
+                  const isSel = selected.includes(option.value)
+                  const color = isColorChoice ? manaColorMeta(option) : null
+                  return (
+                    <button
+                      type="button"
+                      key={option.id}
+                      tabIndex={idx === activeIdx ? 0 : -1}
+                      aria-keyshortcuts={idx < 9 ? String(idx + 1) : undefined}
+                      className={`feedback-choice-card${color ? ` is-color-medallion ${color.cls}` : ''}${isModeCards ? ' is-mode-card' : ''}${isSel ? ' selected' : ''}${idx === activeIdx && gridQuery.trim() !== '' ? ' kb-active' : ''}`}
+                      disabled={busy}
+                      onMouseEnter={() => setActiveIdx(idx)}
+                      onFocus={() => setActiveIdx(idx)}
+                      onDoubleClick={() => {
+                        if (!isMultiGrid) selectOption(option)
+                      }}
+                      onClick={() => {
+                        if (autoAnswerable) chooseBoolean(option)
+                        selectOption(option)
+                      }}
+                    >
+                      {color ? (
+                        <>
+                          <span className="mana-medallion-glyph"><FormattedText text={color.symbol} /></span>
+                          <span className="choice-text"><FormattedText text={localizeOptionLabel(option.label, dynamicT(t))} /></span>
+                        </>
+                      ) : (
+                        <>
+                          <span className="choice-number">{idx + 1}</span>
+                          <span className="choice-text"><FormattedText text={localizeOptionLabel(option.label, dynamicT(t))} /></span>
+                          {prompt.mode === 'uuid' && prompt.max > 1 && (
+                            <span className="choice-checkbox">{isSel ? '✓' : ''}</span>
+                          )}
+                        </>
+                      )}
+                    </button>
+                  )
+                })}
+                {gridOptions.length === 0 && (
+                  <EmptyState size="sm">{t('game', 'grid_no_results')}</EmptyState>
+                )}
+              </div>
             </div>
           )}
-          <div className="feedback-dialog-actions">
-            <Button variant="primary" disabled={busy || !amountValid} onClick={confirmAmount}>{t('game', 'integer_confirm')}</Button>
-            {prompt.required === false && (
-              <Button variant="subtle" disabled={busy} onClick={cancel} className="cancel-btn">{t('game', 'string_cancel')}</Button>
-            )}
-          </div>
-        </div>
-      )}
-
-      {prompt.mode === 'multiString' && (
-        <div className="feedback-multi-amount-wrap">
-          <div className="feedback-multi-list">
-            {(prompt.items ?? []).map((item) => {
-              const cur = multiAmounts[item.id] ?? item.defaultValue ?? item.min
-              return (
-                <div key={item.id} className="multi-amount-row">
-                  <span className="multi-amount-label"><FormattedText text={item.label} /></span>
-                  <div className="multi-stepper">
-                    <IconButton label={`${item.label} — ${t('game', 'amount_decrease')}`} round
-                      disabled={busy || cur <= item.min}
-                      onClick={() => setMultiAmounts((s) => ({ ...s, [item.id]: Math.max(item.min, cur - 1) }))}>
-                      −
-                    </IconButton>
-                    <span className="multi-stepper-val" role="status" aria-live="polite" aria-label={`${item.label}: ${cur}`}>{cur}</span>
-                    <IconButton label={`${item.label} — ${t('game', 'amount_increase')}`} round
-                      disabled={busy || cur >= item.max}
-                      onClick={() => setMultiAmounts((s) => ({ ...s, [item.id]: Math.min(item.max, cur + 1) }))}>
-                      +
-                    </IconButton>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-          <div className="feedback-dialog-actions">
-            <Button variant="primary" disabled={busy} onClick={confirmMultiAmount}>{t('game', 'multi_confirm')}</Button>
-            {prompt.required === false && (
-              <Button variant="subtle" disabled={busy} onClick={cancel} className="cancel-btn">{t('game', 'string_cancel')}</Button>
-            )}
-          </div>
-        </div>
-      )}
-
-      {prompt.mode !== 'integer' && prompt.mode !== 'multiString' && prompt.mode !== 'string' && (
-        <div className="feedback-options feedback-options-wrap">
-          <div
-            className={`feedback-options-grid ${prompt.options.length <= 4 ? 'compact-grid' : ''}`}
-            onKeyDown={onOptionsKeyDown}
-          >
-            {gridOptions.map((option, idx) => {
-              const isSel = selected.includes(option.value)
-              return (
-                <button type="button"
-                  key={option.id}
-                  tabIndex={idx === activeIdx ? 0 : -1}
-                  aria-keyshortcuts={idx < 9 ? String(idx + 1) : undefined}
-                  className={`feedback-choice-card ${isSel ? 'selected' : ''} ${idx === activeIdx && gridQuery.trim() !== '' ? 'kb-active' : ''}`}
-                  disabled={busy}
-                  onMouseEnter={() => setActiveIdx(idx)}
-                  onFocus={() => setActiveIdx(idx)}
-                  onDoubleClick={() => {
-                    if (!isMultiGrid) selectOption(option)
-                  }}
-                  onClick={() => {
-                    if (autoAnswerable) chooseBoolean(option)
-                    selectOption(option)
-                  }}
-                >
-                  <span className="choice-number">{idx + 1}</span>
-                  <span className="choice-text"><FormattedText text={localizeOptionLabel(option.label, dynamicT(t))} /></span>
-                  {prompt.mode === 'uuid' && prompt.max > 1 && (
-                    <span className="choice-checkbox">{isSel ? '✓' : ''}</span>
-                  )}
-                </button>
-              )
-            })}
-            {gridOptions.length === 0 && (
-              <EmptyState size="sm">{t('game', 'grid_no_results')}</EmptyState>
-            )}
-          </div>
-          {(prompt.mode === 'uuid' && prompt.max > 1 || prompt.required === false || prompt.cancelable) && (
-            <div className="feedback-dialog-actions">
-              {prompt.mode === 'uuid' && prompt.max > 1 && (
-                <Button variant="primary" disabled={busy || selected.length < Math.max(prompt.min, 1)} onClick={confirmSelected}>
-                  {t('game', 'selected_count', { count: selected.length })}
-                </Button>
-              )}
-              {(prompt.required === false || prompt.cancelable) && (
-                <Button variant="subtle" disabled={busy} onClick={finishOptionalTarget} className="cancel-btn" aria-keyshortcuts={prompt.cancelable ? 'Escape' : undefined}>
-                  {prompt.cancelable ? t('game', 'targeting_cancel') : t('game', 'targeting_finish')}
-                </Button>
-              )}
-            </div>
-          )}
-          {autoAnswerable && (
-            <Checkbox
-              className="feedback-remember-answer"
-              checked={rememberAnswer}
-              disabled={busy}
-              onChange={setRememberAnswer}
-              label={t('game', 'auto_answer_remember')}
-            />
-          )}
-        </div>
-      )}
-    </DialogShell>
+        </section>
+      </ArenaPromptShell>
+    </div>
   )
 }

@@ -14,7 +14,7 @@ test.describe('Planeswalker Ability Dialog', { tag: '@planeswalker' }, () => {
       expect(pageErrors).toEqual([])
       const dialog = page.locator('.pw-dialog')
       await expect(dialog).toBeVisible()
-      await expect(dialog).toContainText('PLANESWALKER')
+      await expect(dialog).toContainText(/planeswalker/i)
       await expect(dialog).toContainText('+2')
       await expect(dialog).toContainText('-3')
       await expect(dialog).toContainText('-8')

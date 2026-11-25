@@ -15,7 +15,7 @@ test.describe('Voting Dialog', { tag: '@voting' }, () => {
       expect(pageErrors).toEqual([])
       const dialog = page.locator('.voting-dialog')
       await expect(dialog).toBeVisible()
-      await expect(dialog).toContainText('VOTACIÓN')
+      await expect(dialog).toContainText(/votaci[oó]n/i)
       await expect(dialog).toContainText('Strength')
       await expect(dialog).toContainText('Numbers')
       await expect(dialog.locator('.voting-btn')).toHaveCount(2)

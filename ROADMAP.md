@@ -159,7 +159,7 @@ Arena as possible.
 | Phone strip | At 390 px the phase bar, the turn-order ring and the strip buttons overlap in the one strip; the v2 top bar used to serve phones |
 | 5+ players hint | A game of five or more forces the side panel (BRD-6); the switch's hint does not say so yet (needs the nine translations) |
 | Hand column with the chat and log panel open | The column hides while the panel is open and the fan returns (`BoardShell`); a slim strip would keep the hand in place but needs its own card render |
-| Arena prompt overlays | Surveil, scry and standalone library/graveyard orderings (Ponder, bottom-order, graveyard-order; `ArenaLibraryPrompt`, `LibraryOrderDialog`, PRM-20), trigger order (`TriggerOrderDialog`, PRM-14), card selection / library search (`CardGrid`, PRM-5…7, PRM-12, PRM-15) and piles (`PileDialog`, PRM-15) are done. Next, one design each: mulligan, modes, and yes/no. Open on the surveil/scry overlay: keyboard users cannot move cards yet, and it has no phone-width layout |
+| Arena prompt overlays | Surveil, scry and standalone library/graveyard orderings (Ponder, bottom-order, graveyard-order; `ArenaLibraryPrompt`, `LibraryOrderDialog`, PRM-20), trigger order (`TriggerOrderDialog`, PRM-14), card selection / library search (`CardGrid`, PRM-5…7, PRM-12, PRM-15), piles (`PileDialog`, PRM-15), and modes/abilities/color/X/planeswalker/voting/starting-player (`GenericDialog`, `PlaneswalkerAbilityDialog`, `VotingDialog`, `StartingPlayerDialog`) are done. Next: yes/no (`AskBar`). Open on the surveil/scry overlay: keyboard users cannot move cards yet, and it has no phone-width layout |
 
 ### 4.3d Keyword effects: known gaps
 

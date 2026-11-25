@@ -1,20 +1,61 @@
+.arena-pw .arena-prompt-stage {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.arena-pw.has-source .arena-prompt-stage {
+  grid-template-columns: var(--arena-card-w) minmax(0, 1fr) var(--arena-card-w);
+}
+
+.arena-pw .arena-pw-zone {
+  grid-column: 1 / -1;
+  grid-row: 1;
+  justify-self: center;
+  width: min(680px, 100%);
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+.arena-pw.has-source .arena-pw-zone {
+  grid-column: 2;
+}
+
+.arena-pw .arena-prompt-footer {
+  grid-column: 1 / -1;
+  grid-row: 2;
+}
+
+.arena-pw .arena-prompt-aside {
+  grid-column: 3;
+  align-self: center;
+  margin-top: 0;
+  border-radius: 6% / 4.3%;
+  box-shadow:
+    0 0 0 2px rgb(var(--purple-rgb) / 0.85),
+    0 0 26px rgb(var(--purple-rgb) / 0.55),
+    0 0 60px rgb(var(--purple-rgb) / 0.25);
+}
+
 .pw-loyalty-now {
-  font-size: var(--fs-xs);
-  color: var(--purple-fg);
-  margin-bottom: var(--sp-3h);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-1) var(--sp-3h);
+  border-radius: var(--r-pill);
+  background: rgb(var(--ink-2-rgb) / 0.85);
+  border: 1px solid rgb(var(--purple-rgb) / 0.55);
+  font-size: var(--fs-sm);
+  color: var(--fg-1);
 }
 
 .pw-loyalty-val {
+  font-family: var(--font-display);
+  font-size: var(--fs-lg);
   font-weight: 800;
-  color: var(--fg-hi);
-  background: rgb(var(--purple-rgb) / 0.25);
-  border: 1px solid var(--purple);
-  border-radius: var(--r-sm);
-  padding: 1px var(--sp-1h);
-  margin-left: var(--sp-1);
+  color: var(--gold-300);
 }
 
 .pw-options {
+  width: 100%;
   display: flex;
   flex-direction: column;
   gap: var(--sp-2h);
@@ -23,82 +64,73 @@
 .pw-ability-btn {
   display: flex;
   align-items: center;
-  gap: var(--sp-3);
-  padding: var(--sp-3) var(--sp-4);
-  border-radius: var(--r-mid);
-  font-size: var(--fs-sm);
-  font-weight: 600;
+  gap: var(--sp-3h);
+  width: 100%;
+  padding: var(--sp-3h) var(--sp-4h);
+  border-radius: var(--r-lg);
+  background: linear-gradient(180deg, rgb(var(--ink-2-rgb) / 0.92) 0%, rgb(var(--ink-rgb) / 0.96) 100%);
+  border: 2px solid color-mix(in srgb, var(--fg-hi) 28%, transparent);
+  color: var(--fg-hi);
   text-align: left;
   cursor: pointer;
-  border: 1.5px solid var(--brand);
-  background: var(--ink-3);
-  color: var(--fg-1);
-  transition: transform 0.1s ease, border-color 0.15s ease, background 0.15s ease;
+  box-shadow: 0 12px 30px var(--shade-4);
+  transition: transform 140ms ease, border-color 140ms ease, box-shadow 140ms ease;
 }
 
 .pw-ability-btn:hover:not(:disabled) {
-  transform: translateY(-1px);
-  border-color: var(--purple-fg);
-  background: var(--ink-4);
-}
-
-.pw-ability-btn:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
-.pw-ability-btn.delta-pos {
-  border-color: var(--ok);
-}
-
-.pw-ability-btn.delta-neg {
-  border-color: var(--err);
-}
-
-.pw-ability-btn.delta-zero {
-  border-color: var(--purple);
+  transform: translateY(-3px);
+  border-color: rgb(var(--arena-glow-rgb) / 0.95);
+  box-shadow:
+    0 16px 36px var(--shade-5),
+    0 0 22px rgb(var(--arena-glow-rgb) / 0.45);
 }
 
 .pw-delta {
-  min-width: 36px;
-  text-align: center;
-  font-weight: 800;
+  flex: 0 0 auto;
+  min-width: 48px;
+  height: 40px;
+  padding: 0 var(--sp-2);
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-md);
   font-family: var(--font-display);
-  padding: var(--sp-1) var(--sp-2);
-  border-radius: var(--r-base);
-  background: var(--shade-1);
-  font-size: var(--fs-md);
+  font-size: var(--fs-lg);
+  font-weight: 800;
+  background: var(--ink-0);
+  border: 2px solid var(--veil-5);
+  color: var(--fg-hi);
 }
 
-.delta-pos .pw-delta {
+.pw-ability-btn.delta-pos .pw-delta {
+  border-color: rgb(var(--ok-rgb) / 0.85);
   color: var(--ok);
-  border: 1px solid var(--ok);
 }
 
-.delta-neg .pw-delta {
+.pw-ability-btn.delta-neg .pw-delta {
+  border-color: rgb(var(--err-rgb) / 0.85);
   color: var(--err);
-  border: 1px solid var(--err);
-}
-
-.delta-zero .pw-delta {
-  color: var(--purple-fg);
-  border: 1px solid var(--purple);
 }
 
 .pw-label {
   flex: 1;
+  font-family: var(--font-serif);
+  font-size: var(--fs-md);
+  line-height: 1.4;
 }
 
 .pw-after {
-  font-size: var(--fs-xs);
-  color: var(--fg-2);
+  flex: 0 0 auto;
+  font-family: var(--font-display);
+  font-size: var(--fs-sm);
   font-weight: 700;
+  color: var(--fg-2);
 }
 
 .pw-hint {
-  margin-top: var(--sp-3h);
-  font-size: var(--fs-2xs);
-  color: var(--fg-3);
+  font-size: var(--fs-xs);
+  color: var(--fg-2);
+  text-align: center;
+  text-shadow: var(--arena-text-shadow);
 }
 
 @media (prefers-reduced-motion: reduce) {

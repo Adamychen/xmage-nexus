@@ -1,19 +1,93 @@
-/* GenericDialog: choice cards, steppers, multi-amount y string input.
-   Extraído de game/GameScreen.css (secciones «Interactive Choice Cards Grid» → «String Input») — refactor de co-locación. */
+/* Arena-style GenericDialog: mode cards, mana medallions, steppers, multi-amount and searchable choices. */
 
-.feedback-options-wrap {
-  display: flex;
-  flex-direction: column;
+.arena-generic .arena-prompt-stage {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.arena-generic.has-source .arena-prompt-stage {
+  grid-template-columns: var(--arena-card-w) minmax(0, 1fr) var(--arena-card-w);
+}
+
+.arena-generic .arena-generic-zone {
+  grid-column: 1 / -1;
+  grid-row: 1;
+  justify-self: center;
+  width: min(980px, 100%);
+  align-items: center;
   gap: var(--sp-3);
 }
 
+.arena-generic.has-source .arena-generic-zone {
+  grid-column: 2;
+  width: min(860px, 100%);
+}
+
+.arena-generic .arena-prompt-footer {
+  grid-column: 1 / -1;
+  grid-row: 2;
+}
+
+.arena-generic .arena-prompt-aside {
+  grid-column: 3;
+  align-self: center;
+  margin-top: 0;
+  border-radius: 6% / 4.3%;
+  box-shadow:
+    0 0 0 2px rgb(var(--brand-rgb) / 0.9),
+    0 0 26px rgb(var(--brand-rgb) / 0.6),
+    0 0 60px rgb(var(--brand-rgb) / 0.25);
+}
+
+.arena-generic-footer-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.feedback-dialog-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: var(--sp-2h);
+}
+
+.arena-generic-primary {
+  min-width: clamp(140px, 11vw, 190px);
+  padding: var(--sp-2) calc(var(--sp-6) + var(--sp-2h));
+  border: 1px solid var(--brand-fg);
+  border-radius: var(--r-pill);
+  background: linear-gradient(180deg, var(--brand) 0%, var(--brand-strong) 100%);
+  color: var(--fg-hi);
+  font-family: var(--font-serif);
+  font-size: clamp(var(--fs-md), 1.3vw, var(--fs-lg));
+  font-weight: 700;
+  text-shadow: 0 1px 3px rgb(var(--ink-rgb) / 0.8);
+  box-shadow:
+    0 0 0 1px rgb(var(--brand-rgb) / 0.75),
+    0 0 18px rgb(var(--brand-rgb) / 0.65),
+    0 0 44px rgb(var(--brand-rgb) / 0.35),
+    inset 0 1px 0 color-mix(in srgb, var(--fg-hi) 45%, transparent);
+}
+
+.feedback-options-wrap {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+/* ── Default list (searchable / >5 options) ─────────────────── */
 .feedback-options-grid {
+  width: min(640px, 100%);
   display: flex;
   flex-direction: column;
   gap: var(--sp-2);
   max-height: min(420px, 50vh);
   overflow-y: auto;
-  padding-right: var(--sp-1);
+  padding: var(--sp-1);
 }
 
 .feedback-choice-card {
@@ -21,29 +95,169 @@
   align-items: center;
   gap: var(--sp-3h);
   padding: var(--sp-3) var(--sp-4);
-  background: var(--veil-1);
-  border: 1.5px solid var(--veil-3);
+  background: rgb(var(--ink-2-rgb) / 0.84);
+  border: 1.5px solid var(--veil-4);
   border-radius: var(--r-mid);
-  color: var(--fg-1);
+  color: var(--fg-hi);
   cursor: pointer;
   text-align: left;
   font-size: var(--fs-base);
   font-weight: 500;
-  transition: all 0.15s ease;
+  box-shadow: 0 6px 20px var(--shade-3);
+  transition: transform 140ms ease, border-color 140ms ease, box-shadow 140ms ease, background 140ms ease;
 }
 
 .feedback-choice-card:hover:not(:disabled) {
-  background: rgb(var(--brand-rgb) / 0.15);
-  border-color: rgb(var(--brand-rgb) / 0.6);
-  transform: translateX(3px);
-  box-shadow: 0 6px 20px var(--shade-1);
+  background: rgb(var(--ink-2-rgb) / 0.94);
+  border-color: rgb(var(--arena-glow-rgb) / 0.9);
+  transform: translateY(-2px);
+  box-shadow:
+    0 10px 26px var(--shade-4),
+    0 0 18px rgb(var(--arena-glow-rgb) / 0.35);
 }
 
 .feedback-choice-card.selected {
-  background: linear-gradient(90deg, rgb(var(--brand-rgb) / 0.28) 0%, rgb(var(--purple-rgb) / 0.2) 100%);
-  border-color: var(--brand-fg);
+  background: rgb(var(--ink-2-rgb) / 0.95);
+  border-color: rgb(var(--ember-rgb) / 0.95);
   color: var(--fg-hi);
-  box-shadow: 0 0 16px rgb(var(--brand-rgb) / 0.25);
+  box-shadow:
+    0 0 0 2px rgb(var(--ember-rgb) / 0.9),
+    0 0 24px rgb(var(--ember-rgb) / 0.5);
+}
+
+/* ── Option A: Modal / Ability Cards Row ────────────────────── */
+.feedback-options-grid.is-mode-row {
+  width: 100%;
+  max-height: none;
+  overflow: visible;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: stretch;
+  gap: clamp(var(--sp-3), 2vw, var(--sp-5));
+  padding: var(--sp-2);
+}
+
+.feedback-choice-card.is-mode-card {
+  position: relative;
+  flex: 1 1 210px;
+  max-width: 260px;
+  min-height: 220px;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  gap: var(--sp-3);
+  padding: var(--sp-5) var(--sp-4);
+  border-radius: var(--r-lg);
+  background:
+    linear-gradient(180deg, rgb(var(--ink-2-rgb) / 0.92) 0%, rgb(var(--ink-rgb) / 0.96) 100%);
+  border: 2px solid color-mix(in srgb, var(--fg-hi) 30%, transparent);
+  box-shadow:
+    0 14px 36px var(--shade-5),
+    inset 0 1px 0 color-mix(in srgb, var(--fg-hi) 22%, transparent);
+}
+
+.feedback-choice-card.is-mode-card:hover:not(:disabled) {
+  transform: translateY(-6px);
+  border-color: rgb(var(--arena-glow-rgb) / 0.95);
+  box-shadow:
+    0 20px 44px var(--shade-5),
+    0 0 0 1px rgb(var(--arena-glow-rgb) / 0.8),
+    0 0 28px rgb(var(--arena-glow-rgb) / 0.45);
+}
+
+.feedback-choice-card.is-mode-card.selected {
+  border-color: rgb(var(--ember-rgb) / 0.95);
+  box-shadow:
+    0 16px 38px var(--shade-5),
+    0 0 0 2px rgb(var(--ember-rgb) / 0.95),
+    0 0 28px rgb(var(--ember-rgb) / 0.55);
+}
+
+.feedback-choice-card.is-mode-card .choice-number {
+  position: absolute;
+  top: var(--sp-2h);
+  left: var(--sp-2h);
+}
+
+.feedback-choice-card.is-mode-card .choice-text {
+  flex: 0 1 auto;
+  font-family: var(--font-serif);
+  font-size: clamp(var(--fs-base), 1.15vw, var(--fs-lg));
+  line-height: 1.45;
+  color: var(--fg-hi);
+}
+
+.feedback-choice-card.is-mode-card .choice-checkbox {
+  position: absolute;
+  top: var(--sp-2h);
+  right: var(--sp-2h);
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: rgb(var(--ember-rgb) / 0.95);
+  color: var(--fg-hi);
+  font-size: var(--fs-xs);
+}
+
+.feedback-choice-card.is-mode-card .choice-checkbox:empty {
+  display: none;
+}
+
+/* ── Mana Color Medallions ──────────────────────────────────── */
+.feedback-options-grid.is-color-row {
+  width: 100%;
+  max-height: none;
+  overflow: visible;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: clamp(var(--sp-3), 2.2vw, var(--sp-6));
+  padding: var(--sp-2);
+}
+
+.feedback-choice-card.is-color-medallion {
+  flex: 0 0 auto;
+  width: clamp(104px, 9vw, 134px);
+  height: clamp(120px, 10.5vw, 152px);
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-3);
+  border-radius: var(--r-xl);
+  text-align: center;
+  background: rgb(var(--ink-2-rgb) / 0.86);
+  border: 2px solid var(--veil-4);
+}
+
+.feedback-choice-card.is-color-medallion:hover:not(:disabled) {
+  transform: translateY(-6px) scale(1.04);
+}
+
+.mana-medallion-glyph {
+  font-size: clamp(2.2rem, 3.2vw, 3rem);
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mana-medallion-glyph .ms,
+.mana-medallion-glyph img,
+.mana-medallion-glyph svg {
+  width: clamp(44px, 4vw, 58px);
+  height: clamp(44px, 4vw, 58px);
+}
+
+.feedback-choice-card.is-color-medallion .choice-text {
+  flex: 0 0 auto;
+  font-family: var(--font-serif);
+  font-size: var(--fs-md);
+  font-weight: 700;
 }
 
 .choice-number {
@@ -60,13 +274,13 @@
 }
 
 .feedback-choice-card.selected .choice-number {
-  background: var(--brand-fg);
-  color: var(--ink-0);
+  background: rgb(var(--ember-rgb) / 0.95);
+  color: var(--fg-hi);
 }
 
 .feedback-choice-card.kb-active {
-  border-color: rgb(var(--gold-rgb) / 0.7);
-  box-shadow: 0 0 0 1px rgb(var(--gold-rgb) / 0.5), 0 6px 20px var(--shade-1);
+  border-color: rgb(var(--gold-rgb) / 0.85);
+  box-shadow: 0 0 0 1px rgb(var(--gold-rgb) / 0.6), 0 6px 20px var(--shade-3);
 }
 
 .choice-text {
@@ -75,7 +289,7 @@
 }
 
 .choice-checkbox {
-  color: var(--brand-fg);
+  color: rgb(var(--ember-rgb) / 0.95);
   font-weight: 800;
   font-size: var(--fs-base);
 }
@@ -85,33 +299,33 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--sp-4);
-  margin-top: var(--sp-2h);
+  gap: var(--sp-3h);
 }
 
 .feedback-amount-stepper {
   display: flex;
   align-items: center;
-  gap: var(--sp-4h);
-  background: var(--shade-1);
-  padding: var(--sp-3) var(--sp-5);
-  border-radius: var(--r-xl);
-  border: 1.5px solid var(--veil-3);
+  gap: var(--sp-5);
+  background: rgb(var(--ink-2-rgb) / 0.88);
+  padding: var(--sp-4) var(--sp-6);
+  border-radius: var(--r-pill);
+  border: 2px solid color-mix(in srgb, var(--fg-hi) 28%, transparent);
+  box-shadow: 0 14px 36px var(--shade-5);
 }
 
 .stepper-display {
   display: flex;
   flex-direction: column;
   align-items: center;
-  min-width: 90px;
+  min-width: 100px;
 }
 
 .stepper-input {
-  width: 100px;
+  width: 110px;
   background: transparent;
   border: none;
   text-align: center;
-  font-size: 2.4rem;
+  font-size: 2.8rem;
   font-weight: 800;
   font-family: var(--font-display);
   color: var(--gold-300);
@@ -127,7 +341,7 @@
 }
 
 .stepper-range {
-  font-size: var(--fs-2xs);
+  font-size: var(--fs-xs);
   color: var(--fg-2);
   margin-top: var(--sp-1);
 }
@@ -139,17 +353,17 @@
 
 /* ── Multi-Amount List ──────────────────────────────────────── */
 .feedback-multi-amount-wrap {
+  width: min(560px, 100%);
   display: flex;
   flex-direction: column;
-  gap: var(--sp-4);
-  margin-top: var(--sp-2);
+  gap: var(--sp-3);
 }
 
 .feedback-multi-list {
   display: flex;
   flex-direction: column;
   gap: var(--sp-2);
-  max-height: 320px;
+  max-height: 360px;
   overflow-y: auto;
 }
 
@@ -158,15 +372,16 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--sp-3h);
-  padding: var(--sp-2h) var(--sp-3h);
-  background: var(--veil-1);
-  border: 1px solid var(--veil-2);
+  padding: var(--sp-3) var(--sp-4);
+  background: rgb(var(--ink-2-rgb) / 0.86);
+  border: 1.5px solid var(--veil-4);
   border-radius: var(--r-md);
+  box-shadow: 0 6px 20px var(--shade-3);
 }
 
 .multi-amount-label {
   font-size: var(--fs-md);
-  color: var(--fg-1);
+  color: var(--fg-hi);
 }
 
 .multi-stepper {
@@ -176,7 +391,7 @@
 }
 
 .multi-stepper-val {
-  min-width: 24px;
+  min-width: 28px;
   text-align: center;
   font-size: var(--fs-heading);
   font-weight: 700;
@@ -185,14 +400,16 @@
 
 /* ── String Input ───────────────────────────────────────────── */
 .feedback-string-wrap {
+  width: min(640px, 100%);
   display: flex;
   flex-direction: column;
-  gap: var(--sp-4);
-  margin-top: var(--sp-2);
+  align-items: center;
+  gap: var(--sp-3);
 }
 
 .feedback-input-box {
   position: relative;
+  width: min(520px, 100%);
   display: flex;
   align-items: center;
 }
@@ -201,14 +418,33 @@
   position: absolute;
   left: 14px;
   font-size: var(--fs-lg);
+  color: var(--fg-2);
   pointer-events: none;
 }
 
 .feedback-input-box input {
   width: 100%;
-  padding: var(--sp-3) var(--sp-4) var(--sp-3) 42px;
-  font-size: var(--fs-lg);
+  padding: var(--sp-2h) var(--sp-4) var(--sp-2h) 40px;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-pill);
+  background: rgb(var(--ink-rgb) / 0.72);
+  color: var(--fg-hi);
+  font-size: var(--fs-base);
+  outline: none;
 }
 
-.feedback-remember-answer { margin-top: var(--sp-3h); font-size: var(--fs-sm); }
+.feedback-input-box input:focus {
+  border-color: var(--brand-fg);
+  box-shadow: var(--focus-ring);
+}
 
+.feedback-remember-answer {
+  margin-top: var(--sp-1);
+  font-size: var(--fs-sm);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .feedback-choice-card {
+    transition: none;
+  }
+}

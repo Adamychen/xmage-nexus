@@ -195,7 +195,7 @@ describe('GenericDialog hooks', () => {
       sourceName: 'Walking Ballista',
     }
     const { container } = render(<GenericDialog form={stubForm(amountPrompt)} />)
-    expect(container.querySelector('.dlg-source')?.textContent).toContain('Walking Ballista')
+    expect(container.querySelector('.arena-prompt-aside [data-card-name]')?.getAttribute('data-card-name')).toContain('Walking Ballista')
   })
 
   it('multiString mode: no Cancelar button when the prompt is required (default)', () => {
@@ -246,7 +246,7 @@ describe('GenericDialog hooks', () => {
       sourceName: 'Elvish Warrior',
     }
     const { container } = render(<GenericDialog form={stubForm(multiPrompt)} />)
-    expect(container.querySelector('.dlg-source')?.textContent).toContain('Elvish Warrior')
+    expect(container.querySelector('.arena-prompt-aside [data-card-name]')?.getAttribute('data-card-name')).toContain('Elvish Warrior')
     expect(container.querySelector('.cancel-btn')).not.toBeNull()
   })
 
