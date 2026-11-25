@@ -110,8 +110,8 @@ with the known cards kept face up beside it; a hand that is entirely face up nev
 - Guard: `src/board/HandZone.test.tsx` · `e2e/reveal.spec.ts`
 
 ### HND-9 · A known opponent hand opens in a viewer
-Clicking an opponent's hand opens the hand viewer: the known cards numbered from #1, then one numbered back per
-unknown card. The stack opens it even when nothing is known. Only a known card that is a target or
+Clicking an opponent's hand opens the hand viewer: the known cards, then one back per unknown card,
+with no position numbers (BRD-24). The stack opens it even when nothing is known. Only a known card that is a target or
 playable reacts to a click; the viewer closes with its close button or Escape.
 
 - Why: the grimoire-style viewer for an opponent's hand (`6eaceab068`).

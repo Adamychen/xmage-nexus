@@ -142,10 +142,10 @@ board, never the dock.
 ### STK-11 · The whole stack opens in the zone viewer
 Beside the cascade, under the grip that pushes it aside, a button with the number of objects on the
 stack opens all of them in the zone viewer of the graveyard and the exile (BRD-24), in the order the
-cascade shows them: the object about to resolve at the right and on top, marked #1, and the ones
-that resolve later to its left, each with its position and the name of its controller (and a mark
-when it is an ability). The cascade only draws as many cards as fit; the viewer
-draws every one, and when its fan cannot hold them all it opens slid to the right end, on #1, with
+cascade shows them: the object about to resolve at the right and on top, and the ones that resolve
+later to its left, each with the name of its controller (and a mark when it is an ability), with
+`Last` under the left end of the fan and `First` under the right one instead of a number per card. The cascade only draws as many cards as fit; the viewer
+draws every one, and when its fan cannot hold them all it opens slid to the right end, on the object about to resolve, with
 the objects that resolve later in the pile at its left. An object the prompt can target is ringed there and a click on it chooses it, as in
 the cascade. The button stays on screen while the stack is pushed aside, and the viewer closes when
 the stack empties.
@@ -153,6 +153,8 @@ the stack empties.
 - Why: a long stack folds behind the "+N" of its front card and the cards it does draw only show
   their title strip, so a deep chain could not be read; the user asked for a button to see it like
   the graveyard (24-nov-2026).
+  The #N badges on each object gave way to `Last`/`First` at the ends of the fan at the user's
+  request (25-nov-2026), as in the trigger ordering (PRM-14).
 - Guard: `src/board/StackZone.test.tsx`
 
 ### STK-12 · The stack viewer says what the object being read does and aims at
@@ -161,7 +163,7 @@ one about to resolve when the viewer opens, then the one under the pointer or th
 It shows the object's name and the server's text, as the bubble does (STK-10), and, under
 "Targets", what it aims at, the way MTG Arena shows a spell's target beside it: a card on the
 battlefield or in any other zone is drawn as that card; a player is named in their seat colour; an
-object on the stack is named by its place ("#2 · on the stack") and ringed in the fan. The fan keeps
+object on the stack is named by its card ("Path to Exile · on the stack") and ringed in the fan. The fan keeps
 clear of the panel, so no card slides under it.
 
 - Why: the arrows that say what a stack object aims at are drawn over the board, which the viewer

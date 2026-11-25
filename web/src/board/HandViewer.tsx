@@ -38,14 +38,13 @@ export default function HandViewer({
       itemCount={total}
       onClose={onClose}
     >
-          {known.map(([id, card], index) => {
+          {known.map(([id, card]) => {
             const clickable = (targetSet.has(id) || playableSet.has(id)) && onCardClick
             return (
               <div
                 key={id}
                 className="pile-card-wrapper zone-fan-item is-revealed"
               >
-                <div className="pile-position-badge">#{index + 1}</div>
                 <CardSlot
                   cardId={id}
                   card={card}
@@ -59,7 +58,6 @@ export default function HandViewer({
           })}
           {Array.from({ length: unknownCount }, (_, i) => (
             <div key={`hv-back-${i}`} className="pile-card-wrapper zone-fan-item" data-testid="hand-viewer-back" data-index={known.length + i + 1}>
-              <div className="pile-position-badge">#{known.length + i + 1}</div>
               <CardSlot card={{ id: `hv-back-${i}`, name: '?', manaValue: 0, expansionSetCode: '', cardNumber: '0' }} faceDown className="pile-card" />
             </div>
           ))}

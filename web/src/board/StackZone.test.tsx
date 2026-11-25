@@ -400,9 +400,9 @@ describe('StackZone, the whole stack in the zone viewer', () => {
     fireEvent.click(button)
     expect(viewer()).not.toBeNull()
     expect(items().map((el) => el.getAttribute('data-card-id'))).toEqual(['spell-1', 'spell-2', 'spell-3'])
-    expect(items()[2].textContent).toContain('#1')
     expect(items()[2].classList.contains('is-top-card')).toBe(true)
-    expect(items()[0].textContent).toContain('#3')
+    expect(viewer()!.textContent).not.toMatch(/#\d/)
+    expect([...viewer()!.querySelectorAll('.zone-fan-end')].map((el) => el.textContent)).toEqual(['Última', 'Primera'])
     fireEvent.keyDown(document, { key: 'Escape' })
     expect(viewer()).toBeNull()
   })
@@ -487,11 +487,11 @@ describe('StackZone viewer, what the object being read does and what it aims at'
     expect(panel().textContent).toContain('Counter target spell.')
   })
 
-  it('STK-12: a target on the stack is ringed in the fan and named by its place', () => {
+  it('STK-12: a target on the stack is ringed in the fan and named by its card', () => {
     open()
     expect(item('spell-path').classList.contains('is-targeted')).toBe(true)
     expect(item('spell-bolt').classList.contains('is-targeted')).toBe(false)
-    expect(panel().querySelector('[data-testid="stack-viewer-target"]')?.textContent).toContain('#2')
+    expect(panel().querySelector('[data-testid="stack-viewer-target"]')?.textContent).toContain('Path to Exile')
   })
 
   it('STK-12: pointing at another object reads it, and a target elsewhere is drawn as its card beside the fan', () => {

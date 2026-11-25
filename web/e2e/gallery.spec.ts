@@ -36,6 +36,7 @@ const VISUAL_ENTRIES_ALL = [
   'screen:lobby-overflow',
   'screen:decks',
   'screen:draft',
+  'screen:draft-piles',
   'screen:draft-waiting',
   'screen:construct',
   'screen:construct-overflow',

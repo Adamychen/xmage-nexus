@@ -45,21 +45,20 @@ describe('HandViewer', () => {
     expect(backs.length).toBe(3)
   })
 
-  it('renders every back with a #N badge continuing the known numbering (library style)', () => {
+  it('renders every unknown card as a face-down back', () => {
     openViewer({ known: [], unknownCount: 7 })
     const backs = document.body.querySelectorAll('[data-testid="hand-viewer-back"]')
     expect(backs.length).toBe(7)
-    backs.forEach((back, i) => {
+    backs.forEach((back) => {
       expect(back.querySelector('.card-slot.face-down.pile-card')).not.toBeNull()
-      expect(back.querySelector('.pile-position-badge')?.textContent).toBe(`#${i + 1}`)
     })
   })
 
-  it('HND-9: numbers known cards #1..#K and backs after them', () => {
+  it('HND-9: draws the known cards first, then the backs, with no numbers', () => {
     openViewer()
     const viewer = document.body.querySelector('[data-testid="hand-viewer"]')!
-    const badges = viewer.querySelectorAll('.pile-card-wrapper .pile-position-badge')
-    expect([...badges].map((b) => b.textContent)).toEqual(['#1', '#2', '#3', '#4', '#5'])
+    expect(viewer.querySelectorAll('.pile-position-badge')).toHaveLength(0)
+    expect(viewer.textContent).not.toMatch(/#\d/)
   })
 
   it('HND-9: closes on ✕ button and on Escape', () => {

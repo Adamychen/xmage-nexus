@@ -19,6 +19,7 @@ interface ZoneViewerProps {
   startAtEnd?: boolean
   /** Drawn beside the fan, over the dimmed board: what the card being read does and aims at. */
   aside?: ReactNode
+  ends?: { start: string; end: string }
   onClose: () => void
   children: ReactNode
 }
@@ -227,6 +228,7 @@ export default function ZoneViewer({
   itemCount,
   startAtEnd = false,
   aside,
+  ends,
   onClose,
   children,
 }: ZoneViewerProps) {
@@ -270,7 +272,11 @@ export default function ZoneViewer({
           <div ref={fan.trackRef} className="zone-fan-track">{children}</div>
         </div>
         {aside}
-        <FanScrollbar scroll={fan.scroll} maxScroll={fan.maxScroll} onScroll={fan.scrollTo} label={title} />
+        <div className="zone-fan-rail">
+          {ends && itemCount > 1 && <span className="zone-fan-end is-start">{ends.start}</span>}
+          <FanScrollbar scroll={fan.scroll} maxScroll={fan.maxScroll} onScroll={fan.scrollTo} label={title} />
+          {ends && itemCount > 1 && <span className="zone-fan-end is-end">{ends.end}</span>}
+        </div>
         <footer className="zone-viewer-footer">
           <Button
             variant="primary"
