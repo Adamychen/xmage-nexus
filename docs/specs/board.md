@@ -604,9 +604,10 @@ creatures keep their own size.
 On the own board of the Arena layout (BRD-32) the commander and the companion in the command zone
 are drawn with the hand, which is where their owner looks for something to cast: the last cards of
 the fan, apart from it by a gap of 0.4 of a card and with a gold edge; under the hand column,
-behind a line of its own; at the end of the hand row, past a gap. In the fan it is read the way the
-piles beside it are (BRD-32): the top half of a card, on a card a third wider than the hand's, so
-its art and its name carry at a glance without the fan giving up the room a whole card would take. They follow the hand in every
+behind a line of its own; at the end of the hand row, past a gap. Wherever the hand draws it, the fan of the own hand and
+the zone a watched seat or a panel copy draws, it is read the way the
+piles beside it are (BRD-32): the top half of a card, on a card a third wider than that hand's, so
+its art and its name carry at a glance without the hand giving up the room a whole card would take. They follow the hand in every
 hand layout, because the question they answer is the same in all of them. A seat drawn
 at full size that is not mine, the main area of the main-board mode (BRD-6), carries its hand the
 same way: the backs of the cards it holds, with its uncast commander at the end of them, instead
@@ -630,8 +631,11 @@ too: the hand has no room to spare at that width.
   card inside still took the fan's tuck on top of the half it already is, which slid its visible
   half past the bottom of the window. The user looked for it with and without the panel and found
   it in neither (25-nov-2026); measured at 1024x768 the visible half now ends 8 px above the
-  window's edge, with the panel open and closed.
-- Guard: `src/board/HandBar.test.tsx` · `src/board/HandBar.css.test.ts` · `src/board/commanders.test.ts` · `src/board/BoardZone.arenaOwn.test.tsx` · `src/board/HandRail.test.tsx` · `src/board/HandRow.test.tsx` · `src/board/SpotlightBoard.test.tsx`
+  window's edge, with the panel open and closed. The half card was then only the own fan's: a hand
+  drawn as a zone, which is what a watched seat and every copy in the panel use, still drew a whole
+  card, and the user, watching a game, saw his own seat's commander whole while the opponents'
+  read right (same day).
+- Guard: `src/board/HandBar.test.tsx` · `src/board/HandBar.css.test.ts` · `src/board/handCommander.css.test.ts` · `src/board/commanders.test.ts` · `src/board/BoardZone.arenaOwn.test.tsx` · `src/board/HandRail.test.tsx` · `src/board/HandRow.test.tsx` · `src/board/SpotlightBoard.test.tsx`
 
 ### BRD-35 · A band in several lines holds the same count on each line
 A band that wraps into several lines puts the same number of items on each line, or fewer on the
