@@ -63,3 +63,34 @@ describe('the commander coin on a permanent', () => {
     expect(mark()).toContain(`solid ${gold}`)
   })
 })
+
+describe('what a card slot animates', () => {
+  const boardZoneCss = readFileSync(fileURLToPath(new URL('./BoardZone.css', import.meta.url)), 'utf8')
+
+  const transitionsOf = (source: string): Array<{ selector: string; value: string }> => {
+    const stripped = source.replace(/\/\*[\s\S]*?\*\//g, '')
+    const out: Array<{ selector: string; value: string }> = []
+    for (const rule of stripped.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+      const selectors = rule[1].split(',').map((s) => s.trim())
+      if (!selectors.some((s) => /\.card-slot\b/.test(s))) continue
+      for (const decl of rule[2].matchAll(/transition:\s*([^;]+);/g)) {
+        out.push({ selector: selectors.join(', '), value: decl[1].replace(/\s+/g, ' ') })
+      }
+    }
+    return out
+  }
+
+  it('BRD-66: no card slot animates its margins, so a card size change never draws the row at the old size', () => {
+    const lists = [...transitionsOf(css), ...transitionsOf(boardZoneCss)]
+    expect(lists.length, 'a card slot declares what it animates').toBeGreaterThan(0)
+    for (const { selector, value } of lists) {
+      expect(value, `${selector} animates margin`).not.toMatch(/(^|[\s,])margin\b/)
+    }
+  })
+
+  it('BRD-66: a pile still animates `left`, which fans it open without moving its footprint', () => {
+    const pile = transitionsOf(boardZoneCss).find((t) => t.selector.includes('.stack-group > .card-slot'))
+    expect(pile, 'the pile declares its own transition').toBeTruthy()
+    expect(pile!.value).toMatch(/(^|[\s,])left\b/)
+  })
+})

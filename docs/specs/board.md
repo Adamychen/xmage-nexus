@@ -1182,3 +1182,24 @@ line under the overlay's title stays as it was, since it describes the state and
   time, and a player who conceded with life left was shown as having walked out (request of
   2026-11-25).
 - Guard: `src/board/defeatedSeats.test.tsx`
+
+### BRD-66 · A card's margins are layout, never an animation
+No card slot animates `margin`, on the battlefield or in a pile. A slot's margins are the layout's
+own numbers, computed from `--card-w` (the pile's overlap, the footprint a tilted tapped card gives
+back), so the browser must apply them in the same frame the card size changes. Animated, the row is
+drawn at the previous card size for the length of the transition, and in a pile each card's error
+adds to the one before it: the tail leaves the band, which clips it, and the player sees a card
+sliced by a straight edge. What a card does animate is unchanged: its transform, its lift, its
+shadow, its ring, its opacity, and `left`, which is what fans a pile open on hover without touching
+its footprint (BRD-20).
+
+- Why: reported as "las tierras que estaban cortadas" over a screenshot of a board whose lands ended
+  in a card cut down the middle (2026-11-25). Measured in the gallery on `frame:mass-tokens` reached
+  from another board: with the margin animated the 51-card pile hung 19 px outside its band for
+  about 120 ms at 60 fps, and a slot's `margin-left` computed to `-120px`, the card size before the
+  change, while the slot itself was already 46 px wide. With no frames to spare (the same
+  measurement in a hidden window, where `requestAnimationFrame` falls to about 1 Hz) the transition
+  threw the pile's tail 3659 px out and held it there for over a second. A slot's width and its
+  margins then answer to two card sizes at once; with no animation they always answer to the same
+  one, so the pile's footprint is right in whatever frame it is drawn.
+- Guard: `src/board/CardSlot.css.test.ts`
