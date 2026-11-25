@@ -190,6 +190,31 @@
   box-shadow: 0 2px 6px var(--shade-4);
 }
 
+/* SET-16: the fan leans its cards out from the middle and overlaps them at the bottom edge, which
+   is what tells it apart from the row at thumbnail size. */
+.opt-preview-fan {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: var(--sp-2);
+  display: flex;
+  justify-content: center;
+}
+
+.opt-preview-fan-card {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--r-sm);
+  overflow: hidden;
+  box-shadow: 0 2px 6px var(--shade-4);
+  transform-origin: bottom center;
+  transform: translateY(var(--fan-lift, 0)) rotate(var(--fan-rot, 0deg));
+}
+
+.opt-preview-fan-card + .opt-preview-fan-card {
+  margin-left: -12px;
+}
+
 .opt-stack-caption {
   position: relative;
   height: calc(100% - var(--sp-2) * 2);

@@ -150,7 +150,7 @@ mid-game takes effect at once and never drops an open prompt.
   A duel with the switch off used to fall back to a separate Standard board, and five or more
   players could only be seated there; with Standard gone (2026-11-23) a duel is one Arena column and
   a big table takes the panel, which already scrolls.
-- Guard: `e2e/arena-duel.spec.ts` · `e2e/spotlight.spec.ts` · `src/board/ScaledCopy.test.tsx` · `src/board/SpotlightBoard.test.tsx` · `src/board/cardOverlays.test.ts` · `src/board/spotlight.test.ts` · `src/game/GameScreen.test.tsx` · `src/state/persistence.test.ts`
+- Guard: `e2e/arena-duel.spec.ts` · `e2e/spotlight.spec.ts` · `src/board/ScaledCopy.test.tsx` · `src/board/SpotlightBoard.test.tsx` · `src/board/cardOverlays.test.ts` · `src/board/spotlight.test.ts` · `src/game/GameScreen.test.tsx` · `src/settings/OptionPreview.test.tsx` · `src/state/persistence.test.ts`
 
 ### BRD-7 · A click on a copy brings that board to the main area
 Clicking a copy — anywhere that is not something the current prompt can pick (BRD-8) — swaps it:

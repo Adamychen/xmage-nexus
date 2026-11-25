@@ -6,7 +6,7 @@ import BoardDemo from './BoardDemo'
 import '../appearance/playmats.css'
 import './OptionPreview.css'
 
-export type OptionPreviewKind = 'handCost' | 'manaSource' | 'rendered' | 'boardFill' | 'boardSpotlight' | 'handRail' | 'handRow' | 'stackCaption'
+export type OptionPreviewKind = 'handCost' | 'manaSource' | 'rendered' | 'boardFill' | 'boardSpotlight' | 'handRail' | 'handRow' | 'handFan' | 'stackCaption'
 
 const HAND_SAMPLE = [
   { name: 'Shivan Dragon', cost: '{4}{R}{R}' },
@@ -78,16 +78,17 @@ function RenderedPreview({ on }: { on: boolean }) {
   )
 }
 
+/** BRD-6: the panel is the first column of the board, so it is the first column of its thumbnail. */
 function SpotlightPreview({ on }: { on: boolean }) {
   if (on) {
     return (
       <span className="opt-preview-spot">
-        <span className="opt-preview-spot-main" />
         <span className="opt-preview-spot-panel">
           <span className="opt-preview-spot-copy" />
           <span className="opt-preview-spot-copy" />
           <span className="opt-preview-spot-copy" />
         </span>
+        <span className="opt-preview-spot-main" />
       </span>
     )
   }
@@ -117,6 +118,30 @@ function HandRailPreview({ on }: { on: boolean }) {
         </span>
       )}
       <Tiles />
+    </span>
+  )
+}
+
+/** SET-16: the fan, which is how the hand is drawn when neither the column nor the row is chosen. */
+function HandFanPreview({ on }: { on: boolean }) {
+  const middle = (HAND_SAMPLE.length - 1) / 2
+  return (
+    <span className="opt-preview-mat" aria-hidden="true">
+      <span className="playmat-layer" data-playmat="abyss" />
+      <Tiles />
+      {on && (
+        <span className="opt-preview-fan">
+          {HAND_SAMPLE.map((card, i) => (
+            <span
+              key={card.name}
+              className="opt-preview-fan-card"
+              style={{ ['--fan-rot' as string]: `${(i - middle) * 12}deg`, ['--fan-lift' as string]: `${Math.abs(i - middle) * 3}px` }}
+            >
+              <Art name={card.name} />
+            </span>
+          ))}
+        </span>
+      )}
     </span>
   )
 }
@@ -155,6 +180,7 @@ export default function OptionPreview({ kind, on = true }: { kind: OptionPreview
       {kind === 'boardSpotlight' && <SpotlightPreview on={on} />}
       {kind === 'handRail' && <HandRailPreview on={on} />}
       {kind === 'handRow' && <HandRowPreview on={on} />}
+      {kind === 'handFan' && <HandFanPreview on={on} />}
       {kind === 'stackCaption' && <StackCaptionPreview on={on} />}
     </div>
   )
