@@ -1,7 +1,7 @@
 .arena-piles .pile-columns {
   grid-column: 1 / -1;
   grid-row: 1;
-  width: min(1320px, 100%);
+  width: min(1520px, 100%);
   justify-self: center;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);

@@ -244,4 +244,42 @@ describe('FeedbackDialog routing of a surveil or scry', () => {
     expect(zoneIds('top')).toEqual(['a', 'b'])
     expect(zoneIds('away')).toEqual([])
   })
+
+  it('PRM-20: standalone top-order (Ponder) opens a single draggable fan and submits rightmost as top', () => {
+    const prompt = promptOf(
+      ['a', 'b', 'c'],
+      'Select a card ORDER to put on the TOP of your library (last one chosen will be topmost)',
+    )
+    setState({ feedback: prompt })
+    render(<FeedbackDialog />)
+    expect(screen.getByRole('dialog', { name: t('dialogs', 'arena_order_top_title') })).not.toBeNull()
+    expect(zoneIds('top')).toEqual(['a', 'b', 'c'])
+    expect(document.querySelector('[data-arena-zone="away"]')).toBeNull()
+    fireEvent.click(doneButton())
+    expect(start).toHaveBeenCalledWith(prompt, { mode: 'top-order', top: ['c', 'b', 'a'], away: [] })
+  })
+
+  it('PRM-20: standalone bottom-order submits leftmost as bottommost', () => {
+    const prompt = promptOf(
+      ['a', 'b', 'c'],
+      'Select a card ORDER to put on the BOTTOM of your library (last one chosen will be bottommost)',
+    )
+    setState({ feedback: prompt })
+    render(<FeedbackDialog />)
+    expect(screen.getByRole('dialog', { name: t('dialogs', 'arena_order_bottom_title') })).not.toBeNull()
+    fireEvent.click(doneButton())
+    expect(start).toHaveBeenCalledWith(prompt, { mode: 'bottom-order', top: [], away: ['c', 'b', 'a'] })
+  })
+
+  it('PRM-20: standalone grave-order submits rightmost as topmost in graveyard', () => {
+    const prompt = promptOf(
+      ['a', 'b', 'c'],
+      'Select a card to put on the top of your graveyard (last one chosen will be topmost)',
+    )
+    setState({ feedback: prompt })
+    render(<FeedbackDialog />)
+    expect(screen.getByRole('dialog', { name: t('dialogs', 'arena_order_grave_title') })).not.toBeNull()
+    fireEvent.click(doneButton())
+    expect(start).toHaveBeenCalledWith(prompt, { mode: 'grave-order', top: [], away: ['a', 'b', 'c'] })
+  })
 })

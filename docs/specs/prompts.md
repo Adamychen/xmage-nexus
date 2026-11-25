@@ -183,9 +183,9 @@ Every card shown inside a prompt can be seen enlarged, as on the board, and look
 the prompt: the library order dialog, the London mulligan's bottom
 pick, and the revealed and looked-at cards inside a prompt. The zone viewers (graveyard, exile, library,
 the revealed and looked-at windows, the known hand, the cards playable from other zones) and the Arena
-fans (`CardGrid`, `PileDialog`) lift their own card large on hover and open no floating preview; right
+fans (`CardGrid`, `PileDialog`, `LibraryOrderDialog`, `ArenaLibraryPrompt`) lift their own card large on hover and open no floating preview; right
 clicking any card (even a non-selectable one) opens the card inspector without
-choosing it. A card that only shows (library order, a revealed card nobody can play) is itself the preview
+choosing it. A card that only shows (a revealed card nobody can play) is itself the preview
 control: pointing at it or focusing it shows the floating preview, a touch shows it and keeps it until the
 next touch (ACC-9), and a right click, a long press or Enter opens the card inspector. A card that is
 chosen or played by a click keeps that click, on a tap too; pointing at it with a mouse or reaching it
@@ -262,13 +262,17 @@ primaries.
   (user report, with a screenshot, 24-nov-2026).
 - Guard: `src/game/feedbackModes/boardOrder.test.tsx`
 
-### PRM-20 · Surveil and scry are one screen; the client answers the engine's chain from it
-A surveil or scry is decided on one screen. A surveil shows two boxes (graveyard on the left, library
+### PRM-20 · Surveil, scry and library orderings are one screen; the client answers the engine's chain from it
+A surveil, scry, or standalone library/graveyard ordering (`top-order`, `bottom-order`, `grave-order`,
+such as Ponder, Impulse or graveyard ordering) is decided on one screen. A surveil shows two boxes (graveyard on the left, library
 on the right); the leftmost card of the library box ends on top of the library and the rightmost card of
 the graveyard box ends on top of the graveyard. A scry shows one box with the library card back in the
 middle and `Bottom` / `Top` under its corners: cards placed to the left of the card back tuck under the
 library (the leftmost card ends at the very bottom) and cards placed to the right sit on top of it (the
-rightmost card ends on top of the library). Done turns the arrangement into a plan, and the client
+rightmost card ends on top of the library). A standalone ordering shows one borderless draggable fan with
+`Bottom` on the left and `Top` on the right: for top-of-library and graveyard orderings the rightmost card
+ends topmost (sent last), and for bottom-of-library orderings the leftmost card ends bottommost (sent last).
+Done turns the arrangement into a plan, and the client
 answers each prompt of the engine's chain from it as the prompt arrives, one answer per prompt (PRM-17):
 the cards to move, the yes to ordering the graveyard, and one pick per card for each order. A pick over
 cards other than the ones on screen, or for a card the prompt does not offer, is not the plan. A surveil

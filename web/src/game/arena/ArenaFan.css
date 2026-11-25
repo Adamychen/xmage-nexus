@@ -175,9 +175,12 @@
   height: var(--arena-fan-h);
   box-sizing: border-box;
   border-radius: 6% / 4.3%;
-  border: 2px solid rgb(var(--arena-glow-rgb) / 0.8);
-  background: rgb(var(--arena-glow-rgb) / 0.1);
-  box-shadow: 0 0 22px rgb(var(--arena-glow-rgb) / 0.45);
+  border: 2px solid rgb(var(--arena-glow-rgb) / 0.95);
+  background: rgb(var(--arena-glow-rgb) / 0.16);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--fg-hi) 45%, transparent),
+    0 0 26px rgb(var(--arena-glow-rgb) / 0.6),
+    inset 0 0 22px rgb(var(--arena-glow-rgb) / 0.22);
   z-index: 40;
   pointer-events: none;
 }
@@ -205,7 +208,12 @@
     calc(-10px - var(--speed) * 14px) calc(14px + var(--lift) * 34px + var(--speed) * 12px) calc(18px + var(--lift) * 40px) rgb(var(--ink-rgb) / calc(0.45 + var(--lift) * 0.25)),
     0 0 0 calc(var(--lift) * 2px) rgb(var(--arena-glow-rgb) / 0.9),
     0 0 calc(var(--lift) * 30px) rgb(var(--arena-glow-rgb) / 0.55);
-  will-change: transform;
+  transition: opacity 120ms ease;
+  will-change: transform, opacity;
+}
+
+.arena-drag.is-over-target .arena-drag-card {
+  opacity: 0.78;
 }
 
 .arena-drag-glare {

@@ -138,4 +138,36 @@ describe('libraryPlan', () => {
     expect(next?.plan).not.toBe(p)
     expect(p).toEqual(snapshot)
   })
+
+  it('PRM-20: standalone top-order chains bottom-to-top and settles on the last pick', () => {
+    const p = plan({ mode: 'top-order', top: ['a', 'b', 'c'], away: [] })
+    const first = nextPlanAnswer(p, prompt('top-order', { options: offered(['a', 'b', 'c']) }))
+    expect(first?.answer).toEqual({ kind: 'uuid', value: 'c' })
+    expect(first?.plan.settled).toBe(false)
+    const second = nextPlanAnswer(first!.plan, prompt('top-order', { options: offered(['a', 'b']) }))
+    expect(second?.answer).toEqual({ kind: 'uuid', value: 'b' })
+    expect(second?.plan.settled).toBe(true)
+    expect(nextPlanAnswer(p, prompt('bottom-order', { options: offered(['a', 'b']) }))).toBeNull()
+  })
+
+  it('PRM-20: standalone bottom-order chains closest-to-top first so the last lands bottommost', () => {
+    const p = plan({ mode: 'bottom-order', top: [], away: ['c', 'b', 'a'] })
+    const first = nextPlanAnswer(p, prompt('bottom-order', { options: offered(['a', 'b', 'c']) }))
+    expect(first?.answer).toEqual({ kind: 'uuid', value: 'c' })
+    expect(first?.plan.settled).toBe(false)
+    const second = nextPlanAnswer(first!.plan, prompt('bottom-order', { options: offered(['a', 'b']) }))
+    expect(second?.answer).toEqual({ kind: 'uuid', value: 'b' })
+    expect(second?.plan.settled).toBe(true)
+    expect(nextPlanAnswer(p, prompt('top-order', { options: offered(['a', 'b']) }))).toBeNull()
+  })
+
+  it('PRM-20: standalone grave-order chains bottom-to-top and settles on the last pick', () => {
+    const p = plan({ mode: 'grave-order', top: [], away: ['c', 'b', 'a'] })
+    const first = nextPlanAnswer(p, prompt('grave-order', { options: offered(['a', 'b', 'c']) }))
+    expect(first?.answer).toEqual({ kind: 'uuid', value: 'c' })
+    expect(first?.plan.settled).toBe(false)
+    const second = nextPlanAnswer(first!.plan, prompt('grave-order', { options: offered(['a', 'b']) }))
+    expect(second?.answer).toEqual({ kind: 'uuid', value: 'b' })
+    expect(second?.plan.settled).toBe(true)
+  })
 })

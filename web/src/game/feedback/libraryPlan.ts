@@ -1,7 +1,9 @@
 import type { FeedbackPrompt } from './types'
 
+export type LibraryPlanMode = 'surveil' | 'scry' | 'top-order' | 'bottom-order' | 'grave-order'
+
 export interface LibraryArrangement {
-  mode: 'surveil' | 'scry'
+  mode: LibraryPlanMode
   top: string[]
   away: string[]
 }
@@ -53,11 +55,25 @@ function orderStep(plan: LibraryPlan, prompt: FeedbackPrompt, order: string[], s
   if (ids.length === 0 || ids.some((id) => !order.includes(id))) return null
   const next = order.find((id) => ids.includes(id))
   if (next === undefined) return null
-  return settle(plan, { kind: 'uuid', value: next }, settlesLast && ids.length === 2)
+  return settle(plan, { kind: 'uuid', value: next }, settlesLast && ids.length <= 2)
 }
 
 export function nextPlanAnswer(plan: LibraryPlan, prompt: FeedbackPrompt): Step | null {
   if (prompt.gameId !== plan.gameId) return null
+  switch (plan.mode) {
+    case 'top-order':
+      return prompt.libraryStep === 'top-order'
+        ? orderStep(plan, prompt, [...plan.top].reverse(), true)
+        : null
+    case 'bottom-order':
+      return prompt.libraryStep === 'bottom-order'
+        ? orderStep(plan, prompt, plan.away, true)
+        : null
+    case 'grave-order':
+      return prompt.libraryStep === 'grave-order'
+        ? orderStep(plan, prompt, plan.away, true)
+        : null
+  }
   const surveil = plan.mode === 'surveil'
   switch (prompt.libraryStep) {
     case 'surveil-pick':

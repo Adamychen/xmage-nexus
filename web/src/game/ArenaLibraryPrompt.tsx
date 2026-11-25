@@ -1,13 +1,15 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, type MouseEvent } from 'react'
 import CardSlot from '../board/CardSlot'
 import Button from '../ui/Button'
 import type { CardView } from '../net/types'
 import { useTranslation } from '../i18n'
 import type { FeedbackPrompt } from './feedback'
+import type { LibraryPlanMode } from './feedback/libraryPlan'
 import ArenaFan from './arena/ArenaFan'
 import ArenaPromptShell from './arena/ArenaPromptShell'
 import { useFanDrag } from './arena/useFanDrag'
 import { startLibraryPlan } from '../state/libraryPlanRunner'
+import { setState } from '../state/state'
 import './ArenaLibraryPrompt.css'
 
 type Zone = 'top' | 'away'
@@ -18,6 +20,7 @@ interface ArenaLibraryPromptProps {
 }
 
 const ZONES: Zone[] = ['away', 'top']
+const ORDER_ZONES: Zone[] = ['top']
 const DEAL_MS = 900
 
 function nameOnlyCard(id: string, name: string): CardView {
@@ -26,14 +29,45 @@ function nameOnlyCard(id: string, name: string): CardView {
 
 function noLane() {}
 
+function promptMode(prompt: FeedbackPrompt): LibraryPlanMode {
+  switch (prompt.libraryStep) {
+    case 'scry-pick':
+      return 'scry'
+    case 'top-order':
+    case 'bottom-order':
+    case 'grave-order':
+      return prompt.libraryStep
+    default:
+      return 'surveil'
+  }
+}
+
+const TITLE_KEY = {
+  surveil: 'arena_surveil_title',
+  scry: 'arena_scry_title',
+  'top-order': 'arena_order_top_title',
+  'bottom-order': 'arena_order_bottom_title',
+  'grave-order': 'arena_order_grave_title',
+} as const satisfies Record<LibraryPlanMode, string>
+
+const HINT_KEY = {
+  surveil: 'arena_surveil_hint',
+  scry: 'arena_scry_hint',
+  'top-order': 'arena_order_top_hint',
+  'bottom-order': 'arena_order_bottom_hint',
+  'grave-order': 'arena_order_grave_hint',
+} as const satisfies Record<LibraryPlanMode, string>
+
 export default function ArenaLibraryPrompt({ prompt, sending }: ArenaLibraryPromptProps) {
   const { t } = useTranslation()
-  const mode = prompt.libraryStep === 'scry-pick' ? 'scry' : 'surveil'
+  const mode = promptMode(prompt)
+  const isOrderOnly = mode === 'top-order' || mode === 'bottom-order' || mode === 'grave-order'
   const cards = useMemo(() => (prompt.cards ?? []) as unknown as CardView[], [prompt.cards])
   const byId = useMemo(() => new Map(cards.map((card) => [card.id as string, card])), [cards])
   const [zones, setZones] = useState<Record<Zone, string[]>>(() => {
-    const chosen = new Set(prompt.chosenTargets ?? [])
     const ids = cards.map((card) => card.id as string)
+    if (isOrderOnly) return { top: ids, away: [] }
+    const chosen = new Set(prompt.chosenTargets ?? [])
     return { top: ids.filter((id) => !chosen.has(id)), away: ids.filter((id) => chosen.has(id)) }
   })
   const [dealing, setDealing] = useState(true)
@@ -55,21 +89,40 @@ export default function ArenaLibraryPrompt({ prompt, sending }: ArenaLibraryProm
   }
 
   const { drag, hover, bindRoot, startDrag, dragLayer } = useFanDrag({
-    zones: ZONES,
+    zones: isOrderOnly ? ORDER_ZONES : ZONES,
     canDrag: !sending,
     onDrop: (id, zone, index) => place(id, zone as Zone, index),
     onClick: (id, from) => {
+      if (isOrderOnly) return
       const to: Zone = from === 'top' ? 'away' : 'top'
       place(id, to, Number.MAX_SAFE_INTEGER)
     },
   })
 
+  const inspectCard = (e: MouseEvent, id: string) => {
+    e.preventDefault()
+    const card = byId.get(id)
+    if (card) setState({ inspectedCard: card })
+  }
+
   const submit = () => {
     if (sending) return
-    if (mode === 'scry') {
-      startLibraryPlan(prompt, { mode: 'scry', top: [...zones.top].reverse(), away: [...zones.away].reverse() })
-    } else {
-      startLibraryPlan(prompt, { mode: 'surveil', top: [...zones.top], away: [...zones.away] })
+    switch (mode) {
+      case 'scry':
+        startLibraryPlan(prompt, { mode: 'scry', top: [...zones.top].reverse(), away: [...zones.away].reverse() })
+        break
+      case 'surveil':
+        startLibraryPlan(prompt, { mode: 'surveil', top: [...zones.top], away: [...zones.away] })
+        break
+      case 'top-order':
+        startLibraryPlan(prompt, { mode: 'top-order', top: [...zones.top].reverse(), away: [] })
+        break
+      case 'bottom-order':
+        startLibraryPlan(prompt, { mode: 'bottom-order', top: [], away: [...zones.top].reverse() })
+        break
+      case 'grave-order':
+        startLibraryPlan(prompt, { mode: 'grave-order', top: [], away: [...zones.top] })
+        break
     }
   }
 
@@ -93,6 +146,7 @@ export default function ArenaLibraryPrompt({ prompt, sending }: ArenaLibraryProm
         gapIndex={drag?.started && hover?.zone === zone ? hover.index : null}
         dealing={dealing}
         onCardPointerDown={(e, id) => startDrag(e, id, zone)}
+        onCardContextMenu={inspectCard}
         laneRef={noLane}
       />
     </section>
@@ -111,6 +165,7 @@ export default function ArenaLibraryPrompt({ prompt, sending }: ArenaLibraryProm
         dealing={dealing}
         onCardPointerDown={(e, id) => startDrag(e, id, 'top')}
         onUnderCardPointerDown={(e, id) => startDrag(e, id, 'away')}
+        onCardContextMenu={inspectCard}
         laneRef={noLane}
       />
       <div className="arena-scry-labels">
@@ -120,13 +175,32 @@ export default function ArenaLibraryPrompt({ prompt, sending }: ArenaLibraryProm
     </section>
   )
 
+  const renderOrderOnly = () => (
+    <section className="arena-prompt-zone arena-library-zone arena-library-order-zone">
+      <ArenaFan
+        zoneId="top"
+        cards={visible('top')}
+        gapIndex={drag?.started && hover?.zone === 'top' ? hover.index : null}
+        dealing={dealing}
+        onCardPointerDown={(e, id) => startDrag(e, id, 'top')}
+        onCardContextMenu={inspectCard}
+        laneRef={noLane}
+      />
+      <div className="arena-scry-labels">
+        <span className="arena-scry-label">{t('dialogs', 'arena_zone_bottom')}</span>
+        <span className="arena-scry-label">{t('dialogs', 'arena_zone_top')}</span>
+      </div>
+    </section>
+  )
+
   const dragged = drag?.started ? byId.get(drag.id) ?? null : null
+  const rootClass = `arena-library${mode === 'scry' ? ' is-scry' : ''}${isOrderOnly ? ' is-order' : ''}${sending ? ' is-sending' : ''}`
 
   return (
-    <div {...bindRoot} className={`arena-library${mode === 'scry' ? ' is-scry' : ''}${sending ? ' is-sending' : ''}`}>
+    <div {...bindRoot} className={rootClass}>
       <ArenaPromptShell
-        title={t('dialogs', mode === 'surveil' ? 'arena_surveil_title' : 'arena_scry_title')}
-        instruction={t('dialogs', mode === 'surveil' ? 'arena_surveil_hint' : 'arena_scry_hint')}
+        title={t('dialogs', TITLE_KEY[mode])}
+        instruction={t('dialogs', HINT_KEY[mode])}
         aside={source && <CardSlot card={source} cardId="arena-library-source" />}
         footer={
           <Button className="arena-library-done" data-testid="arena-library-done" onClick={submit} disabled={sending}>
@@ -135,7 +209,9 @@ export default function ArenaLibraryPrompt({ prompt, sending }: ArenaLibraryProm
         }
         testId="arena-library-prompt"
       >
-        {mode === 'scry' ? (
+        {isOrderOnly ? (
+          renderOrderOnly()
+        ) : mode === 'scry' ? (
           renderScry()
         ) : (
           <>

@@ -10,7 +10,7 @@
   grid-column: 1 / -1;
   grid-row: 1;
   justify-self: center;
-  width: min(1200px, 100%);
+  width: min(1440px, 100%);
   gap: var(--sp-2h);
 }
 

@@ -58,7 +58,7 @@ export interface FanDragApi {
 }
 
 const DRAG_THRESHOLD = 4
-const LIFT_SCALE = 1.12
+const LIFT_SCALE = 0.82
 const HIT_PAD = 36
 const EDGE_SCROLL_PAD = 72
 const EDGE_SCROLL_SPEED = 0.14
@@ -270,7 +270,7 @@ export function useFanDrag({ zones, canDrag, onDrop, onClick }: FanDragOptions):
     if (!card || !drag?.started) return null
     return h(
       'div',
-      { className: 'arena-drag', ref: dragElRef },
+      { className: `arena-drag${hover ? ' is-over-target' : ''}`, ref: dragElRef },
       h(
         'div',
         { className: 'arena-drag-card', ref: dragCardRef },

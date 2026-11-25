@@ -36,8 +36,8 @@ export function isLibraryOrderPick(message: string): boolean {
 const LIBRARY_CHAIN_STEPS: ReadonlyArray<readonly [RegExp, LibraryStep]> = [
   [/put into your graveyard \(surveil\)/i, 'surveil-pick'],
   [/put on the bottom of your library \(scry\)/i, 'scry-pick'],
-  [/card order to put on the top of your library/i, 'top-order'],
-  [/card order to put on the bottom of your library/i, 'bottom-order'],
+  [/card order to put on the top of (?:your|the) library/i, 'top-order'],
+  [/card order to put on the bottom of (?:your|the) library/i, 'bottom-order'],
   [/card to put on the top of your graveyard/i, 'grave-order'],
   [/choose the order in which the cards go to the graveyard/i, 'grave-order-ask'],
 ]

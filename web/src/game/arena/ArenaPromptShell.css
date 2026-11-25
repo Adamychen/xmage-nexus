@@ -77,14 +77,15 @@
 
 .arena-prompt-stage {
   flex: 0 0 auto;
-  width: 100%;
+  width: min(1720px, 94vw);
+  margin-inline: auto;
   box-sizing: border-box;
   display: grid;
   grid-template-columns: 1fr 1.6fr 1fr;
   align-items: start;
-  column-gap: clamp(var(--sp-4), 2.6vw, calc(var(--sp-6) * 1.625));
+  column-gap: clamp(var(--sp-4), 2.4vw, var(--sp-6));
   row-gap: clamp(var(--sp-3h), 3vh, calc(var(--sp-6) + var(--sp-0h)));
-  padding: 0 clamp(var(--sp-5), 4.5vw, calc(var(--sp-6) * 2.5));
+  padding: 0 clamp(var(--sp-3), 2vw, var(--sp-5));
 }
 
 .arena-prompt-footer {

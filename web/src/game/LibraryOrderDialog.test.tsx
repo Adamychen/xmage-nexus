@@ -8,7 +8,7 @@ describe('LibraryOrderDialog', () => {
     cleanup()
   })
 
-  it('renders top of library cards and allows reordering with arrows', () => {
+  it('renders top of library cards in the Arena fan', () => {
     const send = vi.fn()
     const cancel = vi.fn()
 
@@ -28,7 +28,7 @@ describe('LibraryOrderDialog', () => {
     }
 
     const { container, getByText, getAllByText } = render(
-      <LibraryOrderDialog prompt={prompt} send={send} cancel={cancel} busy={false} />
+      <LibraryOrderDialog prompt={prompt} send={send} cancel={cancel} busy={false} />,
     )
 
     expect(getByText('Adivinar (Scry 3)')).not.toBeNull()
@@ -36,15 +36,10 @@ describe('LibraryOrderDialog', () => {
     expect(getAllByText('Counterspell').length).toBeGreaterThanOrEqual(1)
     expect(getAllByText('Brainstorm').length).toBeGreaterThanOrEqual(1)
 
-    // Move second card (Counterspell) left (to position #1)
-    const arrowBtns = container.querySelectorAll('.btn-arrow')
-    // arrowBtns: [card1-left, card1-right, card2-left, card2-right, card3-left, card3-right]
-    fireEvent.click(arrowBtns[2]) // left arrow on card-2
-
-    // Now Counterspell is first
-    const cardCards = container.querySelectorAll('.order-card-card')
-    expect(cardCards[0].textContent).toContain('Counterspell')
-    expect(cardCards[1].textContent).toContain('Lightning Bolt')
+    const topIds = [...container.querySelectorAll('[data-arena-zone="top"] [data-arena-card]')].map((el) =>
+      el.getAttribute('data-arena-card'),
+    )
+    expect(topIds).toEqual(['card-1', 'card-2', 'card-3'])
   })
 
   it('moves cards between top and bottom zones and handles quick buttons', () => {
@@ -66,7 +61,7 @@ describe('LibraryOrderDialog', () => {
     }
 
     const { getByText } = render(
-      <LibraryOrderDialog prompt={prompt} send={send} cancel={cancel} busy={false} />
+      <LibraryOrderDialog prompt={prompt} send={send} cancel={cancel} busy={false} />,
     )
 
     // Send all to bottom
@@ -104,11 +99,10 @@ describe('LibraryOrderDialog', () => {
       max: 1,
     }
 
-    const { getByText, getAllByText } = render(
-      <LibraryOrderDialog prompt={prompt} send={send} cancel={cancel} busy={false} />
+    const { getByText } = render(
+      <LibraryOrderDialog prompt={prompt} send={send} cancel={cancel} busy={false} />,
     )
 
-    expect(getAllByText('Al Cementerio').length).toBeGreaterThan(0)
     expect(getByText('Todas al cementerio')).not.toBeNull()
   })
 
@@ -128,7 +122,7 @@ describe('LibraryOrderDialog', () => {
     }
 
     const { getByText } = render(
-      <LibraryOrderDialog prompt={prompt} send={send} cancel={cancel} busy={false} />
+      <LibraryOrderDialog prompt={prompt} send={send} cancel={cancel} busy={false} />,
     )
 
     const cancelBtn = getByText('Cancelar')

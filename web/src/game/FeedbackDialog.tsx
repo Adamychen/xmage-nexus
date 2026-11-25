@@ -146,5 +146,12 @@ function promptKey(prompt: FeedbackPrompt): number {
 }
 
 function isArenaLibraryPick(prompt: FeedbackPrompt): boolean {
-  return prompt.libraryStep === 'surveil-pick' || prompt.libraryStep === 'scry-pick'
+  if (!prompt.cards || prompt.cards.length === 0) return false
+  return (
+    prompt.libraryStep === 'surveil-pick' ||
+    prompt.libraryStep === 'scry-pick' ||
+    prompt.libraryStep === 'top-order' ||
+    prompt.libraryStep === 'bottom-order' ||
+    prompt.libraryStep === 'grave-order'
+  )
 }

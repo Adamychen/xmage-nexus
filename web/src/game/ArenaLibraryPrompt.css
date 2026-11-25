@@ -37,19 +37,35 @@
   filter: saturate(0.6) brightness(0.85);
 }
 
-.arena-library.is-scry .arena-library-scry-zone {
-  grid-column: 1 / 3;
+.arena-library.is-scry .arena-prompt-stage,
+.arena-library.is-order .arena-prompt-stage {
+  grid-template-columns: var(--arena-card-w) minmax(0, 1fr) var(--arena-card-w);
+}
+
+.arena-library.is-scry .arena-library-scry-zone,
+.arena-library.is-order .arena-library-order-zone {
+  grid-column: 2;
   grid-row: 1;
 }
 
-.arena-library.is-scry .arena-prompt-footer {
+.arena-library.is-scry .arena-prompt-footer,
+.arena-library.is-order .arena-prompt-footer {
   grid-column: 1 / -1;
   grid-row: 2;
 }
 
-.arena-library.is-scry .arena-prompt-aside {
+.arena-library.is-scry .arena-prompt-aside,
+.arena-library.is-order .arena-prompt-aside {
+  grid-column: 3;
   align-self: center;
   margin-top: 0;
+}
+
+.arena-library.is-order .arena-fan,
+.arena-library.is-order .arena-fan.is-hot {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 .arena-scry-labels {
