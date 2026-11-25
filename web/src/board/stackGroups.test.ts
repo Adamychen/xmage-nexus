@@ -151,6 +151,24 @@ describe('groupStackables', () => {
     expect(solos).toHaveLength(2)
   })
 
+  it('BRD-20: creature tokens that cannot act yet make a pile of their own, and join the rest when they can', () => {
+    const sick = Array.from({ length: 17 }, () => creatureToken('Goblin', { summoningSickness: true }))
+    const ready = Array.from({ length: 7 }, () => creatureToken('Goblin'))
+    const mixed = groupStackables(entries([...ready, ...sick]), 'creatures')
+    expect(mixed.groups.map((g) => g.items.length)).toEqual([7, 17])
+    expect(new Set(mixed.groups.map((g) => g.key)).size).toBe(2)
+
+    const nextTurn = groupStackables(entries([...ready, ...sick.map((p) => ({ ...p, summoningSickness: false }))]), 'creatures')
+    expect(nextTurn.groups.map((g) => g.items.length)).toEqual([24])
+  })
+
+  it('BRD-20: a pump splits the pile by power and toughness', () => {
+    const pumped = Array.from({ length: 7 }, () => creatureToken('Goblin', { power: '2' }))
+    const plain = Array.from({ length: 8 }, () => creatureToken('Goblin'))
+    const { groups } = groupStackables(entries([...plain, ...pumped]), 'creatures')
+    expect(groups.map((g) => g.items.length)).toEqual([8, 7])
+  })
+
   it('BRD-20: a pile holds every identical copy, however many there are', () => {
     const twelve = groupStackables(entries(Array.from({ length: 12 }, () => token('Treasure'))), 'other')
     expect(twelve.groups.map((g) => g.items.length)).toEqual([12])

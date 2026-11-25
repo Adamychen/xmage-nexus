@@ -39,6 +39,11 @@ function tappedFlag(perm: PermanentView): string {
   return perm.tapped === true ? 't' : 'u'
 }
 
+/** BRD-20: a creature that cannot act yet is not the same card to the player as one that can. */
+function sicknessFlag(perm: PermanentView): string {
+  return perm.summoningSickness === true ? 's' : 'r'
+}
+
 export function stackGroupKeyOf(
   id: string,
   perm: PermanentView,
@@ -59,7 +64,7 @@ export function stackGroupKeyOf(
     return { key: `token:${name}:${tappedFlag(perm)}`, name, groupKind: 'token' }
   }
   const pt = `${perm.power ?? ''}/${perm.toughness ?? ''}`
-  return { key: `ctoken:${name}:${tappedFlag(perm)}:${pt}`, name, groupKind: 'creature-token' }
+  return { key: `ctoken:${name}:${tappedFlag(perm)}:${sicknessFlag(perm)}:${pt}`, name, groupKind: 'creature-token' }
 }
 
 export function groupStackables(
