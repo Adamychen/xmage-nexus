@@ -236,6 +236,37 @@ describe('CombatArrowsOverlay', () => {
     boardDiv.remove()
   })
 
+  it('CMB-4: an attacker whose blocker died draws neither beam nor tie while the view calls it blocked', () => {
+    const boardDiv = document.createElement('div')
+    document.body.appendChild(boardDiv)
+    const attacker = document.createElement('div')
+    attacker.setAttribute('data-card-id', 'kraken')
+    attacker.getBoundingClientRect = () => ({ left: 100, top: 400, width: 100, height: 140, right: 200, bottom: 540, x: 100, y: 400, toJSON: () => {} } as DOMRect)
+    const seat = document.createElement('div')
+    seat.setAttribute('data-player-id', 'p-opp')
+    const anchorEl = document.createElement('div')
+    anchorEl.setAttribute('data-player-anchor', 'p-opp')
+    anchorEl.getBoundingClientRect = () => ({ left: 20, top: 20, width: 60, height: 60, right: 80, bottom: 80, x: 20, y: 20, toJSON: () => {} } as DOMRect)
+    seat.appendChild(anchorEl)
+    boardDiv.append(attacker, seat)
+    boardDiv.getBoundingClientRect = () => ({ left: 0, top: 0, width: 1000, height: 800, right: 1000, bottom: 800, x: 0, y: 0, toJSON: () => {} } as DOMRect)
+
+    const game = {
+      step: 'COMBAT_DAMAGE',
+      turn: 3,
+      players: [
+        { playerId: 'p-me', name: 'me', life: 20, controlled: true, battlefield: { kraken: {} } },
+        { playerId: 'p-opp', name: 'them', life: 20, controlled: false, battlefield: {} },
+      ],
+      combat: [{ attackers: { kraken: {} }, blockers: {}, isBlocked: true, defenderId: 'p-opp' }],
+    }
+    const { container, unmount } = render(<CombatArrowsOverlay game={game as never} boardRef={{ current: boardDiv }} />)
+    expect(container.querySelector('.arrow-path.arrow-attack')).toBeNull()
+    expect(container.querySelector('.arrow-path.arrow-block')).toBeNull()
+    unmount()
+    boardDiv.remove()
+  })
+
   it('CMB-4: two blockers of one attacker land side by side on it, in their own order', () => {
     const boardDiv = document.createElement('div')
     document.body.appendChild(boardDiv)

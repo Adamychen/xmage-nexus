@@ -249,8 +249,10 @@ export default function CombatArrowsOverlay({
           ? Object.keys(blockersObj)
           : []
         // CMB-4: a blocked group has no beam to the defender; the tie to its blockers is the whole
-        // story, and the beam comes back the moment the block is taken away.
-        const blockedGroup = blockerIds.length > 0
+        // story, and the beam comes back only when the view says the group is no longer blocked. A
+        // blocker that dies in combat empties `blockers` while `isBlocked` stays true, and an
+        // attacker that was stopped never hits the player.
+        const blockedGroup = record.isBlocked === true || blockerIds.length > 0
         attackerIds.forEach((attId) => {
           if (blockedGroup) return
           let defenderId = (record.defenderId as string) || null

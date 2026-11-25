@@ -4,8 +4,14 @@ import type { GameView, PlayerView } from '../net/types'
 export interface CombatColumn {
   /** The group's attackers, in the order the view lists them; a band attacks as one column. */
   attackerIds: string[]
-  /** The creatures blocking that group, fanned in front of it. */
+  /** The creatures blocking that group that are still on the battlefield. */
   blockerIds: string[]
+  /**
+   * CMB-4: whether the group was blocked, as the view itself says (`isBlocked`). A blocker that dies
+   * in combat leaves `blockers` empty, but the attacker stays blocked for the rest of the combat and
+   * must not read as if it were about to hit the player.
+   */
+  blocked: boolean
 }
 
 /** Everything coming at one defender: their columns and the attackers nothing stops. */
@@ -75,7 +81,8 @@ export function combatArrangement(game: GameView | null | undefined): CombatArra
     const attackerIds = idsOf(record.attackers)
     if (attackerIds.length === 0) continue
     const blockerIds = idsOf(record.blockers)
-    const column: CombatColumn = { attackerIds, blockerIds }
+    const blocked = record.isBlocked === true || blockerIds.length > 0
+    const column: CombatColumn = { attackerIds, blockerIds, blocked }
 
     const defenderId = typeof record.defenderId === 'string' ? record.defenderId : ''
     const kind = defenderId ? defenderKind(players, defenderId) : null
@@ -91,7 +98,7 @@ export function combatArrangement(game: GameView | null | undefined): CombatArra
       order.push(defenderId)
     }
     target.columns.push(column)
-    if (blockerIds.length === 0) target.unblockedIds.push(...attackerIds)
+    if (!blocked) target.unblockedIds.push(...attackerIds)
     for (const id of [...attackerIds, ...blockerIds]) engage(id)
   }
 
@@ -99,8 +106,8 @@ export function combatArrangement(game: GameView | null | undefined): CombatArra
   // them stay on one side and never cross the ties of the groups that are blocked.
   for (const target of byDefender.values()) {
     target.columns = [
-      ...target.columns.filter((column) => column.blockerIds.length === 0),
-      ...target.columns.filter((column) => column.blockerIds.length > 0),
+      ...target.columns.filter((column) => !column.blocked),
+      ...target.columns.filter((column) => column.blocked),
     ]
   }
   return { targets: order.map((id) => byDefender.get(id)!), engagedIds, strays }

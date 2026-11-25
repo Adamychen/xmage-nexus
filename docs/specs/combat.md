@@ -51,8 +51,11 @@ An attacker that nothing blocks draws a red beam to the defender its combat grou
 avatar (not the middle of their zone), or the planeswalker or battle card being attacked. The moment
 it is blocked that beam goes away and a gold tie takes its place, between the attacker and each
 creature blocking it, with a head at both ends: the pair is what matters there, not a second attack.
-If the defender takes the block back, the group has no blockers again, the tie goes and the beam
-returns. Several creatures blocking the same attacker land side by side on it, each on its own spot
+Blocked is what the view itself says (`isBlocked`), not whether a blocker is still alive: a blocker
+that dies in combat empties the group's blockers, and an attacker that was stopped must not read as
+about to hit the player, so for the rest of that combat it draws neither beam nor tie. The beam
+returns only when the view says the group is no longer blocked, which is what happens when the
+defender takes the block back during the declaration. Several creatures blocking the same attacker land side by side on it, each on its own spot
 and in their own left-to-right order, because two ties arriving at one point cannot be told apart. Arrows that start or end on a player who has left the game are not drawn.
 
 - Why: aiming at the player's zone root put the arrow head in the lands band (`6fecaa53fd`,
@@ -61,11 +64,14 @@ and in their own left-to-right order, because two ties arriving at one point can
   arrows of the Table layout (`3392950fb4`) went with it on 2026-11-23. A blocker's own arrow back to
   its attacker crossed half the board; with the combat columns (CMB-14) the two sit one above the
   other, so the user asked for the red one to go and for a two-headed gold tie to say "this one was
-  attacking and has been stopped" (25-nov-2026). The beam still runs to the portrait rather than
+  attacking and has been stopped" (25-nov-2026). Reading "blocked" as "it has blockers" brought the
+  beam back the moment a blocker died: watching a game, an 8/8 Kraken blocked by a 3/3 pointed at the
+  player again as soon as the 3/3 died, and stayed pointing until the end of combat (user report, same
+  day). The beam still runs to the portrait rather than
   stopping at the edge of the defender's zone: with the opponents' boards in front, a beam that died
   at the edge read as an attack on a creature.
-- Guard: `src/board/CombatArrowsOverlay.test.tsx` (blocker arrows, a planeswalker or battle
-  defender and the left-player case are not asserted there)
+- Guard: `src/board/CombatArrowsOverlay.test.tsx` · `src/board/combatColumns.test.ts` (a planeswalker
+  or battle defender and the left-player case are not asserted there)
 
 ### CMB-5 · Combat arrows give way to the game menu
 The arrow layer paints above the side drawer so combat stays readable, but drops below the game

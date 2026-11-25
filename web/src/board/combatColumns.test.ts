@@ -15,10 +15,11 @@ function game(players: PlayerView[], combat: unknown[]): GameView {
   return { players, combat } as unknown as GameView
 }
 
-const group = (attackers: string[], blockers: string[] = [], defenderId?: string) => ({
+const group = (attackers: string[], blockers: string[] = [], defenderId?: string, isBlocked?: boolean) => ({
   attackers: Object.fromEntries(attackers.map((id) => [id, perm(id)])),
   blockers: Object.fromEntries(blockers.map((id) => [id, perm(id)])),
   ...(defenderId ? { defenderId } : null),
+  ...(isBlocked === undefined ? null : { isBlocked }),
 })
 
 describe('combat read as columns', () => {
@@ -30,7 +31,7 @@ describe('combat read as columns', () => {
     const arrangement = combatArrangement(view)
     expect(arrangement.targets).toHaveLength(1)
     expect(arrangement.targets[0]).toMatchObject({ defenderId: 'me', kind: 'player', unblockedIds: [] })
-    expect(arrangement.targets[0].columns).toEqual([{ attackerIds: ['goblin'], blockerIds: ['bear'] }])
+    expect(arrangement.targets[0].columns).toEqual([{ attackerIds: ['goblin'], blockerIds: ['bear'], blocked: true }])
     expect(arrangement.engagedIds).toEqual({ me: ['bear'], opp: ['goblin'] })
     expect(atEaseIds(arrangement, view.players![0] as PlayerView)).toEqual(['wall'])
   })
@@ -52,14 +53,14 @@ describe('combat read as columns', () => {
       [group(['giant'], ['x', 'y', 'z'], 'me')],
     )
     const arrangement = combatArrangement(view)
-    expect(arrangement.targets[0].columns).toEqual([{ attackerIds: ['giant'], blockerIds: ['x', 'y', 'z'] }])
+    expect(arrangement.targets[0].columns).toEqual([{ attackerIds: ['giant'], blockerIds: ['x', 'y', 'z'], blocked: true }])
     expect(arrangement.targets[0].unblockedIds).toEqual([])
   })
 
   it('CMB-14: a band attacks as one column, not as one per creature', () => {
     const view = game([seat('me', []), seat('opp', ['one', 'two'])], [group(['one', 'two'], [], 'me')])
     const arrangement = combatArrangement(view)
-    expect(arrangement.targets[0].columns).toEqual([{ attackerIds: ['one', 'two'], blockerIds: [] }])
+    expect(arrangement.targets[0].columns).toEqual([{ attackerIds: ['one', 'two'], blockerIds: [], blocked: false }])
     expect(arrangement.targets[0].unblockedIds).toEqual(['one', 'two'])
   })
 
@@ -87,7 +88,7 @@ describe('combat read as columns', () => {
     const view = game([seat('me', []), seat('opp', ['ghost'])], [group(['ghost'])])
     const arrangement = combatArrangement(view)
     expect(arrangement.targets).toEqual([])
-    expect(arrangement.strays).toEqual([{ attackerIds: ['ghost'], blockerIds: [] }])
+    expect(arrangement.strays).toEqual([{ attackerIds: ['ghost'], blockerIds: [], blocked: false }])
   })
 
   it('CMB-14: no combat at all is no arrangement', () => {
@@ -107,6 +108,26 @@ describe('combat read as columns', () => {
     const attackers = arrangement.targets.flatMap((t) => t.columns.flatMap((c) => c.attackerIds))
     const engaged = Object.values(arrangement.engagedIds).flat()
     for (const id of attackers) expect(engaged).toContain(id)
+  })
+})
+
+describe('an attacker whose blockers died in combat', () => {
+  it('CMB-4: it stays blocked while the view says so, so it never joins the unblocked ones', () => {
+    const view = game(
+      [seat('me', []), seat('opp', ['kraken'])],
+      [group(['kraken'], [], 'me', true)],
+    )
+    const target = combatArrangement(view).targets[0]
+    expect(target.columns).toEqual([{ attackerIds: ['kraken'], blockerIds: [], blocked: true }])
+    expect(target.unblockedIds).toEqual([])
+  })
+
+  it('CMB-4: a group the view calls unblocked is the one that draws its beam', () => {
+    const view = game(
+      [seat('me', []), seat('opp', ['kraken'])],
+      [group(['kraken'], [], 'me', false)],
+    )
+    expect(combatArrangement(view).targets[0].unblockedIds).toEqual(['kraken'])
   })
 })
 
