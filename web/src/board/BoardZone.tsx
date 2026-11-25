@@ -25,7 +25,7 @@ import { groupStackables, TOKEN_PILE_FAN_DELAY_MS } from './stackGroups'
 import type { StackGroup } from './stackGroups'
 import StackPile from './StackPile'
 import { isMarqueePermanent } from './marquee'
-import { chipReserve } from './chipReserve'
+import { chipReserve, chipSignature } from './chipReserve'
 import { bandFill, bandShares, permanentKind } from './bandWeights'
 import { EMPTY_TARGET_ZONES, type TargetZoneKind } from './targetZones'
 import { isPlayerDefeated, isPlayerOut } from './boardShared'
@@ -197,7 +197,13 @@ export default function BoardZone({
       const row = zoneEl.querySelector<HTMLElement>(':scope > .bz-creatures-row')
       if (!row) return
       const cards = Array.from(row.querySelectorAll<HTMLElement>('.bz-band > *'))
-      const signature = `${zoneEl.clientWidth}x${zoneEl.clientHeight}|${arenaChipEl.offsetWidth}x${arenaChipEl.offsetHeight}|${cards.length}`
+      const signature = chipSignature({
+        zoneW: zoneEl.clientWidth,
+        zoneH: zoneEl.clientHeight,
+        chipW: arenaChipEl.offsetWidth,
+        chipH: arenaChipEl.offsetHeight,
+        cards: cards.length,
+      })
       const cardsTop = cards.reduce((top, el) => Math.min(top, el.getBoundingClientRect().top), Infinity)
       const key = `${signature}|${Math.round(cardsTop)}`
       if (key !== lastKey) stableFrames = 0

@@ -354,7 +354,12 @@ change at all after the board has settled.
   chip of margin, so once a 1000 px window turned it on it stayed on at 1600 px and the own board
   drew 118 px cards instead of 130 px; its first fix measured too early, while the cards were still
   the 1000 px ones on two lines, and locked it on again (24-nov-2026; never caught while the guard
-  ran on the Table interface).
+  ran on the Table interface). What the reserve was held for was then an exact-pixel signature of
+  the zone and the chip, and the chip holds a clock: every tick moved its measured width by a pixel,
+  dropped the reserve for two frames and jumped the whole creatures row by the width of a chip, out
+  and back. In a recording of a four-player game the two attacking creatures moved 135 px sideways
+  between two frames 50 ms apart, with nothing else changed but the clock, 15:11 to 15:10 (user
+  report with video, 25-nov-2026). The signature now reads those sizes in steps of 8 px.
 - Guard: `src/board/HandZone.test.tsx` · `src/board/chipReserve.test.ts` · `e2e/board-settle.spec.ts` · `e2e/board-spotlight-settle.spec.ts`
 
 ### BRD-22 · The phase dial shows the steps of combat
