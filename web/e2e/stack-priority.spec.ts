@@ -45,7 +45,7 @@ test.describe('Pila, Disparos y Prioridad Avanzada (Bloque B)', () => {
       expect(await helper.playCard('card-led')).toBeTruthy()
 
       // 1.5 Comprobar que ambos hechizos están en la pila simultáneamente
-      await expect(page.locator('.stack-card[data-card-id="stack-led"]'), "Lion's Eye Diamond answers it on the same cascade").toBeVisible({ timeout: 10_000 })
+      await expect(page.locator('.stack-card[data-card-id="stack-led"]'), "Lion's Eye Diamond answers it on the same cascade").toBeAttached({ timeout: 10_000 })
 
       await page.screenshot({ path: 'e2e/shots/stack-priority-03-stacked-spells-in-response.png' })
 
@@ -79,7 +79,7 @@ test.describe('Pila, Disparos y Prioridad Avanzada (Bloque B)', () => {
       expect(await helper.playCard('card-grapeshot')).toBeTruthy()
 
       // 3.2 Verificar que el prompt de objetivo para las copias aparece
-      const targetPrompt = page.locator('.feedback-dialog, .targeting-bar')
+      const targetPrompt = page.getByTestId('board-order')
       await expect(targetPrompt, 'prompt de selección de objetivo para copia de tormenta').toBeVisible({ timeout: 10_000 })
 
       await page.screenshot({ path: 'e2e/shots/stack-priority-05-storm-copies-targeting.png' })

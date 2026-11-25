@@ -26,13 +26,14 @@ test('interacciones completas de MTG: GAME_ASK, GAME_CHOOSE_COLOR, GAME_CHOOSE_P
     // 1. GAME_ASK (Pregunta binaria Sí/No, ej. Shockland)
     // ─────────────────────────────────────────────────────────────
     await waitFrame(page, (f) => f.method === 'GAME_ASK', 'GAME_ASK de Shockland', 15_000, cursor)
-    const askDialog = page.locator('.feedback-dialog')
-    await expect(askDialog, 'diálogo GAME_ASK visible').toBeVisible({ timeout: 15_000 })
+    const askDialog = page.getByTestId('board-order')
+    await expect(askDialog, 'pregunta GAME_ASK visible').toBeVisible({ timeout: 15_000 })
     await page.waitForTimeout(300)
     fs.writeFileSync(path.join(SHOTS_DIR, 'interaction-01-game-ask.png'), await page.screenshot({ fullPage: true }))
 
     cursor = parsedLen(page)
-    const yesButton = askDialog.getByRole('button', { name: /sí|yes|confirmar/i }).first()
+    const yesButton = page.getByTestId('prompt-action')
+    await expect(yesButton).toHaveText(/sí|yes|confirmar/i)
     await yesButton.click()
 
     // ─────────────────────────────────────────────────────────────

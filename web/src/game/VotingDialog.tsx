@@ -35,6 +35,7 @@ export default function VotingDialog({ prompt, send, busy }: VotingDialogProps) 
         backdropClassName="voting-backdrop"
         dialogClassName="voting-dialog"
         testId="voting-prompt"
+        describedBy="voting-hint"
         footer={<div className="voting-hint" id="voting-hint">{t('dialogs', 'voting_hint')}</div>}
       >
         <section className="arena-prompt-zone arena-voting-zone">

@@ -86,6 +86,11 @@ export function useFanDrag({ zones, canDrag, onDrop, onClick }: FanDragOptions):
   const dragElRef = useRef<HTMLDivElement | null>(null)
   const dragCardRef = useRef<HTMLDivElement | null>(null)
   const dragIdRef = useRef(0)
+  const zonesRef = useRef(zones)
+
+  useLayoutEffect(() => {
+    zonesRef.current = zones
+  })
 
   const commitDrag = (next: FanDrag | null) => {
     dragRef.current = next
@@ -132,7 +137,7 @@ export function useFanDrag({ zones, canDrag, onDrop, onClick }: FanDragOptions):
         p.rx += (clamp(-p.vy * 1.6, -28, 28) - p.rx) * 0.3
         p.rz += (clamp(-p.vx * 0.5, -12, 12) - p.rz) * 0.25
         paintDrag()
-        for (const zone of zones) {
+        for (const zone of zonesRef.current) {
           const fan = byAttr(rootRef.current, 'data-arena-zone', zone)
           if (!fan || !fan.hasAttribute('data-arena-max-scroll')) continue
           const b = fan.getBoundingClientRect()

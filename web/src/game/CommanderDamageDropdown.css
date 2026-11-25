@@ -30,7 +30,7 @@
 .cmd-dmg-toggle.is-warning {
   border-color: rgb(var(--ember-rgb) / 0.9);
   background: rgb(var(--ember-rgb) / 0.22);
-  color: var(--ember);
+  color: rgb(var(--ember-rgb));
 }
 
 .cmd-dmg-toggle.is-lethal {
@@ -140,7 +140,7 @@
 .cmd-dmg-val {
   flex: 0 0 auto;
   min-width: 28px;
-  padding: 2px var(--sp-1h);
+  padding: var(--sp-0h) var(--sp-1h);
   border-radius: var(--r-sm);
   background: var(--ink-0);
   border: 1px solid var(--veil-3);
@@ -154,7 +154,7 @@
 
 .cmd-dmg-row.is-warning .cmd-dmg-val {
   border-color: rgb(var(--ember-rgb) / 0.8);
-  color: var(--ember);
+  color: rgb(var(--ember-rgb));
 }
 
 .cmd-dmg-row.is-lethal .cmd-dmg-val {
@@ -177,11 +177,17 @@
 }
 
 .cmd-dmg-row.is-warning .cmd-dmg-bar-fill {
-  background: var(--ember);
+  background: rgb(var(--ember-rgb));
 }
 
 .cmd-dmg-row.is-lethal .cmd-dmg-bar-fill {
   background: var(--err);
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .cmd-dmg-dropdown {
+    backdrop-filter: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

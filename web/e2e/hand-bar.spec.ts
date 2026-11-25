@@ -84,6 +84,12 @@ async function expectHandBarLayout(page: Page): Promise<void> {
   await expect(slots.first()).toBeVisible({ timeout: 30_000 })
   // (los rivales espejados en pod comparten la clase .player-zone → excluimos)
   await expect(page.locator('.player-zone:not(.mirrored) .hand-card-slot')).toHaveCount(0)
+  await page.evaluate(async () => {
+    const bar = document.querySelector('[data-testid="hand-bar"]')
+    if (!bar) return
+    const running = bar.getAnimations({ subtree: true }).filter((a) => a.effect?.getTiming().iterations !== Infinity)
+    await Promise.all(running.map((a) => a.finished.catch(() => undefined)))
+  })
 
   const boxes = await page.evaluate<{ bar: Rect; board: Rect; slots: Rect[]; cards: Rect[] }>(`${RECT_OF}
     (() => {

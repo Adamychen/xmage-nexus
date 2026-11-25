@@ -339,6 +339,10 @@ change at all after the board has settled.
   drew 118 px cards instead of 130 px; its first fix measured too early, while the cards were still
   the 1000 px ones on two lines, and locked it on again (24-nov-2026; never caught while the guard
   ran on the Table interface).
+  An Arena opponent's hand, commander and piles followed the seat's card size, and the chip beside
+  them breaks into lines from the room they leave; the card size comes from the height that chip
+  leaves, so a 4-seat board at 1100x700 swapped 64 and 70 px for ever (241 changes in 500 ms). They
+  follow the column's width now (25-nov-2026).
 - Guard: `src/board/HandZone.test.tsx` · `src/board/chipReserve.test.ts` · `e2e/board-settle.spec.ts` · `e2e/board-spotlight-settle.spec.ts`
 
 ### BRD-22 · The phase dial shows the steps of combat
