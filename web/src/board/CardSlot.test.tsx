@@ -1159,3 +1159,24 @@ describe('BRD-53: the symbol of a counter on a card', () => {
     expect(badge?.getAttribute('aria-label')).toBe('Blood: 2')
   })
 })
+
+describe("the badge of a battle's defense", () => {
+  const battle = () =>
+    ({
+      id: 'b1',
+      name: 'Invasion of Zendikar',
+      cardTypes: ['Battle'],
+      subTypes: ['Siege'],
+      defense: '4',
+      counters: [],
+    }) as unknown as PermanentView
+
+  it('says defense under the pointer, not damage', () => {
+    const { container } = render(<CardSlot card={battle()} />)
+    const badge = container.querySelector('.defense-badge')
+    expect(badge).not.toBeNull()
+    const tip = badge?.getAttribute('title') ?? badge?.getAttribute('aria-label') ?? badge?.textContent ?? ''
+    expect(tip, 'the badge names the defense, in whichever language the suite runs').toMatch(/^(Defensa|Defense): 4$/)
+    expect(tip).not.toMatch(/Da[ñn]o|Damage/)
+  })
+})

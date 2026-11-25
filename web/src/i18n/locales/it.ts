@@ -977,6 +977,7 @@ export const it: TranslationSchema = {
     declare_attackers: 'Dichiara Attaccanti',
     declare_blockers: 'Dichiara Difensori',
     damage: 'Danno',
+    defense: 'Difesa',
     life: 'Punti Vita',
     poison: 'Veleno',
     energy: 'Energia',

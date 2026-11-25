@@ -977,6 +977,7 @@ export const ja: TranslationSchema = {
     declare_attackers: '攻撃クリーチャー指定',
     declare_blockers: 'ブロッククリーチャー指定',
     damage: 'ダメージ',
+    defense: '防衛',
     life: 'ライフ',
     poison: '毒',
     energy: 'エネルギー',

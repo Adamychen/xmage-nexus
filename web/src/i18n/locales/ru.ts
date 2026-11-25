@@ -977,6 +977,7 @@ export const ru: TranslationSchema = {
     declare_attackers: 'Объявить Атакующих',
     declare_blockers: 'Объявить Блокирующих',
     damage: 'Урон',
+    defense: 'Защита',
     life: 'Жизни',
     poison: 'Яд',
     energy: 'Энергия',

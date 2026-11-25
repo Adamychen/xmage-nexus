@@ -658,7 +658,7 @@ const showPtBadge =
       )}
 
       {isBattle && defenseVal > 0 && !renderedFace && (
-        <BadgeTip className="defense-badge" data-badge-zone="stats" data-digits={String(perm.defense ?? '').length} tip={{ title: `${t('game', 'damage')}: ${perm.defense}` }}>
+        <BadgeTip className="defense-badge" data-badge-zone="stats" data-digits={String(perm.defense ?? '').length} tip={{ title: `${t('game', 'defense')}: ${perm.defense}` }}>
           <DefensePlate value={String(perm.defense)} />
         </BadgeTip>
       )}

@@ -977,6 +977,7 @@ export const zhs: TranslationSchema = {
     declare_attackers: '宣告攻击者',
     declare_blockers: '宣告阻挡者',
     damage: '伤害',
+    defense: '防御',
     life: '生命值',
     poison: '中毒',
     energy: '能量',
