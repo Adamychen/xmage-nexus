@@ -142,6 +142,7 @@ export default function JoinTableDialog({
   const ranked = useMemo(() => rankDecksForTable(allDecks, profile), [allDecks, profile])
   const [selectedDeck, setSelectedDeck] = useState<JoinDeck | null>(() => pickInitialDeck(ranked, profile, currentDeck))
   const userPicked = useRef(false)
+  const importToggled = useRef(false)
 
   useEffect(() => {
     let cancelled = false
@@ -161,6 +162,8 @@ export default function JoinTableDialog({
         const merged = [...byRef.values()]
         setAllDecks(merged)
         if (!userPicked.current) setSelectedDeck(pickInitialDeck(rankDecksForTable(merged, profile), profile, currentDeck))
+        // DCK-34: the importer opens by itself only once the player's decks have been read.
+        if (!importToggled.current) setShowImport(merged.length === 0 && !currentDeck)
       } catch {}
     })()
     return () => { cancelled = true }
@@ -168,7 +171,9 @@ export default function JoinTableDialog({
 
   const [password, setPassword] = useState(initialPassword ?? '')
   const [query, setQuery] = useState('')
-  const [showImport, setShowImport] = useState(() => getAllAvailableDecks().length === 0 && !currentDeck)
+  // DCK-34: closed until the storage read above says there is nothing to pick. The synchronous
+  // list holds no deck of the gallery, so deciding here opened the importer over a full shelf.
+  const [showImport, setShowImport] = useState(false)
   const [importText, setImportText] = useState('')
   const [importName, setImportName] = useState('')
   const [importError, setImportError] = useState<string | null>(null)
@@ -349,7 +354,7 @@ export default function JoinTableDialog({
             </label>
           )}
           <Button variant="soft" size="sm" data-testid="join-import-toggle-btn"
-            onClick={() => setShowImport(!showImport)}>
+            onClick={() => { importToggled.current = true; setShowImport(!showImport) }}>
             {showImport ? (<><Icon name="x" size={12} /> {t('lobby', 'join_import_toggle_close')}</>) : (<><Icon name="clipboard" size={12} /> {t('lobby', 'join_import_toggle_open')}</>)}
           </Button>
         </div>

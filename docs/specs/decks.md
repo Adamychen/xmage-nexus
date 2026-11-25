@@ -529,3 +529,19 @@ the edge.
   had already moved to the share, while the deck screens still rounded by `--r-base`, `--r-sm`,
   `--r-mid` and `--r-xl` (request of 2026-11-25).
 - Guard: `src/decks/cardCorners.css.test.ts`
+
+### DCK-34 · The join dialog's importer opens by itself only for a player with no decks
+The quick importer of the join dialog (DCK-31) comes closed and opens on its own only once the
+dialog has read the player's decks and found none, and the player carries no deck into the table.
+The player's own toggle wins from then on: a panel they opened stays open when the decks arrive,
+and one they closed stays closed.
+
+It used to decide on the first render, from `getAllAvailableDecks()`. That list is read
+synchronously from `localStorage` and the bundled precons, which only exist in a dev build, while a
+deck of the gallery lives in IndexedDB and is read a frame later. So in a production build every
+player with a full shelf opened the dialog into the importer and had to close it before they could
+pick a deck and join.
+
+- Why: the player pressed join, got the import form over their decks, and had to cancel the import
+  to join (report of 2026-11-25).
+- Guard: `src/lobby/JoinTableDialog.importPanel.test.tsx`
