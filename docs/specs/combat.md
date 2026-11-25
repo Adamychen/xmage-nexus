@@ -46,16 +46,23 @@ text merely mentions it ("create a token with vigilance").
   `07501e3ea3` made the rotation real after a stuck animation pinned the attacker upright.
 - Guard: `src/state/gameUtils.test.ts` · `src/cards/cardImages.test.ts` · `e2e/combat.spec.ts`
 
-### CMB-4 · Each attack arrow lands on the defender the server names
-Every attacker draws an arrow to the defender its combat group names: a player's avatar (not the
-middle of their zone), or the planeswalker or battle card being attacked. Every blocker draws an
-arrow to the attacker it blocks. Arrows that start or end on a player who has left the game are
-not drawn.
+### CMB-4 · An unblocked attacker draws its beam; a blocked one trades it for a tie
+An attacker that nothing blocks draws a red beam to the defender its combat group names: a player's
+avatar (not the middle of their zone), or the planeswalker or battle card being attacked. The moment
+it is blocked that beam goes away and a gold tie takes its place, between the attacker and each
+creature blocking it, with a head at both ends: the pair is what matters there, not a second attack.
+If the defender takes the block back, the group has no blockers again, the tie goes and the beam
+returns. Arrows that start or end on a player who has left the game are not drawn.
 
 - Why: aiming at the player's zone root put the arrow head in the lands band (`6fecaa53fd`,
   `web/INTERACTION_COVERAGE.md` §F); in a pod the arrow must follow the frame's defender, not the
   first non-active player (`e2e/recorded.spec.ts`, `pod-combat.json`). The seat-coloured attack
-  arrows of the Table layout (`3392950fb4`) went with it on 2026-11-23.
+  arrows of the Table layout (`3392950fb4`) went with it on 2026-11-23. A blocker's own arrow back to
+  its attacker crossed half the board; with the combat columns (CMB-14) the two sit one above the
+  other, so the user asked for the red one to go and for a two-headed gold tie to say "this one was
+  attacking and has been stopped" (25-nov-2026). The beam still runs to the portrait rather than
+  stopping at the edge of the defender's zone: with the opponents' boards in front, a beam that died
+  at the edge read as an attack on a creature.
 - Guard: `src/board/CombatArrowsOverlay.test.tsx` (blocker arrows, a planeswalker or battle
   defender and the left-player case are not asserted there)
 
@@ -168,20 +175,23 @@ out.
 - Guard: `src/game/feedbackModes/boardOrder.test.tsx`
 
 ### CMB-14 · A declared combat is read by position, not by lines
-Who fights whom is read from where the cards stand. Each combat group of the view is one column:
-its attacker, or its whole band, with the creatures blocking it in front of it, fanned when there
-are several. Columns gather under the defender the group names, a seat or a permanent of theirs, and
-the blocks gather in the seat order of the table. A creature combat leaves alone stays where it is,
-dimmed. A block draws no line at all; the only arrows left are the attackers nothing blocks, braided
-into one beam per defender, which is the damage about to land. A group whose defender the view does
-not name takes no column: it keeps its arrow, because nothing in the view says where it belongs, and
-the board never guesses it from whose turn it is.
+Who fights whom is read from where the cards stand. Inside each player's own board the creatures in
+combat gather in columns, one per combat group of the view, with a gap of a third of a card between
+columns and the creatures combat leaves alone kept behind them, dimmed. Both sides of a group carry
+the same column number, so an attacker and the creatures blocking it hold the same place in the order
+of their own boards and the pairing lines up across the table. The gap a column opens is part of the
+width the board's solver measures (BRD-25), so a seat's cards never run past its frame.
+
+A group whose defender the view does not name takes no column, because nothing in the view says where
+it belongs and the board never guesses it from whose turn it is.
 
 - Why: an arrow per relation crossed the table four or five times in a multiple block and the
   blocker's curve looped over half the board; of the five arrangements studied, position is the only
   one that removes lines instead of drawing them better, and it is how MTG Arena reads without effort
   (combat-reading study and user decision, 24/25-nov-2026). Design and phases:
-  `docs/plans/2026-11-25-combat-columns-design.md`. The model landed first and the arrangement,
-  the arrows and the drawer's combat tab follow it, so today the arrows of CMB-4 are still what the
-  board draws.
-- Guard: `src/board/combatColumns.test.ts`
+  `docs/plans/2026-11-25-combat-columns-design.md`. Blockers do not stand literally in front of their
+  attacker: the user asked for the columns inside each board instead, because the seats already have
+  a position at the table, and for the pairing to be told by a tie rather than by position alone
+  (CMB-4, 25-nov-2026). The gap went into the solver's width model after the last blocker of a
+  three-card row ran 53 px past its seat's frame.
+- Guard: `src/board/combatColumns.test.ts` · `src/board/layout/itemModel.test.ts`

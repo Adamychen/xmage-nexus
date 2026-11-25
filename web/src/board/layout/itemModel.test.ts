@@ -147,6 +147,14 @@ describe('itemModel: command zone (.command-zone, CommandZone.css)', () => {
     expectLinear(zone(2, true, 0, 1), COMPACT, 2 * 0.88 + 1, 2 * (4 + 1) + 2 * 4)
   })
 
+  it('CMB-14: the gap a combat column opens is part of the item it opens before', () => {
+    expectLinear(card({ gapBefore: 0.34 }), CLASSIC, 1.34, 0)
+    // It adds to whatever the card itself takes: a tapped card keeps its own side room.
+    expectLinear(card({ tapped: true, gapBefore: 0.34 }), CLASSIC, 1.74, 0)
+    // And to a card carrying attachments, whose width is a card plus pixels per attachment.
+    expectLinear(card({ attachments: 2, gapBefore: 0.34 }), CLASSIC, 1.34, 56)
+  })
+
   it('BRD-28: a plane without a commander is c + 14px (the zone is only the plane)', () => {
     expectLinear(zone(0, false, 1), CLASSIC, 1, 14)
   })

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import podCombat from '../../fixtures/recorded/pod-combat.json'
-import { atEaseIds, combatArrangement } from './combatColumns'
+import { atEaseIds, combatArrangement, combatOrder } from './combatColumns'
 import type { GameView, PermanentView, PlayerView } from '../net/types'
 
 const perm = (name: string): PermanentView => ({ name, manaValue: 0, expansionSetCode: '', cardNumber: '0' } as unknown as PermanentView)
@@ -107,5 +107,29 @@ describe('combat read as columns', () => {
     const attackers = arrangement.targets.flatMap((t) => t.columns.flatMap((c) => c.attackerIds))
     const engaged = Object.values(arrangement.engagedIds).flat()
     for (const id of attackers) expect(engaged).toContain(id)
+  })
+})
+
+describe('the column number a creature carries', () => {
+  it('CMB-14: an attacker and the creatures blocking it share a column number', () => {
+    const view = game(
+      [seat('me', ['x', 'y']), seat('opp', ['giant', 'runner'])],
+      [group(['giant'], ['x', 'y'], 'me'), group(['runner'], [], 'me')],
+    )
+    const order = combatOrder(combatArrangement(view))
+    expect(order.get('giant')).toBe(0)
+    expect(order.get('x')).toBe(0)
+    expect(order.get('y')).toBe(0)
+    expect(order.get('runner')).toBe(1)
+  })
+
+  it('CMB-14: the numbering follows the defenders, so a pod reads seat by seat', () => {
+    const view = game(
+      [seat('p1', ['block1']), seat('p2', []), seat('me', ['a', 'b'])],
+      [group(['a'], ['block1'], 'p1'), group(['b'], [], 'p2')],
+    )
+    const order = combatOrder(combatArrangement(view))
+    expect([order.get('a'), order.get('block1')]).toEqual([0, 0])
+    expect(order.get('b')).toBe(1)
   })
 })

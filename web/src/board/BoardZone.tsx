@@ -26,6 +26,7 @@ import type { StackGroup } from './stackGroups'
 import StackPile from './StackPile'
 import { isMarqueePermanent } from './marquee'
 import { chipReserve, chipSignature } from './chipReserve'
+import { combatArrangement, combatOrder } from './combatColumns'
 import { bandFill, bandShares, permanentKind } from './bandWeights'
 import { EMPTY_TARGET_ZONES, type TargetZoneKind } from './targetZones'
 import { isPlayerDefeated, isPlayerOut } from './boardShared'
@@ -281,6 +282,7 @@ export default function BoardZone({
   useTapFlip(othersBandEl)
   const gameId = useStore((s) => s.gameId)
   const gamePlayers = useStore((s) => s.game?.players)
+  const storeGame = useStore((s) => s.game)
   const gameCycle = useStore((s) => s.game?.gameCycle)
   const bandEls = useMemo(
     () => [permanentsBandEl, landsBandEl, othersBandEl, creaturesBandEl],
@@ -465,6 +467,10 @@ export default function BoardZone({
   })
 
   const creatures = permanents.filter(([id, p]) => permanentKind(p) === 'creatures' && !attachedIds.has(id))
+  // CMB-14: creatures in combat gather in a column of their own inside this board, one per combat
+  // group and in the same order on both sides, so who fights whom reads by position.
+  const combatColumnOf = combatOrder(combatArrangement(storeGame ?? null))
+  const combatLive = combatColumnOf.size > 0
   const others = permanents.filter(([id, p]) => permanentKind(p) === 'other' && !attachedIds.has(id))
   const lands = permanents.filter(([id, p]) => permanentKind(p) === 'lands' && !attachedIds.has(id))
   // Dock marquee (sagas/planeswalkers/batallas): sale de `others` antes del
@@ -485,7 +491,7 @@ export default function BoardZone({
     creatures.some(([id]) => targetIds.has(id)) ||
     marqueeEntries.some(([id]) => targetIds.has(id))
 
-  const renderCardItem = (id: string, perm: PermanentView, isCreature: boolean, noPreview = false) => {
+  const renderCardItem = (id: string, perm: PermanentView, isCreature: boolean, noPreview = false, extraClass = '') => {
     const isSelectable = combatSelectableSet.has(id)
     const isChosen = combatChosenSet.has(id)
     const isAttacking = attackingSet.has(id)
@@ -603,6 +609,7 @@ export default function BoardZone({
         key={id}
         cardId={id}
         card={perm}
+        className={extraClass.trim() || undefined}
         onClick={onCardClick ? () => onCardClick(id) : undefined}
         onHover={noPreview ? undefined : onCardHover}
         isTarget={isTarget}
@@ -623,7 +630,24 @@ export default function BoardZone({
 
   const { groups: landGroups, solos: landSolos } = groupStackables(lands, 'lands', { excludeIds: stackExcludedIds, ...(arenaBottom ? { min: 2 } : null) })
   const { groups: tokenGroups, solos: otherSolos } = groupStackables(restOthers, 'other', { excludeIds: stackExcludedIds })
-  const { groups: creatureTokenGroups, solos: creatureSolos } = groupStackables(creatures, 'creatures', { excludeIds: stackExcludedIds })
+  const { groups: creatureTokenGroups, solos: creatureSolosRaw } = groupStackables(creatures, 'creatures', { excludeIds: stackExcludedIds })
+  /** CMB-14: in combat the engaged creatures come first, grouped by their column; the rest keep their order. */
+  const creatureSolos = combatLive
+    ? creatureSolosRaw
+        .map((entry, i) => ({ entry, i, column: combatColumnOf.get(entry[0]) }))
+        .sort((a, b) => (a.column ?? Infinity) - (b.column ?? Infinity) || a.i - b.i)
+        .map(({ entry }) => entry)
+    : creatureSolosRaw
+  /** CMB-14: the gap between two combat columns, in card widths (BoardZone.css draws it). */
+  const COMBAT_COLUMN_GAP = 0.34
+  /** The class a creature's slot carries while combat is live: its column, the gap before a new one, the rest dimmed. */
+  const combatSlotClass = (id: string, index: number): string => {
+    if (!combatLive) return ''
+    const column = combatColumnOf.get(id)
+    if (column === undefined) return ' combat-at-ease'
+    const previous = index > 0 ? combatColumnOf.get(creatureSolos[index - 1][0]) : undefined
+    return ` combat-engaged${previous === column ? '' : ' combat-column-start'}`
+  }
 
   const renderStackGroup = (group: StackGroup, isCreature: boolean) => {
     const isLand = group.kind === 'land'
@@ -993,7 +1017,7 @@ export default function BoardZone({
         className={`bz-band oz-band pz-band creatures-band${kindColumns && marqueeEntries.length > 0 ? ' bz-split-band' : ''}${!hasCommander && marqueeEntries.length === 0 ? ' full-width' : ''}`}
       >
         {creatureTokenGroups.map((group) => renderStackGroup(group, true))}
-        {creatureSolos.map(([id, perm]) => renderCardItem(id, perm, true))}
+        {creatureSolos.map(([id, perm], i) => renderCardItem(id, perm, true, false, combatSlotClass(id, i)))}
       </div>
       {marqueeEntries.length > 0 && kindColumns && (
         <div
@@ -1014,11 +1038,12 @@ export default function BoardZone({
   )
 
   const isTappedPerm = (id: string, perm: PermanentView) => perm.tapped === true || (attackingSet.has(id) && !hasVigilance(perm))
-  const cardItem = (id: string, perm: PermanentView): ItemKind => ({
+  const cardItem = (id: string, perm: PermanentView, gapBefore = 0): ItemKind => ({
     kind: 'card',
     tapped: isTappedPerm(id, perm),
     attachments: (perm.attachments ?? []).filter((attId) => battlefield[attId]).length,
     mutateParts: perm.mutated ? Object.entries(perm.mutateView?.cards ?? {}).filter(([partId, part]) => part && partId !== id).length : 0,
+    ...(gapBefore ? { gapBefore } : null),
   })
   const pileItem = (group: StackGroup): ItemKind => ({
     kind: 'pile',
@@ -1048,7 +1073,10 @@ export default function BoardZone({
     creaturesBands.push({
       id: 'creatures',
       el: creaturesBandEl,
-      items: [...creatureTokenGroups.map(pileItem), ...creatureSolos.map(([id, perm]) => cardItem(id, perm))],
+      items: [
+        ...creatureTokenGroups.map(pileItem),
+        ...creatureSolos.map(([id, perm], i) => cardItem(id, perm, combatSlotClass(id, i).includes('combat-column-start') && i > 0 ? COMBAT_COLUMN_GAP : 0)),
+      ],
       evenLines: true,
       ...(arenaBottom ? { preferOneLine: true } : null),
     })

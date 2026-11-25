@@ -754,3 +754,27 @@
   max-width: 25cqw;
   min-width: 0;
 }
+
+/* CMB-14: a declared combat splits a board's creatures into columns. The creatures of one combat
+   group stand together, a gap of a third of a card opens before the next group, and what is not in
+   combat keeps its place a step back, dimmed, so the engaged cards read first. The attacker's
+   columns and its blockers' are numbered the same, so the pairing lines up across the table. */
+.board-zone .creatures-band > .combat-column-start:not(:first-child) {
+  margin-left: calc(var(--card-w, var(--card-w-base)) * 0.34);
+}
+
+.board-zone .creatures-band > .combat-at-ease {
+  opacity: 0.55;
+  filter: saturate(0.75);
+}
+
+.board-zone .creatures-band > .combat-at-ease:hover {
+  opacity: 1;
+  filter: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .board-zone .creatures-band > .combat-at-ease {
+    transition: none;
+  }
+}

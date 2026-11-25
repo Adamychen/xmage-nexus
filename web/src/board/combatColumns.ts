@@ -104,3 +104,20 @@ export function atEaseIds(arrangement: CombatArrangement, player: PlayerView | u
   const engaged = new Set(arrangement.engagedIds[player?.playerId ?? ''] ?? [])
   return Object.keys(battlefield).filter((id) => !engaged.has(id))
 }
+
+/**
+ * CMB-14: the column each creature belongs to, numbered across the whole combat. Both sides of a
+ * group get the same number, so an attacker and the creatures blocking it sit at the same place in
+ * their own boards and the pairing reads across the table without a line.
+ */
+export function combatOrder(arrangement: CombatArrangement): Map<string, number> {
+  const order = new Map<string, number>()
+  let column = 0
+  for (const target of arrangement.targets) {
+    for (const group of target.columns) {
+      for (const id of [...group.attackerIds, ...group.blockerIds]) order.set(id, column)
+      column += 1
+    }
+  }
+  return order
+}

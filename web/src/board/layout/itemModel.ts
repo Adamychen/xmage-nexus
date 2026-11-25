@@ -4,7 +4,7 @@ export interface ItemModel {
 }
 
 export type ItemKind =
-  | { kind: 'card'; tapped: boolean; attachments: number; mutateParts?: number }
+  | { kind: 'card'; tapped: boolean; attachments: number; mutateParts?: number; gapBefore?: number }
   | { kind: 'pile'; pile: 'land' | 'token'; count: number; tapped: number }
   | { kind: 'commander'; commanders: number; compactPod: boolean; planes?: number; emblems?: number }
 
@@ -86,9 +86,12 @@ export function itemModel(item: ItemKind, opts: ItemOpts): ItemModel {
   if (item.kind === 'pile') return pileModel(item.pile, item.count, item.tapped, opts)
   if (item.kind === 'commander') return commanderModel(item.commanders, item.compactPod, item.planes ?? 0, item.emblems ?? 0)
   const mutate = item.mutateParts ?? 0
+  // CMB-14: the gap a combat column opens before itself is part of the item's width, so the row the
+  // solver sizes is the row the board draws and the cards never run past the seat's frame.
+  const gap = item.gapBefore ?? 0
   if (item.attachments > 0 || mutate > 0) {
-    return { a: 1, b: ATTACH_STEP * item.attachments + MUTATE_STEP * mutate }
+    return { a: 1 + gap, b: ATTACH_STEP * item.attachments + MUTATE_STEP * mutate }
   }
   const side = tapSide(item.tapped, opts)
-  return { a: 1 + 2 * side.a, b: 0 }
+  return { a: 1 + gap + 2 * side.a, b: 0 }
 }
