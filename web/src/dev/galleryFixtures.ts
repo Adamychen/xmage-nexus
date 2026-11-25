@@ -1966,6 +1966,8 @@ export interface CombatScenePlan {
   attackers: number
   /** Blockers that seat puts in front of each attacker, attacker by attacker. */
   blockers?: number[]
+  /** CMB-4: the group stays blocked with no blockers left, as it does once they die in combat. */
+  blockersDied?: boolean
 }
 
 /**
@@ -1992,14 +1994,16 @@ function withCombatScene(game: GameView, plan: CombatScenePlan[]): GameView {
       const blockers: Record<string, unknown> = {}
       for (let b = 0; b < blockerCount; b++) {
         const blockerId = `cmb-${planIndex}-a${a}-b${b}`
-        const onSeat = theirs.get(seat.playerId) ?? {}
-        onSeat[blockerId] = sceneCreature(blockerId, 'Llanowar Elves', '1', '1', false)
-        theirs.set(seat.playerId, onSeat)
+        if (!entry.blockersDied) {
+          const onSeat = theirs.get(seat.playerId) ?? {}
+          onSeat[blockerId] = sceneCreature(blockerId, 'Llanowar Elves', '1', '1', false)
+          theirs.set(seat.playerId, onSeat)
+        }
         blockers[blockerId] = {}
       }
       groups.push({
         attackers: { [attackerId]: {} },
-        blockers,
+        blockers: entry.blockersDied ? {} : blockers,
         isBlocked: blockerCount > 0,
         defenderId: seat.playerId,
         defenderName: seat.name,
@@ -6309,6 +6313,9 @@ export function buildGalleryEntries(): GalleryEntry[] {
   const podBlocked = FOUR_PLAYER_GAME
     ? withCombatScene(calmGame(FOUR_PLAYER_GAME), [{ seat: 0, attackers: 2, blockers: [2, 0] }, { seat: 1, attackers: 1, blockers: [1] }, { seat: 2, attackers: 1 }])
     : null
+  const duelStopped = duelBase
+    ? withCombatScene(calmGame(duelBase), [{ seat: 0, attackers: 2, blockers: [1, 0], blockersDied: true }])
+    : null
   const combatStates: Array<{ id: string; label: string; description: string; game: GameView | null; panel: boolean }> = [
     {
       id: 'combat:duel-attack',
@@ -6337,6 +6344,13 @@ export function buildGalleryEntries(): GalleryEntry[] {
       description: 'The same block with the side panel open.',
       game: duelBlocked,
       panel: true,
+    },
+    {
+      id: 'combat:duel-stopped',
+      label: 'Combat: the blocker died, the attacker stays stopped',
+      description: 'The 8/8 case: a blocked attacker whose blocker died in the damage step. The view still calls the group blocked, so that attacker draws neither beam nor tie for the rest of the combat, while the one nothing blocked keeps its beam. Side panel off.',
+      game: duelStopped,
+      panel: false,
     },
     {
       id: 'combat:pod-attack',
