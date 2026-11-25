@@ -782,7 +782,8 @@ export const DEFAULT_AUDIO_SETTINGS: AudioSettings = {
   masterVolume: 0.8,
   sfxVolume: 0.8,
   uiVolume: 0.7,
-  prioritySound: 'every-prompt',
+  // SET-14: the cue follows the client's own stops unless the player says otherwise.
+  prioritySound: 'on-stop',
 }
 
 /**

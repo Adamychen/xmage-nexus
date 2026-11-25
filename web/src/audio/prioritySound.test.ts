@@ -9,11 +9,11 @@ vi.mock('./soundManager', () => ({
 const play = vi.mocked(soundManager.play)
 
 describe('normalizePrioritySound', () => {
-  it('defaults to every-prompt', () => {
-    expect(normalizePrioritySound(undefined)).toBe('every-prompt')
-    expect(normalizePrioritySound(null)).toBe('every-prompt')
-    expect(normalizePrioritySound('nope')).toBe('every-prompt')
-    expect(normalizePrioritySound(0)).toBe('every-prompt')
+  it('SET-14: defaults to on-stop', () => {
+    expect(normalizePrioritySound(undefined)).toBe('on-stop')
+    expect(normalizePrioritySound(null)).toBe('on-stop')
+    expect(normalizePrioritySound('nope')).toBe('on-stop')
+    expect(normalizePrioritySound(0)).toBe('on-stop')
   })
 
   it('keeps each valid mode', () => {
