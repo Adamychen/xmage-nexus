@@ -1,4 +1,4 @@
-import type { GameView, PlayerView } from '../net/types'
+import type { CombatGroupView, GameView, PlayerView } from '../net/types'
 
 /** One combat group as the board draws it: the attacker (or the band) with the blockers in front. */
 export interface CombatColumn {
@@ -77,7 +77,8 @@ export function combatArrangement(game: GameView | null | undefined): CombatArra
   }
 
   for (const group of groups) {
-    const record = (group ?? {}) as Record<string, unknown>
+    const record = (group ?? {}) as CombatGroupView
+    // The proxy sends `attackers`/`blockers` as maps keyed by id, which the contract types as arrays.
     const attackerIds = idsOf(record.attackers)
     if (attackerIds.length === 0) continue
     const blockerIds = idsOf(record.blockers)

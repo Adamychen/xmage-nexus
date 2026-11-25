@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo, useCallback } from 'react'
 import { BOARD_RELAYOUT_EVENT } from './layout/relayout'
 import { isPlayerOut } from './boardShared'
-import type { CardView, GameView } from '../net/types'
+import type { CardView, CombatGroupView, GameView } from '../net/types'
 import { stackTargetIds } from './stackEntries'
 import { seatColorVar, seatIndexOf } from './seatColor'
 import './CombatArrowsOverlay.css'
@@ -235,7 +235,7 @@ export default function CombatArrowsOverlay({
     // 1. Attack arrows from game.combat groups
     if (Array.isArray(game.combat) && game.combat.length > 0) {
       game.combat.forEach((group, gi) => {
-        const record = group as Record<string, unknown>
+        const record = group as CombatGroupView & Record<string, unknown>
         const attackersObj = record.attackers
         const attackerIds = Array.isArray(attackersObj)
           ? attackersObj

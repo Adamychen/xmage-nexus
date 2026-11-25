@@ -299,6 +299,9 @@ export interface ManaPoolView {
 export interface CombatGroupView {
   attackers?: unknown[]
   blockers?: unknown[]
+  isBlocked?: boolean
+  defenderId?: string
+  defenderName?: string
   defenders?: unknown[]
   attacker?: unknown
   isAttackedByDefender?: boolean
