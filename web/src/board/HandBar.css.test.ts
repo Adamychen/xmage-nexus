@@ -23,6 +23,20 @@ describe('the commander drawn with the fan', () => {
     expect(slot).toMatch(/height:\s*calc\(var\(--cmd-w\)\s*\*\s*88\s*\/\s*63\s*\*\s*0\.5\)/)
   })
 
+  it('BRD-34: the box keeps its width in a tight row, so the card never spills out of it', () => {
+    const slot = block('.hand-bar .hand-card-slot.hand-trailing')
+    // The bar lays out one card per slot: without this the wider slot is the one the row shrinks.
+    expect(slot).toMatch(/flex:\s*0 0 var\(--cmd-w\)/)
+  })
+
+  it('BRD-34: the commander takes no tuck of its own, because the box is already the half', () => {
+    const card = block('.hand-bar .hand-card-slot.hand-trailing .hand-trailing-card')
+    // The fan's pose sinks a card below the board edge; stacked on the half it left a sliver.
+    expect(card).toMatch(/transform:\s*translateY\(calc\(-1 \* var\(--rise, 0px\)\)\)/)
+    expect(card).not.toMatch(/var\(--sink/)
+    expect(card).not.toMatch(/rotate\(/)
+  })
+
   it('BRD-34: the card keeps its height inside that box and is clipped at the waist', () => {
     const card = block('.hand-bar .hand-card-slot.hand-trailing .hand-trailing-card')
     expect(card).toMatch(/height:\s*calc\(var\(--cmd-w\)\s*\*\s*88\s*\/\s*63\)/)

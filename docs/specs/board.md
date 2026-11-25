@@ -624,7 +624,13 @@ too: the hand has no room to spare at that width.
   tax drawn in the card's corner sat below the board edge in the hand, a "+" drawn next to a pip did
   not read against the gold edge, and a separate "+N" still had to be added up by eye. It was the
   fanned hand of the v1 chrome only until the user asked for it everywhere (2026-11-21): with the
-  v2 chrome the commander sat in the left column and read as one more thing on the board.
+  v2 chrome the commander sat in the left column and read as one more thing on the board. The wider
+  half-card box then never reached the screen: the bar sizes itself for one card per slot, so the
+  wider slot was the item the tight row shrank (23 px, with the card spilling out of it), and the
+  card inside still took the fan's tuck on top of the half it already is, which slid its visible
+  half past the bottom of the window. The user looked for it with and without the panel and found
+  it in neither (25-nov-2026); measured at 1024x768 the visible half now ends 8 px above the
+  window's edge, with the panel open and closed.
 - Guard: `src/board/HandBar.test.tsx` · `src/board/HandBar.css.test.ts` · `src/board/commanders.test.ts` · `src/board/BoardZone.arenaOwn.test.tsx` · `src/board/HandRail.test.tsx` · `src/board/HandRow.test.tsx` · `src/board/SpotlightBoard.test.tsx`
 
 ### BRD-35 · A band in several lines holds the same count on each line
