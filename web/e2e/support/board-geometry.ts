@@ -103,6 +103,9 @@ export async function drawBoard(page: Page, game: Rec, settings: Rec): Promise<v
 export interface Settle {
   settled: boolean
   changes: number
+  /** What changed after the board settled: element, property and the two values, so a red run says
+   *  which size moved instead of only how many did (BRD-21). */
+  details?: string[]
 }
 
 export async function settleAndCount(page: Page): Promise<Settle> {
@@ -112,7 +115,7 @@ export async function settleAndCount(page: Page): Promise<Settle> {
       new Promise<Settle>((resolve) => {
         const board = document.querySelector(opts.selector)
         if (!board) {
-          resolve({ settled: false, changes: -1 })
+          resolve({ settled: false, changes: -1, details: [] })
           return
         }
         const SIZING_STYLE = ['--card-w', '--zone-card-w', 'flex', 'flex-grow']
@@ -125,6 +128,13 @@ export async function settleAndCount(page: Page): Promise<Settle> {
         }
         const known = new Map<Element, Map<string, string>>()
         let total = 0
+        let watching = false
+        const details: string[] = []
+        const describe = (el: Element): string => {
+          const cls = (el.getAttribute('class') ?? el.tagName).split(' ').slice(0, 3).join('.')
+          const seat = el.closest('[data-player-id]')?.getAttribute('data-player-id')
+          return seat ? `${cls}@${seat.slice(0, 6)}` : cls
+        }
         const mo = new MutationObserver((records) => {
           const touched = new Map<Element, Set<string>>()
           for (const record of records) {
@@ -147,6 +157,7 @@ export async function settleAndCount(page: Page): Promise<Settle> {
             for (const name of names) {
               const now = sizingOf(name, el.getAttribute(name))
               if (now === prev.get(name)) continue
+              if (watching && details.length < 8) details.push(`${describe(el)} ${name}: ${prev.get(name)} -> ${now}`)
               prev.set(name, now)
               total++
             }
@@ -170,9 +181,10 @@ export async function settleAndCount(page: Page): Promise<Settle> {
           if (now - lastChange >= opts.calmMs || now - started > opts.capMs) {
             const settled = now - lastChange >= opts.calmMs
             const base = total
+            watching = true
             setTimeout(() => {
               mo.disconnect()
-              resolve({ settled, changes: total - base })
+              resolve({ settled, changes: total - base, details })
             }, opts.windowMs)
           } else requestAnimationFrame(frame)
         }
@@ -186,7 +198,9 @@ export async function settleAndCount(page: Page): Promise<Settle> {
 export function settleProblem(result: Settle): string | null {
   if (result.changes < 0) return 'no board on the page'
   if (!result.settled) return `never calmed within ${SETTLE_CAP_MS / 1000} s (${result.changes} size changes in the next ${WINDOW_MS} ms)`
-  return result.changes > MAX_BOARD_CHANGES ? `${result.changes} size changes after the board settled` : null
+  if (result.changes <= MAX_BOARD_CHANGES) return null
+  const what = result.details?.length ? ` (${result.details.join('; ')})` : ''
+  return `${result.changes} size changes after the board settled${what}`
 }
 
 export interface ZoneInfo {

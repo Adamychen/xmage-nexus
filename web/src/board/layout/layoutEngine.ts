@@ -205,9 +205,24 @@ function clearBand(el: HTMLElement): boolean {
   return changed
 }
 
+/**
+ * BRD-21: a solve that lands within a pixel of the size the seat already has keeps that size. The
+ * cards are what the row's height is made of, so writing a card width changes the box the next
+ * solve measures: without this the two answers can chase each other, and a seat sat flipping
+ * between 111 px and 112 px on every frame, for ever.
+ */
+const CARD_W_HYSTERESIS_PX = 1.5
+
+export function settledCardW(seat: HTMLElement, solved: number): number {
+  const current = parseFloat(seat.style.getPropertyValue('--zone-card-w'))
+  if (!Number.isFinite(current)) return solved
+  return Math.abs(solved - current) < CARD_W_HYSTERESIS_PX ? current : solved
+}
+
 function writeSeat(reg: SeatRegistration, out: SeatOut): boolean {
-  let changed = setVar(reg.seat, '--zone-card-w', px(out.zoneCardW))
-  changed = setVar(reg.seat, '--card-w', px(out.zoneCardW)) || changed
+  const cardW = settledCardW(reg.seat, out.zoneCardW)
+  let changed = setVar(reg.seat, '--zone-card-w', px(cardW))
+  changed = setVar(reg.seat, '--card-w', px(cardW)) || changed
   const rows = [
     [reg.rows.creatures, out.rows.creatures.bands],
     [reg.rows.permanents, out.rows.permanents.bands],

@@ -339,7 +339,10 @@ board drawn without it, and kept while the zone, the chip and the number of card
 a board resized away and back draws the same sizes it had. The guard sweeps the Arena board, with and without the side panel, with 2 and 4 seats, boards of
 several sizes with planeswalkers, sagas, commanders, tokens and attachments, both card styles and
 several window sizes, both drawn fresh and reached by resizing a drawn board, and allows no size
-change at all after the board has settled.
+change at all after the board has settled. A solve that lands within a pixel and a half of the size
+a seat already has keeps that size: the cards are what the row's height is made of, so every size
+written changes the box the next solve measures, and two answers a pixel apart would otherwise
+chase each other.
 
 - Why: the planeswalker column of BRD-2 made a board resize every frame without end (user
   report, 2026-10-29; the user then set the bar: a slow transition does not matter, a loop does), and no test watched a board after it was drawn; the size of a card was
@@ -363,8 +366,12 @@ change at all after the board has settled.
   An Arena opponent's hand, commander and piles followed the seat's card size, and the chip beside
   them breaks into lines from the room they leave; the card size comes from the height that chip
   leaves, so a 4-seat board at 1100x700 swapped 64 and 70 px for ever (241 changes in 500 ms). They
-  follow the column's width now (25-nov-2026).
-- Guard: `src/board/HandZone.test.tsx` · `src/board/chipReserve.test.ts` · `e2e/board-settle.spec.ts` · `e2e/board-spotlight-settle.spec.ts`
+  follow the column's width now (25-nov-2026). The pool on its own line (MNA-12) left the own seat
+  one pixel short of its next card size, and the seat flipped between 111 px and 112 px on every
+  frame, 16 different values in 16 frames, which also stopped a click from ever landing on a pool
+  pip (`e2e/mana-payment.spec.ts`, MNA-3, reported by another session). Hence the pixel and a half:
+  measured on that board, 16 values in 16 frames before, one after.
+- Guard: `src/board/HandZone.test.tsx` · `src/board/chipReserve.test.ts` · `src/board/layout/layoutEngine.test.ts` · `e2e/board-settle.spec.ts` · `e2e/board-spotlight-settle.spec.ts`
 
 ### BRD-22 · The phase dial shows the steps of combat
 Retired 2026-11-23: the Table (v2) interface was removed when every game moved to the one Arena layout; the phase dial is gone and the phase strip names the combat steps.

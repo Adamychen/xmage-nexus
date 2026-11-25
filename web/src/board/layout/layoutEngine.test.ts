@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from 'vitest'
-import { BoardLayoutEngine, balancedLineWidth, bandColumns, registrationSignature, type SeatRegistration } from './layoutEngine'
+import { BoardLayoutEngine, balancedLineWidth, bandColumns, registrationSignature, settledCardW, type SeatRegistration } from './layoutEngine'
 import type { ItemKind } from './itemModel'
 
 function sized(el: HTMLElement, width: number, height: number): HTMLElement {
@@ -140,5 +140,25 @@ describe('BRD-35: even lines', () => {
   it('BRD-35: the line width is the widest even line, gaps included', () => {
     expect(balancedLineWidth([100, 100, 100, 100], 2, 10)).toBe(210)
     expect(balancedLineWidth([140, 100, 100, 100, 100], 3, 10)).toBe(360)
+  })
+})
+
+describe('BRD-21: a seat keeps the size it has when the next solve lands beside it', () => {
+  const seatWith = (written?: number) => {
+    const seat = document.createElement('div')
+    if (written !== undefined) seat.style.setProperty('--zone-card-w', `${written}px`)
+    return seat
+  }
+
+  it('BRD-21: a solve within a pixel and a half of the written size keeps it, so the two cannot chase each other', () => {
+    expect(settledCardW(seatWith(111), 112)).toBe(111)
+    expect(settledCardW(seatWith(112), 111)).toBe(112)
+    expect(settledCardW(seatWith(111), 112.4)).toBe(111)
+  })
+
+  it('BRD-21: a real change moves the size, and a seat with nothing written takes what it is given', () => {
+    expect(settledCardW(seatWith(111), 113)).toBe(113)
+    expect(settledCardW(seatWith(111), 64)).toBe(64)
+    expect(settledCardW(seatWith(), 111)).toBe(111)
   })
 })
