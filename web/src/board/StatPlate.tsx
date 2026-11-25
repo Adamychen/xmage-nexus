@@ -1,7 +1,7 @@
 /**
  * BRD-43: the plates a card prints its own numbers on, drawn as vectors with
  * the number inside them: the loyalty plate of a planeswalker and the spiked
- * defense badge of a battle.
+ * defense badge of a battle, plus the loyalty-cost shields of its abilities.
  *
  * The number is SVG text inside the same drawing, not HTML text centred over
  * it, because an HTML box is centred by its line box: with this display font
@@ -48,7 +48,30 @@ const DEFENSE: Shape = {
   path: 'M370.481 724.636c0 0 95.104 99.485 95.104 99.485s93.865-99.485 93.865-99.485c0 0 279.156 71.741 279.156 71.741s-116.427-258.057-116.427-258.057c0 0 106.249-111.572 106.249-111.572s-106.249-112.959-106.249-112.959c0 0 117.456-257.567 117.456-257.567s-280.185 72.724-280.185 72.724c0 0-94.433-99.669-94.433-99.669s-94.536 99.669-94.536 99.669c0 0-289.195-79.34-289.195-79.34s122.539 266.088 122.856 264.182c0.319-1.905-104.911 111.939-104.911 111.939s104.911 112.592 104.911 112.592c0 0-121.264 254.394-121.264 254.394s287.602-68.079 287.602-68.079z',
 }
 
-function StatPlate({ shape, kind, value, valueClass = '' }: { shape: Shape; kind: 'loyalty' | 'defense'; value: string; valueClass?: string }) {
+const LOYALTY_UP: Shape = {
+  viewBox: '-1.2 3.3 34.4 24.2',
+  centre: [16, 17.4],
+  size: [12, 10.4, 8.4],
+  path: 'M31.986 25.659c-18.682 2.509-31.971 0.091-31.971 0 0 0 2.507-7.148 1.621-14.262-0.011-0.085 14.239-6.898 14.239-6.898h0.063c0 0 14.406 6.898 14.406 6.898h-0.068c-0.756 7.129 1.621 14.262 1.621 14.262h0.089z',
+}
+
+const LOYALTY_DOWN: Shape = {
+  viewBox: '-1.2 5.1 34.4 23',
+  centre: [16, 15],
+  size: [12, 10.4, 8.4],
+  path: 'M31.986 6.341c-18.682-2.509-31.971-0.091-31.971 0 0 0 2.377 7.133 1.621 14.262 5.508 3.744 14.365 6.193 14.365 6.193h-0.023c0 0 8.857-2.448 14.365-6.193h-0.068c-0.756-7.129 1.621-14.262 1.621-14.262h0.089z',
+}
+
+const LOYALTY_ZERO: Shape = {
+  viewBox: '-1.2 5.5 34.4 21',
+  centre: [16, 16],
+  size: [12, 10.4, 8.4],
+  path: 'M0.014 23.607c0 0 2.298-7.336-0.014-15.354 0 0 9.813-1.566 16-1.566 6.75 0 16 1.696 16 1.696-2.25 7.561-0.103 15.224-0.103 15.224s-9.834 1.705-15.897 1.705c-6.063 0-15.986-1.705-15.986-1.705z',
+}
+
+type PlateKind = 'loyalty' | 'defense' | 'loyalty-cost'
+
+function StatPlate({ shape, kind, value, valueClass = '' }: { shape: Shape; kind: PlateKind; value: string; valueClass?: string }) {
   const digits = value.length
   const size = shape.size[Math.min(digits, 3) - 1]
   const [cx, cy] = shape.centre
@@ -72,6 +95,16 @@ function StatPlate({ shape, kind, value, valueClass = '' }: { shape: Shape; kind
 
 export function LoyaltyPlate(props: { value: string; valueClass?: string }) {
   return <StatPlate shape={LOYALTY} kind="loyalty" {...props} />
+}
+
+/**
+ * The cost of a loyalty ability as the card prints it: the Mana set's
+ * loyalty-up, loyalty-down and loyalty-zero shields with the signed number inside.
+ */
+export function LoyaltyCostPlate({ delta }: { delta: number }) {
+  const shape = delta > 0 ? LOYALTY_UP : delta < 0 ? LOYALTY_DOWN : LOYALTY_ZERO
+  const value = delta > 0 ? `+${delta}` : delta < 0 ? `\u2212${-delta}` : '0'
+  return <StatPlate shape={shape} kind="loyalty-cost" value={value} />
 }
 
 export function DefensePlate(props: { value: string; valueClass?: string }) {
