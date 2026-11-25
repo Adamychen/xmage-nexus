@@ -2,8 +2,9 @@ import type { PermanentView } from '../net/types'
 import { isTokenCard } from '../cards/cardImages'
 
 export const STACK_GROUP_MIN = 3
-export const TOKEN_PILE_MAX = 5
 export const TOKEN_PILE_FAN_DELAY_MS = 1000
+/** BRD-20: the largest pile that still fans out; beyond it the fan is a smear, not a row of cards. */
+export const PILE_FAN_MAX = 12
 
 export type StackGroupKind = 'land' | 'token' | 'creature-token'
 
@@ -61,16 +62,6 @@ export function stackGroupKeyOf(
   return { key: `ctoken:${name}:${tappedFlag(perm)}:${pt}`, name, groupKind: 'creature-token' }
 }
 
-function chunkPile(group: StackGroup): StackGroup[] {
-  const chunks: StackGroup[] = []
-  for (let i = 0; i < group.items.length; i += TOKEN_PILE_MAX) {
-    const items = group.items.slice(i, i + TOKEN_PILE_MAX)
-    if (items.length < 2) continue
-    chunks.push({ ...group, key: i === 0 ? group.key : `${group.key}#${i / TOKEN_PILE_MAX}`, items })
-  }
-  return chunks
-}
-
 export function groupStackables(
   entries: [string, PermanentView][],
   kind: 'creatures' | 'lands' | 'other',
@@ -89,7 +80,9 @@ export function groupStackables(
     }
     group.items.push([id, perm])
   }
-  const groups = order.filter((g) => g.items.length >= (opts.min ?? STACK_GROUP_MIN)).flatMap(chunkPile)
+  /** BRD-20: a pile holds the whole group. Copies that the game is asking the player to pick leave
+   *  it through `excludeIds`, so a pile never hides a card that has to be reachable. */
+  const groups = order.filter((g) => g.items.length >= (opts.min ?? STACK_GROUP_MIN))
   const groupedIds = new Set<string>()
   for (const g of groups) for (const [id] of g.items) groupedIds.add(id)
   return { groups, solos: entries.filter(([id]) => !groupedIds.has(id)) }

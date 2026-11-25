@@ -64,3 +64,18 @@ describe('the planeswalker zone of the own Arena board', () => {
     expect(block).toMatch(/align-content:\s*flex-start/)
   })
 })
+
+describe('a pile of identical permanents', () => {
+  it('BRD-20: from the sixth copy on the backs sit on each other, so the pile keeps five edges', () => {
+    const blocks = [...zone.matchAll(/([^{}]+)\{([^{}]*)\}/g)]
+      .filter((m) => /\.stack-group[^{]*\.card-slot[^{]*:nth-child\(n \+ 6\)/.test(m[1]))
+    expect(blocks.length, 'the pile caps the edges it shows').toBeGreaterThan(0)
+    const body = blocks.map((m) => m[2]).join('\n')
+    expect(body).toMatch(/margin-left:\s*calc\(-1 \* var\(--card-w\)\)/)
+    // The cap must reach the variants that overlap by their own amount, tapped and compact included.
+    const selectors = blocks.map((m) => m[1]).join(',')
+    expect(selectors).toMatch(/token-pile/)
+    expect(selectors).toMatch(/card-style-compact/)
+    expect(selectors).toMatch(/tap-tilted/)
+  })
+})

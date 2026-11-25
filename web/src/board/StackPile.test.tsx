@@ -2,6 +2,7 @@ import { createEvent, fireEvent, render } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import StackPile from './StackPile'
 import { BOARD_RELAYOUT_EVENT } from './layout/relayout'
+import { PILE_FAN_MAX } from './stackGroups'
 
 function relayoutEvents(spy: { mock: { calls: unknown[][] } }): number {
   return spy.mock.calls.filter(([event]) => (event as Event).type === BOARD_RELAYOUT_EVENT).length
@@ -40,6 +41,36 @@ describe('StackPile', () => {
     const spy = vi.spyOn(window, 'dispatchEvent')
     fireEvent.pointerEnter(container.querySelector('.stack-group')!)
     expect(relayoutEvents(spy)).toBeGreaterThan(0)
+  })
+
+  it('BRD-20: a pile of more copies than a fan can show stays closed', () => {
+    const slots = (n: number) => Array.from({ length: n }, (_, i) => <div key={i} className="card-slot" />)
+    const ids = (n: number) => Array.from({ length: n }, (_, i) => `c${i}`)
+    const { container } = render(
+      <div className="permanents-band">
+        <StackPile className="stack-group token-pile" name="Soldier" count={PILE_FAN_MAX + 1} cardIds={ids(PILE_FAN_MAX + 1)}>
+          {slots(PILE_FAN_MAX + 1)}
+        </StackPile>
+      </div>,
+    )
+    const pile = container.querySelector<HTMLElement>('.stack-group')!
+    fireEvent.pointerEnter(pile)
+    expect(pile.dataset.spread).toBeUndefined()
+  })
+
+  it('BRD-20: a pile a fan can still show opens as before', () => {
+    const slots = (n: number) => Array.from({ length: n }, (_, i) => <div key={i} className="card-slot" />)
+    const ids = (n: number) => Array.from({ length: n }, (_, i) => `c${i}`)
+    const { container } = render(
+      <div className="permanents-band">
+        <StackPile className="stack-group token-pile" name="Soldier" count={PILE_FAN_MAX} cardIds={ids(PILE_FAN_MAX)}>
+          {slots(PILE_FAN_MAX)}
+        </StackPile>
+      </div>,
+    )
+    const pile = container.querySelector<HTMLElement>('.stack-group')!
+    fireEvent.pointerEnter(pile)
+    expect(pile.dataset.spread).toBe('')
   })
 
   it('BRD-23: a pile fans into the free room of its row up to the next band, not only inside its own band', () => {

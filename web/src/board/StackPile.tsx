@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, type ReactNode } from 'react'
 import { spreadLayout } from './stackSpread'
+import { PILE_FAN_MAX } from './stackGroups'
 import { BOARD_RELAYOUT_EVENT } from './layout/relayout'
 
 const SPREAD_GAP = 6
@@ -149,6 +150,9 @@ export default function StackPile({ className, name, count, cardIds, landName, f
   const fan = useCallback(
     (pile: HTMLElement) => {
       cancelFan()
+      // BRD-20: a pile of dozens cannot be fanned into readable cards, so it stays closed; the
+      // copies the game asks the player to pick leave the pile anyway (groupStackables).
+      if (count > PILE_FAN_MAX) return
       spread(pile)
       announceSettledRelayout()
       onFanChangeRef.current?.(true)
@@ -159,7 +163,7 @@ export default function StackPile({ className, name, count, cardIds, landName, f
       pointerWatch.current = watch
       document.addEventListener('pointermove', watch)
     },
-    [cancelFan, close, stopWatching],
+    [cancelFan, close, count, stopWatching],
   )
 
   useEffect(() => () => {

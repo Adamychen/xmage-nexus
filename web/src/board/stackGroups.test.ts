@@ -151,21 +151,27 @@ describe('groupStackables', () => {
     expect(solos).toHaveLength(2)
   })
 
-  it('BRD-20: token piles hold at most five, a leftover single token stays solo', () => {
+  it('BRD-20: a pile holds every identical copy, however many there are', () => {
     const twelve = groupStackables(entries(Array.from({ length: 12 }, () => token('Treasure'))), 'other')
-    expect(twelve.groups.map((g) => g.items.length)).toEqual([5, 5, 2])
-    expect(new Set(twelve.groups.map((g) => g.key)).size).toBe(3)
+    expect(twelve.groups.map((g) => g.items.length)).toEqual([12])
     expect(twelve.solos).toHaveLength(0)
 
-    const six = groupStackables(entries(Array.from({ length: 6 }, () => creatureToken('Soldier'))), 'creatures')
-    expect(six.groups.map((g) => g.items.length)).toEqual([5])
-    expect(six.solos.map(([id]) => id)).toEqual(['c5'])
+    const fifty = groupStackables(entries(Array.from({ length: 50 }, () => creatureToken('Soldier'))), 'creatures')
+    expect(fifty.groups.map((g) => g.items.length)).toEqual([50])
+    expect(fifty.solos).toHaveLength(0)
   })
 
-  it('BRD-20: land piles hold at most five too, a leftover single land stays solo', () => {
-    const { groups, solos } = groupStackables(entries(Array.from({ length: 6 }, () => land('Forest'))), 'lands')
-    expect(groups.map((g) => g.items.length)).toEqual([5])
-    expect(solos.map(([id]) => id)).toEqual(['c5'])
+  it('BRD-20: a land pile holds every copy too', () => {
+    const { groups, solos } = groupStackables(entries(Array.from({ length: 9 }, () => land('Forest'))), 'lands')
+    expect(groups.map((g) => g.items.length)).toEqual([9])
+    expect(solos).toHaveLength(0)
+  })
+
+  it('BRD-20: a copy the game asks the player to pick leaves the pile and stands on its own', () => {
+    const perms = entries(Array.from({ length: 8 }, () => token('Treasure')))
+    const { groups, solos } = groupStackables(perms, 'other', { excludeIds: new Set(['c3']) })
+    expect(groups.map((g) => g.items.length)).toEqual([7])
+    expect(solos.map(([id]) => id)).toEqual(['c3'])
   })
 
   it('a divergent creature token stays solo while its siblings stack', () => {

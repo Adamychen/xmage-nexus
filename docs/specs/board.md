@@ -293,15 +293,18 @@ Retired 2026-11-23: the phone layout is no longer a target (user decision with t
 
 - Guard: none yet (retired)
 
-### BRD-20 · Piles hold five; token piles open after a second of hover
+### BRD-20 · One pile per identical permanent; token piles open after a second of hover
 Three or more identical permanents pile up (two lands are enough on the own board of the Arena layout, as
-in MTG Arena, BRD-32), five to a pile at most: twelve Treasures are piles of five, five
-and two, and a sixth token left alone stays a single card. Lands follow the same five-card limit. A pile is
-drawn as its top card with each other copy a dim edge just behind it, and the count badge in the corner.
+in MTG Arena, BRD-32), and the pile holds every copy there is: fifty Soldiers are one pile of fifty, not
+ten piles of five. A pile is drawn as its top card with each other copy a dim edge just behind it, and the
+count badge in the corner, which is where the number is read; it shows at most five of those edges, so a
+pile of fifty takes the width of a pile of five instead of growing one edge per card.
 With a mouse, a token pile fans out only after the pointer has rested on it for one second, and only that
 pile; a touch fans it out at once. While a token pile is fanned out the large hover preview is hidden, so
 it never covers the fanned cards. A land pile fans out as soon as the pointer enters. A fanned pile closes as
 soon as the pointer moves over anything outside it, even when the browser never reports that the pointer left.
+A pile of more than twelve does not fan at all: a fan compressed into the row would be a smear rather than a
+row of cards, and a copy the game is asking the player to pick leaves the pile and stands on its own anyway.
 
 - Why: a board of tokens (dozens of Treasures or Soldiers) spread each pile across the row, and passing the
   pointer over a pile fanned it out and pushed its neighbours aside. A pile that holds still and opens on a
@@ -309,7 +312,11 @@ soon as the pointer moves over anything outside it, even when the browser never 
   A land pile stayed open while the pointer rested on the mana rock it had pushed aside (CI, 2026-10-31):
   when the card under the pointer is redrawn as the pointer leaves, React reports no leave for the pile, so
   the pile also watches pointer moves while it is open.
-- Guard: `src/board/stackGroups.test.ts` · `src/board/StackPile.test.tsx` · `e2e/stack-groups.spec.ts`
+  Cutting a group into piles of five only moved the problem: a board of 254 Doppelganger tokens was 51 piles
+  of "×5" filling three rows, and the player asked why identical creatures did not stack further (user
+  report, 25-nov-2026). What the five-card limit was really protecting is the pile's footprint, so the limit
+  now caps the edges drawn, not the copies held.
+- Guard: `src/board/stackGroups.test.ts` · `src/board/StackPile.test.tsx` · `src/board/BoardZone.css.test.ts` · `e2e/stack-groups.spec.ts`
 
 ### BRD-21 · A board settles: no card size keeps changing for ever
 Once a board has been drawn and nothing changes (no new game view, no window resize, no hover),
