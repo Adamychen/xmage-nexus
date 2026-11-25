@@ -16,6 +16,7 @@ import {
   clampFanScroll,
   FAN_SLICE,
   FAN_STEP_DEG,
+  fanDrop,
   fanMaxScroll,
   fanRadius,
   fanSlot,
@@ -149,14 +150,20 @@ function FanCard({ zoneId, side, under, piled, offFan, card, angle, zIndex, deal
   )
 }
 
+export function edgeDrop(cardW: number, visible: number): number {
+  return Math.ceil(fanDrop(cardW, visible, true))
+}
+
 function ArenaFanScrollbar({
   scroll,
   maxScroll,
   onScroll,
+  drop,
 }: {
   scroll: number
   maxScroll: number
   onScroll: (next: number) => void
+  drop: number
 }) {
   const trackRef = useRef<HTMLDivElement>(null)
   const [trackW, setTrackW] = useState(0)
@@ -207,7 +214,7 @@ function ArenaFanScrollbar({
   }
 
   return (
-    <div ref={trackRef} className="arena-fan-scrollbar" data-testid="arena-fan-scrollbar" onPointerDown={onTrackDown}>
+    <div ref={trackRef} className="arena-fan-scrollbar" data-testid="arena-fan-scrollbar" style={{ marginTop: drop }} onPointerDown={onTrackDown}>
       <div
         className="arena-fan-thumb"
         role="scrollbar"
@@ -487,7 +494,7 @@ export default function ArenaFan({
           />
         ))}
       </div>
-      {scrollable && <ArenaFanScrollbar scroll={currentScroll} maxScroll={maxScroll} onScroll={scrollTo} />}
+      {scrollable && <ArenaFanScrollbar scroll={currentScroll} maxScroll={maxScroll} onScroll={scrollTo} drop={edgeDrop(size.cardW, visible)} />}
     </div>
   )
 }

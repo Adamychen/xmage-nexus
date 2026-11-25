@@ -209,7 +209,7 @@ html.fx-off .zone-fan-lift {
   gap: 0;
   border-radius: var(--r-pill);
   color: var(--fg-1);
-  background: linear-gradient(180deg, var(--veil-7) 0%, var(--veil-4) 100%);
+  background: linear-gradient(180deg, var(--veil-7) 0%, var(--veil-4) 100%), var(--ink-2);
   border: 1px solid var(--veil-6);
   box-shadow: 0 2px 8px var(--shade-3), inset 0 1px 0 var(--veil-6);
   cursor: grab;

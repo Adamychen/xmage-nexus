@@ -1,10 +1,10 @@
-import { useCallback, useEffect, useState, useMemo, useRef, type DragEvent } from 'react'
+import { useCallback, useEffect, useState, useMemo, useRef } from 'react'
 import Button from '../ui/Button'
 import EmptyState from '../ui/EmptyState'
 import * as cmds from '../net/commands'
 import { useStore, clearActiveDraft } from '../state/store'
 import { getState, setState } from '../state/state'
-import type { SimpleCardView } from '../net/types'
+import type { CardView, SimpleCardView } from '../net/types'
 import type { CardStripMeta } from '../decks/ArenaCardStrip'
 import { soundManager } from '../audio/soundManager'
 import { buildDraftLog, type DraftLogData } from './draftLog'
@@ -13,22 +13,21 @@ import { confirmDialog } from '../ui/confirmDialog'
 import { isDraftStalled, mergePickAck, persistDraft } from '../state/events/draft'
 import Modal from '../ui/Modal'
 import { fetchCardJson } from '../cards/scryfallCards'
-import DeckHoverPreview, { hoverPreviewPosition, type HoverPreview } from '../decks/DeckHoverPreview'
 import { downloadBlob } from '../utils/download'
 import DraftHelper from './DraftHelper'
 import { adviseDraftPick, type AdvisorCard } from './draftAdvisor'
 import { loadDraftHelper, saveDraftHelper } from '../state/persistence'
 import { flyCardTo, landingRow } from '../ui/flyCard'
-import { usePointerTilt } from '../ui/usePointerTilt'
-import { ArenaCardStacks } from '../decks/ArenaCardStacks'
-import { useStackLabels } from '../decks/useStackLabels'
-import { buildDraftPickZones } from './draftPickStacks'
+import ArenaFan from './arena/ArenaFan'
+import { useFanDrag } from './arena/useFanDrag'
+import { orderPicks, placeInZone, type PickZone } from './draftPickZones'
 import './DraftScreen.css'
 
 const PICK_PROTECTION_MS = 1500
 const PICKS_FLY_TARGET = '[data-fly-target="picks"]'
-const PICK_STACK_CARD = '.arena-stack-card[data-front="true"]'
-const DROP_MIME = 'application/json'
+const PICK_FAN_CARD = '[data-arena-card]'
+const BOOSTER_ZONE = 'booster'
+const PICK_ZONES: PickZone[] = ['deck', 'side']
 const PICK_TIMEOUT_MS = 15000
 const COUNTDOWN_WARN_SECS = 30
 const COUNTDOWN_AUDIO_SECS = 6
@@ -66,26 +65,10 @@ function rarityRankOf(card: SimpleCardView, metaMap: Map<string, CardStripMeta>)
   return RARITY_RANK[rarity] ?? 0
 }
 
-function dropRegion(onKey: (key: string) => void) {
-  return {
-    onDragOver: (e: DragEvent<HTMLElement>) => {
-      if (!Array.from(e.dataTransfer.types ?? []).includes(DROP_MIME)) return
-      e.preventDefault()
-      e.dataTransfer.dropEffect = 'move'
-    },
-    onDrop: (e: DragEvent<HTMLElement>) => {
-      let key: unknown
-      try {
-        key = (JSON.parse(e.dataTransfer.getData(DROP_MIME)) as { key?: unknown })?.key
-      } catch {
-        return
-      }
-      if (typeof key !== 'string' || !key) return
-      e.preventDefault()
-      e.stopPropagation()
-      onKey(key)
-    },
-  }
+function noLane() {}
+
+function asCardView(card: SimpleCardView, meta: CardStripMeta | null): CardView {
+  return { ...card, name: cardLabel(card, meta), manaValue: meta?.cmc ?? 0 } as unknown as CardView
 }
 
 function formatTime(seconds: number): string {
@@ -173,15 +156,16 @@ export default function DraftScreen() {
   const [helperOn, setHelperOn] = useState(loadDraftHelper)
   const [markedIds, setMarkedIds] = useState<Set<string>>(new Set())
   const [hiddenIds, setHiddenIds] = useState<Set<string>>(new Set())
-  const [hoverPreview, setHoverPreview] = useState<HoverPreview | null>(null)
+  const [pickOrder, setPickOrder] = useState<string[]>([])
+  const orderedPickIds = useMemo(() => orderPicks(pickOrder, pickCards.map((c) => c.id)), [pickOrder, pickCards])
   const lastPickAt = useRef(0)
-  const boosterAreaRef = useRef<HTMLDivElement>(null)
-  usePointerTilt(boosterAreaRef, '.draft-card')
+  const boosterAreaRef = useRef<HTMLElement>(null)
   const audioFiredFor = useRef('')
   const logRef = useRef<DraftLogData | null>(null)
 
   useEffect(() => {
     setHiddenIds(new Set())
+    setPickOrder([])
     setMarkedIds(new Set())
     setPickError(null)
     setPickAck(null)
@@ -288,25 +272,20 @@ export default function DraftScreen() {
     saveDraftHelper(on)
   }, [])
 
-  const handleHover = useCallback((card: SimpleCardView, rect?: DOMRect) => {
-    const meta = metaFor(card, metaMap)
-    const img = meta?.imageUrl ?? null
-    const back = meta?.backImageUrl ?? null
-    const name = cardLabel(card, meta)
-    if (!img) return
-    const { x, y } = hoverPreviewPosition(rect, !!back)
-    setHoverPreview({ url: img, backUrl: back, x, y, name })
-  }, [metaMap])
-
-  const handleLeave = useCallback(() => setHoverPreview(null), [])
-
-  const handlePick = useCallback(async (cardId: string, source?: HTMLElement) => {
+  const handlePick = useCallback(async (cardId: string, source?: HTMLElement, placement?: { zone: PickZone; index: number }) => {
     if (!draftId || !freshPick || busyPick || pickAck) return
     if (timeout > 0 && timeLeft <= 0) return
     const now = Date.now()
     if (now - lastPickAt.current < PICK_PROTECTION_MS) return
     lastPickAt.current = now
-    if (source) flyCardTo(source, landingRow(PICKS_FLY_TARGET, PICK_STACK_CARD, (row) => row.dataset.cardKey === cardId), { pop: true })
+    const sendHidden = new Set(hiddenIds)
+    if (placement?.zone === 'side') sendHidden.add(cardId)
+    else sendHidden.delete(cardId)
+    if (placement) {
+      setPickOrder(placeInZone(orderedPickIds, sendHidden, cardId, placement.zone, placement.index))
+      setHiddenIds(sendHidden)
+    }
+    if (source) flyCardTo(source, landingRow(PICKS_FLY_TARGET, PICK_FAN_CARD, (row) => row.dataset.arenaCard === cardId), { pop: true })
     const picked = boosterCards.find((c) => c.id === cardId)
     const pickName = picked ? cardLabel(picked, metaFor(picked, metaMap)) : cardId
     const sentKey = { boosterNum: draftView?.boosterNum ?? 0, cardNum: draftView?.cardNum ?? 0 }
@@ -324,7 +303,7 @@ export default function DraftScreen() {
     setBusyPick(cardId)
     setPickError(null)
     try {
-      const res = await withPickTimeout(cmds.sendCardPick(draftId, cardId, hiddenIds.size > 0 ? [...hiddenIds] : undefined)) as { ok?: boolean; error?: string; data?: unknown }
+      const res = await withPickTimeout(cmds.sendCardPick(draftId, cardId, [...sendHidden])) as { ok?: boolean; error?: string; data?: unknown }
       if (!res?.ok) {
         setPickError(t('game', 'draft_pick_failed'))
       } else {
@@ -350,7 +329,7 @@ export default function DraftScreen() {
     } finally {
       setBusyPick(null)
     }
-  }, [draftId, freshPick, busyPick, pickAck, boosterCards, draftView, hiddenIds, metaMap, t, timeLeft, timeout])
+  }, [draftId, freshPick, busyPick, pickAck, boosterCards, draftView, hiddenIds, orderedPickIds, metaMap, t, timeLeft, timeout])
 
   const handleMark = useCallback(async (cardId: string) => {
     if (!draftId) return
@@ -372,39 +351,104 @@ export default function DraftScreen() {
     clearActiveDraft()
   }, [draftId, t])
 
-  const setPickHidden = useCallback((cardId: string, hidden: boolean) => {
-    setHiddenIds((prev) => {
-      if (prev.has(cardId) === hidden) return prev
-      const nxt = new Set(prev)
-      if (hidden) nxt.add(cardId)
-      else nxt.delete(cardId)
-      return nxt
-    })
-  }, [])
+  const pickById = useMemo(() => new Map(pickCards.map((c) => [c.id, c])), [pickCards])
+  const boosterById = useMemo(() => new Map(boosterCards.map((c) => [c.id, c])), [boosterCards])
 
-  const togglePickHidden = useCallback((cardId: string) => {
-    setHiddenIds((prev) => {
-      const nxt = new Set(prev)
-      if (nxt.has(cardId)) nxt.delete(cardId)
-      else nxt.add(cardId)
-      return nxt
-    })
-  }, [])
+  const placePick = useCallback((id: string, zone: PickZone, index: number) => {
+    const nextHidden = new Set(hiddenIds)
+    if (zone === 'side') nextHidden.add(id)
+    else nextHidden.delete(id)
+    setPickOrder(placeInZone(orderedPickIds, nextHidden, id, zone, index))
+    setHiddenIds(nextHidden)
+  }, [hiddenIds, orderedPickIds])
 
-  const stackLabels = useStackLabels()
-  const sideboardLabel = t('decks', 'sideboard')
-  const pickZones = useMemo(
-    () => buildDraftPickZones(pickCards, hiddenIds, (c) => metaFor(c, metaMap) ?? undefined, stackLabels, sideboardLabel),
-    [pickCards, hiddenIds, metaMap, stackLabels, sideboardLabel],
-  )
+  const { drag, hover, bindRoot, startDrag, dragLayer } = useFanDrag({
+    zones: PICK_ZONES,
+    canDrag: true,
+    onDrop: (id, zone, index) => {
+      if (pickById.has(id)) placePick(id, zone as PickZone, index)
+      else if (boosterById.has(id)) void handlePick(id, undefined, { zone: zone as PickZone, index })
+    },
+    onClick: (id, from) => {
+      if (from === BOOSTER_ZONE) {
+        const el = boosterAreaRef.current?.querySelector<HTMLElement>(`[data-card-id="${CSS.escape(id)}"]`) ?? undefined
+        void handlePick(id, el)
+        return
+      }
+      if (pickById.has(id)) placePick(id, from === 'side' ? 'deck' : 'side', Number.MAX_SAFE_INTEGER)
+    },
+  })
 
-  const handleStackHover = useCallback((_card: unknown, meta?: CardStripMeta, rect?: DOMRect) => {
-    const img = meta?.imageUrl ?? null
-    if (!img) return
-    const back = meta?.backImageUrl ?? null
-    const { x, y } = hoverPreviewPosition(rect, !!back)
-    setHoverPreview({ url: img, backUrl: back, x, y, name: meta?.name ?? '' })
-  }, [])
+  const pickViews = useMemo(() => {
+    const out = new Map<string, CardView>()
+    for (const c of [...pickCards, ...boosterCards]) out.set(c.id, asCardView(c, metaFor(c, metaMap)))
+    return out
+  }, [pickCards, boosterCards, metaMap])
+
+  const boosterViews = boosterCards
+    .filter((c) => !(drag?.started && drag.id === c.id))
+    .map((c) => pickViews.get(c.id))
+    .filter((c): c is CardView => c != null)
+
+  const zoneCards = (zone: PickZone): CardView[] =>
+    orderedPickIds
+      .filter((id) => hiddenIds.has(id) === (zone === 'side'))
+      .filter((id) => !(drag?.started && drag.id === id))
+      .map((id) => pickViews.get(id))
+      .filter((c): c is CardView => c != null)
+
+  const renderFace = (card: SimpleCardView) => {
+    const meta = metaFor(card, metaMap)
+    const name = cardLabel(card, meta)
+    const img = meta?.imageUrl ?? meta?.artCropUrl ?? null
+    const set = card.expansionSetCode ?? ''
+    const num = card.cardNumber ?? ''
+    return img ? (
+      <img src={img} alt={name || card.id} className="draft-card-img" loading="lazy" draggable={false} />
+    ) : (
+      <span className="draft-card-placeholder">
+        <span className="draft-card-placeholder-name">{name || card.id.slice(0, 8)}</span>
+        <span className="draft-card-placeholder-set">{set && num ? `${set}/${num}` : ''}</span>
+      </span>
+    )
+  }
+
+  const renderPickCard = (view: CardView) => {
+    const card = pickById.get(view.id as string)
+    return card ? <span className="draft-card draft-pick-face">{renderFace(card)}</span> : undefined
+  }
+
+  const renderBoosterCard = (view: CardView) => {
+    const key = view.id as string
+    const card = boosterById.get(key)
+    if (!card) return undefined
+    const meta = metaFor(card, metaMap)
+    const name = cardLabel(card, meta)
+    const marked = markedIds.has(key)
+    const isBusy = busyPick === key
+    const isPicked = pickAck?.id === key
+    const advised = helperOn && advice.ranked[0]?.id === key
+    return (
+      <button
+        type="button"
+        className={`draft-card${advised ? ' is-advised' : ''}${marked ? ' is-marked' : ''}${!canPick ? ' is-disabled' : ''}${isBusy ? ' is-busy' : ''}${isPicked ? ' is-picked' : ''}`}
+        disabled={!canPick}
+        onClick={(e) => { if (e.detail === 0) void handlePick(key, e.currentTarget) }}
+        title={name || key}
+        data-testid="draft-card"
+        data-card-id={key}
+      >
+        {renderFace(card)}
+        {marked && <span className="draft-card-mark">★</span>}
+        {isBusy && <span className="draft-card-busy">…</span>}
+        {isPicked && <span className="draft-card-busy draft-card-picked">✓</span>}
+      </button>
+    )
+  }
+
+  const renderPickOverlay = (card: CardView) =>
+    pickAck?.id === card.id ? <span className="draft-pick-new" data-testid="draft-pick-new" aria-hidden="true" /> : null
+
 
   const handleShowAllHidden = useCallback(() => {
     setHiddenIds(new Set())
@@ -476,7 +520,7 @@ export default function DraftScreen() {
   const deckCount = pickCards.length - hiddenCount
 
   return (
-    <Modal backdropClassName="draft-backdrop" dialogClassName="draft-screen" label={t('game', 'draft_title')}>
+    <Modal backdropClassName="draft-backdrop board-surface" dialogClassName="draft-screen" label={t('game', 'draft_title')}>
         <header className="draft-header">
           <div className="draft-title">
             <h2>{t('game', 'draft_title')}</h2>
@@ -556,119 +600,84 @@ export default function DraftScreen() {
             </Button>
           </div>
         )}
-        {players.length > 0 && (
-          <div className="draft-table" title={t('game', 'draft_table_title')} data-testid="draft-table">
-            <span className="draft-table-dir" aria-hidden="true">{passLeft ? '←' : '→'}</span>
-            <span className="draft-table-dir-label">{passLeft ? t('game', 'draft_pass_left') : t('game', 'draft_pass_right')}</span>
-            {players.map((p, i) => (
-              <span key={`${i}-${p}`} className="draft-seat">{p}</span>
-            ))}
-          </div>
-        )}
-
-        {helperOn && boosterCards.length > 0 && advice.ranked.length > 0 && (
-          <DraftHelper advice={advice.ranked} names={advice.names} pending={advice.pending} onHide={() => toggleHelper(false)} />
-        )}
-        {!helperOn && boosterCards.length > 0 && (
-          <Button variant="ghost" size="sm" data-testid="draft-helper-show" onClick={() => toggleHelper(true)}>
-            {t('game', 'draft_helper_show')}
-          </Button>
-        )}
-
-        <div className="draft-booster-area" ref={boosterAreaRef}>
-          <h3 className="draft-section-title">{t('game', 'booster_label')}</h3>
-          {boosterCards.length === 0 ? (
-            <EmptyState>{t('game', 'draft_loading')}</EmptyState>
-          ) : (
-            <div className="draft-grid" data-testid="draft-booster">
-              {boosterCards.map((card, index) => {
-                const set = card.expansionSetCode ?? ''
-                const num = card.cardNumber ?? ''
-                const key = card.id
-                const meta = metaFor(card, metaMap)
-                const name = cardLabel(card, meta)
-                const img = meta?.imageUrl ?? meta?.artCropUrl ?? null
-                const marked = markedIds.has(key)
-                const isBusy = busyPick === key
-                const isPicked = pickAck?.id === key
-                return (
-                  <button
-                    key={key}
-                    type="button"
-                    className={`draft-card ${helperOn && advice.ranked[0]?.id === key ? 'is-advised' : ''} ${marked ? 'is-marked' : ''} ${!canPick ? 'is-disabled' : ''} ${isBusy ? 'is-busy' : ''} ${isPicked ? 'is-picked' : ''}`}
-                    disabled={!canPick}
-                    onClick={(e) => void handlePick(key, e.currentTarget)}
-                    style={{ animationDelay: `${Math.min(index, 12) * 45}ms` }}
-                    onContextMenu={(e) => { e.preventDefault(); void handleMark(key) }}
-                    onMouseEnter={(e) => handleHover(card, e.currentTarget.getBoundingClientRect())}
-                    onMouseLeave={handleLeave}
-                    title={name || `${set}/${num}` || key}
-                    data-testid="draft-card"
-                    data-card-id={key}
-                  >
-                    {img ? (
-                      <img src={img} alt={name || key} className="draft-card-img" loading="lazy" />
-                    ) : (
-                      <div className="draft-card-placeholder">
-                        <span className="draft-card-placeholder-name">{name || key.slice(0, 8)}</span>
-                        <span className="draft-card-placeholder-set">{set && num ? `${set}/${num}` : ''}</span>
-                      </div>
-                    )}
-                    {marked && <span className="draft-card-mark">★</span>}
-                    {isBusy && <span className="draft-card-busy">…</span>}
-                    {isPicked && <span className="draft-card-busy draft-card-picked">✓</span>}
-                    <span className="draft-card-name-overlay">{name || key}</span>
-                  </button>
-                )
-              })}
+        <div className="draft-topline">
+          {players.length > 0 && (
+            <div className="draft-table" title={t('game', 'draft_table_title')} data-testid="draft-table">
+              <span className="draft-table-dir" aria-hidden="true">{passLeft ? '←' : '→'}</span>
+              <span className="draft-table-dir-label">{passLeft ? t('game', 'draft_pass_left') : t('game', 'draft_pass_right')}</span>
+              {players.map((p, i) => (
+                <span key={`${i}-${p}`} className="draft-seat">{p}</span>
+              ))}
             </div>
+          )}
+          {helperOn && boosterCards.length > 0 && advice.ranked.length > 0 && (
+            <DraftHelper advice={advice.ranked} names={advice.names} pending={advice.pending} onHide={() => toggleHelper(false)} />
+          )}
+          {!helperOn && boosterCards.length > 0 && (
+            <Button variant="ghost" size="sm" data-testid="draft-helper-show" onClick={() => toggleHelper(true)}>
+              {t('game', 'draft_helper_show')}
+            </Button>
           )}
         </div>
 
-        <div className="draft-picks-area" data-fly-target="picks">
-          <div className="draft-picks-zone" data-testid="draft-picks" {...dropRegion((key) => setPickHidden(key, false))}>
-            <h3 className="draft-section-title">{t('game', 'draft_picks_title', { count: String(deckCount) })}</h3>
-            {pickCards.length === 0 ? (
-              <EmptyState size="sm">{t('game', 'draft_empty')}</EmptyState>
-            ) : (
-              <ArenaCardStacks
-                columns={pickZones.deck}
-                copies="separate"
-                zone="main"
-                selectedKey={pickAck?.id ?? null}
-                onSelect={togglePickHidden}
-                onSwap={togglePickHidden}
-                onHover={handleStackHover}
-                onLeave={handleLeave}
+        <div {...bindRoot} className="draft-body">
+        <section className={`draft-booster-area draft-pick-zone is-booster${canPick ? '' : ' is-locked'}`} ref={boosterAreaRef}>
+          <h3 className="draft-zone-label">{t('game', 'booster_label')}</h3>
+          {boosterCards.length === 0 ? (
+            <EmptyState>{t('game', 'draft_loading')}</EmptyState>
+          ) : (
+            <div className="draft-booster-fan" data-testid="draft-booster">
+              <ArenaFan
+                zoneId={BOOSTER_ZONE}
+                cards={boosterViews}
+                gapIndex={null}
+                dealing={false}
+                onCardPointerDown={(e, id) => { if (canPick) startDrag(e, id, BOOSTER_ZONE) }}
+                onCardContextMenu={(e, id) => { e.preventDefault(); void handleMark(id) }}
+                renderCard={renderBoosterCard}
+                laneRef={noLane}
               />
-            )}
-          </div>
-          <div
-            className="draft-sideboard-zone"
+            </div>
+          )}
+        </section>
+
+          <section className="draft-pick-zone is-deck" data-testid="draft-picks" data-fly-target="picks">
+            <h3 className="draft-zone-label">{t('game', 'draft_picks_title', { count: String(deckCount) })}</h3>
+            <ArenaFan
+              zoneId="deck"
+              cards={zoneCards('deck')}
+              gapIndex={drag?.started && hover?.zone === 'deck' ? hover.index : null}
+              dealing={false}
+              startAtEnd
+              onCardPointerDown={(e, id) => startDrag(e, id, 'deck')}
+              renderCard={renderPickCard}
+              renderOverlay={renderPickOverlay}
+              laneRef={noLane}
+            />
+            {pickCards.length === 0 && <p className="draft-zone-hint">{t('game', 'draft_empty')}</p>}
+          </section>
+          <section
+            className="draft-pick-zone is-side"
             data-testid="draft-sideboard"
             title={hiddenCount > 0 ? t('game', 'draft_show_all') : undefined}
             onContextMenu={(e) => { if (hiddenCount > 0) { e.preventDefault(); handleShowAllHidden() } }}
-            {...dropRegion((key) => setPickHidden(key, true))}
           >
-            {hiddenCount === 0 ? (
-              <>
-                <h3 className="draft-section-title">{sideboardLabel}</h3>
-                <p className="draft-sideboard-hint">{t('game', 'draft_sideboard_hint')}</p>
-              </>
-            ) : (
-              <ArenaCardStacks
-                columns={pickZones.side}
-                copies="separate"
-                zone="side"
-                onSelect={togglePickHidden}
-                onSwap={togglePickHidden}
-                onHover={handleStackHover}
-                onLeave={handleLeave}
-              />
-            )}
-          </div>
+            <h3 className="draft-zone-label">{t('game', 'draft_sideboard_title', { count: String(hiddenCount) })}</h3>
+            <ArenaFan
+              zoneId="side"
+              cards={zoneCards('side')}
+              gapIndex={drag?.started && hover?.zone === 'side' ? hover.index : null}
+              dealing={false}
+              startAtEnd
+              onCardPointerDown={(e, id) => startDrag(e, id, 'side')}
+              renderCard={renderPickCard}
+              renderOverlay={renderPickOverlay}
+              laneRef={noLane}
+            />
+            {hiddenCount === 0 && <p className="draft-zone-hint">{t('game', 'draft_sideboard_hint')}</p>}
+          </section>
+        {dragLayer(drag?.started ? pickViews.get(drag.id) ?? null : null)}
         </div>
-      <DeckHoverPreview preview={hoverPreview} />
     </Modal>
   )
 }

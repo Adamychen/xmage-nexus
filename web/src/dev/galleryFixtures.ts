@@ -1235,7 +1235,7 @@ function withViewerPiles(game: GameView): GameView {
   const controller = { controllerId: me?.playerId, controllerName: me?.name }
   const graveyard = Object.fromEntries(VIEWER_CARDS.map((c, i) => [`gallery-grave-${i}`, viewerCard(`gallery-grave-${i}`, c)]))
   const stack = Object.fromEntries(
-    VIEWER_CARDS.filter(([, , types]) => types[0] === 'INSTANT').map((c, i) => [`gallery-vstack-${i}`, viewerCard(`gallery-vstack-${i}`, c, controller)]),
+    VIEWER_CARDS.slice(0, 8).map((c, i) => [`gallery-vstack-${i}`, viewerCard(`gallery-vstack-${i}`, c, controller)]),
   )
   const withPiles = mapControlled(game, (p) => ({
     ...p,
@@ -3850,7 +3850,7 @@ export function buildGalleryEntries(): GalleryEntry[] {
       id: 'viewer:stack',
       group: 'Visores',
       label: 'Viewer: whole stack (Last / First)',
-      description: 'Press "Abrir pila": the stack viewer opens on the object about to resolve at the right, with Last / First under the ends and no numbers (STK-11).',
+      description: 'Eight objects: the cascade draws five and the button beside it reads +3. Press "Abrir pila": the stack viewer opens on the object about to resolve at the right, with Last / First under the ends and no numbers (STK-11).',
       phase: 'game',
       boardSpotlight: true,
       game: withViewerPiles(game),
@@ -5943,15 +5943,15 @@ export function buildGalleryEntries(): GalleryEntry[] {
     id: 'screen:draft',
     group: 'Pantallas',
     label: 'Draft (pick en curso)',
-    description: 'Booster de 14 cartas, pick 3 de la ronda 1, con 2 ya elegidas.',
+    description: 'TRN-21: booster de 14 cartas, pick 3 de la ronda 1, con 2 ya elegidas. Se puede jugar: clic en una carta del booster o arrástrala al Mazo o al Banquillo; la galería simula el pick y el siguiente sobre llega solo.',
     screen: 'draft',
     draft: DRAFT_INPROGRESS,
   })
   entries.push({
     id: 'screen:draft-piles',
     group: 'Pantallas',
-    label: 'Draft (picks en pilas)',
-    description: 'TRN-21: 23 picks reales de M21 en pilas por coste; clic, Shift+clic o arrastrar mueven un pick al banquillo y F9 los devuelve.',
+    label: 'Draft (23 picks)',
+    description: 'TRN-21: 23 picks reales de M21 en el abanico del Mazo; clic o arrastrar mueven un pick al Banquillo y F9 los devuelve. El booster también se puede elegir y arrastrar.',
     screen: 'draft',
     draft: DRAFT_PILES,
   })

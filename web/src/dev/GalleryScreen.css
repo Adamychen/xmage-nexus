@@ -191,6 +191,10 @@
   left: 272px;
 }
 
+.gallery:not(.is-collapsed) .gallery-stage .draft-backdrop {
+  left: 272px;
+}
+
 /* Los visores de tablero (PileOverlay/HandViewer/CrossZoneOverlay) se portan a
    [data-overlay-root]; con el portal a <body> (z-index 100) la galería (500) los
    tapaba y las reveladas/miradas no se veían. Dentro del stage se centran en él

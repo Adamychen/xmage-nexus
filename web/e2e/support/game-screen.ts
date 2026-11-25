@@ -46,8 +46,8 @@ export async function openDrawerTab(page: Page, tab: DrawerTab): Promise<void> {
 }
 
 /** How many objects the stack is showing. The cascade draws one card per object (STK-1), with no
- *  header to read a number off, and folds the tail past `CASCADE_MAX_SHOWN` into a count on the
- *  front card. An empty stack draws nothing at all (STK-2). */
+ *  header to read a number off, and folds the tail past `CASCADE_MAX_SHOWN` into the count of the
+ *  button that opens the whole stack (STK-11). An empty stack draws nothing at all (STK-2). */
 export async function expectStackCount(page: Page, n: number): Promise<void> {
   const zone = page.locator('.stack-zone')
   if (n === 0) {
@@ -57,7 +57,8 @@ export async function expectStackCount(page: Page, n: number): Promise<void> {
   await expect(zone).toBeVisible()
   const shown = Math.min(n, CASCADE_MAX_SHOWN)
   await expect(zone.locator('.stack-card')).toHaveCount(shown)
-  if (n > shown) await expect(page.locator('[data-testid="stack-cascade-more"]')).toContainText(`+${n - shown}`)
+  if (n > shown) await expect(page.locator('[data-testid="stack-open-viewer"]')).toContainText(`+${n - shown}`)
+  else await expect(page.locator('[data-testid="stack-open-viewer"]')).toHaveCount(0)
 }
 
 export function feedbackDialog(page: Page) {

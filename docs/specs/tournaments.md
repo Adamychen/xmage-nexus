@@ -245,16 +245,25 @@ count. The count is the number of messages after the last one you saw, not a dif
   the list's length freezes once the list is full.
 - Guard: `e2e/tournament.spec.ts` · `src/game/TournamentPanel.test.tsx` · `src/game/tournamentChatUnread.test.ts`
 
-### TRN-21 · Draft picks are drawn as piles, and the sideboard is what you hide
-During a draft your picks are drawn like the deck editor's Piles view: a Deck zone with one pile per
-mana value (0 to 5, 6+, lands last) and a Sideboard band under it. Clicking or tapping a pick
-(or Enter, S, Shift+click, or dragging it to the band) moves it to the other zone. The picks band
-is sized by its content up to a little over half the dialog, so the booster keeps most of the room. The band is the set of hidden
-picks sent with every pick, so when construction starts the server puts every other pick in the
-main deck and keeps the band's cards in the sideboard. F9 or right-click on the band brings them
-all back. Hovering a pick shows the enlarged preview. The band empties when a new draft starts.
+### TRN-21 · The draft is full screen with three equal Arena fans: Booster, Deck and Sideboard
+The draft fills the screen with no window frame. The booster is a fan on the left, your Deck a fan on
+the right and your Sideboard a fan across the bottom, all three drawn like the zones of the
+surveil/scry prompt and with the same card size; the seats and the pick helper share one line above
+them. A booster card is picked with a click, or by dragging it onto the Deck or the Sideboard, where
+it lands at the slot it was dropped on (a drop elsewhere picks nothing). A pick is moved to the other
+zone with a click, or dragged to any slot of either fan, so the order inside a zone is yours. The
+three fans are the same width, the Sideboard's centred under the other two, and a fan with more cards
+than fit scrolls instead of growing; the Deck and the Sideboard open on their newest picks. The Sideboard is the set of
+hidden picks sent with every pick (always the whole set, so emptying it also reaches the server), so
+when construction starts the server puts every other pick in the main deck and keeps the Sideboard's
+cards out of it. F9 or right-click on the Sideboard brings them all back. Hovering a card only lifts
+it in its fan, with no enlarged preview on top. Both pick zones empty when a new draft starts.
 
-- Why: the picks were a flat grid of 90 px thumbnails in a 260 px scrolling strip that read "like
-  a spreadsheet"; the user asked for the editor's piles. The server already treats hidden picks as
-  the sideboard (`DraftPlayer.prepareDeck`).
-- Guard: `src/game/draftPickStacks.test.ts` · `src/game/DraftScreen.test.tsx` · `e2e/draft.spec.ts`
+- Why: the picks were first a flat grid of thumbnails and then the deck editor's mana-value piles
+  under a booster grid in a dialog; the user asked for the Arena draft instead: full screen, booster
+  left, deck right, sideboard below, the three as the same kind of pile, cards dragged between them
+  like surveil and scry. The enlarged hover preview covered the fans, so the user asked to remove it. A full-width Sideboard
+  never reached its scroll and kept widening its arc off the screen. The server already treats
+  hidden picks as the sideboard (`DraftPlayer.prepareDeck`), and it only replaces that set when one
+  is sent (`DraftPlayer.addPick`), so an omitted empty set left the old sideboard in place.
+- Guard: `src/game/draftPickZones.test.ts` · `src/game/DraftScreen.test.tsx` · `e2e/draft.spec.ts`
