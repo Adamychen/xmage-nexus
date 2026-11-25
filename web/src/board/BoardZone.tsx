@@ -29,7 +29,8 @@ import { chipReserve, chipSignature } from './chipReserve'
 import { combatArrangement, combatOrder } from './combatColumns'
 import { bandFill, bandShares, permanentKind } from './bandWeights'
 import { EMPTY_TARGET_ZONES, type TargetZoneKind } from './targetZones'
-import { isPlayerDefeated, isPlayerOut } from './boardShared'
+import { isPlayerDefeated, isPlayerOut, useOutReason } from './boardShared'
+import { OUT_ICON, OUT_STATUS } from './outReason'
 import { useCommanderInHand, useHandCommander } from './handCommander'
 import { useBattlefieldPulse } from './seatFocus'
 import { pileCornerReaches } from './pileCorner'
@@ -441,6 +442,9 @@ export default function BoardZone({
       statusSide
     )
   }, [player, effectiveControlled, helperEmblems, statusSide])
+
+  // BRD-65: read before the empty-zone return, as a hook must be.
+  const outReason = useOutReason(player)
 
   if (!player) {
     return (
@@ -1144,9 +1148,9 @@ export default function BoardZone({
       {isDefeated && (
         <div className="zone-defeated-overlay">
           <div className="zone-defeated-card">
-            <span className="zone-defeated-icon">{wasDefeated ? <Icon name="skull" size={28} /> : <Icon name="door" size={28} />}</span>
+            <span className="zone-defeated-icon"><Icon name={OUT_ICON[outReason]} size={28} /></span>
             <span className="zone-defeated-title">
-              {player.name} {wasDefeated ? t('game', 'player_defeated') : t('game', 'player_left')}
+              {player.name} {t('game', OUT_STATUS[outReason])}
             </span>
             <span className="zone-defeated-sub">
               {wasDefeated ? t('game', 'life_zero_desc') : t('game', 'player_left_desc')}

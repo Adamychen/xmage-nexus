@@ -1167,3 +1167,18 @@ copy of a real card is not a token and carries no tag.
 - Why: the player saw the tag in the hover preview and asked why the table did not show it
   (25-nov-2026). The slot under the card was free, since damage moved onto the toughness.
 - Guard: `src/board/CardSlot.test.tsx`
+
+### BRD-65 · A seat out of the game says why on every board, not only in the panel
+Wherever a seat that is out of the game is drawn, it says which of the three things happened: a skull
+and "has died" for a loss (0 life, poison, an effect), a white flag and "has conceded" for a
+concession, and a door and "has left the game" for a player who quit the match or ran out of time.
+That covers the panel's folded head (BRD-30), the strip an Arena column folds to, and the overlay
+over a seat the player reopens. The reason is read once, from the game log, because the game view
+only says `hasLeft`; without a log line, 0 life reads as a death and anything else as leaving. The
+line under the overlay's title stays as it was, since it describes the state and not the reason.
+
+- Why: the panel learned the three reasons in #81 and the other boards kept a two-way guess, so the
+  same seat said "has been defeated" in the Arena strip and "has conceded" in the panel at the same
+  time, and a player who conceded with life left was shown as having walked out (request of
+  2026-11-25).
+- Guard: `src/board/defeatedSeats.test.tsx`
