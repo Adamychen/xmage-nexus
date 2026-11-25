@@ -97,6 +97,9 @@ export function arrowPath(a: Pt, b: Pt, height?: number, head = 0, headStart = 0
   return `M ${r(start.x)} ${r(start.y)} C ${r(c1.x)} ${r(c1.y)} ${r(c2.x)} ${r(c2.y)} ${r(end.x)} ${r(end.y)}`
 }
 
+/** CMB-4: how far apart two ties land on the same attacker, in board pixels. */
+export const TIE_SPREAD = 22
+
 /** TGT-11: how long the dart is, in board pixels; the line is trimmed by it. */
 export const ARROW_HEAD = 13
 
@@ -275,15 +278,18 @@ export default function CombatArrowsOverlay({
           }
         })
 
-        // 2. The tie between each blocker and the attacker it stops.
+        // 2. The tie between each blocker and the attacker it stops. Several blockers land side by
+        //    side on their attacker, in their own order, instead of piling onto the same point:
+        //    two ties arriving together cannot be told apart (CMB-4).
         if (attackerIds.length > 0) {
           const firstAttCenter = getCenter(String(attackerIds[0]))
           if (firstAttCenter) {
-            blockerIds.forEach((blkId) => {
-              const blkCenter = getCenter(String(blkId))
-              if (blkCenter) {
-                newArrows.push(makeArrow(`blk-${gi}-${blkId}`, blkCenter, firstAttCenter, 'block', String(blkId), String(attackerIds[0])))
-              }
+            const landing = blockerIds.map((blkId) => ({ blkId, center: getCenter(String(blkId)) })).filter((entry) => entry.center)
+            const spread = Math.min(TIE_SPREAD, (firstAttCenter.rect.width || TIE_SPREAD * 2) / (landing.length + 1))
+            landing.forEach((entry, i) => {
+              const offset = (i - (landing.length - 1) / 2) * spread
+              const target = { ...firstAttCenter, x: firstAttCenter.x + offset }
+              newArrows.push(makeArrow(`blk-${gi}-${entry.blkId}`, entry.center!, target, 'block', String(entry.blkId), String(attackerIds[0])))
             })
           }
         }

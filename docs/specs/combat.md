@@ -52,7 +52,8 @@ avatar (not the middle of their zone), or the planeswalker or battle card being 
 it is blocked that beam goes away and a gold tie takes its place, between the attacker and each
 creature blocking it, with a head at both ends: the pair is what matters there, not a second attack.
 If the defender takes the block back, the group has no blockers again, the tie goes and the beam
-returns. Arrows that start or end on a player who has left the game are not drawn.
+returns. Several creatures blocking the same attacker land side by side on it, each on its own spot
+and in their own left-to-right order, because two ties arriving at one point cannot be told apart. Arrows that start or end on a player who has left the game are not drawn.
 
 - Why: aiming at the player's zone root put the arrow head in the lands band (`6fecaa53fd`,
   `web/INTERACTION_COVERAGE.md` §F); in a pod the arrow must follow the frame's defender, not the

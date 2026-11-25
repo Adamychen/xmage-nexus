@@ -221,6 +221,7 @@ describe('CombatArrowsOverlay', () => {
 
     const first = render(<CombatArrowsOverlay game={blocked as never} boardRef={{ current: boardDiv }} />)
     expect(first.container.querySelector('.arrow-path.arrow-attack')).toBeNull()
+    expect(first.container.querySelectorAll('.arrow-path.arrow-block')).toHaveLength(1)
     const tie = first.container.querySelector('.arrow-path.arrow-block')
     expect(tie).not.toBeNull()
     expect(tie?.getAttribute('marker-start')).toBe('url(#marker-block)')
@@ -232,6 +233,49 @@ describe('CombatArrowsOverlay', () => {
     expect(second.container.querySelector('.arrow-path.arrow-attack')).not.toBeNull()
     expect(second.container.querySelector('.arrow-path.arrow-block')).toBeNull()
     second.unmount()
+    boardDiv.remove()
+  })
+
+  it('CMB-4: two blockers of one attacker land side by side on it, in their own order', () => {
+    const boardDiv = document.createElement('div')
+    document.body.appendChild(boardDiv)
+    const box = (el: Element, left: number, top: number) => {
+      el.getBoundingClientRect = () => ({ left, top, width: 100, height: 140, right: left + 100, bottom: top + 140, x: left, y: top, toJSON: () => {} } as DOMRect)
+    }
+    const attacker = document.createElement('div')
+    attacker.setAttribute('data-card-id', 'att-1')
+    box(attacker, 300, 400)
+    const left = document.createElement('div')
+    left.setAttribute('data-card-id', 'blk-left')
+    box(left, 100, 100)
+    const right = document.createElement('div')
+    right.setAttribute('data-card-id', 'blk-right')
+    box(right, 500, 100)
+    boardDiv.append(attacker, left, right)
+    boardDiv.getBoundingClientRect = () => ({ left: 0, top: 0, width: 1000, height: 800, right: 1000, bottom: 800, x: 0, y: 0, toJSON: () => {} } as DOMRect)
+
+    const game = {
+      step: 'DECLARE_BLOCKERS',
+      turn: 3,
+      players: [
+        { playerId: 'p-me', name: 'me', life: 20, controlled: true, battlefield: { 'att-1': {} } },
+        { playerId: 'p-opp', name: 'them', life: 20, controlled: false, battlefield: { 'blk-left': {}, 'blk-right': {} } },
+      ],
+      combat: [{ attackers: { 'att-1': {} }, blockers: { 'blk-left': {}, 'blk-right': {} }, isBlocked: true, defenderId: 'p-opp' }],
+    }
+    const { container, unmount } = render(<CombatArrowsOverlay game={game as never} boardRef={{ current: boardDiv }} />)
+    const ends = [...container.querySelectorAll('.arrow-group.arrow-block')].map((g) => {
+      const d = g.querySelector('.arrow-path')!.getAttribute('d')!
+      const numbers = d.split(/[ MC]+/).filter(Boolean).map(Number)
+      return { from: g.getAttribute('data-arrow-from'), x: numbers[numbers.length - 2] }
+    })
+    expect(ends).toHaveLength(2)
+    const leftTie = ends.find((e) => e.from === 'blk-left')!
+    const rightTie = ends.find((e) => e.from === 'blk-right')!
+    // Each lands on its own spot of the attacker, and the left blocker's is the left one.
+    expect(leftTie.x).not.toBe(rightTie.x)
+    expect(leftTie.x).toBeLessThan(rightTie.x)
+    unmount()
     boardDiv.remove()
   })
 
