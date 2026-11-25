@@ -166,3 +166,22 @@ out.
   screenshots, 24-nov-2026). Going to blockers is the player's decision, so cancelling never does
   it: only "no attacks" and the confirm advance the game.
 - Guard: `src/game/feedbackModes/boardOrder.test.tsx`
+
+### CMB-14 · A declared combat is read by position, not by lines
+Who fights whom is read from where the cards stand. Each combat group of the view is one column:
+its attacker, or its whole band, with the creatures blocking it in front of it, fanned when there
+are several. Columns gather under the defender the group names, a seat or a permanent of theirs, and
+the blocks gather in the seat order of the table. A creature combat leaves alone stays where it is,
+dimmed. A block draws no line at all; the only arrows left are the attackers nothing blocks, braided
+into one beam per defender, which is the damage about to land. A group whose defender the view does
+not name takes no column: it keeps its arrow, because nothing in the view says where it belongs, and
+the board never guesses it from whose turn it is.
+
+- Why: an arrow per relation crossed the table four or five times in a multiple block and the
+  blocker's curve looped over half the board; of the five arrangements studied, position is the only
+  one that removes lines instead of drawing them better, and it is how MTG Arena reads without effort
+  (combat-reading study and user decision, 24/25-nov-2026). Design and phases:
+  `docs/plans/2026-11-25-combat-columns-design.md`. The model landed first and the arrangement,
+  the arrows and the drawer's combat tab follow it, so today the arrows of CMB-4 are still what the
+  board draws.
+- Guard: `src/board/combatColumns.test.ts`
