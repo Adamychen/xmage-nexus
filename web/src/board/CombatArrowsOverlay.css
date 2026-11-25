@@ -38,11 +38,13 @@
 
 /* One colour the whole way. */
 .arrow-path.arrow-attack { stroke: var(--err); }
-.arrow-path.arrow-block { stroke: var(--brand-fg); }
+/* CMB-4: a block is read as a tie between the two cards, in gold, not as a second attack: the
+   attacker's own beam is the red one, and this one only says who is standing in its way. */
+.arrow-path.arrow-block { stroke: var(--gold-500); stroke-width: 2.4; }
 .arrow-path.arrow-target { stroke: var(--gold-300); }
 
 .arrow-head-attack { fill: var(--err); }
-.arrow-head-block { fill: var(--brand-fg); }
+.arrow-head-block { fill: var(--gold-500); }
 .arrow-head-target { fill: var(--gold-300); }
 
 /* The seat-coloured arrows of the Table layout are the same beam, a touch thinner. */
@@ -51,3 +53,12 @@
 }
 
 
+
+/* TGT-11: the dart is drawn in board pixels, not in stroke widths, so its size never follows the
+   beam's thickness, and it carries the same dark seam as the line so it reads over card art. */
+.arrow-head {
+  stroke: var(--shade-2);
+  stroke-width: 1;
+  stroke-linejoin: round;
+  paint-order: stroke;
+}

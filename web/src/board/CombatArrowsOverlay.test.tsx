@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { render } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
-import CombatArrowsOverlay, { arrowAnchors, arrowPath, stackLoopPath } from './CombatArrowsOverlay'
+import CombatArrowsOverlay, { ARROW_HEAD, arrowAnchors, arrowPath, stackLoopPath } from './CombatArrowsOverlay'
 
 describe('CombatArrowsOverlay', () => {
   it('renders nothing when there are no arrows', () => {
@@ -170,29 +170,115 @@ describe('CombatArrowsOverlay', () => {
     const attackPath = container.querySelector('.arrow-path.arrow-attack') as SVGPathElement | null
     expect(attackPath).not.toBeNull()
     const d = attackPath!.getAttribute('d') ?? ''
-    // TGT-12: the attacker's card is (100,400,100,140) and the avatar (120,30,60,60), so the beam
-    // leaves the top edge of the card (y 400) and comes in under the avatar (y 90).
-    expect(d.startsWith('M 150 400')).toBe(true)
-    expect(d.endsWith('150 90')).toBe(true)
+    // TGT-12: the attacker's card is (100,400,100,140) and the avatar (120,30,60,60), both centred on
+    // x 150, so the beam leaves the card's top edge (y 400) and stops a dart short of the avatar's
+    // bottom edge (y 90), which is where the head then lands (TGT-11).
+    const coords = d.split(/[ MC]+/).filter(Boolean).map(Number)
+    expect(coords[0]).toBe(150)
+    // Over the card, not on its border: inside the attacker's top half.
+    expect(coords[1]).toBeGreaterThan(400)
+    expect(coords[1]).toBeLessThan(470)
+    const end = coords.slice(-2)
+    expect(end[0]).toBe(150)
+    // The line stops a dart short and the head covers the rest, landing over the portrait (y 30..90).
+    expect(end[1] - ARROW_HEAD).toBeLessThanOrEqual(90)
+    expect(end[1] - ARROW_HEAD).toBeGreaterThanOrEqual(30)
 
     unmount()
     boardDiv.remove()
   })
 
-  it('TGT-12: every arrow leaves its source through the top edge and comes into its target through the bottom edge', () => {
-    const box = (x: number, y: number, w: number, h: number) =>
-      ({ x, y, rect: { width: w, height: h } as DOMRect })
-    const from = box(100, 300, 80, 120)
-    const to = box(400, 120, 80, 120)
-    expect(arrowAnchors(from, to)).toEqual({ a: { x: 100, y: 240 }, b: { x: 400, y: 180 } })
+  it('CMB-4: a blocked attacker trades its beam for a tie with two heads; unblocking gives it back', () => {
+    const boardDiv = document.createElement('div')
+    document.body.appendChild(boardDiv)
+    const box = (el: Element, left: number, top: number) => {
+      el.getBoundingClientRect = () => ({ left, top, width: 100, height: 140, right: left + 100, bottom: top + 140, x: left, y: top, toJSON: () => {} } as DOMRect)
+    }
+    const attacker = document.createElement('div')
+    attacker.setAttribute('data-card-id', 'att-1')
+    box(attacker, 100, 400)
+    const blocker = document.createElement('div')
+    blocker.setAttribute('data-card-id', 'blk-1')
+    box(blocker, 100, 150)
+    const seat = document.createElement('div')
+    seat.setAttribute('data-player-id', 'p-opp')
+    const anchorEl = document.createElement('div')
+    anchorEl.setAttribute('data-player-anchor', 'p-opp')
+    box(anchorEl, 20, 20)
+    seat.appendChild(anchorEl)
+    boardDiv.append(attacker, blocker, seat)
+    boardDiv.getBoundingClientRect = () => ({ left: 0, top: 0, width: 1000, height: 800, right: 1000, bottom: 800, x: 0, y: 0, toJSON: () => {} } as DOMRect)
+
+    const base = {
+      step: 'DECLARE_BLOCKERS',
+      turn: 3,
+      players: [
+        { playerId: 'p-me', name: 'me', life: 20, controlled: true, battlefield: { 'att-1': {} } },
+        { playerId: 'p-opp', name: 'them', life: 20, controlled: false, battlefield: { 'blk-1': {} } },
+      ],
+    }
+    const blocked = { ...base, combat: [{ attackers: { 'att-1': {} }, blockers: { 'blk-1': {} }, isBlocked: true, defenderId: 'p-opp' }] }
+
+    const first = render(<CombatArrowsOverlay game={blocked as never} boardRef={{ current: boardDiv }} />)
+    expect(first.container.querySelector('.arrow-path.arrow-attack')).toBeNull()
+    const tie = first.container.querySelector('.arrow-path.arrow-block')
+    expect(tie).not.toBeNull()
+    expect(tie?.getAttribute('marker-start')).toBe('url(#marker-block)')
+    expect(tie?.getAttribute('marker-end')).toBe('url(#marker-block)')
+    first.unmount()
+
+    const unblocked = { ...base, combat: [{ attackers: { 'att-1': {} }, blockers: {}, isBlocked: false, defenderId: 'p-opp' }] }
+    const second = render(<CombatArrowsOverlay game={unblocked as never} boardRef={{ current: boardDiv }} />)
+    expect(second.container.querySelector('.arrow-path.arrow-attack')).not.toBeNull()
+    expect(second.container.querySelector('.arrow-path.arrow-block')).toBeNull()
+    second.unmount()
+    boardDiv.remove()
   })
 
-  it('TGT-12: the curve leaves the source upwards and rises into the target from below', () => {
-    expect(arrowPath({ x: 0, y: 200 }, { x: 0, y: 0 })).toBe('M 0 200 C 0 130 0 70 0 0')
-    expect(arrowPath({ x: 0, y: 0 }, { x: 0, y: 200 })).toBe('M 0 0 C 0 -70 0 270 0 200')
+  it('TGT-12: both ends sit over their own card, on the sides that face each other', () => {
+    const box = (x: number, y: number, w: number, h: number) =>
+      ({ x, y, rect: { width: w, height: h } as DOMRect })
+    // Straight up: inside the source's top half and inside the target's bottom half, not on the edges.
+    const up = arrowAnchors(box(100, 300, 80, 120), box(100, 100, 80, 120))
+    expect(up.a.x).toBe(100)
+    expect(up.a.y).toBeGreaterThan(240)
+    expect(up.a.y).toBeLessThan(300)
+    expect(up.b.y).toBeLessThan(160)
+    expect(up.b.y).toBeGreaterThan(100)
+    // Straight across: the sides, never the top and the bottom.
+    const across = arrowAnchors(box(100, 300, 80, 120), box(400, 300, 80, 120))
+    expect(across.a.y).toBe(300)
+    expect(across.b.y).toBe(300)
+    expect(across.a.x).toBeGreaterThan(100)
+    expect(across.a.x).toBeLessThan(140)
+    expect(across.b.x).toBeGreaterThan(360)
+    expect(across.b.x).toBeLessThan(400)
+    // Down and to the right: the bottom-right corner of the source, the top-left of the target.
+    const diagonal = arrowAnchors(box(100, 100, 80, 120), box(300, 300, 80, 120))
+    expect(diagonal.a.x).toBeGreaterThan(100)
+    expect(diagonal.a.y).toBeGreaterThan(100)
+    expect(diagonal.b.x).toBeLessThan(300)
+    expect(diagonal.b.y).toBeLessThan(300)
+  })
+
+  it('TGT-12: the curve is a shallow arc between those ends, never a loop', () => {
+    const path = arrowPath({ x: 0, y: 200 }, { x: 0, y: 0 })
+    expect(path.startsWith('M 0 200 C ')).toBe(true)
+    expect(path.endsWith(' 0 0')).toBe(true)
+    const handles = path.replace('M 0 200 C ', '').split(' ').map(Number)
+    // Both handles stay between the two ends, so the beam never swings past either of them.
+    expect(handles[1]).toBeLessThanOrEqual(200)
+    expect(handles[1]).toBeGreaterThanOrEqual(0)
+    expect(handles[3]).toBeLessThanOrEqual(200)
+    expect(handles[3]).toBeGreaterThanOrEqual(0)
+    // The bow is a fraction of the span, not the old 35%.
+    expect(Math.abs(handles[0])).toBeLessThanOrEqual(200 * 0.17)
     // TGT-12: told the board's height, the handles stay inside it instead of swinging off screen.
-    expect(arrowPath({ x: 0, y: 0 }, { x: 0, y: 200 }, 300)).toBe('M 0 0 C 0 6 0 270 0 200')
-    expect(arrowPath({ x: 0, y: 100 }, { x: 0, y: 280 }, 300)).toBe('M 0 100 C 0 37 0 294 0 280')
+    const bounded = arrowPath({ x: 0, y: 0 }, { x: 0, y: 200 }, 300)
+    for (const value of bounded.replace('M 0 0 C ', '').split(' ').map(Number).filter((_, i) => i % 2 === 1)) {
+      expect(value).toBeGreaterThanOrEqual(0)
+      expect(value).toBeLessThanOrEqual(300)
+    }
   })
 
   it('TGT-12: an arrow between two objects on the stack swings out past the cascade and still rises into its target from below', () => {
@@ -253,10 +339,11 @@ describe('CombatArrowsOverlay', () => {
     expect(arrow?.getAttribute('data-arrow-to')).toBe('p-opp')
     const coords = container.querySelector('.arrow-path.arrow-attack')!.getAttribute('d')!.split(/[ MCQ]+/).filter(Boolean).map(Number)
     const [x2, y2] = coords.slice(-2)
-    expect(x2).toBeGreaterThanOrEqual(500)
-    expect(x2).toBeLessThanOrEqual(560)
-    expect(y2).toBeGreaterThanOrEqual(100)
-    expect(y2).toBeLessThanOrEqual(160)
+    // The beam stops a dart short of the portrait, which is where the head lands (TGT-11).
+    expect(x2).toBeGreaterThanOrEqual(500 - ARROW_HEAD)
+    expect(x2).toBeLessThanOrEqual(560 + ARROW_HEAD)
+    expect(y2).toBeGreaterThanOrEqual(100 - ARROW_HEAD)
+    expect(y2).toBeLessThanOrEqual(160 + ARROW_HEAD)
 
     unmount()
     boardDiv.remove()
