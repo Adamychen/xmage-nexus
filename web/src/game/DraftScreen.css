@@ -17,7 +17,7 @@
 
 .draft-screen {
   width: min(1100px, 100%);
-  max-height: 92vh;
+  height: 92vh;
   display: flex;
   flex-direction: column;
   border: var(--dlg-border);
@@ -227,15 +227,6 @@
   color: var(--text-dim, var(--fg-2));
 }
 
-.draft-pick-hide { position: absolute; top: 2px; right: 2px; background: var(--shade-3); opacity: 0; transition: opacity 0.15s; }
-
-.draft-pick-card:hover .draft-pick-hide,
-.draft-pick-hide:focus-visible {
-  opacity: 1;
-}
-
-.draft-hidden-link { margin: 0 var(--sp-3) var(--sp-1h); }
-
 .draft-status {
   display: flex;
   align-items: center;
@@ -269,16 +260,38 @@
 }
 
 .draft-booster-area {
-  flex: 1;
+  flex: 1 1 0;
   overflow-y: auto;
   min-height: 220px;
 }
 
 .draft-picks-area {
+  flex: 0 1 auto;
+  max-height: 55%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
   border-top: 1px solid var(--border, var(--veil-2));
   background: var(--shade-0);
-  max-height: 260px;
   overflow-y: auto;
+}
+
+.draft-picks-zone .arena-stack-board,
+.draft-sideboard-zone .arena-stack-board {
+  overflow-x: auto;
+}
+
+.draft-sideboard-zone {
+  padding: var(--sp-2) var(--sp-3);
+  border: 1px dashed var(--veil-2);
+  border-radius: var(--r-md);
+}
+
+.draft-sideboard-hint {
+  margin: 0;
+  color: var(--text-dim, var(--fg-2));
+  font-size: var(--fs-2xs);
 }
 
 .draft-section-title {
@@ -456,48 +469,6 @@ html.fx-off .draft-card:hover:not(:disabled)::after {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-.draft-picks-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
-  gap: var(--sp-2);
-}
-
-.draft-pick-card {
-  position: relative;
-  border-radius: var(--r-base);
-  overflow: hidden;
-  background: var(--ink-3);
-  aspect-ratio: 2.5 / 3.5;
-  border: 1px solid var(--veil-2);
-}
-
-.draft-pick-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.draft-pick-card.is-new {
-  border-color: var(--ok);
-  box-shadow: 0 0 14px rgb(var(--ok-rgb) / 0.55);
-}
-
-.draft-pick-new-badge {
-  position: absolute;
-  top: 4px;
-  left: 4px;
-  width: 18px;
-  height: 18px;
-  display: grid;
-  place-items: center;
-  border-radius: 50%;
-  background: var(--ok);
-  color: var(--ink-3);
-  font-size: var(--fs-3xs);
-  font-weight: 800;
-  box-shadow: 0 2px 6px var(--shade-1);
 }
 
 @media (prefers-reduced-motion: reduce) {

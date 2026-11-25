@@ -31,6 +31,7 @@ export interface BuildStackOptions {
   piles?: DeckStackPiles
   commanderKeys?: Set<string>
   singlePile?: { id: string; label: string }
+  keyOf?: (card: DeckCard) => string
 }
 
 type BucketGroup = Exclude<StackGroup, 'free'>
@@ -102,7 +103,7 @@ export function buildStackColumns(
   metaOf: (card: DeckCard) => CardStripMeta | undefined,
   opts: BuildStackOptions,
 ): StackColumn[] {
-  const { group, sort, labels, keyPrefix = '', piles, commanderKeys, singlePile } = opts
+  const { group, sort, labels, keyPrefix = '', piles, commanderKeys, singlePile, keyOf = deckCardKey } = opts
   const order = sort === 'name' ? byName : group === 'cmc' ? byTypeThenName : byCmcThenName
   const sorted = (items: StackItem[], by: (a: StackItem, b: StackItem) => number = order) => [...items].sort(by)
 
@@ -118,7 +119,7 @@ export function buildStackColumns(
     const meta = metaOf(card)
     const loaded = isMetaLoaded(meta)
     const cardKey = deckCardKey(card)
-    const key = `${keyPrefix}${cardKey}`
+    const key = `${keyPrefix}${keyOf(card)}`
     const item: StackItem = loaded ? { key, card, meta } : { key, card, loading: true }
     if (commanderKeys?.has(cardKey)) {
       commander.push(item)

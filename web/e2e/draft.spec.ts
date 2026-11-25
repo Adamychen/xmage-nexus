@@ -89,8 +89,8 @@ test.describe('Draft', { tag: '@draft' }, () => {
       await expect(banner).toContainText('Esperando a los demás jugadores')
       await expect(page.getByTestId('draft-waiting')).toContainText('Esperando')
       await expect(page.getByTestId('draft-timeout')).toHaveCount(0)
-      await expect(page.getByTestId('draft-pick-card').first()).toHaveAttribute('data-card-id', firstId!)
-      await expect(page.getByTestId('draft-pick-new')).toBeVisible()
+      await expect(page.locator('[data-testid="draft-picks"] .arena-stack-card[data-front="true"]').first()).toHaveAttribute('data-card-key', firstId!)
+      await expect(page.locator(`[data-testid="draft-picks"] .arena-stack-card[data-front="true"].is-selected[data-card-key="${firstId}"]`)).toBeVisible()
       for (const card of await page.getByTestId('draft-card').all()) {
         await expect(card).toBeDisabled()
       }
@@ -118,12 +118,12 @@ test.describe('Draft', { tag: '@draft' }, () => {
       await expect(card).toBeEnabled()
       await card.click()
       await expect(page.getByTestId('draft-picked-banner')).toContainText('Has elegido', { timeout: 5_000 })
-      await expect(page.getByTestId('draft-pick-card').first()).toHaveAttribute('data-card-id', firstId ?? '')
+      await expect(page.locator('[data-testid="draft-picks"] .arena-stack-card[data-front="true"]').first()).toHaveAttribute('data-card-key', firstId ?? '')
       await page.screenshot({ path: 'e2e/shots/draft-reload-resync.png' })
     })
   })
 
-  test('U9: mesa, ocultar pick con F9 y botón de log', async ({ page }) => {
+  test('U9 · TRN-21: table, a pick moves to the sideboard, F9 brings it back, log button', async ({ page }) => {
     await page.goto('/')
     await dismissSetupWizard(page)
     await expect(page.locator('body')).toBeVisible({ timeout: 10_000 })
@@ -158,12 +158,71 @@ test.describe('Draft', { tag: '@draft' }, () => {
     await expect(table.locator('.draft-seat')).toHaveCount(8)
     await expect(page.locator('[data-testid="draft-log-btn"]').first()).toBeVisible()
 
-    const pick = page.getByTestId('draft-pick-card').first()
-    await expect(pick).toBeVisible()
-    await page.getByTestId('draft-pick-hide').first().click()
-    await expect(page.getByTestId('draft-pick-card')).toHaveCount(0)
-    await expect(page.locator('.draft-hidden-link').first()).toBeVisible()
+    const deckPicks = page.locator('[data-testid="draft-picks"] .arena-stack-card[data-front="true"]')
+    const sidePicks = page.locator('[data-testid="draft-sideboard"] .arena-stack-card[data-front="true"]')
+    await expect(deckPicks).toHaveCount(1)
+    await deckPicks.first().click({ modifiers: ['Shift'] })
+    await expect(deckPicks).toHaveCount(0)
+    await expect(sidePicks).toHaveCount(1)
     await page.keyboard.press('F9')
-    await expect(page.getByTestId('draft-pick-card')).toHaveCount(1)
+    await expect(deckPicks).toHaveCount(1)
+    await expect(sidePicks).toHaveCount(0)
+  })
+
+  test('TRN-21: 45 picks scroll in the band and no pile is clipped', async ({ page }) => {
+    await page.setViewportSize({ width: 1600, height: 900 })
+    await page.goto('/')
+    await dismissSetupWizard(page)
+    await page.evaluate(() => {
+      const picks = Object.fromEntries(Array.from({ length: 45 }, (_, i) => [`p-${i}`, { id: `p-${i}`, expansionSetCode: 'M21', cardNumber: String(1 + i * 6), name: '' }]))
+      const store = (globalThis as unknown as { __mageStore?: { setState: (s: unknown) => void } }).__mageStore
+      store?.setState({
+        draft: {
+          draftId: 'draft-test-45',
+          message: {
+            draftView: { setNames: ['Core Set 2021'], setCodes: ['M21', 'M21', 'M21'], boosterNum: 3, cardNum: 1, players: ['a', 'b'] },
+            draftPickView: { booster: {}, picks, picking: false, timeout: 60 },
+          },
+        },
+        phase: 'game',
+      })
+    })
+    const area = page.locator('.draft-picks-area')
+    await expect(area).toBeVisible({ timeout: 10_000 })
+    await expect(page.locator('[data-testid="draft-picks"] .arena-stack-card[data-front="true"]')).toHaveCount(45)
+    const columns = page.locator('[data-testid="draft-picks"] .arena-stack-col')
+    const last = columns.last().locator('.arena-stack-card[data-front="true"]').last()
+    await last.scrollIntoViewIfNeeded()
+    await expect(last).toBeVisible()
+    const box = await last.boundingBox()
+    const areaBox = await area.boundingBox()
+    expect(box && areaBox).toBeTruthy()
+    expect(box!.y).toBeGreaterThanOrEqual(areaBox!.y - 1)
+    expect(box!.y + box!.height).toBeLessThanOrEqual(areaBox!.y + areaBox!.height + 1)
+  })
+
+  test('TRN-21: at pick 1 on a laptop the booster keeps most of the dialog', async ({ page }) => {
+    await page.setViewportSize({ width: 1366, height: 768 })
+    await page.goto('/')
+    await dismissSetupWizard(page)
+    await page.evaluate(() => {
+      const booster = Object.fromEntries(Array.from({ length: 15 }, (_, i) => [`b-${i}`, { id: `b-${i}`, expansionSetCode: 'M21', cardNumber: String(10 + i * 13), name: `Card ${i}` }]))
+      const store = (globalThis as unknown as { __mageStore?: { setState: (s: unknown) => void } }).__mageStore
+      store?.setState({
+        draft: {
+          draftId: 'draft-test-p1',
+          message: {
+            draftView: { setNames: ['Core Set 2021'], setCodes: ['M21', 'M21', 'M21'], boosterNum: 1, cardNum: 1, players: ['a', 'b'] },
+            draftPickView: { booster, picks: {}, picking: true, timeout: 60 },
+          },
+        },
+        phase: 'game',
+      })
+    })
+    await expect(page.getByTestId('draft-booster')).toBeVisible({ timeout: 10_000 })
+    const booster = await page.locator('.draft-booster-area').boundingBox()
+    const picks = await page.locator('.draft-picks-area').boundingBox()
+    expect(booster && picks).toBeTruthy()
+    expect(booster!.height).toBeGreaterThan(picks!.height * 2)
   })
 })

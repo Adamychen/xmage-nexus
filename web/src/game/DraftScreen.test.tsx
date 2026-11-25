@@ -46,6 +46,23 @@ function makeDraftMessage(overrides: Partial<DraftClientMessage> = {}): DraftCli
   }
 }
 
+function pickedOnlyMessage(): DraftClientMessage {
+  return makeDraftMessage({
+    draftPickView: {
+      booster: {},
+      picks: { 'p-1': { id: 'p-1', expansionSetCode: 'M21', cardNumber: '99', name: 'Bear' } },
+      picking: false,
+      timeout: 45,
+    },
+  })
+}
+
+function pickCard(container: HTMLElement, id: string): HTMLElement {
+  const el = container.querySelector(`.arena-stack-card[data-front="true"][data-card-key="${id}"]`)
+  if (!el) throw new Error(`no pick card ${id}`)
+  return el as HTMLElement
+}
+
 describe('DraftScreen', () => {
   beforeEach(() => {
     reset()
@@ -133,9 +150,9 @@ describe('DraftScreen', () => {
     // La carta elegida sale del sobre y aparece en picks marcada como nueva
     const boosterIds = [...container.querySelectorAll('[data-testid="draft-card"]')].map((c) => c.getAttribute('data-card-id'))
     expect(boosterIds).toEqual(['c-2'])
-    const pickIds = [...container.querySelectorAll('[data-testid="draft-pick-card"]')].map((c) => c.getAttribute('data-card-id'))
+    const pickIds = [...container.querySelectorAll('[data-testid="draft-picks"] .arena-stack-card[data-front="true"]')].map((c) => c.getAttribute('data-card-key'))
     expect(pickIds).toEqual(['c-1'])
-    expect(getByTestId('draft-pick-new')).toBeTruthy()
+    expect(container.querySelector('[data-testid="draft-picks"] .arena-stack-card.is-selected[data-card-key="c-1"]')).toBeTruthy()
     for (const c of Array.from(container.querySelectorAll('[data-testid="draft-card"]'))) {
       expect((c as HTMLButtonElement).disabled).toBe(true)
     }
@@ -248,7 +265,33 @@ describe('DraftScreen', () => {
     await waitFor(() => expect(container.textContent).toContain('Has elegido Mock Card'))
   })
 
-  it('shows picks tray', () => {
+  it('TRN-21: draws picks as piles in the Deck zone', () => {
+    setState({
+      lastDraftMethod: 'DRAFT_PICK',
+      draft: {
+        draftId: 'draft-1',
+        message: makeDraftMessage({
+          draftPickView: {
+            booster: { 'c-1': { id: 'c-1', expansionSetCode: 'M21', cardNumber: '1', name: 'Bolt' } },
+            picks: { 'p-1': { id: 'p-1', expansionSetCode: 'M21', cardNumber: '99', name: 'Bear' } },
+            picking: true,
+            timeout: 45,
+          },
+        }),
+      },
+    })
+    const { getByTestId } = render(<DraftScreen />)
+    expect(getByTestId('draft-picks').querySelector('.arena-stack-card[data-card-key="p-1"]')).toBeTruthy()
+    expect(getByTestId('draft-sideboard')).toBeTruthy()
+  })
+
+  it('calls setBoosterLoaded on mount when booster exists', async () => {
+    setState({ draft: { draftId: 'draft-1', message: makeDraftMessage() }, lastDraftMethod: 'DRAFT_PICK' })
+    render(<DraftScreen />)
+    await waitFor(() => expect(mockSetBoosterLoaded).toHaveBeenCalledWith('draft-1'))
+  })
+
+  it('TRN-21: Shift+click moves a pick to the sideboard and it is sent as hidden (U9-1)', async () => {
     setState({
       lastDraftMethod: 'DRAFT_PICK',
       draft: {
@@ -264,59 +307,51 @@ describe('DraftScreen', () => {
       },
     })
     const { container, getByTestId } = render(<DraftScreen />)
-    expect(getByTestId('draft-picks')).toBeTruthy()
-    expect(container.textContent).toContain('Tus picks')
-  })
-
-  it('calls setBoosterLoaded on mount when booster exists', async () => {
-    setState({ draft: { draftId: 'draft-1', message: makeDraftMessage() }, lastDraftMethod: 'DRAFT_PICK' })
-    render(<DraftScreen />)
-    await waitFor(() => expect(mockSetBoosterLoaded).toHaveBeenCalledWith('draft-1'))
-  })
-
-  it('hides a pick and sends hiddenCards with the next pick (U9-1)', async () => {
-    setState({
-      lastDraftMethod: 'DRAFT_PICK',
-      draft: {
-        draftId: 'draft-1',
-        message: makeDraftMessage({
-          draftPickView: {
-            booster: { 'c-1': { id: 'c-1', expansionSetCode: 'M21', cardNumber: '1', name: 'Bolt' } },
-            picks: { 'p-1': { id: 'p-1', expansionSetCode: 'M21', cardNumber: '99', name: 'Bear' } },
-            picking: true,
-            timeout: 45,
-          },
-        }),
-      },
-    })
-    const { container } = render(<DraftScreen />)
-    expect(container.querySelectorAll('[data-testid="draft-pick-card"]').length).toBe(1)
-    await fireEvent.click(container.querySelector('[data-testid="draft-pick-hide"]')!)
-    expect(container.querySelectorAll('[data-testid="draft-pick-card"]').length).toBe(0)
-    expect(container.textContent).toContain('oculta')
+    fireEvent.click(pickCard(container, 'p-1'), { shiftKey: true })
+    expect(getByTestId('draft-sideboard').querySelector('[data-card-key="p-1"]')).toBeTruthy()
+    expect(getByTestId('draft-picks').querySelector('[data-card-key="p-1"]')).toBeNull()
     await fireEvent.click(container.querySelector('[data-testid="draft-card"]') as HTMLButtonElement)
     await waitFor(() => expect(mockSendCardPick).toHaveBeenCalledWith('draft-1', 'c-1', ['p-1']))
   })
 
+  it('TRN-21: a plain tap or Enter on a pick moves it, so touch players can sideboard', () => {
+    setState({ draft: { draftId: 'draft-1', message: pickedOnlyMessage() } })
+    const { container, getByTestId } = render(<DraftScreen />)
+    fireEvent.click(pickCard(container, 'p-1'))
+    expect(getByTestId('draft-sideboard').querySelector('[data-card-key="p-1"]')).toBeTruthy()
+    fireEvent.keyDown(pickCard(container, 'p-1'), { key: 'Enter' })
+    expect(getByTestId('draft-picks').querySelector('[data-card-key="p-1"]')).toBeTruthy()
+  })
+
   it('KEY-12: F9 shows hidden picks again (U9-1)', async () => {
-    setState({
-      draft: {
-        draftId: 'draft-1',
-        message: makeDraftMessage({
-          draftPickView: {
-            booster: {},
-            picks: { 'p-1': { id: 'p-1', expansionSetCode: 'M21', cardNumber: '99', name: 'Bear' } },
-            picking: false,
-            timeout: 45,
-          },
-        }),
-      },
-    })
-    const { container } = render(<DraftScreen />)
-    await fireEvent.click(container.querySelector('[data-testid="draft-pick-hide"]')!)
-    expect(container.querySelectorAll('[data-testid="draft-pick-card"]').length).toBe(0)
+    setState({ draft: { draftId: 'draft-1', message: pickedOnlyMessage() } })
+    const { container, getByTestId } = render(<DraftScreen />)
+    fireEvent.click(pickCard(container, 'p-1'), { shiftKey: true })
+    expect(getByTestId('draft-picks').querySelector('[data-card-key="p-1"]')).toBeNull()
     await fireEvent.keyDown(window, { key: 'F9' })
-    expect(container.querySelectorAll('[data-testid="draft-pick-card"]').length).toBe(1)
+    expect(getByTestId('draft-picks').querySelector('[data-card-key="p-1"]')).toBeTruthy()
+  })
+
+  it('TRN-21: dropping a sideboard pick on the Deck zone brings it back', () => {
+    setState({ draft: { draftId: 'draft-1', message: pickedOnlyMessage() } })
+    const { container, getByTestId } = render(<DraftScreen />)
+    fireEvent.click(pickCard(container, 'p-1'), { shiftKey: true })
+    const payload = JSON.stringify({ source: 'sideboard', key: 'p-1' })
+    const dataTransfer = { getData: () => payload, types: ['application/json'], files: [] }
+    fireEvent.drop(getByTestId('draft-picks'), { dataTransfer })
+    expect(getByTestId('draft-picks').querySelectorAll('[data-card-key="p-1"]').length).toBe(1)
+    fireEvent.drop(getByTestId('draft-picks'), { dataTransfer })
+    expect(getByTestId('draft-picks').querySelectorAll('[data-card-key="p-1"]').length).toBe(1)
+    expect(getByTestId('draft-sideboard').querySelector('[data-card-key="p-1"]')).toBeNull()
+  })
+
+  it('TRN-21: the sideboard empties when a new draft starts', () => {
+    setState({ draft: { draftId: 'draft-1', message: pickedOnlyMessage() } })
+    const { container, getByTestId } = render(<DraftScreen />)
+    fireEvent.click(pickCard(container, 'p-1'), { shiftKey: true })
+    expect(getByTestId('draft-sideboard').querySelector('.arena-stack-card')).toBeTruthy()
+    act(() => setState({ draft: { draftId: 'draft-2', message: pickedOnlyMessage() } }))
+    expect(getByTestId('draft-sideboard').querySelector('.arena-stack-card')).toBeNull()
   })
 
   it('quit asks for confirmation (U9-2)', async () => {

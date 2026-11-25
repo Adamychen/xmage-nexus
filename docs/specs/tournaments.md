@@ -244,3 +244,17 @@ count. The count is the number of messages after the last one you saw, not a dif
   whole game. The client keeps only the last 300 chat messages of all chats together, so a count built on
   the list's length freezes once the list is full.
 - Guard: `e2e/tournament.spec.ts` · `src/game/TournamentPanel.test.tsx` · `src/game/tournamentChatUnread.test.ts`
+
+### TRN-21 · Draft picks are drawn as piles, and the sideboard is what you hide
+During a draft your picks are drawn like the deck editor's Piles view: a Deck zone with one pile per
+mana value (0 to 5, 6+, lands last) and a Sideboard band under it. Clicking or tapping a pick
+(or Enter, S, Shift+click, or dragging it to the band) moves it to the other zone. The picks band
+is sized by its content up to a little over half the dialog, so the booster keeps most of the room. The band is the set of hidden
+picks sent with every pick, so when construction starts the server puts every other pick in the
+main deck and keeps the band's cards in the sideboard. F9 or right-click on the band brings them
+all back. Hovering a pick shows the enlarged preview. The band empties when a new draft starts.
+
+- Why: the picks were a flat grid of 90 px thumbnails in a 260 px scrolling strip that read "like
+  a spreadsheet"; the user asked for the editor's piles. The server already treats hidden picks as
+  the sideboard (`DraftPlayer.prepareDeck`).
+- Guard: `src/game/draftPickStacks.test.ts` · `src/game/DraftScreen.test.tsx` · `e2e/draft.spec.ts`

@@ -447,3 +447,18 @@ describe('splitCreatureRows', () => {
     expect(canSeparateCreatures('free')).toBe(false)
   })
 })
+
+describe('buildStackColumns keyOf', () => {
+  it('keyOf overrides the item key so equal printings stay distinct', () => {
+    const a = card('Bear')
+    const b = card('Bear')
+    const ids = new Map<DeckCard, string>([[a, 'p-1'], [b, 'p-2']])
+    const columns = buildStackColumns([a, b], () => ({ typeLine: 'Creature', cmc: 2 }), {
+      group: 'cmc',
+      sort: 'cmc',
+      labels: stackLabels,
+      keyOf: (c) => ids.get(c) ?? '',
+    })
+    expect(columns.find((c) => c.id === 'cmc-2')?.items.map((i) => i.key)).toEqual(['p-1', 'p-2'])
+  })
+})
