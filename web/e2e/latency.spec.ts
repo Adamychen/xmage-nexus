@@ -43,6 +43,7 @@ import {
 } from './support/frames'
 import { waitScene } from './support/scene'
 import { retryTimingSpecInCi } from './support/timing'
+import { clickDraftCard } from './support/draft'
 
 retryTimingSpecInCi()
 
@@ -268,7 +269,7 @@ test.describe('Perceived latency (immediate ack + delayed echo)', { tag: ['@late
       await perfClear(page)
       await armAckProbe(page, '.draft-card.is-busy, .draft-card.is-picked', {})
       const clickedAt = Date.now()
-      await card.click({ force: true })
+      await clickDraftCard(card)
       expectImmediateAck(await readAck(page, 2000), 'pick de draft')
       expect(await page.locator('.draft-card.is-busy, .draft-card.is-picked').count(), 'estado is-busy o is-picked visible tras el ack').toBeGreaterThan(0)
       await page.waitForTimeout(WAIT_STATE_MS)

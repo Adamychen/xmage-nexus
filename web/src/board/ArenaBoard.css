@@ -490,7 +490,7 @@
 /* BRD-36: each opponent column of the Arena layout shows its library, graveyard and exile as
    small half cards with a caption, at the right end of its status row, instead of chips. */
 .arena-opp-cell .bz-status-row > .arena-opp-piles {
-  --pile-card-w: clamp(34px, calc(var(--zone-card-w, 60px) * 0.62), 52px);
+  --pile-card-w: var(--opp-row-card-w);
   flex: 0 0 auto;
   margin-left: auto;
   align-self: flex-start;
@@ -518,6 +518,7 @@
 }
 
 .arena-opp-cell .bz-status-row {
+  --opp-row-card-w: clamp(34px, 9cqw, 52px);
   flex-wrap: nowrap;
 }
 
@@ -527,8 +528,8 @@
 }
 
 @container (max-width: 520px) {
-  .arena-opp-cell .bz-status-row > .arena-opp-piles {
-    --pile-card-w: clamp(30px, calc(var(--zone-card-w, 50px) * 0.55), 40px);
+  .arena-opp-cell .bz-status-row {
+    --opp-row-card-w: clamp(30px, 10cqw, 42px);
   }
 }
 
@@ -609,15 +610,17 @@
    half that shows. It takes no board space and no more height than the hand beside it. */
 /* The hand sizes itself from the row's height, which grows with the chip's counters, so one
    opponent's backs came out much larger than another's: in a column it takes the size of its
-   piles, like the commander beside it. */
+   piles, like the commander beside it. All three follow the column's width and not the seat's
+   card size (BRD-21): the chip beside them breaks into lines from the room they leave, and the
+   card size comes from the height that chip leaves, so tying them to the card size made a loop. */
 .arena-opp-cell .bz-status-row > .hand-zone {
-  --card-w: clamp(34px, calc(var(--zone-card-w, 60px) * 0.62), 52px) !important;
+  --card-w: var(--opp-row-card-w) !important;
   flex: 0 0 auto;
   margin-left: var(--sp-2);
 }
 
 .arena-opp-cell .bz-status-row > .arena-opp-commander {
-  --card-w: clamp(34px, calc(var(--zone-card-w, 60px) * 0.62), 52px);
+  --card-w: var(--opp-row-card-w);
   flex: 0 0 auto;
   align-self: flex-start;
   margin-left: var(--sp-2);
@@ -647,7 +650,6 @@
 @container (max-width: 520px) {
   .arena-opp-cell .bz-status-row > .hand-zone,
   .arena-opp-cell .bz-status-row > .arena-opp-commander {
-    --card-w: clamp(30px, calc(var(--zone-card-w, 50px) * 0.55), 42px) !important;
     margin-left: var(--sp-1h);
   }
 }

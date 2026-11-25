@@ -26,10 +26,10 @@ test('LEARN: elegir una Lesson del sideboard (Eyetwitch muerte → learn) @learn
     // 1. GAME_ASK chooseUse del LearnEffect — responder SÍ en la AskBar
     await waitFrameAt(page, (f) => f.method === 'GAME_ASK', 'GAME_ASK learn', 15_000, cursor)
     cursor = parsedLen(page)
-    const askBar = page.locator('.ask-prompt-bar').filter({ hasText: /Lesson/i })
-    await expect(askBar).toBeVisible({ timeout: 15_000 })
+    await expect(page.getByTestId('board-order')).toContainText(/Lesson/i, { timeout: 15_000 })
     await page.screenshot({ path: path.join(SHOTS_DIR, 'learn-ask.png'), fullPage: true })
-    await askBar.getByRole('button', { name: /sí|yes/i }).click()
+    await expect(page.getByTestId('prompt-action')).toHaveText(/sí|yes/i)
+    await page.getByTestId('prompt-action').click()
 
     // 2. GAME_TARGET "Select a Lesson card" (forma real del overload Cards:
     //    targets null + possibleTargets en options + cardsView1 con la Lesson).
@@ -53,12 +53,12 @@ test('LEARN: elegir una Lesson del sideboard (Eyetwitch muerte → learn) @learn
     expect(overlaps, 'the peek hint covers neither the opponent piles nor the card grid').toEqual([])
     for (let i = 0; i < 2; i++) {
       await page.keyboard.down('Alt')
-      await expect(grid).toHaveCSS('opacity', '0')
-      await expect(grid).toHaveCSS('animation-name', 'none')
+      await expect(grid.locator('.arena-prompt-stage')).toHaveCSS('opacity', '0')
+      await expect(grid.locator('.arena-prompt-head')).toHaveCSS('opacity', '0')
       await expect(peekHint.locator('.card-grid-peek-hint-active')).toBeVisible()
       if (i === 0) await page.screenshot({ path: path.join(SHOTS_DIR, 'learn-peek.png'), fullPage: true })
       await page.keyboard.up('Alt')
-      await expect(grid).toHaveCSS('opacity', '1')
+      await expect(grid.locator('.arena-prompt-stage')).toHaveCSS('opacity', '1')
       await expect(peekHint.locator('.card-grid-peek-hint-idle')).toBeVisible()
     }
     await page.screenshot({ path: path.join(SHOTS_DIR, 'learn-grid.png'), fullPage: true })

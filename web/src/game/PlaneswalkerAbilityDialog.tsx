@@ -8,6 +8,7 @@ import FormattedText from './FormattedText'
 import ArenaPromptShell from './arena/ArenaPromptShell'
 import { useTranslation } from '../i18n'
 import Button from '../ui/Button'
+import { LoyaltyCostPlate, LoyaltyPlate } from '../board/StatPlate'
 import './PlaneswalkerAbilityDialog.css'
 
 interface PlaneswalkerAbilityDialogProps {
@@ -22,13 +23,6 @@ function deltaClass(delta: number | null): string {
   if (delta > 0) return 'delta-pos'
   if (delta < 0) return 'delta-neg'
   return 'delta-zero'
-}
-
-function deltaLabel(delta: number | null): string {
-  if (delta == null) return ''
-  if (delta > 0) return `+${delta}`
-  if (delta < 0) return `${delta}`
-  return '0'
 }
 
 function nameOnlyCard(id: string, name: string): CardView {
@@ -85,7 +79,7 @@ export default function PlaneswalkerAbilityDialog({ prompt, send, cancel, busy }
         <section className="arena-prompt-zone arena-pw-zone">
           {pwInfo.loyalty != null && (
             <div className="pw-loyalty-now">
-              {t('game', 'planeswalker_loyalty_now')} <span className="pw-loyalty-val">{pwInfo.loyalty}</span>
+              {t('game', 'planeswalker_loyalty_now')} <span className="pw-loyalty-val" aria-label={String(pwInfo.loyalty)}><LoyaltyPlate value={String(pwInfo.loyalty)} /></span>
             </div>
           )}
           <div className="pw-options">
@@ -100,7 +94,11 @@ export default function PlaneswalkerAbilityDialog({ prompt, send, cancel, busy }
                   disabled={busy}
                   onClick={() => void send(() => cmds.sendPlayerUUID(opt.value, prompt.gameId), t('errors', 'send_failed'))}
                 >
-                  <span className="pw-delta">{deltaLabel(d)}</span>
+                  {d != null && (
+                    <span className="pw-delta" aria-label={d > 0 ? `+${d}` : String(d)}>
+                      <LoyaltyCostPlate delta={d} />
+                    </span>
+                  )}
                   <span className="pw-label"><FormattedText text={opt.label} /></span>
                   {after != null && <span className="pw-after">→ {after}</span>}
                 </button>

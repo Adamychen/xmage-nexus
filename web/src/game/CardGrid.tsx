@@ -33,10 +33,10 @@ export default function CardGrid({ prompt, selected, setSelected, send, busy }: 
   const [filter, setFilter] = useState('')
   const [showAll, setShowAll] = useState(false)
   const [dealing, setDealing] = useState(true)
-  const cards = prompt.cards ?? []
+  const cards = useMemo(() => prompt.cards ?? [], [prompt.cards])
   const serverDriven = prompt.method === 'GAME_TARGET'
   const isMulti = !serverDriven && prompt.max > 1
-  const chosen = serverDriven ? (prompt.chosenTargets ?? []) : selected
+  const chosen = useMemo(() => (serverDriven ? (prompt.chosenTargets ?? []) : selected), [serverDriven, prompt.chosenTargets, selected])
   const chosenSet = useMemo(() => new Set(chosen), [chosen])
   const selectable = useMemo(() => new Set(prompt.options.map((option) => option.id)), [prompt.options])
 

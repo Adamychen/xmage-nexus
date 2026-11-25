@@ -155,6 +155,8 @@ export default function CommanderDamageDropdown({
                   <li
                     key={commander.id}
                     className={`cmd-dmg-row${isLethal ? ' is-lethal' : isWarn ? ' is-warning' : ''}`}
+                    data-commander-id={commander.id}
+                    data-damage={dmg}
                     onMouseEnter={(e) =>
                       onHoverCard?.(
                         { name: commander.name, displayName: commander.name, manaValue: 0 } as CardView,

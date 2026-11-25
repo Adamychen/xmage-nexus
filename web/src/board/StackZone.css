@@ -779,20 +779,6 @@ html.fx-off .stack-card-face {
 .stack-card-sub:hover { background: rgb(var(--ink-3-rgb, var(--ink-2-rgb)) / 0.95); }
 
 /* How many more objects the cascade is not drawing. */
-.stack-card-more {
-  position: absolute;
-  top: var(--sp-1);
-  right: var(--sp-1);
-  z-index: 4;
-  padding: 1px var(--sp-1);
-  border-radius: var(--r-pill);
-  background: rgb(var(--ink-2-rgb) / 0.92);
-  border: 1px solid var(--veil-5);
-  color: var(--fg-1);
-  font-size: var(--fs-3xs, 10px);
-  font-weight: 700;
-}
-
 /* STK-6: who controls the object, on a plate of its own. The token has to be one that exists:
    `--ink-1-rgb` is never declared, so `rgb(var(--ink-1-rgb) / .94)` is an invalid declaration and
    the chip ends up with no background at all, unreadable over the art it sits on. */
@@ -997,8 +983,8 @@ html.fx-off .stack-card-face {
   display: grid;
   place-items: center;
   gap: var(--sp-0h);
-  width: 26px;
-  padding: var(--sp-1) 0;
+  min-width: 26px;
+  padding: var(--sp-1) var(--sp-0h);
   border: 1px solid var(--veil-5);
   border-radius: var(--r-pill);
   background: rgb(var(--ink-2-rgb) / 0.86);

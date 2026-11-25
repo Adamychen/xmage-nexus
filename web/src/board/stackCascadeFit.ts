@@ -22,7 +22,7 @@ export const CASCADE_CARD_MIN = 96
 export const CASCADE_PEEK_X = 0.11
 export const CASCADE_PEEK_Y = 0.075
 /** Past this many objects the tail is folded away rather than drawn as ever-thinner slivers. */
-export const CASCADE_MAX_SHOWN = 6
+export const CASCADE_MAX_SHOWN = 5
 
 export interface CascadeFit {
   /** Card width in pixels. */
@@ -39,7 +39,7 @@ export interface CascadeFit {
  * A cascade for `count` objects inside `width` x `height` pixels.
  *
  * The card is as large as both sides allow once the slivers behind it are accounted for. When the
- * stack is deeper than `CASCADE_MAX_SHOWN`, only that many are drawn: a seventh sliver carries no
+ * stack is deeper than `CASCADE_MAX_SHOWN`, only that many are drawn: a sixth sliver carries no
  * information that a count does not carry better.
  */
 export function stackCascadeFit(width: number, height: number, count: number): CascadeFit {

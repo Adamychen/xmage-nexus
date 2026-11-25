@@ -6,7 +6,7 @@ import { fakeOnly } from './support/fake-mode'
 import { quickStartGame } from './support/start-game'
 import { withFakeServer } from './support/fake-backend'
 import { playableInSceneByName } from './support/scene'
-import { expectStackCount, openDrawerTab } from './support/game-screen'
+import { expectStackCount } from './support/game-screen'
 import { mutatePileOf } from './support/frames'
 import { replayRecordedScenario } from '../fixtures/scenarios/replay-recorded'
 
@@ -254,11 +254,10 @@ test.describe('Recorded real frames (anti-drift smoke)', { tag: '@recorded' }, (
             (p) => String(p?.name ?? '').toLowerCase() === String(m?.[2] ?? '').trim().toLowerCase(),
           )
           expect(target, 'el rival dañado existe en el frame').toBeTruthy()
-          await openDrawerTab(page, 'commander')
-          await expect(page.locator('[data-testid="commander-damage-matrix"]')).toBeVisible()
-          await expect(
-            page.locator(`[data-testid="cdm-cell-${target?.playerId}-${cmd?.id}"][data-damage="${dmg}"]`),
-          ).toHaveCount(1)
+          await page.getByTestId(`cmd-dmg-toggle-${target?.playerId}`).click()
+          const dropdown = page.getByTestId(`cmd-dmg-dropdown-${target?.playerId}`)
+          await expect(dropdown).toBeVisible()
+          await expect(dropdown.locator(`.cmd-dmg-row[data-commander-id="${cmd?.id}"][data-damage="${dmg}"]`)).toHaveCount(1)
         }
         if (entry.assert === 'hasFfaSix') {
           // BRD-6: five or more players always get the main board with every other seat in the panel.

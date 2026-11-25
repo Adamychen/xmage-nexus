@@ -360,6 +360,10 @@ change at all after the board has settled.
   and back. In a recording of a four-player game the two attacking creatures moved 135 px sideways
   between two frames 50 ms apart, with nothing else changed but the clock, 15:11 to 15:10 (user
   report with video, 25-nov-2026). The signature now reads those sizes in steps of 8 px.
+  An Arena opponent's hand, commander and piles followed the seat's card size, and the chip beside
+  them breaks into lines from the room they leave; the card size comes from the height that chip
+  leaves, so a 4-seat board at 1100x700 swapped 64 and 70 px for ever (241 changes in 500 ms). They
+  follow the column's width now (25-nov-2026).
 - Guard: `src/board/HandZone.test.tsx` · `src/board/chipReserve.test.ts` · `e2e/board-settle.spec.ts` · `e2e/board-spotlight-settle.spec.ts`
 
 ### BRD-22 · The phase dial shows the steps of combat
@@ -389,8 +393,13 @@ dims behind it, the zone's name and card count sit on top, the cards are fanned 
 held up, each turned `FAN_STEP_DEG` further than the one before around a pivot below the row, so the
 outer cards lean out and sit lower, and one Done button closes it. Neighbouring cards overlap by the
 same slice, 44 % of a card (`FAN_SLICE`), whatever the count: the fan shows as many cards as fit at
-that overlap and never squeezes them. A longer pile slides its cards along the arc, from its first
-card, with the mouse wheel, by dragging the pill-shaped thumb on the thin line under the fan, by
+that overlap and never squeezes them. The graveyard, the exile, the library and the revealed and
+looked-at windows read like the stack (STK-11): the top of the pile is drawn at the right end
+(the card put in a graveyard or an exile last, a library's top card, the first card revealed) and the
+cards under it run to its left, and the viewer opens slid to that right end. No card carries a
+position number: under the fan, `Bottom` sits at the left end and `Top` at the right one (`Last` and
+`First` for revealed and looked-at cards, which are not a pile). A longer pile slides its
+cards along the arc with the mouse wheel, by dragging the pill-shaped thumb on the thin line under the fan, by
 clicking that line, or with the arrow keys on the thumb; the line is hidden when every card fits.
 The cards past either end of the fan are not hidden: up to `PILE_DEPTH` of them gather at that side
 in a tight, dimmed pile, each turned only `PILE_STEP_DEG` past the one before, so the pile shows
@@ -414,6 +423,10 @@ these viewers, the known hand included, opens no side preview panel.
   hover was dropped at the user's request (24-nov-2026): the lifted copy already shows the card
   large, and the panel beside it was a second, redundant copy. The same day the user extended it to
   every Arena-style viewer, the known hand too: the lifted card is large enough to read.
+  The pile viewers first opened on their left end, so a graveyard showed its oldest cards and a
+  library put #1 at the left, the opposite of the stack viewer; the user asked for the first card at
+  the right, like the stack (25-nov-2026). The same day the user asked to drop the #N badges on every
+  card for one label at each end: the order is the fan's, and a number per card was noise.
 - Guard: `src/board/zoneFan.test.ts` · `src/board/HandViewer.test.tsx` · `src/board/PileOverlay.test.tsx` · `e2e/cross-zone-layout.spec.ts`
 
 ### BRD-25 · The same board in the same window always looks the same

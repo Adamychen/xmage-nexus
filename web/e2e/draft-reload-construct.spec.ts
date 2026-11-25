@@ -3,6 +3,7 @@ import { fakeOnly } from './support/fake-mode'
 import { login } from './support/start-game'
 import { withFakeServer } from './support/fake-backend'
 import { makeDraftScenario } from '../fixtures/scenarios/draft'
+import { clickDraftCard } from './support/draft'
 fakeOnly()
 
 test.describe('Draft reload', { tag: '@draft' }, () => {
@@ -10,7 +11,7 @@ test.describe('Draft reload', { tag: '@draft' }, () => {
     await withFakeServer(() => makeDraftScenario({ totalPicksBeforeOver: 1, nextPickDelayMs: 60 }), async () => {
       await login(page, `draftcn-${String(Date.now()).slice(-6)}`, { landsOn: '.draft-screen' })
       await expect(page.locator('.draft-screen').first()).toBeVisible({ timeout: 10_000 })
-      await page.getByTestId('draft-card').first().click()
+      await clickDraftCard(page.getByTestId('draft-card').first())
       await expect(page.locator('.construct-screen').first()).toBeVisible({ timeout: 15_000 })
       await page.reload()
       await expect(page.locator('.construct-screen').first()).toBeVisible({ timeout: 15_000 })
@@ -23,7 +24,7 @@ test.describe('Draft reload', { tag: '@draft' }, () => {
     await withFakeServer(() => makeDraftScenario({ totalPicksBeforeOver: 1, nextPickDelayMs: 60 }), async () => {
       await login(page, `draftsv-${String(Date.now()).slice(-6)}`, { landsOn: '.draft-screen' })
       await expect(page.locator('.draft-screen').first()).toBeVisible({ timeout: 10_000 })
-      await page.getByTestId('draft-card').first().click()
+      await clickDraftCard(page.getByTestId('draft-card').first())
       await expect(page.locator('.construct-screen').first()).toBeVisible({ timeout: 15_000 })
 
       // Pin the card by its key: the pool can re-sort between reading the key and

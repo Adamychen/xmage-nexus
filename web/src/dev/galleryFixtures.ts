@@ -357,6 +357,27 @@ const DRAFT_INPROGRESS: DraftState = {
   timeLeft: 42,
 }
 
+const DRAFT_PILES_PICKS = [3, 9, 15, 21, 28, 34, 40, 47, 52, 58, 61, 66, 70, 77, 85, 92, 101, 113, 124, 138, 151, 160, 246]
+const DRAFT_PILES: DraftState = {
+  draftId: 'gallery-draft-piles',
+  message: {
+    draftView: {
+      setNames: ['Core Set 2021'],
+      setCodes: ['M21', 'M21', 'M21'],
+      boosterNum: 2,
+      cardNum: 9,
+      players: ['gallery-dev', 'alice', 'bora', 'chen', 'dara', 'enzo', 'fran', 'grace'],
+    },
+    draftPickView: {
+      booster: cardsById(Array.from({ length: 7 }, (_, i) => ({ id: `piles-b-${i}`, expansionSetCode: 'M21', cardNumber: String(10 + i * 29) }))),
+      picks: cardsById(DRAFT_PILES_PICKS.map((n, i) => ({ id: `piles-p-${i}`, expansionSetCode: 'M21', cardNumber: String(n) }))),
+      picking: true,
+      timeout: 60,
+    },
+  },
+  timeLeft: 38,
+}
+
 const DRAFT_WAITING: DraftState = {
   draftId: 'gallery-draft-2',
   message: {
@@ -1186,6 +1207,47 @@ function withAuraAttached(game: GameView, hostId: string, auraId: string, rules:
     if (!host) return p
     return { ...p, battlefield: { ...p.battlefield, [hostId]: { ...host, rules, attachments: [auraId] } } }
   })
+}
+
+const VIEWER_CARDS: Array<[string, string, string[]]> = [
+  ['3', 'Angelic Ascension', ['INSTANT']],
+  ['9', 'Basri\'s Lieutenant', ['CREATURE']],
+  ['15', 'Defiant Strike', ['INSTANT']],
+  ['21', 'Glorious Anthem', ['ENCHANTMENT']],
+  ['28', 'Nine Lives', ['ENCHANTMENT']],
+  ['34', 'Seasoned Hallowblade', ['CREATURE']],
+  ['40', 'Swift Response', ['INSTANT']],
+  ['47', 'Capture Sphere', ['ENCHANTMENT']],
+  ['52', 'Ghostly Pilferer', ['CREATURE']],
+  ['58', 'Mistral Singer', ['CREATURE']],
+  ['61', 'Rain of Revelation', ['INSTANT']],
+  ['66', 'Rookie Mistake', ['INSTANT']],
+  ['70', 'Shacklegeist', ['CREATURE']],
+  ['77', 'Teferi\'s Protege', ['CREATURE']],
+]
+
+function viewerCard(id: string, [cardNumber, name, cardTypes]: [string, string, string[]], extra: Partial<CardView> = {}): CardView {
+  return { id, name, expansionSetCode: 'M21', cardNumber, cardTypes, manaValue: 2, rules: [], ...extra } as unknown as CardView
+}
+
+function withViewerPiles(game: GameView): GameView {
+  const me = controlledPlayer(game)
+  const controller = { controllerId: me?.playerId, controllerName: me?.name }
+  const graveyard = Object.fromEntries(VIEWER_CARDS.map((c, i) => [`gallery-grave-${i}`, viewerCard(`gallery-grave-${i}`, c)]))
+  const stack = Object.fromEntries(
+    VIEWER_CARDS.slice(0, 8).map((c, i) => [`gallery-vstack-${i}`, viewerCard(`gallery-vstack-${i}`, c, controller)]),
+  )
+  const withPiles = mapControlled(game, (p) => ({
+    ...p,
+    graveyard: graveyard as unknown as PlayerView['graveyard'],
+    libraryCount: 24,
+    topCard: viewerCard('gallery-lib-top', VIEWER_CARDS[10]),
+  }))
+  return { ...withPiles, stack: stack as unknown as GameView['stack'] }
+}
+
+function clickInBoard(selector: string): void {
+  document.querySelector<HTMLElement>(selector)?.click()
 }
 
 function sendToGraveyard(game: GameView, id: string): GameView {
@@ -3855,6 +3917,37 @@ export function buildGalleryEntries(): GalleryEntry[] {
       action: { label: 'Tap land', apply: tapOneLand },
     })
     entries.push({
+      id: 'viewer:graveyard',
+      group: 'Visores',
+      label: 'Viewer: graveyard (top at the right)',
+      description: 'Press "Abrir cementerio": the viewer opens slid to its right end, on the card put there last, with Bottom / Top under the ends of the fan and no numbers (BRD-24).',
+      phase: 'game',
+      game: withViewerPiles(game),
+      gameId,
+      action: { label: 'Abrir cementerio', run: () => clickInBoard('.player-zone [data-testid="pile-card-graveyard"]') },
+    })
+    entries.push({
+      id: 'viewer:library',
+      group: 'Visores',
+      label: 'Viewer: library (top card at the right)',
+      description: 'Press "Abrir biblioteca": the revealed top card sits at the right end with the backs to its left, Bottom / Top under the ends (BRD-24).',
+      phase: 'game',
+      game: withViewerPiles(game),
+      gameId,
+      action: { label: 'Abrir biblioteca', run: () => clickInBoard('.player-zone [data-testid="pile-card-library"]') },
+    })
+    entries.push({
+      id: 'viewer:stack',
+      group: 'Visores',
+      label: 'Viewer: whole stack (Last / First)',
+      description: 'Eight objects: the cascade draws five and the button beside it reads +3. Press "Abrir pila": the stack viewer opens on the object about to resolve at the right, with Last / First under the ends and no numbers (STK-11).',
+      phase: 'game',
+      boardSpotlight: true,
+      game: withViewerPiles(game),
+      gameId,
+      action: { label: 'Abrir pila', run: () => clickInBoard('[data-testid="stack-open-viewer"]') },
+    })
+    entries.push({
       id: 'stack:identical-pile',
       group: 'Pila',
       label: 'Stack: identical spells pile',
@@ -5940,9 +6033,17 @@ export function buildGalleryEntries(): GalleryEntry[] {
     id: 'screen:draft',
     group: 'Pantallas',
     label: 'Draft (pick en curso)',
-    description: 'Booster de 14 cartas, pick 3 de la ronda 1, con 2 ya elegidas.',
+    description: 'TRN-21: booster de 14 cartas, pick 3 de la ronda 1, con 2 ya elegidas. Se puede jugar: clic en una carta del booster o arrástrala al Mazo o al Banquillo; la galería simula el pick y el siguiente sobre llega solo.',
     screen: 'draft',
     draft: DRAFT_INPROGRESS,
+  })
+  entries.push({
+    id: 'screen:draft-piles',
+    group: 'Pantallas',
+    label: 'Draft (23 picks)',
+    description: 'TRN-21: 23 picks reales de M21 en el abanico del Mazo; clic o arrastrar mueven un pick al Banquillo y F9 los devuelve. El booster también se puede elegir y arrastrar.',
+    screen: 'draft',
+    draft: DRAFT_PILES,
   })
   entries.push({
     id: 'screen:draft-waiting',

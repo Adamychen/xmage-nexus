@@ -3,6 +3,7 @@ import { getState, setState } from '../state/state'
 import { getGateway, setGateway } from '../net/commands'
 import type { Gateway } from '../net/Gateway'
 import { buildGalleryEntries, type GalleryAction, type GalleryEntry } from './galleryFixtures'
+import { galleryDraftPick } from './galleryDraft'
 import { getLanguage, setLanguage, t } from '../i18n'
 import { forgetPreviousView } from '../board/gameTransitionEngine'
 import GameScreen from '../game/GameScreen'
@@ -175,6 +176,7 @@ export default function GalleryScreen() {
       lobby: active.lobby ?? null,
       conn: active.conn ?? base.conn,
       draft: active.draft ?? null,
+      lastDraftMethod: active.draft ? 'DRAFT_PICK' : base.lastDraftMethod,
       construct: active.construct ?? null,
       ...(active.myDeck !== undefined ? { myDeck: active.myDeck } : null),
     })
@@ -205,7 +207,10 @@ export default function GalleryScreen() {
       prevGateway = null
     }
     const stubGateway = {
-      send: async () => ({ type: 'result', action: '', ok: false, error: 'gallery: sin gateway real' }),
+      send: async (action: string, args: Record<string, unknown> = {}) =>
+        action === 'sendCardPick'
+          ? galleryDraftPick(args)
+          : { type: 'result', action: '', ok: false, error: 'gallery: sin gateway real' },
     } as unknown as Gateway
     setGateway(stubGateway)
     return () => setGateway(prevGateway)

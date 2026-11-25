@@ -158,6 +158,23 @@ html.fx-off .zone-fan-lift {
   }
 }
 
+.zone-fan-rail {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+}
+
+.zone-fan-end {
+  font-family: var(--font-ui);
+  font-size: clamp(var(--fs-md), 1.2vw, var(--fs-lg));
+  font-weight: 700;
+  font-style: italic;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--fg-hi);
+  text-shadow: 0 2px 12px var(--shade-5);
+}
+
 .zone-fan-scrollbar {
   position: relative;
   width: min(420px, 60vw);
@@ -192,7 +209,7 @@ html.fx-off .zone-fan-lift {
   gap: 0;
   border-radius: var(--r-pill);
   color: var(--fg-1);
-  background: linear-gradient(180deg, var(--veil-7) 0%, var(--veil-4) 100%);
+  background: linear-gradient(180deg, var(--veil-7) 0%, var(--veil-4) 100%), var(--ink-2);
   border: 1px solid var(--veil-6);
   box-shadow: 0 2px 8px var(--shade-3), inset 0 1px 0 var(--veil-6);
   cursor: grab;
@@ -237,18 +254,6 @@ html.fx-off .zone-fan-lift {
   align-items: center;
   gap: var(--sp-1);
   align-self: flex-start;
-}
-
-.pile-position-badge.top-badge {
-  background: linear-gradient(135deg, rgb(var(--gold-rgb) / 0.25) 0%, rgb(var(--warn-rgb) / 0.15) 100%);
-  color: var(--gold-300);
-  border-color: rgb(var(--gold-rgb) / 0.4);
-  box-shadow: 0 0 10px rgb(var(--gold-rgb) / 0.3);
-}
-
-.pile-position-badge.revealed-badge {
-  color: var(--brand-fg);
-  border-color: rgb(var(--brand-rgb) / 0.4);
 }
 
 .pile-card-wrapper.is-top-card .pile-card {

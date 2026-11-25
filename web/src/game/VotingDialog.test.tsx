@@ -33,7 +33,7 @@ describe('VotingDialog', () => {
     }
     const send = vi.fn((action: () => Promise<unknown>) => { void action(); })
     const { container } = render(<VotingDialog prompt={prompt} send={send as never} busy={false} />)
-    expect(container.textContent).toContain('VOTACIÓN')
+    expect(container.textContent).toContain('Votación')
     expect(container.textContent).toContain('Strength')
     expect(container.textContent).toContain('Numbers')
     const btns = container.querySelectorAll('.voting-btn')

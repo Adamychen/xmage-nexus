@@ -56,7 +56,7 @@ test.describe('Cross-zone cast (ray)', { tag: '@crosszone' }, () => {
      // (c) el cast en curso: el diálogo de objetivo aparece (la carta se lanzó
      //     por sendPlayerUUID desde el overlay). El sourceName puede no estar
      //     en el GAME_TARGET (fallback "Objetivo").
-    await expect(page.locator('.targeting-bar, .feedback-dialog')).toBeVisible({ timeout: 15_000 })
+    await expect(page.getByTestId('board-order')).toBeVisible({ timeout: 15_000 })
     const opp = opponentPlayer(lastGameView(parseFrames(frames)))
     if (opp?.playerId) {
       expect(await helper.playCard(opp.playerId), 'objetivo del Arc Trail').toBeTruthy()
@@ -89,7 +89,7 @@ test.describe('Cross-zone cast (ray)', { tag: '@crosszone' }, () => {
     await arcCard.click()
 
     // el sourceName puede no estar en el GAME_TARGET (fallback "Objetivo")
-    await expect(page.locator('.targeting-bar, .feedback-dialog')).toBeVisible({ timeout: 15_000 })
+    await expect(page.getByTestId('board-order')).toBeVisible({ timeout: 15_000 })
     const opp = opponentPlayer(lastGameView(parseFrames(frames)))
     if (opp?.playerId) {
       expect(await helper.playCard(opp.playerId), 'objetivo del Arc Trail (exilio)').toBeTruthy()

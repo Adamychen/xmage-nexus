@@ -8,6 +8,7 @@ import { useSettings } from '../state/store'
 import { useTranslation } from '../i18n'
 import type { PermanentView } from '../net/types'
 import '../appearance/playmats.css'
+import '../board/BoardZone.css'
 import './BoardDemo.css'
 import './BoardLivePreview.css'
 

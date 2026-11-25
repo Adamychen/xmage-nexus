@@ -184,6 +184,12 @@
   background: var(--err);
 }
 
+@media (prefers-reduced-transparency: reduce) {
+  .cmd-dmg-dropdown {
+    backdrop-filter: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .cmd-dmg-toggle,
   .cmd-dmg-bar-fill {

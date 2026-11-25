@@ -66,8 +66,11 @@ test.describe('Visual preset & playmat pickers', { tag: '@site' }, () => {
       await expect(page.getByTestId('settings-layout-arena')).toHaveCount(0)
       await expect(page.getByTestId('board-live-preview')).toBeVisible()
       await page.screenshot({ path: shot('layouts.png') })
-      for (const kind of ['boardFill', 'boardSpotlight', 'handRail', 'handRow'] as const) {
+      for (const kind of ['boardFill', 'boardSpotlight'] as const) {
         await expect(page.getByTestId(`option-switch-${kind}`)).toBeVisible()
+      }
+      for (const layout of ['fan', 'column', 'row'] as const) {
+        await expect(page.getByTestId(`settings-hand-layout-${layout}`)).toBeVisible()
       }
       const fill = page.getByTestId('option-switch-boardFill')
       const fillRow = page.locator('.settings-row', { has: fill })

@@ -385,41 +385,46 @@ describe('StackZone, the preview the pointer opens', () => {
 describe('StackZone, the whole stack in the zone viewer', () => {
   beforeEach(cleanup)
   afterEach(cleanup)
-  const three = () => stackOf(
-    spell('spell-3', 'Fireball'),
-    spell('spell-2', 'Counterspell'),
-    spell('spell-1', 'Lightning Bolt'),
-  )
+  const seven = () => stackOf(...Array.from({ length: 7 }, (_, i) => spell(`spell-${7 - i}`, `Spell ${7 - i}`)))
   const viewer = () => document.body.querySelector<HTMLElement>('[data-testid="stack-viewer"]')
   const items = () => [...document.body.querySelectorAll<HTMLElement>('[data-testid="stack-viewer"] .zone-fan-item')]
 
-  it('STK-11: a button beside the stack opens every object in the zone viewer, in the cascade order with the one resolving next at the right', () => {
-    const { getByTestId } = render(<StackZone stack={three()} />)
+  it('STK-11: up to five objects there is no button, and nothing on the front card counts them', () => {
+    const { container, queryByTestId } = render(<StackZone stack={stackOf(...Array.from({ length: 5 }, (_, i) => spell(`s-${i}`, `Spell ${i}`)))} />)
+    expect(cards(container)).toHaveLength(5)
+    expect(queryByTestId('stack-open-viewer')).toBeNull()
+    expect(container.textContent).not.toMatch(/\+\d/)
+  })
+
+  it('STK-11: past five objects the button says how many are folded and opens every object in the zone viewer, the one resolving next at the right', () => {
+    const { container, getByTestId } = render(<StackZone stack={seven()} />)
+    expect(cards(container)).toHaveLength(5)
     const button = getByTestId('stack-open-viewer')
-    expect(button.textContent).toContain('3')
+    expect(button.textContent).toBe('+2')
+    expect(container.querySelector('.stack-cascade')!.textContent).not.toContain('+2')
     expect(viewer()).toBeNull()
     fireEvent.click(button)
     expect(viewer()).not.toBeNull()
-    expect(items().map((el) => el.getAttribute('data-card-id'))).toEqual(['spell-1', 'spell-2', 'spell-3'])
-    expect(items()[2].textContent).toContain('#1')
-    expect(items()[2].classList.contains('is-top-card')).toBe(true)
-    expect(items()[0].textContent).toContain('#3')
+    expect(items().map((el) => el.getAttribute('data-card-id'))).toEqual(['spell-1', 'spell-2', 'spell-3', 'spell-4', 'spell-5', 'spell-6', 'spell-7'])
+    expect(items()[6].classList.contains('is-top-card')).toBe(true)
+    expect(viewer()!.textContent).not.toMatch(/#\d/)
+    expect([...viewer()!.querySelectorAll('.zone-fan-end')].map((el) => el.textContent)).toEqual(['Última', 'Primera'])
     fireEvent.keyDown(document, { key: 'Escape' })
     expect(viewer()).toBeNull()
   })
 
   it('STK-11: an object the prompt can target is chosen from the viewer too', () => {
     const onCardClick = vi.fn()
-    const { getByTestId } = render(<StackZone stack={three()} targetIds={new Set(['spell-2'])} onCardClick={onCardClick} />)
+    const { getByTestId } = render(<StackZone stack={seven()} targetIds={new Set(['spell-2'])} onCardClick={onCardClick} />)
     fireEvent.click(getByTestId('stack-open-viewer'))
-    const target = items()[1].querySelector<HTMLElement>('.stack-viewer-card')!
+    const target = items().find((el) => el.getAttribute('data-card-id') === 'spell-2')!.querySelector<HTMLElement>('.stack-viewer-card')!
     expect(target.classList.contains('targetable')).toBe(true)
     fireEvent.click(target)
     expect(onCardClick).toHaveBeenCalledWith('spell-2')
   })
 
   it('STK-11: the viewer button stays reachable while the stack is pushed aside', () => {
-    const { getByTestId } = render(<StackZone stack={three()} />)
+    const { getByTestId } = render(<StackZone stack={seven()} />)
     fireEvent.click(getByTestId('stack-push'))
     fireEvent.click(getByTestId('stack-open-viewer'))
     expect(viewer()).not.toBeNull()
@@ -463,7 +468,7 @@ describe('StackZone viewer, what the object being read does and what it aims at'
   const bolt = spell('spell-bolt', 'Lightning Bolt', { rules: ['Lightning Bolt deals 3 damage to any target.'], targets: ['p-bob'] })
   const path = spell('spell-path', 'Path to Exile', { rules: ['Exile target creature.'], targets: ['perm-elf'] })
   const counter = spell('spell-counter', 'Counterspell', { rules: ['Counter target spell.'], targets: ['spell-path'] })
-  const stack = stackOf(counter, path, bolt)
+  const stack = stackOf(counter, path, bolt, ...Array.from({ length: 3 }, (_, i) => spell(`filler-${i}`, `Filler ${i}`)))
   const seat = () => setState({
     game: makeGameView({
       players: [
@@ -488,11 +493,11 @@ describe('StackZone viewer, what the object being read does and what it aims at'
     expect(panel().textContent).toContain('Counter target spell.')
   })
 
-  it('STK-12: a target on the stack is ringed in the fan and named by its place', () => {
+  it('STK-12: a target on the stack is ringed in the fan and named by its card', () => {
     open()
     expect(item('spell-path').classList.contains('is-targeted')).toBe(true)
     expect(item('spell-bolt').classList.contains('is-targeted')).toBe(false)
-    expect(panel().querySelector('[data-testid="stack-viewer-target"]')?.textContent).toContain('#2')
+    expect(panel().querySelector('[data-testid="stack-viewer-target"]')?.textContent).toContain('Path to Exile')
   })
 
   it('STK-12: pointing at another object reads it, and a target elsewhere is drawn as its card beside the fan', () => {

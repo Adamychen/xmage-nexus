@@ -23,14 +23,14 @@ interface StackViewerProps {
 }
 
 type Target =
-  | { kind: 'stack'; id: string; position: number; card: CardView }
+  | { kind: 'stack'; id: string; card: CardView }
   | { kind: 'card'; id: string; card: CardView }
   | { kind: 'player'; id: string; player: PlayerView }
 
 function resolveTargets(card: CardView, entries: [string, CardView][], game: GameView | null): Target[] {
   return stackTargetIds(card).flatMap((id): Target[] => {
     const at = entries.findIndex(([entryId]) => entryId === id)
-    if (at >= 0) return [{ kind: 'stack', id, position: at + 1, card: entries[at][1] }]
+    if (at >= 0) return [{ kind: 'stack', id, card: entries[at][1] }]
     const player = game?.players?.find((p) => p.playerId === id)
     if (player) return [{ kind: 'player', id, player }]
     const hit = findCardViewInGame(game, id)
@@ -62,7 +62,7 @@ function ReadPanel({ card, targets, players }: { card: CardView; targets: Target
                 <CardSlot cardId={target.id} card={target.card} className="stack-viewer-target-card" />
               )}
               {target.kind === 'stack' && (
-                <span className="stack-viewer-target-chip">#{target.position} · {t('game', 'stack_viewer_on_stack')}</span>
+                <span className="stack-viewer-target-chip">{target.card.name} · {t('game', 'stack_viewer_on_stack')}</span>
               )}
               {target.kind === 'player' && (
                 <span
@@ -101,6 +101,7 @@ export default function StackViewer({ entries, players, myPlayerId, targetIds, o
       testId="stack-viewer"
       itemCount={entries.length}
       startAtEnd
+      ends={{ start: t('dialogs', 'arena_trigger_last'), end: t('dialogs', 'arena_trigger_first') }}
       aside={reading && <ReadPanel card={reading[1]} targets={targets} players={players} />}
       onClose={onClose}
     >
@@ -122,8 +123,7 @@ export default function StackViewer({ entries, players, myPlayerId, targetIds, o
             onMouseEnter={() => setReadId(id)}
             onFocus={() => setReadId(id)}
           >
-            <div className={`pile-position-badge${index === 0 ? ' top-badge' : ''}`}>
-              {index === 0 ? <><Icon name="star" size={10} /> #1</> : `#${index + 1}`}
+            <div className="pile-position-badge">
               <span
                 className={`stack-viewer-ctrl ${ctrl.isMe ? 'is-me' : 'is-opp'}`}
                 style={{ ['--seat' as string]: seatColorVar(seatIndexOf(players, ctrl.id)) }}

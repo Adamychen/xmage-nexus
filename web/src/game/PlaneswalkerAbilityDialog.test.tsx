@@ -1,15 +1,21 @@
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, fireEvent } from '@testing-library/react'
 import PlaneswalkerAbilityDialog from './PlaneswalkerAbilityDialog'
 import type { FeedbackPrompt } from './feedback'
+import { setState } from '../state/store'
+import type { GameView } from '../net/types'
 
 vi.mock('../net/commands', () => ({
   sendPlayerUUID: vi.fn().mockResolvedValue({ ok: true }),
 }))
 
-vi.mock('../state/store', () => ({
-  useStore: (selector: (s: unknown) => unknown) => selector({ game: { players: [{ battlefield: { pw1: { loyalty: '3' } } }] } }),
-}))
+beforeEach(() => {
+  setState({ game: { players: [{ battlefield: { pw1: { loyalty: '3' } } }] } as unknown as GameView })
+})
+
+afterEach(() => {
+  setState({ game: null })
+})
 
 describe('PlaneswalkerAbilityDialog', () => {
   it('renders loyalty deltas with colors and sends UUID', () => {
@@ -31,7 +37,7 @@ describe('PlaneswalkerAbilityDialog', () => {
     }
     const send = vi.fn((action: () => Promise<unknown>) => { void action(); })
     const { container } = render(<PlaneswalkerAbilityDialog prompt={prompt} send={send as never} busy={false} />)
-    expect(container.textContent).toContain('PLANESWALKER')
+    expect(container.textContent).toContain('Habilidad de Planeswalker')
     expect(container.textContent).toContain('+2')
     expect(container.textContent).toContain('-3')
     expect(container.textContent).toContain('Lealtad actual: 3')

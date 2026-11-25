@@ -62,6 +62,7 @@ describe('galería de estados (P3)', () => {
       'Frames reales',
       'Prompts',
       'Animaciones',
+      'Visores',
       'Pila',
       'Pantallas',
       'Tablero',

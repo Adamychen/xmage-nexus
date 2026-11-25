@@ -14,6 +14,7 @@ interface ArenaPromptShellProps {
   dialogClassName?: string
   onEscape?: () => void
   trailing?: ReactNode
+  describedBy?: string
 }
 
 const PEEK_KEYS = new Set([' ', 'Enter'])
@@ -29,6 +30,7 @@ export default function ArenaPromptShell({
   dialogClassName = '',
   onEscape,
   trailing,
+  describedBy,
 }: ArenaPromptShellProps) {
   const { t } = useTranslation()
   const titleId = useId()
@@ -54,6 +56,7 @@ export default function ArenaPromptShell({
       testId={testId}
       onEscape={onEscape}
       trailing={trailing}
+      sectionProps={describedBy ? { 'aria-describedby': describedBy } : undefined}
     >
       <header className="arena-prompt-head">
         <h2 id={titleId}>{title}</h2>

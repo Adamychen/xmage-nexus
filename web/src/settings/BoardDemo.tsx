@@ -4,6 +4,7 @@ import type { CardStyle, TapStyle } from '../board/compactCard'
 import { showcaseArtUrl } from '../cards/showcaseArt'
 import type { PermanentView } from '../net/types'
 import '../appearance/playmats.css'
+import '../board/BoardZone.css'
 import './BoardDemo.css'
 
 export type BoardDemoSpec =

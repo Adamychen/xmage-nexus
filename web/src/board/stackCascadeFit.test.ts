@@ -51,7 +51,9 @@ describe('stackCascadeFit', () => {
     expect(fit.stepY).toBe(Math.round(fit.cardW * CASCADE_RATIO * CASCADE_PEEK_Y))
   })
 
-  it('STK-1: past six objects the tail is folded away rather than drawn as thinner slivers', () => {
+  it('STK-1: past five objects the tail is folded away rather than drawn as thinner slivers', () => {
+    expect(CASCADE_MAX_SHOWN).toBe(5)
+    expect(stackCascadeFit(420, 620, 5).shown).toBe(5)
     expect(stackCascadeFit(420, 620, 6).shown).toBe(CASCADE_MAX_SHOWN)
     expect(stackCascadeFit(420, 620, 12).shown).toBe(CASCADE_MAX_SHOWN)
     expect(stackCascadeFit(420, 620, 12).cardW).toBe(stackCascadeFit(420, 620, 6).cardW)

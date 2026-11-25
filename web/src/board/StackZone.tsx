@@ -19,7 +19,7 @@ import StackBubble, { type StackBubblePlacement } from './StackBubble'
 import { StackCardFace, StackEntryCardName } from './StackCardFace'
 import StackViewer from './StackViewer'
 import { seatColorVar, seatIndexOf } from './seatColor'
-import { stackCascadeFit, type CascadeFit } from './stackCascadeFit'
+import { CASCADE_MAX_SHOWN, stackCascadeFit, type CascadeFit } from './stackCascadeFit'
 import { BOARD_RELAYOUT_EVENT } from './layout/relayout'
 import './StackZone.css'
 
@@ -186,8 +186,8 @@ export default function StackZone({
   // on its own, so each one is drawn. Folding them into a single card with a count hid that.
   const groups = entries.map(([id, card], i) => ({ items: [[id, card]] as [string, CardView][], start: i }))
   const groupCount = groups.length
-  // Deeper than the cascade draws: the tail is counted on the front card.
-  const shownGroups = fit ? groups.slice(0, fit.shown) : groups
+  // Deeper than the cascade draws: the tail is counted on the button that opens the whole stack.
+  const shownGroups = groups.slice(0, fit ? fit.shown : CASCADE_MAX_SHOWN)
   const foldedCount = groups.length - shownGroups.length
 
   const modalOpen = useStore(isBlockingModal)
@@ -417,17 +417,19 @@ export default function StackZone({
         >
           <Icon name={pushed ? 'chevronLeft' : 'chevronRight'} size={16} />
         </IconButton>
-        <button
-          type="button"
-          className="stack-view-all"
-          data-testid="stack-open-viewer"
-          title={t('game', 'stack_view_all')}
-          aria-label={`${t('game', 'stack_view_all')} (${entries.length})`}
-          onClick={() => setViewerOpen(true)}
-        >
-          <Icon name="layers" size={14} />
-          <span className="stack-view-all-count">{entries.length}</span>
-        </button>
+        {foldedCount > 0 && (
+          <button
+            type="button"
+            className="stack-view-all"
+            data-testid="stack-open-viewer"
+            title={t('game', 'stack_view_all')}
+            aria-label={`${t('game', 'stack_view_all')} (+${foldedCount})`}
+            onClick={() => setViewerOpen(true)}
+          >
+            <Icon name="layers" size={14} />
+            <span className="stack-view-all-count">+{foldedCount}</span>
+          </button>
+        )}
       </div>
 
       {/* STK-1: the stack is a cascade of cards, the one about to resolve in front and the rest
@@ -472,9 +474,6 @@ export default function StackZone({
             >
               <div className="stack-card-face">
                 <StackCardFace card={card} rendered={cardRender === 'rendered'} />
-                {gi === 0 && foldedCount > 0 && (
-                  <span className="stack-card-more" data-testid="stack-cascade-more">+{foldedCount}</span>
-                )}
               </div>
             </RecordedStackEntry>
             {openGroup && group.items.map(([subId, subCard], k) => (

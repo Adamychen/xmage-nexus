@@ -28,33 +28,34 @@ test('costes complejos de MTG: Maná Pirexiano, Kicker, Split Cards, Aventuras/M
     // 1. Maná Pirexiano ({U/P}): Pagar 2 vidas con GAME_ASK
     // ─────────────────────────────────────────────────────────────
     await waitFrame(page, (f) => f.method === 'GAME_ASK' && /gitaxian/i.test(String(f.data?.message ?? '')), 'GAME_ASK de Gitaxian Probe', 15_000, cursor)
-    const phyrexianDialog = page.locator('.feedback-dialog')
-    await expect(phyrexianDialog, 'diálogo de maná pirexiano visible').toBeVisible({ timeout: 15_000 })
+    const phyrexianDialog = page.getByTestId('board-order')
+    await expect(phyrexianDialog, 'pregunta de maná pirexiano visible').toBeVisible({ timeout: 15_000 })
     await expect(phyrexianDialog.locator('.mana-badge.mana-phyrexian.mana-u'), 'símbolo de maná pirexiano').toBeVisible({ timeout: 5_000 })
     await page.waitForTimeout(300)
     fs.writeFileSync(path.join(SHOTS_DIR, 'complex-costs-01-phyrexian-mana.png'), await page.screenshot({ fullPage: true }))
 
     cursor = parsedLen(page)
-    const payLifeBtn = phyrexianDialog.getByRole('button', { name: /sí|yes|confirmar/i }).first()
+    const payLifeBtn = page.getByTestId('prompt-action')
+    await expect(payLifeBtn).toHaveText(/sí|yes|confirmar/i)
     await payLifeBtn.click()
 
     // ─────────────────────────────────────────────────────────────
     // 2. Kicker / Estímulo Adicional ({4}): GAME_ASK y resolución con 4 de daño
     // ─────────────────────────────────────────────────────────────
     await waitFrame(page, (f) => f.method === 'GAME_ASK' && /burst|kicker|estímulo/i.test(String(f.data?.message ?? '')), 'GAME_ASK de Kicker', 15_000, cursor)
-    const kickerDialog = page.locator('.feedback-dialog')
-    await expect(kickerDialog, 'diálogo de Kicker visible').toBeVisible({ timeout: 15_000 })
+    const kickerDialog = page.getByTestId('board-order')
+    await expect(kickerDialog, 'pregunta de Kicker visible').toBeVisible({ timeout: 15_000 })
     await page.waitForTimeout(300)
     fs.writeFileSync(path.join(SHOTS_DIR, 'complex-costs-02-kicker-prompt.png'), await page.screenshot({ fullPage: true }))
 
     cursor = parsedLen(page)
-    const payKickerBtn = kickerDialog.getByRole('button', { name: /sí|yes|confirmar/i }).first()
+    const payKickerBtn = page.getByTestId('prompt-action')
+    await expect(payKickerBtn).toHaveText(/sí|yes|confirmar/i)
     await payKickerBtn.click()
 
     // Objetivo del Burst Lightning (oponente)
     await waitFrame(page, (f) => f.method === 'GAME_TARGET', 'GAME_TARGET de Burst Lightning', 15_000, cursor)
-    const targetingBar = page.locator('.targeting-bar')
-    await expect(targetingBar, 'barra de targeting visible').toBeVisible({ timeout: 10_000 })
+    await expect(page.getByTestId('board-order'), 'orden de objetivo visible').toBeVisible({ timeout: 10_000 })
     cursor = parsedLen(page)
     expect(await helper.playCard(SIM_PLAYER_ID), 'objetivo Burst Lightning a SIM').toBeTruthy()
 
