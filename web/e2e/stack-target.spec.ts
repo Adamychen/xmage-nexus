@@ -36,8 +36,10 @@ test.describe('Targeting a spell on the stack', () => {
       // that is where the click has to land, the same place a player would aim at.
       const edge = (await bolt.boundingBox())!
       await page.mouse.click(edge.x + 6, edge.y + edge.height / 2)
-      await expect(page.locator('.feedback-dialog'), 'the click reaches the server with the stack object id')
-        .toContainText('clicked:stack-bolt', { timeout: 10_000 })
+      // PRM-18: what the server answers is read across the board or in the bar, depending on the
+      // prompt; what this test is about is that the id reached it at all.
+      await expect(page.getByText('clicked:stack-bolt').first(), 'the click reaches the server with the stack object id')
+        .toBeVisible({ timeout: 10_000 })
 
       expect(pageErrors).toEqual([])
     })
