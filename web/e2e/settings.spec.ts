@@ -156,7 +156,7 @@ test.describe('Global settings modal', () => {
     await withFakeServer(lobbyScenario, async () => {
       await login(page, 'e2e')
       await page.getByTestId('open-settings').click()
-      await page.getByTestId('settings-search').fill('ENFERMEDAD')
+      await page.getByTestId('settings-search').fill('MAREO')
       await expect(page.getByTestId('settings-search-results')).toBeVisible()
       await expect(page.getByTestId('settings-hit-sickness-style')).toContainText('Tablero')
       await page.getByTestId('settings-go-sickness-style').click()

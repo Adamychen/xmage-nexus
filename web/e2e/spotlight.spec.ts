@@ -296,20 +296,25 @@ for (const vp of VIEWPORTS) {
       await expect(page.getByTestId('spotlight-main')).toHaveAttribute('data-main-seat', 'p3')
       const stack = page.getByTestId('spotlight-main').locator('[data-testid="opp-hand-stack"]')
       await expect(stack).toHaveAttribute('data-count', '2')
-      const handCards = await page.locator('[data-testid="hand-bar"] .hand-card-slot').evaluateAll((els) =>
-        els.map((el) => {
-          const b = el.getBoundingClientRect()
-          return { left: b.left, top: b.top, right: b.right, bottom: b.bottom }
-        }),
-      )
-      expect(handCards.length).toBeGreaterThan(0)
-      for (const zone of await page.locator('[data-testid="spotlight-main"] .hand-zone').all()) {
-        const r = await zone.evaluate((el) => {
-          const b = el.getBoundingClientRect()
-          return { left: b.left, top: b.top, right: b.right, bottom: b.bottom }
-        })
-        for (const card of handCards) expect(intersects(r, card)).toBe(false)
+      const overlaps = async () => {
+        const handCards = await page.locator('[data-testid="hand-bar"] .hand-card-slot').evaluateAll((els) =>
+          els.map((el) => {
+            const b = el.getBoundingClientRect()
+            return { left: b.left, top: b.top, right: b.right, bottom: b.bottom }
+          }),
+        )
+        if (handCards.length === 0) return -1
+        let hits = 0
+        for (const zone of await page.locator('[data-testid="spotlight-main"] .hand-zone').all()) {
+          const r = await zone.evaluate((el) => {
+            const b = el.getBoundingClientRect()
+            return { left: b.left, top: b.top, right: b.right, bottom: b.bottom }
+          })
+          hits += handCards.filter((card) => intersects(r, card)).length
+        }
+        return hits
       }
+      await expect.poll(overlaps, { message: 'the settled hand fan clears the opponent hand zone' }).toBe(0)
       await expect(stack).toBeVisible()
     })
 
