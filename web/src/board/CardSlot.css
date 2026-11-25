@@ -1251,9 +1251,9 @@ html.fx-off .card-icon.icon-gained {
    badge used to be (BRD-63), so it sits clear of the counters and the power and toughness. */
 .token-tag {
   position: absolute;
-  /* Stacked over the stat badges of the bottom edge, clear of both the counters and the power and
-     toughness, with the room they take read from their own type tokens rather than guessed. */
-  bottom: calc(4px + var(--stat-badge-h) + 3px);
+  /* BRD-64: under the printed name, where the card itself leaves a band free. In the middle of the
+     card it sat on the rules text and covered the abilities. */
+  top: 11%;
   left: 50%;
   transform: translateX(-50%);
   padding: 0 var(--sp-1);
@@ -1273,7 +1273,9 @@ html.fx-off .card-icon.icon-gained {
   z-index: 5;
 }
 
+/* A compact tile carries its name on the plate at the bottom edge, so the tag goes against it. */
 .card-slot.is-compact .token-tag {
+  top: auto;
   bottom: calc(var(--plate-h) + 3px);
 }
 
