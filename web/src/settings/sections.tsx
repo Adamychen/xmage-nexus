@@ -14,6 +14,7 @@ import PlaymatPicker from '../appearance/PlaymatPicker'
 import { ZOOM_PRESETS, isZoomPreset, stepZoom, zoomPercent } from '../appearance/zoom'
 import SoundFxControls from './SoundFxControls'
 import PresetPicker from './PresetPicker'
+import { HAND_LAYOUTS, HAND_LAYOUT_PREVIEW, handLayoutFlags, handLayoutOf, type HandLayout } from './handLayout'
 import { HAND_RAIL_MAX_W, HAND_RAIL_MIN_W, KEYWORD_AURA_MODES, PT_BADGE_MODES, SICKNESS_STYLES } from '../board/cardOverlays'
 import Button from '../ui/Button'
 import Select from '../ui/Select'
@@ -255,6 +256,12 @@ function OptionSwitch({ id, kind, label, hint, value, onChange }: {
 function LayoutTab() {
   const { t } = useTranslation()
   const settings = useSettings()
+  // SET-16: one choice, written as the pair the board reads, so the two flags cannot disagree.
+  const pickHandLayout = (layout: HandLayout) => {
+    const flags = handLayoutFlags(layout)
+    setSetting('handRail', flags.handRail)
+    setSetting('handRow', flags.handRow)
+  }
   return (
     <>
       <SettingsGroup title={t('lobby', 'settings_group_field_hand')}>
@@ -262,10 +269,20 @@ function LayoutTab() {
           value={settings.boardFill} onChange={(v) => setSetting('boardFill', v)} />
         <OptionSwitch id="board-spotlight" kind="boardSpotlight" label={t('lobby', 'board_spotlight_show')} hint={t('lobby', 'board_spotlight_show_hint')}
           value={settings.boardSpotlight} onChange={(v) => setSetting('boardSpotlight', v)} />
-        <OptionSwitch id="hand-rail" kind="handRail" label={t('lobby', 'hand_rail_show')} hint={t('lobby', 'hand_rail_show_hint')}
-          value={settings.handRail} onChange={(v) => setSetting('handRail', v)} />
-        <OptionSwitch id="hand-row" kind="handRow" label={t('lobby', 'hand_row_show')} hint={t('lobby', 'hand_row_show_hint')}
-          value={settings.handRow} onChange={(v) => setSetting('handRow', v)} />
+        <Picker
+          settingId="hand-layout"
+          title={t('lobby', 'hand_layout_title')}
+          hint={t('lobby', 'hand_layout_hint')}
+          value={handLayoutOf(settings)}
+          onPick={pickHandLayout}
+          options={HAND_LAYOUTS.map((id) => ({
+            id,
+            label: t('lobby', `hand_layout_${id}`),
+            desc: t('lobby', `hand_layout_${id}_desc`),
+            demo: <OptionPreview kind={HAND_LAYOUT_PREVIEW[id]} on />,
+            testId: `settings-hand-layout-${id}`,
+          }))}
+        />
         {(settings.handRail || settings.handRow) && (
           <SettingsRow id="hand-rail-width" label={t('lobby', 'hand_rail_width')}>
             {({ controlId }) => (
