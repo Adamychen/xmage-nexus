@@ -188,6 +188,8 @@
   aspect-ratio: 5 / 7;
   position: relative;
   background: var(--ink-1);
+  /* DCK-33 */
+  border-radius: var(--r-card);
   overflow: hidden;
 }
 
