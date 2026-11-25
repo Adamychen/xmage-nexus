@@ -2,9 +2,10 @@
 
 Prefix: `PNL`
 
-The panels that hold the game's log, chat, commander damage and mechanics. Log and chat open in a
-panel that floats over the left edge of the board (PNL-10); commander damage and mechanics drop down
-from the strip's buttons (`GameDrawer`, with `CommanderDamageMatrix` and `MechanicsTray`). The
+The panels that hold the game's log, chat and mechanics. Log and chat open in a
+panel that floats over the left edge of the board (PNL-10); mechanics drop down
+from the strip's button (`GameDrawer`, with `MechanicsTray`); commander damage
+received opens from a chevron beside each player's life total (PNL-11). The
 Table (v2) interface and its left side panel were removed on 2026-11-23 with the one Arena layout,
 which retired the rules about that panel's header and views (PNL-1, PNL-7, PNL-8).
 
@@ -97,3 +98,15 @@ button counts the messages that arrived while the chat was not shown; system lin
   stays clear and the chat is out of sight until asked for (2026-11-23). Drawn from the top of the
   board it covered the strip and an opponent's life.
 - Guard: `src/game/ChatLogPanel.test.tsx` · `src/game/GameScreen.test.tsx`
+
+### PNL-11 · Commander damage opens from a chevron beside each player's life total
+When an opponent controls a commander, a chevron button sits beside that player's life total in
+`PlayerInfoBar` (`CommanderDamageDropdown`). Clicking it opens a floating dropdown listing each
+opponent, their commander, and the commander damage received by that player (warning at 15+, lethal
+at 21+), without triggering player targeting and closing on outside click or Escape. The toolbar
+crown button and `CommanderDamageMatrix` are removed.
+
+- Why: commander damage is a per-player property tied to life totals; a matrix in a toolbar drawer
+  forced players to look away from the seat they were attacking or defending (step 2 of
+  `docs/plans/2026-11-23-arena-only-design.md`, 2026-11-25).
+- Guard: `src/game/CommanderDamageDropdown.test.tsx` · `src/game/GameDrawer.test.tsx`

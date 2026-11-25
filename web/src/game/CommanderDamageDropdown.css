@@ -1,0 +1,192 @@
+.cmd-dmg-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  margin-left: var(--sp-0h);
+  border-radius: 50%;
+  border: 1px solid var(--veil-4);
+  background: rgb(var(--ink-rgb) / 0.55);
+  color: var(--fg-2);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 120ms ease, border-color 120ms ease, color 120ms ease, transform 120ms ease;
+}
+
+.cmd-dmg-toggle:hover,
+.cmd-dmg-toggle.is-open {
+  background: rgb(var(--ink-2-rgb) / 0.92);
+  border-color: rgb(var(--gold-rgb) / 0.85);
+  color: var(--gold-300);
+}
+
+.cmd-dmg-toggle.has-damage {
+  border-color: rgb(var(--gold-rgb) / 0.7);
+  color: var(--gold-300);
+}
+
+.cmd-dmg-toggle.is-warning {
+  border-color: rgb(var(--ember-rgb) / 0.9);
+  background: rgb(var(--ember-rgb) / 0.22);
+  color: var(--ember);
+}
+
+.cmd-dmg-toggle.is-lethal {
+  border-color: rgb(var(--err-rgb) / 0.95);
+  background: rgb(var(--err-rgb) / 0.28);
+  color: var(--err);
+}
+
+.cmd-dmg-dropdown {
+  position: fixed;
+  z-index: 900;
+  width: 264px;
+  padding: var(--sp-2h) var(--sp-3);
+  border-radius: var(--r-lg);
+  background: rgb(var(--ink-2-rgb) / 0.96);
+  border: 1.5px solid var(--veil-5);
+  box-shadow: 0 16px 40px var(--shade-5);
+  backdrop-filter: blur(10px);
+  color: var(--fg-hi);
+  font-family: var(--font-ui);
+}
+
+.cmd-dmg-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  padding-bottom: var(--sp-1h);
+  border-bottom: 1px solid var(--veil-3);
+}
+
+.cmd-dmg-title {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  color: var(--gold-300);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.cmd-dmg-cap {
+  font-size: var(--fs-2xs);
+  color: var(--fg-3);
+}
+
+.cmd-dmg-list {
+  list-style: none;
+  margin: var(--sp-2) 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.cmd-dmg-row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  padding: var(--sp-1h) var(--sp-2);
+  border-radius: var(--r-sm);
+  background: var(--veil-1);
+  border: 1px solid var(--veil-2);
+}
+
+.cmd-dmg-row.is-warning {
+  border-color: rgb(var(--ember-rgb) / 0.6);
+  background: rgb(var(--ember-rgb) / 0.1);
+}
+
+.cmd-dmg-row.is-lethal {
+  border-color: rgb(var(--err-rgb) / 0.75);
+  background: rgb(var(--err-rgb) / 0.14);
+}
+
+.cmd-dmg-row-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+}
+
+.cmd-dmg-who {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.cmd-dmg-owner {
+  font-size: var(--fs-2xs);
+  color: var(--fg-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cmd-dmg-name {
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  color: var(--fg-hi);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cmd-dmg-val {
+  flex: 0 0 auto;
+  min-width: 28px;
+  padding: 2px var(--sp-1h);
+  border-radius: var(--r-sm);
+  background: var(--ink-0);
+  border: 1px solid var(--veil-3);
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: var(--fs-sm);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--fg-hi);
+}
+
+.cmd-dmg-row.is-warning .cmd-dmg-val {
+  border-color: rgb(var(--ember-rgb) / 0.8);
+  color: var(--ember);
+}
+
+.cmd-dmg-row.is-lethal .cmd-dmg-val {
+  border-color: rgb(var(--err-rgb) / 0.9);
+  color: var(--err);
+}
+
+.cmd-dmg-bar {
+  height: 3px;
+  border-radius: var(--r-pill);
+  background: var(--veil-2);
+  overflow: hidden;
+}
+
+.cmd-dmg-bar-fill {
+  height: 100%;
+  border-radius: var(--r-pill);
+  background: var(--gold-300);
+  transition: width 160ms ease;
+}
+
+.cmd-dmg-row.is-warning .cmd-dmg-bar-fill {
+  background: var(--ember);
+}
+
+.cmd-dmg-row.is-lethal .cmd-dmg-bar-fill {
+  background: var(--err);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cmd-dmg-toggle,
+  .cmd-dmg-bar-fill {
+    transition: none;
+  }
+}

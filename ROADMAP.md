@@ -154,7 +154,6 @@ Arena as possible.
 
 | Open item | Why |
 |---|---|
-| Commander damage under each player's life | Step 2 of the design: life, a chevron, and per opponent the player, the commander and the damage received; it replaces the crown button and `CommanderDamageMatrix` |
 | Mechanics as badges on the side of the board | Step 3: designations, day/night, monarch, initiative, dungeon and emblems as MTGA-style badges instead of the mechanics button and `MechanicsTray` |
 | Phone strip | At 390 px the phase bar, the turn-order ring and the strip buttons overlap in the one strip; the v2 top bar used to serve phones |
 | 5+ players hint | A game of five or more forces the side panel (BRD-6); the switch's hint does not say so yet (needs the nine translations) |

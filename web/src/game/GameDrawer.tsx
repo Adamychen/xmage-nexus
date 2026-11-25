@@ -1,17 +1,16 @@
 import { useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
-import { useGame, useStore } from '../state/store'
+import { useStore } from '../state/store'
 import { useTranslation } from '../i18n'
 import IconButton from '../ui/IconButton'
 import CloseButton from '../ui/CloseButton'
 import type { IconName } from '../ui/Icon'
 import { isGameChatEntry } from './GameChat'
 import MechanicsTray from './MechanicsTray'
-import CommanderDamageMatrix from './CommanderDamageMatrix'
 import { DrawerHeadSlotContext } from './drawerHeadSlot'
 import './GameDrawer.css'
 
-export type DrawerTab = 'commander' | 'mechanics'
+export type DrawerTab = 'mechanics'
 
 interface DrawerTabDef {
   id: DrawerTab
@@ -31,10 +30,9 @@ export function useChatUnread(chatOpen: boolean): number {
   return chatOpen ? 0 : Math.max(0, total - seen)
 }
 
-export function useDrawerTabs(hasCommanders: boolean, hasActiveMechanics: boolean, mechanicsCount?: number): DrawerTabDef[] {
+export function useDrawerTabs(hasActiveMechanics: boolean, mechanicsCount?: number): DrawerTabDef[] {
   const { t } = useTranslation()
   return [
-    { id: 'commander', icon: 'crown', label: t('game', 'tab_commander'), title: t('game', 'commander_damage'), hidden: !hasCommanders },
     {
       id: 'mechanics',
       icon: 'sparkles',
@@ -50,14 +48,13 @@ export function useDrawerTabs(hasCommanders: boolean, hasActiveMechanics: boolea
 interface DrawerTogglesProps {
   active: DrawerTab | null
   onToggle: (tab: DrawerTab) => void
-  hasCommanders: boolean
   hasActiveMechanics: boolean
   exclude?: readonly DrawerTab[]
   mechanicsCount?: number
 }
 
-export function DrawerToggles({ active, onToggle, hasCommanders, hasActiveMechanics, exclude = [], mechanicsCount }: DrawerTogglesProps) {
-  const tabs = useDrawerTabs(hasCommanders, hasActiveMechanics, mechanicsCount).filter((tab) => !exclude.includes(tab.id))
+export function DrawerToggles({ active, onToggle, hasActiveMechanics, exclude = [], mechanicsCount }: DrawerTogglesProps) {
+  const tabs = useDrawerTabs(hasActiveMechanics, mechanicsCount).filter((tab) => !exclude.includes(tab.id))
   return (
     <div className="drawer-toggles" role="toolbar">
       {tabs.filter((tab) => !tab.hidden).map((tab) => (
@@ -80,25 +77,14 @@ export function DrawerToggles({ active, onToggle, hasCommanders, hasActiveMechan
 }
 
 export function DrawerBody({ tab }: { tab: DrawerTab }) {
-  const game = useGame()
-  return (
-    <>
-      {tab === 'commander' ? (
-        <div className="sidebar-commander-tab">
-          <CommanderDamageMatrix game={game} defaultView="cards" />
-        </div>
-      ) : (
-        <MechanicsTray />
-      )}
-    </>
-  )
+  void tab
+  return <MechanicsTray />
 }
 
 export default function GameDrawer({ tab, onClose }: { tab: DrawerTab; onClose: () => void }) {
   const { t } = useTranslation()
   const [headSlot, setHeadSlot] = useState<HTMLElement | null>(null)
   const titles: Record<DrawerTab, string> = {
-    commander: t('game', 'commander_damage'),
     mechanics: t('game', 'tab_mechanics'),
   }
   return (
@@ -109,9 +95,9 @@ export default function GameDrawer({ tab, onClose }: { tab: DrawerTab; onClose: 
         <CloseButton variant="plain" size="sm" onClick={onClose} />
       </header>
       <DrawerHeadSlotContext.Provider value={headSlot}>
-      <div className="game-drawer-content">
-        <DrawerBody tab={tab} />
-      </div>
+        <div className="game-drawer-content">
+          <DrawerBody tab={tab} />
+        </div>
       </DrawerHeadSlotContext.Provider>
     </aside>
   )

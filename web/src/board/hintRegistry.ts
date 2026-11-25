@@ -108,6 +108,6 @@ export const hintRegistry: HintRegistryRow[] = [
   { id: 'info:IS_SUSPECTED', kind: 'info', status: 'rendered', ref: 'web/src/board/designations.ts:33' },
   { id: 'info:NAMED_CARD', kind: 'info', status: 'known-unrendered', causa: 'informativo/cosmético (nombre elegido; línea de reglas)' },
   { id: 'info:_secOpp', kind: 'info', status: 'known-unrendered', causa: 'informativo/cosmético (oponente secreto; línea de reglas)' },
-  { id: 'info:"Commander" + entry.getKey()', kind: 'info', status: 'rendered', ref: 'web/src/game/CommanderDamageMatrix.tsx:35' },
+  { id: 'info:"Commander" + entry.getKey()', kind: 'info', status: 'rendered', ref: 'web/src/game/CommanderDamageDropdown.tsx:38' },
   { id: 'info:"detain" + getId()', kind: 'info', status: 'known-unrendered', causa: 'informativo/cosmético (estado Detained; línea de reglas)' },
 ]

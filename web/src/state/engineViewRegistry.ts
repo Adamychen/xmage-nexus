@@ -87,7 +87,7 @@ export const ENGINE_VIEW_REGISTRY: EngineViewRegistryRow[] = [
   { id: 'PlayerView.canGainLife', view: 'PlayerView', field: 'canGainLife', impacto: 'bajo', decision: 'accepted', causa: 'restricción global (efectos que prohíben ganar vida); sin canal' },
   { id: 'PlayerView.canLoseLife', view: 'PlayerView', field: 'canLoseLife', impacto: 'bajo', decision: 'accepted', causa: 'restricción global (efectos que prohíben perder vida); sin canal' },
   { id: 'PlayerView.canPlotFromTopOfLibrary', view: 'PlayerView', field: 'canPlotFromTopOfLibrary', impacto: 'bajo', decision: 'accepted', causa: 'la oferta de Plot viaja en canPlayObjects' },
-  { id: 'PlayerView.commandersIds', view: 'PlayerView', field: 'commandersIds', impacto: 'nulo', decision: 'duplicado', causa: 'los comandantes llegan en commandList y en CommanderDamageMatrix' },
+  { id: 'PlayerView.commandersIds', view: 'PlayerView', field: 'commandersIds', impacto: 'nulo', decision: 'duplicado', causa: 'los comandantes llegan en commandList y en CommanderDamageDropdown' },
   { id: 'PlayerView.dateLastAddedToStack', view: 'PlayerView', field: 'dateLastAddedToStack', impacto: 'nulo', decision: 'bookkeeping', causa: 'marca temporal interna de prioridad' },
   { id: 'PlayerView.designations', view: 'PlayerView', field: 'designations', impacto: 'nulo', decision: 'rendered', ref: 'web/src/game/MechanicsTray.tsx:142', causa: 'llegan como designationNames (PlayerView.java:156-158) y se pintan en MechanicsTray/PlayerInfoBar' },
   { id: 'PlayerView.draws', view: 'PlayerView', field: 'draws', impacto: 'nulo', decision: 'bookkeeping', causa: 'bandera interna de robo del turno' },

@@ -21,6 +21,7 @@ import { DamageNumbers } from '../board/DamageNumber'
 import { counterPulseClass } from '../board/useCounterPulse'
 import { POISON_LETHAL } from '../board/gameTransitionEngine'
 import { usePlayerCounters } from './usePlayerCounters'
+import CommanderDamageDropdown from './CommanderDamageDropdown'
 import './PlayerInfoBar.css'
 import type { CommandEntry } from './commandItems'
 
@@ -520,6 +521,7 @@ export default function PlayerInfoBar({
             <span className={`counter life-counter ${shownLife <= 5 ? 'low-life' : ''} ${shownLife <= 2 ? 'critical' : ''}`} title={t('game', 'life')}>
               <span className="counter-icon"><Icon name="heart" size={12} /></span>
               <span className="life-value" key={shownLife}>{life}</span>
+              <CommanderDamageDropdown game={game} player={player} side={side} onHoverCard={onHover} />
             </span>
             {countersEl}
           </div>

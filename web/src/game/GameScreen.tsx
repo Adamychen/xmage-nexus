@@ -54,7 +54,6 @@ import type { ManaColor } from '../board/impactFx'
 import '../appearance/playmats.css'
 import { musicEngine } from '../audio/musicEngine'
 import { musicIntensity } from '../audio/musicIntensity'
-import { hasCommanders as hasCommandersInGame } from '../board/commanders'
 import TournamentPanel from './TournamentPanel'
 import { resolveTargetSourceId } from './resolveTargetSourceId'
 import { SPACE_PASS_REGION_SELECTOR, SPACE_SHORTCUT_OFF_SELECTOR } from '../ui/clickable'
@@ -325,7 +324,6 @@ export default function GameScreen() {
   const mechanicsCount = useMemo(() => activeMechanicsCount(game), [game])
   const hasActiveMechanics = mechanicsCount > 0
 
-  const hasCommanders = useMemo(() => hasCommandersInGame(game), [game])
 
   const totalPlayers = game?.players?.length ?? opps.length + (isSpectator ? 0 : 1)
   const seatLiveIds = liveOpponentIds(game?.players)
@@ -348,7 +346,7 @@ export default function GameScreen() {
   const closeChatLog = useCallback(() => setChatLogTab(null), [])
   const chatLogOpen = chatLogTab !== null
   const chromeActions = useMemo(() => ({ sidePanelOpen: chatLogOpen }), [chatLogOpen])
-  const activeDrawerTab = drawerTab === 'commander' && !hasCommanders ? null : drawerTab
+  const activeDrawerTab = drawerTab
 
   const stripCenter = (
     <TurnOrderRing
@@ -384,7 +382,6 @@ export default function GameScreen() {
           <DrawerToggles
             active={activeDrawerTab}
             onToggle={toggleLegacyDrawer}
-            hasCommanders={hasCommanders}
             hasActiveMechanics={hasActiveMechanics}
             mechanicsCount={mechanicsCount}
           />
