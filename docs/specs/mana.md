@@ -82,7 +82,8 @@ on any yes/no answer and the spell or ability is not cast. Escape does the same 
 *Smart mana payment* is what the Simple and Balanced presets turn on, and the Simple one is where a
 player who has set nothing starts (SET-15), so it is on until they say otherwise. When on, it
 taps one source per mana prompt and re-solves at the next one. It does nothing while an answer is
-in flight, when the cost holds a symbol it cannot model or cannot be paid from known sources. If
+in flight, when the cost holds a symbol it cannot model, or when nothing on your board could cover
+the cost (MNA-13). If
 the next prompt's cost did not drop by exactly one (the player clicked a source, or the engine
 did something else) it stops for the rest of that payment, and the player finishes by hand; a
 failed send also stops it and shows the error.
@@ -94,17 +95,30 @@ failed send also stops it and shows the error.
 
 ### MNA-8 · Smart payment taps like a careful player, from public information
 The solver reads sources from your battlefield's mana abilities (untapped, not summoning-sick
-creatures, not phased out; no sacrifice, restricted or multi-mana abilities) and spends floating
-mana first. It matches every coloured and hybrid pip exactly, reassigning sources when a greedy
-pick would strand a later pip; colourless sources pay generic before coloured ones and any-colour
-sources are kept for last. Among equal choices it keeps open the last producer of a colour an
-instant or flash card in your hand needs, weighted by the mana your opponents have untapped, but
-that reserve never makes a payable cost unpayable. It uses only your hand, your board and the
-opponents' visible untapped mana.
+creatures, not phased out; nothing that costs more than the tap, nothing whose mana may only be
+spent on something else) and spends floating mana first. The wordings it reads are the symbol runs
+(`{G}`, and `{C}{C}` for the two mana of a Sol Ring, whose count it records), the lists of symbols
+(`{W} or {U}`), "one mana of any color", "one mana of any color in your commander's color
+identity" and "one mana of any of this creature's colors"; a sentence after the mana clause is a
+bonus, not a restriction, so Path of Ancestry is read and Cavern of Souls is not. The commander's
+identity comes from `commandersOf` and `originalColorIdentity`, with partners united. It matches
+coloured and hybrid pips, reassigning sources when a greedy pick would strand a later pip;
+colourless sources pay generic before coloured ones and any-colour sources are kept for last.
+Among equal choices it keeps open the last producer of a colour an instant or flash card in your
+hand needs, weighted by the mana your opponents have untapped, but that reserve never makes a
+payable cost unpayable. It uses only your hand, your board and the opponents' visible untapped
+mana.
 
 - Why: `canPlayObjects` is empty in non-cast payments, so sources come from the battlefield
   `rules`; a client-side helper must not use hidden information (`d92e29804f`,
-  `docs/lessons.md`).
+  `docs/lessons.md`). The rule text is the only channel there is: the engine knows the answer
+  (`ManaAbility.getProducableManaTypes`) but no `mage.view.*` DTO carries it, and Nexus plays
+  against stock XMage servers, so a field added to our fork would arrive empty from
+  `beta.xmage.today`. It is safe to parse because the engine builds it from the ability classes'
+  own `staticText` and no card text is ever localised, server side or client side
+  (25-nov-2026). The commander's identity is not read from `PlayerView.commandList`: that list
+  holds a commander only while it waits in the command zone, so the Signet would have stopped
+  working the moment the commander was cast.
 - Guard: `src/game/smartManaPayment.test.ts`
 
 ### MNA-9 · Smart payment never spends a pain land on generic while a painless source is open
@@ -159,3 +173,22 @@ pips take the room the board already left empty and the row grows only where the
   25-nov-2026). Laid out as its own line the clearance is 12 px at every reserve measured (194 px
   with a hand, 120 px watched, 90 px tight).
 - Guard: `src/board/SpotlightBoard.test.tsx` · `src/board/ArenaBoard.css.test.ts`
+
+### MNA-13 · Smart payment taps what it can read and hands the rest over
+Smart payment pays as far as it can instead of all or nothing: it taps the sources that cover the
+pips it can cover, and the player finishes the cost by hand. Before it taps anything it checks the
+cost against what the board could produce, counting each source for the mana one activation adds
+and counting, as one mana each, the untapped permanents whose tap-for-mana wording it could not
+read. So a cost nothing on the board could cover is still left untouched, while a single unreadable
+card no longer freezes the whole payment.
+
+- Why: with two Forests and an Arcane Signet on the board, the auto-payment of a Kodama's Reach
+  did nothing at all. The Signet's wording was unreadable, so the feasibility check saw two
+  sources against a three-mana cost and returned before tapping even the two Forests it did
+  understand; the player tapped all three by hand and read it as the feature being broken (report
+  of 25-nov-2026). Partial payment is safe because the mana of a tap the player does not finish
+  stays in the pool, where the next prompt spends it, and the "cost did not drop by exactly one"
+  stop of MNA-7 still catches a tap that did not help. The unknown count is what keeps it from
+  starting a payment it could never finish, which on an optional cost (an attack tax, a kicker)
+  would waste the lands it tapped.
+- Guard: `src/game/smartManaPayment.test.ts`
