@@ -3,7 +3,9 @@ import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 
-const read = (rel: string) => readFileSync(fileURLToPath(new URL(rel, import.meta.url)), 'utf8')
+// Read with one kind of line ending: the checkout decides the file's own, and the blocks below
+// are found by the line they start on.
+const read = (rel: string) => readFileSync(fileURLToPath(new URL(rel, import.meta.url)), 'utf8').replace(/\r\n/g, '\n')
 
 const tokens = read('../ui/tokens.css')
 
