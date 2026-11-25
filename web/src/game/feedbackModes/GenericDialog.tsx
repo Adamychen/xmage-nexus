@@ -41,10 +41,18 @@ const COLOR_MAP: Record<string, { symbol: string; cls: string }> = {
   g: { symbol: '{G}', cls: 'is-mana-g' },
 }
 
-function manaColorMeta(option: FeedbackOption): { symbol: string; cls: string } | null {
+const PURE_MANA_ABILITY_RE = /^\s*\{T\}\s*:\s*Add\s+((?:\{[WUBRGC]\})+)\s*\.?\s*$/i
+
+function manaColorMeta(option: FeedbackOption): { symbol: string; cls: string; label?: string } | null {
   const key = option.value.trim().toLowerCase()
   const labelKey = option.label.trim().toLowerCase()
-  return COLOR_MAP[key] ?? COLOR_MAP[labelKey] ?? null
+  const direct = COLOR_MAP[key] ?? COLOR_MAP[labelKey]
+  if (direct) return direct
+  const m = PURE_MANA_ABILITY_RE.exec(option.label)
+  if (!m) return null
+  const symbols = m[1].toUpperCase()
+  const first = /\{([WUBRGC])\}/.exec(symbols)?.[1]?.toLowerCase() ?? 'c'
+  return { symbol: symbols, cls: `is-mana-${first}`, label: '' }
 }
 
 function nameOnlyCard(id: string, name: string): CardView {
@@ -550,7 +558,9 @@ export default function GenericDialog({ form }: { form: UseFeedbackForm }) {
                       {color ? (
                         <>
                           <span className="mana-medallion-glyph"><FormattedText text={color.symbol} /></span>
-                          <span className="choice-text"><FormattedText text={localizeOptionLabel(option.label, dynamicT(t))} /></span>
+                          {color.label !== '' && (
+                            <span className="choice-text"><FormattedText text={localizeOptionLabel(option.label, dynamicT(t))} /></span>
+                          )}
                         </>
                       ) : (
                         <>
