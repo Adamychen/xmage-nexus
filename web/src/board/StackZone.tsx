@@ -42,6 +42,9 @@ const BUBBLE_GAP = 12
 /** Under this much room between the cascade and the dock, the bubble lies over the front card: a
  *  folded strip and two lines of text. */
 const BUBBLE_MIN_BELOW = 72
+/** STK-10: what the bubble leaves between its own bottom and the dock. Reaching to the gap above
+ *  the dock read as a strip pressed against the button the player is about to press. */
+const BUBBLE_CLEAR = 24
 
 /** How long an object primed as an arrival waits for its flight before giving up on it. */
 const ARRIVAL_WAIT_MS = 120
@@ -223,7 +226,11 @@ export default function StackZone({
         setFloor(0)
         return
       }
-      setFloor(Math.max(0, Math.round(base.bottom - rect.top)))
+      // STK-2/STK-10: the floor leaves room for the dock and for the bubble that hangs under the
+      // cascade. Measuring only the dock let the cascade sit right on top of it, so the bubble was
+      // squeezed into whatever was left between the two and read as a strip pressed against the
+      // button the player is about to press.
+      setFloor(Math.max(0, Math.round(base.bottom - rect.top) + BUBBLE_GAP + BUBBLE_MIN_BELOW + BUBBLE_CLEAR))
     }
     measure()
     if (typeof ResizeObserver === 'undefined') return
@@ -350,7 +357,7 @@ export default function StackZone({
       const dock = document.querySelector('.game-dock')?.getBoundingClientRect()
       const base = (zone.offsetParent ?? document.documentElement).getBoundingClientRect()
       const limit = dock && dock.height > 0 ? Math.min(dock.top, base.bottom) : base.bottom
-      const room = Math.floor(limit - top - BUBBLE_GAP)
+      const room = Math.floor(limit - top - BUBBLE_GAP - BUBBLE_CLEAR)
       const next: StackBubblePlacement = room >= BUBBLE_MIN_BELOW ? 'below' : 'inside'
       setBubblePlacement(next)
       setBubbleMax(next === 'below' ? room : null)

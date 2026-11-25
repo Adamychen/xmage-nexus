@@ -32,11 +32,14 @@ moment something is cast is worth more than the cards it covers, and the grip on
 pays for it, pushing the whole thing aside and bringing it back without closing it and without
 losing what is on it. The board is not squeezed to make room, because that would move every card
 on it each time something is cast. What the stack never covers is the dock: the button the player
-is about to press is not a card they can look at later.
+is about to press is not a card they can look at later. The room it leaves above the dock is the
+dock's own height plus the bubble that hangs under the cascade (STK-10), so the cascade rises on a
+short window instead of pressing its text against that button.
 
 - Why: a stack you have to open is a stack you read after the moment has passed. The grip is what
   pays for always being in view, and it stands clear of the turned cards' corners so it never sits
-  on one.
+  on one. The floor measured the dock alone, so on a short window the cascade sat right on top of it
+  and the bubble was squeezed into what was left between the two (user report, 25-nov-2026).
 - Guard: `src/board/StackZone.test.tsx` · `src/game/GameDrawer.test.tsx` · `e2e/arena-chrome.spec.ts`
 
 ### STK-3 · Only two objects point at their targets
