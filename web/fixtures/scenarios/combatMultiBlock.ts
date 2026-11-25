@@ -3,9 +3,9 @@ import { TABLE } from '../table-names'
  * Escenario determinista del FixtureServer para combate con múltiples bloqueadores:
  * 1. Humano ataca con Colossal Dreadmaw (6/6).
  * 2. Sim bloquea con Grizzly Bears (2/2) y Raging Goblin (1/1).
- * 3. Paso de Orden de Bloqueadores (Damage Assignment Order - GAME_CHOOSE_CARDS_ORDER).
- * 4. Paso de Asignación de Daño (Damage Distribution - GAME_GET_MULTI_AMOUNT).
- * 5. Resolución de daño de combate.
+ * 3. Paso de Asignación de Daño (Damage Distribution - GAME_GET_MULTI_AMOUNT). XMage no
+ *    pide orden de bloqueadores: la regla de damage assignment order ya no existe en el motor.
+ * 4. Resolución de daño de combate.
  */
 
 import { makeBaseScenario } from '../fake'
@@ -48,12 +48,12 @@ export function combatMultiBlockScenario(): Scenario {
     cardTypes: ['Creature'],
   })
 
-  let stage: 'attack' | 'blocked' | 'order' | 'damage' | 'resolved' = 'attack'
+  let stage: 'attack' | 'blocked' | 'damage' | 'resolved' = 'attack'
 
   const getGameView = (combatGroups: unknown[] = []): GameView => ({
     turn: 3,
     phase: 'COMBAT',
-    step: stage === 'attack' ? 'DECLARE_ATTACKERS' : stage === 'blocked' || stage === 'order' ? 'DECLARE_BLOCKERS' : stage === 'damage' ? 'COMBAT_DAMAGE' : 'POSTCOMBAT_MAIN',
+    step: stage === 'attack' ? 'DECLARE_ATTACKERS' : stage === 'blocked' ? 'DECLARE_BLOCKERS' : stage === 'damage' ? 'COMBAT_DAMAGE' : 'POSTCOMBAT_MAIN',
     activePlayerId: HUMAN_PLAYER_ID,
     priorityPlayerId: HUMAN_PLAYER_ID,
     combat: combatGroups as unknown as GameView['combat'],
@@ -153,37 +153,15 @@ export function combatMultiBlockScenario(): Scenario {
         ]
         conn.broadcast('GAME_UPDATE', { gameView: getGameView(multiBlockCombat) }, GAME_ID)
 
-        // Next: Server asks attacker to order the blockers (Damage Assignment Order)
-        stage = 'order'
+        stage = 'damage'
         setTimeout(() => {
           conn.broadcast(
-            'GAME_CHOOSE_CARDS_ORDER',
+            'GAME_GET_MULTI_AMOUNT',
             {
-              message: 'Order blockers for Colossal Dreadmaw',
-              title: 'Order Blockers',
-              options: [
-                { id: simBlocker1.parentId!, label: 'Grizzly Bears', value: simBlocker1.parentId! },
-                { id: simBlocker2.parentId!, label: 'Raging Goblin', value: simBlocker2.parentId! },
-              ],
-              cardsView1: [
-                {
-                  id: simBlocker1.parentId!,
-                  name: 'Grizzly Bears',
-                  displayName: 'Grizzly Bears',
-                  power: '2',
-                  toughness: '2',
-                  cardTypes: ['Creature'],
-                  manaCost: ['{1}', '{G}'],
-                },
-                {
-                  id: simBlocker2.parentId!,
-                  name: 'Raging Goblin',
-                  displayName: 'Raging Goblin',
-                  power: '1',
-                  toughness: '1',
-                  cardTypes: ['Creature'],
-                  manaCost: ['{R}'],
-                },
+              message: 'Asigna el daño de combate de Colossal Dreadmaw (6 puntos)',
+              messages: [
+                { id: simBlocker1.parentId!, message: 'Daño a Grizzly Bears (mínimo 2 letal)', min: 2, max: 5, defaultValue: 2 },
+                { id: simBlocker2.parentId!, message: 'Daño a Raging Goblin (restante)', min: 1, max: 4, defaultValue: 4 },
               ],
               gameView: getGameView(multiBlockCombat),
             },
@@ -193,33 +171,7 @@ export function combatMultiBlockScenario(): Scenario {
       }
     },
     onSendPlayerString: (conn) => {
-      if (stage === 'order') {
-        // Blocker order confirmed -> Prompt for damage distribution
-        stage = 'damage'
-        const multiBlockCombat = [
-          {
-            attackers: { [myAttacker.parentId!]: {} },
-            blockers: {
-              [simBlocker1.parentId!]: {},
-              [simBlocker2.parentId!]: {},
-            },
-            isBlocked: true,
-            defenderId: SIM_PLAYER_ID,
-          },
-        ]
-        conn.broadcast(
-          'GAME_GET_MULTI_AMOUNT',
-          {
-            message: 'Asigna el daño de combate de Colossal Dreadmaw (6 puntos)',
-            messages: [
-              { id: simBlocker1.parentId!, message: 'Daño a Grizzly Bears (mínimo 2 letal)', min: 2, max: 5, defaultValue: 2 },
-              { id: simBlocker2.parentId!, message: 'Daño a Raging Goblin (restante)', min: 1, max: 4, defaultValue: 4 },
-            ],
-            gameView: getGameView(multiBlockCombat),
-          },
-          GAME_ID,
-        )
-      } else if (stage === 'damage') {
+      if (stage === 'damage') {
         // Damage amounts sent -> Resolve combat damage and cleanup blockers
         stage = 'resolved'
         conn.broadcast('GAME_UPDATE', { gameView: getGameView([]) }, GAME_ID)

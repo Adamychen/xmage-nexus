@@ -628,15 +628,6 @@ describe('parseFeedback', () => {
     expect(prompt?.title).toBe('Elige una carta para descartar')
   })
 
-  it('maps GAME_CHOOSE_CARDS_ORDER to an order prompt (library reorder / scry)', () => {
-    const prompt = parseFeedback('GAME_CHOOSE_CARDS_ORDER', 'game-14', {
-      message: 'Reorder the top cards of your library',
-      cardsView1: { 'c-a': { id: 'c-a', name: 'Mountain' }, 'c-b': { id: 'c-b', name: 'Island' } },
-    })
-    expect(prompt?.mode).toBe('order')
-    expect(prompt?.options?.map((o) => o.value)).toEqual(['c-a', 'c-b'])
-  })
-
   it('routes voting GAME_ASK to VotingDialog', () => {
     const prompt = parseFeedback('GAME_ASK', 'game-20', {
       message: 'Vote, step 1 of 2',

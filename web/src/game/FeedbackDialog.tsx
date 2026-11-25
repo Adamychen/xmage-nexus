@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import CardGrid from './CardGrid'
-import LibraryOrderDialog from './LibraryOrderDialog'
 import MulliganDialog from './MulliganDialog'
 import PileDialog from './PileDialog'
 import TriggerOrderDialog from './TriggerOrderDialog'
@@ -56,11 +55,6 @@ function renderPrompt(form: UseFeedbackForm, handPick: boolean, onExpandHandPick
 
   if (isArenaLibraryPick(prompt)) {
     return <ArenaLibraryPrompt key={promptKey(prompt)} prompt={prompt} sending={false} />
-  }
-
-  // ── Scry / Surveil / Reorder dialog (GAME_CHOOSE_CARDS_ORDER or mode === 'order')
-  if (prompt.mode === 'order' || prompt.method === 'GAME_CHOOSE_CARDS_ORDER') {
-    return <LibraryOrderDialog prompt={prompt} send={send} cancel={cancel} busy={busy} />
   }
 
   // ── Mulligan: diálogo dedicado (Keep/Mulligan y London-bottom)

@@ -283,10 +283,6 @@ export function parseFeedback(
       const choices = optionEntries(data.choices ?? (Array.isArray(data.options) ? data.options : cleanChoices(data.options)))
       return prompt(method, gameId, t('game', 'choose_between'), message, 'string', choices, bounds)
     }
-    case 'GAME_CHOOSE_CARDS_ORDER': {
-      const cards = cardOptions(data.cardsView1 ?? cleanChoices(data.options))
-      return prompt(method, gameId, t('game', 'choose_order'), message, 'order', cards, bounds, undefined, undefined, true, undefined, undefined, undefined, feedbackCards(data))
-    }
     case 'GAME_TARGET_AMOUNT': {
       return prompt(method, gameId, t('game', 'choose_target_amount'), message, 'integer', [], bounds)
     }

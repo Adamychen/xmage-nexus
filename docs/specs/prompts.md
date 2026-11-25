@@ -180,10 +180,10 @@ overlay.
 
 ### PRM-15 · Every card a prompt shows can be looked at without choosing it
 Every card shown inside a prompt can be seen enlarged, as on the board, and looking at it never answers
-the prompt: the library order dialog, the London mulligan's bottom
+the prompt: the Arena library overlay, the London mulligan's bottom
 pick, and the revealed and looked-at cards inside a prompt. The zone viewers (graveyard, exile, library,
 the revealed and looked-at windows, the known hand, the cards playable from other zones) and the Arena
-fans (`CardGrid`, `PileDialog`, `LibraryOrderDialog`, `ArenaLibraryPrompt`) lift their own card large on hover and open no floating preview; right
+fans (`CardGrid`, `PileDialog`, `ArenaLibraryPrompt`) lift their own card large on hover and open no floating preview; right
 clicking any card (even a non-selectable one) opens the card inspector without
 choosing it. A card that only shows (a revealed card nobody can play) is itself the preview
 control: pointing at it or focusing it shows the floating preview, a touch shows it and keeps it until the

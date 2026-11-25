@@ -11,7 +11,7 @@ import { parsedLen, waitFrame } from './support/frames'
 
 const SHOTS_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), 'shots')
 
-test('interacciones completas de MTG: GAME_ASK, GAME_CHOOSE_COLOR, GAME_CHOOSE_PILE, CardGrid (tutor), Scry y Commander', { tag: '@interactions' }, async ({ page }) => {
+test('interacciones completas de MTG: GAME_ASK, GAME_CHOOSE_COLOR, GAME_CHOOSE_PILE, CardGrid (tutor) y Commander', { tag: '@interactions' }, async ({ page }) => {
   fs.mkdirSync(SHOTS_DIR, { recursive: true })
 
   await withFakeServer(() => allInteractionsScenario(), async () => {
@@ -76,20 +76,6 @@ test('interacciones completas de MTG: GAME_ASK, GAME_CHOOSE_COLOR, GAME_CHOOSE_P
     await expect(lotusCard, 'Black Lotus en CardGrid').toBeVisible({ timeout: 10_000 })
     // Cards overlap in the Arena fan: click the exposed left slice of the card button.
     await cardGrid.locator('[data-arena-card="c-lotus"] .card-grid-cell').click({ position: { x: 30, y: 120 } })
-
-    // ─────────────────────────────────────────────────────────────
-    // 5. GAME_CHOOSE_CARDS_ORDER (Scry / Surveil / Reordenar biblioteca)
-    // ─────────────────────────────────────────────────────────────
-    await waitFrame(page, (f) => f.method === 'GAME_CHOOSE_CARDS_ORDER', 'GAME_CHOOSE_CARDS_ORDER de Scry', 15_000, cursor)
-    const scryOverlay = page.locator('.library-order-dialog')
-    await expect(scryOverlay, 'diálogo de Scry visible').toBeVisible({ timeout: 15_000 })
-    await page.waitForTimeout(300)
-    fs.writeFileSync(path.join(SHOTS_DIR, 'interaction-05-scry-library-order.png'), await page.screenshot({ fullPage: true }))
-
-    cursor = parsedLen(page)
-    const confirmOrderBtn = page.getByRole('button', { name: /confirmar orden/i })
-    await expect(confirmOrderBtn, 'botón confirmar orden').toBeVisible({ timeout: 10_000 })
-    await confirmOrderBtn.click()
 
     // ─────────────────────────────────────────────────────────────
     // 6. Zona de Comando: Comandante con Impuesto de Comandante (+2)

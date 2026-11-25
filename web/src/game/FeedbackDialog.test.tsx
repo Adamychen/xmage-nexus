@@ -94,26 +94,6 @@ describe('FeedbackDialog (componente)', () => {
     expect(screen.getByRole('button', { name: 'Acción especial' })).toBeTruthy()
   })
 
-  it('renderiza LibraryOrderDialog al recibir GAME_CHOOSE_CARDS_ORDER', () => {
-    handleMessage({
-      type: 'event',
-      method: 'GAME_CHOOSE_CARDS_ORDER',
-      messageId: 3,
-      objectId: 'game-1',
-      data: {
-        message: 'Order cards on top of library',
-        options: {
-          'c-1': 'Ponder',
-          'c-2': 'Brainstorm',
-        },
-      },
-    } as never)
-    render(<FeedbackDialog />)
-    expect(screen.getAllByText('Ordena las cartas').length).toBeGreaterThan(0)
-    expect(screen.getAllByText('Ponder').length).toBeGreaterThanOrEqual(1)
-    expect(screen.getAllByText('Brainstorm').length).toBeGreaterThanOrEqual(1)
-  })
-
   it('renderiza CardGrid HD para GAME_CHOOSE_CARDS (tutor) y envía sendPlayerUUID al elegir', async () => {
     handleMessage({
       type: 'event',

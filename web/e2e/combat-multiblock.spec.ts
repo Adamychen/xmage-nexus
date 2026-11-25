@@ -10,7 +10,7 @@ import { sceneClick, waitScene } from './support/scene'
 fakeOnly()
 const SHOTS_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), 'shots')
 
-test('combate multi-bloqueador: declaración de múltiples bloqueadores, orden de asignación de daño y distribución de daño @combat', async ({ page }) => {
+test('combate multi-bloqueador: declaración de múltiples bloqueadores y distribución de daño @combat', async ({ page }) => {
   fs.mkdirSync(SHOTS_DIR, { recursive: true })
 
   await withFakeServer(() => combatMultiBlockScenario(), async () => {
@@ -33,24 +33,7 @@ test('combate multi-bloqueador: declaración de múltiples bloqueadores, orden d
     const multiBlockShot = await page.screenshot({ fullPage: true })
     fs.writeFileSync(path.join(SHOTS_DIR, 'combat-07-multiple-blockers-declared.png'), multiBlockShot)
 
-    // 3. Aparece el diálogo de Ordenar Bloqueadores (Damage Assignment Order)
-    const orderDialog = page.locator('.library-order-dialog')
-    await expect(orderDialog).toBeVisible({ timeout: 10_000 })
-    await expect(orderDialog).toContainText('Ordenar Bloqueadores')
-    await expect(orderDialog).toContainText('Grizzly Bears')
-    await expect(orderDialog).toContainText('Raging Goblin')
-
-    // Esperar a que las imágenes Scryfall se carguen
-    await page.waitForTimeout(800)
-
-    // Captura 8: Diálogo centrado de orden de bloqueadores para asignación de daño
-    const orderShot = await page.screenshot({ fullPage: true })
-    fs.writeFileSync(path.join(SHOTS_DIR, 'combat-08-damage-assignment-order.png'), orderShot)
-
-    // Confirmar orden de bloqueadores
-    await page.getByRole('button', { name: /Confirmar orden/i }).click()
-
-    // 4. Aparece el diálogo de Distribución de Daño (Multi-Amount)
+    // 3. Aparece el diálogo de Distribución de Daño (Multi-Amount)
     const multiAmountDialog = page.locator('.feedback-multi-amount-wrap')
     await expect(multiAmountDialog).toBeVisible({ timeout: 10_000 })
     await expect(page.locator('.feedback-dialog')).toContainText('Colossal Dreadmaw')
@@ -63,7 +46,7 @@ test('combate multi-bloqueador: declaración de múltiples bloqueadores, orden d
     // Enviar asignación de daño
     await page.locator('.feedback-multi-amount-wrap button.ui-btn--primary').click()
 
-    // 5. Resolución de daño: los bloqueadores son destruidos
+    // 4. Resolución de daño: los bloqueadores son destruidos
     await expect(page.locator('.feedback-dialog')).toBeHidden({ timeout: 5_000 })
     await page.waitForTimeout(300)
     const resolvedShot = await page.screenshot({ fullPage: true })

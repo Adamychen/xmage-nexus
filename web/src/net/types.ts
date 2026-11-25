@@ -263,7 +263,6 @@ export const EVENT_METHODS = {
   gameChooseNumber: 'GAME_CHOOSE_NUMBER',
   gameChooseString: 'GAME_CHOOSE_STRING',
   gameChooseBetween: 'GAME_CHOOSE_BETWEEN',
-  gameChooseCardsOrder: 'GAME_CHOOSE_CARDS_ORDER',
   gameEnd: 'GAME_END',
   gameOver: 'GAME_OVER',
   endGameInfo: 'END_GAME_INFO',
