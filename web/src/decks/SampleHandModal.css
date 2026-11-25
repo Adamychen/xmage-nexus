@@ -238,7 +238,8 @@
   right: 20px;
   bottom: 70px;
   width: 200px;
-  border-radius: var(--r-mid);
+  /* DCK-33 */
+  border-radius: var(--r-card);
   overflow: hidden;
   box-shadow: 0 12px 36px var(--shade-4);
   pointer-events: none;

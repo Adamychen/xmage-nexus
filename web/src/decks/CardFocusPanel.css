@@ -20,7 +20,8 @@
 .card-focus-placeholder {
   width: min(100%, 240px);
   aspect-ratio: 488 / 680;
-  border-radius: var(--r-sm);
+  /* DCK-33 */
+  border-radius: var(--r-card);
   box-sizing: border-box;
 }
 

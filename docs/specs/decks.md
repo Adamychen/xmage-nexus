@@ -511,3 +511,21 @@ A spectator has no cards of their own, so they see every player's choice.
   chosen art never reached the opponent, and the opponent's copies of a card took the viewer's art
   (request of 2026-11-20).
 - Guard: `src/cards/artPreferences.test.ts` · `src/cards/foreignCards.test.ts` · `src/cards/cardImages.test.ts` · `src/decks/CardPrintingsModal.test.tsx`
+
+### DCK-33 · A card picture keeps the corner it was printed with
+Every deck screen that shows a whole card rounds the picture by a share of its own size, the
+`--r-card` token, and clips it: the grid, the focused card, each printing in the printings dialog,
+the floating preview and the sample hand's docked card. It is the same share the board rounds a
+card slot by, held in one token so the two cannot drift apart. The grid's card is ringed over the
+picture instead of bordered, because a border insets the picture and the arc then follows the
+wrapper's edge rather than the card's corner.
+
+A place that shows a crop of the art rather than the whole card keeps its own rounding: the stack
+faces, the strip rows, the deck covers and a custom art thumbnail, where no printed corner reaches
+the edge.
+
+- Why: the pictures carry no transparency and hold white outside the printed corner, so a radius
+  given as a length misses that corner at every size but one and leaves a white wedge. The board
+  had already moved to the share, while the deck screens still rounded by `--r-base`, `--r-sm`,
+  `--r-mid` and `--r-xl` (request of 2026-11-25).
+- Guard: `src/decks/cardCorners.css.test.ts`

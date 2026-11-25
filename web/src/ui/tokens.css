@@ -210,6 +210,10 @@
   --r-lg: 14px;
   --r-xl: 16px;
   --r-pill: 999px;
+  /* A card picture is rounded by a share of its size, never by a fixed number: the files carry
+     white outside the printed corner, so a constant arc misses that corner at every size but one.
+     This is the arc those pictures carry, the same the board rounds a card slot by. */
+  --r-card: 6% / 4.3%;
 
   /* The width a card assumes when it is drawn outside a board shell, which sets its own. */
   --card-w-base: 100px;
