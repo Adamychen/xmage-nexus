@@ -35,9 +35,14 @@ const NO_TRAILING: HandTrailingCard[] = []
 /** Side panels the hand must not cover: the bottom-left player panel (its mana pool row) and the command wheel. */
 const HAND_SIDE_PANELS = '.pz-bottom-row:not(.arena-own-row), [data-testid="game-dock"], .spotlight-panel, .hand-side-panel'
 const SCALED_COPY = '.spotlight-copy'
-const CARD_W_HYSTERESIS_PX = 0.5
+/** BRD-21: the bar's card size feeds the reserve it leaves the board, which feeds the width it
+ *  measures itself from, so two answers close together chase each other. Half a pixel was not
+ *  enough: at 1366x900 on a compact Arena board the bar went 156 -> 153.733 -> 154.25 px, and that
+ *  last step of 0.517 px slipped through. A pixel and a half, the same the seat keeps (BRD-21). */
+const CARD_W_HYSTERESIS_PX = 1.5
 const RESERVE_HYSTERESIS_PX = 1
 const SPOTLIGHT_MAIN_ROW = '.spotlight-main .pz-bottom-row'
+import { BOARD_RELAYOUT_EVENT } from './layout/relayout'
 import './targetZone.css'
 
 /** Mana cost as bubbles over the card's top edge (split cards show both halves): what casting the
@@ -219,6 +224,11 @@ export default function HandBar({
     measureRef.current = measure
     measure()
     window.addEventListener('resize', measure)
+    // BRD-21: the width the bar fits its cards in comes from the board's own layout, so it measures
+    // again as soon as the board has solved. Waiting for a resize or a stray mutation instead left
+    // the bar a couple of pixels wide of its size until something else nudged it, after the board
+    // had settled.
+    window.addEventListener(BOARD_RELAYOUT_EVENT, measure)
     const ro = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(measure)
     ro?.observe(host)
     scope.querySelectorAll<HTMLElement>(HAND_SIDE_PANELS).forEach((panel) => {
@@ -228,6 +238,7 @@ export default function HandBar({
     mo?.observe(scope, { childList: true })
     return () => {
       window.removeEventListener('resize', measure)
+      window.removeEventListener(BOARD_RELAYOUT_EVENT, measure)
       ro?.disconnect()
       mo?.disconnect()
     }

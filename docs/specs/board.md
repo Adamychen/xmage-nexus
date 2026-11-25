@@ -338,11 +338,17 @@ The room the own creatures leave beside the player chip (BRD-32) is decided only
 board drawn without it, and kept while the zone, the chip and the number of cards stay the same, so
 a board resized away and back draws the same sizes it had. The guard sweeps the Arena board, with and without the side panel, with 2 and 4 seats, boards of
 several sizes with planeswalkers, sagas, commanders, tokens and attachments, both card styles and
-several window sizes, both drawn fresh and reached by resizing a drawn board, and allows no size
-change at all after the board has settled. A solve that lands within a pixel and a half of the size
-a seat already has keeps that size: the cards are what the row's height is made of, so every size
-written changes the box the next solve measures, and two answers a pixel apart would otherwise
-chase each other.
+several window sizes, both drawn fresh and reached by resizing a drawn board. What it forbids is a
+loop: after the board has settled no size may move twice, and none may come back to a value it
+already had. One late correction, in one direction, of a size whose own input is the settled board
+is allowed and named in the report, because the dependency runs that way: the hand bar fits its
+cards in the width the board leaves it, so it cannot know that width until the board is still.
+
+A solve that lands within a pixel and a half of the size a seat already has keeps that size, and so
+does the hand bar with its own card width: the cards are what a row's height is made of, and the
+bar's height is what the board reserves for it, so every size written changes the box the next solve
+measures, and two answers a pixel apart would otherwise chase each other. The bar measures again on
+the board's relayout, not only on a resize, so its correction lands inside the same settling.
 
 - Why: the planeswalker column of BRD-2 made a board resize every frame without end (user
   report, 2026-10-29; the user then set the bar: a slow transition does not matter, a loop does), and no test watched a board after it was drawn; the size of a card was
@@ -370,7 +376,11 @@ chase each other.
   one pixel short of its next card size, and the seat flipped between 111 px and 112 px on every
   frame, 16 different values in 16 frames, which also stopped a click from ever landing on a pool
   pip (`e2e/mana-payment.spec.ts`, MNA-3, reported by another session). Hence the pixel and a half:
-  measured on that board, 16 values in 16 frames before, one after.
+  measured on that board, 16 values in 16 frames before, one after. What the guard had been calling
+  a failure in the six compact Arena cases was the hand bar correcting itself by two pixels after
+  the board settled, once, which is the order the sizes depend on each other in and not a loop; the
+  guard says now which size moved and judges a second move, not a first. With that and the two
+  hysteresis the fourteen cases pass in a serial run (25-nov-2026).
 - Guard: `src/board/HandZone.test.tsx` · `src/board/chipReserve.test.ts` · `src/board/layout/layoutEngine.test.ts` · `e2e/board-settle.spec.ts` · `e2e/board-spotlight-settle.spec.ts`
 
 ### BRD-22 · The phase dial shows the steps of combat

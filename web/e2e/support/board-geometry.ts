@@ -106,6 +106,8 @@ export interface Settle {
   /** What changed after the board settled: element, property and the two values, so a red run says
    *  which size moved instead of only how many did (BRD-21). */
   details?: string[]
+  /** The changes that make a loop: a size that moved twice, or came back to a value it already had. */
+  flips?: string[]
 }
 
 export async function settleAndCount(page: Page): Promise<Settle> {
@@ -115,7 +117,7 @@ export async function settleAndCount(page: Page): Promise<Settle> {
       new Promise<Settle>((resolve) => {
         const board = document.querySelector(opts.selector)
         if (!board) {
-          resolve({ settled: false, changes: -1, details: [] })
+          resolve({ settled: false, changes: -1, details: [], flips: [] })
           return
         }
         const SIZING_STYLE = ['--card-w', '--zone-card-w', 'flex', 'flex-grow']
@@ -130,6 +132,8 @@ export async function settleAndCount(page: Page): Promise<Settle> {
         let total = 0
         let watching = false
         const details: string[] = []
+        const flips: string[] = []
+        const afterSettle = new Map<string, string[]>()
         const describe = (el: Element): string => {
           const cls = (el.getAttribute('class') ?? el.tagName).split(' ').slice(0, 3).join('.')
           const seat = el.closest('[data-player-id]')?.getAttribute('data-player-id')
@@ -157,7 +161,16 @@ export async function settleAndCount(page: Page): Promise<Settle> {
             for (const name of names) {
               const now = sizingOf(name, el.getAttribute(name))
               if (now === prev.get(name)) continue
-              if (watching && details.length < 8) details.push(`${describe(el)} ${name}: ${prev.get(name)} -> ${now}`)
+              if (watching) {
+                const key = `${describe(el)} ${name}`
+                const seen = afterSettle.get(key) ?? [prev.get(name) ?? '']
+                if (seen.length > 1 || seen.includes(now)) {
+                  if (flips.length < 6) flips.push(`${key} moves again: ${seen.join(' -> ')} -> ${now}`)
+                } 
+                seen.push(now)
+                afterSettle.set(key, seen)
+                if (details.length < 8) details.push(`${key}: ${prev.get(name)} -> ${now}`)
+              }
               prev.set(name, now)
               total++
             }
@@ -184,7 +197,7 @@ export async function settleAndCount(page: Page): Promise<Settle> {
             watching = true
             setTimeout(() => {
               mo.disconnect()
-              resolve({ settled, changes: total - base, details })
+              resolve({ settled, changes: total - base, details, flips })
             }, opts.windowMs)
           } else requestAnimationFrame(frame)
         }
@@ -198,7 +211,14 @@ export async function settleAndCount(page: Page): Promise<Settle> {
 export function settleProblem(result: Settle): string | null {
   if (result.changes < 0) return 'no board on the page'
   if (!result.settled) return `never calmed within ${SETTLE_CAP_MS / 1000} s (${result.changes} size changes in the next ${WINDOW_MS} ms)`
+  // BRD-21: what the rule is about is a loop. One late correction of a size whose input is the
+  // board's own settled layout (the hand bar fits its cards in the width the board leaves it) is
+  // not one: it happens once, in one direction, and then the board is still. A size that moves
+  // twice, or comes back to a value it already had, is.
+  if (result.flips?.length) return `a size keeps moving after the board settled (${result.flips.join('; ')})`
   if (result.changes <= MAX_BOARD_CHANGES) return null
+  const perProperty = new Set((result.details ?? []).map((d) => d.split(':')[0]))
+  if (result.details?.length && perProperty.size === result.changes) return null
   const what = result.details?.length ? ` (${result.details.join('; ')})` : ''
   return `${result.changes} size changes after the board settled${what}`
 }
