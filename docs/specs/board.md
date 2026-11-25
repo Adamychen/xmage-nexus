@@ -105,8 +105,12 @@ Settings → Board has a **Main board with side panel** switch (`boardSpotlight`
 With it on, a player (not a spectator) with at least one opponent
 still in the game — a duel, a game that started as one, or a pod down to two — sees one board at
 full size in the main area — their own when the game starts —
-and every other seat in a panel on the right edge of the board, one copy per seat, top to bottom
-in turn order starting after the player. A copy is the whole board of that seat (status row,
+and every other seat in a panel on the left edge of the board, one copy per seat, top to bottom
+in turn order starting after the player. The panel takes the left edge because the stack rises on
+the right one, and a panel there covered it. What belongs to the board being played on is laid out
+over the main area rather than over the whole board: the own hand's fan takes the main area as its
+band (so the panel is outside it instead of eating the fan's width) and the order line is centred
+on it (PRM-18). A copy is the whole board of that seat (status row,
 battlefield bands, command zone, piles) laid out at the size of the main area and scaled down as
 one piece, so it keeps the main area's proportions and its cards never wrap or clip differently
 from the same board in the main area. Every copy spans the panel's width and takes the main area's
@@ -137,6 +141,9 @@ mid-game takes effect at once and never drops an open prompt.
   The mode used to switch off below two live opponents, so a Commander game that came down to two
   jumped mid-game to the split duel view, which looked like a broken table (user report,
   2026-11-11); the player who turned the switch on wants the same view to the end and in duels.
+  The panel opened on the right edge and moved to the left one on 24-nov-2026: the stack is drawn
+  at the right of the board, so the panel sat on top of the very thing a player reads while a spell
+  is waiting.
   With one copy in a duel its box used to stretch to the panel's whole height around a much smaller
   board; the user asked for each box to keep the table's proportions at the panel's width, and for
   the panel to scroll when the copies do not fit (user report, 2026-11-12).
@@ -230,8 +237,9 @@ column draws them at the right of its status row (BRD-36).
 - Guard: `src/board/BoardZone.pileCards.test.tsx` · `src/board/SpotlightBoard.test.tsx` · `src/game/ResourceBar.test.tsx` · `e2e/spotlight.spec.ts`
 
 ### BRD-13 · The panel can be resized
-The panel's left edge can be dragged to change its width between 15% and 35% of the board width
-(22% by default). The width is a player setting (`boardSpotlightPanel`), kept across games, and the
+The panel's inner edge, which with the panel on the left edge (BRD-6) is its right one, can be
+dragged to change its width between 15% and 35% of the board width (22% by default); the arrow keys
+on it do the same by one percent, the right one widening the panel and the left one narrowing it. The width is a player setting (`boardSpotlightPanel`), kept across games, and the
 copies rescale while dragging: a copy spans the panel's width (BRD-6), so a wider panel makes every
 copy larger, and the panel scrolls vertically once they no longer fit its height. A copy never
 scrolls sideways.
@@ -517,9 +525,11 @@ already readable.
   EDHPlay shows them (user report, 2026-11-12). The look follows the panel, not EDHPlay's.
 - Guard: `src/board/SpotlightBoard.test.tsx`
 
-### BRD-32 · The own Arena board is framed around the hand
-The own board, with or without the side panel (BRD-6),
-keeps the battlefield clear of everything around it. The player chip sits at the top-left corner
+### BRD-32 · The board at the bottom is framed around the hand
+The board drawn at the bottom, with or without the side panel (BRD-6), keeps the battlefield clear
+of everything around it. It is the frame of the seat in that place, not a reward for owning it: a
+spectator, and a second window watching a game of your own (which carries no controlled seat), get
+the same frame around the seat they are watching. The player chip sits at the top-left corner
 with no frame: the photo, the name and a large life total. The creatures only leave it room when
 they would actually reach it in height. The bottom row is as tall as the resting hand (BRD-16) and
 holds, from left to right, the library, graveyard and exile and, when the player can play

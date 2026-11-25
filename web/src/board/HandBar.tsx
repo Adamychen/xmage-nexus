@@ -192,12 +192,18 @@ export default function HandBar({
         .filter((panel) => !panel.closest(SCALED_COPY) && !panel.matches(SPOTLIGHT_MAIN_ROW))
         .map((panel) => panel.getBoundingClientRect())
         .filter((r) => r.width > 0 && r.top < barRect.bottom && r.bottom > barRect.top)
-      const base = computeHandSideReserve({ left: hostRect.left, right: hostRect.right }, panels)
+      // BRD-6: with a side panel the hand belongs to the board being played on, so its band is the
+      // main area and the panel falls outside it instead of eating the fan's width from one side.
+      const area = scope.querySelector<HTMLElement>('.spotlight-main')
+      const areaRect = area?.getBoundingClientRect()
+      const band = areaRect && areaRect.width > 0 ? areaRect : hostRect
+      const base = computeHandSideReserve({ left: band.left, right: band.right }, panels)
       const spill = handFanSpill(entries.length, HAND_BAR_MAX_CARD_W)
       const trailingSpill = trailing.length > 0 ? Math.ceil(HAND_BAR_MAX_CARD_W * 0.2) : 0
+      const outside = { left: Math.max(0, band.left - hostRect.left), right: Math.max(0, hostRect.right - band.right) }
       const reserve = {
-        left: base.left > 0 ? base.left + spill + clearRef.current.left : 0,
-        right: base.right > 0 ? base.right + (trailing.length > 0 ? trailingSpill : spill) + clearRef.current.right : 0,
+        left: outside.left + (base.left > 0 ? base.left + spill + clearRef.current.left : 0),
+        right: outside.right + (base.right > 0 ? base.right + (trailing.length > 0 ? trailingSpill : spill) + clearRef.current.right : 0),
       }
       panelRectsRef.current = panels
       const availW = hostRect.width - reserve.left - reserve.right

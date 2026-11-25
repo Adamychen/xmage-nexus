@@ -52,15 +52,15 @@ describe('AskBar', () => {
     setState({ settings: { ...initialState.settings } })
   })
 
-  it('shows kicker, source, message and the yes/no buttons in a non-modal bar', () => {
+  it('PRM-18: the question names its source and the bar is no longer a titled box', () => {
     const { container } = render(<AskBar form={stubForm(askPrompt)} />)
     const bar = container.querySelector('.ask-prompt-bar')!
     expect(bar).toBeTruthy()
-    expect(bar.classList.contains('feedback-dialog')).toBe(true)
-    expect(bar.getAttribute('role')).toBe('group')
-    expect(container.textContent).toContain('CONFIRMACIÓN')
-    expect(screen.getByTestId('ask-source').textContent).toContain('Steam Vents')
-    expect(screen.getByText('¿Pagar 2 vidas?')).toBeTruthy()
+    expect(bar.classList.contains('is-keys-only')).toBe(true)
+    expect(container.textContent).not.toContain('CONFIRMACIÓN')
+    expect(container.querySelector('[data-testid="ask-source"]')).toBeNull()
+    expect(screen.getByTestId('board-order').textContent).toContain('¿Pagar 2 vidas?')
+    expect(screen.getByTestId('board-order').textContent).toContain('Steam Vents')
     expect(screen.getByRole('button', { name: /Sí/ })).toBeTruthy()
     expect(screen.getByRole('button', { name: /No/ })).toBeTruthy()
   })
@@ -80,8 +80,38 @@ describe('AskBar', () => {
   it('KEY-7: digit shortcuts answer the ask', () => {
     const selectOption = vi.fn()
     render(<AskBar form={stubForm(askPrompt, { selectOption })} />)
-    fireEvent.keyDown(document.querySelector('.feedback-options-grid')!, { key: '2' })
+    // PRM-19: the answers are keys in the corner now, so the digits act from the bar that asks.
+    fireEvent.keyDown(document.querySelector('.ask-prompt-bar')!, { key: '2' })
     expect(selectOption).toHaveBeenCalledWith(askPrompt.options[1])
+  })
+
+  it('PRM-18: the question is read across the board and the bar does not repeat it', () => {
+    render(<AskBar form={stubForm(askPrompt)} />)
+    expect(screen.getByTestId('board-order').textContent).toContain('¿Pagar 2 vidas?')
+    expect(document.querySelector('.ask-prompt-bar .action-prompt-msg')).toBeNull()
+  })
+
+  it('PRM-18: a message too long to read across the board becomes a question about its source', () => {
+    const long = { ...askPrompt, message: "At the beginning of each opponent's upkeep, you may have that player gain control of Slicer, Hired Muscle until end of turn. If you do, untap it, goad it, and it can't be sacrificed this turn." }
+    render(<AskBar form={stubForm(long)} />)
+    // The ability's own text is on the stack while it resolves; the board asks about it instead.
+    expect(screen.getByTestId('board-order').textContent).toContain('Steam Vents')
+    expect(screen.getByTestId('board-order').textContent).not.toContain('upkeep')
+    expect(document.querySelector('.ask-prompt-bar')?.textContent).not.toContain('upkeep')
+  })
+
+  it('PRM-19: the first answer is the key in the corner and the second the small one above it', () => {
+    const selectOption = vi.fn()
+    render(<AskBar form={stubForm(askPrompt, { selectOption })} />)
+    const action = screen.getByTestId('prompt-action')
+    const second = screen.getByTestId('prompt-second')
+    expect(action.textContent).toContain('Sí')
+    expect(second.textContent).toContain('No')
+    // KEY-8: each one says which digit answers it.
+    expect(action.querySelector('kbd')?.textContent).toBe('1')
+    expect(second.querySelector('kbd')?.textContent).toBe('2')
+    fireEvent.click(action)
+    expect(selectOption).toHaveBeenCalledWith(askPrompt.options[0])
   })
 
   it('the remember checkbox stores an auto-answer rule', () => {

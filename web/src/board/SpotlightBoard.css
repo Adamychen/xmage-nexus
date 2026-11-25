@@ -51,11 +51,12 @@
   box-sizing: border-box;
 }
 
+/* BRD-13: the grip is on the panel's inner edge, which with the panel on the left is its right one. */
 .spotlight-panel-handle {
   position: absolute;
   top: 0;
   bottom: 0;
-  left: -6px;
+  right: -6px;
   width: 12px;
   z-index: 5;
   display: flex;

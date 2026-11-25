@@ -208,8 +208,9 @@ describe('FeedbackDialog (componente)', () => {
     render(<FeedbackDialog />)
     expect(document.querySelector('.ask-prompt-bar')).toBeTruthy()
     expect(document.querySelector('.feedback-backdrop')).toBeNull()
-    expect(screen.getAllByText('CONFIRMACIÓN').length).toBeGreaterThan(0)
-    expect(screen.getByTestId('ask-source').textContent).toContain('Steam Vents')
+    // PRM-18: the question is across the board and names its source; no titled box is left behind.
+    expect(screen.queryByText('CONFIRMACIÓN')).toBeNull()
+    expect(screen.getByTestId('board-order').textContent).toContain('Steam Vents')
     expect(screen.getByRole('button', { name: /Sí/ })).toBeTruthy()
     expect(screen.getByRole('button', { name: /No/ })).toBeTruthy()
     expect(screen.queryByText('ASK')).toBeNull()

@@ -125,6 +125,12 @@ describe('ArenaBoard', () => {
     const bottom = container.querySelector('.arena-board > .board-zone')
     expect(bottom).not.toBeNull()
     expect(container.querySelector('[data-testid="hand-bar"]')).toBeNull()
+    // BRD-32: the frame belongs to the place, not to owning the seat. Watching a game (a spectator,
+    // or a second window on a game of your own, which carries no controlled seat) used to drop the
+    // bottom board to the plain arrangement while the side panel framed that same seat.
+    expect(bottom!.classList.contains('arena-own')).toBe(true)
+    expect(container.querySelector('[data-testid="arena-own-row"]')).not.toBeNull()
+    expect(container.querySelector('[data-testid="arena-own-chip"]')).not.toBeNull()
   })
 
   describe('seat focus', () => {

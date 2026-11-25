@@ -12,6 +12,8 @@ interface PromptActionKeyProps {
   disabled?: boolean
   /** The key that does the same thing, announced to a screen reader (Escape on a cancel). */
   keyShortcut?: string
+  /** KEY-7/KEY-8: the same key, shown on the cap, where the shortcut applies. */
+  shortcut?: string
   icon?: IconName
 }
 
@@ -20,7 +22,7 @@ interface PromptActionKeyProps {
  * hand, which is how one copy came to carry an icon the other three did not; it is one control, with
  * a tone, a label and an icon only where the answer is not already in the words.
  */
-export function PromptActionKey({ tone, label, onClick, disabled, keyShortcut, icon }: PromptActionKeyProps) {
+export function PromptActionKey({ tone, label, onClick, disabled, keyShortcut, shortcut, icon }: PromptActionKeyProps) {
   return (
     <button
       type="button"
@@ -28,25 +30,28 @@ export function PromptActionKey({ tone, label, onClick, disabled, keyShortcut, i
       data-testid="prompt-action"
       disabled={disabled}
       onClick={onClick}
-      aria-keyshortcuts={keyShortcut}
+      aria-keyshortcuts={keyShortcut ?? shortcut}
     >
       {icon && <span className="prompt-action-icon" aria-hidden="true"><Icon name={icon} size={15} /></span>}
       <span className="prompt-action-label">{label}</span>
+      {shortcut && <kbd className="prompt-key-shortcut">{shortcut}</kbd>}
     </button>
   )
 }
 
 /** PRM-19 / CMB-13: the smaller key above it, the way back (never the one that advances the game). */
-export function PromptSecondKey({ label, onClick, disabled }: { label: ReactNode; onClick: () => void; disabled?: boolean }) {
+export function PromptSecondKey({ label, onClick, disabled, shortcut, tone }: { label: ReactNode; onClick: () => void; disabled?: boolean; shortcut?: string; tone?: 'deny' }) {
   return (
     <button
       type="button"
-      className="prompt-second-btn"
+      className={`prompt-second-btn${tone ? ` is-${tone}` : ''}`}
       data-testid="prompt-second"
       disabled={disabled}
       onClick={onClick}
+      aria-keyshortcuts={shortcut}
     >
       {label}
+      {shortcut && <kbd className="prompt-key-shortcut">{shortcut}</kbd>}
     </button>
   )
 }

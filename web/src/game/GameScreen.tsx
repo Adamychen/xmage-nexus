@@ -60,6 +60,7 @@ import { SPACE_PASS_REGION_SELECTOR, SPACE_SHORTCUT_OFF_SELECTOR } from '../ui/c
 import { crossZonePlayables } from '../board/crossZone'
 import { resolveTargetHits, targetZoneKindOf } from '../board/targetZones'
 import { combatActorsFrom } from '../state/gameUtils'
+import { isPlainBooleanAsk } from './handPick'
 import { spectatorHomeSeat } from '../board/boardShared'
 import { useTranslation } from '../i18n'
 import { soundManager } from '../audio/soundManager'
@@ -413,7 +414,8 @@ export default function GameScreen() {
   // PRM-19: a mana payment or a target pick leaves the big button with nothing to do ("Loading…"),
   // so the prompt's own action takes that place instead of opening a second box beside it.
   const promptOwnsAction = feedback != null
-    && (feedback.mode === 'mana' || feedback.mode === 'combat' || feedback.method === 'GAME_TARGET')
+    && (feedback.mode === 'mana' || feedback.mode === 'combat' || feedback.method === 'GAME_TARGET'
+      || isPlainBooleanAsk(feedback))
   const dockButton = promptOwnsAction
     ? <div className="game-dock-action-slot" data-testid="game-dock-action-slot" ref={setActionSlot} />
     : actionButton
@@ -444,8 +446,8 @@ export default function GameScreen() {
               data-playmat={playmatId}
               style={{
                 // PRM-18: the order is centred on the board being played on, so the side panel of
-                // the main board mode (BRD-6) does not push it off to the right.
-                '--order-inset-right': spotlightOn ? `${settings.boardSpotlightPanel}%` : '0px',
+                // the main board mode (BRD-6) does not push it off to one side.
+                '--order-inset-left': spotlightOn ? `${settings.boardSpotlightPanel}%` : '0px',
               } as React.CSSProperties}
             >
               {playmatId !== 'classic' && (
