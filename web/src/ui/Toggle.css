@@ -31,9 +31,13 @@
   transition: background 0.15s, border-color 0.15s;
 }
 
+/* The knob centres itself in the track instead of sitting at a fixed `top`: the track's inner
+   height is its own height less its border, so one number only fits one size. At the chat head's
+   30x16 the 12 px knob sat on the bottom border and bulged out of the pill. */
 .ui-toggle-knob {
   position: absolute;
-  top: 2px;
+  top: 50%;
+  translate: 0 -50%;
   left: 2px;
   width: 16px;
   height: 16px;
