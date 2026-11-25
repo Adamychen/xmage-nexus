@@ -297,6 +297,84 @@ describe('CardSlot', () => {
     expect(container.querySelector('.designation-badge.is-room')).toBeNull()
   })
 
+  it('BRD-64: a token on the table carries its tag; a copy of a real card does not', () => {
+    const token = {
+      id: 'tok1',
+      name: 'Goblin Token',
+      cardTypes: ['Creature'],
+      power: '1',
+      toughness: '1',
+      isToken: true,
+    } as unknown as PermanentView
+    const shown = render(<CardSlot card={token} showPt />)
+    expect(shown.container.querySelector('.token-tag')?.textContent).toBe('TOKEN')
+    shown.unmount()
+
+    const copy = { ...token, id: 'cp1', copy: true } as unknown as PermanentView
+    const copied = render(<CardSlot card={copy} showPt />)
+    expect(copied.container.querySelector('.token-tag')).toBeNull()
+    copied.unmount()
+
+    const real = {
+      id: 'real1',
+      name: 'Grizzly Bears',
+      cardTypes: ['Creature'],
+      power: '2',
+      toughness: '2',
+    } as unknown as PermanentView
+    const printed = render(<CardSlot card={real} showPt />)
+    expect(printed.container.querySelector('.token-tag')).toBeNull()
+  })
+
+  it('BRD-63: damage drops the toughness shown and paints it red, with no badge of its own', () => {
+    const card = {
+      id: 'dmg1',
+      name: 'Rattleback Apothecary',
+      cardTypes: ['Creature'],
+      power: '5',
+      toughness: '2',
+      damage: 4,
+    } as unknown as PermanentView
+    const { container } = render(<CardSlot card={card} showPt showDamage />)
+    expect(container.querySelector('.damage-badge')).toBeNull()
+    const values = container.querySelectorAll('.pt-badge .pt-value')
+    expect(values[0].textContent).toBe('5')
+    // Lethal damage held by an indestructible creature reads 0, never a negative toughness.
+    expect(values[1].textContent).toBe('0')
+    expect(values[1].hasAttribute('data-damaged')).toBe(true)
+    expect(container.querySelector('.pt-badge')?.getAttribute('data-damaged')).toBe('4')
+  })
+
+  it('BRD-63: an undamaged creature shows its toughness plainly', () => {
+    const card = {
+      id: 'dmg2',
+      name: 'Grizzly Bears',
+      cardTypes: ['Creature'],
+      power: '2',
+      toughness: '2',
+    } as unknown as PermanentView
+    const { container } = render(<CardSlot card={card} showPt showDamage />)
+    const values = container.querySelectorAll('.pt-badge .pt-value')
+    expect(values[1].textContent).toBe('2')
+    expect(values[1].hasAttribute('data-damaged')).toBe(false)
+  })
+
+  it('BRD-63: the toughness still carries the damage when the player hides power and toughness', () => {
+    setSetting('ptBadgeMode', 'hidden')
+    const card = {
+      id: 'dmg3',
+      name: 'Grizzly Bears',
+      cardTypes: ['Creature'],
+      power: '2',
+      toughness: '3',
+      damage: 1,
+    } as unknown as PermanentView
+    const { container } = render(<CardSlot card={card} showPt showDamage />)
+    const values = container.querySelectorAll('.pt-badge .pt-value')
+    expect(values[1].textContent).toBe('2')
+    setSetting('ptBadgeMode', 'always')
+  })
+
   it('expone data-attrs de fidelidad (P2): P/T, girado, contadores y daño', () => {
     const card = {
       id: 'fid1',
@@ -332,7 +410,7 @@ describe('CardSlot', () => {
     expect(slot.getAttribute('data-tapped')).toBe('0')
   })
 
-  it('el badge de enfermedad de invocación usa su propio texto accesible (no "Girar para maná")', () => {
+  it('el badge de mareo de invocación usa su propio texto accesible (no "Girar para maná")', () => {
     const card = {
       id: 'sick1',
       name: 'Elvish Mystic',
@@ -344,11 +422,11 @@ describe('CardSlot', () => {
     const { container } = render(<CardSlot card={card} />)
     const badge = container.querySelector('.sickness-badge') as HTMLElement
     expect(badge).not.toBeNull()
-    expect(badge.getAttribute('aria-label')).toContain('Enfermedad de invocación')
+    expect(badge.getAttribute('aria-label')).toContain('Mareo de invocación')
     expect(badge.getAttribute('title')).toBeNull()
   })
 
-  it('no pinta el badge de enfermedad de invocación si la criatura está girada', () => {
+  it('no pinta el badge de mareo de invocación si la criatura está girada', () => {
     const card = {
       id: 'sick2',
       name: 'Elvish Mystic',
@@ -796,7 +874,7 @@ describe('CardSlot sicknessStyle (issue #12)', () => {
     // Geometry is not measured here: jsdom returns zero rects. The "covers the
     // whole card" contract lives in `cardOverlayCss.test.ts` (`inset: 0`) and was
     // checked in a real browser (elementFromPoint returns the card).
-    expect(veil.querySelector('.sickness-veil-icon')?.getAttribute('aria-label')).toContain('Enfermedad de invocación')
+    expect(veil.querySelector('.sickness-veil-icon')?.getAttribute('aria-label')).toContain('Mareo de invocación')
     expect(veil.querySelector('svg')).not.toBeNull()
   })
 

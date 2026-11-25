@@ -383,23 +383,22 @@
   column-gap: var(--arena-perm-gap);
 }
 
-.arena-own-row > .arena-own-pool {
-  align-self: flex-start;
-  padding-top: var(--sp-1);
-}
-
 /* MNA-12: the floating mana of the own board rides the strip the board leaves between the lands
-   and the piles, in one line over them, instead of taking a place of its own in the bottom row. */
+   and the piles, in one line of its own right above the pile captions. The line is laid out, not
+   floated over them: a board with no hand bar to reserve room (one being watched) was only as tall
+   as its piles, and the pips landed on top of "LIBRARY n". Both lines hug the bottom, so the strip
+   above the pips is the one the board already left empty. */
 .arena-own-row {
   position: relative;
+  flex-wrap: wrap;
+  align-content: flex-end;
 }
 
 .arena-own-row > .arena-own-pool {
-  position: absolute;
-  left: var(--arena-edge);
-  top: 0;
-  padding: 0;
-  z-index: 6;
+  order: -1;
+  flex: 0 0 100%;
+  padding: 0 0 0 var(--arena-edge);
+  align-self: flex-end;
 }
 
 .arena-own-row > .arena-own-pool .mana-inline {
@@ -584,24 +583,19 @@
   --card-w: clamp(44px, calc(var(--zone-card-w, 90px) * 0.6), 72px) !important;
 }
 
+/* MNA-12: the pool keeps its own line above everything else in the row, hand included. */
 .arena-own-row > .arena-own-pool {
-  order: 2;
+  order: -1;
 }
 
 .arena-own-row > .arena-own-commander {
   order: 3;
 }
 
-/* BRD-38: in the bottom row the opponent's fan is tucked like the own resting hand (HND-1), so it
-   covers nothing: seven tenths of the card, not the sliver it used to be. */
+/* BRD-38: in the bottom row an opponent's fan is drawn whole and nothing clips it, wherever that
+   row is: the main area, the board at the bottom without the panel (BRD-32) and a copy in the
+   panel, which is a miniature of the main area and read as a cut when its fan alone was tucked. */
 .arena-own-row > .arena-opp-hand .hand-back-stack.is-fan {
-  height: calc(var(--card-w, 60px) * 0.98);
-  overflow: hidden;
-}
-
-/* BRD-38: the seat drawn at full size has the room, so its hand is drawn whole and nothing clips
-   it: a watched board shows the cards it holds the way its owner would see them. */
-.spotlight-main .arena-own-row > .arena-opp-hand .hand-back-stack.is-fan {
   height: calc(var(--card-w, 60px) * 1.4);
   overflow: visible;
 }

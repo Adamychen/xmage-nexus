@@ -124,7 +124,7 @@ export function combatMultiBlockScenario(): Scenario {
     onSendPlayerUUID: (conn) => {
       // Declaring Colossal Dreadmaw as attacker (taps because no vigilance)
       myAttacker.tapped = true
-      const combatGroups = [{ attackers: { [myAttacker.parentId!]: {} } }]
+      const combatGroups = [{ attackers: { [myAttacker.parentId!]: {} }, blockers: {}, isBlocked: false }]
       conn.broadcast('GAME_UPDATE', { gameView: getGameView(combatGroups) }, GAME_ID)
       conn.broadcast(
         'GAME_SELECT',
@@ -147,6 +147,7 @@ export function combatMultiBlockScenario(): Scenario {
               [simBlocker1.parentId!]: {},
               [simBlocker2.parentId!]: {},
             },
+            isBlocked: true,
             defenderId: SIM_PLAYER_ID,
           },
         ]
@@ -202,6 +203,7 @@ export function combatMultiBlockScenario(): Scenario {
               [simBlocker1.parentId!]: {},
               [simBlocker2.parentId!]: {},
             },
+            isBlocked: true,
             defenderId: SIM_PLAYER_ID,
           },
         ]

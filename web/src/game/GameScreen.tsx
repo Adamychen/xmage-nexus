@@ -329,7 +329,8 @@ export default function GameScreen() {
   const totalPlayers = game?.players?.length ?? opps.length + (isSpectator ? 0 : 1)
   const seatLiveIds = liveOpponentIds(game?.players)
   const seatFocus = useSeatFocus(seatLiveIds, game)
-  const seatPillsClickable = !isSpectator && seatLiveIds.length >= 2
+  // BRD-37: the pill takes the click for whoever is reading the board, a spectator included.
+  const seatPillsClickable = seatLiveIds.length >= 2
   const homeId = me?.playerId ?? spectatorHomeSeat(opps)?.playerId
   const spotlight = useSpotlight(game, homeId, seatLiveIds, isSpectator ? null : combat?.mode ?? null)
   const spotlightOn = spotlightActive({

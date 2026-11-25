@@ -33,8 +33,23 @@
 
 /* BRD-34: in a hand drawn as a zone (a watched seat, a copy in the panel) the commander stands at
    the end with air on both sides, so it is not read as one more card of the hand and nothing
-   crowds it against what comes next in the row. */
+   crowds it against what comes next in the row. It is read the same way as in the fan and as the
+   piles beside it: the top half of a card, on a card a third wider than that hand's, clipped at the
+   waist. Drawn whole it was the one place a commander still read as one more card of the hand. */
 .hand-zone > .hand-zone-commander {
+  --cmd-w: calc(var(--card-w, var(--card-w-base)) * 1.3);
   margin-left: calc(var(--card-w, var(--card-w-base)) * 0.22);
   margin-right: calc(var(--card-w, var(--card-w-base)) * 0.3);
+  width: var(--cmd-w);
+  height: calc(var(--cmd-w) * 88 / 63 * 0.5);
+  align-self: flex-end;
 }
+
+.hand-zone > .hand-zone-commander .hand-trailing-card {
+  position: absolute;
+  inset: 0 0 auto 0;
+  width: var(--cmd-w);
+  height: calc(var(--cmd-w) * 88 / 63);
+  clip-path: inset(0 0 50% 0 round var(--r-card, 6px) var(--r-card, 6px) 0 0);
+}
+

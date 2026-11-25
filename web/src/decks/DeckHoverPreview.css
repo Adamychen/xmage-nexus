@@ -16,7 +16,8 @@
   position: relative;
   width: min(420px, calc(48vw - 24px), calc((100vh - 40px) * 2.5 / 3.5));
   aspect-ratio: 2.5 / 3.5;
-  border-radius: var(--r-xl);
+  /* DCK-33 */
+  border-radius: var(--r-card);
   overflow: hidden;
   border: 2.5px solid rgb(var(--gold-rgb) / 0.85);
   background: var(--ink-2);

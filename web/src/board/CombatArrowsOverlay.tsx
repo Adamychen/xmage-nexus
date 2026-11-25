@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo, useCallback } from 'react'
 import { BOARD_RELAYOUT_EVENT } from './layout/relayout'
 import { isPlayerOut } from './boardShared'
-import type { CardView, GameView } from '../net/types'
+import type { CardView, CombatGroupView, GameView } from '../net/types'
 import { stackTargetIds } from './stackEntries'
 import { seatColorVar, seatIndexOf } from './seatColor'
 import './CombatArrowsOverlay.css'
@@ -35,38 +35,73 @@ const EMPTY_ARRAY: string[] = []
 
 type Pt = { x: number; y: number }
 
+/** How far inside its own box each end of an arrow sits, as a share of the way out to the edge. */
+const ANCHOR_INSET = 0.62
+
+/** The point on the ray from a box's centre towards (dx, dy), over the box itself rather than on its
+ *  border: an arrow that starts on the card it comes from cannot be read as starting anywhere else. */
+function facingEdge(box: Pt & { rect: DOMRect }, dx: number, dy: number, inset = ANCHOR_INSET): Pt {
+  const halfW = Math.max(1, box.rect.width) / 2
+  const halfH = Math.max(1, box.rect.height) / 2
+  if (dx === 0 && dy === 0) return { x: box.x, y: box.y }
+  const byX = dx === 0 ? Infinity : halfW / Math.abs(dx)
+  const byY = dy === 0 ? Infinity : halfH / Math.abs(dy)
+  const scale = Math.min(byX, byY) * inset
+  return { x: box.x + dx * scale, y: box.y + dy * scale }
+}
+
 /**
- * TGT-12: every arrow leaves its source through the top edge and comes into its target through the
- * bottom edge, whatever is acting: a spell on the stack, an ability, an attacker or a blocker. The
- * source points up and out, the target is reached from below, and nobody has to work out which end
- * of the beam is which.
+ * TGT-12: an arrow leaves and arrives by the sides that face each other, with each end **over** its
+ * own card rather than on its border, so a beam reads as coming out of a card and a tie between two
+ * cards reaches both of them. It never passes over what sits above its target (a seat's chip) and
+ * never loops around to come in from underneath.
  */
 export function arrowAnchors(
   from: Pt & { rect: DOMRect },
   to: Pt & { rect: DOMRect },
 ): { a: Pt; b: Pt } {
-  return {
-    a: { x: from.x, y: from.y - from.rect.height / 2 },
-    b: { x: to.x, y: to.y + to.rect.height / 2 },
-  }
+  const dx = to.x - from.x
+  const dy = to.y - from.y
+  return { a: facingEdge(from, dx, dy), b: facingEdge(to, -dx, -dy) }
 }
 
-/** The curve between those two: it leaves the source upwards and rises into the target from
- *  below, so both ends meet their card square. The handles stay inside the board (`height`, when
- *  it is known), because a curve that swings off the screen is drawn as a straight cut across the
- *  edge and reads as two arrows instead of one. */
-export function arrowPath(a: Pt, b: Pt, height?: number): string {
-  const span = Math.hypot(b.x - a.x, b.y - a.y)
-  const bow = Math.max(28, Math.min(140, span * 0.35))
+/** The curve between those two: a shallow arc, bowed to the same side of its own direction for every
+ *  arrow, so arrows that run alongside each other stay apart instead of crossing. The handles stay
+ *  inside the board (`height`, when it is known), because a curve that swings off the screen is
+ *  drawn as a straight cut across the edge and reads as two arrows instead of one. */
+export function arrowPath(a: Pt, b: Pt, height?: number, head = 0, headStart = 0): string {
+  const dx = b.x - a.x
+  const dy = b.y - a.y
+  const span = Math.hypot(dx, dy) || 1
+  const bow = Math.max(8, Math.min(48, span * 0.16))
+
+  const nx = -dy / span
+  const ny = dx / span
+  // TGT-11: the line stops where a head begins, so no stroke pokes out of a dart's tip or shows
+  // through the notch at its back; each head covers the last stretch up to its own edge. A tie
+  // (CMB-4) carries one at each end, so both are trimmed.
+  // A tie between a blocker and the attacker right below it spans little more than the gap between
+  // the two rows, so a head takes at most a third of it and a short tie keeps a line of its own.
+  const room = Math.max(1, span - 1)
+  const trimEnd = Math.min(head, room * 0.34)
+  const trimStart = Math.min(headStart, room * 0.34)
+  const start = { x: a.x + (dx / span) * trimStart, y: a.y + (dy / span) * trimStart }
+  const end = { x: b.x - (dx / span) * trimEnd, y: b.y - (dy / span) * trimEnd }
+  const ex = end.x - start.x
+  const ey = end.y - start.y
   const r = (v: number) => Math.round(v)
   const bounded = !!height && height > 40
-  const lo = bounded ? 6 : -Infinity
-  const hi = bounded ? height - 6 : Infinity
-  const clamp = (v: number) => Math.max(lo, Math.min(hi, v))
-  const c1y = clamp(a.y - bow)
-  const c2y = clamp(b.y + bow)
-  return `M ${r(a.x)} ${r(a.y)} C ${r(a.x)} ${r(c1y)} ${r(b.x)} ${r(c2y)} ${r(b.x)} ${r(b.y)}`
+  const clampY = (v: number) => (bounded ? Math.max(6, Math.min(height - 6, v)) : v)
+  const c1 = { x: start.x + ex * 0.3 + nx * bow, y: clampY(start.y + ey * 0.3 + ny * bow) }
+  const c2 = { x: start.x + ex * 0.7 + nx * bow, y: clampY(start.y + ey * 0.7 + ny * bow) }
+  return `M ${r(start.x)} ${r(start.y)} C ${r(c1.x)} ${r(c1.y)} ${r(c2.x)} ${r(c2.y)} ${r(end.x)} ${r(end.y)}`
 }
+
+/** CMB-4: how far apart two ties land on the same attacker, in board pixels. */
+export const TIE_SPREAD = 22
+
+/** TGT-11: how long the dart is, in board pixels; the line is trimmed by it. */
+export const ARROW_HEAD = 13
 
 /**
  * TGT-12 inside the cascade: an object aimed at another object on the stack leaves through its top
@@ -180,7 +215,7 @@ export default function CombatArrowsOverlay({
     }
 
     const makeArrow = (id: string, from: { x: number; y: number; rect: DOMRect }, to: { x: number; y: number; rect: DOMRect }, type: ArrowItem['type'], fromId = '', toId = ''): ArrowItem => {
-      // TGT-12: out of the source's top edge, into the target's bottom edge.
+      // TGT-12: both ends on the edges that face each other.
       const { a, b } = arrowAnchors(from, to)
       // Whole pixels at both ends: with integer input the dart sits identically between sessions.
       const end = (v: number) => Math.round(v)
@@ -193,21 +228,33 @@ export default function CombatArrowsOverlay({
         type,
         fromId,
         toId,
-        path: arrowPath(a, b, boardRect.height),
+        path: arrowPath(a, b, boardRect.height, ARROW_HEAD, type === 'block' ? ARROW_HEAD : 0),
       }
     }
 
     // 1. Attack arrows from game.combat groups
     if (Array.isArray(game.combat) && game.combat.length > 0) {
       game.combat.forEach((group, gi) => {
-        const record = group as Record<string, unknown>
+        const record = group as CombatGroupView & Record<string, unknown>
         const attackersObj = record.attackers
         const attackerIds = Array.isArray(attackersObj)
           ? attackersObj
           : attackersObj && typeof attackersObj === 'object'
           ? Object.keys(attackersObj)
           : []
+        const blockersObj = record.blockers
+        const blockerIds = Array.isArray(blockersObj)
+          ? blockersObj
+          : blockersObj && typeof blockersObj === 'object'
+          ? Object.keys(blockersObj)
+          : []
+        // CMB-4: a blocked group has no beam to the defender; the tie to its blockers is the whole
+        // story, and the beam comes back only when the view says the group is no longer blocked. A
+        // blocker that dies in combat empties `blockers` while `isBlocked` stays true, and an
+        // attacker that was stopped never hits the player.
+        const blockedGroup = record.isBlocked === true || blockerIds.length > 0
         attackerIds.forEach((attId) => {
+          if (blockedGroup) return
           let defenderId = (record.defenderId as string) || null
 
           if (!defenderId) {
@@ -233,22 +280,18 @@ export default function CombatArrowsOverlay({
           }
         })
 
-        // 2. Block arrows from group.blockers -> attackers
-        const blockersObj = record.blockers
-        const blockerIds = Array.isArray(blockersObj)
-          ? blockersObj
-          : blockersObj && typeof blockersObj === 'object'
-          ? Object.keys(blockersObj)
-          : []
-
+        // 2. The tie between each blocker and the attacker it stops. Several blockers land side by
+        //    side on their attacker, in their own order, instead of piling onto the same point:
+        //    two ties arriving together cannot be told apart (CMB-4).
         if (attackerIds.length > 0) {
           const firstAttCenter = getCenter(String(attackerIds[0]))
           if (firstAttCenter) {
-            blockerIds.forEach((blkId) => {
-              const blkCenter = getCenter(String(blkId))
-              if (blkCenter) {
-                newArrows.push(makeArrow(`blk-${gi}-${blkId}`, blkCenter, firstAttCenter, 'block', String(blkId), String(attackerIds[0])))
-              }
+            const landing = blockerIds.map((blkId) => ({ blkId, center: getCenter(String(blkId)) })).filter((entry) => entry.center)
+            const spread = Math.min(TIE_SPREAD, (firstAttCenter.rect.width || TIE_SPREAD * 2) / (landing.length + 1))
+            landing.forEach((entry, i) => {
+              const offset = (i - (landing.length - 1) / 2) * spread
+              const target = { ...firstAttCenter, x: firstAttCenter.x + offset }
+              newArrows.push(makeArrow(`blk-${gi}-${entry.blkId}`, entry.center!, target, 'block', String(entry.blkId), String(attackerIds[0])))
             })
           }
         }
@@ -375,14 +418,15 @@ export default function CombatArrowsOverlay({
           <marker
             key={kind}
             id={`marker-${kind}`}
-            viewBox="0 0 10 10"
-            refX="9"
-            refY="5"
-            markerWidth="7"
-            markerHeight="7"
+            viewBox="0 0 10 8"
+            refX="0"
+            refY="4"
+            markerWidth={ARROW_HEAD}
+            markerHeight={ARROW_HEAD * 0.8}
+            markerUnits="userSpaceOnUse"
             orient="auto-start-reverse"
           >
-            <path d="M 0 0.6 L 10 5 L 0 9.4 L 2.6 5 z" className={`arrow-head arrow-head-${kind}`} />
+            <path d="M 0 0 L 10 4 L 0 8 L 2.2 4 z" className={`arrow-head arrow-head-${kind}`} />
           </marker>
         ))}
 
@@ -412,8 +456,8 @@ export default function CombatArrowsOverlay({
               data-arrow-from={a.fromId}
               data-arrow-to={a.toId}
             >
-              <marker id={markerId} viewBox="0 0 10 10" markerWidth="7" markerHeight="7" refX="9" refY="5" orient="auto-start-reverse">
-                <path d="M 0 0.6 L 10 5 L 0 9.4 L 2.6 5 z" style={{ fill: a.color }} />
+              <marker id={markerId} viewBox="0 0 10 8" markerWidth={ARROW_HEAD} markerHeight={ARROW_HEAD * 0.8} refX="0" refY="4" markerUnits="userSpaceOnUse" orient="auto-start-reverse">
+                <path d="M 0 0 L 10 4 L 0 8 L 2.2 4 z" className="arrow-head" style={{ fill: a.color }} />
               </marker>
               <path
                 d={pathData}
@@ -438,6 +482,7 @@ export default function CombatArrowsOverlay({
             <path
               d={pathData}
               className={`arrow-path arrow-${a.type}`}
+              markerStart={a.type === 'block' ? `url(#marker-${a.type})` : undefined}
               markerEnd={`url(#marker-${a.type})`}
             />
           </g>

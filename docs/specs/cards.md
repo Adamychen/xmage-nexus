@@ -87,3 +87,16 @@ modal permanent), and a word that merely starts like one is left alone.
   knew the well-formed `&bull;` (user report, 23-nov-2026).
 - Guard: `src/game/FormattedText.test.tsx`
 
+### CRD-8 · A keyword chip reads in one language, qualities included
+A keyword drawn from a card's text carries the parameter the engine wrote: protection names its
+qualities, ward its cost, toxic its number. The chip and its summary read in the interface's
+language whole, so every quality of the parameter is translated, not only the first: a colour, a
+card type, "everything" and the conjunction between them. A list may be written with commas or by
+repeating the preposition ("black and from green"), and either way it is read as a list. A quality
+with no translation of its own, a creature type or a number, is left exactly as the engine wrote it.
+
+- Why: Sword of Feast and Famine granted "protección contra Black and from green" in Spanish,
+  because the whole tail of the line was taken as one name and dropped into the template untouched
+  (user report, 25-nov-2026).
+- Guard: `src/data/keywordI18n.test.ts`
+

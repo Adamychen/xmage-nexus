@@ -656,7 +656,7 @@ export class HumanGame {
     } else {
       this.combat = groups.length > 0
         ? groups.map((g, i) => (i === 0 ? { ...g, attackers: { ...g.attackers, [id]: {} } } : g))
-        : [{ attackers: { [id]: {} } }]
+        : [{ attackers: { [id]: {} }, blockers: {}, isBlocked: false }]
       const perm = this.myBattle.find((p) => (p.parentId ?? p.name) === id)
       if (perm) perm.tapped = true
     }
@@ -665,7 +665,7 @@ export class HumanGame {
   }
 
   private onAttackSpecial(): void {
-    this.combat = [{ attackers: Object.fromEntries(this.myBattle.map((p) => [p.parentId ?? p.name, {}])) }]
+    this.combat = [{ attackers: Object.fromEntries(this.myBattle.map((p) => [p.parentId ?? p.name, {}])), blockers: {}, isBlocked: false }]
     for (const p of this.myBattle) p.tapped = true
     this.emitUpdate()
     this.finishHumanAttack()
@@ -712,7 +712,9 @@ export class HumanGame {
       this.combat = this.combat.map((g) => {
         const blockers = { ...((g as Record<string, Record<string, unknown>>).blockers ?? {}) }
         delete blockers[id]
-        return { ...(g as Record<string, unknown>), blockers }
+        // CMB-4: the engine's own flag, which is what the client reads: taking the last blocker back
+        // leaves the group unblocked, so the attacker's beam comes back.
+        return { ...(g as Record<string, unknown>), blockers, isBlocked: Object.keys(blockers).length > 0 }
       })
       this.emitUpdate()
       this.emitBlockSelect()
@@ -735,8 +737,11 @@ export class HumanGame {
 
   private assignBlocker(_attackerId: string): void {
     if (!this.blockingId) return
-    const group = this.combat[0] as Record<string, Record<string, unknown>>
-    if (group) group.blockers = { ...(group.blockers ?? {}), [this.blockingId]: {} }
+    const group = this.combat[0] as Record<string, unknown> & { blockers?: Record<string, unknown> }
+    if (group) {
+      group.blockers = { ...(group.blockers ?? {}), [this.blockingId]: {} }
+      group.isBlocked = true
+    }
     this.blockingId = null
     this.emitUpdate()
     this.emitBlockSelect()
@@ -786,7 +791,7 @@ export class HumanGame {
             if (simAtt) simAtt.tapped = true
             this.phase = 'COMBAT'
             this.step = 'DECLARE_ATTACKERS'
-            this.combat = [{ attackers: { [simAttackerId]: {} }, blockers: {}, defenderId: HUMAN_PLAYER_ID }]
+            this.combat = [{ attackers: { [simAttackerId]: {} }, blockers: {}, isBlocked: false, defenderId: HUMAN_PLAYER_ID }]
             this.emitUpdate()
             if (this.options.humanBlock && this.myBattle.length > 0) { this.startHumanBlock(); return }
           }

@@ -203,3 +203,21 @@ picked. The mana cost of a card in hand is read on the card from the start as we
   read as a default, not as a migration, so a player who did configure their automation keeps every
   value of it.
 - Guard: `src/state/persistence.test.ts` · `src/state/store.test.ts` · `src/settings/PresetPicker.test.tsx`
+
+### SET-16 · How the hand is drawn is one choice of three, shown as it looks
+Settings → Board → Layout offers the hand as one choice of three, each with a thumbnail of what it
+draws: the fan, a column at the left edge, or a row of whole cards with a horizontal slider. The
+fan is the default and the one a player who has set nothing gets.
+
+Behind it the board still reads two flags, `handRail` and `handRow`, and the choice is turned into
+that pair (`src/settings/handLayout.ts`), so exactly one of the two is ever on. A setting saved
+earlier with both on reads as the column, which is what the board draws in that case. The card
+width slider stays, and is shown for the column and the row, which are the two that use it.
+
+The side panel's own thumbnail draws the panel at the left edge, where the panel is (BRD-6).
+
+- Why: the hand already had three shapes, but the settings offered two switches whose off-and-off
+  state was the third, so the fan was never named and the pair could be set to say two things at
+  once. The panel's thumbnail still showed it on the right after the panel moved to the left edge
+  (request of 2026-11-25).
+- Guard: `src/settings/handLayout.test.ts` · `src/settings/OptionPreview.test.tsx`

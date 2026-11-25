@@ -72,9 +72,10 @@ export default function ArenaBoard({
   const { focusId, select, showAll } = useSeatFocus(liveIds, game)
   const focusable = liveIds.length >= 2
   const peekId = useStore((s) => s.seatPeek)
-  // BRD-37: the turn strip only takes the click when I am playing; a spectator
-  // still focuses a seat from the board itself.
-  const inStrip = !isSpectator
+  // BRD-37: the strip owns the click, so no board draws a focus button of its own. A spectator
+  // reads the same boards and gets the same pills; leaving the button on their columns was the one
+  // place where a seat was focused from two different controls.
+  const inStrip = true
   const narrow = useNarrowScreen()
   const handCommander = useHandCommander(me, !isSpectator && !narrow, game?.myHelperEmblems)
 

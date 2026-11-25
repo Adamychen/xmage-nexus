@@ -117,22 +117,32 @@ the board, a card lifted out of the hand, the menus and the dialogs.
 ### TGT-11 · An arrow is a beam that points, not a ladder of dashes
 An arrow is one colour the whole way, ending in a notched dart, with a dark seam under it where it
 crosses the board. Nothing marches, nothing fades and nothing glows: the direction is in the dart.
-A halo was tried under the beam and taken out again, and so was a gradient along it.
+A halo was tried under the beam and taken out again, and so was a gradient along it. The dart is
+drawn in board pixels, never in multiples of the line's thickness, its back is where the line stops
+and its tip is the point being pointed at, so no stroke ever pokes out past the tip or shows through
+the notch; where two darts share one short line, each takes at most a third of it.
 
 - Why: the arrows were dashed strokes animated forever, which read as a ladder and told the
   direction only by watching them move; a gradient along the beam was tried first and read as the
   arrow fading out rather than as a direction. A capture of the board was also never reproducible,
   because the dash phase depends on the instant of capture and on the path's sub-pixel length, and
   WebKit does not freeze it; the reduced-motion rule existed only to make screenshots settle. The
-  halo went the same way: over a board of card art it read as a smear around the beam.
+  halo went the same way: over a board of card art it read as a smear around the beam. The dart was
+  sized in stroke widths and anchored at nine tenths of its own length, so the round cap of the seam
+  stuck out past the tip and the line met the head at its notch: "the heads still look odd, the line
+  doesn't meet the head and sometimes comes in from one side of it" (user report, 25-nov-2026).
 - Guard: `src/board/CombatArrowsOverlay.test.tsx` · `e2e/arena-chrome.spec.ts`
-### TGT-12 · An arrow leaves over the top of its source and comes in under its target
-Every arrow leaves what is acting through its top edge and arrives at what it points at through
-the bottom edge, whatever is acting: a spell or an ability on the stack, an attacker, a blocker. The
-curve rises out of the source and comes up into the target, so neither end crosses its own card and
-the dart is always read arriving from below. An arrow between two objects on the stack, which lie
-over each other, swings out past the cascade's left edge and rises into the bottom corner of the
-covered card that stays in view.
+
+### TGT-12 · An arrow runs between the sides that face each other, with both ends over their cards
+Every arrow leaves what is acting and reaches what it points at by the sides that face each other,
+whatever is acting: a spell or an ability on the stack, an attacker, a blocker. Each end sits over
+its own card rather than on its border, a bit inside it, so a beam reads as coming out of that card
+and a tie between two cards (CMB-4) reaches both of them. The curve between the two is a shallow arc,
+bowed to the same side of its own direction for every arrow, so arrows that run alongside each other
+stay apart; it never loops around to come in from underneath and never passes over whatever sits
+above its target, such as a seat's chip. An arrow between two objects on the stack, which lie over
+each other, still swings out past the cascade's left edge and rises into the covered card that stays
+in view.
 
 - Why: the arrows were anchored on the line between the two centres, trimmed by a fixed inset, so
   the same pair of cards gave a different entry point as either one moved and the dart could sit on
@@ -140,5 +150,8 @@ covered card that stays in view.
   out of the bottom of its card; with the stack's bubble under the cascade (STK-9) that crossed the
   bubble's text, and it was not what the user had asked for: any card that targets has its arrow
   leaving through the top, and any card that is targeted has it arriving through the bottom, as in
-  MTG Arena (2026-11-23).
+  MTG Arena (2026-11-23). That convention was dropped on 25-nov-2026, at the user's request: with the
+  attackers' row against the dividing line, a beam leaving upwards and coming in from below crossed
+  the defender's chip on its way, and the 35 % bow made every arrow a loop. The sides that face each
+  other give the same reading with a third of the curve.
 - Guard: `src/board/CombatArrowsOverlay.test.tsx`

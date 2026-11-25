@@ -211,3 +211,17 @@ from wherever its namesake stood.
   entry's stack was still holding. The gallery is also how every animation is reviewed, so a bug
   that only shows there still shows on everything else.
 - Guard: `src/board/cardPositionRegistry.test.ts` · `src/board/gameTransitionEngine.timers.test.tsx`
+
+### FX-16 · A tap slide starts from the place the board gave the card, never from mid-air
+When a tap regroups a pile the cards it displaced slide in from where they were, and "where they
+were" is the position the layout had given them, not wherever an animation had them at that instant.
+The reference is read with any slide the card is carrying taken back out: the one this animation is
+playing and the lunge an attacker or a blocker holds in CSS. A card whose only movement is such an
+offset has not changed place and is not animated at all.
+
+- Why: the reference was the plain bounding box, taken on every commit, so a commit landing in the
+  middle of a slide recorded a transient position and the next tap animated that card in from a
+  place it had never occupied. The user saw cards moving and returning "very fast, and it looks
+  random" (25-nov-2026). The jump that report started from was the chip reserve (BRD-21); this is
+  the other half, and it is what made the movement look arbitrary rather than like a regroup.
+- Guard: `src/board/useTapFlip.test.ts`

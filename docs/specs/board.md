@@ -150,7 +150,7 @@ mid-game takes effect at once and never drops an open prompt.
   A duel with the switch off used to fall back to a separate Standard board, and five or more
   players could only be seated there; with Standard gone (2026-11-23) a duel is one Arena column and
   a big table takes the panel, which already scrolls.
-- Guard: `e2e/arena-duel.spec.ts` · `e2e/spotlight.spec.ts` · `src/board/ScaledCopy.test.tsx` · `src/board/SpotlightBoard.test.tsx` · `src/board/cardOverlays.test.ts` · `src/board/spotlight.test.ts` · `src/game/GameScreen.test.tsx` · `src/state/persistence.test.ts`
+- Guard: `e2e/arena-duel.spec.ts` · `e2e/spotlight.spec.ts` · `src/board/ScaledCopy.test.tsx` · `src/board/SpotlightBoard.test.tsx` · `src/board/cardOverlays.test.ts` · `src/board/spotlight.test.ts` · `src/game/GameScreen.test.tsx` · `src/settings/OptionPreview.test.tsx` · `src/state/persistence.test.ts`
 
 ### BRD-7 · A click on a copy brings that board to the main area
 Clicking a copy — anywhere that is not something the current prompt can pick (BRD-8) — swaps it:
@@ -293,15 +293,25 @@ Retired 2026-11-23: the phone layout is no longer a target (user decision with t
 
 - Guard: none yet (retired)
 
-### BRD-20 · Piles hold five; token piles open after a second of hover
+### BRD-20 · One pile per identical permanent; token piles open after a second of hover
 Three or more identical permanents pile up (two lands are enough on the own board of the Arena layout, as
-in MTG Arena, BRD-32), five to a pile at most: twelve Treasures are piles of five, five
-and two, and a sixth token left alone stays a single card. Lands follow the same five-card limit. A pile is
-drawn as its top card with each other copy a dim edge just behind it, and the count badge in the corner.
+in MTG Arena, BRD-32), and the pile holds every copy there is: fifty Soldiers are one pile of fifty, not
+ten piles of five. Identical means identical to the player: the same card, the same tapped state, the same
+power and toughness, and, for a creature, the same ability to act. So fifteen 1/1 Goblins are one pile;
+give seven of them +1/+0 and those seven leave for a pile of 2/1 Goblins; make seventeen more and they
+stay apart while they cannot attack, joining the ready ones on the turn their sickness ends. A copy with
+counters, with damage marked, with something attached, mutated, face down or disguised is in no pile at
+all, and neither is one the game is asking the player to pick (a target, an attacker, a blocker), which
+leaves its pile for as long as the question lasts.
+A pile is drawn as its top card with each other copy a dim edge just behind it, and the
+count badge in the corner, which is where the number is read; it shows at most five of those edges, so a
+pile of fifty takes the width of a pile of five instead of growing one edge per card.
 With a mouse, a token pile fans out only after the pointer has rested on it for one second, and only that
 pile; a touch fans it out at once. While a token pile is fanned out the large hover preview is hidden, so
 it never covers the fanned cards. A land pile fans out as soon as the pointer enters. A fanned pile closes as
 soon as the pointer moves over anything outside it, even when the browser never reports that the pointer left.
+A pile of more than twelve does not fan at all: a fan compressed into the row would be a smear rather than a
+row of cards, and a copy the game is asking the player to pick leaves the pile and stands on its own anyway.
 
 - Why: a board of tokens (dozens of Treasures or Soldiers) spread each pile across the row, and passing the
   pointer over a pile fanned it out and pushed its neighbours aside. A pile that holds still and opens on a
@@ -309,7 +319,13 @@ soon as the pointer moves over anything outside it, even when the browser never 
   A land pile stayed open while the pointer rested on the mana rock it had pushed aside (CI, 2026-10-31):
   when the card under the pointer is redrawn as the pointer leaves, React reports no leave for the pile, so
   the pile also watches pointer moves while it is open.
-- Guard: `src/board/stackGroups.test.ts` · `src/board/StackPile.test.tsx` · `e2e/stack-groups.spec.ts`
+  Cutting a group into piles of five only moved the problem: a board of 254 Doppelganger tokens was 51 piles
+  of "×5" filling three rows, and the player asked why identical creatures did not stack further (user
+  report, 25-nov-2026). What the five-card limit was really protecting is the pile's footprint, so the limit
+  now caps the edges drawn, not the copies held. Summoning sickness went into the key with it, from the
+  same report: a Krenko activation adds seventeen Goblins that cannot attack, and a pile that mixed them
+  with the ones that can would say the player has twenty-four attackers.
+- Guard: `src/board/stackGroups.test.ts` · `src/board/StackPile.test.tsx` · `src/board/BoardZone.css.test.ts` · `e2e/stack-groups.spec.ts`
 
 ### BRD-21 · A board settles: no card size keeps changing for ever
 Once a board has been drawn and nothing changes (no new game view, no window resize, no hover),
@@ -338,7 +354,12 @@ change at all after the board has settled.
   chip of margin, so once a 1000 px window turned it on it stayed on at 1600 px and the own board
   drew 118 px cards instead of 130 px; its first fix measured too early, while the cards were still
   the 1000 px ones on two lines, and locked it on again (24-nov-2026; never caught while the guard
-  ran on the Table interface).
+  ran on the Table interface). What the reserve was held for was then an exact-pixel signature of
+  the zone and the chip, and the chip holds a clock: every tick moved its measured width by a pixel,
+  dropped the reserve for two frames and jumped the whole creatures row by the width of a chip, out
+  and back. In a recording of a four-player game the two attacking creatures moved 135 px sideways
+  between two frames 50 ms apart, with nothing else changed but the clock, 15:11 to 15:10 (user
+  report with video, 25-nov-2026). The signature now reads those sizes in steps of 8 px.
   An Arena opponent's hand, commander and piles followed the seat's card size, and the chip beside
   them breaks into lines from the room they leave; the card size comes from the height that chip
   leaves, so a 4-seat board at 1100x700 swapped 64 and 70 px for ever (241 changes in 500 ms). They
@@ -596,7 +617,10 @@ creatures keep their own size.
 On the own board of the Arena layout (BRD-32) the commander and the companion in the command zone
 are drawn with the hand, which is where their owner looks for something to cast: the last cards of
 the fan, apart from it by a gap of 0.4 of a card and with a gold edge; under the hand column,
-behind a line of its own; at the end of the hand row, past a gap. They follow the hand in every
+behind a line of its own; at the end of the hand row, past a gap. Wherever the hand draws it, the fan of the own hand and
+the zone a watched seat or a panel copy draws, it is read the way the
+piles beside it are (BRD-32): the top half of a card, on a card a third wider than that hand's, so
+its art and its name carry at a glance without the hand giving up the room a whole card would take. They follow the hand in every
 hand layout, because the question they answer is the same in all of them. A seat drawn
 at full size that is not mine, the main area of the main-board mode (BRD-6), carries its hand the
 same way: the backs of the cards it holds, with its uncast commander at the end of them, instead
@@ -614,8 +638,17 @@ too: the hand has no room to spare at that width.
   tax drawn in the card's corner sat below the board edge in the hand, a "+" drawn next to a pip did
   not read against the gold edge, and a separate "+N" still had to be added up by eye. It was the
   fanned hand of the v1 chrome only until the user asked for it everywhere (2026-11-21): with the
-  v2 chrome the commander sat in the left column and read as one more thing on the board.
-- Guard: `src/board/HandBar.test.tsx` · `src/board/commanders.test.ts` · `src/board/BoardZone.arenaOwn.test.tsx` · `src/board/HandRail.test.tsx` · `src/board/HandRow.test.tsx` · `src/board/SpotlightBoard.test.tsx`
+  v2 chrome the commander sat in the left column and read as one more thing on the board. The wider
+  half-card box then never reached the screen: the bar sizes itself for one card per slot, so the
+  wider slot was the item the tight row shrank (23 px, with the card spilling out of it), and the
+  card inside still took the fan's tuck on top of the half it already is, which slid its visible
+  half past the bottom of the window. The user looked for it with and without the panel and found
+  it in neither (25-nov-2026); measured at 1024x768 the visible half now ends 8 px above the
+  window's edge, with the panel open and closed. The half card was then only the own fan's: a hand
+  drawn as a zone, which is what a watched seat and every copy in the panel use, still drew a whole
+  card, and the user, watching a game, saw his own seat's commander whole while the opponents'
+  read right (same day).
+- Guard: `src/board/HandBar.test.tsx` · `src/board/HandBar.css.test.ts` · `src/board/handCommander.css.test.ts` · `src/board/commanders.test.ts` · `src/board/BoardZone.arenaOwn.test.tsx` · `src/board/HandRail.test.tsx` · `src/board/HandRow.test.tsx` · `src/board/SpotlightBoard.test.tsx`
 
 ### BRD-35 · A band in several lines holds the same count on each line
 A band that wraps into several lines puts the same number of items on each line, or fewer on the
@@ -671,14 +704,17 @@ Every pill whose click does something carries the board icon, dim at rest and li
 pointed at, focused by the keyboard or already focused, where it turns into the icon that brings
 all the boards back; its tooltip names the action after the player and the life. Pointing at a pill
 lights its opponent's column, and pointing at that column lights the pill, so the strip reads as
-the control of the boards above it. The pill is the only way in: those boards draw no focus button
-of their own (a spectator, whose pills do nothing, keeps it).
+the control of the boards above it. The pill is the only way in, for whoever is reading those boards:
+a spectator gets the same pills and the same lit pair, and no board draws a focus button of its own.
 
 - Why: without the side panel the strip was the opponent switcher of the Standard layout (with
   life and paging arrows) and with it the turn order ring, so the same layout read two ways; the
   user asked for one, without life (2026-11-13). A button on every column said what a click does
   but took the width the status row needed, while the pill said nothing at all, so the icon and the
-  lit pair moved that offer to the strip, where there is room for it (2026-11-13).
+  lit pair moved that offer to the strip, where there is room for it (2026-11-13). A spectator kept the button
+  because their pills did nothing, which left one seat focused from two different controls and the
+  button back on the boards for anyone watching (user report, 25-nov-2026): the pills answer for
+  them too now, since focusing a board is reading it, not playing it.
 
 The ring never clips a name. When the band gives the row less room than it needs it gives up, in
 order, its spacing and the size of its type (nothing is lost), and then the names of the seats that
@@ -702,10 +738,10 @@ the bar and never bleeding into it, at the size of that seat's piles (a narrow c
 almost one card). It never takes its size
 from the status row's height, which grows with the chip's counters and would leave one seat's hand
 much larger than another's.
-With the side panel (BRD-6) the fan sits upright in the bottom row of that board (BRD-39). On a
-copy in the panel it is tucked like the own resting hand (HND-1), seven tenths of the card, so it
-covers nothing; in the main area it is drawn whole and nothing clips it, because that board has
-the room and its cards are the ones the watcher came to read. A known card still shows face up and the pile
+With the side panel (BRD-6) the fan sits upright in the bottom row of that board (BRD-39), drawn
+whole wherever that row is: the main area, the board at the bottom without the panel (BRD-32) and
+every copy in the panel, which is a miniature of the main area and must read like one. Nothing
+clips it. A known card still shows face up and the pile
 still opens the hand viewer.
 
 - Why: a whole card back took a column's height for a number, and a stacked pile read less like a
@@ -713,8 +749,10 @@ still opens the hand viewer.
   card, which in the main area read as a cut, not as a hand (user report, 23-nov-2026). Once the top
   strip moved above the opponents' row (BRD-11), keeping `.arena-opp-row` flush with the top bar's
   separator lets the tucked fan emerge cleanly from beneath the bar without a mid-air gap (user
-  report, 24-nov-2026).
-- Guard: `src/board/HandZone.test.tsx`
+  report, 24-nov-2026). Tucking it on a panel copy read as a cut there too: measured at 1600×900 the
+  copy's fan box was 19 px tall around cards 30 px tall, so each back lost 7 px at the waist (user
+  report, 25-nov-2026). Whole, the box is 27 px and the backs are painted entire.
+- Guard: `src/board/HandZone.test.tsx` · `src/board/ArenaBoard.css.test.ts`
 
 ### BRD-39 · With the side panel every board is drawn like the own Arena board
 With the side panel on (BRD-6), every player's board, the one
@@ -1116,3 +1154,44 @@ information. The stops are the one `phaseStops` setting (SET-11).
   (same day). Arena's row edits the stops of the turn on screen, so the right click keeps the other
   turn one gesture away.
 - Guard: `src/game/ladderSteps.test.ts` · `src/game/PhaseLadder.test.tsx` · `src/dev/galleryFixtures.test.ts` · `e2e/phase-stops.spec.ts`
+
+### BRD-63 · Damage is read on the creature's own toughness, in red
+Damage marked on a creature is not a badge of its own: the power and toughness badge shows what the
+creature has left, the toughness dropping by the damage on it and painted red (never below zero, so
+an indestructible creature holding lethal damage reads "5/0"). The badge is shown while damage is
+marked even when the player chose to see power and toughness only when it changes, or not at all,
+because marked damage is state the player has to see; the badge's tooltip carries the printed
+numbers and the exact damage. Damage clears when the turn does, and with it the red.
+
+- Why: a red "4" badge under a 5/2 read as a number without a unit, and the player asked what it was;
+  it was the damage the server marks on the permanent (`PermanentView.damage`), on a creature that
+  survived it because it was indestructible. MTG Arena writes the same thing on the creature's own
+  toughness, which is where a player looks to know whether it dies (user request, 25-nov-2026).
+- Guard: `src/board/CardSlot.test.tsx`
+
+### BRD-64 · A token says on the table that it is a token
+A token on the battlefield carries a small tag with the word the hover preview uses, in the middle of
+its bottom edge, where the damage mark used to be (BRD-63) and clear of the counters and the power
+and toughness. It is drawn face up in both card renderings and at every card size, because at board
+size a token's type line ("Token Creature — Goblin") cannot be read, and a player has to know a token
+from a real card: a token leaves the game when it changes zone and cannot be returned to a hand. A
+copy of a real card is not a token and carries no tag.
+
+- Why: the player saw the tag in the hover preview and asked why the table did not show it
+  (25-nov-2026). The slot under the card was free, since damage moved onto the toughness.
+- Guard: `src/board/CardSlot.test.tsx`
+
+### BRD-65 · A seat out of the game says why on every board, not only in the panel
+Wherever a seat that is out of the game is drawn, it says which of the three things happened: a skull
+and "has died" for a loss (0 life, poison, an effect), a white flag and "has conceded" for a
+concession, and a door and "has left the game" for a player who quit the match or ran out of time.
+That covers the panel's folded head (BRD-30), the strip an Arena column folds to, and the overlay
+over a seat the player reopens. The reason is read once, from the game log, because the game view
+only says `hasLeft`; without a log line, 0 life reads as a death and anything else as leaving. The
+line under the overlay's title stays as it was, since it describes the state and not the reason.
+
+- Why: the panel learned the three reasons in #81 and the other boards kept a two-way guess, so the
+  same seat said "has been defeated" in the Arena strip and "has conceded" in the panel at the same
+  time, and a player who conceded with life left was shown as having walked out (request of
+  2026-11-25).
+- Guard: `src/board/defeatedSeats.test.tsx`

@@ -668,6 +668,17 @@
   filter: brightness(0.45);
 }
 
+/* BRD-20: a pile holds every identical copy, but shows at most five edges: from the sixth card on
+   each back sits exactly on the one before it, so fifty Soldiers take the width of five and the
+   count badge carries the real number. Without this the pile grew one edge per card and fifty
+   tokens were a staircase wider than the board. */
+.board-zone .stack-group > .card-slot:nth-child(n + 6),
+.board-zone .stack-group.token-pile > .card-slot:nth-child(n + 6),
+.board-zone.card-style-compact .stack-group.token-pile > .card-slot.tapped:nth-child(n + 6),
+.board-zone.card-style-compact.tap-tilted .stack-group.token-pile > .card-slot.tapped:nth-child(n + 6) {
+  margin-left: calc(-1 * var(--card-w));
+}
+
 /* Graveyard/exile dissolve (D4): a detached clone of a card that just left the
    battlefield. It sits in the board shell (or on <body> outside one) and carries
    its own size and transform; the positioning is set inline. */
@@ -742,4 +753,28 @@
   z-index: 11;
   max-width: 25cqw;
   min-width: 0;
+}
+
+/* CMB-14: a declared combat splits a board's creatures into columns. The creatures of one combat
+   group stand together, a gap of a third of a card opens before the next group, and what is not in
+   combat keeps its place a step back, dimmed, so the engaged cards read first. The attacker's
+   columns and its blockers' are numbered the same, so the pairing lines up across the table. */
+.board-zone .creatures-band > .combat-column-start:not(:first-child) {
+  margin-left: calc(var(--card-w, var(--card-w-base)) * 0.34);
+}
+
+.board-zone .creatures-band > .combat-at-ease {
+  opacity: 0.55;
+  filter: saturate(0.75);
+}
+
+.board-zone .creatures-band > .combat-at-ease:hover {
+  opacity: 1;
+  filter: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .board-zone .creatures-band > .combat-at-ease {
+    transition: none;
+  }
 }

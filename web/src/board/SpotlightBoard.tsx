@@ -7,7 +7,7 @@ import PlayerZone from './PlayerZone'
 import BoardShell, { BoardTopStrip } from './BoardShell'
 import { useBoardPresenter, useBoardPlayers } from './useBoardPresenter'
 import { opponentRevealedCards } from './revealedCards'
-import { isPlayerDefeated, isPlayerOut, useSeatStates, useSpectatorBottomHand, useSwitchedHand, type BoardProps } from './boardShared'
+import { isPlayerOut, useOutReason, useSeatStates, useSpectatorBottomHand, useSwitchedHand, type BoardProps } from './boardShared'
 import { useBattlefieldPulse } from './seatFocus'
 import { panelSeatIds } from './spotlight'
 import { pileCornerLift } from './pileCorner'
@@ -20,8 +20,8 @@ import ScaledCopy, { useLayoutBox } from './ScaledCopy'
 import { seatColorVar, seatIndexOf } from './seatColor'
 import Icon from '../ui/Icon'
 import { normalizeBoardSpotlightPanel, SPOTLIGHT_PANEL_MAX, SPOTLIGHT_PANEL_MIN } from './cardOverlays'
-import { setSetting, useSettings, useStore } from '../state/store'
-import { outReasonKey, type OutReason } from './outReason'
+import { setSetting, useSettings } from '../state/store'
+import { OUT_ICON, OUT_STATUS } from './outReason'
 import './SpotlightBoard.css'
 
 export interface SpotlightBoardProps extends BoardProps {
@@ -93,8 +93,6 @@ function CopyPulse({ player }: { player: PlayerView | undefined }) {
 }
 
 /** Left edge of the panel: drag it, or press the arrow keys, to resize the panel (BRD-13). */
-const OUT_STATUS = { died: 'player_died', conceded: 'player_conceded', left: 'player_left' } as const
-const OUT_ICON = { died: 'skull', conceded: 'flag', left: 'door' } as const
 
 /** A copy's name and life at full size above it (BRD-31): a scaled copy is too small to tell whose it is. */
 /** MNA-12: whether a pool holds anything worth drawing. */
@@ -106,12 +104,11 @@ function poolHasMana(pool: PlayerView['manaPool'] | undefined): boolean {
 function CopyHead({ player, players, active, onSelect }: { player: PlayerView; players: PlayerView[]; active: boolean; onSelect: () => void }) {
   const { t } = useTranslation()
   const lifeLabel = t('board', 'turn_life_label')
-  const loggedReason = useStore((s) => (s.gameId ? s.outReasons[outReasonKey(s.gameId, player.name)] : undefined))
+  const reason = useOutReason(player)
   const seat = { '--seat': seatColorVar(seatIndexOf(players, player.playerId)) } as CSSProperties
   if (isPlayerOut(player) && !player.controlled) {
-    // BRD-30: an opponent out of the game folds to its head; there is no board left to show. Why they
-    // left comes from the log; without it, 0 life reads as a death and anything else as leaving.
-    const reason: OutReason = loggedReason ?? (isPlayerDefeated(player) ? 'died' : 'left')
+    // BRD-30: an opponent out of the game folds to its head; there is no board left to show. Why
+    // they left is read for every board the same way (BRD-65).
     const status = t('game', OUT_STATUS[reason])
     return (
       <div

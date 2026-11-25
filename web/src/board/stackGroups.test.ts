@@ -151,21 +151,45 @@ describe('groupStackables', () => {
     expect(solos).toHaveLength(2)
   })
 
-  it('BRD-20: token piles hold at most five, a leftover single token stays solo', () => {
-    const twelve = groupStackables(entries(Array.from({ length: 12 }, () => token('Treasure'))), 'other')
-    expect(twelve.groups.map((g) => g.items.length)).toEqual([5, 5, 2])
-    expect(new Set(twelve.groups.map((g) => g.key)).size).toBe(3)
-    expect(twelve.solos).toHaveLength(0)
+  it('BRD-20: creature tokens that cannot act yet make a pile of their own, and join the rest when they can', () => {
+    const sick = Array.from({ length: 17 }, () => creatureToken('Goblin', { summoningSickness: true }))
+    const ready = Array.from({ length: 7 }, () => creatureToken('Goblin'))
+    const mixed = groupStackables(entries([...ready, ...sick]), 'creatures')
+    expect(mixed.groups.map((g) => g.items.length)).toEqual([7, 17])
+    expect(new Set(mixed.groups.map((g) => g.key)).size).toBe(2)
 
-    const six = groupStackables(entries(Array.from({ length: 6 }, () => creatureToken('Soldier'))), 'creatures')
-    expect(six.groups.map((g) => g.items.length)).toEqual([5])
-    expect(six.solos.map(([id]) => id)).toEqual(['c5'])
+    const nextTurn = groupStackables(entries([...ready, ...sick.map((p) => ({ ...p, summoningSickness: false }))]), 'creatures')
+    expect(nextTurn.groups.map((g) => g.items.length)).toEqual([24])
   })
 
-  it('BRD-20: land piles hold at most five too, a leftover single land stays solo', () => {
-    const { groups, solos } = groupStackables(entries(Array.from({ length: 6 }, () => land('Forest'))), 'lands')
-    expect(groups.map((g) => g.items.length)).toEqual([5])
-    expect(solos.map(([id]) => id)).toEqual(['c5'])
+  it('BRD-20: a pump splits the pile by power and toughness', () => {
+    const pumped = Array.from({ length: 7 }, () => creatureToken('Goblin', { power: '2' }))
+    const plain = Array.from({ length: 8 }, () => creatureToken('Goblin'))
+    const { groups } = groupStackables(entries([...plain, ...pumped]), 'creatures')
+    expect(groups.map((g) => g.items.length)).toEqual([8, 7])
+  })
+
+  it('BRD-20: a pile holds every identical copy, however many there are', () => {
+    const twelve = groupStackables(entries(Array.from({ length: 12 }, () => token('Treasure'))), 'other')
+    expect(twelve.groups.map((g) => g.items.length)).toEqual([12])
+    expect(twelve.solos).toHaveLength(0)
+
+    const fifty = groupStackables(entries(Array.from({ length: 50 }, () => creatureToken('Soldier'))), 'creatures')
+    expect(fifty.groups.map((g) => g.items.length)).toEqual([50])
+    expect(fifty.solos).toHaveLength(0)
+  })
+
+  it('BRD-20: a land pile holds every copy too', () => {
+    const { groups, solos } = groupStackables(entries(Array.from({ length: 9 }, () => land('Forest'))), 'lands')
+    expect(groups.map((g) => g.items.length)).toEqual([9])
+    expect(solos).toHaveLength(0)
+  })
+
+  it('BRD-20: a copy the game asks the player to pick leaves the pile and stands on its own', () => {
+    const perms = entries(Array.from({ length: 8 }, () => token('Treasure')))
+    const { groups, solos } = groupStackables(perms, 'other', { excludeIds: new Set(['c3']) })
+    expect(groups.map((g) => g.items.length)).toEqual([7])
+    expect(solos.map(([id]) => id)).toEqual(['c3'])
   })
 
   it('a divergent creature token stays solo while its siblings stack', () => {

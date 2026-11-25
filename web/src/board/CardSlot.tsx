@@ -332,7 +332,14 @@ export default function CardSlot({
   const defenseVal = perm.defense ? parseInt(String(perm.defense), 10) : 0
 
   const hasSummoningSickness = isRealCreature && !tapped && perm.summoningSickness === true
+  // BRD-64: a token, not a copy of a real card, which is a card like any other.
+  const isTokenPermanent =
+    (perm.isToken === true || String(card.mageObjectType ?? '').toUpperCase() === 'TOKEN') && perm.copy !== true
   const pt = ptTrend(perm)
+  // BRD-63: damage is read on the creature's own toughness, in red, and not as a badge of its own.
+  const toughnessNumber = Number(perm.toughness)
+  const damaged = showDamage && isRealCreature && shownDamage > 0 && Number.isFinite(toughnessNumber)
+  const liveToughness = damaged ? Math.max(0, toughnessNumber - shownDamage) : perm.toughness
   const basePower = basePtValue(perm.originalPower)
   const baseToughness = basePtValue(perm.originalToughness)
   const ptTitle = (pt.power !== 'same' || pt.toughness !== 'same') && basePower != null && baseToughness != null
@@ -411,9 +418,9 @@ export default function CardSlot({
 const ptBaseKnown = basePower != null || baseToughness != null
 const showPtBadge =
     showPt
-    && ptBadgeMode !== 'hidden'
+    && (ptBadgeMode !== 'hidden' || damaged)
     && isRealCreature && perm.power != null && perm.toughness != null
-    && (ptBadgeMode === 'always' || !ptBaseKnown || pt.power !== 'same' || pt.toughness !== 'same')
+    && (damaged || ptBadgeMode === 'always' || !ptBaseKnown || pt.power !== 'same' || pt.toughness !== 'same')
   const hasCornerStat = showPtBadge || (isPlaneswalker && loyaltyVal > 0) || (isBattle && defenseVal > 0)
   const tileArt = cropUrl && cropFailed !== cropUrl ? cropUrl : null
   // BRD-42: the loyalty, the defense and the chapter already have their own
@@ -604,10 +611,21 @@ const showPtBadge =
           className="pt-badge"
           data-badge-zone="stats"
           data-trend={pt.power !== 'same' || pt.toughness !== 'same' ? 'changed' : undefined}
-          tip={{ title: `${perm.power}/${perm.toughness}`, body: ptTitle }}
+          data-damaged={damaged ? String(shownDamage) : undefined}
+          tip={{
+            title: `${perm.power}/${perm.toughness}`,
+            body: [damaged ? `${t('game', 'damage')}: ${shownDamage}` : null, ptTitle].filter(Boolean).join(' · ') || undefined,
+          }}
         >
-          <span className="pt-value" data-trend={pt.power}>{perm.power}</span>/<span className="pt-value" data-trend={pt.toughness}>{perm.toughness}</span>
+          <span className="pt-value" data-trend={pt.power}>{perm.power}</span>/<span className="pt-value" data-trend={damaged ? undefined : pt.toughness} data-damaged={damaged ? '' : undefined}>{liveToughness}</span>
         </BadgeTip>
+      )}
+
+      {/* BRD-64: a token says so on the table, where its type line is unreadable, as it does in the
+          hover preview. It takes the place the damage badge left (BRD-63), between the counters and
+          the power and toughness. */}
+      {isTokenPermanent && !showBack && (
+        <span className="token-tag" data-badge-zone="stats">{t('board', 'token')}</span>
       )}
 
       {isPlaneswalker && loyaltyVal > 0 && !renderedFace && (
@@ -709,10 +727,6 @@ const showPtBadge =
             )
           })}
         </div>
-      )}
-
-      {showDamage && isRealCreature && shownDamage > 0 && (
-        <BadgeTip className="damage-badge" data-badge-zone="stats" tip={{ title: `${t('game', 'damage')}: ${shownDamage}` }}>{shownDamage}</BadgeTip>
       )}
 
       {enteredThisTurn && <span className="entered-glow" aria-hidden="true" />}

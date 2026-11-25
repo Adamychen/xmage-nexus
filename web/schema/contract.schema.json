@@ -416,9 +416,13 @@
     },
     "CombatGroupView": {
       "type": "object",
+      "description": "One attacking group. The fork's CombatGroupView carries attackers, blockers, isBlocked, defenderId and defenderName; defenders, attacker and isAttackedByDefender are kept for the versions that send them instead.",
       "properties": {
         "attackers": { "type": "array", "items": {} },
         "blockers": { "type": "array", "items": {} },
+        "isBlocked": { "type": "boolean", "description": "CMB-4: the group was blocked. It stays true for the rest of the combat, even once every blocker has died, so an attacker that was stopped never reads as about to hit the player." },
+        "defenderId": { "type": "string", "description": "Who the group attacks: a player, or a planeswalker or battle of theirs." },
+        "defenderName": { "type": "string" },
         "defenders": { "type": "array", "items": {} },
         "attacker": {},
         "isAttackedByDefender": { "type": "boolean" }

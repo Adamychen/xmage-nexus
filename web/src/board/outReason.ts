@@ -24,6 +24,10 @@ export function parseOutReason(message: string): { player: string; reason: OutRe
   return null
 }
 
+/** What a seat out of the game says and shows, wherever it folds (BRD-65). */
+export const OUT_STATUS = { died: 'player_died', conceded: 'player_conceded', left: 'player_left' } as const
+export const OUT_ICON = { died: 'skull', conceded: 'flag', left: 'door' } as const
+
 export function outReasonKey(gameId: string, player: string): string {
   return `${gameId}‖${player.trim().toLowerCase()}`
 }

@@ -1995,6 +1995,96 @@ function withTwoAttackers(game: GameView): GameView {
   return { ...withBears, combat: [...(game.combat ?? []), unblocked] as unknown as GameView['combat'] }
 }
 
+/** CMB-14: the same table with one opponent only, for the duel cases of the combat states. */
+function twoSeatsOf(game: GameView): GameView {
+  const me = controlledPlayer(game)
+  const opponent = opponentPlayer(game)
+  if (!me || !opponent) return game
+  return { ...game, players: [me, opponent] as PlayerView[] }
+}
+
+/** CMB-14: a creature made for a combat scene of the gallery. */
+function sceneCreature(id: string, name: string, power: string, toughness: string, tapped: boolean): PermanentView {
+  return {
+    id,
+    name,
+    displayName: name,
+    expansionSetCode: 'IMA',
+    cardNumber: '165',
+    manaValue: 2,
+    cardTypes: ['Creature'],
+    subtypes: ['Bear'],
+    power,
+    toughness,
+    tapped,
+    counters: [],
+  } as unknown as PermanentView
+}
+
+export interface CombatScenePlan {
+  /** Which opponent is attacked: 0 is the first seat that is not mine. */
+  seat: number
+  /** How many of my creatures attack that seat. */
+  attackers: number
+  /** Blockers that seat puts in front of each attacker, attacker by attacker. */
+  blockers?: number[]
+  /** CMB-4: the group stays blocked with no blockers left, as it does once they die in combat. */
+  blockersDied?: boolean
+}
+
+/**
+ * CMB-14: a declared combat built from scratch, so a gallery entry reads the same whatever the base
+ * frame holds: my attackers are tapped on my battlefield, the blockers stand on the seat they
+ * defend, and every group names its defender the way the proxy does.
+ */
+function withCombatScene(game: GameView, plan: CombatScenePlan[]): GameView {
+  const me = controlledPlayer(game)
+  const seats = players(game).filter((p) => !p.controlled)
+  if (!me || seats.length === 0) return game
+
+  const mine: Record<string, PermanentView> = {}
+  const theirs = new Map<string, Record<string, PermanentView>>()
+  const groups: Array<Record<string, unknown>> = []
+
+  plan.forEach((entry, planIndex) => {
+    const seat = seats[Math.min(entry.seat, seats.length - 1)]
+    if (!seat?.playerId) return
+    for (let a = 0; a < entry.attackers; a++) {
+      const attackerId = `cmb-${planIndex}-a${a}`
+      mine[attackerId] = sceneCreature(attackerId, a % 2 === 0 ? 'Grizzly Bears' : 'Raging Goblin', a % 2 === 0 ? '2' : '1', a % 2 === 0 ? '2' : '1', true)
+      const blockerCount = entry.blockers?.[a] ?? 0
+      const blockers: Record<string, unknown> = {}
+      for (let b = 0; b < blockerCount; b++) {
+        const blockerId = `cmb-${planIndex}-a${a}-b${b}`
+        if (!entry.blockersDied) {
+          const onSeat = theirs.get(seat.playerId) ?? {}
+          onSeat[blockerId] = sceneCreature(blockerId, 'Llanowar Elves', '1', '1', false)
+          theirs.set(seat.playerId, onSeat)
+        }
+        blockers[blockerId] = {}
+      }
+      groups.push({
+        attackers: { [attackerId]: {} },
+        blockers: entry.blockersDied ? {} : blockers,
+        isBlocked: blockerCount > 0,
+        defenderId: seat.playerId,
+        defenderName: seat.name,
+      })
+    }
+  })
+
+  const step = plan.some((entry) => (entry.blockers ?? []).some((n) => n > 0)) ? 'DECLARE_BLOCKERS' : 'DECLARE_ATTACKERS'
+  const withCards = {
+    ...game,
+    players: players(game).map((player) => {
+      if (player.controlled) return { ...player, battlefield: { ...player.battlefield, ...mine } }
+      const added = player.playerId ? theirs.get(player.playerId) : undefined
+      return added ? { ...player, battlefield: { ...player.battlefield, ...added } } : player
+    }) as PlayerView[],
+  }
+  return { ...withStep(withCards, 'COMBAT', step), combat: groups as unknown as GameView['combat'] }
+}
+
 /**
  * The combat damage step: every attacker and blocker in a group with a blocker dies (two 1/1 Mystics trade),
  * and the opponent loses what the unblocked attackers deal. Only the unblocked groups stay in combat.
@@ -6314,6 +6404,97 @@ export function buildGalleryEntries(): GalleryEntry[] {
     gameId: GANG_BLOCK_FRAME?.gameId ?? null,
     action: { label: 'Pasar prioridad', apply: rotatePriority },
   })
+  // CMB-14: the combat states of the rework, each pinned to a layout so the panel's case is explicit.
+  const duelBase = GANG_BLOCK_FRAME?.gameView ? twoSeatsOf(GANG_BLOCK_FRAME.gameView) : null
+  const duelAttack = duelBase ? withCombatScene(calmGame(duelBase), [{ seat: 0, attackers: 3 }]) : null
+  const duelBlocked = duelBase ? withCombatScene(calmGame(duelBase), [{ seat: 0, attackers: 3, blockers: [2, 1, 0] }]) : null
+  const podAttack = FOUR_PLAYER_GAME
+    ? withCombatScene(calmGame(FOUR_PLAYER_GAME), [{ seat: 0, attackers: 2 }, { seat: 1, attackers: 1 }, { seat: 2, attackers: 1 }])
+    : null
+  const podBlocked = FOUR_PLAYER_GAME
+    ? withCombatScene(calmGame(FOUR_PLAYER_GAME), [{ seat: 0, attackers: 2, blockers: [2, 0] }, { seat: 1, attackers: 1, blockers: [1] }, { seat: 2, attackers: 1 }])
+    : null
+  const duelStopped = duelBase
+    ? withCombatScene(calmGame(duelBase), [{ seat: 0, attackers: 2, blockers: [1, 0], blockersDied: true }])
+    : null
+  const combatStates: Array<{ id: string; label: string; description: string; game: GameView | null; panel: boolean }> = [
+    {
+      id: 'combat:duel-attack',
+      label: 'Combat: duel, three attackers, nothing blocks',
+      description: 'One opponent, three of my creatures attacking and no blockers: the engaged creatures gather in their columns and what is not in combat stays back, dimmed. Side panel off.',
+      game: duelAttack,
+      panel: false,
+    },
+    {
+      id: 'combat:duel-attack-panel',
+      label: 'Combat: duel, three attackers, side panel',
+      description: 'The same combat with the side panel open: the main board arranges the columns and the copy in the panel arranges them at its own scale.',
+      game: duelAttack,
+      panel: true,
+    },
+    {
+      id: 'combat:duel-block',
+      label: 'Combat: duel, two of three blocked',
+      description: 'One opponent blocking: two creatures on the first attacker, one on the second, the third unblocked. Each group is a column on both boards, in the same order. Side panel off.',
+      game: duelBlocked,
+      panel: false,
+    },
+    {
+      id: 'combat:duel-block-panel',
+      label: 'Combat: duel, two of three blocked, side panel',
+      description: 'The same block with the side panel open.',
+      game: duelBlocked,
+      panel: true,
+    },
+    {
+      id: 'combat:duel-stopped',
+      label: 'Combat: the blocker died, the attacker stays stopped',
+      description: 'The 8/8 case: a blocked attacker whose blocker died in the damage step. The view still calls the group blocked, so that attacker draws neither beam nor tie for the rest of the combat, while the one nothing blocked keeps its beam. Side panel off.',
+      game: duelStopped,
+      panel: false,
+    },
+    {
+      id: 'combat:pod-attack',
+      label: 'Commander: attacking three seats at once',
+      description: 'Four-player table: two attackers at one seat and one at each of the others, nothing blocked. The columns of a seat sit together and follow the seat order. Side panel off.',
+      game: podAttack,
+      panel: false,
+    },
+    {
+      id: 'combat:pod-attack-panel',
+      label: 'Commander: attacking three seats, side panel',
+      description: 'The same attack with the side panel open, which is where the arrows used to cross the panel to reach a two-centimetre card.',
+      game: podAttack,
+      panel: true,
+    },
+    {
+      id: 'combat:pod-block',
+      label: 'Commander: three seats, two of them blocking',
+      description: 'Four-player table with blockers on two of the three seats attacked: every group is a column, and a seat with nothing engaged keeps its row untouched. Side panel off.',
+      game: podBlocked,
+      panel: false,
+    },
+    {
+      id: 'combat:pod-block-panel',
+      label: 'Commander: three seats, two blocking, side panel',
+      description: 'The same combat with the side panel open.',
+      game: podBlocked,
+      panel: true,
+    },
+  ]
+  for (const state of combatStates) {
+    entries.push({
+      id: state.id,
+      group: 'Tablero',
+      label: state.label,
+      description: state.description,
+      phase: 'game',
+      game: state.game,
+      gameId: GANG_BLOCK_FRAME?.gameId ?? null,
+      boardSpotlight: state.panel,
+    })
+  }
+
   entries.push({
     id: 'board:table-4-crowded',
     group: 'Tablero',

@@ -196,3 +196,11 @@
     transition: none;
   }
 }
+
+/* ACC-1: whoever asked for less transparency keeps the wash and loses the blur behind it. */
+@media (prefers-reduced-transparency: reduce) {
+  .cmd-dmg-dropdown {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}

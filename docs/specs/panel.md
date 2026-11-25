@@ -34,12 +34,15 @@ square, the event's sentence, a damage or life chip ("−4", "+3") when it has o
 hours and minutes (the full time in its tooltip). In the sentence card names are hover links to the
 card (gold) and player names take their seat colour (PNL-2). The card name, the target and the player
 are not repeated outside the sentence, and the card art is not painted behind the row; hovering a card
-name shows the card. Rows are grouped under the turn divider, which stays. The text view is unchanged.
+name shows the card, and only its name does: the row itself opens nothing, however much of it the
+pointer crosses. Rows are grouped under the turn divider, which stays. The text view is unchanged.
 At 1440×900 with the side panel on (BRD-6), the log panel shows at least fifteen events at once.
 
 - Why: every event was a 50–80 px card that said the card name, the target and the player twice
   ("FOREST · Adam juega Forest"), with the same time on all of them, the sentence on a black box and
   the art at 25 % that could barely be seen; ten events filled the panel (review of 2026-10-27).
+  The row kept a hover of its own, anchored to its whole width, so reading the log opened a card
+  preview over the board on every row the pointer passed (user report, 25-nov-2026).
 - Guard: `src/game/ActionFeedCard.test.tsx` · `e2e/arena-chrome.spec.ts`
 
 ### PNL-4 · Chat messages are bubbles, mine on the right

@@ -3,6 +3,7 @@ import type { CardView, CardsView, GameView, PermanentView, PlayerView } from '.
 import { simpleToCardsView } from './revealedCards'
 import { switchedHandCards } from './handSwitch'
 import { useStore } from '../state/store'
+import { outReasonKey, type OutReason } from './outReason'
 import type { CrossZonePlayable } from './crossZone'
 import type { TargetZoneKind } from './targetZones'
 
@@ -22,6 +23,15 @@ export function spectatorHomeSeat(opps: readonly PlayerView[]): PlayerView | und
 
 export function isPlayerDefeated(player: PlayerView | undefined | null): boolean {
   return isPlayerOut(player) && (player?.life ?? 1) <= 0
+}
+
+/** BRD-65: why a seat is out. The game view only says `hasLeft`, so the reason comes from the
+ *  log; without a log line (the game was opened after they left), 0 life reads as a death and
+ *  anything else as leaving. */
+export function useOutReason(player: PlayerView | undefined | null): OutReason {
+  const name = player?.name ?? ''
+  const logged = useStore((s) => (s.gameId && name ? s.outReasons[outReasonKey(s.gameId, name)] : undefined))
+  return logged ?? (isPlayerDefeated(player) ? 'died' : 'left')
 }
 
 export type SeatState = 'alive' | 'collapsed' | 'open'

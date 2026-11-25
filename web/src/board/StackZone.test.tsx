@@ -267,7 +267,8 @@ describe('StackZone, the bubble', () => {
       const bubble = container.querySelector<HTMLElement>('[data-testid="stack-bubble"]')!
       expect(bubble.classList.contains('is-below')).toBe(true)
       const zone = container.querySelector<HTMLElement>('[data-testid="stack-zone"]')!
-      expect(zone.style.getPropertyValue('--bubble-max'), 'its height is the room above the dock').toBe('188px')
+      // STK-10: the room above the dock, less the clearance it keeps from the button under it.
+      expect(zone.style.getPropertyValue('--bubble-max'), 'its height is the room above the dock').toBe('164px')
       unmount()
 
       dockTop = 540

@@ -170,6 +170,21 @@ describe('ArenaBoard', () => {
       expect(container.querySelector('.seat-focus-btn')).toBeNull()
     })
 
+    it('BRD-37: a spectator reads the same boards, so the pill owns the click there too', () => {
+      const game = makeGameView({
+        activePlayerId: 'p2',
+        players: [
+          makePlayer({ playerId: 'p1', name: 'Alice', controlled: false, commandList: [] }),
+          makePlayer({ playerId: 'p2', name: 'Bob', controlled: false, commandList: [] }),
+          makePlayer({ playerId: 'p3', name: 'Carol', controlled: false, commandList: [] }),
+          makePlayer({ playerId: 'p4', name: 'Dave', controlled: false, commandList: [] }),
+        ],
+      })
+      const { container } = render(<ArenaBoard game={game} />)
+      expect(container.querySelectorAll('.arena-opp-cell').length).toBe(3)
+      expect(container.querySelector('.seat-focus-btn')).toBeNull()
+    })
+
     it('BRD-37: a column lights up with its pill, from either side', () => {
       const { getByTestId } = render(<ArenaBoard game={multiplayerGame()} />)
       const cell = getByTestId('arena-opp-cell-p2')
