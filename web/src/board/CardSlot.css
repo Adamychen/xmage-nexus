@@ -764,8 +764,7 @@ html.fx-off .card-slot.casting-pop {
 .pt-badge,
 .loyalty-badge,
 .defense-badge,
-.counter-badge,
-.damage-badge {
+.counter-badge {
   position: absolute;
   bottom: 4px;
   right: 4px;
@@ -1119,7 +1118,6 @@ html.fx-off .loyalty-badge .counter-tick {
    `--digit-shift-ui`, the slack its line box leaves above the digits, measured from the font. */
 .counter-badge .counter-text-val,
 .pt-badge .pt-value,
-.damage-badge,
 .counter-badge .counter-change-label {
   font-family: var(--font-ui);
   font-variant-numeric: tabular-nums lining-nums;
@@ -1242,16 +1240,6 @@ html.fx-off .card-icon.icon-gained {
 .card-icon.ability {
   background: var(--ink-4);
   border: 1px solid var(--veil-5);
-}
-
-.damage-badge {
-  bottom: 4px;
-  left: 50%;
-  transform: translateX(-50%);
-  right: auto;
-  background: rgb(var(--err-rgb) / 0.95);
-  color: var(--fg-hi);
-  border: 1px solid rgb(var(--err-rgb) / 0.8);
 }
 
 /* Summoning Sickness */
@@ -1661,6 +1649,17 @@ html.fx-off .card-slot[data-recap] {
   color: var(--err);
 }
 
+/* BRD-63: marked damage is read on the toughness itself, which drops to what the creature has left
+   and turns red while the damage is on it. The exact damage is in the badge's tooltip. */
+.pt-value[data-damaged] {
+  color: var(--err);
+  text-shadow: 0 0 8px rgb(var(--err-rgb) / 0.55);
+}
+
+.pt-badge[data-damaged] {
+  border-color: rgb(var(--err-rgb) / 0.85);
+}
+
 .pt-badge[data-trend='changed'] {
   border-color: var(--gold-500);
 }
@@ -1860,10 +1859,6 @@ html.fx-off .entered-glow {
 }
 
 .card-slot.is-compact .card-counters-wrap {
-  bottom: calc(var(--plate-h) + 3px);
-}
-
-.card-slot.is-compact .damage-badge {
   bottom: calc(var(--plate-h) + 3px);
 }
 

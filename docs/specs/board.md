@@ -296,7 +296,14 @@ Retired 2026-11-23: the phone layout is no longer a target (user decision with t
 ### BRD-20 · One pile per identical permanent; token piles open after a second of hover
 Three or more identical permanents pile up (two lands are enough on the own board of the Arena layout, as
 in MTG Arena, BRD-32), and the pile holds every copy there is: fifty Soldiers are one pile of fifty, not
-ten piles of five. A pile is drawn as its top card with each other copy a dim edge just behind it, and the
+ten piles of five. Identical means identical to the player: the same card, the same tapped state, the same
+power and toughness, and, for a creature, the same ability to act. So fifteen 1/1 Goblins are one pile;
+give seven of them +1/+0 and those seven leave for a pile of 2/1 Goblins; make seventeen more and they
+stay apart while they cannot attack, joining the ready ones on the turn their sickness ends. A copy with
+counters, with damage marked, with something attached, mutated, face down or disguised is in no pile at
+all, and neither is one the game is asking the player to pick (a target, an attacker, a blocker), which
+leaves its pile for as long as the question lasts.
+A pile is drawn as its top card with each other copy a dim edge just behind it, and the
 count badge in the corner, which is where the number is read; it shows at most five of those edges, so a
 pile of fifty takes the width of a pile of five instead of growing one edge per card.
 With a mouse, a token pile fans out only after the pointer has rested on it for one second, and only that
@@ -315,7 +322,9 @@ row of cards, and a copy the game is asking the player to pick leaves the pile a
   Cutting a group into piles of five only moved the problem: a board of 254 Doppelganger tokens was 51 piles
   of "×5" filling three rows, and the player asked why identical creatures did not stack further (user
   report, 25-nov-2026). What the five-card limit was really protecting is the pile's footprint, so the limit
-  now caps the edges drawn, not the copies held.
+  now caps the edges drawn, not the copies held. Summoning sickness went into the key with it, from the
+  same report: a Krenko activation adds seventeen Goblins that cannot attack, and a pile that mixed them
+  with the ones that can would say the player has twenty-four attackers.
 - Guard: `src/board/stackGroups.test.ts` · `src/board/StackPile.test.tsx` · `src/board/BoardZone.css.test.ts` · `e2e/stack-groups.spec.ts`
 
 ### BRD-21 · A board settles: no card size keeps changing for ever
@@ -1117,3 +1126,17 @@ information. The stops are the one `phaseStops` setting (SET-11).
   (same day). Arena's row edits the stops of the turn on screen, so the right click keeps the other
   turn one gesture away.
 - Guard: `src/game/ladderSteps.test.ts` · `src/game/PhaseLadder.test.tsx` · `src/dev/galleryFixtures.test.ts` · `e2e/phase-stops.spec.ts`
+
+### BRD-63 · Damage is read on the creature's own toughness, in red
+Damage marked on a creature is not a badge of its own: the power and toughness badge shows what the
+creature has left, the toughness dropping by the damage on it and painted red (never below zero, so
+an indestructible creature holding lethal damage reads "5/0"). The badge is shown while damage is
+marked even when the player chose to see power and toughness only when it changes, or not at all,
+because marked damage is state the player has to see; the badge's tooltip carries the printed
+numbers and the exact damage. Damage clears when the turn does, and with it the red.
+
+- Why: a red "4" badge under a 5/2 read as a number without a unit, and the player asked what it was;
+  it was the damage the server marks on the permanent (`PermanentView.damage`), on a creature that
+  survived it because it was indestructible. MTG Arena writes the same thing on the creature's own
+  toughness, which is where a player looks to know whether it dies (user request, 25-nov-2026).
+- Guard: `src/board/CardSlot.test.tsx`

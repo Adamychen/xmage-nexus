@@ -297,6 +297,55 @@ describe('CardSlot', () => {
     expect(container.querySelector('.designation-badge.is-room')).toBeNull()
   })
 
+  it('BRD-63: damage drops the toughness shown and paints it red, with no badge of its own', () => {
+    const card = {
+      id: 'dmg1',
+      name: 'Rattleback Apothecary',
+      cardTypes: ['Creature'],
+      power: '5',
+      toughness: '2',
+      damage: 4,
+    } as unknown as PermanentView
+    const { container } = render(<CardSlot card={card} showPt showDamage />)
+    expect(container.querySelector('.damage-badge')).toBeNull()
+    const values = container.querySelectorAll('.pt-badge .pt-value')
+    expect(values[0].textContent).toBe('5')
+    // Lethal damage held by an indestructible creature reads 0, never a negative toughness.
+    expect(values[1].textContent).toBe('0')
+    expect(values[1].hasAttribute('data-damaged')).toBe(true)
+    expect(container.querySelector('.pt-badge')?.getAttribute('data-damaged')).toBe('4')
+  })
+
+  it('BRD-63: an undamaged creature shows its toughness plainly', () => {
+    const card = {
+      id: 'dmg2',
+      name: 'Grizzly Bears',
+      cardTypes: ['Creature'],
+      power: '2',
+      toughness: '2',
+    } as unknown as PermanentView
+    const { container } = render(<CardSlot card={card} showPt showDamage />)
+    const values = container.querySelectorAll('.pt-badge .pt-value')
+    expect(values[1].textContent).toBe('2')
+    expect(values[1].hasAttribute('data-damaged')).toBe(false)
+  })
+
+  it('BRD-63: the toughness still carries the damage when the player hides power and toughness', () => {
+    setSetting('ptBadgeMode', 'hidden')
+    const card = {
+      id: 'dmg3',
+      name: 'Grizzly Bears',
+      cardTypes: ['Creature'],
+      power: '2',
+      toughness: '3',
+      damage: 1,
+    } as unknown as PermanentView
+    const { container } = render(<CardSlot card={card} showPt showDamage />)
+    const values = container.querySelectorAll('.pt-badge .pt-value')
+    expect(values[1].textContent).toBe('2')
+    setSetting('ptBadgeMode', 'always')
+  })
+
   it('expone data-attrs de fidelidad (P2): P/T, girado, contadores y daño', () => {
     const card = {
       id: 'fid1',
