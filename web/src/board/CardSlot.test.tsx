@@ -410,7 +410,7 @@ describe('CardSlot', () => {
     expect(slot.getAttribute('data-tapped')).toBe('0')
   })
 
-  it('el badge de enfermedad de invocación usa su propio texto accesible (no "Girar para maná")', () => {
+  it('el badge de mareo de invocación usa su propio texto accesible (no "Girar para maná")', () => {
     const card = {
       id: 'sick1',
       name: 'Elvish Mystic',
@@ -422,11 +422,11 @@ describe('CardSlot', () => {
     const { container } = render(<CardSlot card={card} />)
     const badge = container.querySelector('.sickness-badge') as HTMLElement
     expect(badge).not.toBeNull()
-    expect(badge.getAttribute('aria-label')).toContain('Enfermedad de invocación')
+    expect(badge.getAttribute('aria-label')).toContain('Mareo de invocación')
     expect(badge.getAttribute('title')).toBeNull()
   })
 
-  it('no pinta el badge de enfermedad de invocación si la criatura está girada', () => {
+  it('no pinta el badge de mareo de invocación si la criatura está girada', () => {
     const card = {
       id: 'sick2',
       name: 'Elvish Mystic',
@@ -874,7 +874,7 @@ describe('CardSlot sicknessStyle (issue #12)', () => {
     // Geometry is not measured here: jsdom returns zero rects. The "covers the
     // whole card" contract lives in `cardOverlayCss.test.ts` (`inset: 0`) and was
     // checked in a real browser (elementFromPoint returns the card).
-    expect(veil.querySelector('.sickness-veil-icon')?.getAttribute('aria-label')).toContain('Enfermedad de invocación')
+    expect(veil.querySelector('.sickness-veil-icon')?.getAttribute('aria-label')).toContain('Mareo de invocación')
     expect(veil.querySelector('svg')).not.toBeNull()
   })
 

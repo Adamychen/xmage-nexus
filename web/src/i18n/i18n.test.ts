@@ -149,7 +149,7 @@ describe('i18n system', () => {
     expect(t('game.tab_chat')).toBe('聊天')
   })
 
-  it('expone las claves de fin de partida sin turno y la de enfermedad de invocación', async () => {
+  it('expone las claves de fin de partida sin turno y la de mareo de invocación', async () => {
     setLanguage('es')
     expect(t('game.end_won_game', { player: 'Ana' })).toBe('Ana gana la partida')
     expect(t('game.end_lost_game', { player: 'Ana' })).toBe('Ana pierde la partida')

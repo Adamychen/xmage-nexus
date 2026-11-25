@@ -46,7 +46,7 @@ describe('settings search index', () => {
   })
 
   it('SET-6: matching ignores case and accents, and an empty query finds nothing', () => {
-    expect(normalizeSearch('  Enfermedad DE Invocación ')).toBe('enfermedad de invocacion')
+    expect(normalizeSearch('  Mareo DE Invocación ')).toBe('mareo de invocacion')
     expect(searchSettings('   ', t)).toEqual([])
     const label = t('game', 'smart_stops')
     expect(searchSettings(label.toUpperCase(), t).map((h) => h.entry.id)).toContain('smart-stops')
