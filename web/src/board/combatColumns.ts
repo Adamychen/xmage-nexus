@@ -95,6 +95,14 @@ export function combatArrangement(game: GameView | null | undefined): CombatArra
     for (const id of [...attackerIds, ...blockerIds]) engage(id)
   }
 
+  // CMB-14: inside a defender's block, the groups nothing blocks come first, so the beams that leave
+  // them stay on one side and never cross the ties of the groups that are blocked.
+  for (const target of byDefender.values()) {
+    target.columns = [
+      ...target.columns.filter((column) => column.blockerIds.length === 0),
+      ...target.columns.filter((column) => column.blockerIds.length > 0),
+    ]
+  }
   return { targets: order.map((id) => byDefender.get(id)!), engagedIds, strays }
 }
 

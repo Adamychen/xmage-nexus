@@ -179,7 +179,9 @@ Who fights whom is read from where the cards stand. Inside each player's own boa
 combat gather in columns, one per combat group of the view, with a gap of a third of a card between
 columns and the creatures combat leaves alone kept behind them, dimmed. Both sides of a group carry
 the same column number, so an attacker and the creatures blocking it hold the same place in the order
-of their own boards and the pairing lines up across the table. The gap a column opens is part of the
+of their own boards and the pairing lines up across the table. Inside the block of one defender the
+groups nothing blocks come first, so the beams that leave them stay on one side and never cross the
+ties of the groups that are blocked. The gap a column opens is part of the
 width the board's solver measures (BRD-25), so a seat's cards never run past its frame.
 
 A group whose defender the view does not name takes no column, because nothing in the view says where

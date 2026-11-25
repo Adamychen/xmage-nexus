@@ -110,6 +110,30 @@ describe('combat read as columns', () => {
   })
 })
 
+describe('the order of the columns inside a defender', () => {
+  it('CMB-14: the attackers nothing blocks come first, so their beams never cross a tie', () => {
+    const view = game(
+      [seat('me', ['wall']), seat('opp', ['blocked', 'free'])],
+      [group(['blocked'], ['wall'], 'me'), group(['free'], [], 'me')],
+    )
+    const arrangement = combatArrangement(view)
+    expect(arrangement.targets[0].columns.map((c) => c.attackerIds[0])).toEqual(['free', 'blocked'])
+    const order = combatOrder(arrangement)
+    expect(order.get('free')).toBe(0)
+    expect(order.get('blocked')).toBe(1)
+    expect(order.get('wall')).toBe(1)
+  })
+
+  it('CMB-14: among themselves the groups keep the order the view lists them in', () => {
+    const view = game(
+      [seat('me', []), seat('opp', ['a', 'b', 'c'])],
+      [group(['a'], [], 'me'), group(['b'], [], 'me'), group(['c'], [], 'me')],
+    )
+    const columns = combatArrangement(view).targets[0].columns
+    expect(columns.map((c) => c.attackerIds[0])).toEqual(['a', 'b', 'c'])
+  })
+})
+
 describe('the column number a creature carries', () => {
   it('CMB-14: an attacker and the creatures blocking it share a column number', () => {
     const view = game(
@@ -117,10 +141,11 @@ describe('the column number a creature carries', () => {
       [group(['giant'], ['x', 'y'], 'me'), group(['runner'], [], 'me')],
     )
     const order = combatOrder(combatArrangement(view))
-    expect(order.get('giant')).toBe(0)
-    expect(order.get('x')).toBe(0)
-    expect(order.get('y')).toBe(0)
-    expect(order.get('runner')).toBe(1)
+    // The unblocked runner takes the first column, and the blocked group shares the next one.
+    expect(order.get('runner')).toBe(0)
+    expect(order.get('giant')).toBe(1)
+    expect(order.get('x')).toBe(1)
+    expect(order.get('y')).toBe(1)
   })
 
   it('CMB-14: the numbering follows the defenders, so a pod reads seat by seat', () => {
