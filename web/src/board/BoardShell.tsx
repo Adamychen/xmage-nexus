@@ -9,6 +9,7 @@ import FloatingCardPreview from './FloatingCardPreview'
 import FlyingCardOverlay from './FlyingCardOverlay'
 import type { BoardPresenter } from './useBoardPresenter'
 import { BoardLayoutProvider } from './layout/BoardLayoutProvider'
+import { useOpeningHandHeld } from './openingHand'
 import type { BoardLayoutKind } from './layout/solveBoardLayout'
 import { useStore, useSettings, isMulliganDecision } from '../state/store'
 import { useChromeActions } from '../game/chromeActions'
@@ -36,6 +37,9 @@ export interface BoardShellProps {
   opponentsCappedByOwn?: boolean
   children: ReactNode
 }
+
+const NO_CARDS: Record<string, CardView> = {}
+const NO_TRAILING: HandTrailingCard[] = []
 
 export const DividerSlotContext = createContext<((el: HTMLElement | null) => void) | null>(null)
 
@@ -77,6 +81,10 @@ export function BoardColDivider() {
 export default function BoardShell({ className, testId, presenter, handBar = null, style, layout = 'standard', opponentsCappedByOwn = false, children }: BoardShellProps) {
   const setHandPromptSlot = useContext(HandPromptSlotContext)
   const raised = useStore((s) => isMulliganDecision(s.feedback))
+  // HND-14: the pre-game deals the cards before it asks about them, so the bar holds them back
+  // until the opening-hand decision is on screen.
+  const held = useOpeningHandHeld()
+  const hand = handBar && held ? { ...handBar, cards: NO_CARDS, trailing: NO_TRAILING } : handBar
   const { handRail, handRailWidth, handRow } = useSettings()
   const sidePanelOpen = useChromeActions()?.sidePanelOpen ?? false
   const railed = handRail && !!handBar && !raised && !sidePanelOpen
@@ -85,39 +93,39 @@ export default function BoardShell({ className, testId, presenter, handBar = nul
     <BoardLayoutProvider boardRef={presenter.boardRef} layout={layout} opponentsCappedByOwn={opponentsCappedByOwn}>
     <div className={`board-shell board-surface ${className}${railed ? ' has-hand-rail' : ''}`} data-testid={testId} ref={presenter.boardRef} style={railed ? ({ ...style, '--hand-rail-w': `${handRailWidth}px` } as CSSProperties) : style}>
       {children}
-      {railed && handBar && (
+      {railed && hand && (
         <HandRail
-          cards={handBar.cards}
-          onCardClick={handBar.onCardClick}
-          onHover={handBar.onHover}
-          playableIds={handBar.playableIds}
-          targetIds={handBar.targetIds}
-          trailing={handBar.trailing}
-          onTrailingClick={handBar.onTrailingClick}
+          cards={hand.cards}
+          onCardClick={hand.onCardClick}
+          onHover={hand.onHover}
+          playableIds={hand.playableIds}
+          targetIds={hand.targetIds}
+          trailing={hand.trailing}
+          onTrailingClick={hand.onTrailingClick}
         />
       )}
-      {handBar && !railed && !rowed && (
+      {hand && !railed && !rowed && (
         <HandBar
-          cards={handBar.cards}
-          onCardClick={handBar.onCardClick}
-          onHover={handBar.onHover}
-          playableIds={handBar.playableIds}
-          targetIds={handBar.targetIds}
-          trailing={handBar.trailing}
-          onTrailingClick={handBar.onTrailingClick}
+          cards={hand.cards}
+          onCardClick={hand.onCardClick}
+          onHover={hand.onHover}
+          playableIds={hand.playableIds}
+          targetIds={hand.targetIds}
+          trailing={hand.trailing}
+          onTrailingClick={hand.onTrailingClick}
           raised={raised}
           promptSlotRef={setHandPromptSlot ?? undefined}
         />
       )}
-      {rowed && handBar && (
+      {rowed && hand && (
         <HandRow
-          cards={handBar.cards}
-          onCardClick={handBar.onCardClick}
-          onHover={handBar.onHover}
-          playableIds={handBar.playableIds}
-          targetIds={handBar.targetIds}
-          trailing={handBar.trailing}
-          onTrailingClick={handBar.onTrailingClick}
+          cards={hand.cards}
+          onCardClick={hand.onCardClick}
+          onHover={hand.onHover}
+          playableIds={hand.playableIds}
+          targetIds={hand.targetIds}
+          trailing={hand.trailing}
+          onTrailingClick={hand.onTrailingClick}
         />
       )}
       <FloatingCardPreview

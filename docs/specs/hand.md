@@ -162,3 +162,19 @@ player.
   cards face up in several hands at once in a pod; one function now answers "what do I know of this
   hand", for the hand row and for the reveal animation alike.
 - Guard: `src/board/revealedCards.test.ts`
+
+### HND-14 · The opening hand is dealt before it is asked about, and waits for the question
+In the pre-game (the view carries no phase and no step: the starting-player choice and the
+mulligans) the hand bar holds the cards back until the opening-hand decision is on screen, the keep
+or mulligan question and the London cards to put back. Once that question has been asked in a game
+the hand stays for the rest of it, so a keep does not take the cards away again while the other
+seats are still deciding. A seat that only watches has no hand to hold back, and a game already
+running is untouched, because its view carries a phase.
+
+- Why: the cards reached the hand a good while before the mulligan screen did, and a player saw
+  seven cards with nothing asking anything about them (user report, 25-nov-2026). The server deals
+  at `GAME_INIT` and asks in a later `GAME_ASK`, so the gap belongs to the client to close. The
+  consequence to know: a client that arrives in the middle of the pre-game, a reconnection after
+  its own keep, has never been asked, so its bar stays empty until the game starts. The view says
+  nothing that tells that apart from a hand just dealt, and the cards are not playable either way.
+- Guard: `src/board/openingHand.test.ts`
