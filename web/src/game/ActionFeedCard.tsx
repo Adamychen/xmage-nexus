@@ -1,4 +1,4 @@
-import { useMemo, useRef } from 'react'
+import { useMemo } from 'react'
 import type { CardView, PermanentView, PlayerView } from '../net/types'
 import type { ActionFeedItem } from './gameEventParser'
 import { useStore } from '../state/store'
@@ -60,7 +60,6 @@ function namesIn(item: ActionFeedItem, players: PlayerView[] | undefined): Forma
 export default function ActionFeedCard({ item, onHover }: ActionFeedCardProps) {
   const { t, lang } = useTranslation()
   const players = useStore((s) => s.game?.players)
-  const rowRef = useRef<HTMLDivElement | null>(null)
   const time = formatFeedTime(item.timestamp, lang)
   const clock = formatFeedClock(item.timestamp, lang)
   const icon: IconName = TYPE_ICONS[item.type] ?? 'info'
@@ -86,15 +85,6 @@ export default function ActionFeedCard({ item, onHover }: ActionFeedCardProps) {
     )
   }
 
-  const cardForHover = item.cardName
-    ? {
-        name: item.cardName,
-        manaValue: 0,
-        expansionSetCode: '',
-        cardNumber: '0',
-      }
-    : null
-
   const chipValue =
     item.amount === undefined || item.amount === 0
       ? null
@@ -104,37 +94,18 @@ export default function ActionFeedCard({ item, onHover }: ActionFeedCardProps) {
           ? item.amount
           : null
 
-  const handleMouseEnter = () => {
-    if (cardForHover && rowRef.current) {
-      onHover?.(cardForHover, rowRef.current.getBoundingClientRect())
-    }
-  }
-
-  const handleMouseLeave = () => {
-    onHover?.(null)
-  }
-
-  const handleSentenceHover = (card: CardView | null, rect?: DOMRect) => {
-    if (card || !cardForHover || !rowRef.current) {
-      onHover?.(card, rect)
-      return
-    }
-    onHover?.(cardForHover, rowRef.current.getBoundingClientRect())
-  }
-
   return (
     <div
-      ref={rowRef}
       className={`action-feed-row type-${item.type}`}
       data-type={item.type}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
     >
       <span className="action-feed-icon" aria-hidden="true">
         <Icon name={icon} size={14} />
       </span>
+      {/* PNL-3: the card comes up over its name, never over the row: the row anchored the preview to
+          its whole width, so a pointer resting anywhere in the log opened a card. */}
       <span className="action-feed-sentence">
-        <FormattedText text={item.description} names={names} onHover={handleSentenceHover} />
+        <FormattedText text={item.description} names={names} onHover={onHover} />
       </span>
       {chipValue !== null && (
         <span className={`action-feed-chip ${chipValue < 0 ? 'loss' : 'gain'}`}>

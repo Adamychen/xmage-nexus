@@ -81,13 +81,13 @@ describe('ActionFeed & ActionFeedCard', () => {
     expect(getByText('Lightning Bolt')).not.toBeNull()
     expect(container.querySelector('.action-feed-chip')?.textContent).toBe('−3')
 
-    const rowEl = container.querySelector('.action-feed-row')!
-    fireEvent.mouseEnter(rowEl)
+    const nameEl = container.querySelector('.action-feed-sentence .is-card')!
+    fireEvent.mouseEnter(nameEl)
     expect(onHover).toHaveBeenCalledWith(
       expect.objectContaining({ name: 'Lightning Bolt' }),
       expect.any(Object)
     )
-    fireEvent.mouseLeave(rowEl)
+    fireEvent.mouseLeave(nameEl)
     expect(onHover).toHaveBeenCalledWith(null)
   })
 

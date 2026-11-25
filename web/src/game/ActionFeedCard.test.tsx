@@ -42,6 +42,26 @@ describe('ActionFeedCard visual log row', () => {
     expect(container.querySelector('.action-feed-sentence .is-card')?.textContent).toBe('Lightning Bolt')
   })
 
+  it('PNL-3: the card comes up over its name in the sentence, not over the row', () => {
+    const onHover = vi.fn()
+    const { container } = render(
+      <ActionFeedCard
+        item={item({ playerName: 'Adam', cardName: 'Lightning Bolt', description: 'Adam casts Lightning Bolt' })}
+        onHover={onHover}
+      />,
+    )
+    const row = container.querySelector('.action-feed-row')!
+    fireEvent.mouseEnter(row)
+    expect(onHover).not.toHaveBeenCalled()
+
+    const name = container.querySelector('.action-feed-sentence .is-card')!
+    fireEvent.mouseEnter(name)
+    expect(onHover).toHaveBeenCalledTimes(1)
+    expect(onHover.mock.calls[0][0]?.name).toBe('Lightning Bolt')
+    fireEvent.mouseLeave(name)
+    expect(onHover).toHaveBeenLastCalledWith(null)
+  })
+
   it('PNL-3: the card art and the black box behind the description are gone', () => {
     const { container } = render(<ActionFeedCard item={item({ cardName: 'Grizzly Bears', description: 'Grizzly Bears attacks' })} />)
     expect(container.querySelector('.action-card-bg')).toBeNull()
@@ -73,17 +93,17 @@ describe('ActionFeedCard visual log row', () => {
     expect(time.getAttribute('title')).toBe(formatFeedTime(TIME, getLanguage()))
   })
 
-  it('PNL-3: hovering a row with a card shows that card, and leaving it clears the preview', () => {
+  it('PNL-3: hovering the name of a card shows it, and leaving the name clears the preview', () => {
     const onHover = vi.fn()
     const { container } = render(<ActionFeedCard item={item({ type: 'land', cardName: 'Forest', description: 'Adam plays Forest' })} onHover={onHover} />)
-    const row = container.querySelector('.action-feed-row')!
-    fireEvent.mouseEnter(row)
+    const name = container.querySelector('.action-feed-sentence .is-card')!
+    fireEvent.mouseEnter(name)
     expect(onHover).toHaveBeenLastCalledWith(expect.objectContaining({ name: 'Forest' }), expect.any(Object))
-    fireEvent.mouseLeave(row)
+    fireEvent.mouseLeave(name)
     expect(onHover).toHaveBeenLastCalledWith(null)
   })
 
-  it('PNL-3: a card name in the sentence is a hover link, and leaving it returns the preview to the row card', () => {
+  it('PNL-3: each card name of the sentence is its own hover link', () => {
     const onHover = vi.fn()
     const { container } = render(
       <ActionFeedCard
@@ -95,7 +115,11 @@ describe('ActionFeedCard visual log row', () => {
     expect(link.textContent).toBe('Grizzly Bears')
     fireEvent.mouseEnter(link)
     expect(onHover).toHaveBeenLastCalledWith(expect.objectContaining({ name: 'Grizzly Bears' }), expect.any(Object))
-    fireEvent.mouseOut(link, { relatedTarget: container.querySelector('.action-feed-row') })
+    fireEvent.mouseLeave(link)
+    expect(onHover).toHaveBeenLastCalledWith(null)
+    const blocker = [...container.querySelectorAll<HTMLElement>('.action-feed-sentence .is-card')].at(-1)!
+    expect(blocker.textContent).toBe('Wall of Omens')
+    fireEvent.mouseEnter(blocker)
     expect(onHover).toHaveBeenLastCalledWith(expect.objectContaining({ name: 'Wall of Omens' }), expect.any(Object))
   })
 
