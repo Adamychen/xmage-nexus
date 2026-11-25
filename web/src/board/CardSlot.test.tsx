@@ -297,6 +297,35 @@ describe('CardSlot', () => {
     expect(container.querySelector('.designation-badge.is-room')).toBeNull()
   })
 
+  it('BRD-64: a token on the table carries its tag; a copy of a real card does not', () => {
+    const token = {
+      id: 'tok1',
+      name: 'Goblin Token',
+      cardTypes: ['Creature'],
+      power: '1',
+      toughness: '1',
+      isToken: true,
+    } as unknown as PermanentView
+    const shown = render(<CardSlot card={token} showPt />)
+    expect(shown.container.querySelector('.token-tag')?.textContent).toBe('TOKEN')
+    shown.unmount()
+
+    const copy = { ...token, id: 'cp1', copy: true } as unknown as PermanentView
+    const copied = render(<CardSlot card={copy} showPt />)
+    expect(copied.container.querySelector('.token-tag')).toBeNull()
+    copied.unmount()
+
+    const real = {
+      id: 'real1',
+      name: 'Grizzly Bears',
+      cardTypes: ['Creature'],
+      power: '2',
+      toughness: '2',
+    } as unknown as PermanentView
+    const printed = render(<CardSlot card={real} showPt />)
+    expect(printed.container.querySelector('.token-tag')).toBeNull()
+  })
+
   it('BRD-63: damage drops the toughness shown and paints it red, with no badge of its own', () => {
     const card = {
       id: 'dmg1',

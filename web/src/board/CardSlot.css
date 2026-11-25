@@ -760,7 +760,12 @@ html.fx-off .card-slot.casting-pop {
   line-height: 1.2;
 }
 
-/* Badges */
+/* Badges. The height they take at the bottom edge, from their own tokens, so a tag stacked over
+   them (BRD-64) follows the same metrics instead of a number measured on one machine. */
+.card-slot {
+  --stat-badge-h: calc(var(--fs-sm) * 1.1 + var(--sp-0h) * 2);
+}
+
 .pt-badge,
 .loyalty-badge,
 .defense-badge,
@@ -1240,6 +1245,36 @@ html.fx-off .card-icon.icon-gained {
 .card-icon.ability {
   background: var(--ink-4);
   border: 1px solid var(--veil-5);
+}
+
+/* BRD-64: the token tag on the table: small, in the middle of the bottom edge, where the damage
+   badge used to be (BRD-63), so it sits clear of the counters and the power and toughness. */
+.token-tag {
+  position: absolute;
+  /* Stacked over the stat badges of the bottom edge, clear of both the counters and the power and
+     toughness, with the room they take read from their own type tokens rather than guessed. */
+  bottom: calc(4px + var(--stat-badge-h) + 3px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0 var(--sp-1);
+  border-radius: var(--r-xs);
+  background: rgb(var(--gold-rgb) / 0.92);
+  color: var(--ink-0);
+  font-family: var(--font-ui);
+  font-size: var(--fs-3xs);
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  line-height: 1.5;
+  max-width: calc(100% - 8px);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.card-slot.is-compact .token-tag {
+  bottom: calc(var(--plate-h) + 3px);
 }
 
 /* Summoning Sickness */

@@ -1140,3 +1140,15 @@ numbers and the exact damage. Damage clears when the turn does, and with it the 
   survived it because it was indestructible. MTG Arena writes the same thing on the creature's own
   toughness, which is where a player looks to know whether it dies (user request, 25-nov-2026).
 - Guard: `src/board/CardSlot.test.tsx`
+
+### BRD-64 · A token says on the table that it is a token
+A token on the battlefield carries a small tag with the word the hover preview uses, in the middle of
+its bottom edge, where the damage mark used to be (BRD-63) and clear of the counters and the power
+and toughness. It is drawn face up in both card renderings and at every card size, because at board
+size a token's type line ("Token Creature — Goblin") cannot be read, and a player has to know a token
+from a real card: a token leaves the game when it changes zone and cannot be returned to a hand. A
+copy of a real card is not a token and carries no tag.
+
+- Why: the player saw the tag in the hover preview and asked why the table did not show it
+  (25-nov-2026). The slot under the card was free, since damage moved onto the toughness.
+- Guard: `src/board/CardSlot.test.tsx`
