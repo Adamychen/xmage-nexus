@@ -16,6 +16,8 @@ export interface FlightRecord {
   duration: number
   /** El origen era una carta girada 90° (tapped): el clon debe partir rotado. */
   rotated90?: boolean
+  /** Explicit starting rotation in degrees (e.g. 180 for an opponent's inverted hand fan). */
+  startRotation?: number
   /** Timers de backstop/limpieza: se reprograman al encadenar un redirect. */
   timers?: Array<ReturnType<typeof setTimeout>>
   variant?: FlightVariant
@@ -151,6 +153,8 @@ export interface FlightOptions {
   reveal?: boolean
   /** The card goes into a hidden zone (a library): it starts face up and turns face down halfway. */
   conceal?: boolean
+  /** Explicit starting rotation in degrees (e.g. 180 for an opponent's inverted hand fan). */
+  startRotation?: number
   tint?: string
 }
 
@@ -310,6 +314,7 @@ export function startCardFlight(
     startTime: performance.now(),
     duration: scaledDuration,
     rotated90: from.rotated90 || undefined,
+    startRotation: options?.startRotation,
     variant: options?.variant,
     trail: options?.trail,
     lift: options?.lift,

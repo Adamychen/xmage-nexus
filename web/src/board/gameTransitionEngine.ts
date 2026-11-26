@@ -31,7 +31,7 @@ import { ANIMATE_FLIGHT_MS, SETTLE_FLIGHT_MS, animateColor, clearCreatureShifts,
 import { commandArrivals } from './commandObjectsFx'
 import { handReveals, spawnHandReveal } from './handRevealFx'
 import { flySpentMana, manaSpends } from './manaSpentFx'
-import { fxTimeline, resetFxContext } from '../fx/fxEngine'
+import { ARENA_EASE, fxTimeline, resetFxContext } from '../fx/fxEngine'
 import { vfx } from '../fx/vfxEngine'
 import { manaToVfxColor } from '../fx/vfxPalette'
 
@@ -948,21 +948,83 @@ export function copiedSpellId(spellId: string, spell: CardView, prevGame: GameVi
 function playMulligan(prevHand: Record<string, CardView>, nextHand: Record<string, CardView>, libRect: DOMRect, handRect: DOMRect, pSel: string): void {
   const returned = Object.keys(prevHand).filter((id) => !(id in nextHand)).slice(0, MULLIGAN_MAX_CARDS)
   const dealt = Object.keys(nextHand).filter((id) => !(id in prevHand)).slice(0, MULLIGAN_MAX_CARDS)
+  const fanRect = getRect('.mulligan-fan')
+  const activeHandRect = fanRect ?? handRect
+  const sampleCard = document.querySelector<HTMLElement>('.mulligan-fan .card-slot')
+  const sampleRect = sampleCard ? rectOf(sampleCard) : null
+  const cardW = sampleRect?.width ?? 92
+  const cardH = sampleRect?.height ?? 128
+
   returned.forEach((id, i) => {
-    const from = getPreviousCardPosition(id)
-    if (!from) return
-    const card = { ...prevHand[id], faceDown: true }
-    setTimeout(() => startCardFlight(card, from, libRect, MULLIGAN_RETURN_MS, undefined, { sourceSize: getPreviousCardSize(id) }), i * MULLIGAN_STAGGER_MS)
+    const fallbackLeft = activeHandRect.left + ((i + 1) / (returned.length + 1)) * activeHandRect.width - cardW / 2
+    const fallbackTop = activeHandRect.top + activeHandRect.height / 2 - cardH / 2
+    const fallbackRect = {
+      left: fallbackLeft,
+      top: fallbackTop,
+      width: cardW,
+      height: cardH,
+      right: fallbackLeft + cardW,
+      bottom: fallbackTop + cardH,
+      x: fallbackLeft,
+      y: fallbackTop,
+      toJSON: () => {},
+    } as DOMRect
+    const from =
+      getRect(`.mulligan-fan [data-card-id="${id}"]`) ??
+      (fanRect ? fallbackRect : (getPreviousCardPosition(id) ?? getRect(`[data-card-id="${id}"]`) ?? fallbackRect))
+    const card = prevHand[id]
+    setTimeout(() => startCardFlight(card, from, libRect, MULLIGAN_RETURN_MS, undefined, {
+      sourceSize: fanRect ? { w: cardW, h: cardH } : getPreviousCardSize(id),
+      conceal: true,
+    }), i * MULLIGAN_STAGGER_MS)
   })
-  const dealFrom = returned.length > 0 ? MULLIGAN_RETURN_MS * 0.6 : 0
-  dealt.forEach((id, i) => {
-    setTimeout(() => {
-      flyAfterLayout(id, nextHand[id], libRect, [
-        `[data-card-id="${id}"]`,
-        '.hand-bar .hand-card-slot:last-child',
-        `${pSel} .hand-zone .hand-card-slot:last-child`,
-      ], handRect, MULLIGAN_DEAL_MS)
-    }, dealFrom + i * MULLIGAN_STAGGER_MS)
+  const dealFromMs = returned.length > 0 ? MULLIGAN_RETURN_MS * 0.72 + returned.length * MULLIGAN_STAGGER_MS * 0.45 : 0
+  if (dealt.length === 0) return
+
+  // Hold the newly rendered hand slots hidden while the old hand returns, then deal each
+  // real slot directly from the library into its exact place (prioritizing .mulligan-fan when open).
+  scheduleAfterLayout(() => {
+    const tl = fxTimeline()
+    const libCx = libRect.left + libRect.width / 2
+    const libCy = libRect.top + libRect.height / 2
+    let order = 0
+    for (const id of dealt) {
+      const slot =
+        document.querySelector<HTMLElement>(`.mulligan-fan [data-card-id="${id}"]`) ??
+        document.querySelector<HTMLElement>(`[data-card-id="${id}"]`)
+      const r = slot?.getBoundingClientRect()
+      if (slot && r && r.width > 0 && r.height > 0 && tl) {
+        const dx = libCx - (r.left + r.width / 2)
+        const dy = libCy - (r.top + r.height / 2)
+        const at = (dealFromMs + order++ * MULLIGAN_STAGGER_MS) / 1000
+        tl.set(slot, { opacity: 0, animation: 'none', transition: 'none' }, 0)
+          .fromTo(
+            slot,
+            { x: dx, y: dy, scale: 0.45, rotation: -10, opacity: 0 },
+            {
+              x: 0,
+              y: 0,
+              scale: 1,
+              rotation: 0,
+              opacity: 1,
+              duration: MULLIGAN_DEAL_MS / 1000,
+              ease: ARENA_EASE.snapOut,
+              clearProps: 'x,y,scale,rotation,opacity,animation,transition',
+            },
+            at,
+          )
+      } else {
+        const delay = dealFromMs + order++ * MULLIGAN_STAGGER_MS
+        setTimeout(() => {
+          flyAfterLayout(id, nextHand[id], libRect, [
+            `.mulligan-fan [data-card-id="${id}"]`,
+            `[data-card-id="${id}"]`,
+            '.hand-bar .hand-card-slot:last-child',
+            `${pSel} .hand-zone .hand-card-slot:last-child`,
+          ], activeHandRect, MULLIGAN_DEAL_MS, pileSize(libRect), undefined, undefined, undefined, true)
+        }, delay)
+      }
+    }
   })
 }
 

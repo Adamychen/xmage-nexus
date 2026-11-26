@@ -137,7 +137,7 @@ function FlyingCardItem({ flight }: { flight: FlightRecord }) {
     const { fromRect } = flight
     const durS = Math.max(0.14, flight.duration / 1000)
     const endRot = destinationRotation(flight)
-    const startRot = flight.rotated90 ? 90 : 0
+    const startRot = flight.startRotation ?? (flight.rotated90 ? 90 : 0)
     const entering = flight.variant === 'enter' || flight.variant === 'land'
     const lifted = entering || flight.lift === true
     const rank = entering ? enterRank(flight.card) : null

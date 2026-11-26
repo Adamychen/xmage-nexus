@@ -4609,6 +4609,20 @@ export function buildGalleryEntries(): GalleryEntry[] {
       phase: 'game',
       game: mulliganBase,
       gameId,
+      feedback: {
+        method: 'GAME_ASK',
+        gameId,
+        title: 'Mulligan',
+        message: 'Mulligan down to 6 cards?',
+        mode: 'boolean',
+        options: [
+          { id: 'keep', label: 'Keep (7)', value: 'false' },
+          { id: 'mull', label: 'Mulligan', value: 'true' },
+        ],
+        min: 0,
+        max: 0,
+        isMulligan: true,
+      },
       action: { label: 'Replay', run: replayQuiet(mulliganBase, gameId, (g) => mulliganHand(g, 1)) },
     })
     if (opponentOfBase) {
