@@ -14,8 +14,9 @@ export type PrioritySoundMode = 'every-prompt' | 'on-gain' | 'on-stop' | 'off'
 
 export const PRIORITY_SOUND_MODES: readonly PrioritySoundMode[] = ['every-prompt', 'on-gain', 'on-stop', 'off']
 
+/** A missing or unreadable mode is a player who never chose one, so it reads as the default. */
 export function normalizePrioritySound(value: unknown): PrioritySoundMode {
-  return PRIORITY_SOUND_MODES.includes(value as PrioritySoundMode) ? (value as PrioritySoundMode) : 'every-prompt'
+  return PRIORITY_SOUND_MODES.includes(value as PrioritySoundMode) ? (value as PrioritySoundMode) : 'on-stop'
 }
 
 /**

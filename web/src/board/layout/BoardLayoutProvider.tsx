@@ -65,6 +65,12 @@ export function BoardLayoutSeat({ reg }: { reg: SeatRegistration | null }): null
     const next = latest.current
     if (!engine || !next) return
     engine.register(key, next)
+    // BRD-67: solved before the browser paints the seat's new contents, not in the animation frame
+    // the engine schedules, which draws them once at the card size the previous contents had. The
+    // microtask runs after the whole commit, so every seat of this render is already registered and
+    // the board is solved once with all of them: solving inside the effect instead solves the board
+    // again for each seat and writes sizes the next seat changes (BRD-21).
+    queueMicrotask(() => engine.flush())
     return () => engine.unregister(key)
   }, [engine, key, signature])
 

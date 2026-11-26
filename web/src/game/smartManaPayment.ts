@@ -1,4 +1,5 @@
 import type { CardView, GameView, PermanentView, PlayerView } from '../net/types'
+import { commandersOf } from '../board/commanders'
 import type { PoolKey } from './manaPayment'
 
 export type ManaColor = 'W' | 'U' | 'B' | 'R' | 'G' | 'C'
@@ -19,6 +20,10 @@ export interface ManaSource {
   poolColor?: PoolKey
   id?: string
   produces: ManaColor[]
+  /** Mana one activation adds. Only the feasibility count reads it (MNA-13): a pip is still
+   *  matched one per source, and the surplus of a Sol Ring lands in the pool, where the next
+   *  prompt already sees it as a pool source. */
+  amount: number
   painful: boolean
 }
 
@@ -56,36 +61,113 @@ export function parseRemainingManaCost(message: string): ParsedCost {
   return cost
 }
 
-const TAP_ADD_RE = /^\{T\}:\s*Add\s+(.+?)\.?$/i
+/** A tap-for-mana ability of any shape, extra costs included (`{T}, Sacrifice this artifact:`).
+ *  What it adds may be unreadable, but the permanent announces itself as a mana source all the
+ *  same: MNA-13 counts these so one wording the solver cannot read never makes a payable cost
+ *  look hopeless. */
+const TAP_ADD_LOOSE = /^\{T\}[^:]*:\s*Add\s/i
+/** The only shape a source can be modelled from: tapping and nothing else. */
+const TAP_ADD_RE = /^\{T\}:\s*Add\s+(.+)$/i
+/** Conditional mana (Cavern of Souls): the engine would take the tap and the mana it made could
+ *  not pay this cost. A trailing sentence that only grants a bonus, as Path of Ancestry's scry
+ *  does, is not one of these. */
+const SPEND_ONLY_RE = /\bSpend this mana only\b/i
+/** A run of symbols with no separator: `{G}`, and `{C}{C}` for the two mana of a Sol Ring. */
+const SYMBOL_RUN_RE = /^(?:\{[WUBRGC]\})+$/i
 
-function producedColors(rule: string): ManaColor[] | null {
-  const m = TAP_ADD_RE.exec(rule.trim())
-  if (!m) return null
-  const body = m[1].trim()
-  if (/^one mana of any color$/i.test(body)) return [...COLORED]
-  const colors: ManaColor[] = []
-  for (const part of body.split(/\s*,\s*(?:or\s+)?|\s+or\s+/i)) {
-    const sym = /^\{([WUBRGC])\}$/i.exec(part.trim())
-    if (!sym) return null
-    colors.push(sym[1].toUpperCase() as ManaColor)
-  }
-  return colors.length > 0 ? colors : null
+/** The engine writes a plain apostrophe, but a rule can reach the view escaped or curled. */
+const normalize = (text: string) =>
+  text.replace(/&(?:apos|#0*39|rsquo|#8217);/gi, "'").replace(/[‘’ʼ]/g, "'")
+
+export interface ManaContext {
+  /** Colours of the player's commanders, for "in your commander's color identity". */
+  commanderIdentity: ManaColor[]
+  /** The permanent's own colours, for "any of this creature's colors" (Katilda). */
+  ownColors: ManaColor[]
 }
 
-function tapColorsOf(perm: PermanentView): ManaColor[] {
-  if (perm.tapped === true || perm.phasedIn === false) return []
+/** The mana one activation of `rule` adds, or null when the wording cannot be modelled. */
+function producedMana(rule: string, ctx: ManaContext): { colors: ManaColor[]; amount: number } | null {
+  const m = TAP_ADD_RE.exec(normalize(rule).trim())
+  if (!m) return null
+  if (SPEND_ONLY_RE.test(m[1])) return null
+  const dot = m[1].indexOf('.')
+  const clause = (dot < 0 ? m[1] : m[1].slice(0, dot)).trim()
+  const pick = (colors: ManaColor[]) => (colors.length > 0 ? { colors: [...colors], amount: 1 } : null)
+  if (/^one mana of any color$/i.test(clause)) return pick([...COLORED])
+  if (/^one mana of any color in your commander's color identity$/i.test(clause)) return pick(ctx.commanderIdentity)
+  if (/^one mana of any of this creature's colors$/i.test(clause)) return pick(ctx.ownColors)
+  const compact = clause.replace(/\s+/g, '')
+  if (SYMBOL_RUN_RE.test(compact)) {
+    const symbols = [...compact.matchAll(/\{([WUBRGC])\}/gi)].map((s) => s[1].toUpperCase() as ManaColor)
+    return { colors: [...new Set(symbols)], amount: symbols.length }
+  }
+  const colors: ManaColor[] = []
+  for (const part of clause.split(/\s*,\s*(?:or\s+)?|\s+or\s+/i)) {
+    const symbol = /^\{([WUBRGC])\}$/i.exec(part.trim())
+    if (!symbol) return null
+    colors.push(symbol[1].toUpperCase() as ManaColor)
+  }
+  return pick([...new Set(colors)])
+}
+
+function canTap(perm: PermanentView): boolean {
+  if (perm.tapped === true || perm.phasedIn === false) return false
   const isCreature = (perm.cardTypes ?? []).some((t) => t.toUpperCase() === 'CREATURE')
-  if (isCreature && perm.summoningSickness === true) return []
+  return !(isCreature && perm.summoningSickness === true)
+}
+
+function ownColorsOf(perm: PermanentView): ManaColor[] {
+  const color = perm.color
+  if (!color) return []
+  const out: ManaColor[] = []
+  if (color.white) out.push('W')
+  if (color.blue) out.push('U')
+  if (color.black) out.push('B')
+  if (color.red) out.push('R')
+  if (color.green) out.push('G')
+  return out
+}
+
+/** The colours of a player's commanders, read wherever the engine's own marker finds them
+ *  (`commandersOf`): `commandList` holds a commander only while it waits in the command zone,
+ *  and the rest of the game is played after the first cast. Partners contribute one identity
+ *  each. */
+export function commanderIdentityOf(player: PlayerView | undefined): ManaColor[] {
   const out = new Set<ManaColor>()
-  for (const rule of perm.rules ?? []) for (const c of producedColors(rule) ?? []) out.add(c)
+  for (const commander of commandersOf(player)) {
+    if (!commander.isCommander) continue
+    for (const match of (commander.card?.originalColorIdentity ?? '').matchAll(/\{([WUBRG])\}/g)) {
+      out.add(match[1] as ManaColor)
+    }
+  }
   return [...out]
+}
+
+/** What one tap of `perm` can produce, and how much of it. */
+function tapManaOf(perm: PermanentView, identity: ManaColor[]): { colors: ManaColor[]; amount: number } | null {
+  if (!canTap(perm)) return null
+  const ctx: ManaContext = { commanderIdentity: identity, ownColors: ownColorsOf(perm) }
+  const colors = new Set<ManaColor>()
+  let amount = 0
+  for (const rule of perm.rules ?? []) {
+    const produced = producedMana(rule, ctx)
+    if (!produced) continue
+    for (const color of produced.colors) colors.add(color)
+    amount = Math.max(amount, produced.amount)
+  }
+  return colors.size > 0 ? { colors: [...colors], amount } : null
+}
+
+function tapColorsOf(perm: PermanentView, identity: ManaColor[] = []): ManaColor[] {
+  return tapManaOf(perm, identity)?.colors ?? []
 }
 
 const PAIN_TO_YOU_RE = /deals?\s+\d*\s*damage to you|lose[sd]?\s+(\d+\s+)?life/i
 
 function tapPainOf(perm: PermanentView): boolean {
   const rules = perm.rules ?? []
-  if (!rules.some((r) => TAP_ADD_RE.test(r.trim()))) return false
+  if (!rules.some((r) => TAP_ADD_RE.test(normalize(r).trim()))) return false
   return rules.some((r) => PAIN_TO_YOU_RE.test(r))
 }
 
@@ -104,21 +186,38 @@ export function ownManaSources(me: PlayerView, pool: Record<PoolKey, number>): M
   const sources: ManaSource[] = []
   for (const color of Object.keys(POOL_LETTER) as PoolKey[]) {
     for (let i = 0; i < (pool[color] ?? 0); i++) {
-      sources.push({ key: `pool:${color}:${i}`, kind: 'pool', poolColor: color, produces: [POOL_LETTER[color]], painful: false })
+      sources.push({ key: `pool:${color}:${i}`, kind: 'pool', poolColor: color, produces: [POOL_LETTER[color]], amount: 1, painful: false })
     }
   }
+  const identity = commanderIdentityOf(me)
   for (const [id, perm] of battlefieldEntries(me)) {
-    const produces = tapColorsOf(perm)
-    if (produces.length > 0) sources.push({ key: `tap:${id}`, kind: 'tap', id, produces, painful: tapPainOf(perm) })
+    const produced = tapManaOf(perm, identity)
+    if (!produced) continue
+    sources.push({ key: `tap:${id}`, kind: 'tap', id, produces: produced.colors, amount: produced.amount, painful: tapPainOf(perm) })
   }
   return sources
+}
+
+/** MNA-13: untapped permanents that announce a tap-for-mana ability the solver could not read.
+ *  They are never spent, they only keep an unreadable wording from making a payable cost look
+ *  hopeless. */
+export function unknownManaSourceCount(me: PlayerView): number {
+  const identity = commanderIdentityOf(me)
+  let count = 0
+  for (const [, perm] of battlefieldEntries(me)) {
+    if (!canTap(perm)) continue
+    if (tapManaOf(perm, identity)) continue
+    if ((perm.rules ?? []).some((r) => TAP_ADD_LOOSE.test(normalize(r).trim()))) count++
+  }
+  return count
 }
 
 export function opponentOpenManaCount(game: GameView): number {
   let count = 0
   for (const player of game.players ?? []) {
     if (player.controlled) continue
-    for (const [, perm] of battlefieldEntries(player)) if (tapColorsOf(perm).length > 0) count++
+    const identity = commanderIdentityOf(player)
+    for (const [, perm] of battlefieldEntries(player)) if (tapColorsOf(perm, identity).length > 0) count++
   }
   return count
 }
@@ -169,10 +268,14 @@ export function computeNextManaAction(
   sources: ManaSource[],
   reserved: Set<ManaColor> = new Set(),
   opponentOpenMana = 0,
+  unknownSources = 0,
 ): ManaAction | null {
   if (cost.unresolved.length > 0) return null
   if (cost.pips.length === 0 && cost.generic === 0) return null
-  if (sources.length < cost.pips.length + cost.generic) return null
+  // MNA-13: a Sol Ring counts for the two mana it makes, and a wording the solver cannot read
+  // counts for one, so only a cost nothing on the board could cover is left untouched.
+  const capacity = sources.reduce((total, s) => total + s.amount, 0) + unknownSources
+  if (capacity < cost.pips.length + cost.generic) return null
 
   const scores = spendScores(sources, reserved, opponentOpenMana)
   const ranked = [...sources].sort((a, b) => (scores.get(a.key)! - scores.get(b.key)!) || a.key.localeCompare(b.key))
@@ -195,7 +298,11 @@ export function computeNextManaAction(
     }
     return false
   }
-  for (let i = 0; i < pipOrder.length; i++) if (!visit(i, new Set())) return null
+  // MNA-13: a maximum matching, not a perfect one. Pips no known source covers are left to the
+  // player instead of stopping the whole payment.
+  let matched = 0
+  for (let i = 0; i < pipOrder.length; i++) if (visit(i, new Set())) matched++
+  if (matched === 0 && cost.generic === 0) return null
 
   const sourceByKey = new Map(sources.map((s) => [s.key, s]))
   const assigned = ranked.filter((s) => owner.has(s.key))
@@ -216,5 +323,6 @@ export function nextSmartManaAction(game: GameView, message: string, pool: Recor
     ownManaSources(me, pool),
     reservedColorsForInstants(game.myHand ?? {}),
     opponentOpenManaCount(game),
+    unknownManaSourceCount(me),
   )
 }

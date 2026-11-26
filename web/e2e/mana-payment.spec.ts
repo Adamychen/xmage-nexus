@@ -54,7 +54,9 @@ test.describe('Mana payment prefs', { tag: '@manapayment' }, () => {
       })
       expect(pageErrors).toEqual([])
 
-      await page.locator('.player-zone [data-testid="mana-pay-R"]').first().click()
+      // MNA-12 moved the pool out of the seat's zone and onto its own line beside the hand, so the
+      // own pool is reached by its own slot and not by the zone around it.
+      await page.locator('[data-testid="arena-own-pool"] [data-testid="mana-pay-R"]').first().click()
       await expect.poll(() => MANA_TYPES.length, { timeout: 5000 }).toBeGreaterThan(0)
       expect(MANA_TYPES[0]).toEqual({ playerId: 'human-1', manaType: 'RED' })
     })

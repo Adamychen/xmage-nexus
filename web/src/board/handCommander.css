@@ -37,7 +37,7 @@
    piles beside it: the top half of a card, on a card a third wider than that hand's, clipped at the
    waist. Drawn whole it was the one place a commander still read as one more card of the hand. */
 .hand-zone > .hand-zone-commander {
-  --cmd-w: calc(var(--card-w, var(--card-w-base)) * 1.3);
+  --cmd-w: calc(var(--card-w, var(--card-w-base)) * 1.15);
   margin-left: calc(var(--card-w, var(--card-w-base)) * 0.22);
   margin-right: calc(var(--card-w, var(--card-w-base)) * 0.3);
   width: var(--cmd-w);

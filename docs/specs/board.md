@@ -344,8 +344,17 @@ The room the own creatures leave beside the player chip (BRD-32) is decided only
 board drawn without it, and kept while the zone, the chip and the number of cards stay the same, so
 a board resized away and back draws the same sizes it had. The guard sweeps the Arena board, with and without the side panel, with 2 and 4 seats, boards of
 several sizes with planeswalkers, sagas, commanders, tokens and attachments, both card styles and
-several window sizes, both drawn fresh and reached by resizing a drawn board, and allows no size
-change at all after the board has settled.
+several window sizes, both drawn fresh and reached by resizing a drawn board. What it forbids is a
+loop: after the board has settled no size may move twice, and none may come back to a value it
+already had. One late correction, in one direction, of a size whose own input is the settled board
+is allowed and named in the report, because the dependency runs that way: the hand bar fits its
+cards in the width the board leaves it, so it cannot know that width until the board is still.
+
+A solve that lands within a pixel and a half of the size a seat already has keeps that size, and so
+does the hand bar with its own card width: the cards are what a row's height is made of, and the
+bar's height is what the board reserves for it, so every size written changes the box the next solve
+measures, and two answers a pixel apart would otherwise chase each other. The bar measures again on
+the board's relayout, not only on a resize, so its correction lands inside the same settling.
 
 - Why: the planeswalker column of BRD-2 made a board resize every frame without end (user
   report, 2026-10-29; the user then set the bar: a slow transition does not matter, a loop does), and no test watched a board after it was drawn; the size of a card was
@@ -369,8 +378,16 @@ change at all after the board has settled.
   An Arena opponent's hand, commander and piles followed the seat's card size, and the chip beside
   them breaks into lines from the room they leave; the card size comes from the height that chip
   leaves, so a 4-seat board at 1100x700 swapped 64 and 70 px for ever (241 changes in 500 ms). They
-  follow the column's width now (25-nov-2026).
-- Guard: `src/board/HandZone.test.tsx` · `src/board/chipReserve.test.ts` · `e2e/board-settle.spec.ts` · `e2e/board-spotlight-settle.spec.ts`
+  follow the column's width now (25-nov-2026). The pool on its own line (MNA-12) left the own seat
+  one pixel short of its next card size, and the seat flipped between 111 px and 112 px on every
+  frame, 16 different values in 16 frames, which also stopped a click from ever landing on a pool
+  pip (`e2e/mana-payment.spec.ts`, MNA-3, reported by another session). Hence the pixel and a half:
+  measured on that board, 16 values in 16 frames before, one after. What the guard had been calling
+  a failure in the six compact Arena cases was the hand bar correcting itself by two pixels after
+  the board settled, once, which is the order the sizes depend on each other in and not a loop; the
+  guard says now which size moved and judges a second move, not a first. With that and the two
+  hysteresis the fourteen cases pass in a serial run (25-nov-2026).
+- Guard: `src/board/HandZone.test.tsx` · `src/board/chipReserve.test.ts` · `src/board/layout/layoutEngine.test.ts` · `e2e/board-settle.spec.ts` · `e2e/board-spotlight-settle.spec.ts`
 
 ### BRD-22 · The phase dial shows the steps of combat
 Retired 2026-11-23: the Table (v2) interface was removed when every game moved to the one Arena layout; the phase dial is gone and the phase strip names the combat steps.
@@ -625,8 +642,13 @@ are drawn with the hand, which is where their owner looks for something to cast:
 the fan, apart from it by a gap of 0.4 of a card and with a gold edge; under the hand column,
 behind a line of its own; at the end of the hand row, past a gap. Wherever the hand draws it, the fan of the own hand and
 the zone a watched seat or a panel copy draws, it is read the way the
-piles beside it are (BRD-32): the top half of a card, on a card a third wider than that hand's, so
-its art and its name carry at a glance without the hand giving up the room a whole card would take. They follow the hand in every
+piles beside it are (BRD-32): the top half of a card, on a card a seventh wider than that hand's, so
+its art and its name carry at a glance without the hand giving up the room a whole card would take.
+That width is part of what the bar fits its cards in, not one more card of the fan, so the
+commander is drawn whole and inside the bar instead of past its edge. The hand's band keeps clear
+of the game dock before anything else, because the dock takes the clicks and the hover and a card
+under it can be neither read nor picked; when there is not room for everything, what gives way is
+the piles row, half cards the fan may lean over, and the cards shrink to what is left. They follow the hand in every
 hand layout, because the question they answer is the same in all of them. A seat drawn
 at full size that is not mine, the main area of the main-board mode (BRD-6), carries its hand the
 same way: the backs of the cards it holds, with its uncast commander at the end of them, instead
@@ -640,7 +662,17 @@ command zone on the board, which is what a hand cannot hold. A phone keeps the c
 too: the hand has no room to spare at that width.
 
 - Why: in the middle of the board the uncast commander took room from the creatures; the user
-  asked for MTG Arena's Brawl arrangement, the commander as a hand card set apart (2026-11-12). The
+  asked for MTG Arena's Brawl arrangement, the commander as a hand card set apart (2026-11-12).
+  The bar counted the commander as about two cards of the fan while it draws it 1.55 cards wide, so
+  at 1024x768 with the side panel the slot ran from x 890 to x 1093 in a window 1024 wide: half of
+  it off screen and the rest under the dock, where its hover barely opened (user report,
+  25-nov-2026, who also asked for it a little smaller: a seventh wider than a hand card, not a
+  third). Underneath that, the reserve the bar asks for (the piles on one side, the dock on the
+  other) came to more than the bar's whole width and the measurement simply gave up, leaving the
+  bar with the size it starts with and no reserve at all, which is what drew the commander out of
+  the window. Measured after: the slot ends at 737 px with the dock starting at 754, nothing off
+  screen, and the cards at that width come down to their minimum, which is what fits between the
+  panel and the dock. The
   tax drawn in the card's corner sat below the board edge in the hand, a "+" drawn next to a pip did
   not read against the gold edge, and a separate "+N" still had to be added up by eye. It was the
   fanned hand of the v1 chrome only until the user asked for it everywhere (2026-11-21): with the
@@ -654,7 +686,7 @@ too: the hand has no room to spare at that width.
   drawn as a zone, which is what a watched seat and every copy in the panel use, still drew a whole
   card, and the user, watching a game, saw his own seat's commander whole while the opponents'
   read right (same day).
-- Guard: `src/board/HandBar.test.tsx` · `src/board/HandBar.css.test.ts` · `src/board/handCommander.css.test.ts` · `src/board/commanders.test.ts` · `src/board/BoardZone.arenaOwn.test.tsx` · `src/board/HandRail.test.tsx` · `src/board/HandRow.test.tsx` · `src/board/SpotlightBoard.test.tsx`
+- Guard: `src/board/HandBar.test.tsx` · `src/board/HandBar.css.test.ts` · `src/board/handCommander.css.test.ts` · `src/board/commanders.test.ts` · `src/board/BoardZone.arenaOwn.test.tsx` · `src/board/HandRail.test.tsx` · `src/board/HandRow.test.tsx` · `src/board/SpotlightBoard.test.tsx` · `src/board/handSizing.test.ts`
 
 ### BRD-35 · A band in several lines holds the same count on each line
 A band that wraps into several lines puts the same number of items on each line, or fewer on the
@@ -1219,3 +1251,43 @@ player opened from `View` stays until closed.
   after it; a player who did not know why it was open thought the game had broken (play report,
   2026-11-25). MTG Arena shows a reveal as a passing notice in the corner.
 - Guard: `src/game/InfoWindows.test.tsx` · `e2e/info-windows.spec.ts` · `e2e/kodamas-reach.spec.ts`
+
+### BRD-67 · A seat is solved before the paint that shows its new contents
+When a seat's contents change, the layout is solved and written before the browser paints that
+change, in a microtask after the commit that registered it, so every seat of that render is counted
+in the one solve. The engine still watches sizes with its observer and still coalesces those into
+one animation frame (BRD-25); what does not wait for a frame is the solve a new set of cards asks
+for. Until it is written the seat's cards are laid out at the card size the previous contents were
+given, and a pile is the worst of it: every card's overlap is a share of that stale size, so the
+error adds along the pile and its tail is drawn far outside the band, which clips it.
+
+- Why: the other half of the sliced-lands report of BRD-66. Measured in the gallery on
+  `frame:mass-tokens` reached from another board, six runs each way: solving on the next frame drew
+  45 of the 51-card pile outside their band every run, the furthest 5839 px out; solving before the
+  paint, none in any run. A window with no frames to spare (hidden or covered, where
+  `requestAnimationFrame` nearly stops) holds that first frame on screen, which is how a player
+  comes to screenshot a board with a card cut down the middle. Solving inside the commit instead of
+  after it was tried first and broke the settle sweep: it solves the board once per seat and writes
+  sizes the next seat changes.
+- Guard: `src/board/layout/BoardLayoutProvider.test.tsx`
+
+### BRD-68 · A card's margins are layout, never an animation
+No card slot animates `margin`, on the battlefield or in a pile. A slot's margins are the layout's
+own numbers, computed from `--card-w` (the pile's overlap, the footprint a tilted tapped card gives
+back), so the browser must apply them in the same frame the card size changes. Animated, the row is
+drawn at the previous card size for the length of the transition, and in a pile each card's error
+adds to the one before it: the tail leaves the band, which clips it, and the player sees a card
+sliced by a straight edge. What a card does animate is unchanged: its transform, its lift, its
+shadow, its ring, its opacity, and `left`, which is what fans a pile open on hover without touching
+its footprint (BRD-20).
+
+- Why: reported as "las tierras que estaban cortadas" over a screenshot of a board whose lands ended
+  in a card cut down the middle (2026-11-25). Measured in the gallery on `frame:mass-tokens` reached
+  from another board: with the margin animated the 51-card pile hung 19 px outside its band for
+  about 120 ms at 60 fps, and a slot's `margin-left` computed to `-120px`, the card size before the
+  change, while the slot itself was already 46 px wide. With no frames to spare (the same
+  measurement in a hidden window, where `requestAnimationFrame` falls to about 1 Hz) the transition
+  threw the pile's tail 3659 px out and held it there for over a second. A slot's width and its
+  margins then answer to two card sizes at once; with no animation they always answer to the same
+  one, so the pile's footprint is right in whatever frame it is drawn.
+- Guard: `src/board/CardSlot.css.test.ts`

@@ -648,7 +648,8 @@ describe('persistence', () => {
         masterVolume: 1,
         sfxVolume: 0,
         uiVolume: 0.8,
-        prioritySound: 'every-prompt',
+        // SET-14: a payload saved before the key reads as the default, the client's own stops.
+        prioritySound: 'on-stop',
       })
     })
 

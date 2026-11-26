@@ -975,6 +975,7 @@ export const en = {
     declare_attackers: 'Declare Attackers',
     declare_blockers: 'Declare Blockers',
     damage: 'Damage',
+    defense: 'Defense',
     life: 'Life',
     poison: 'Poison',
     energy: 'Energy',

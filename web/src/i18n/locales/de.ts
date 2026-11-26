@@ -977,6 +977,7 @@ export const de: TranslationSchema = {
     declare_attackers: 'Angreifer deklarieren',
     declare_blockers: 'Blocker deklarieren',
     damage: 'Schaden',
+    defense: 'Verteidigung',
     life: 'Lebenspunkte',
     poison: 'Gift',
     energy: 'Energie',
