@@ -1,12 +1,13 @@
 import { useLayoutEffect, useRef } from 'react'
 import type { PlayerView } from '../net/types'
-import { fxMotionAllowed, fxMotionDuration, fxOpacityAllowed, fxOpacityDuration } from './fx'
+import { fxMotionAllowed, fxOpacityAllowed } from './fx'
 import { cardNodesIn } from './cardNodes'
-import { spawnTokenBurst } from './tokenBurst'
 import { cardManaColors } from './impactFx'
-import './tokenBurst.css'
+import { ARENA_EASE, fxTimeline } from '../fx/fxEngine'
+import { vfx } from '../fx/vfxEngine'
+import { manaToVfxColor } from '../fx/vfxPalette'
 
-export const TOKEN_POP_MS = 300
+export const TOKEN_POP_MS = 280
 
 type PopMode = 'pop' | 'fade'
 
@@ -15,22 +16,10 @@ function popMode(): PopMode | null {
   return fxOpacityAllowed() ? 'fade' : null
 }
 
-function playTokenPop(node: HTMLElement, mode: PopMode): void {
-  if (typeof node.animate !== 'function') return
-  if (mode === 'fade') {
-    node.animate([{ opacity: 0 }, { opacity: 1 }], { duration: fxOpacityDuration(TOKEN_POP_MS), easing: 'ease-out' })
-    return
-  }
-  node.animate(
-    [
-      { scale: '0', rotate: '5deg', easing: 'ease-out', offset: 0 },
-      { scale: '1.2', rotate: '0deg', easing: 'ease-in-out', offset: 0.6 },
-      { scale: '1', rotate: '0deg', offset: 1 },
-    ],
-    { duration: fxMotionDuration(TOKEN_POP_MS) },
-  )
-}
-
+/**
+ * Arena-style token materialization: tokens pop directly in their battlefield
+ * slot with a synchronized Canvas 2D shockwave & spark burst (never flying from hand).
+ */
 export function useTokenPop(scopes: ReadonlyArray<HTMLElement | null>, player: PlayerView | undefined): void {
   const seenRef = useRef<{ playerId: string; ids: Set<string> } | null>(null)
 
@@ -45,13 +34,45 @@ export function useTokenPop(scopes: ReadonlyArray<HTMLElement | null>, player: P
     if (fresh.length === 0) return
     const mode = popMode()
     if (!mode) return
+
     const nodes = cardNodesIn(scopes)
     for (const id of fresh) {
       const node = nodes.get(id)
       if (!node) continue
+      // Measure before GSAP scales the node down.
       const rect = node.getBoundingClientRect()
-      playTokenPop(node, mode)
-      spawnTokenBurst(rect, cardManaColors(battlefield[id])[0] ?? null)
+      const color = manaToVfxColor(cardManaColors(battlefield[id])[0])
+
+      if (mode === 'fade') {
+        const tl = fxTimeline(undefined, { allowReducedMotion: true })
+        tl?.fromTo(
+          node,
+          { opacity: 0 },
+          { opacity: 1, duration: 0.15, ease: 'power2.out', clearProps: 'opacity' },
+        )
+        continue
+      }
+
+      const tl = fxTimeline()
+      tl?.fromTo(
+        node,
+        { scale: 0.15, rotation: 6, opacity: 0 },
+        {
+          scale: 1,
+          rotation: 0,
+          opacity: 1,
+          duration: TOKEN_POP_MS / 1000,
+          ease: ARENA_EASE.pop,
+          clearProps: 'scale,rotation,opacity',
+        },
+      )
+
+      if (rect.width > 0 && rect.height > 0) {
+        const cx = rect.left + rect.width / 2
+        const cy = rect.top + rect.height / 2
+        vfx.shockwave(cx, cy, color, { startR: 8, endR: Math.max(rect.width, rect.height) * 0.75, lineWidth: 3, duration: 0.3 })
+        vfx.sparkBurst(cx, cy, color, { count: 16, speed: 210, size: 3.6, life: 0.36, gravity: 80 })
+      }
     }
   })
 }

@@ -4,7 +4,7 @@ import { getState } from '../state/state'
 import { soundManager } from '../audio/soundManager'
 import { fxMotionAllowed, fxMotionDuration } from './fx'
 import { spawnImpact } from './impactFx'
-import { startCardFlight } from './flightManager'
+import { onFlightLanded, startCardFlight } from './flightManager'
 import { sniffDiceRoll } from './diceRollFx'
 import { sniffFizzle } from './fizzleFx'
 import { sniffBehold } from './beholdFx'
@@ -126,18 +126,59 @@ export function animateOpponentMulligan(playerId: string): void {
   afterLayout(() => {
     const seat = `[data-player-id="${playerId}"]`
     const library = visibleRect(document.querySelector(`${seat} :is(.library-stack, .library-chip, .pile-card--library)`))
-    const hand = visibleRect(document.querySelector(`${seat} .hand-zone`))
-      ?? visibleRect(document.querySelector(`.player-info-bar${seat} .pp-hand-badge`))
-      ?? visibleRect(document.querySelector(`.player-info-bar${seat}`))
+    const fanCards = Array.from(document.querySelectorAll<HTMLElement>(`${seat} .hand-back-fan-card`))
+    const handEl =
+      document.querySelector<HTMLElement>(`${seat} .hand-back-fan`)
+      ?? document.querySelector<HTMLElement>(`${seat} .hand-back-stack`)
+      ?? document.querySelector<HTMLElement>(`${seat} .hand-zone`)
+      ?? document.querySelector<HTMLElement>(`.player-info-bar${seat} .pp-hand-badge`)
+      ?? document.querySelector<HTMLElement>(`.player-info-bar${seat}`)
+    const hand = visibleRect(handEl)
     if (!library || !hand) return
     const ms = fxMotionDuration(MULLIGAN_FLIGHT_MS)
     const stamp = Date.now()
-    for (let i = 0; i < MULLIGAN_CARDS; i++) {
+    const isInvertedFan = Boolean(handEl?.closest('.hand-back-stack.is-half-fan') || handEl?.classList.contains('is-half-fan'))
+    const count = fanCards.length > 0 ? Math.min(fanCards.length, 6) : MULLIGAN_CARDS
+    const pileCardSize = { w: 44, h: 62 }
+
+    for (let i = 0; i < count; i++) {
+      const fanEl = fanCards[i] ?? null
+      const cardRect = visibleRect(fanEl) ?? hand
+      const fanDeg = fanEl ? parseFloat(getComputedStyle(fanEl).getPropertyValue('--fan-rot')) || 0 : 0
+      const startRotation = isInvertedFan ? 180 + fanDeg : fanDeg
       const out = faceDownCard(`mulligan-out-${playerId}-${stamp}-${i}`)
       const back = faceDownCard(`mulligan-in-${playerId}-${stamp}-${i}`)
-      setTimeout(() => startCardFlight(out, hand, library, ms), i * MULLIGAN_STAGGER_MS)
-      setTimeout(() => startCardFlight(back, library, hand, ms), ms + 160 + i * MULLIGAN_STAGGER_MS)
+      const fanSelector = fanEl ? `${seat} .hand-back-fan-card:nth-child(${i + 1})` : undefined
+
+      setTimeout(() => {
+        if (fanEl) fanEl.style.opacity = '0'
+        startCardFlight(out, cardRect, library, ms, undefined, {
+          sourceSize: fanEl ? { w: 52, h: 73 } : pileCardSize,
+          startRotation,
+        })
+      }, i * MULLIGAN_STAGGER_MS)
+
+      setTimeout(() => {
+        const destRect = visibleRect(fanEl) ?? hand
+        const flightId = startCardFlight(back, library, destRect, ms, fanSelector, {
+          sourceSize: pileCardSize,
+        })
+        if (fanEl) {
+          if (flightId) {
+            onFlightLanded(flightId, () => {
+              fanEl.style.opacity = ''
+            })
+          } else {
+            fanEl.style.opacity = ''
+          }
+        }
+      }, ms + 160 + i * MULLIGAN_STAGGER_MS)
     }
+
+    // Safety net: ensure opponent hand cards are never left invisible if a flight is skipped.
+    setTimeout(() => {
+      fanCards.forEach((el) => { el.style.opacity = '' })
+    }, ms * 2 + 240 + count * MULLIGAN_STAGGER_MS)
   })
 }
 

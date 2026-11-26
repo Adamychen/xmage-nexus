@@ -74,14 +74,9 @@
   transition: none;
 }
 
-/* Crossfade when the real card takes over from the landed clone */
-@keyframes cardLand {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
-
+/* Instant handover under the landed clone so opacity never dips during swap. */
 .card-slot.flight-land {
-  animation: cardLand 0.17s ease-out both;
+  opacity: 1;
 }
 
 /* `translate` (no `transform: translateY`) para que el alzado se componga con

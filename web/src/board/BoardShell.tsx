@@ -7,6 +7,7 @@ import HandRail from './HandRail'
 import HandRow from './HandRow'
 import FloatingCardPreview from './FloatingCardPreview'
 import FlyingCardOverlay from './FlyingCardOverlay'
+import VfxCanvas from '../fx/VfxCanvas'
 import type { BoardPresenter } from './useBoardPresenter'
 import { BoardLayoutProvider } from './layout/BoardLayoutProvider'
 import { useOpeningHandHeld } from './openingHand'
@@ -135,6 +136,7 @@ export default function BoardShell({ className, testId, presenter, handBar = nul
         leaving={presenter.previewLeaving}
       />
       <FlyingCardOverlay />
+      <VfxCanvas />
     </div>
     </BoardLayoutProvider>
   )

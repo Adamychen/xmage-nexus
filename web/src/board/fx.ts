@@ -50,6 +50,13 @@ export function fxOpacityDuration(ms: number): number {
   return fxOpacityAllowed() ? Math.min(fxDuration(ms), FX_OPACITY_MAX_MS) : 0
 }
 
+const rootListeners = new Set<() => void>()
+
+export function onFxRootApplied(listener: () => void): () => void {
+  rootListeners.add(listener)
+  return () => rootListeners.delete(listener)
+}
+
 /** Mirrors the effects settings on the document root: `fx-off` class (turns
  *  off decorative CSS animations) and the `--fx-speed` variable. */
 export function applyFxRoot(): void {
@@ -57,4 +64,5 @@ export function applyFxRoot(): void {
   const { enabled, speed } = getFxPrefs()
   document.documentElement.classList.toggle('fx-off', !enabled)
   document.documentElement.style.setProperty('--fx-speed', String(speed))
+  rootListeners.forEach((fn) => fn())
 }

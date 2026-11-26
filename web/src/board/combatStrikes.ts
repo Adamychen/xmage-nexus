@@ -4,6 +4,8 @@ import { soundManager } from '../audio/soundManager'
 import { fxMotionDuration } from './fx'
 import { spawnImpact } from './impactFx'
 import { getPreviousCardPosition } from './cardPositionRegistry'
+import { ARENA_EASE, fxShake, fxTimeline, resetFxContext } from '../fx/fxEngine'
+import { vfx } from '../fx/vfxEngine'
 import './combatStrikes.css'
 
 export interface StrikePlan {
@@ -137,7 +139,7 @@ function visibleRect(el: Element | null): DOMRect | null {
   return rect.width > 0 && rect.height > 0 ? rect : null
 }
 
-const OFF_BATTLEFIELD = '.graveyard-stack, .exile-stack, .library-stack, .hand-zone, .hand-bar, .stack-zone, .combat-strike-layer'
+const OFF_BATTLEFIELD = '.graveyard-stack, .exile-stack, .library-stack, .pile-card, .graveyard-chip, .exile-chip, .library-chip, .hand-zone, .hand-bar, .hand-rail, .hand-row, .hand-back-fan, .hand-back-stack, .stack-zone, .combat-strike-layer'
 
 export function isOffBattlefield(el: Element): boolean {
   return el.closest(OFF_BATTLEFIELD) !== null
@@ -197,6 +199,8 @@ export function strikeTargetElement(id: string): HTMLElement | null {
   if (card) return card
   const anchor = document.querySelector(`[data-player-id="${id}"] [data-player-anchor]`)
   if (visibleRect(anchor)) return anchor as HTMLElement
+  const infoBar = document.querySelector(`.player-info-bar[data-player-id="${id}"]`)
+  if (visibleRect(infoBar)) return infoBar as HTMLElement
   const tagged = Array.from(document.querySelectorAll(`[data-player-id="${id}"]`))
   const deepest = tagged.reduce<Element | null>((acc, el) => (!acc || acc.contains(el) ? el : acc), null)
   return visibleRect(deepest) ? (deepest as HTMLElement) : null
@@ -240,6 +244,7 @@ function buildGhost(el: HTMLElement, rect: DOMRect): HTMLDivElement {
   clone.style.transform = cs.transform === 'none' ? '' : cs.transform
   clone.style.animation = 'none'
   clone.style.visibility = 'visible'
+  clone.style.opacity = '1'
 
   const ghost = document.createElement('div')
   ghost.className = 'combat-strike-ghost'
@@ -327,6 +332,7 @@ export function primeCombatHolds(prevGame: GameView | null | undefined, nextGame
 export function clearCombatSnapshots(): void {
   snapshots.clear()
   holds.clear()
+  resetFxContext()
   const hadImpacts = impacts.size > 0
   impacts.clear()
   if (hadImpacts) impactsChanged()
@@ -342,10 +348,17 @@ export function strikeVector(from: DOMRect, to: DOMRect): { dx: number; dy: numb
   return { dx: (dx / dist) * reach, dy: (dy / dist) * reach }
 }
 
-function impactFeedback(el: Element): void {
+function impactFeedback(el: Element, angle = -0.55): void {
   soundManager.play('combat_hit', 'game')
   const card = el.classList.contains('combat-strike-ghost') ? el.firstElementChild ?? el : el
-  spawnImpact('sparks', card.getBoundingClientRect())
+  const rect = card.getBoundingClientRect()
+  spawnImpact('sparks', rect)
+  if (rect.width > 0 && rect.height > 0) {
+    vfx.slash(rect.left + rect.width / 2, rect.top + rect.height / 2, angle, 'ember')
+  }
+  fxShake(card, 'medium')
+  const board = document.querySelector('.board-shell')
+  if (board) fxShake(board, 'light')
   shake(card)
 }
 
@@ -361,47 +374,51 @@ function runStrike(
   if ((!live && !standIn) || !targetEl || !to) return false
 
   const ghost = live ? buildGhost(live, live.getBoundingClientRect()) : standIn!
-  if (typeof ghost.animate !== 'function') return false
   const from = ghost.isConnected ? ghost.getBoundingClientRect() : live!.getBoundingClientRect()
   if (!ghost.isConnected) strikeLayer().appendChild(ghost)
   const prevVisibility = live?.style.visibility ?? ''
   if (live) live.style.visibility = 'hidden'
 
   const { dx, dy } = strikeVector(from, to)
-  const back = 0.08
-  const anim = ghost.animate(
-    [
-      { translate: '0px 0px', offset: 0 },
-      { translate: `${-dx * back}px ${-dy * back}px`, offset: 0.22, easing: 'cubic-bezier(0.5, 0, 0.9, 0.4)' },
-      { translate: `${dx}px ${dy}px`, offset: IMPACT_AT, easing: 'cubic-bezier(0.2, 0.7, 0.3, 1)' },
-      { translate: `${dx * 0.9}px ${dy * 0.9}px`, offset: IMPACT_AT + 0.08, easing: 'cubic-bezier(0.3, 0, 0.3, 1)' },
-      { translate: '0px 0px', offset: 1 },
-    ],
-    { duration, fill: 'forwards' },
-  )
+  const durS = Math.max(0.24, duration / 1000)
+  const slashAngle = Math.atan2(dy, dx) - 0.55
 
   let landed = false
   const land = () => {
     if (landed) return
     landed = true
-    clearTimeout(impact)
-    impactFeedback(strikeTargetElement(plan.targetId) ?? targetEl)
+    clearTimeout(impactBackstop)
+    impactFeedback(strikeTargetElement(plan.targetId) ?? targetEl, slashAngle)
     landImpacts([plan.targetId, plan.attackerId])
   }
-  const impact = setTimeout(land, Math.round(duration * IMPACT_AT))
 
   let done = false
   const finish = () => {
     if (done) return
     done = true
+    clearTimeout(finishBackstop)
     if (live) {
       ghost.remove()
       if (live.isConnected) live.style.visibility = prevVisibility
     }
     land()
   }
-  anim.finished.then(finish, finish)
-  setTimeout(finish, duration + 400)
+
+  const baseScale = parseFloat(ghost.style.scale) || 1
+  ghost.style.scale = ''
+  const tl = fxTimeline({ onComplete: finish })
+  if (tl) {
+    tl.set(ghost, { x: 0, y: 0, scale: baseScale })
+      .to(ghost, { x: -dx * 0.13, y: -dy * 0.13, scale: baseScale * 1.07, duration: durS * 0.2, ease: 'power2.out' })
+      .to(ghost, { x: dx, y: dy, scale: baseScale * 1.12, duration: durS * 0.24, ease: ARENA_EASE.slamIn })
+      .call(land)
+      .to(ghost, { duration: 0.045 }) // Arena hitstop
+      .to(ghost, { x: 0, y: 0, scale: baseScale, duration: durS * 0.42, ease: ARENA_EASE.recoil })
+  }
+
+  // Safety backstops (also ensure deterministic completion under fake timers in tests)
+  const impactBackstop = setTimeout(land, Math.round(duration * IMPACT_AT))
+  const finishBackstop = setTimeout(finish, duration + 400)
   return true
 }
 

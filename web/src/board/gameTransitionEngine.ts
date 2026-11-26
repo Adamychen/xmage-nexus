@@ -31,6 +31,9 @@ import { ANIMATE_FLIGHT_MS, SETTLE_FLIGHT_MS, animateColor, clearCreatureShifts,
 import { commandArrivals } from './commandObjectsFx'
 import { handReveals, spawnHandReveal } from './handRevealFx'
 import { flySpentMana, manaSpends } from './manaSpentFx'
+import { ARENA_EASE, fxTimeline, resetFxContext } from '../fx/fxEngine'
+import { vfx } from '../fx/vfxEngine'
+import { manaToVfxColor } from '../fx/vfxPalette'
 
 /** How long the card positions of the view being left behind stay invisible (two frames and some). */
 const FORGET_BLIND_MS = 160
@@ -56,6 +59,7 @@ export function forgetPreviousView(): void {
   clearStackArrivals()
   forgetStackHold()
   clearFlights()
+  resetFxContext()
   blindCardPositions(FORGET_BLIND_MS)
 }
 
@@ -163,7 +167,7 @@ function scheduleAfterLayout(fn: () => void): void {
   }
 }
 
-const STACK_EXIT_MS = 380
+const STACK_EXIT_MS = 360
 const REATTACH_FLIGHT_MS = 520
 
 function attachmentHosts(game: GameView): Map<string, { hostId: string | null; card: CardView }> {
@@ -210,7 +214,7 @@ function playStackSpellExit(spellId: string, spell: CardView, prevRect: DOMRect,
   if (destSelectors.length > 0) {
     flyAfterLayout(spellId, spell, prevRect, destSelectors, fallbackRect, STACK_EXIT_MS, prevSize)
   } else {
-    startCardFlight(spell, prevRect, prevRect, 340, undefined, { static: true, sourceSize: prevSize })
+    startCardFlight(spell, prevRect, prevRect, STACK_EXIT_MS, undefined, { static: true, sourceSize: prevSize })
   }
 }
 
@@ -944,21 +948,83 @@ export function copiedSpellId(spellId: string, spell: CardView, prevGame: GameVi
 function playMulligan(prevHand: Record<string, CardView>, nextHand: Record<string, CardView>, libRect: DOMRect, handRect: DOMRect, pSel: string): void {
   const returned = Object.keys(prevHand).filter((id) => !(id in nextHand)).slice(0, MULLIGAN_MAX_CARDS)
   const dealt = Object.keys(nextHand).filter((id) => !(id in prevHand)).slice(0, MULLIGAN_MAX_CARDS)
+  const fanRect = getRect('.mulligan-fan')
+  const activeHandRect = fanRect ?? handRect
+  const sampleCard = document.querySelector<HTMLElement>('.mulligan-fan .card-slot')
+  const sampleRect = sampleCard ? rectOf(sampleCard) : null
+  const cardW = sampleRect?.width ?? 92
+  const cardH = sampleRect?.height ?? 128
+
   returned.forEach((id, i) => {
-    const from = getPreviousCardPosition(id)
-    if (!from) return
-    const card = { ...prevHand[id], faceDown: true }
-    setTimeout(() => startCardFlight(card, from, libRect, MULLIGAN_RETURN_MS, undefined, { sourceSize: getPreviousCardSize(id) }), i * MULLIGAN_STAGGER_MS)
+    const fallbackLeft = activeHandRect.left + ((i + 1) / (returned.length + 1)) * activeHandRect.width - cardW / 2
+    const fallbackTop = activeHandRect.top + activeHandRect.height / 2 - cardH / 2
+    const fallbackRect = {
+      left: fallbackLeft,
+      top: fallbackTop,
+      width: cardW,
+      height: cardH,
+      right: fallbackLeft + cardW,
+      bottom: fallbackTop + cardH,
+      x: fallbackLeft,
+      y: fallbackTop,
+      toJSON: () => {},
+    } as DOMRect
+    const from =
+      getRect(`.mulligan-fan [data-card-id="${id}"]`) ??
+      (fanRect ? fallbackRect : (getPreviousCardPosition(id) ?? getRect(`[data-card-id="${id}"]`) ?? fallbackRect))
+    const card = prevHand[id]
+    setTimeout(() => startCardFlight(card, from, libRect, MULLIGAN_RETURN_MS, undefined, {
+      sourceSize: fanRect ? { w: cardW, h: cardH } : getPreviousCardSize(id),
+      conceal: true,
+    }), i * MULLIGAN_STAGGER_MS)
   })
-  const dealFrom = returned.length > 0 ? MULLIGAN_RETURN_MS * 0.6 : 0
-  dealt.forEach((id, i) => {
-    setTimeout(() => {
-      flyAfterLayout(id, nextHand[id], libRect, [
-        `[data-card-id="${id}"]`,
-        '.hand-bar .hand-card-slot:last-child',
-        `${pSel} .hand-zone .hand-card-slot:last-child`,
-      ], handRect, MULLIGAN_DEAL_MS)
-    }, dealFrom + i * MULLIGAN_STAGGER_MS)
+  const dealFromMs = returned.length > 0 ? MULLIGAN_RETURN_MS * 0.72 + returned.length * MULLIGAN_STAGGER_MS * 0.45 : 0
+  if (dealt.length === 0) return
+
+  // Hold the newly rendered hand slots hidden while the old hand returns, then deal each
+  // real slot directly from the library into its exact place (prioritizing .mulligan-fan when open).
+  scheduleAfterLayout(() => {
+    const tl = fxTimeline()
+    const libCx = libRect.left + libRect.width / 2
+    const libCy = libRect.top + libRect.height / 2
+    let order = 0
+    for (const id of dealt) {
+      const slot =
+        document.querySelector<HTMLElement>(`.mulligan-fan [data-card-id="${id}"]`) ??
+        document.querySelector<HTMLElement>(`[data-card-id="${id}"]`)
+      const r = slot?.getBoundingClientRect()
+      if (slot && r && r.width > 0 && r.height > 0 && tl) {
+        const dx = libCx - (r.left + r.width / 2)
+        const dy = libCy - (r.top + r.height / 2)
+        const at = (dealFromMs + order++ * MULLIGAN_STAGGER_MS) / 1000
+        tl.set(slot, { opacity: 0, animation: 'none', transition: 'none' }, 0)
+          .fromTo(
+            slot,
+            { x: dx, y: dy, scale: 0.45, rotation: -10, opacity: 0 },
+            {
+              x: 0,
+              y: 0,
+              scale: 1,
+              rotation: 0,
+              opacity: 1,
+              duration: MULLIGAN_DEAL_MS / 1000,
+              ease: ARENA_EASE.snapOut,
+              clearProps: 'x,y,scale,rotation,opacity,animation,transition',
+            },
+            at,
+          )
+      } else {
+        const delay = dealFromMs + order++ * MULLIGAN_STAGGER_MS
+        setTimeout(() => {
+          flyAfterLayout(id, nextHand[id], libRect, [
+            `.mulligan-fan [data-card-id="${id}"]`,
+            `[data-card-id="${id}"]`,
+            '.hand-bar .hand-card-slot:last-child',
+            `${pSel} .hand-zone .hand-card-slot:last-child`,
+          ], activeHandRect, MULLIGAN_DEAL_MS, pileSize(libRect), undefined, undefined, undefined, true)
+        }, delay)
+      }
+    }
   })
 }
 
@@ -1155,7 +1221,7 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
     // La mano del jugador controlado vive en la barra dedicada (fuera de la zona)
     const handRect = isControlled
       ? (getRect('.hand-bar') ?? getRect(`${pSel} .hand-zone`))
-      : getRect(`${pSel} .hand-zone`)
+      : (getRect(`${pSel} .hand-back-fan`) ?? getRect(`${pSel} .hand-back-stack`) ?? getRect(`${pSel} .hand-zone`))
     if (isControlled) {
       const prevHand = prevGame.myHand ?? {}
       const nextHand = nextGame.myHand ?? {}
@@ -1259,9 +1325,11 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
       graveArrivals.slice(0, 3).forEach((id, i) => {
         if (id in (prevP.battlefield ?? {}) || id in prevStack || fellFromStack.has(id)) return
         const arrived = (nextGraveIds as Record<string, CardView>)[id]
+        const fromHand = isControlled ? id in (prevGame.myHand ?? {}) : handShrank
+        // Capture pre-commit position synchronously before the graveyard top card mounts and overwrites it.
+        const registered = fromHand ? getPreviousCardPosition(id) : null
+        const registeredSize = registered ? getPreviousCardSize(id) : null
         setTimeout(() => {
-          const registered = getPreviousCardPosition(id)
-          const fromHand = isControlled ? id in (prevGame.myHand ?? {}) : handShrank
           const originRect =
             registered ??
             (fromHand ? (getRect(`[data-card-id="${id}"]`) ?? handRect ?? libRect) : (libRect ?? handRect))
@@ -1269,10 +1337,23 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
             noteFlightEvent({ kind: 'skip', reason: 'no-source', cardId: id, detail: 'discard' })
             return
           }
-          flyAfterLayout(id, arrived, originRect, [
-            `${pSel} ${GRAVE_PILE} [data-card-id="${id}"]`,
-            `${pSel} :is(.graveyard-stack, .graveyard-chip)`,
-          ], graveRect, 350, registered ? getPreviousCardSize(id) : null)
+          const isMill = !fromHand && originRect === libRect
+          flyAfterLayout(
+            id,
+            arrived,
+            originRect,
+            [
+              `${pSel} ${GRAVE_PILE} [data-card-id="${id}"]`,
+              `${pSel} ${GRAVE_PILE}`,
+            ],
+            graveRect,
+            isMill ? 460 : 350,
+            registeredSize ?? pileSize(originRect),
+            undefined,
+            undefined,
+            undefined,
+            isMill,
+          )
         }, i * 70)
       })
     }
@@ -1332,11 +1413,11 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
           originRect = handRect
         }
 
-        if ((perm as { isToken?: boolean }).isToken && !wasInStack) {
+        const createdToken = (perm as { isToken?: boolean }).isToken === true && !wasInStack
+        if (createdToken) {
+          originRect = null
           scheduleAfterLayout(() => spawnImpact('token-pop', getRect(`[data-card-id="${permId}"]`)))
-        }
-
-        if (originRect) {
+        } else if (originRect) {
           const enteringLand = !wasInStack && (perm.cardTypes ?? []).some((t) => String(t).toUpperCase() === 'LAND')
           flyAfterLayout(permId, perm, originRect, [
             `[data-card-id="${permId}"]`,
@@ -1377,11 +1458,14 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
         afterLanding(permId, deathDelay(permId), () => {
           spawnImpact('bounce', fromRect)
           flyAfterLayout(permId, perm, fromRect, [
+            `${pSel} .hand-back-fan-card:last-child`,
+            `${pSel} .hand-back-fan`,
+            `${pSel} .hand-back-stack`,
             `${pSel} .hand-zone .hand-card-slot:last-child`,
             `${pSel} .hand-zone`,
             `.player-info-bar[data-player-id="${nextP.playerId}"] .pp-hand-badge`,
             `.player-info-bar[data-player-id="${nextP.playerId}"]`,
-          ], handRect ?? getRect(`.player-info-bar[data-player-id="${nextP.playerId}"]`), BOUNCE_FLIGHT_MS, prevSize)
+          ], handRect ?? getRect(`.player-info-bar[data-player-id="${nextP.playerId}"]`), BOUNCE_FLIGHT_MS, prevSize, undefined, undefined, undefined, false, true)
         })
         continue
       }
@@ -1517,7 +1601,8 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
           }
           return
         }
-        const rect = deepest.getBoundingClientRect()
+        const lifeAnchor = deepest.querySelector<HTMLElement>('.life-value') ?? deepest.querySelector<HTMLElement>('.life-counter') ?? deepest
+        const rect = lifeAnchor.getBoundingClientRect()
         spawnFloater(`life:${nextP.playerId}`, rect, `+${nextLife - prevLife}`, 'good')
         spawnImpact('heal', rect)
         replayClass(deepest, 'gained-life', fxMotionDuration(900) + 40)
@@ -1588,14 +1673,53 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
     const fizzled = !countered.has(spellId) && consumeFizzled(spellId)
     enqueueStackResolve(spellId, (done) => {
       const exit = () => {
+        const shown = [...document.querySelectorAll<HTMLElement>(`[data-card-id="${spellId}"]`)].find((el) => el.closest(STACK_SELECTOR))
+        const hasZoneDest = Boolean(departure && departure.zone !== 'battlefield')
         if (prevRect && mergeHost) {
           const source = stackSpellSource(spellId)
+          if (shown) shown.style.visibility = 'hidden'
           mergeIntoHost(spellId, spell, source?.rect ?? prevRect, source?.size ?? prevSize, mergeHost)
+          later(STACK_EXIT_MS, done)
+        } else if (prevRect && !entersBattlefield && hasZoneDest) {
+          const source = stackSpellSource(spellId)
+          if (shown) shown.style.visibility = 'hidden'
+          playStackSpellExit(spellId, spell, source?.rect ?? prevRect, source?.size ?? prevSize, nextPlayers, departure)
+          later(STACK_EXIT_MS, done)
+        } else if (prevRect && !entersBattlefield && shown) {
+          // Dissolve the actual stack card directly in place (no clone, no black-box flash).
+          const rect = shown.getBoundingClientRect()
+          if (rect.width > 0 && rect.height > 0) {
+            vfx.sparkBurst(rect.left + rect.width / 2, rect.top + rect.height / 2, manaToVfxColor(colors[0], 'gold'), {
+              count: 14,
+              speed: 140,
+              size: 3.4,
+              life: 0.4,
+              gravity: -40,
+            })
+          }
+          const tl = fxTimeline()
+          tl?.set(shown, { transition: 'none' })
+            .fromTo(
+              shown,
+              { x: 0, y: 0, scale: 1, opacity: 1, filter: 'blur(0px) brightness(1)' },
+              {
+                x: -64,
+                y: -16,
+                scale: 1.07,
+                opacity: 0,
+                filter: 'blur(6px) brightness(1.45)',
+                duration: STACK_EXIT_MS / 1000,
+                ease: 'power2.out',
+              },
+            )
+          later(STACK_EXIT_MS, done)
         } else if (prevRect && !entersBattlefield) {
           const source = stackSpellSource(spellId)
           playStackSpellExit(spellId, spell, source?.rect ?? prevRect, source?.size ?? prevSize, nextPlayers, departure)
+          later(STACK_EXIT_MS, done)
+        } else {
+          done()
         }
-        later(STACK_EXIT_MS, done)
       }
       if (!prevRect) {
         noteFlightEvent({ kind: 'skip', reason: 'no-source', cardId: spellId, detail: 'stack-resolve' })
@@ -1605,20 +1729,28 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
       }
       if (countered.has(spellId)) {
         for (const targetId of targetIds) landed(targetId)
-        const shown = [...document.querySelectorAll(`[data-card-id="${spellId}"]`)].find((el) => el.closest(STACK_SELECTOR))
+        const shown = [...document.querySelectorAll<HTMLElement>(`[data-card-id="${spellId}"]`)].find((el) => el.closest(STACK_SELECTOR))
         const ms = fxMotionDuration(COUNTERED_MS)
         if (shown) replayClass(shown, 'fx-countered-shake', ms + 200)
         spawnImpact('countered', stackSpellSource(spellId)?.rect ?? prevRect)
         soundManager.play('destroy', 'game')
-        later(ms, exit)
+        const hasZoneDest = Boolean(departure && departure.zone !== 'battlefield')
+        later(ms, () => {
+          if (hasZoneDest) exit()
+          else done()
+        })
         return
       }
       if (fizzled) {
         for (const targetId of targetIds) landed(targetId)
-        const shown = [...document.querySelectorAll(`[data-card-id="${spellId}"]`)].find((el) => el.closest(STACK_SELECTOR))
+        const shown = [...document.querySelectorAll<HTMLElement>(`[data-card-id="${spellId}"]`)].find((el) => el.closest(STACK_SELECTOR))
         const ms = fxMotionDuration(FIZZLE_MS)
         if (shown) replayClass(shown, 'fx-fizzle', ms + 200)
-        later(ms, exit)
+        const hasZoneDest = Boolean(departure && departure.zone !== 'battlefield')
+        later(ms, () => {
+          if (hasZoneDest) exit()
+          else done()
+        })
         return
       }
       if (targetIds.length === 0) {

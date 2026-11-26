@@ -2,12 +2,14 @@
 
 Prefix: `FX`
 
-Board animations are driven by `web/src/board/gameTransitionEngine.ts`, which diffs the previous and
-the next game view, plus per-component hooks (`useDrawSlide`, `useTokenPop`, `useUntapWave`, …) and
-the fixed FX overlays (`web/src/board/*Overlay.tsx`). Motion preferences live in
-`web/src/board/fx.ts`. The guiding principle: **an animation answers "what happened?" and never
-stands between the player and the game**. How the FX layer stacks against dialogs is DLG-1 and
-DLG-7 (`dialogs.md`). The design history is `docs/plans/2026-10-16-game-animations.md`.
+Board animations are driven by the MTG Arena-style two-layer engine in `web/src/fx/` (`fxEngine.ts`
+using GSAP `Flip`/`MotionPathPlugin`/timelines + `vfxEngine.ts`/`VfxCanvas.tsx` Canvas 2D particle
+& VFX overlay), orchestrated by `web/src/board/gameTransitionEngine.ts`, per-component hooks
+(`useTapFlip`, `useDrawSlide`, `useTokenPop`, `useUntapWave`), and the fixed FX overlays
+(`web/src/board/*Overlay.tsx`). Motion preferences live in `web/src/board/fx.ts` and sync directly
+to `gsap.globalTimeline.timeScale`. The guiding principle: **an animation answers "what happened?"
+and never stands between the player and the game**. How the FX layer stacks against dialogs is DLG-1
+and DLG-7 (`dialogs.md`). The design history is `docs/plans/2026-10-16-game-animations.md`.
 
 ### FX-1 · Turning effects off stops every animation, in every screen
 With the effects setting off, the document root carries `html.fx-off` and no CSS animation or
@@ -53,11 +55,15 @@ nothing hanging: no hidden slot, no half-entered card, no orphan flight.
 An animation plays when the value it shows changes between two views, never because a view
 arrived or a component mounted. The opening hand, a full hand refresh and the mulligan do not
 slide; tokens already on the battlefield at mount do not pop; cards already untapped do not wave;
-a re-render with the same state starts nothing.
+a re-render with the same state starts nothing. A token created on the battlefield was never in
+any zone, so it does not fly in from anywhere: it pops in its own slot, as in MTG Arena, while a
+card that enters from the hand, the stack, the graveyard or the exile still flies from there.
 
 - Why: plan §1 ("animate only when the underlying value actually changes, never on every
-  `GAME_UPDATE`"); `4b3228b639` kept initial hands, full refreshes and mulligans still.
-- Guard: `src/board/useDrawSlide.test.tsx` · `src/board/useTokenPop.test.tsx` · `src/board/useUntapWave.test.tsx`
+  `GAME_UPDATE`"); `4b3228b639` kept initial hands, full refreshes and mulligans still. A new
+  permanent with no known origin was flown in from the hand, so a token rose like a played card
+  and then popped on top of that (user report, 26-nov-2026).
+- Guard: `src/board/useDrawSlide.test.tsx` · `src/board/useTokenPop.test.tsx` · `src/board/useUntapWave.test.tsx` · `src/board/gameTransitionEngine.test.ts`
 
 ### FX-6 · A hit shows when it lands
 Combat strikes start when combat damage is dealt, never while attackers or blockers are being

@@ -1,10 +1,12 @@
 import { useEffect } from 'react'
 import ProjectileOverlay from '../board/ProjectileOverlay'
+import VfxCanvas from '../fx/VfxCanvas'
 import { replayProjectileDemo } from './projectileDemo'
 
 export default function ProjectileGalleryStage() {
   useEffect(() => {
-    replayProjectileDemo()
+    const id = requestAnimationFrame(() => replayProjectileDemo())
+    return () => cancelAnimationFrame(id)
   }, [])
   return (
     <div className="projectile-stage" data-projectile-stage="">
@@ -15,6 +17,7 @@ export default function ProjectileGalleryStage() {
         <span>Target</span>
       </div>
       <ProjectileOverlay />
+      <VfxCanvas />
     </div>
   )
 }

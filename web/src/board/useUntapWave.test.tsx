@@ -2,6 +2,7 @@ import { renderHook } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { useUntapWave } from './useUntapWave'
 import { getState, setState } from '../state/state'
+import { getFxDiagnostics, resetFxContext } from '../fx/fxEngine'
 
 function setFx(effects: boolean) {
   setState({ settings: { ...getState().settings, effects } })
@@ -34,32 +35,29 @@ function renderWave(scope: HTMLElement, tilted = false) {
 }
 
 describe('useUntapWave', () => {
-  let animate: ReturnType<typeof vi.fn>
-
   beforeEach(() => {
+    resetFxContext()
     setFx(true)
     setReducedMotion(false)
-    animate = vi.fn(() => ({ cancel: vi.fn() }))
-    Object.defineProperty(HTMLElement.prototype, 'animate', { value: animate, configurable: true, writable: true })
   })
 
   afterEach(() => {
+    resetFxContext()
     delete (window as { matchMedia?: unknown }).matchMedia
-    delete (HTMLElement.prototype as { animate?: unknown }).animate
     document.body.innerHTML = ''
   })
 
   it('FX-5: does not wave at mount, even with cards already untapped or tapped', () => {
     const scope = board([{ id: 'a', tapped: true }, { id: 'b', tapped: true }, { id: 'c', tapped: false }])
     renderWave(scope)
-    expect(animate).not.toHaveBeenCalled()
+    expect(getFxDiagnostics().activeTimelines()).toBe(0)
   })
 
   it('FX-5: does not wave on a re-render without tap changes', () => {
     const scope = board([{ id: 'a', tapped: true }, { id: 'b', tapped: true }])
     const { rerender } = renderWave(scope)
     rerender({ t: false })
-    expect(animate).not.toHaveBeenCalled()
+    expect(getFxDiagnostics().activeTimelines()).toBe(0)
   })
 
   it('plays no wave when only one card untaps', () => {
@@ -67,10 +65,10 @@ describe('useUntapWave', () => {
     const { rerender } = renderWave(scope)
     setTapped(scope, 'a', false)
     rerender({ t: false })
-    expect(animate).not.toHaveBeenCalled()
+    expect(getFxDiagnostics().activeTimelines()).toBe(0)
   })
 
-  it('cascades when two cards untap in the same commit, delayed by index x 40 ms', () => {
+  it('cascades a GSAP timeline when two or more cards untap in the same commit', () => {
     const scope = board([
       { id: 'a', tapped: true },
       { id: 'b', tapped: true },
@@ -82,43 +80,7 @@ describe('useUntapWave', () => {
     setTapped(scope, 'b', false)
     setTapped(scope, 'c', false)
     rerender({ t: false })
-    expect(animate).toHaveBeenCalledTimes(3)
-    const delays = animate.mock.calls.map((call) => (call[1] as { delay: number }).delay)
-    expect(delays).toEqual([0, 40, 80])
-    const options = animate.mock.calls[0][1] as { duration: number; fill: string }
-    expect(options.duration).toBe(250)
-    expect(options.fill).toBe('backwards')
-  })
-
-  it('starts each card from the normal tapped pose (rotate 90deg) and unrotates it', () => {
-    const scope = board([{ id: 'a', tapped: true }, { id: 'b', tapped: true }])
-    const { rerender } = renderWave(scope)
-    setTapped(scope, 'a', false)
-    setTapped(scope, 'b', false)
-    rerender({ t: false })
-    const frames = animate.mock.calls[0][0] as Array<{ rotate: string; scale: string }>
-    expect(frames[0]).toMatchObject({ rotate: '90deg' })
-    expect(frames[frames.length - 1]).toMatchObject({ rotate: '0deg', scale: '1' })
-  })
-
-  it('uses the tilted pose (45deg) when tapStyle is tilted', () => {
-    const scope = board([{ id: 'a', tapped: true }, { id: 'b', tapped: true }])
-    const { rerender } = renderWave(scope, true)
-    setTapped(scope, 'a', false)
-    setTapped(scope, 'b', false)
-    rerender({ t: true })
-    const frames = animate.mock.calls[0][0] as Array<{ rotate: string; scale: string }>
-    expect(frames[0]).toMatchObject({ rotate: '45deg', scale: '0.825' })
-  })
-
-  it('keeps the compact scale in the starting pose', () => {
-    const scope = board([{ id: 'a', tapped: true, compact: true }, { id: 'b', tapped: true, compact: true }])
-    const { rerender } = renderWave(scope)
-    setTapped(scope, 'a', false)
-    setTapped(scope, 'b', false)
-    rerender({ t: false })
-    const frames = animate.mock.calls[0][0] as Array<{ rotate: string; scale: string }>
-    expect(frames[0]).toMatchObject({ rotate: '90deg', scale: '0.75' })
+    expect(getFxDiagnostics().activeTimelines()).toBe(1)
   })
 
   it('FX-2: does nothing under reduced motion', () => {
@@ -128,7 +90,7 @@ describe('useUntapWave', () => {
     setTapped(scope, 'a', false)
     setTapped(scope, 'b', false)
     rerender({ t: false })
-    expect(animate).not.toHaveBeenCalled()
+    expect(getFxDiagnostics().activeTimelines()).toBe(0)
   })
 
   it('FX-1: does nothing when effects are off', () => {
@@ -138,10 +100,10 @@ describe('useUntapWave', () => {
     setTapped(scope, 'a', false)
     setTapped(scope, 'b', false)
     rerender({ t: false })
-    expect(animate).not.toHaveBeenCalled()
+    expect(getFxDiagnostics().activeTimelines()).toBe(0)
   })
 
-  it('cancels the running transform transition so the wave owns the pose', () => {
+  it('cancels the running transform transition so the GSAP wave owns the pose', () => {
     const cancel = vi.fn()
     const transform = { transitionProperty: 'transform', cancel }
     const other = { transitionProperty: 'margin', cancel: vi.fn() }

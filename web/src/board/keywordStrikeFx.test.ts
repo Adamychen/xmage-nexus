@@ -346,6 +346,7 @@ describe('playKeywordStrikes', () => {
   })
 
   afterEach(() => {
+    clearCombatSnapshots()
     vi.restoreAllMocks()
     vi.unstubAllGlobals()
     vi.useRealTimers()
@@ -461,6 +462,7 @@ describe('keyword strike engine integration', () => {
   })
 
   afterEach(() => {
+    clearCombatSnapshots()
     delete (HTMLElement.prototype as unknown as { animate?: unknown }).animate
     vi.restoreAllMocks()
     vi.unstubAllGlobals()
@@ -604,6 +606,7 @@ describe('keyword strikes on a combatant that left its slot', () => {
   })
 
   afterEach(() => {
+    clearCombatSnapshots()
     delete (HTMLElement.prototype as unknown as { animate?: unknown }).animate
     vi.restoreAllMocks()
     vi.unstubAllGlobals()

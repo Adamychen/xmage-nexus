@@ -471,6 +471,32 @@ describe('gameTransitionEngine', () => {
     expect(flights.some((f) => f.card.name === 'Grizzly Bears')).toBe(true)
   })
 
+  it('FX-5: a token created on the battlefield pops in place and does not fly in from the hand', () => {
+    const token = makePermanent({ id: 'perm-grizzly', name: 'Soldier', isToken: true } as never)
+    const alice1 = makePlayer({ playerId: 'p-alice', name: 'Alice', battlefield: {} })
+    const prevGame = makeGameView({ players: [alice1] })
+    const alice2 = makePlayer({ playerId: 'p-alice', name: 'Alice', battlefield: { 'perm-grizzly': token } })
+    const nextGame = makeGameView({ players: [alice2] })
+
+    detectAndAnimateTransitions(prevGame, nextGame)
+    vi.advanceTimersByTime(200)
+
+    expect(getActiveFlights().some((f) => f.card.name === 'Soldier')).toBe(false)
+  })
+
+  it('FX-5: a nontoken permanent that enters from the hand still flies in', () => {
+    const bear = makePermanent({ id: 'perm-grizzly', name: 'Grizzly Bears' })
+    const alice1 = makePlayer({ playerId: 'p-alice', name: 'Alice', battlefield: {} })
+    const prevGame = makeGameView({ players: [alice1] })
+    const alice2 = makePlayer({ playerId: 'p-alice', name: 'Alice', battlefield: { 'perm-grizzly': bear } })
+    const nextGame = makeGameView({ players: [alice2] })
+
+    detectAndAnimateTransitions(prevGame, nextGame)
+    vi.advanceTimersByTime(200)
+
+    expect(getActiveFlights().some((f) => f.card.name === 'Grizzly Bears')).toBe(true)
+  })
+
   it('does not fly a ghost to the graveyard when a token vanishes without arrival', () => {
     const token = makePermanent({ id: 'perm-token', name: 'Goblin Token' })
     const alice1 = makePlayer({

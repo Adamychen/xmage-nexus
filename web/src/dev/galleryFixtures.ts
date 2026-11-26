@@ -89,6 +89,7 @@ export type GalleryScreenName =
   | 'cards'
   | 'projectile'
   | 'glyphs'
+  | 'arena-fx'
 
 /** Acción de dev de una entrada: un botón en el sidebar que modifica el estado de la galería. */
 export interface GalleryAction {
@@ -3992,6 +3993,13 @@ export function buildGalleryEntries(): GalleryEntry[] {
       gameId,
     })
     entries.push({
+      id: 'anim:arena-sandbox',
+      group: 'Animaciones',
+      label: 'Arena FX Sandbox (GSAP + Canvas 2D)',
+      description: 'Interactive lab for the MTG Arena animation engine: test combat strikes, curved mana projectiles, mythic ETB slams, destroy shatter, exile vortex and GSAP Flip land regrouping.',
+      screen: 'arena-fx',
+    })
+    entries.push({
       id: 'anim:projectile',
       group: 'Animaciones',
       label: 'Stack: spell projectile to target',
@@ -4601,6 +4609,20 @@ export function buildGalleryEntries(): GalleryEntry[] {
       phase: 'game',
       game: mulliganBase,
       gameId,
+      feedback: {
+        method: 'GAME_ASK',
+        gameId,
+        title: 'Mulligan',
+        message: 'Mulligan down to 6 cards?',
+        mode: 'boolean',
+        options: [
+          { id: 'keep', label: 'Keep (7)', value: 'false' },
+          { id: 'mull', label: 'Mulligan', value: 'true' },
+        ],
+        min: 0,
+        max: 0,
+        isMulligan: true,
+      },
       action: { label: 'Replay', run: replayQuiet(mulliganBase, gameId, (g) => mulliganHand(g, 1)) },
     })
     if (opponentOfBase) {
