@@ -283,7 +283,10 @@ never shows two primaries.
   button went on saying "Loading…" beside the two answers it could have carried (second report,
   also with a screenshot, 24-nov-2026): two answers are not a choice to scan, they are the forward
   and the way back this corner is built for.
-- Guard: `src/game/feedbackModes/boardOrder.test.tsx` · `src/game/feedbackModes/AskBar.test.tsx`
+  An option's label is the server's own sentence ("Leave in current zone (Graveyard)"), so a button
+  in this corner wraps it instead of letting it run out of its shape (user, with a screenshot of a
+  label hanging off both ends of its pill, 26-nov-2026).
+- Guard: `src/game/feedbackModes/boardOrder.test.tsx` · `src/game/feedbackModes/AskBar.test.tsx` · `src/game/feedbackModes/promptBars.css.test.ts`
 
 ### PRM-20 · Surveil, scry and library orderings are one screen; the client answers the engine's chain from it
 A surveil, scry, or standalone library/graveyard ordering (`top-order`, `bottom-order`, `grave-order`,

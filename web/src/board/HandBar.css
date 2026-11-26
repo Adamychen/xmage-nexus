@@ -320,9 +320,10 @@
   transform: translateY(calc(-0.7 * var(--cmd-w))) scale(var(--cmd-hover-scale));
 }
 
+/* The slot is what rises over its neighbours (`.hand-card-slot:hover`); the picture must not rise
+   over its own cost, which comes after it and paints the bubbles on top of the card. */
 .hand-bar .hand-card-slot.hand-trailing:hover .hand-trailing-card {
   clip-path: none;
-  z-index: 40;
   box-shadow: 0 18px 44px var(--shade-5), 0 0 0 2px var(--gold-300), 0 0 24px rgb(var(--gold-rgb) / 0.55);
 }
 

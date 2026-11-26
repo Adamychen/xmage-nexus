@@ -9,6 +9,10 @@
   gap: var(--sp-1);
   overflow: clip;
   box-sizing: border-box;
+  /* BRD-34: a seat is a layer of its own, so what it stacks inside (a pile's count badge sits at
+     30) cannot climb over the hand in front of it: a grown commander had a land pile's "x12"
+     printed across its art. */
+  isolation: isolate;
 }
 
 .board-zone.empty,

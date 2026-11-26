@@ -96,9 +96,14 @@
 /* PRM-19: what the big button cannot do is the same button one size down — same shape, same face,
    same uppercase, a quieter colour, so the corner reads as one family instead of a panel of
    leftovers. */
+/* PRM-19: the label of an option comes from the server and can be a sentence ("Leave in current
+   zone (Graveyard)"), so it wraps inside the button instead of running out of it. */
 .action-prompt-actions button {
   flex: 1 1 auto;
-  white-space: nowrap;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  text-align: center;
+  line-height: 1.25;
 }
 
 .prompt-second-btn {
