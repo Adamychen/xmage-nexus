@@ -236,3 +236,17 @@ which is the engine's own `removeAttackerIfPossible`.
   cannot cancel it without patching the engine, so what it can do is make the question
   unmissable and say where the way back is.
 - Guard: `src/game/feedback/detect.test.ts`
+
+### CMB-17 · Attackers of the same seat stay one pile
+A declared attacker does not leave its pile: what tells one pile from another while the combat is
+live is who the creatures attack. Three copies of a token attacking the same seat are one pile with
+its count, a fourth attacking someone else is a pile of its own, and the ones not in the combat
+keep theirs. An attacker that was stopped and one that goes through are not the same pile either,
+since one of them is about to deal damage and the other is not. A blocker keeps no pile: it is tied
+to one attacker (CMB-4) and has to stay its own card for that tie to mean anything.
+
+- Why: the player asked for it after CMB-15, in the same words as the piles themselves: "los tokens
+  atacando no se apilan cuando 3 tokens iguales atacan a un mismo rival" (26-nov-2026). Known gap:
+  a pile of attackers is drawn before the creatures sorted into their combat columns, not inside
+  its own column, so with attacks on two seats the two piles sit together at the front of the row.
+- Guard: `src/board/combatColumns.test.ts`, `src/board/BoardZone.pileCards.test.tsx`

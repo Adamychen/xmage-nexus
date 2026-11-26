@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import podCombat from '../../fixtures/recorded/pod-combat.json'
-import { atEaseIds, combatArrangement, combatOrder } from './combatColumns'
+import { atEaseIds, combatArrangement, combatOrder, combatPileKeys } from './combatColumns'
 import type { GameView, PermanentView, PlayerView } from '../net/types'
 
 const perm = (name: string): PermanentView => ({ name, manaValue: 0, expansionSetCode: '', cardNumber: '0' } as unknown as PermanentView)
@@ -177,5 +177,42 @@ describe('the column number a creature carries', () => {
     const order = combatOrder(combatArrangement(view))
     expect([order.get('a'), order.get('block1')]).toEqual([0, 0])
     expect(order.get('b')).toBe(1)
+  })
+})
+
+describe('CMB-17: the pile key of a creature in combat', () => {
+  it('CMB-17: copies attacking the same seat share a key, and one attacking another seat does not', () => {
+    const game = {
+      players: [
+        { playerId: 'me', controlled: true, battlefield: { a: { id: 'a' }, b: { id: 'b' }, c: { id: 'c' } } },
+        { playerId: 'opp1', controlled: false, battlefield: {} },
+        { playerId: 'opp2', controlled: false, battlefield: {} },
+      ],
+      combat: [
+        { attackers: { a: {}, b: {} }, blockers: {}, defenderId: 'opp1', isBlocked: false },
+        { attackers: { c: {} }, blockers: {}, defenderId: 'opp2', isBlocked: false },
+      ],
+    } as unknown as GameView
+
+    const keys = combatPileKeys(combatArrangement(game))
+    expect(keys.get('a')).toBe(keys.get('b'))
+    expect(keys.get('c')).not.toBe(keys.get('a'))
+  })
+
+  it('CMB-17: an attacker that was stopped does not share a pile with one that goes through', () => {
+    const game = {
+      players: [
+        { playerId: 'me', controlled: true, battlefield: { a: { id: 'a' }, b: { id: 'b' } } },
+        { playerId: 'opp1', controlled: false, battlefield: { w: { id: 'w' } } },
+      ],
+      combat: [
+        { attackers: { a: {} }, blockers: { w: {} }, defenderId: 'opp1', isBlocked: true },
+        { attackers: { b: {} }, blockers: {}, defenderId: 'opp1', isBlocked: false },
+      ],
+    } as unknown as GameView
+
+    const keys = combatPileKeys(combatArrangement(game))
+    expect(keys.get('a')).not.toBe(keys.get('b'))
+    expect(keys.has('w'), 'a blocker keeps no pile key: it is tied to one attacker').toBe(false)
   })
 })

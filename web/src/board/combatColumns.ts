@@ -137,3 +137,22 @@ export function combatOrder(arrangement: CombatArrangement): Map<string, number>
   }
   return order
 }
+
+/**
+ * CMB-17: what each attacker's pile key gains while the combat is live: who it attacks and whether
+ * it was stopped. Copies of the same token attacking the same seat are one pile; the same token
+ * attacking someone else is another. A blocker gets none: it is tied to one attacker and has to
+ * stay its own card.
+ */
+export function combatPileKeys(arrangement: CombatArrangement): Map<string, string> {
+  const keys = new Map<string, string>()
+  for (const target of arrangement.targets) {
+    for (const group of target.columns) {
+      for (const id of group.attackerIds) keys.set(id, `atk:${target.defenderId}:${group.blocked ? 'b' : 'u'}`)
+    }
+  }
+  for (const group of arrangement.strays) {
+    for (const id of group.attackerIds) keys.set(id, `atk:stray:${group.blocked ? 'b' : 'u'}`)
+  }
+  return keys
+}

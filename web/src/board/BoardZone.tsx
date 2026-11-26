@@ -26,7 +26,7 @@ import type { StackGroup } from './stackGroups'
 import StackPile from './StackPile'
 import { isMarqueePermanent } from './marquee'
 import { chipReserve, chipSignature } from './chipReserve'
-import { combatArrangement, combatOrder } from './combatColumns'
+import { combatArrangement, combatOrder, combatPileKeys } from './combatColumns'
 import { bandFill, bandShares, permanentKind } from './bandWeights'
 import { EMPTY_TARGET_ZONES, type TargetZoneKind } from './targetZones'
 import { isPlayerDefeated, isPlayerOut, useOutReason } from './boardShared'
@@ -325,16 +325,18 @@ export default function BoardZone({
   const promptChosenSet = useMemo(() => new Set(promptChosenTargets ?? []), [promptChosenTargets])
   const attackingSet = useMemo(() => new Set(attackingIds), [attackingIds])
   const blockingSet = useMemo(() => new Set(blockingIds), [blockingIds])
-  // CMB-15: only a creature that is already committed leaves its pile (picked, attacking,
-  // blocking). One that merely could be picked stays in it: at the declare step every untapped
-  // creature can be picked, and taking them all out broke every pile on the board at once.
+  // CMB-15: only a creature that is already committed leaves its pile (picked, blocking). One that
+  // merely could be picked stays in it: at the declare step every untapped creature can be picked,
+  // and taking them all out broke every pile on the board at once. CMB-17: an attacker does not
+  // leave either; its pile key gains who it attacks, so copies attacking one seat pile together.
+  // A blocker stays out, tied as it is to one attacker.
   const busyIds = useMemo(() => {
     const busy = new Set<string>()
-    for (const s of [combatChosenSet, attackingSet, blockingSet]) {
+    for (const s of [combatChosenSet, blockingSet]) {
       for (const id of s) busy.add(id)
     }
     return busy
-  }, [combatChosenSet, attackingSet, blockingSet])
+  }, [combatChosenSet, blockingSet])
   const stackExcludedIds = useMemo(() => new Set([...busyIds, ...targetIds]), [busyIds, targetIds])
 
   const finalHand = useMemo((): CardsView => {
@@ -476,7 +478,9 @@ export default function BoardZone({
   const creatures = permanents.filter(([id, p]) => permanentKind(p) === 'creatures' && !attachedIds.has(id))
   // CMB-14: creatures in combat gather in a column of their own inside this board, one per combat
   // group and in the same order on both sides, so who fights whom reads by position.
-  const combatColumnOf = combatOrder(combatArrangement(storeGame ?? null))
+  const combatArrangementNow = combatArrangement(storeGame ?? null)
+  const combatColumnOf = combatOrder(combatArrangementNow)
+  const combatPileKeyOf = combatPileKeys(combatArrangementNow)
   const combatLive = combatColumnOf.size > 0
   const others = permanents.filter(([id, p]) => permanentKind(p) === 'other' && !attachedIds.has(id))
   const lands = permanents.filter(([id, p]) => permanentKind(p) === 'lands' && !attachedIds.has(id))
@@ -637,7 +641,7 @@ export default function BoardZone({
 
   const { groups: landGroups, solos: landSolos } = groupStackables(lands, 'lands', { excludeIds: stackExcludedIds, ...(arenaBottom ? { min: 2 } : null) })
   const { groups: tokenGroups, solos: otherSolos } = groupStackables(restOthers, 'other', { excludeIds: stackExcludedIds })
-  const { groups: creatureTokenGroups, solos: creatureSolosRaw } = groupStackables(creatures, 'creatures', { excludeIds: stackExcludedIds })
+  const { groups: creatureTokenGroups, solos: creatureSolosRaw } = groupStackables(creatures, 'creatures', { excludeIds: stackExcludedIds, combatKeys: combatPileKeyOf })
   /** CMB-14: in combat the engaged creatures come first, grouped by their column; the rest keep their order. */
   const creatureSolos = combatLive
     ? creatureSolosRaw

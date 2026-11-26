@@ -94,3 +94,46 @@ describe('CMB-15: a pile in the declare step', () => {
     expect(container.querySelector('.stack-group')?.getAttribute('data-count')).toBe('5')
   })
 })
+
+describe('CMB-17: attackers of the same seat stay one pile', () => {
+  afterEach(() => {
+    setState({ game: null, gameId: null })
+    cleanup()
+  })
+
+  const goblin = (i: number) =>
+    [`t-${i}`, { id: `t-${i}`, name: 'Goblin Token', isToken: true, cardTypes: ['Creature'], power: '1', toughness: '1', counters: [] }] as const
+
+  const table = (count: number, combat: unknown[]) => {
+    const battlefield = Object.fromEntries(Array.from({ length: count }, (_, i) => goblin(i)))
+    const mine = makePlayer({ playerId: 'p1', name: 'Alice', controlled: true, battlefield: battlefield as never })
+    const theirs = makePlayer({ playerId: 'p2', name: 'Bob' })
+    setState({ game: makeGameView({ players: [mine, theirs], combat: combat as never }) as never })
+    return mine
+  }
+
+  const group = (attacker: string, defenderId: string, blockers: string[] = []) => ({
+    attackers: [attacker],
+    blockers,
+    defenderId,
+    isBlocked: blockers.length > 0,
+  })
+
+  it('CMB-17: three copies attacking one seat are drawn as one pile of three', () => {
+    const mine = table(3, [group('t-0', 'p2'), group('t-1', 'p2'), group('t-2', 'p2')])
+    const { container } = render(<BoardZone player={mine} attackingIds={['t-0', 't-1', 't-2']} />)
+
+    const piles = container.querySelectorAll('.stack-group')
+    expect(piles).toHaveLength(1)
+    expect(piles[0].getAttribute('data-count')).toBe('3')
+  })
+
+  it('CMB-17: a copy that was blocked is not in the pile of the ones that go through', () => {
+    const mine = table(4, [group('t-0', 'p2'), group('t-1', 'p2'), group('t-2', 'p2'), group('t-3', 'p2', ['b-1'])])
+    const { container } = render(<BoardZone player={mine} attackingIds={['t-0', 't-1', 't-2', 't-3']} />)
+
+    const piles = container.querySelectorAll('.stack-group')
+    expect(piles).toHaveLength(1)
+    expect(piles[0].getAttribute('data-count')).toBe('3')
+  })
+})

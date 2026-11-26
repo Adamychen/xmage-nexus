@@ -19,6 +19,9 @@ export interface GroupStackablesOpts {
   excludeIds?: Set<string>
   /** Smallest group that stacks (STACK_GROUP_MIN unless given). */
   min?: number
+  /** CMB-17: what a creature is doing in the combat, so attackers of one seat pile together and
+   *  apart from the ones attacking someone else (`combatPileKeys`). */
+  combatKeys?: Map<string, string>
 }
 
 function hasCounters(perm: PermanentView): boolean {
@@ -49,6 +52,7 @@ export function stackGroupKeyOf(
   perm: PermanentView,
   kind: 'creatures' | 'lands' | 'other',
   excludeIds?: Set<string>,
+  combatKey?: string,
 ): { key: string; name: string; groupKind: StackGroupKind } | null {
   const name = perm.name || 'Card'
   if (excludeIds?.has(id)) return null
@@ -64,7 +68,8 @@ export function stackGroupKeyOf(
     return { key: `token:${name}:${tappedFlag(perm)}`, name, groupKind: 'token' }
   }
   const pt = `${perm.power ?? ''}/${perm.toughness ?? ''}`
-  return { key: `ctoken:${name}:${tappedFlag(perm)}:${sicknessFlag(perm)}:${pt}`, name, groupKind: 'creature-token' }
+  const combat = combatKey ? `:${combatKey}` : ''
+  return { key: `ctoken:${name}:${tappedFlag(perm)}:${sicknessFlag(perm)}:${pt}${combat}`, name, groupKind: 'creature-token' }
 }
 
 export function groupStackables(
@@ -75,7 +80,7 @@ export function groupStackables(
   const byKey = new Map<string, StackGroup>()
   const order: StackGroup[] = []
   for (const [id, perm] of entries) {
-    const slot = stackGroupKeyOf(id, perm, kind, opts.excludeIds)
+    const slot = stackGroupKeyOf(id, perm, kind, opts.excludeIds, opts.combatKeys?.get(id))
     if (!slot) continue
     let group = byKey.get(slot.key)
     if (!group) {
