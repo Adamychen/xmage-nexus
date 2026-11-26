@@ -10,6 +10,7 @@ import { infoWindowsScenario } from '../fixtures/scenarios/infoWindows'
 import { withFakeServer } from './support/fake-backend'
 import { quickStartGame } from './support/start-game'
 import { parseSent, sentOf } from './support/frames'
+import { dismissInfoWindows } from './support/info-windows'
 
 test('BRD-66: info windows: the look is a corner notice and the companion opens its viewer', { tag: '@game' }, async ({ page }) => {
   await withFakeServer(() => infoWindowsScenario(), async () => {
@@ -47,6 +48,34 @@ test('BRD-66: info windows: the look is a corner notice and the companion opens 
         message: 'clic en el compañero debe enviar sendPlayerUUID(c-1)',
       })
       .toBe(true)
+
+    expect(pageErrors, `pageerrors: ${pageErrors.map(String).join(' | ')}`).toEqual([])
+  })
+})
+
+test('BRD-66: a revealed card opened from its notice stays face up when hovered', { tag: '@game' }, async ({ page }) => {
+  await withFakeServer(() => infoWindowsScenario(), async () => {
+    const { pageErrors } = await quickStartGame(page, { prefix: 'infoh' })
+
+    const companion = page.locator('.pile-overlay', { hasText: 'Lurrus of the Dream-Den' })
+    await expect(companion).toBeVisible({ timeout: 15_000 })
+    await dismissInfoWindows(page)
+    await expect(companion).toHaveCount(0)
+
+    await page.getByTestId('reveal-toast').locator('.reveal-toast-expand').click()
+    const viewer = page.locator('.pile-overlay', { hasText: 'Scry Card' })
+    await expect(viewer).toBeVisible()
+    const item = viewer.locator('.zone-fan-item').first()
+    await expect
+      .poll(() => item.locator('.pile-card').evaluate((el) => el.getAnimations().filter((a) => a.playState === 'running').length))
+      .toBe(0)
+
+    await item.hover()
+    const lifted = viewer.locator('.zone-fan-lift .pile-card')
+    await expect(lifted).toHaveCount(1)
+    const replays = await lifted.evaluate((el) => el.getAnimations().map((a) => (a as CSSAnimation).animationName))
+    expect(replays, 'the lifted copy must not turn the card face up again').not.toContain('pileFlipIn')
+    expect(await lifted.evaluate((el) => getComputedStyle(el).opacity)).toBe('1')
 
     expect(pageErrors, `pageerrors: ${pageErrors.map(String).join(' | ')}`).toEqual([])
   })
