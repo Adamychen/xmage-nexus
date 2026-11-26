@@ -2,12 +2,14 @@
 
 Prefix: `FX`
 
-Board animations are driven by `web/src/board/gameTransitionEngine.ts`, which diffs the previous and
-the next game view, plus per-component hooks (`useDrawSlide`, `useTokenPop`, `useUntapWave`, …) and
-the fixed FX overlays (`web/src/board/*Overlay.tsx`). Motion preferences live in
-`web/src/board/fx.ts`. The guiding principle: **an animation answers "what happened?" and never
-stands between the player and the game**. How the FX layer stacks against dialogs is DLG-1 and
-DLG-7 (`dialogs.md`). The design history is `docs/plans/2026-10-16-game-animations.md`.
+Board animations are driven by the MTG Arena-style two-layer engine in `web/src/fx/` (`fxEngine.ts`
+using GSAP `Flip`/`MotionPathPlugin`/timelines + `vfxEngine.ts`/`VfxCanvas.tsx` Canvas 2D particle
+& VFX overlay), orchestrated by `web/src/board/gameTransitionEngine.ts`, per-component hooks
+(`useTapFlip`, `useDrawSlide`, `useTokenPop`, `useUntapWave`), and the fixed FX overlays
+(`web/src/board/*Overlay.tsx`). Motion preferences live in `web/src/board/fx.ts` and sync directly
+to `gsap.globalTimeline.timeScale`. The guiding principle: **an animation answers "what happened?"
+and never stands between the player and the game**. How the FX layer stacks against dialogs is DLG-1
+and DLG-7 (`dialogs.md`). The design history is `docs/plans/2026-10-16-game-animations.md`.
 
 ### FX-1 · Turning effects off stops every animation, in every screen
 With the effects setting off, the document root carries `html.fx-off` and no CSS animation or

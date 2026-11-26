@@ -3,6 +3,9 @@ import type { CardView } from '../net/types'
 import { fxMotionDuration } from './fx'
 import { isAbilityCard } from '../cards/cardImages'
 import { soundManager } from '../audio/soundManager'
+import { fxShake } from '../fx/fxEngine'
+import { vfx } from '../fx/vfxEngine'
+import { manaToVfxColor } from '../fx/vfxPalette'
 
 export type ManaColor = 'w' | 'u' | 'b' | 'r' | 'g'
 export type SpellWeight = 0 | 1 | 2
@@ -133,6 +136,78 @@ const BASE_MS: Record<ImpactKind, number> = {
   indestructible: 1100,
 }
 
+function emitCanvasImpact(
+  kind: ImpactKind,
+  rect: Pick<DOMRect, 'left' | 'top' | 'width' | 'height'> | null,
+  colors: ManaColor[],
+  weight: SpellWeight,
+): void {
+  const color = manaToVfxColor(colors[0], 'gold')
+  if (kind === 'slam' || kind === 'wipe' || kind === 'ultimate') {
+    const cx = rect && rect.width > 0 ? rect.left + rect.width / 2 : (typeof window !== 'undefined' ? window.innerWidth / 2 : 0)
+    const cy = rect && rect.height > 0 ? rect.top + rect.height / 2 : (typeof window !== 'undefined' ? window.innerHeight / 2 : 0)
+    if (cx > 0 || cy > 0) vfx.mythicBurst(cx, cy, kind === 'wipe' ? 'W' : color)
+    if (typeof document !== 'undefined') {
+      const board = document.querySelector('.board-shell')
+      if (board) fxShake(board, weight === 2 || kind === 'wipe' ? 'heavy' : 'medium')
+    }
+    return
+  }
+  if (!rect || rect.width <= 0 || rect.height <= 0) return
+  const cx = rect.left + rect.width / 2
+  const cy = rect.top + rect.height / 2
+
+  switch (kind) {
+    case 'sparks':
+      vfx.sparkBurst(cx, cy, manaToVfxColor(colors[0], 'ember'), { count: 16, speed: 250, size: 3.8, life: 0.36 })
+      break
+    case 'destroy':
+      vfx.shatter(rect, 'ember')
+      break
+    case 'sacrifice':
+      vfx.shatter(rect, 'blood')
+      break
+    case 'exile':
+      vfx.exileVortex(rect, 'W')
+      break
+    case 'countered':
+      vfx.counterShatter(rect)
+      if (typeof document !== 'undefined') {
+        const board = document.querySelector('.board-shell')
+        if (board) fxShake(board, 'light')
+      }
+      break
+    case 'eliminated':
+      vfx.playerEliminated(rect)
+      if (typeof document !== 'undefined') {
+        const board = document.querySelector('.board-shell')
+        if (board) fxShake(board, 'heavy')
+      }
+      break
+    case 'bounce':
+      vfx.exileVortex(rect, 'U', 18)
+      break
+    case 'heal':
+    case 'lifelink':
+      vfx.sparkBurst(cx, cy, 'G', { count: 18, speed: 170, size: 3.5, life: 0.5, gravity: -140 })
+      break
+    case 'first-strike':
+      vfx.slash(cx, cy, -0.45, 'volt', 130)
+      break
+    case 'deathtouch':
+      vfx.sparkBurst(cx, cy, 'toxic', { count: 20, speed: 220, size: 4, life: 0.44 })
+      break
+    case 'trample':
+      vfx.shockwave(cx, cy, 'G', { startR: 16, endR: 120, lineWidth: 5, duration: 0.36 })
+      break
+    case 'enter-ring':
+      vfx.mythicBurst(cx, cy, color)
+      break
+    default:
+      break
+  }
+}
+
 export function spawnImpact(
   kind: ImpactKind,
   rect: Pick<DOMRect, 'left' | 'top' | 'width' | 'height'> | null,
@@ -156,6 +231,7 @@ export function spawnImpact(
   }
   impacts = [...impacts, item].slice(-MAX_IMPACTS)
   notify()
+  emitCanvasImpact(kind, rect, opts.colors ?? [], opts.weight ?? 0)
   setTimeout(() => {
     impacts = impacts.filter((f) => f.id !== item.id)
     notify()

@@ -31,13 +31,15 @@ export interface FlightRecord {
   conceal?: boolean
   /** A CSS colour the flight glows in (a control change wears the new controller's seat colour). */
   tint?: string
+  /** In-place stack dissolve (no destination zone: copies, abilities, triggers). */
+  static?: boolean
 }
 
-/** Entrada al campo: subida al centro, pausa y caída (ver FlyingCardOverlay). */
-export const ENTER_FLIGHT_MS = 1100
-/** Fracción de ENTER_FLIGHT_MS en la que la carta toca el suelo. */
-export const ENTER_LAND_AT = 0.8
-export const CAST_FLIGHT_MS = 900
+/** Arena-paced battlefield entry: crisp rise, brief beat, weighty slam and settle. */
+export const ENTER_FLIGHT_MS = 760
+/** Fraction of ENTER_FLIGHT_MS at which the card slams onto the battlefield. */
+export const ENTER_LAND_AT = 0.78
+export const CAST_FLIGHT_MS = 640
 /** The clone lands this long after its flight duration elapses (its settle pause). */
 const FLIGHT_LAND_LAG_MS = 120
 
@@ -316,6 +318,7 @@ export function startCardFlight(
     reveal: (options?.reveal === true && card.faceDown !== true) || undefined,
     conceal: (options?.conceal === true && options?.reveal !== true && card.faceDown !== true) || undefined,
     tint: options?.tint,
+    static: options?.static || undefined,
   }
 
   activeFlights = [...activeFlights, record]
@@ -325,7 +328,9 @@ export function startCardFlight(
     detail: `${Math.round(Math.hypot(to.rect.left - from.rect.left, to.rect.top - from.rect.top))}px:${card.name ?? ''}${options?.static ? ':static' : ''}`,
   })
 
-  if (toSelector?.includes('hand') || toSelector?.includes('hand-bar') || toSelector?.includes('hand-zone')) {
+  if (options?.static) {
+    // Dissolving off the stack makes no card-play sound.
+  } else if (toSelector?.includes('hand') || toSelector?.includes('hand-bar') || toSelector?.includes('hand-zone')) {
     soundManager.play('draw', 'game')
   } else if (toSelector?.includes('stack')) {
     soundManager.play('stack_cast', 'game')
@@ -402,6 +407,16 @@ export function markFlightLanded(flightId: string) {
   if (!set) return
   landedListeners.delete(flightId)
   set.forEach((fn) => fn())
+}
+
+/** Removes a flight immediately once its GSAP handover fade finishes. */
+export function removeFlight(flightId: string) {
+  const record = activeFlights.find((f) => f.flightId === flightId)
+  if (!record) return
+  record.timers?.forEach((t) => clearTimeout(t))
+  activeFlights = activeFlights.filter((f) => f.flightId !== flightId)
+  landedListeners.delete(flightId)
+  notify()
 }
 
 export function getActiveFlights(): FlightRecord[] {

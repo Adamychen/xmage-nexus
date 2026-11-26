@@ -41,8 +41,8 @@ describe('FlyingCardOverlay with compact art-crop tiles', () => {
     expect(flight.fromRect.width).toBe(120)
     expect(flight.fromRect.height).toBe(90)
 
-    const { container } = await renderOverlay()
-    const crop = container.querySelector<HTMLImageElement>('.flying-card-crop')
+    const { baseElement } = await renderOverlay()
+    const crop = baseElement.querySelector<HTMLImageElement>('.flying-card-crop')
     expect(crop?.getAttribute('src')).toBe('https://cards.scryfall.io/art_crop/front/a/b/ab.jpg?1')
     expect(crop?.style.opacity).toBe('1')
   })
@@ -54,16 +54,16 @@ describe('FlyingCardOverlay with compact art-crop tiles', () => {
     expect(flight.toRect.width).toBe(120)
     expect(flight.toRect.height).toBe(90)
 
-    const { container } = await renderOverlay()
-    const crop = container.querySelector<HTMLImageElement>('.flying-card-crop')
+    const { baseElement } = await renderOverlay()
+    const crop = baseElement.querySelector<HTMLImageElement>('.flying-card-crop')
     expect(crop).not.toBeNull()
     expect(crop?.style.opacity).toBe('0')
   })
 
   it('renders no art crop between two printed cards', async () => {
     startCardFlight(card, rect(200, 800, 100, 140), rect(900, 400, 100, 140), 300)
-    const { container } = await renderOverlay()
-    expect(container.querySelector('.flying-card-crop')).toBeNull()
-    expect(container.querySelector('.flying-card-img')).not.toBeNull()
+    const { baseElement } = await renderOverlay()
+    expect(baseElement.querySelector('.flying-card-crop')).toBeNull()
+    expect(baseElement.querySelector('.flying-card-img')).not.toBeNull()
   })
 })

@@ -1,24 +1,26 @@
 import { useLayoutEffect, useRef } from 'react'
-import { fxMotionAllowed, fxMotionDuration } from './fx'
+import { fxMotionAllowed } from './fx'
 import { cardNodesIn } from './cardNodes'
+import { ARENA_EASE, fxTimeline } from '../fx/fxEngine'
+import { vfx } from '../fx/vfxEngine'
 
-export const UNTAP_WAVE_MS = 250
-export const UNTAP_WAVE_STAGGER_MS = 40
+export const UNTAP_WAVE_MS = 260
+export const UNTAP_WAVE_STAGGER_MS = 45
 export const UNTAP_WAVE_MIN_CARDS = 2
 
 interface TapPose {
-  rotate: string
-  scale: string
+  rotation: number
+  scale: number
 }
 
 const TAPPED_POSE: Record<'normal' | 'tilted', Record<'classic' | 'compact', TapPose>> = {
   normal: {
-    classic: { rotate: '90deg', scale: '1' },
-    compact: { rotate: '90deg', scale: '0.75' },
+    classic: { rotation: 90, scale: 1 },
+    compact: { rotation: 90, scale: 0.75 },
   },
   tilted: {
-    classic: { rotate: '45deg', scale: '0.825' },
-    compact: { rotate: '45deg', scale: '0.606' },
+    classic: { rotation: 45, scale: 0.825 },
+    compact: { rotation: 45, scale: 0.606 },
   },
 }
 
@@ -27,28 +29,19 @@ function tappedPose(node: HTMLElement, tilted: boolean): TapPose {
   return node.classList.contains('is-compact') ? style.compact : style.classic
 }
 
-function playUntapWave(node: HTMLElement, index: number, tilted: boolean): void {
-  if (typeof node.animate !== 'function') return
+function cancelTransformTransitions(node: HTMLElement): void {
   node.getAnimations?.().forEach((animation) => {
     if ((animation as Animation & { transitionProperty?: string }).transitionProperty === 'transform') {
       animation.cancel()
     }
   })
-  const from = tappedPose(node, tilted)
-  node.animate(
-    [
-      { rotate: from.rotate, scale: from.scale },
-      { rotate: '0deg', scale: '1' },
-    ],
-    {
-      duration: fxMotionDuration(UNTAP_WAVE_MS),
-      delay: index * UNTAP_WAVE_STAGGER_MS,
-      easing: 'ease-out',
-      fill: 'backwards',
-    },
-  )
 }
 
+/**
+ * Arena-style left-to-right untap wave: cards snap upright with a subtle pop
+ * and glint sparks, driven by a single GSAP timeline. Disables CSS `transition`
+ * while GSAP owns `transform` so the browser transition never fights the wave.
+ */
 export function useUntapWave(scopes: ReadonlyArray<HTMLElement | null>, tiltedTaps: boolean): void {
   const tappedRef = useRef<Map<string, boolean> | null>(null)
 
@@ -63,6 +56,46 @@ export function useUntapWave(scopes: ReadonlyArray<HTMLElement | null>, tiltedTa
     }
     tappedRef.current = next
     if (untapped.length < UNTAP_WAVE_MIN_CARDS || !fxMotionAllowed()) return
-    untapped.forEach((node, index) => playUntapWave(node, index, tiltedTaps))
+
+    const tl = fxTimeline()
+    if (!tl) return
+
+    untapped.forEach((node, index) => {
+      cancelTransformTransitions(node)
+      const from = tappedPose(node, tiltedTaps)
+      const at = (index * UNTAP_WAVE_STAGGER_MS) / 1000
+      const rise = (UNTAP_WAVE_MS * 0.65) / 1000
+      const settle = (UNTAP_WAVE_MS * 0.35) / 1000
+
+      tl.set(node, { transition: 'none' }, 0)
+        .fromTo(
+          node,
+          { rotation: from.rotation, scale: from.scale },
+          { rotation: 0, scale: 1.06, duration: rise, ease: ARENA_EASE.pop },
+          at,
+        )
+        .to(
+          node,
+          { scale: 1, duration: settle, ease: ARENA_EASE.snapOut, clearProps: 'rotation,scale,transition' },
+          at + rise,
+        )
+
+      const rect = node.getBoundingClientRect()
+      if (rect.width > 0 && rect.height > 0) {
+        tl.call(
+          () => {
+            vfx.sparkBurst(rect.left + rect.width / 2, rect.top + rect.height / 2, 'W', {
+              count: 6,
+              speed: 120,
+              size: 2.6,
+              life: 0.25,
+              gravity: 40,
+            })
+          },
+          undefined,
+          at + 0.04,
+        )
+      }
+    })
   })
 }

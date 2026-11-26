@@ -23,6 +23,7 @@ import SetupWizard from '../setup/SetupWizard'
 import RenderedCardsGallery from './RenderedCardsGallery'
 import ProjectileGalleryStage from './ProjectileGalleryStage'
 import KeywordGlyphGallery from './KeywordGlyphGallery'
+import ArenaFxSandbox from './ArenaFxSandbox'
 import IconButton from '../ui/IconButton'
 import Button from '../ui/Button'
 import './GalleryScreen.css'
@@ -59,6 +60,7 @@ function stageOf(entry: GalleryEntry | undefined) {
   if (entry.screen === 'cards') return <RenderedCardsGallery />
   if (entry.screen === 'projectile') return <ProjectileGalleryStage />
   if (entry.screen === 'glyphs') return <KeywordGlyphGallery />
+  if (entry.screen === 'arena-fx') return <ArenaFxSandbox />
   if (entry.screen === 'help') return <HelpWikiModal onClose={() => {}} />
   if (entry.screen === 'gameend') {
     return (

@@ -2,6 +2,8 @@ import { useSyncExternalStore } from 'react'
 import { fxMotionDuration } from './fx'
 import type { ManaColor } from './impactFx'
 import { soundManager } from '../audio/soundManager'
+import { vfx } from '../fx/vfxEngine'
+import { manaToVfxColor } from '../fx/vfxPalette'
 
 type Rect = Pick<DOMRect, 'left' | 'top' | 'width' | 'height'>
 export interface Point {
@@ -82,6 +84,7 @@ export function spawnProjectile(from: Rect, measureTo: () => Rect | null, colors
   projectiles = [...projectiles, item].slice(-MAX_PROJECTILES)
   notify()
   soundManager.play('projectile_launch', 'game')
+  vfx.projectile(start, to0, manaToVfxColor(colors[0], 'gold'), duration / 1000)
   setTimeout(() => {
     projectiles = projectiles.filter((p) => p.id !== item.id)
     notify()

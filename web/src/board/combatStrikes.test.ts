@@ -20,6 +20,7 @@ import { makeGameView, makePermanent, makePlayer } from '../__fixtures__/gameVie
 import type { GameView } from '../net/types'
 import { act, renderHook } from '@testing-library/react'
 import { useCombatHeld } from './useCombatHeld'
+import { getFxDiagnostics, gsap, resetFxContext } from '../fx/fxEngine'
 
 const rect = (left: number, top: number, width = 80, height = 112): DOMRect =>
   ({ left, top, width, height, right: left + width, bottom: top + height, x: left, y: top, toJSON: () => {} } as DOMRect)
@@ -200,16 +201,17 @@ describe('strike sequence', () => {
     expect(schedule.impactAt.get('a2')).toBe(520)
 
     vi.advanceTimersByTime(0)
-    expect(animate).toHaveBeenCalledTimes(1)
+    expect(document.querySelectorAll('.combat-strike-ghost')).toHaveLength(1)
     expect((document.querySelector('[data-card-id="a1"]') as HTMLElement).style.visibility).toBe('hidden')
     vi.advanceTimersByTime(290)
     expect(hits()).toBe(1)
-    expect(animate).toHaveBeenCalledTimes(2)
+    expect(document.querySelectorAll('.combat-strike-ghost')).toHaveLength(2)
     expect(getImpacts().filter((f) => f.kind === 'sparks')).toHaveLength(1)
     vi.advanceTimersByTime(2000)
     expect(hits()).toBe(2)
     expect(document.querySelectorAll('.combat-strike-ghost')).toHaveLength(0)
     expect((document.querySelector('[data-card-id="a1"]') as HTMLElement).style.visibility).toBe('')
+    resetFxContext()
   })
 
   it('FX-6: holds each combatant before the board re-renders, with a safety net past its own planned impact', () => {
@@ -263,15 +265,18 @@ describe('strike sequence', () => {
   })
 
   it('FX-6: a strike whose animation ends before its impact timer still lands the hit once', async () => {
-    animate.mockImplementation(() => ({ finished: Promise.resolve() } as unknown as Animation))
+    resetFxContext()
     playDamageStrikes([{ attackerId: 'a1', targetId: 'p-opp' }], ['a1'])
     expect(combatImpactRemaining('p-opp')).toBeGreaterThan(0)
     await vi.advanceTimersByTimeAsync(0)
+    expect(getFxDiagnostics().activeTimelines()).toBeGreaterThanOrEqual(1)
+    gsap.globalTimeline.progress(1)
     expect(hits()).toBe(1)
     expect(combatImpactRemaining('p-opp')).toBe(0)
     expect(document.querySelectorAll('.combat-strike-ghost')).toHaveLength(0)
     await vi.advanceTimersByTimeAsync(2000)
     expect(hits()).toBe(1)
+    resetFxContext()
   })
 
   it('FX-6: declaring attackers alone does not animate or sound a hit', () => {

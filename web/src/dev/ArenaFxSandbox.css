@@ -1,0 +1,128 @@
+.arena-fx-sandbox {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4h);
+  min-height: 100%;
+  padding: var(--sp-5);
+  color: var(--fg-1);
+}
+
+.arena-fx-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  border-radius: var(--r-mid);
+  background: var(--ink-2);
+  border: 1px solid var(--line-2);
+}
+
+.arena-fx-colors,
+.arena-fx-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+
+.arena-fx-chip {
+  padding: var(--sp-1) var(--sp-2h);
+  border-radius: var(--r-pill);
+  border: 1px solid var(--line-2);
+  background: var(--ink-3);
+  color: var(--fg-2);
+  font-size: var(--fs-xs);
+  cursor: pointer;
+}
+
+.arena-fx-chip.is-active {
+  border-color: var(--gold-500);
+  background: var(--gold-soft);
+  color: var(--fg-hi);
+}
+
+.arena-fx-stage {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  align-items: center;
+  gap: var(--sp-6);
+  padding: var(--sp-6);
+  border-radius: var(--r-xl);
+  background: var(--ink-1);
+  border: 1px solid var(--line-1);
+  overflow: hidden;
+}
+
+.arena-fx-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-6);
+}
+
+.arena-fx-card {
+  position: relative;
+  width: 118px;
+  height: 164px;
+  padding: var(--sp-2h);
+  border-radius: var(--r-md);
+  background: var(--ink-3);
+  border: 1px solid var(--line-3);
+  box-shadow: 0 12px 24px var(--shade-3);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  will-change: transform, opacity;
+}
+
+.arena-fx-card--mythic {
+  border-color: var(--gold-500);
+}
+
+.arena-fx-card--stack {
+  border-color: var(--brand);
+}
+
+.arena-fx-card-tag {
+  font-size: var(--fs-2xs);
+  letter-spacing: 0.08em;
+  color: var(--fg-3);
+}
+
+.arena-fx-card-pt {
+  align-self: flex-end;
+  padding: var(--sp-0h) var(--sp-1h);
+  border-radius: var(--r-sm);
+  background: var(--ink-2);
+  border: 1px solid var(--line-2);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+}
+
+.arena-fx-row--lands {
+  gap: var(--sp-5);
+}
+
+.arena-fx-land {
+  width: 84px;
+  height: 112px;
+  padding: var(--sp-2);
+  border-radius: var(--r-base);
+  background: var(--ink-2);
+  border: 1px solid var(--line-2);
+  display: flex;
+  align-items: flex-end;
+  font-size: var(--fs-xs);
+  color: var(--fg-2);
+  transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.arena-fx-land.is-tapped {
+  transform: rotate(90deg);
+  border-color: var(--gold-line);
+}

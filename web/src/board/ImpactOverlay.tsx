@@ -117,13 +117,8 @@ function ImpactItem({ fx }: { fx: ImpactFx }) {
         </div>
       )
     case 'countered':
-      return (
-        <div className="fx-burst fx-countered" data-testid="fx-countered" style={at}>
-          <span className="fx-countered-flash" />
-          <span className="fx-countered-crack" />
-          <Particles fx={fx} count={12} spread={Math.max(44, fx.w * 0.8)} className="fx-shard" />
-        </div>
-      )
+      // Rendered by Canvas 2D `vfx.counterShatter` (keep anchor for test hooks).
+      return <div className="fx-burst fx-countered" data-testid="fx-countered" style={at} />
     case 'transform':
       return (
         <div className="fx-burst fx-transform" data-testid="fx-transform" style={at}>
@@ -186,11 +181,10 @@ function ImpactItem({ fx }: { fx: ImpactFx }) {
         </div>
       )
     case 'eliminated':
+      // Rendered by Canvas 2D `vfx.playerEliminated` (keep subtle dim & anchor for test hooks).
       return (
         <div className="fx-burst fx-eliminated" data-testid="fx-eliminated" style={at}>
           <span className="fx-eliminated-dim" />
-          <span className="fx-eliminated-crack" />
-          <Particles fx={fx} count={10} spread={Math.max(60, Math.min(fx.w, fx.h) * 0.45)} className="fx-shard fx-eliminated-shard" />
         </div>
       )
     case 'conceded':
