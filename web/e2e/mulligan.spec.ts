@@ -158,3 +158,32 @@ test('PRM-2: la pantalla ofrece "Conceder" y confirma el envío de CONCEDE', { t
     expect(pageErrors, `pageerrors: ${pageErrors.map(String).join(' | ')}`).toEqual([])
   })
 })
+
+test('PRM-21: pointing at the bottom of a card in the opening hand keeps the card under the pointer', { tag: '@fullflow' }, async ({ page }) => {
+  await withFakeServer(() => mulliganScenario(), async () => {
+    await quickStartGame(page, { prefix: 'mullhov', autoStartingPlayer: false })
+    await expect(page.getByTestId('mulligan-fan')).toBeVisible({ timeout: 15_000 })
+
+    const wraps = page.locator('.mulligan-card-wrap')
+    const card = wraps.nth(Math.floor((await wraps.count()) / 2))
+    // The cards are dealt in: measure the card where it comes to rest, not mid-animation.
+    await card.evaluate((el) => Promise.all(el.getAnimations().map((a) => a.finished)))
+    const box = (await card.boundingBox())!
+    const x = box.x + box.width / 2
+
+    for (const dy of [3, 10, 18]) {
+      const y = box.y + box.height - dy
+      await page.mouse.move(x, box.y - 60)
+      await page.waitForTimeout(250)
+      await page.mouse.move(x, y)
+      const held = await card.evaluate(async (el, restBottom) => {
+        for (let i = 0; i < 12; i++) {
+          await new Promise((r) => setTimeout(r, 40))
+          if (!el.matches(':hover')) return 'the card left the pointer'
+        }
+        return el.getBoundingClientRect().bottom < restBottom ? 'held' : 'the card never rose'
+      }, box.y + box.height)
+      expect(held, `a pointer ${dy}px above the card's bottom edge keeps pointing at the card`).toBe('held')
+    }
+  })
+})

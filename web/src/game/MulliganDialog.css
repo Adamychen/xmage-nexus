@@ -121,6 +121,9 @@
   /* Room under the fan for a card chosen for the bottom to sink into, reserved whether or not one
      is chosen, so choosing never pushes the rest of the screen around. */
   --fan-sink: 34px;
+  /* How far a card rises when it is pointed at. The hit skirt below each card is cut from the
+     same number, so the two can never drift apart. */
+  --fan-hover-rise: 20px;
   display: flex;
   align-items: flex-end;
   justify-content: center;
@@ -165,7 +168,21 @@
 .mulligan-card-wrap:has(:focus-visible),
 .mulligan-card-wrap.is-previewing {
   z-index: 5;
-  transform: translateY(-20px) scale(1.05);
+  transform: translateY(calc(-1 * var(--fan-hover-rise))) scale(1.05);
+}
+
+/* PRM-21: the card rises out from under the pointer, so a pointer resting on the bottom strip of
+   a card would lose it, let the card fall back, catch it again and flicker. The card carries a
+   hit skirt as deep as the rise (plus the few pixels the growth lifts the bottom edge by), so a
+   pointer that is on the card is still on the card once it has risen. The skirt rides the same
+   transform as the card and lives inside the fan's own bottom padding. */
+.mulligan-card-wrap::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  height: calc(var(--fan-hover-rise) + 6px);
 }
 
 .mulligan-fan.is-pickable .mulligan-card-wrap {
@@ -194,7 +211,7 @@
 
 .mulligan-card-wrap.is-chosen:hover,
 .mulligan-card-wrap.is-chosen:has(:focus-visible) {
-  transform: translateY(14px) scale(1.05);
+  transform: translateY(calc(var(--fan-sink) - var(--fan-hover-rise))) scale(1.05);
 }
 
 .mulligan-card-mark {

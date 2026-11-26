@@ -316,3 +316,19 @@ shown normally and ends the plan.
   plan still running when a later surveil arrived answered it with a card it did not offer, which
   the engine ignores and asks again, forever (2026-11-24).
 - Guard: `src/game/feedback/libraryPlan.test.ts` · `src/state/events/prompts.libraryPlan.test.ts` · `src/game/ArenaLibraryPrompt.test.tsx` · `e2e/arena-surveil.spec.ts`
+
+### PRM-21 · A card that rises to the pointer keeps the pointer
+A card of the opening hand rises when it is pointed at (PRM-2), and the rise moves it out from
+under the pointer that asked for it: on the bottom strip of a card the hover is dropped as soon as
+it is taken, the card falls back under the pointer, and it is taken again. So a card's hit area
+holds a skirt below it as deep as the rise, cut from the same number: a pointer anywhere on a card
+is still pointing at that card once it has risen, and nothing flickers.
+
+- Why: the player reported it as a bug, in the mulligan and at the bottom of the cards
+  ("si pongo el ratón en la parte de abajo de las cartas, se bugea con el hover", 26-nov-2026).
+  Measured: the card rises 20 px and its growth lifts the bottom edge another 2.5 px at the widest
+  card, so the lowest ~23 px of every card was a strip that could not be pointed at. The same
+  shape is what the hand's own fan avoids by growing around a pivot that keeps its bottom edge
+  (`HandBar.css`); the opening-hand fan lifts instead, which is the pose it was designed with, so
+  what changes here is the hit area and not the movement.
+- Guard: `e2e/mulligan.spec.ts`
