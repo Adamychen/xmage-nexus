@@ -152,13 +152,13 @@ are the deck tracker, the "Last actions" box and the combat ledger (design
 `docs/plans/2026-11-23-arena-only-design.md`). The direction is to bring the game screen as close to MTG
 Arena as possible.
 
+Closed without building (user, 2026-11-26): step 3, mechanics as MTGA-style badges on the side of the board (the mechanics button and `MechanicsTray` stay), and any phone UI work: no mobile layout will be built.
+
 | Open item | Why |
 |---|---|
-| Mechanics as badges on the side of the board | Step 3: designations, day/night, monarch, initiative, dungeon and emblems as MTGA-style badges instead of the mechanics button and `MechanicsTray` |
-| Phone strip | At 390 px the phase bar, the turn-order ring and the strip buttons overlap in the one strip; the v2 top bar used to serve phones |
 | 5+ players hint | A game of five or more forces the side panel (BRD-6); the switch's hint does not say so yet (needs the nine translations) |
 | Hand column with the chat and log panel open | The column hides while the panel is open and the fan returns (`BoardShell`); a slim strip would keep the hand in place but needs its own card render |
-| Arena prompt overlays | Surveil, scry and standalone library/graveyard orderings (Ponder, bottom-order, graveyard-order; `ArenaLibraryPrompt`, `LibraryOrderDialog`, PRM-20), trigger order (`TriggerOrderDialog`, PRM-14), card selection / library search (`CardGrid`, PRM-5…7, PRM-12, PRM-15), piles (`PileDialog`, PRM-15), and modes/abilities/color/X/planeswalker/voting/starting-player (`GenericDialog`, `PlaneswalkerAbilityDialog`, `VotingDialog`, `StartingPlayerDialog`) are done. Next: yes/no (`AskBar`). Open on the surveil/scry overlay: keyboard users cannot move cards yet, and it has no phone-width layout |
+| Arena prompt overlays | Surveil, scry and standalone library/graveyard orderings (Ponder, bottom-order, graveyard-order; `ArenaLibraryPrompt`, PRM-20), trigger order (`TriggerOrderDialog`, PRM-14), card selection / library search (`CardGrid`, PRM-5…7, PRM-12, PRM-15), piles (`PileDialog`, PRM-15), and modes/abilities/color/X/planeswalker/voting/starting-player (`GenericDialog`, `PlaneswalkerAbilityDialog`, `VotingDialog`, `StartingPlayerDialog`) and yes/no asks (the order across the board, the two answers in the corner; `AskBar`, PRM-3) are done. Open on the surveil/scry overlay: keyboard users cannot move cards yet |
 
 ### 4.3d Keyword effects: known gaps
 
@@ -205,7 +205,7 @@ Shipped 2026-10-23 (branch `feat/test-robustez-tst`, PR #28): the **TST guard pa
 
 Still open:
 
-- Mobile layout: the full board stays desktop-only on purpose. Since 2026-10-15 a phone-width window (≤ 600 px) has a compact spectator view (`game/MobileSpectator.tsx`: scoreboard, turn/phase, stack, feed and chat, "Full board" button), the lobby and chat already fit, and dialogs no longer overflow (`ui/DialogShell.css` caps the panel at the window minus the backdrop padding; the create-table wizard hides inactive step labels and stacks its type cards). Guard: `e2e/mobile.spec.ts` at 390 px (verified red with the dialog fix removed). The draft header fits since the same day (same guard, verified red without its CSS). Still open: playing a seat on a phone and the deck builder editor at 390 px.
+- Mobile layout: the full board stays desktop-only on purpose. Since 2026-10-15 a phone-width window (≤ 600 px) has a compact spectator view (`game/MobileSpectator.tsx`: scoreboard, turn/phase, stack, feed and chat, "Full board" button), the lobby and chat already fit, and dialogs no longer overflow (`ui/DialogShell.css` caps the panel at the window minus the backdrop padding; the create-table wizard hides inactive step labels and stacks its type cards). Guard: `e2e/mobile.spec.ts` at 390 px (verified red with the dialog fix removed). The draft header fits since the same day (same guard, verified red without its CSS). No further phone UI is planned (closed by the user, 2026-11-26): playing a seat on a phone and the deck builder editor at 390 px stay out.
 - Replay files exist (§4.2); loading one in the GitHub Pages demo is still open.
 
 ### 4.5 Out of scope on purpose
