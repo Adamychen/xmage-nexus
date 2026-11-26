@@ -166,15 +166,18 @@ player.
 ### HND-14 · The opening hand is dealt before it is asked about, and waits for the question
 In the pre-game (the view carries no phase and no step: the starting-player choice and the
 mulligans) the hand bar holds the cards back until the opening-hand decision is on screen, the keep
-or mulligan question and the London cards to put back. Once that question has been asked in a game
-the hand stays for the rest of it, so a keep does not take the cards away again while the other
-seats are still deciding. A seat that only watches has no hand to hold back, and a game already
+or mulligan question and the London cards to put back. The question is remembered for the hand it
+was asked about: after a keep the cards stay up while the other seats decide, and after a mulligan
+the new hand waits for its own question instead of being dealt in sight and asked about seconds
+later. A seat that only watches has no hand to hold back, and a game already
 running is untouched, because its view carries a phase.
 
 - Why: the cards reached the hand a good while before the mulligan screen did, and a player saw
   seven cards with nothing asking anything about them (user report, 25-nov-2026). The server deals
   at `GAME_INIT` and asks in a later `GAME_ASK`, so the gap belongs to the client to close. The
   consequence to know: a client that arrives in the middle of the pre-game, a reconnection after
-  its own keep, has never been asked, so its bar stays empty until the game starts. The view says
+  its own keep, has never been asked, so its bar stays empty until the game starts. Remembering the
+  question for the game rather than for the hand had the mulligan show its new seven, then close
+  and reopen the screen over them a moment later (user, 2026-11-26). The view says
   nothing that tells that apart from a hand just dealt, and the cards are not playable either way.
 - Guard: `src/board/openingHand.test.ts`

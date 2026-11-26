@@ -106,3 +106,15 @@ confirms. A confirmation with no Cancel starts on its one button.
   ones that only confirm a choice the player just made. Apple's button guidance gives the primary role to
   the action people are most likely to choose; for a destructive choice that is the safe option.
 - Guard: `src/ui/ConfirmModal.test.tsx`
+
+### DLG-13 · The rewind vote asks without taking the screen
+The dialog that puts a rollback to the table is the one dialog that does not block what is behind
+it: nothing is dimmed or covered, the board and the side panel keep their clicks, no focus is taken
+and Tab is not trapped, and it carries no `aria-modal`. It sits at the top of the screen so the
+game under it stays readable. Every other dialog keeps its backdrop: this one asks a question whose
+answer is read off the board, and often discussed in the chat first.
+
+- Why: with a rewind pending a player could do nothing at all, "not even see the chat", while the
+  vote he was being asked about was a change to the game he had just played (user, 2026-11-26).
+  The modal's Alt-peek shows the board but takes no clicks, so it did not answer this.
+- Guard: `src/game/RollbackVoteDialog.test.tsx` · `src/ui/Modal.test.tsx`

@@ -202,3 +202,36 @@ describe('Modal', () => {
     expect(document.activeElement).toBe(two)
   })
 })
+
+describe('DLG-13: a dialog that asks without taking the screen', () => {
+  it('DLG-13: a non-blocking modal takes no focus, traps no Tab and is not aria-modal', () => {
+    const outside = document.createElement('button')
+    outside.textContent = 'outside'
+    document.body.appendChild(outside)
+    outside.focus()
+
+    render(
+      <Modal backdropClassName="dlg-backdrop test-backdrop" dialogClassName="dlg-panel" labelledBy="t" testId="nb" nonBlocking>
+        <h2 id="t">Asking</h2>
+        <button type="button">Accept</button>
+      </Modal>,
+    )
+
+    const dialog = screen.getByTestId('nb')
+    expect(dialog.getAttribute('aria-modal')).toBeNull()
+    expect(document.activeElement, 'the focus stays where the player had it').toBe(outside)
+    outside.remove()
+  })
+
+  it('DLG-13: a blocking modal still takes the focus and says it is modal', () => {
+    render(
+      <Modal backdropClassName="dlg-backdrop test-backdrop" dialogClassName="dlg-panel" labelledBy="t2" testId="bl">
+        <h2 id="t2">Asking</h2>
+        <button type="button">Accept</button>
+      </Modal>,
+    )
+    const dialog = screen.getByTestId('bl')
+    expect(dialog.getAttribute('aria-modal')).toBe('true')
+    expect(document.activeElement?.textContent).toBe('Accept')
+  })
+})

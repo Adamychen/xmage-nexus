@@ -645,7 +645,10 @@ the zone a watched seat or a panel copy draws, it is read the way the
 piles beside it are (BRD-32): the top half of a card, on a card a seventh wider than that hand's, so
 its art and its name carry at a glance without the hand giving up the room a whole card would take.
 That width is part of what the bar fits its cards in, not one more card of the fan, so the
-commander is drawn whole and inside the bar instead of past its edge. The hand's band keeps clear
+commander is drawn whole and inside the bar instead of past its edge. Pointing at it grows it to a
+whole card, the way pointing at a card of the fan does, upward from its own bottom edge, because
+what it shows is the top half and the rest hangs below the window; its cost bubbles are posed on
+its own card, at rest and grown, so they never hang off it. The hand's band keeps clear
 of the game dock before anything else, because the dock takes the clicks and the hover and a card
 under it can be neither read nor picked; when there is not room for everything, what gives way is
 the piles row, half cards the fan may lean over, and the cards shrink to what is left. They follow the hand in every
@@ -672,7 +675,10 @@ too: the hand has no room to spare at that width.
   bar with the size it starts with and no reserve at all, which is what drew the commander out of
   the window. Measured after: the slot ends at 737 px with the dock starting at 754, nothing off
   screen, and the cards at that width come down to their minimum, which is what fits between the
-  panel and the dock. The
+  panel and the dock. The hover was the other half of the same report: the hand's rule grows
+  `.hand-card` and the commander's picture is a `.hand-trailing-card`, so it was the one card in
+  the hand that answered a point with nothing, and its bubbles, sized and hung for a fan card,
+  floated half a card above it (user, 26-nov-2026). The
   tax drawn in the card's corner sat below the board edge in the hand, a "+" drawn next to a pip did
   not read against the gold edge, and a separate "+N" still had to be added up by eye. It was the
   fanned hand of the v1 chrome only until the user asked for it everywhere (2026-11-21): with the

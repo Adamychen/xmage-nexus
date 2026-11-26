@@ -270,6 +270,9 @@
    clipped at the waist, the same trick the piles use. */
 .hand-bar .hand-card-slot.hand-trailing {
   --cmd-w: calc(var(--card-w, 136px) * 1.15);
+  /* The hover reaches the same width a grown card of the fan reaches, so the commander does not
+     come up larger than the hand just because it starts wider. */
+  --cmd-hover-scale: calc(var(--hover-scale, 1.5) / 1.15);
   /* The bar sizes itself for one card per slot, so a wider one is the item a tight row shrinks:
      it came out 23 px wide with the card spilling out of it. It keeps its width instead. */
   flex: 0 0 var(--cmd-w);
@@ -287,8 +290,39 @@
   box-shadow: 0 0 0 2px var(--gold-300), 0 0 18px rgb(var(--gold-rgb) / 0.45);
   /* BRD-34: the half-card box already shows what the fan's tuck shows, so the commander takes
      neither the fan's rotation nor its sink: with both, the half slid below the window's edge and
-     only a sliver of it was ever on screen. Hovering still lifts it with the rest of the hand. */
-  transform-origin: 50% 50%;
+     only a sliver of it was ever on screen. */
+  transform-origin: 50% 100%;
   transform: translateY(calc(-1 * var(--rise, 0px)));
+}
+
+/* BRD-34: the commander's cost bubbles are posed on the commander's own card, not on a card of
+   the fan: it is wider and shows only its top half, so bubbles sized and placed for a fan card
+   hung off it. They carry the same pose as the picture, at rest and grown, so the two move as one. */
+.hand-bar .hand-card-slot.hand-trailing .hand-card-cost {
+  width: var(--cmd-w);
+  height: calc(var(--cmd-w) * 88 / 63);
+  /* Hung from the card's own top edge, like the picture it belongs to: the hand's cost hangs from
+     the bottom of its slot, and on the commander's half-card box that left the bubbles floating a
+     card's half above the picture. */
+  top: 0;
+  bottom: auto;
+  transform-origin: 50% 100%;
+  transform: translateY(calc(-1 * var(--rise, 0px)));
+}
+
+/* BRD-34: hovering the commander shows the whole card, the way hovering a card of the fan grows
+   it. The hand's own rule cannot do it: it grows `.hand-card`, and the commander's picture is a
+   `.hand-trailing-card`, so for a while the commander was the one card in the hand that answered
+   a hover with nothing. It grows upward from its own bottom edge, because the half it shows is
+   the top half and the rest of the card hangs below the window. */
+.hand-bar .hand-card-slot.hand-trailing:hover .hand-trailing-card,
+.hand-bar .hand-card-slot.hand-trailing:hover .hand-card-cost {
+  transform: translateY(calc(-0.7 * var(--cmd-w))) scale(var(--cmd-hover-scale));
+}
+
+.hand-bar .hand-card-slot.hand-trailing:hover .hand-trailing-card {
+  clip-path: none;
+  z-index: 40;
+  box-shadow: 0 18px 44px var(--shade-5), 0 0 0 2px var(--gold-300), 0 0 24px rgb(var(--gold-rgb) / 0.55);
 }
 

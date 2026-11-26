@@ -139,3 +139,18 @@
     animation: none;
   }
 }
+
+/* GME-x: a rewind is put to the table, not forced on it: the vote asks from the top of the screen
+   and leaves the game, the log and the chat visible and usable underneath, because a player reads
+   the board (and asks in the chat why) before answering. */
+.dlg-backdrop.rollback-vote-backdrop {
+  background: none;
+  backdrop-filter: none;
+  pointer-events: none;
+  align-items: flex-start;
+  padding-top: var(--sp-6);
+}
+
+.dlg-backdrop.rollback-vote-backdrop > * {
+  pointer-events: auto;
+}

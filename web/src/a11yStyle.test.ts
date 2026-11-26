@@ -207,6 +207,9 @@ it('ACC-1: every stylesheet that sets backdrop-filter removes it under prefers-r
     if (!css.includes('backdrop-filter')) continue
     const rel = relative(SRC, file)
     const rules = parseRules(css)
+    // A file that only ever turns the blur off has nothing left to remove under reduced
+    // transparency: it is already the plain surface the setting asks for.
+    if (rules.every((r) => (r.decls.get('backdrop-filter') ?? 'none') === 'none')) continue
     const reduced = rules.filter(isReducedTransparency)
     if (!reduced.some((r) => r.decls.get('backdrop-filter') === 'none')) {
       offenders.push(`${rel}: no prefers-reduced-transparency block sets backdrop-filter: none`)

@@ -31,6 +31,10 @@ interface ModalProps {
   children: ReactNode
   trailing?: ReactNode
   sectionProps?: Omit<HTMLAttributes<HTMLElement>, 'className'>
+  /** A dialog that asks without taking the screen: nothing behind it is dimmed, covered, taken
+   *  focus from or kept from being tabbed to. For a question the player may want to read the board
+   *  or the chat before answering. */
+  nonBlocking?: boolean
 }
 
 export default function Modal({
@@ -45,6 +49,7 @@ export default function Modal({
   children,
   trailing,
   sectionProps,
+  nonBlocking = false,
 }: ModalProps) {
   const [z] = useState(() => zIndex ?? nextModalZ())
   const [peek, setPeek] = useState(false)
@@ -101,7 +106,7 @@ export default function Modal({
   // superior. Al cerrar se restaura el foco previo.
   useEffect(() => {
     const section = sectionRef.current
-    if (!section) return
+    if (!section || nonBlocking) return
     const prev = document.activeElement as HTMLElement | null
     const focusables = (): HTMLElement[] =>
       [...section.querySelectorAll<HTMLElement>(
@@ -136,18 +141,25 @@ export default function Modal({
       document.removeEventListener('keydown', trapTab, true)
       prev?.focus?.()
     }
-  }, [z, layer])
+  }, [z, layer, nonBlocking])
 
   const handleBackdropClick = (e: MouseEvent<HTMLDivElement>) => {
     if (e.target === e.currentTarget) onBackdropClick?.(e)
   }
   return (
-    <div className={backdropClassName} role="presentation" style={backdropStyle} data-peek={peek ? '1' : undefined} onClick={handleBackdropClick}>
+    <div
+      className={backdropClassName}
+      role="presentation"
+      style={backdropStyle}
+      data-peek={peek ? '1' : undefined}
+      data-non-blocking={nonBlocking ? '1' : undefined}
+      onClick={handleBackdropClick}
+    >
       <section
         ref={sectionRef}
         className={dialogClassName}
         role="dialog"
-        aria-modal="true"
+        aria-modal={nonBlocking ? undefined : 'true'}
         aria-labelledby={labelledBy}
         aria-label={label}
         data-testid={testId}

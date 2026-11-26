@@ -27,6 +27,8 @@ export interface DialogShellProps {
   closeInCorner?: boolean
   sectionProps?: Omit<HTMLAttributes<HTMLElement>, 'className'>
   onBackdropClick?: (e: MouseEvent<HTMLDivElement>) => void
+  /** Asks without taking the screen: see `Modal`'s own flag. */
+  nonBlocking?: boolean
   onClose?: () => void
   /** Escape close, for callers that render their own ✕ in `topRight` instead
    *  of the shell's `onClose` button. Falls back to `onClose`. */
@@ -58,6 +60,7 @@ export default function DialogShell({
   onBackdropClick,
   onClose,
   onEscape,
+  nonBlocking = false,
 }: DialogShellProps) {
   const closeButton = onClose ? (
     <CloseButton variant="solid" size="sm" className="dlg-close" onClick={onClose} data-testid={testId ? `${testId}-close` : undefined} />
@@ -73,6 +76,7 @@ export default function DialogShell({
       trailing={trailing}
       onBackdropClick={onBackdropClick}
       onEscape={onEscape ?? onClose}
+      nonBlocking={nonBlocking}
       sectionProps={sectionProps}
     >
       <div className="dlg-head">

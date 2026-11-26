@@ -136,3 +136,13 @@ describe('RollbackVoteDialog', () => {
     expect(screen.getByRole('alert').textContent).toMatch(/4/)
   })
 })
+
+describe('DLG-13: the rewind vote does not take the screen', () => {
+  it('DLG-13: it asks without a backdrop that covers or dims the game behind it', () => {
+    setState({ rollbackVote: vote() })
+    const { container } = render(<RollbackVoteDialog />)
+    const backdrop = container.querySelector('.rollback-vote-backdrop')
+    expect(backdrop, 'the vote carries its own backdrop class, which the stylesheet opens up').not.toBeNull()
+    expect(screen.getByTestId('rollback-vote').getAttribute('aria-modal'), 'it is not a modal').toBeNull()
+  })
+})

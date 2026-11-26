@@ -45,3 +45,27 @@ describe('the commander drawn with the fan', () => {
     expect(card).toMatch(/inset:\s*0 0 auto 0/)
   })
 })
+
+describe('BRD-34: the commander at the end of the fan answers a hover', () => {
+  const bar = readFileSync(fileURLToPath(new URL('./HandBar.css', import.meta.url)), 'utf8')
+
+  it('BRD-34: pointing at it grows the picture and its cost together, from its own bottom edge', () => {
+    const hover = /\.hand-bar \.hand-card-slot\.hand-trailing:hover \.hand-trailing-card,\s*\n\.hand-bar \.hand-card-slot\.hand-trailing:hover \.hand-card-cost \{([^}]*)\}/.exec(bar)
+    expect(hover, 'the picture and the cost share one hover pose').not.toBeNull()
+    expect(hover![1]).toMatch(/scale\(var\(--cmd-hover-scale\)\)/)
+    expect(hover![1]).toMatch(/translateY\(calc\(-0\.7 \* var\(--cmd-w\)\)\)/)
+  })
+
+  it('BRD-34: the whole card shows while it is pointed at', () => {
+    const grown = /\.hand-bar \.hand-card-slot\.hand-trailing:hover \.hand-trailing-card \{([^}]*)\}/.exec(bar)
+    expect(grown![1]).toMatch(/clip-path:\s*none/)
+  })
+
+  it('BRD-34: its cost hangs from the card it belongs to, not from the slot', () => {
+    const cost = /\.hand-bar \.hand-card-slot\.hand-trailing \.hand-card-cost \{([^}]*)\}/.exec(bar)
+    expect(cost, 'the commander poses its own cost').not.toBeNull()
+    expect(cost![1]).toMatch(/width:\s*var\(--cmd-w\)/)
+    expect(cost![1]).toMatch(/top:\s*0/)
+    expect(cost![1]).toMatch(/bottom:\s*auto/)
+  })
+})
