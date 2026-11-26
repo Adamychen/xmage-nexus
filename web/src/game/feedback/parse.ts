@@ -16,6 +16,7 @@ import {
   libraryChainStep,
   isLondonBottoming,
   isMulliganAsk,
+  isDefenderPick,
   isStartingPlayerMessage,
   isTriggerOrderPick,
   isVotingAsk,
@@ -168,6 +169,13 @@ export function parseFeedback(
                 : t('game', 'choose_target')
       const chosenTargets = chosenTargetsOf(data)
       const fp = prompt(method, gameId, title, message, 'uuid', targetOptions(data, (index, id) => t('game', 'target_fallback', { index: String(index + 1), id: id.slice(0, 8) })), bounds, undefined, undefined, data.flag !== false && data.flag !== 'false', secondMessageOf(data), chosenTargets, undefined, cards, undefined, isMulliganLondon, isStartingPlayer, isVoting, undefined, undefined, isTriggerOrder, undefined, undefined, undefined, undefined, isOrderPick)
+      if (isDefenderPick(message)) {
+        // CMB-16: the engine asks this straight after an attacker is picked and will take nothing
+        // else until it is answered, so the prompt says so in its own words.
+        fp.isDefenderPick = true
+        fp.title = t('game', 'choose_defender')
+        fp.message = t('game', 'choose_defender_hint')
+      }
       const progress = targetProgress(message, chosenTargets)
       if (progress) fp.progress = progress
       const libraryStep = libraryChainStep(message)

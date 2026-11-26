@@ -5,6 +5,7 @@ import {
   isDiscardMessage,
   isLondonBottoming,
   isMulliganAsk,
+  isDefenderPick,
   isStartingPlayerMessage,
   isTriggerOrderPick,
   isVotingAsk,
@@ -111,5 +112,27 @@ describe('parseFeedback with injected display strings (no i18n)', () => {
     expect(pick?.title).toBe('[game.trigger_title]')
     const normal = parseFeedback('GAME_TARGET', 'g', { message: 'Choose a target', targets: ['abc'] }, stub)
     expect(normal?.isTriggerOrder).toBeUndefined()
+  })
+})
+
+describe('CMB-16: the question the engine opens after an attacker is picked', () => {
+  it('CMB-16: the defender target is told from any other target by its own message', () => {
+    expect(isDefenderPick('Select the player, planeswalker, or battle to attack')).toBe(true)
+    expect(isDefenderPick('player, planeswalker or battle to attack')).toBe(true)
+    expect(isDefenderPick('Select a creature to block')).toBe(false)
+    expect(isDefenderPick('Choose a target')).toBe(false)
+  })
+
+  it('CMB-16: it is titled as the question it is, and says the game is waiting for it', () => {
+    const t: FeedbackTextFn = (_ns, key) => key
+    const prompt = parseFeedback(
+      'GAME_TARGET',
+      'g-1',
+      { message: 'Select the player, planeswalker, or battle to attack', targets: ['p-opp'], options: {} },
+      t,
+    )
+    expect(prompt?.isDefenderPick).toBe(true)
+    expect(prompt?.title).toBe('choose_defender')
+    expect(prompt?.message).toBe('choose_defender_hint')
   })
 })

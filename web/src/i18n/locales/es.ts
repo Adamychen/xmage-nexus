@@ -1214,6 +1214,8 @@ export const es: TranslationSchema = {
     starting_player_starts_first: 'Empieza primero →',
     starting_player_board_hint: 'Haz clic en tu avatar o en el oponente',
     choose_target: 'Elige objetivo',
+    choose_defender: '¿A quién ataca?',
+    choose_defender_hint: 'Elige al jugador, planeswalker o batalla que ataca esta criatura. La partida espera esta respuesta: una vez dada, volver a pulsar la criatura la saca del ataque.',
     library_order_title: 'Ordenando cartas',
     choose_cards: 'Selecciona cartas',
     choose_discard: 'Elige una carta para descartar',

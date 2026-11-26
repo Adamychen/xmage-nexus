@@ -1212,6 +1212,8 @@ export const en = {
     starting_player_starts_first: 'Goes first →',
     starting_player_board_hint: 'Click your avatar or the opponent',
     choose_target: 'Choose target',
+    choose_defender: 'Who does it attack?',
+    choose_defender_hint: 'Pick the player, planeswalker or battle this creature attacks. The game waits for this answer: once it is given, clicking the creature again takes it out of the attack.',
     library_order_title: 'Ordering cards',
     choose_cards: 'Select cards',
     choose_discard: 'Choose a card to discard',

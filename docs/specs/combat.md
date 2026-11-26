@@ -218,3 +218,21 @@ pick for something else (a target) still leaves the pile, as it always did (BRD-
   attack step began. The player asked for the opposite: the pile holds, and clicking it peels one
   attacker off at a time (26-nov-2026).
 - Guard: `src/board/BoardZone.pileCards.test.tsx`
+
+### CMB-16 · The question about who an attacker attacks says so, and marks the creature it is about
+When a creature is picked as an attacker and there is more than one thing it could attack, the
+engine asks which one and takes no other answer until that is answered: not a second click on the
+same creature, not a click on another. The client says so instead of leaving the player to find
+out: the prompt is titled as the question it is ("Who does it attack?"), its text says the game is
+waiting for the answer and that clicking the creature again takes it out of the attack once it is
+given, and the creature that opened the question stays marked on the board while it waits, as a
+picked one does. Answering declares the attack; from then on a click on the creature removes it,
+which is the engine's own `removeAttackerIfPossible`.
+
+- Why: "en cuanto selecciono un atacante, si no selecciono un target no me deja quitarlo, ni
+  pulsando sobre la misma criatura" (user, 26-nov-2026). Read in the fork: `selectDefender` opens a
+  `TargetDefender` through `chooseTarget`, and a target is required unless it says otherwise
+  (`TargetImpl.required` starts true), so the loop re-asks until it gets a defender. The client
+  cannot cancel it without patching the engine, so what it can do is make the question
+  unmissable and say where the way back is.
+- Guard: `src/game/feedback/detect.test.ts`

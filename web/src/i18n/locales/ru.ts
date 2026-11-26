@@ -1214,6 +1214,8 @@ export const ru: TranslationSchema = {
     starting_player_starts_first: 'Ходит первым →',
     starting_player_board_hint: 'Нажмите на свой аватар или оппонента',
     choose_target: 'Выберите цель',
+    choose_defender: 'Кого она атакует?',
+    choose_defender_hint: 'Выберите игрока, планусвокера или битву, которую атакует это существо. Игра ждёт этот ответ: после него повторный щелчок по существу уберёт его из атаки.',
     library_order_title: 'Упорядочивание карт',
     choose_cards: 'Выберите карты',
     choose_discard: 'Выберите карту для сброса',

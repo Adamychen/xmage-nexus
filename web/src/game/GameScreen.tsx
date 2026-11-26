@@ -11,7 +11,7 @@ import RewindBar from './RewindBar'
 import MobileSpectator from './MobileSpectator'
 import { useNarrowScreen } from './useNarrowScreen'
 import { useRewind, viewedSnapshot } from './rewind'
-import { isRollbackVoteBlocking, maybeAutoPass, setStoreError, useGame, useSettings, useStore } from '../state/store'
+import { getState, isRollbackVoteBlocking, maybeAutoPass, setState, setStoreError, useGame, useSettings, useStore } from '../state/store'
 import FeedbackDialog from './FeedbackDialog'
 import UserRequestDialog from './UserRequestDialog'
 import RollbackDialog from './RollbackDialog'
@@ -212,6 +212,13 @@ export default function GameScreen() {
   const onCombatClick = async (id: string) => {
     if (!gameId) return
     perfMark('click', 'combat', undefined, { id })
+    // CMB-16: picking an attacker can open the engine's question about who it attacks, and nothing
+    // else is taken until that is answered. The creature stays marked while it waits, so the
+    // player can see what the question is about.
+    const current = getState().combat
+    if (current?.mode === 'attack' && current.selectable.includes(id) && !current.chosen.includes(id)) {
+      setState({ combat: { ...current, pending: id } })
+    }
     const result = await cmds.sendPlayerUUID(id, gameId)
     if (!result.ok) setStoreError(result.error ?? t('errors', 'send_failed_combat'))
   }
@@ -227,7 +234,7 @@ export default function GameScreen() {
     onPlayableClick,
     combatSelectable: combat?.selectable ?? [],
     combatMode: combat?.mode ?? null,
-    combatChosen: combat?.chosen ?? [],
+    combatChosen: combat?.pending ? [...(combat.chosen ?? []), combat.pending] : combat?.chosen ?? [],
     onCombatClick,
     attackingIds: combatActors.attackingIds,
     blockingIds: combatActors.blockingIds,
@@ -497,7 +504,7 @@ export default function GameScreen() {
               boardRef={gameBodyRef}
               targetSourceId={targetSourceId}
               chosenTargetIds={chosenTargetIds}
-              combatChosen={combat?.chosen ?? []}
+              combatChosen={combat?.pending ? [...(combat.chosen ?? []), combat.pending] : combat?.chosen ?? []}
               combatMode={combat?.mode ?? null}
             />
             <TournamentPanel />

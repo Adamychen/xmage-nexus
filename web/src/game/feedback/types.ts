@@ -70,6 +70,8 @@ export interface FeedbackPrompt {
   isMulligan?: boolean
   isMulliganLondon?: boolean
   isStartingPlayer?: boolean
+  /** CMB-16: the engine is asking who the attacker just picked is attacking. */
+  isDefenderPick?: boolean
   isVoting?: boolean
   isPlaneswalkerAbility?: boolean
   loyaltyDeltas?: (number | null)[]

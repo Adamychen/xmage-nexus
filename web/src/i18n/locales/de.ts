@@ -1214,6 +1214,8 @@ export const de: TranslationSchema = {
     starting_player_starts_first: 'Beginnt →',
     starting_player_board_hint: 'Klicke auf deinen Avatar oder den Gegner',
     choose_target: 'Wähle ein Ziel',
+    choose_defender: 'Wen greift sie an?',
+    choose_defender_hint: 'Wähle den Spieler, Planeswalker oder die Schlacht, die diese Kreatur angreift. Das Spiel wartet auf diese Antwort; danach nimmt ein erneuter Klick auf die Kreatur sie aus dem Angriff.',
     library_order_title: 'Karten ordnen',
     choose_cards: 'Karten wählen',
     choose_discard: 'Wähle eine Karte zum Abwerfen',

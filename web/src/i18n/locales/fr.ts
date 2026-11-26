@@ -1214,6 +1214,8 @@ export const fr: TranslationSchema = {
     starting_player_starts_first: 'Commence en premier →',
     starting_player_board_hint: 'Cliquez sur votre avatar ou sur l\'adversaire',
     choose_target: 'Choisissez une cible',
+    choose_defender: 'Qui attaque-t-elle ?',
+    choose_defender_hint: "Choisis le joueur, l'arpenteur ou la bataille que cette créature attaque. La partie attend cette réponse ; ensuite, recliquer sur la créature la retire de l'attaque.",
     library_order_title: 'Classement des cartes',
     choose_cards: 'Choisissez des cartes',
     choose_discard: 'Choisissez une carte à défausser',

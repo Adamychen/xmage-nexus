@@ -8,6 +8,12 @@ export function isStartingPlayerMessage(message: string): boolean {
   return /who goes first|choose.*start|starting player|who will go first|empieza primero|quién empieza|lanzamiento|primer turno/i.test(message)
 }
 
+/** CMB-16: the defender question the engine opens after an attacker is picked. Its message is the
+ *  target's own name (`FilterDefender`: "player, planeswalker, or battle to attack"). */
+export function isDefenderPick(message: string): boolean {
+  return /player, planeswalker,? or battle to attack|jugador, planeswalker.*atacar/i.test(message)
+}
+
 export function isVotingAsk(message: string, question?: string): boolean {
   return /vote|voting|voted|votar|votación|council|will of the council/i.test(message) || /vote/i.test(question ?? '')
 }

@@ -1214,6 +1214,8 @@ export const zhs: TranslationSchema = {
     starting_player_starts_first: '先攻 →',
     starting_player_board_hint: '点击您的头像或对手头像',
     choose_target: '选择目标',
+    choose_defender: '它攻击谁？',
+    choose_defender_hint: '选择这个生物攻击的玩家、鹏洛客或战役。对局在等这个回答：回答之后再次点击该生物就能把它撤出攻击。',
     library_order_title: '正在排序卡牌',
     choose_cards: '选择卡牌',
     choose_discard: '选择一张要弃置的牌',

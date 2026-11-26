@@ -1214,6 +1214,8 @@ export const ja: TranslationSchema = {
     starting_player_starts_first: '先攻 →',
     starting_player_board_hint: '自分または対戦相手のアバターをクリック',
     choose_target: '対象を選ぶ',
+    choose_defender: '誰を攻撃する？',
+    choose_defender_hint: 'このクリーチャーが攻撃するプレイヤー、プレインズウォーカー、または戦いを選ぶ。ゲームはこの回答を待っている。回答後にもう一度クリックすると攻撃から外れる。',
     library_order_title: 'カードを並べ替え中',
     choose_cards: 'カードを選ぶ',
     choose_discard: '捨てるカードを選ぶ',

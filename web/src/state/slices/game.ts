@@ -11,6 +11,9 @@ export interface CombatState {
   selectable: string[]
   special: boolean
   chosen: string[]
+  /** CMB-16: the creature just sent as an attacker, while the engine asks who it attacks. It is
+   *  not declared yet, and the engine takes no other answer until that question is answered. */
+  pending?: string | null
 }
 
 /** A card in the sideboard screen (instance ID + resolved Scryfall data). */
