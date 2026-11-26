@@ -14,6 +14,7 @@ import { stripTargetProgress, targetProgressLabel, type FeedbackPrompt } from '.
 import { useTranslation, dynamicT } from '../i18n'
 import { localizeServerMessage } from './serverMessageTranslation'
 import { setState } from '../state/store'
+import { startLibraryPlan } from '../state/libraryPlanRunner'
 import './CardGrid.css'
 
 interface CardGridProps {
@@ -35,8 +36,19 @@ export default function CardGrid({ prompt, selected, setSelected, send, busy }: 
   const [dealing, setDealing] = useState(true)
   const cards = useMemo(() => prompt.cards ?? [], [prompt.cards])
   const serverDriven = prompt.method === 'GAME_TARGET'
-  const isMulti = !serverDriven && prompt.max > 1
-  const chosen = useMemo(() => (serverDriven ? (prompt.chosenTargets ?? []) : selected), [serverDriven, prompt.chosenTargets, selected])
+  // PRM-6: a target pick of several cards is chosen here and confirmed once; the plan then answers
+  // the engine's re-asks one card at a time.
+  const plannedMax = serverDriven ? (prompt.progress?.max ?? 0) : 0
+  const planned = plannedMax > 1
+  const isMulti = (!serverDriven && prompt.max > 1) || planned
+  const multiMax = planned ? plannedMax : prompt.max
+  const multiMin = planned ? (prompt.progress?.min ?? 0) : prompt.min
+  const local = !serverDriven || planned
+  const chosen = useMemo(() => (local ? selected : (prompt.chosenTargets ?? [])), [local, prompt.chosenTargets, selected])
+
+  useEffect(() => {
+    if (planned && prompt.chosenTargets?.length) setSelected((current) => (current.length ? current : [...prompt.chosenTargets!]))
+  }, [planned, prompt.chosenTargets, setSelected])
   const chosenSet = useMemo(() => new Set(chosen), [chosen])
   const selectable = useMemo(() => new Set(prompt.options.map((option) => option.id)), [prompt.options])
 
@@ -69,7 +81,7 @@ export default function CardGrid({ prompt, selected, setSelected, send, busy }: 
     if (isMulti) {
       setSelected((current) => current.includes(cardId)
         ? current.filter((id) => id !== cardId)
-        : current.length < prompt.max ? [...current, cardId] : current)
+        : current.length < multiMax ? [...current, cardId] : current)
     } else {
       void send(() => sendSingle(prompt, cardId), t('errors', 'send_failed_choice'))
     }
@@ -77,6 +89,10 @@ export default function CardGrid({ prompt, selected, setSelected, send, busy }: 
 
   const confirmMulti = () => {
     if (selected.length === 0) return
+    if (planned) {
+      startLibraryPlan(prompt, { mode: 'pick', top: [], away: [...selected] })
+      return
+    }
     void send(async () => {
       let result: { ok: boolean; error?: string } = { ok: true }
       for (const value of selected) {
@@ -87,7 +103,9 @@ export default function CardGrid({ prompt, selected, setSelected, send, busy }: 
     }, t('errors', 'send_failed_choice'))
   }
 
-  const progressText = serverDriven && prompt.progress ? targetProgressLabel(prompt.progress, dynamicT(t)) : null
+  const progressText = planned
+    ? targetProgressLabel({ ...prompt.progress, selected: selected.length }, dynamicT(t))
+    : serverDriven && prompt.progress ? targetProgressLabel(prompt.progress, dynamicT(t)) : null
   const message = serverDriven ? stripTargetProgress(prompt.message) : prompt.message
   const isDiscard = /descart|discard/i.test(prompt.message)
   const cardGridTitle = prompt.isLibraryOrderPick
@@ -159,13 +177,13 @@ export default function CardGrid({ prompt, selected, setSelected, send, busy }: 
             {isMulti && (
               <Button
                 className="arena-card-grid-done"
-                disabled={busy || selected.length < Math.max(prompt.min, 1)}
+                disabled={busy || selected.length < Math.max(multiMin, 1)}
                 onClick={confirmMulti}
               >
-                {t('dialogs', 'cardgrid_confirm', { selected: selected.length, max: prompt.max })}
+                {t('dialogs', 'cardgrid_confirm', { selected: selected.length, max: multiMax })}
               </Button>
             )}
-            {prompt.required === false && (
+            {prompt.required === false && !(planned && selected.length > 0) && (
               <Button
                 className="arena-card-grid-done"
                 disabled={busy}

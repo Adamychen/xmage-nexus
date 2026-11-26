@@ -1,6 +1,7 @@
 /**
  * Helpers for the looked-at / revealed / companion viewers (`.pile-overlay` modals that
- * `infoWindowState` latches open when such a group first appears).
+ * `infoWindowState` latches open when such a group first appears: every companion, and a look or a
+ * reveal with a card to play or target; any other look or reveal is a corner notice, BRD-66).
  */
 
 import { expect, type Page } from '@playwright/test'

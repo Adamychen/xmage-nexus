@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import CardGrid from './CardGrid'
-import LibraryOrderDialog from './LibraryOrderDialog'
 import MulliganDialog from './MulliganDialog'
 import PileDialog from './PileDialog'
 import TriggerOrderDialog from './TriggerOrderDialog'
@@ -30,7 +29,11 @@ export default function FeedbackDialog() {
     return (
       <div className="chrome-surface">
         <span data-library-plan={libraryPlan.mode} hidden aria-hidden="true" />
-        <ArenaLibraryPrompt key={promptKey(libraryPrompt)} prompt={libraryPrompt} sending />
+        {libraryPlan.mode === 'pick' ? (
+          <CardGrid prompt={libraryPrompt} selected={libraryPlan.away} setSelected={noop} send={noop} busy />
+        ) : (
+          <ArenaLibraryPrompt key={promptKey(libraryPrompt)} prompt={libraryPrompt} sending />
+        )}
       </div>
     )
   }
@@ -56,11 +59,6 @@ function renderPrompt(form: UseFeedbackForm, handPick: boolean, onExpandHandPick
 
   if (isArenaLibraryPick(prompt)) {
     return <ArenaLibraryPrompt key={promptKey(prompt)} prompt={prompt} sending={false} />
-  }
-
-  // ── Scry / Surveil / Reorder dialog (GAME_CHOOSE_CARDS_ORDER or mode === 'order')
-  if (prompt.mode === 'order' || prompt.method === 'GAME_CHOOSE_CARDS_ORDER') {
-    return <LibraryOrderDialog prompt={prompt} send={send} cancel={cancel} busy={busy} />
   }
 
   // ── Mulligan: diálogo dedicado (Keep/Mulligan y London-bottom)
@@ -132,6 +130,8 @@ function renderPrompt(form: UseFeedbackForm, handPick: boolean, onExpandHandPick
 
   return <GenericDialog form={form} />
 }
+
+function noop() {}
 
 const promptKeys = new WeakMap<FeedbackPrompt, number>()
 let promptKeySeq = 0

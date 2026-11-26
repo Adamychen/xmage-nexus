@@ -234,7 +234,7 @@ export default function CardSlot({
 
     if (isFirstMountRef.current) {
       isFirstMountRef.current = false
-      if (el.closest('.feedback-dialog, .library-order-dialog, .card-grid, .mechanics-tray')) {
+      if (el.closest('.feedback-dialog, .card-grid, .mechanics-tray')) {
         return
       }
       const lastRect = el.getBoundingClientRect()

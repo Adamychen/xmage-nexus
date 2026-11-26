@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { render, fireEvent, cleanup, act } from '@testing-library/react'
-import InfoWindows from './InfoWindows'
+import InfoWindows, { REVEAL_TOAST_MS } from './InfoWindows'
 import ClaimedInfoCards from './feedbackModes/ClaimedInfoCards'
 import { EMPTY_INFO_WINDOWS, closeInfoWindow, foldInfoWindows } from './infoWindowState'
 import { setState } from '../state/store'
@@ -33,12 +33,14 @@ describe('InfoWindows', () => {
     expect(document.querySelector('.pile-overlay')).toBeNull()
   })
 
-  it('shows one window per entry with its cards', () => {
+  it('BRD-66: shows one window per entry: a look as a corner notice, a companion as a viewer', () => {
     setState({ game: makeGameView({ lookedAt: [looked], companion: [comp] }) as never })
-    const { getByText } = render(<InfoWindows />)
-    expect(document.querySelectorAll('.pile-overlay')).toHaveLength(2)
-    expect(getByText('Scry Card')).not.toBeNull()
-    expect(getByText('Lurrus of the Dream-Den')).not.toBeNull()
+    render(<InfoWindows />)
+    const toasts = document.querySelectorAll('[data-testid="reveal-toast"]')
+    expect(toasts).toHaveLength(1)
+    expect(toasts[0].querySelector('[aria-label="Scry Card"]')).not.toBeNull()
+    expect(document.querySelectorAll('.pile-overlay')).toHaveLength(1)
+    expect(document.querySelector('.pile-overlay')?.textContent).toContain('Lurrus of the Dream-Den')
   })
 
   it('ignores empty entries', () => {
@@ -50,19 +52,77 @@ describe('InfoWindows', () => {
   it('closing hides the window until the cards change', () => {
     setState({ game: makeGameView({ lookedAt: [looked], companion: [] }) as never })
     render(<InfoWindows />)
-    expect(document.querySelectorAll('.pile-overlay')).toHaveLength(1)
-    fireEvent.click(document.querySelector('.pile-overlay-close')!)
-    expect(document.querySelector('.pile-overlay')).toBeNull()
+    expect(document.querySelectorAll('[data-testid="reveal-toast"]')).toHaveLength(1)
+    fireEvent.click(document.querySelector('.reveal-toast-close')!)
+    expect(document.querySelector('[data-testid="reveal-toast"]')).toBeNull()
   })
 
   it('keeps the looked-at card open when the follow-up prompt view has lookedAt cleared (Jace +2)', () => {
     render(<InfoWindows />)
     act(() => setState({ game: makeGameView({ lookedAt: [jace] }) as never }))
     act(() => setState({ game: makeGameView({ lookedAt: [] }) as never }))
-    expect(document.querySelectorAll('.pile-overlay')).toHaveLength(1)
-    expect(document.body.textContent).toContain('Island')
-    fireEvent.click(document.querySelector('.pile-overlay-close')!)
-    expect(document.querySelector('.pile-overlay')).toBeNull()
+    expect(document.querySelectorAll('[data-testid="reveal-toast"]')).toHaveLength(1)
+    expect(document.querySelector('[data-testid="reveal-toast"] [aria-label="Island"]')).not.toBeNull()
+    fireEvent.click(document.querySelector('.reveal-toast-close')!)
+    expect(document.querySelector('[data-testid="reveal-toast"]')).toBeNull()
+  })
+
+  it('BRD-66: a reveal notice goes away on its own and does not come back for the same cards', () => {
+    vi.useFakeTimers()
+    try {
+      render(<InfoWindows />)
+      act(() => setState({ game: makeGameView({ revealed: [reveal] }) as never }))
+      expect(document.querySelector('[data-testid="reveal-toast"]')).not.toBeNull()
+      expect(document.querySelector('.pile-overlay'), 'no viewer over the board').toBeNull()
+      act(() => { vi.advanceTimersByTime(REVEAL_TOAST_MS + 50) })
+      expect(document.querySelector('[data-testid="reveal-toast"]')).toBeNull()
+      act(() => setState({ game: makeGameView({ revealed: [reveal], turn: 2 }) as never }))
+      expect(document.querySelector('[data-testid="reveal-toast"]')).toBeNull()
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('BRD-66: pointing at a reveal notice keeps it up until the pointer leaves', () => {
+    vi.useFakeTimers()
+    try {
+      render(<InfoWindows />)
+      act(() => setState({ game: makeGameView({ revealed: [reveal] }) as never }))
+      const toast = document.querySelector('[data-testid="reveal-toast"]')!
+      fireEvent.pointerEnter(toast)
+      act(() => { vi.advanceTimersByTime(REVEAL_TOAST_MS * 3) })
+      expect(document.querySelector('[data-testid="reveal-toast"]')).not.toBeNull()
+      fireEvent.pointerLeave(toast)
+      act(() => { vi.advanceTimersByTime(REVEAL_TOAST_MS + 50) })
+      expect(document.querySelector('[data-testid="reveal-toast"]')).toBeNull()
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('BRD-66: View opens the full viewer for the revealed cards, which stays until closed', () => {
+    vi.useFakeTimers()
+    try {
+      render(<InfoWindows />)
+      act(() => setState({ game: makeGameView({ revealed: [reveal] }) as never }))
+      fireEvent.click(document.querySelector('.reveal-toast-expand')!)
+      expect(document.querySelector('[data-testid="reveal-toast"]')).toBeNull()
+      expect(document.querySelector('.pile-overlay')?.textContent).toContain('Lightning Bolt')
+      act(() => { vi.advanceTimersByTime(REVEAL_TOAST_MS * 2) })
+      expect(document.querySelector('.pile-overlay')).not.toBeNull()
+      fireEvent.click(document.querySelector('.pile-overlay-close')!)
+      expect(document.querySelector('.pile-overlay')).toBeNull()
+      expect(document.querySelector('[data-testid="reveal-toast"]')).toBeNull()
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('BRD-66: a revealed card the player can play opens the full viewer, not a notice', () => {
+    setState({ game: makeGameView({ revealed: [reveal] }) as never })
+    render(<InfoWindows playableIds={new Set(['r-1'])} onPlayCard={vi.fn()} />)
+    expect(document.querySelector('[data-testid="reveal-toast"]')).toBeNull()
+    expect(document.querySelector('.pile-overlay')?.textContent).toContain('Lightning Bolt')
   })
 
   it('shows revealed cards in their own window', () => {

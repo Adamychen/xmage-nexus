@@ -5,6 +5,8 @@ import type { CardView } from '../net/types'
 import { useTranslation } from '../i18n'
 import type { FeedbackPrompt } from './feedback'
 import type { LibraryPlanMode } from './feedback/libraryPlan'
+
+type ArenaLibraryMode = Exclude<LibraryPlanMode, 'pick'>
 import ArenaFan from './arena/ArenaFan'
 import ArenaPromptShell from './arena/ArenaPromptShell'
 import { useFanDrag } from './arena/useFanDrag'
@@ -29,7 +31,7 @@ function nameOnlyCard(id: string, name: string): CardView {
 
 function noLane() {}
 
-function promptMode(prompt: FeedbackPrompt): LibraryPlanMode {
+function promptMode(prompt: FeedbackPrompt): ArenaLibraryMode {
   switch (prompt.libraryStep) {
     case 'scry-pick':
       return 'scry'
@@ -48,7 +50,7 @@ const TITLE_KEY = {
   'top-order': 'arena_order_top_title',
   'bottom-order': 'arena_order_bottom_title',
   'grave-order': 'arena_order_grave_title',
-} as const satisfies Record<LibraryPlanMode, string>
+} as const satisfies Record<ArenaLibraryMode, string>
 
 const HINT_KEY = {
   surveil: 'arena_surveil_hint',
@@ -56,7 +58,7 @@ const HINT_KEY = {
   'top-order': 'arena_order_top_hint',
   'bottom-order': 'arena_order_bottom_hint',
   'grave-order': 'arena_order_grave_hint',
-} as const satisfies Record<LibraryPlanMode, string>
+} as const satisfies Record<ArenaLibraryMode, string>
 
 export default function ArenaLibraryPrompt({ prompt, sending }: ArenaLibraryPromptProps) {
   const { t } = useTranslation()

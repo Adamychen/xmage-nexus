@@ -107,23 +107,6 @@
   white-space: nowrap;
 }
 
-.trigger-bubble-rank {
-  flex: 0 0 auto;
-  padding: 0 var(--sp-1h);
-  border-radius: var(--r-pill);
-  border: 1px solid var(--bubble-edge);
-  font-family: var(--font-ui);
-  font-size: var(--fs-xs);
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-}
-
-.trigger-bubble-rank.is-first {
-  background: var(--brand-strong);
-  border-color: var(--brand-strong);
-  color: var(--fg-hi);
-}
-
 .trigger-bubble-tools {
   display: inline-flex;
   align-items: center;
@@ -331,11 +314,6 @@
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   pointer-events: none;
-}
-
-.trigger-fan-rank.is-first {
-  border-color: var(--brand-fg);
-  background: var(--brand-strong);
 }
 
 .trigger-fan-rank.is-active {

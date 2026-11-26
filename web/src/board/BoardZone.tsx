@@ -665,6 +665,7 @@ export default function BoardZone({
         cardIds={group.items.map(([id]) => id)}
         landName={isLand ? group.name : undefined}
         fanDelayMs={isLand ? 0 : TOKEN_PILE_FAN_DELAY_MS}
+        fanOnBadge={isLand}
         onFanChange={
           isLand
             ? undefined

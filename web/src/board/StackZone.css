@@ -234,21 +234,6 @@ html.fx-off .stack-tl-node.node-top {
   padding: var(--sp-0h) var(--sp-1h) var(--sp-1) var(--sp-0h);
 }
 
-.stack-tl-pos {
-  display: inline-flex;
-  align-items: center;
-  flex-shrink: 0;
-  font-size: var(--fs-2xs);
-  font-weight: 700;
-  letter-spacing: 0.03em;
-  color: var(--fg-2);
-}
-
-.stack-tl-entry.is-top .stack-tl-pos {
-  color: var(--ok);
-  text-shadow: 0 0 6px rgb(var(--ok-rgb) / 0.3);
-}
-
 .stack-controller-pill {
   display: inline-flex;
   align-items: center;

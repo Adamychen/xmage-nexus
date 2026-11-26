@@ -69,7 +69,7 @@ describe('CardGrid', () => {
     expect(container.textContent).toContain('Confirmar')
   })
 
-  it('PRM-6: never batches GAME_TARGET picks behind a confirm button (the server keeps only the latest answer)', () => {
+  it('PRM-6: a target pick with no stated maximum sends on click, with no confirm button', () => {
     const { container } = render(<CardGrid prompt={makePrompt({ max: 3 })} selected={['c-1', 'c-2']} setSelected={vi.fn()} send={vi.fn()} busy={false} />)
     expect(container.textContent).not.toContain('Confirmar')
   })
@@ -104,29 +104,36 @@ describe('CardGrid', () => {
     expect(send).toHaveBeenCalledTimes(1)
   })
 
-  it('PRM-6: shows server-side picks as chosen and sends one card per click (GAME_TARGET)', async () => {
-    const send = vi.fn(async (action: () => Promise<{ ok: boolean }>) => { await action() })
+  it('PRM-6: a target pick of several cards collects the picks and sends nothing until Confirm', async () => {
+    const send = vi.fn()
     const commands = await import('../net/commands')
     const uuid = vi.spyOn(commands, 'sendPlayerUUID').mockResolvedValue({ ok: true } as never)
     const prompt = makePrompt({
-      message: 'Select cards from your graveyard (selected 1 of 3, min 1)',
-      chosenTargets: ['c-1'],
-      progress: { selected: 1, max: 3, min: 1 },
+      message: 'Select basic land cards (selected 0 of 2)',
+      progress: { selected: 0, max: 2 },
       options: [{ id: 'c-1', label: 'Grizzly Bears', value: 'c-1' }, { id: 'c-2', label: 'Lightning Bolt', value: 'c-2' }, { id: 'c-3', label: 'Island', value: 'c-3' }],
       required: false,
     })
-    const { container, getByTestId } = render(<CardGrid prompt={prompt} selected={['c-2']} setSelected={vi.fn()} send={send} busy={false} />)
-    const cells = container.querySelectorAll<HTMLButtonElement>('.card-grid-cell')
-    expect(cells.length).toBe(3)
-    expect(cells[0].classList.contains('selected')).toBe(true)
-    expect(cells[1].classList.contains('selected')).toBe(false)
-    expect(getByTestId('card-grid-progress').textContent).toBe('Seleccionadas 1 de 3 · mín. 1')
-    expect(container.textContent).not.toContain('(selected 1 of 3')
-    expect(container.textContent).toContain('Hecho (1)')
+    let selected: string[] = []
+    const setSelected = vi.fn((next: React.SetStateAction<string[]>) => {
+      selected = typeof next === 'function' ? next(selected) : next
+    })
+    const view = render(<CardGrid prompt={prompt} selected={selected} setSelected={setSelected} send={send} busy={false} />)
+    fireEvent.click(view.container.querySelectorAll<HTMLButtonElement>('.card-grid-cell')[2])
+    view.rerender(<CardGrid prompt={prompt} selected={selected} setSelected={setSelected} send={send} busy={false} />)
+    fireEvent.click(view.container.querySelectorAll<HTMLButtonElement>('.card-grid-cell')[0])
+    view.rerender(<CardGrid prompt={prompt} selected={selected} setSelected={setSelected} send={send} busy={false} />)
+    expect(selected).toEqual(['c-3', 'c-1'])
+    fireEvent.click(view.container.querySelectorAll<HTMLButtonElement>('.card-grid-cell')[1])
+    expect(selected, 'a third card does not fit a pick of two').toEqual(['c-3', 'c-1'])
+    expect(send).not.toHaveBeenCalled()
+    expect(uuid).not.toHaveBeenCalled()
+    expect(view.getByTestId('card-grid-progress').textContent).toBe('Seleccionadas 2 de 2')
+    expect(view.container.textContent).not.toContain('Terminar selección')
 
-    fireEvent.click(cells[1])
-    await vi.waitFor(() => expect(uuid).toHaveBeenCalledWith('c-2', 'g-1'))
+    fireEvent.click(view.container.querySelector('.card-grid-actions .arena-card-grid-done')!)
     expect(uuid).toHaveBeenCalledTimes(1)
+    expect(uuid).toHaveBeenCalledWith('c-3', 'g-1')
     uuid.mockRestore()
   })
 

@@ -80,7 +80,7 @@ describe('what a card slot animates', () => {
     return out
   }
 
-  it('BRD-66: no card slot animates its margins, so a card size change never draws the row at the old size', () => {
+  it('BRD-68: no card slot animates its margins, so a card size change never draws the row at the old size', () => {
     const lists = [...transitionsOf(css), ...transitionsOf(boardZoneCss)]
     expect(lists.length, 'a card slot declares what it animates').toBeGreaterThan(0)
     for (const { selector, value } of lists) {
@@ -88,7 +88,7 @@ describe('what a card slot animates', () => {
     }
   })
 
-  it('BRD-66: a pile still animates `left`, which fans it open without moving its footprint', () => {
+  it('BRD-68: a pile still animates `left`, which fans it open without moving its footprint', () => {
     const pile = transitionsOf(boardZoneCss).find((t) => t.selector.includes('.stack-group > .card-slot'))
     expect(pile, 'the pile declares its own transition').toBeTruthy()
     expect(pile!.value).toMatch(/(^|[\s,])left\b/)

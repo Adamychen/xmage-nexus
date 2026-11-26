@@ -293,7 +293,7 @@ Retired 2026-11-23: the phone layout is no longer a target (user decision with t
 
 - Guard: none yet (retired)
 
-### BRD-20 · One pile per identical permanent; token piles open after a second of hover
+### BRD-20 · One pile per identical permanent; token piles open after a second of hover, land piles from their count
 Three or more identical permanents pile up (two lands are enough on the own board of the Arena layout, as
 in MTG Arena, BRD-32), and the pile holds every copy there is: fifty Soldiers are one pile of fifty, not
 ten piles of five. Identical means identical to the player: the same card, the same tapped state, the same
@@ -308,7 +308,8 @@ count badge in the corner, which is where the number is read; it shows at most f
 pile of fifty takes the width of a pile of five instead of growing one edge per card.
 With a mouse, a token pile fans out only after the pointer has rested on it for one second, and only that
 pile; a touch fans it out at once. While a token pile is fanned out the large hover preview is hidden, so
-it never covers the fanned cards. A land pile fans out as soon as the pointer enters. A fanned pile closes as
+it never covers the fanned cards. A land pile never fans out on hover: its count badge is a button that
+opens it and closes it again, and a click on the pile's card still taps the land. A fanned pile closes as
 soon as the pointer moves over anything outside it, even when the browser never reports that the pointer left.
 A pile of more than twelve does not fan at all: a fan compressed into the row would be a smear rather than a
 row of cards, and a copy the game is asking the player to pick leaves the pile and stands on its own anyway.
@@ -325,7 +326,12 @@ row of cards, and a copy the game is asking the player to pick leaves the pile a
   now caps the edges drawn, not the copies held. Summoning sickness went into the key with it, from the
   same report: a Krenko activation adds seventeen Goblins that cannot attack, and a pile that mixed them
   with the ones that can would say the player has twenty-four attackers.
-- Guard: `src/board/stackGroups.test.ts` · `src/board/StackPile.test.tsx` · `src/board/BoardZone.css.test.ts` · `e2e/stack-groups.spec.ts`
+  Land piles fanned out the moment the pointer crossed them, which it does all the time while paying
+  mana: a pile of tapped lands spread into overlapping turned cards, each one cut by the next, and
+  pushed its neighbours aside, so in a game with a Kodama's Reach the lands "came out cut" and a
+  player asked for land piles to open only on a click (play report, 2026-11-25). The count is the
+  click target because the card itself is the land to tap.
+- Guard: `src/board/stackGroups.test.ts` · `src/board/StackPile.test.tsx` · `src/board/BoardZone.css.test.ts` · `e2e/stack-groups.spec.ts` · `e2e/land-fan.spec.ts`
 
 ### BRD-21 · A board settles: no card size keeps changing for ever
 Once a board has been drawn and nothing changes (no new game view, no window resize, no hover),
@@ -1228,26 +1234,23 @@ line under the overlay's title stays as it was, since it describes the state and
   2026-11-25).
 - Guard: `src/board/defeatedSeats.test.tsx`
 
-### BRD-66 · A card's margins are layout, never an animation
-No card slot animates `margin`, on the battlefield or in a pile. A slot's margins are the layout's
-own numbers, computed from `--card-w` (the pile's overlap, the footprint a tilted tapped card gives
-back), so the browser must apply them in the same frame the card size changes. Animated, the row is
-drawn at the previous card size for the length of the transition, and in a pile each card's error
-adds to the one before it: the tail leaves the band, which clips it, and the player sees a card
-sliced by a straight edge. What a card does animate is unchanged: its transform, its lift, its
-shadow, its ring, its opacity, and `left`, which is what fans a pile open on hover without touching
-its footprint (BRD-20).
+### BRD-66 · A look or a reveal that asks nothing of the player is a notice in the corner
+When the engine reveals cards or lets the player look at them (`GameView.revealed` / `lookedAt`)
+and none of those cards can be played or targeted from there, the client shows a notice in the
+top-left corner of the table instead of the full viewer (BRD-24): the window's title, the cards as
+small thumbnails that preview on hover, a close button and a `View` button that opens the full
+viewer. The notice goes away by itself after `REVEAL_TOAST_MS` (8 s), a thin bar under it counting
+down; pointing at it, focusing it or previewing one of its cards holds it until the pointer or the
+focus leaves. A notice that went away or was closed does not come back while the same cards stay in
+the view (the same rule as closing the viewer). A window with a card the player can play or target,
+and every companion window, still opens the full viewer, since it is a place to act; the viewer the
+player opened from `View` stays until closed.
 
-- Why: reported as "las tierras que estaban cortadas" over a screenshot of a board whose lands ended
-  in a card cut down the middle (2026-11-25). Measured in the gallery on `frame:mass-tokens` reached
-  from another board: with the margin animated the 51-card pile hung 19 px outside its band for
-  about 120 ms at 60 fps, and a slot's `margin-left` computed to `-120px`, the card size before the
-  change, while the slot itself was already 46 px wide. With no frames to spare (the same
-  measurement in a hidden window, where `requestAnimationFrame` falls to about 1 Hz) the transition
-  threw the pile's tail 3659 px out and held it there for over a second. A slot's width and its
-  margins then answer to two card sizes at once; with no animation they always answer to the same
-  one, so the pile's footprint is right in whatever frame it is drawn.
-- Guard: `src/board/CardSlot.css.test.ts`
+- Why: casting Kodama's Reach revealed the two lands and the full viewer opened in the middle of
+  the board and latched there, on top of the "put one onto the battlefield" pick and the board
+  after it; a player who did not know why it was open thought the game had broken (play report,
+  2026-11-25). MTG Arena shows a reveal as a passing notice in the corner.
+- Guard: `src/game/InfoWindows.test.tsx` · `e2e/info-windows.spec.ts` · `e2e/kodamas-reach.spec.ts`
 
 ### BRD-67 · A seat is solved before the paint that shows its new contents
 When a seat's contents change, the layout is solved and written before the browser paints that
@@ -1267,3 +1270,24 @@ error adds along the pile and its tail is drawn far outside the band, which clip
   after it was tried first and broke the settle sweep: it solves the board once per seat and writes
   sizes the next seat changes.
 - Guard: `src/board/layout/BoardLayoutProvider.test.tsx`
+
+### BRD-68 · A card's margins are layout, never an animation
+No card slot animates `margin`, on the battlefield or in a pile. A slot's margins are the layout's
+own numbers, computed from `--card-w` (the pile's overlap, the footprint a tilted tapped card gives
+back), so the browser must apply them in the same frame the card size changes. Animated, the row is
+drawn at the previous card size for the length of the transition, and in a pile each card's error
+adds to the one before it: the tail leaves the band, which clips it, and the player sees a card
+sliced by a straight edge. What a card does animate is unchanged: its transform, its lift, its
+shadow, its ring, its opacity, and `left`, which is what fans a pile open on hover without touching
+its footprint (BRD-20).
+
+- Why: reported as "las tierras que estaban cortadas" over a screenshot of a board whose lands ended
+  in a card cut down the middle (2026-11-25). Measured in the gallery on `frame:mass-tokens` reached
+  from another board: with the margin animated the 51-card pile hung 19 px outside its band for
+  about 120 ms at 60 fps, and a slot's `margin-left` computed to `-120px`, the card size before the
+  change, while the slot itself was already 46 px wide. With no frames to spare (the same
+  measurement in a hidden window, where `requestAnimationFrame` falls to about 1 Hz) the transition
+  threw the pile's tail 3659 px out and held it there for over a second. A slot's width and its
+  margins then answer to two card sizes at once; with no animation they always answer to the same
+  one, so the pile's footprint is right in whatever frame it is drawn.
+- Guard: `src/board/CardSlot.css.test.ts`

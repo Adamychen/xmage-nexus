@@ -213,6 +213,11 @@
   pointer-events: auto;
 }
 
+/* BRD-66: the reveal notice sits in the stage's top-left corner, beside the selector, not under it. */
+.gallery-overlay-root .reveal-toasts {
+  position: absolute;
+}
+
 .gallery-overlay-root .card-inspector-backdrop {
   pointer-events: auto;
 }

@@ -184,6 +184,17 @@ test.describe('galería de estados (P3)', () => {
     await openGallery(page)
     await showEntry(page, 'frame:opponent-reveal')
 
+    // BRD-66: the reveal is a corner notice first; it too must sit above the gallery.
+    const notice = page.getByTestId('reveal-toast')
+    await expect(notice).toBeVisible()
+    const noticeOnTop = await notice.evaluate((el) => {
+      const rect = el.getBoundingClientRect()
+      const hit = document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2)
+      return hit === el || el.contains(hit)
+    })
+    expect(noticeOnTop).toBe(true)
+    await notice.locator('.reveal-toast-expand').click()
+
     const overlay = page.locator('.pile-overlay')
     await expect(overlay).toBeVisible()
     await expect(overlay).toContainText('Aether Vial')

@@ -1,7 +1,6 @@
 import { act, cleanup, fireEvent, render } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import CardGrid from './CardGrid'
-import LibraryOrderDialog from './LibraryOrderDialog'
 import PileDialog from './PileDialog'
 import MulliganDialog from './MulliganDialog'
 import type { FeedbackPrompt } from './feedback'
@@ -93,30 +92,7 @@ describe('PRM-15: Arena card-selection fan (search, look at cards, pick from a l
   })
 })
 
-describe('PRM-15: cards that only show (library order, piles)', () => {
-  it('PRM-15: scry ordering inspects each card on right click without opening a redundant preview or moving it', () => {
-    const p: FeedbackPrompt = {
-      method: 'GAME_CHOOSE_CARDS_ORDER',
-      gameId: 'g-1',
-      title: 'Scry 2',
-      message: 'Put the cards on top of your library in any order',
-      mode: 'order',
-      options: CARDS.map((c) => ({ id: c.id, label: c.name, value: c.id })),
-      min: 0,
-      max: 2,
-      cards: CARDS,
-    }
-    const { container } = render(<LibraryOrderDialog prompt={p} send={send as never} cancel={vi.fn()} busy={false} />)
-    const cards = container.querySelectorAll('[data-arena-zone="top"] [data-arena-card]')
-    expect(cards).toHaveLength(2)
-    pointer(cards[0], 'pointerover', 'mouse')
-    expect(document.querySelector('.floating-card-preview')).toBeNull()
-    fireEvent.contextMenu(cards[1].querySelector('.arena-fan-card') as Element)
-    expect((getState().inspectedCard as { name?: string } | null)?.name).toBe('Lightning Bolt')
-    expect(container.querySelectorAll('[data-arena-zone="top"] [data-arena-card]')).toHaveLength(2)
-    expect(sendPlayerString).not.toHaveBeenCalled()
-  })
-
+describe('PRM-15: cards that only show (piles)', () => {
   it('PRM-15: each card of a pile inspects on right click without opening a redundant preview or choosing the pile', () => {
     const p: FeedbackPrompt = {
       method: 'GAME_CHOOSE_PILE',

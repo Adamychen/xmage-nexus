@@ -1,7 +1,7 @@
 import type { TargetProgress } from './progress'
 import type { CardView } from '../../net/types'
 
-export type FeedbackMode = 'boolean' | 'string' | 'uuid' | 'integer' | 'multiString' | 'mana' | 'combat' | 'order'
+export type FeedbackMode = 'boolean' | 'string' | 'uuid' | 'integer' | 'multiString' | 'mana' | 'combat'
 
 export interface FeedbackOption {
   id: string

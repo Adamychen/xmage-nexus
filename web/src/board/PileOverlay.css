@@ -336,6 +336,7 @@ html.fx-off .zone-fan-lift {
   animation-delay: calc(var(--flip-i, 0) * 90ms / var(--fx-speed, 1));
 }
 
+.pile-card-wrapper.is-flip-in.zone-fan-lift .pile-card,
 html.fx-off .pile-card-wrapper.is-flip-in .pile-card {
   animation: none !important;
 }

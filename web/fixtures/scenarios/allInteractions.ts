@@ -5,7 +5,6 @@ import { TABLE } from '../table-names'
  * 2. GAME_CHOOSE_COLOR (Selector de color de maná, ej. Utopia Sprawl)
  * 3. GAME_CHOOSE_PILE (Elección de pila, ej. Fact or Fiction)
  * 4. GAME_TARGET con cardsView1 (Cuadrícula CardGrid para tutores y búsquedas)
- * 5. GAME_CHOOSE_CARDS_ORDER (Scry / Surveil / Reordenar biblioteca con botones Top/Bottom)
  */
 
 import { makeBaseScenario } from '../fake'
@@ -20,7 +19,7 @@ export function allInteractionsScenario(): Scenario {
   const tableId = TABLE_ID
   const gameId = GAME_ID
 
-  let stage: 'ask' | 'color' | 'pile' | 'tutor' | 'scry' | 'finished' = 'ask'
+  let stage: 'ask' | 'color' | 'pile' | 'tutor' | 'finished' = 'ask'
 
   const commanderCard: CardView = makeCard({
     id: 'cmd-atraxa',
@@ -131,12 +130,6 @@ export function allInteractionsScenario(): Scenario {
     'c-birds': makeCard({ id: 'c-birds', name: 'Birds of Paradise', displayName: 'Birds of Paradise', manaCostLeftStr: ['{G}'], manaValue: 1, cardTypes: ['Creature'] }),
   }
 
-  const scryCards: Record<string, CardView> = {
-    'scry-ponder': makeCard({ id: 'scry-ponder', name: 'Ponder', displayName: 'Ponder', manaCostLeftStr: ['{U}'], manaValue: 1, cardTypes: ['Sorcery'] }),
-    'scry-brainstorm': makeCard({ id: 'scry-brainstorm', name: 'Brainstorm', displayName: 'Brainstorm', manaCostLeftStr: ['{U}'], manaValue: 1, cardTypes: ['Instant'] }),
-    'scry-opt': makeCard({ id: 'scry-opt', name: 'Opt', displayName: 'Opt', manaCostLeftStr: ['{U}'], manaValue: 1, cardTypes: ['Instant'] }),
-  }
-
   return makeBaseScenario({
     tableId,
     tableName: TABLE.allInteractions,
@@ -213,28 +206,16 @@ export function allInteractionsScenario(): Scenario {
           },
           GAME_ID,
         )
-      } else if (stage === 'scry') {
+      }
+    },
+    onSendPlayerUUID: (conn) => {
+      if (stage === 'tutor') {
         stage = 'finished'
         conn.broadcast('GAME_UPDATE', { gameView: getGameView() }, GAME_ID)
         conn.broadcast(
           'GAME_SELECT',
           {
             message: 'Prioridad en Fase Principal (M1)',
-            gameView: getGameView(),
-          },
-          GAME_ID,
-        )
-      }
-    },
-    onSendPlayerUUID: (conn) => {
-      if (stage === 'tutor') {
-        // Avanzar a 5. GAME_CHOOSE_CARDS_ORDER (Scry 3)
-        stage = 'scry'
-        conn.broadcast(
-          'GAME_CHOOSE_CARDS_ORDER',
-          {
-            message: 'Scry 3: Ordena las cartas de tu biblioteca o ponlas al fondo',
-            cardsView1: scryCards,
             gameView: getGameView(),
           },
           GAME_ID,

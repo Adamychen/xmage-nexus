@@ -1,0 +1,116 @@
+/* BRD-66: a look or a reveal that asks nothing of the player is a notice in the
+   top-left corner of the table, under the game strip and the top seat's
+   portrait, and never covers the middle of the board. */
+.reveal-toasts {
+  position: fixed;
+  top: 104px;
+  left: var(--sp-3);
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  max-width: min(360px, calc(100% - 2 * var(--sp-3)));
+  pointer-events: none;
+}
+
+.reveal-toast {
+  position: relative;
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-2h) var(--sp-2h);
+  border-radius: var(--r-lg);
+  background: rgb(var(--ink-2-rgb) / 0.94);
+  border: 1px solid rgb(var(--arena-glow-rgb) / 0.55);
+  box-shadow: 0 12px 30px var(--shade-4), 0 0 18px rgb(var(--arena-glow-rgb) / 0.25);
+  overflow: hidden;
+  animation: reveal-toast-in 220ms ease-out;
+}
+
+.reveal-toast-head {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1h);
+  min-width: 0;
+  color: var(--fg-1);
+}
+
+.reveal-toast-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: var(--fs-2xs);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.reveal-toast-close {
+  flex: none;
+}
+
+.reveal-toast-row {
+  display: flex;
+  gap: var(--sp-1h);
+  overflow-x: auto;
+  padding-bottom: var(--sp-0h);
+}
+
+.reveal-toast-card {
+  --card-w: clamp(64px, 11vh, 96px);
+  flex-shrink: 0;
+}
+
+.reveal-toast-expand {
+  align-self: flex-end;
+  padding: var(--sp-0h) var(--sp-2);
+  border: 1px solid var(--veil-5);
+  border-radius: var(--r-pill);
+  background: transparent;
+  color: var(--fg-1);
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.reveal-toast-expand:hover,
+.reveal-toast-expand:focus-visible {
+  border-color: rgb(var(--arena-glow-rgb) / 0.9);
+  color: var(--fg-hi);
+}
+
+.reveal-toast-timer {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 2px;
+  width: 100%;
+  background: rgb(var(--arena-glow-rgb) / 0.8);
+  transform-origin: left center;
+  animation-name: reveal-toast-timer;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+
+@keyframes reveal-toast-in {
+  from {
+    opacity: 0;
+    transform: translateX(-16px);
+  }
+}
+
+@keyframes reveal-toast-timer {
+  to {
+    transform: scaleX(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal-toast {
+    animation: none;
+  }
+  .reveal-toast-timer {
+    display: none;
+  }
+}

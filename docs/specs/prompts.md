@@ -70,13 +70,24 @@ already chosen stays visible even when it is no longer selectable.
   non-artifact in an "artifact card" tutor), and picking one did nothing (`6fccc8e84a`).
 - Guard: `src/game/CardGrid.test.tsx`
 
-### PRM-6 · Target picks go one card per click
-For `GAME_TARGET`, each click sends one card and the server re-asks; picks already made come back
-as chosen. The grid never collects several targets behind a Confirm button.
+### PRM-6 · A pick of several cards is chosen on the grid and sent once, with Confirm
+A `GAME_TARGET` card grid whose message states a maximum above one ("Select basic land cards
+(selected 0 of 2)") collects the player's picks on the grid: a click marks or unmarks a card, no
+more than the maximum, the progress line counts the marked cards, and nothing goes to the server
+until Confirm. Confirm turns the picks into a plan that answers the engine's re-asks one card per
+prompt, the same runner as PRM-20: the next marked card the prompt does not list as chosen, and Done
+once every marked card is in when fewer than the maximum were marked. A library search asks for
+Done twice (`TargetCardInLibrary.choose` wraps the pick in a second loop), so the plan answers Done
+at most twice; a prompt over other cards, or one that does not offer the next card, is shown
+normally and ends the plan. A grid with no stated maximum above one still sends a card per click.
 
-- Why: the engine keeps only the latest answer that arrives while it is busy and re-asks after
-  every picked card, so a batched confirm lost every pick but the last (`df969dee61`).
-- Guard: `src/game/CardGrid.test.tsx`
+- Why: each click went to the server at once and the engine closes the pick when the last card
+  fits, so the second land of a Kodama's Reach was gone before the player could look at the pair,
+  and a player who wanted one land had to press Done twice (play report, 2026-11-25). A single
+  batched confirm is still wrong: the engine keeps only the latest answer that arrives while it is
+  busy (`df969dee61`), which is why the plan sends one card per re-ask. Checked live against the
+  local server: one land and two lands both resolve with no extra question.
+- Guard: `src/game/CardGrid.test.tsx` · `src/game/feedback/libraryPlan.test.ts` · `fixtures/recordedPrompts.test.ts` · `e2e/kodamas-reach.spec.ts`
 
 ### PRM-7 · A required prompt has no cancel
 A required prompt shows no cancel button, in a card grid or on the targeting bar; an optional one
@@ -160,7 +171,9 @@ Ordering simultaneous triggers uses a full-screen Arena overlay laid out like th
 one draggable horizontal fan of source cards with `Last` on the left (bottom of the stack, sent
 first) and `First` on the right (top of the stack, resolves first), a stack-style speech bubble
 on the right showing the active trigger's text and targets without shifting the fan height, and
-`Done` underneath to confirm and chain the engine's one-pick-at-a-time prompts. Each trigger shows the live source card
+`Done` underneath to confirm and chain the engine's one-pick-at-a-time prompts. No card and no
+bubble carries a `#N` rank: `Last` and `First` at the ends of the fan say the order, and a trigger
+already placed carries only a check. Each trigger shows the live source card
 (right click opens the live permanent in the inspector) and, when it points at objects
 (`CardView.targets`: chosen targets or the card its effect follows, like Tergrid's "that card"),
 each of those cards in the bubble named with the zone it is in now ("in Rival's graveyard").
@@ -175,15 +188,16 @@ overlay.
 - Why: with Tergrid, God of Fright and several opponents discarding at once, the dialog listed three
   identical Tergrid rows whose only difference was a card name in small print, and that card, already
   in a graveyard, could not be looked at (reported 2026-11-11). The Swing client shows the trigger as
-  a card and repeats the related object only as text.
+  a card and repeats the related object only as text. The `#N` ranks on the fan and in the bubble
+  went at the user's request (26-nov-2026), as they did on the stack (STK-11).
 - Guard: `src/game/TriggerOrderDialog.test.tsx` · `src/game/triggerOrder.test.ts` · `e2e/trigger-order.spec.ts`
 
 ### PRM-15 · Every card a prompt shows can be looked at without choosing it
 Every card shown inside a prompt can be seen enlarged, as on the board, and looking at it never answers
-the prompt: the library order dialog, the London mulligan's bottom
+the prompt: the Arena library overlay, the London mulligan's bottom
 pick, and the revealed and looked-at cards inside a prompt. The zone viewers (graveyard, exile, library,
 the revealed and looked-at windows, the known hand, the cards playable from other zones) and the Arena
-fans (`CardGrid`, `PileDialog`, `LibraryOrderDialog`, `ArenaLibraryPrompt`) lift their own card large on hover and open no floating preview; right
+fans (`CardGrid`, `PileDialog`, `ArenaLibraryPrompt`) lift their own card large on hover and open no floating preview; right
 clicking any card (even a non-selectable one) opens the card inspector without
 choosing it. A card that only shows (a revealed card nobody can play) is itself the preview
 control: pointing at it or focusing it shows the floating preview, a touch shows it and keeps it until the

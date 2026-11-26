@@ -22,7 +22,7 @@
      ring keeps every state it had; only `--slot-ring` changes colour now. */
   --slot-ring: var(--veil-3);
   border: 0;
-  /* BRD-66: `margin` is not in this list. A card's margins are the layout's own numbers, derived
+  /* BRD-68: `margin` is not in this list. A card's margins are the layout's own numbers, derived
      from `--card-w`, so animating them draws the row at the previous card size for a quarter of a
      second: in a pile each card's error adds to the one before it and the tail is thrown out of the
      band, where it is drawn sliced. */

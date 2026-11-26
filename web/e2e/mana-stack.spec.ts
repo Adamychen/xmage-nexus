@@ -13,7 +13,7 @@ test.describe('Mana permanents next to a land pile', () => {
       const pile = myZone.locator('.stack-group[data-stack-name="Plains"][data-count="3"]')
       await expect(pile).toHaveCount(1, { timeout: 30_000 })
       await page.mouse.move(2, 2)
-      await pile.hover()
+      await pile.locator('button.stack-group-badge').click()
       await expect(pile).toHaveAttribute('data-spread', '')
       await pile.evaluate((el) =>
         Promise.all(el.parentElement!.getAnimations({ subtree: true }).filter((a) => a instanceof CSSTransition).map((a) => a.finished.catch(() => undefined))),

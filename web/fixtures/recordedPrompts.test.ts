@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url'
 import { describe, it, expect } from 'vitest'
 import { parseFeedback } from '../src/game/feedback/parse'
 import type { LibraryStep } from '../src/game/feedback/types'
+import { createLibraryPlan, nextPlanAnswer } from '../src/game/feedback/libraryPlan'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const PROMPTS_DIR = path.join(__dirname, 'recorded', 'prompts')
@@ -67,4 +68,32 @@ describe('prompt texts recorded from the engine', () => {
       })
     })
   }
+})
+
+describe("kodamas-reach-chain.json (PRM-6: a library search for up to two cards)", () => {
+  const recording = load('kodamas-reach-chain.json')
+  const prompts = parsed(recording).filter((prompt) => prompt?.method === 'GAME_TARGET')
+
+  it('PRM-6: the search states its maximum only in the message, and the parser reads it', () => {
+    const search = prompts[0]!
+    expect(search.max, 'the engine leaves max at 0').toBe(0)
+    expect(search.progress).toEqual({ selected: 0, max: 2 })
+    expect(search.libraryStep).toBeUndefined()
+  })
+
+  it('PRM-6: a plan of two lands answers the two search prompts and leaves the battlefield pick to the player', () => {
+    const [search, again, battlefield] = prompts
+    const away = search!.options.filter((o) => /Forest|Mountain/.test(o.label)).map((o) => o.id)
+    const chosen = again!.chosenTargets ?? []
+    const ordered = [...chosen, ...away.filter((id) => !chosen.includes(id))].slice(0, 2)
+    let plan = createLibraryPlan(search!.gameId, (search!.cards ?? []).map((c) => c.id), { mode: 'pick', top: [], away: ordered })
+    const first = nextPlanAnswer(plan, search!)!
+    expect(first.answer).toEqual({ kind: 'uuid', value: ordered[0] })
+    plan = first.plan
+    const second = nextPlanAnswer(plan, again!)!
+    expect(second.answer).toEqual({ kind: 'uuid', value: ordered[1] })
+    expect(second.plan.settled).toBe(true)
+    expect(nextPlanAnswer(second.plan, battlefield!), 'the battlefield pick is a new decision').toBeNull()
+    expect(battlefield!.cards?.map((c) => c.name).sort()).toEqual(['Forest', 'Mountain'])
+  })
 })

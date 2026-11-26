@@ -28,12 +28,6 @@ describe('isBlockingModal', () => {
     expect(isBlockingModal(s)).toBe(true)
   })
 
-  it('PRM-1: is true for library-order (mode order) feedback', () => {
-    const s = base()
-    s.feedback = { method: 'GAME_CHOOSE_CARDS_ORDER', mode: 'order', gameId: 'g', title: '', message: '', items: [], min: 0, max: 0 } as never
-    expect(isBlockingModal(s)).toBe(true)
-  })
-
   it('PRM-1: is true for a card-grid GAME_TARGET feedback', () => {
     const s = base()
     s.feedback = { method: 'GAME_TARGET', options: [], cards: [{ id: 'c1', name: 'Forest' }], sourceName: '', min: 0, max: 0, gameId: 'g' } as never
