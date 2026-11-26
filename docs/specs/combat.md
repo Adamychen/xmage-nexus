@@ -204,3 +204,17 @@ it belongs and the board never guesses it from whose turn it is.
   (CMB-4, 25-nov-2026). The gap went into the solver's width model after the last blocker of a
   three-card row ran 53 px past its seat's frame.
 - Guard: `src/board/combatColumns.test.ts` · `src/board/layout/itemModel.test.ts`
+
+### CMB-15 · A pile picks its attackers one at a time
+While the game is asking which creatures attack or block, a pile of identical creatures stays a
+pile. Only a copy the player has already committed leaves it: one picked, one attacking, one
+blocking. The pile itself takes the click, and each click takes one more copy out of it and into
+the combat, until the player stops or the pile runs out; it does not fan open while that question
+is on screen, because the pile is what the player is aiming at. A copy the game asks the player to
+pick for something else (a target) still leaves the pile, as it always did (BRD-20).
+
+- Why: every untapped creature can be picked at the declare step, and the board took every one of
+  them out of its pile, so a table of seventeen Goblins burst into seventeen cards the moment the
+  attack step began. The player asked for the opposite: the pile holds, and clicking it peels one
+  attacker off at a time (26-nov-2026).
+- Guard: `src/board/BoardZone.pileCards.test.tsx`

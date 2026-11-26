@@ -325,13 +325,16 @@ export default function BoardZone({
   const promptChosenSet = useMemo(() => new Set(promptChosenTargets ?? []), [promptChosenTargets])
   const attackingSet = useMemo(() => new Set(attackingIds), [attackingIds])
   const blockingSet = useMemo(() => new Set(blockingIds), [blockingIds])
+  // CMB-15: only a creature that is already committed leaves its pile (picked, attacking,
+  // blocking). One that merely could be picked stays in it: at the declare step every untapped
+  // creature can be picked, and taking them all out broke every pile on the board at once.
   const busyIds = useMemo(() => {
     const busy = new Set<string>()
-    for (const s of [combatSelectableSet, combatChosenSet, attackingSet, blockingSet]) {
+    for (const s of [combatChosenSet, attackingSet, blockingSet]) {
       for (const id of s) busy.add(id)
     }
     return busy
-  }, [combatSelectableSet, combatChosenSet, attackingSet, blockingSet])
+  }, [combatChosenSet, attackingSet, blockingSet])
   const stackExcludedIds = useMemo(() => new Set([...busyIds, ...targetIds]), [busyIds, targetIds])
 
   const finalHand = useMemo((): CardsView => {
@@ -656,8 +659,13 @@ export default function BoardZone({
   const renderStackGroup = (group: StackGroup, isCreature: boolean) => {
     const isLand = group.kind === 'land'
     const noPreview = !isLand && fannedTokenPile === group.key
+    // CMB-15: with a combat selection open the pile is the button: each click takes one copy out
+    // of it and into the combat, and the rest stay piled until the player picks them or stops.
+    const pickable = onCardClick ? group.items.find(([id]) => combatSelectableSet.has(id) && !combatChosenSet.has(id)) : undefined
+    const onPick = pickable ? () => onCardClick?.(pickable[0]) : undefined
     return (
       <StackPile
+        onPick={onPick}
         key={`sg-${group.key}`}
         className={`stack-group${isLand ? ' land-group' : ' token-pile'} stack-group--${group.kind}`}
         name={group.name}

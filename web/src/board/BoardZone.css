@@ -794,3 +794,13 @@
     transition: none;
   }
 }
+
+/* CMB-15: while a combat selection is open the pile is the thing the player aims at, so it takes
+   the pointer as one target instead of fanning into cards under it. */
+.board-zone .stack-group[data-picking] {
+  cursor: pointer;
+}
+
+.board-zone .stack-group[data-picking] > .card-slot {
+  pointer-events: none;
+}

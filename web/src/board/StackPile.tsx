@@ -108,6 +108,9 @@ interface StackPileProps {
   /** BRD-20: the pile fans out only from its count badge (land piles), never on hover. */
   fanOnBadge?: boolean
   onFanChange?: (fanned: boolean) => void
+  /** CMB-15: with a combat selection open the pile is a button that takes one copy out of it per
+   *  click. While it is set the pile does not fan: the pile itself is what the player is aiming at. */
+  onPick?: () => void
   children: ReactNode
 }
 
@@ -120,7 +123,7 @@ interface StackPileProps {
  * the fan reaches past the pile, so a mana rock beside a land pile is never
  * covered.
  */
-export default function StackPile({ className, name, count, cardIds, landName, fanDelayMs = 0, fanOnBadge = false, onFanChange, children }: StackPileProps) {
+export default function StackPile({ className, name, count, cardIds, landName, fanDelayMs = 0, fanOnBadge = false, onFanChange, onPick, children }: StackPileProps) {
   const { t } = useTranslation()
   const ref = useRef<HTMLDivElement>(null)
   const [open, setOpen] = useState(false)
@@ -202,8 +205,13 @@ export default function StackPile({ className, name, count, cardIds, landName, f
       data-count={count}
       data-land-name={landName}
       title={`${name} (×${count})`}
+      data-picking={onPick ? '' : undefined}
+      onClick={onPick ? (e) => {
+        e.stopPropagation()
+        onPick()
+      } : undefined}
       onPointerEnter={(e) => {
-        if (fanOnBadge) return
+        if (fanOnBadge || onPick) return
         const pile = e.currentTarget
         cancelFan()
         if (fanDelayMs > 0 && e.pointerType === 'mouse') {
@@ -214,6 +222,13 @@ export default function StackPile({ className, name, count, cardIds, landName, f
       }}
       onPointerLeave={(e) => close(e.currentTarget)}
       onMouseLeave={(e) => close(e.currentTarget)}
+      role={onPick ? 'button' : undefined}
+      tabIndex={onPick ? 0 : undefined}
+      onKeyDown={onPick ? (e) => {
+        if (e.key !== 'Enter' && e.key !== ' ') return
+        e.preventDefault()
+        onPick()
+      } : undefined}
     >
       {children}
       {fanOnBadge && count <= PILE_FAN_MAX ? (

@@ -47,3 +47,50 @@ describe('BoardZone pileCards', () => {
     expect(container.querySelector('.bz-status-row')!.querySelector(CHIP_SELECTOR)).not.toBeNull()
   })
 })
+
+describe('CMB-15: a pile in the declare step', () => {
+  afterEach(() => {
+    setState({ game: null, gameId: null })
+    cleanup()
+  })
+
+  const goblins = (n: number) =>
+    Object.fromEntries(
+      Array.from({ length: n }, (_, i) => [
+        `t-${i}`,
+        { id: `t-${i}`, name: 'Goblin Token', isToken: true, cardTypes: ['Creature'], power: '1', toughness: '1', counters: [] },
+      ]),
+    )
+
+  const seat = (battlefield: Record<string, unknown>) =>
+    makePlayer({ playerId: 'p1', name: 'Alice', controlled: true, battlefield: battlefield as never })
+
+  it('CMB-15: every copy that can be picked stays in the pile, so the board does not break apart', () => {
+    const player = seat(goblins(6))
+    setState({ game: makeGameView({ players: [player] }) as never })
+    const ids = Object.keys(goblins(6))
+    const { container } = render(<BoardZone player={player} combatSelectable={ids} onCardClick={() => {}} />)
+
+    expect(container.querySelectorAll('.stack-group')).toHaveLength(1)
+    expect(container.querySelector('.stack-group')?.getAttribute('data-count')).toBe('6')
+  })
+
+  it('CMB-15: a click on the pile picks one copy, and a picked one leaves it', () => {
+    const player = seat(goblins(6))
+    setState({ game: makeGameView({ players: [player] }) as never })
+    const ids = Object.keys(goblins(6))
+    const picked: string[] = []
+    const { container, rerender } = render(
+      <BoardZone player={player} combatSelectable={ids} onCardClick={(id) => picked.push(id)} />,
+    )
+
+    const pile = container.querySelector('.stack-group[data-picking]') as HTMLElement
+    expect(pile, 'the pile is what takes the click').not.toBeNull()
+    pile.click()
+    expect(picked).toHaveLength(1)
+    expect(ids).toContain(picked[0])
+
+    rerender(<BoardZone player={player} combatSelectable={ids} combatChosen={[picked[0]]} onCardClick={() => {}} />)
+    expect(container.querySelector('.stack-group')?.getAttribute('data-count')).toBe('5')
+  })
+})
