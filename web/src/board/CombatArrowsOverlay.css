@@ -1,14 +1,15 @@
 /* TGT-10: an arrow says who is attacking whom or what a spell is pointing at, so it is drawn over
    the board's own chrome (the phase strip, the turn strip, a seat's chip) instead of sliding
-   under it. It still passes under what the player is reading or acting on: a card lifted out of
-   the hand (50), the menus and the dialogs (200 and up) and every overlay above them. */
+   under it. It still passes under what the player is reading or acting on: the chat and log panel
+   and the dock (40 and 41), a card lifted out of the hand (50), the menus and the dialogs (200 and
+   up) and every overlay above them. Hence 39: over the stack's cascade (38), under all of those. */
 .combat-arrows-overlay {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   pointer-events: none;
-  z-index: 40;
+  z-index: 39;
   overflow: visible;
 }
 

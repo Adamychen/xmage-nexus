@@ -107,12 +107,15 @@ from the source to each target already chosen.
 ### TGT-10 · An arrow is drawn over the board, not under it
 The arrow layer sits above everything the board itself paints: the phase strip, the player chips,
 the zone piles and the badges on a card. It still passes under what is deliberately in front of
-the board, a card lifted out of the hand, the menus and the dialogs.
+the board: the chat and log panel, the dock, a card lifted out of the hand, the menus and the
+dialogs. Reading the chat during a combat is one of the things the arrows are drawn for.
 
 - Why: an arrow that disappears behind a strip of chrome does not say who is attacking whom, which
   is its whole job; it was drawn at `z-index: 28`, under the phase strip and the piles, with an
-  exception that lifted it only while the stack drawer was open.
-- Guard: `src/board/CombatArrowsOverlay.test.tsx` · `e2e/game-menu-overlay.spec.ts`
+  exception that lifted it only while the stack drawer was open. It then shared a layer with the
+  chat and log panel and won on document order, so the blockers' arrows were drawn across the chat
+  the player was reading (user, 26-nov-2026): one below it now, still over the stack's cascade.
+- Guard: `src/board/CombatArrowsOverlay.test.tsx` · `src/board/CombatArrowsOverlay.css.test.ts` · `e2e/game-menu-overlay.spec.ts`
 
 ### TGT-11 · An arrow is a beam that points, not a ladder of dashes
 An arrow is one colour the whole way, ending in a notched dart, with a dark seam under it where it
