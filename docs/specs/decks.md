@@ -520,14 +520,18 @@ card slot by, held in one token so the two cannot drift apart. The grid's card i
 picture instead of bordered, because a border insets the picture and the arc then follows the
 wrapper's edge rather than the card's corner.
 
-A place that shows a crop of the art rather than the whole card keeps its own rounding: the stack
-faces, the strip rows, the deck covers and a custom art thumbnail, where no printed corner reaches
-the edge.
+The editor's piles and the cards of the sample hand are whole cards too: a pile card is drawn at
+the picture's own 488 x 680 and overlapped by the next one, so the corners it shows are printed
+ones. A place that shows a crop of the art rather than the whole card keeps its own rounding: the
+strip rows, the deck covers and a custom art thumbnail, where no printed corner reaches the edge.
 
 - Why: the pictures carry no transparency and hold white outside the printed corner, so a radius
   given as a length misses that corner at every size but one and leaves a white wedge. The board
   had already moved to the share, while the deck screens still rounded by `--r-base`, `--r-sm`,
-  `--r-mid` and `--r-xl` (request of 2026-11-25).
+  `--r-mid` and `--r-xl` (request of 2026-11-25). The piles were read as crops and left at 4 px,
+  and the sample hand's cards at `--r-md`, so the editor still showed white corners the day after
+  (user, 2026-11-26); a pile card measures 210 x 294 on screen, the picture's own ratio, which is
+  what gives it away.
 - Guard: `src/decks/cardCorners.css.test.ts`
 
 ### DCK-34 · The join dialog's importer opens by itself only for a player with no decks

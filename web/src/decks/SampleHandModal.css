@@ -124,7 +124,9 @@
 .sample-card-item {
   width: 130px;
   height: 185px;
-  border-radius: var(--r-md);
+  /* DCK-33: a card of the sample hand is a whole card, so it rounds by the share of its own size
+     the board rounds a card slot by, not by a length that only fits one size. */
+  border-radius: var(--r-card);
   background: var(--ink-3);
   border: 2px solid var(--veil-3);
   display: flex;

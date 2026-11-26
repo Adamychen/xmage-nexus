@@ -12,10 +12,12 @@ const tokens = read('../ui/tokens.css')
 /** Every place in the deck screens that draws a whole card picture, by the block that shapes it. */
 const CARD_SHAPED: { file: string; selector: string }[] = [
   { file: 'ArenaCardGrid.css', selector: '.arena-grid-card-img-wrapper' },
+  { file: 'ArenaCardStacks.css', selector: '.arena-stack-face' },
   { file: 'CardFocusPanel.css', selector: '.card-focus-image,\n.card-focus-placeholder' },
   { file: 'CardPrintingsModal.css', selector: '.printing-img-wrap' },
   { file: 'DeckHoverPreview.css', selector: '.arena-floating-preview .preview-face-card' },
   { file: 'SampleHandModal.css', selector: '.sample-hand-preview-dock' },
+  { file: 'SampleHandModal.css', selector: '.sample-card-item' },
 ]
 
 function block(file: string, selector: string): string {

@@ -130,7 +130,9 @@
   display: block;
   position: absolute;
   inset: 0;
-  border-radius: var(--r-xs);
+  /* DCK-33: a pile card is a whole card, drawn at the picture's own 488 x 680, so its printed
+     corners reach this box and it rounds by the share the board rounds a card slot by. */
+  border-radius: var(--r-card);
   overflow: hidden;
   background: var(--ink-3);
   box-shadow: 0 2px 6px var(--shade-2);
