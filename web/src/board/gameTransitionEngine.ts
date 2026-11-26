@@ -1332,11 +1332,11 @@ export function detectAndAnimateTransitions(prevGame: GameView, nextGame: GameVi
           originRect = handRect
         }
 
-        if ((perm as { isToken?: boolean }).isToken && !wasInStack) {
+        const createdToken = (perm as { isToken?: boolean }).isToken === true && !wasInStack
+        if (createdToken) {
+          originRect = null
           scheduleAfterLayout(() => spawnImpact('token-pop', getRect(`[data-card-id="${permId}"]`)))
-        }
-
-        if (originRect) {
+        } else if (originRect) {
           const enteringLand = !wasInStack && (perm.cardTypes ?? []).some((t) => String(t).toUpperCase() === 'LAND')
           flyAfterLayout(permId, perm, originRect, [
             `[data-card-id="${permId}"]`,

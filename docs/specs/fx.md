@@ -53,11 +53,15 @@ nothing hanging: no hidden slot, no half-entered card, no orphan flight.
 An animation plays when the value it shows changes between two views, never because a view
 arrived or a component mounted. The opening hand, a full hand refresh and the mulligan do not
 slide; tokens already on the battlefield at mount do not pop; cards already untapped do not wave;
-a re-render with the same state starts nothing.
+a re-render with the same state starts nothing. A token created on the battlefield was never in
+any zone, so it does not fly in from anywhere: it pops in its own slot, as in MTG Arena, while a
+card that enters from the hand, the stack, the graveyard or the exile still flies from there.
 
 - Why: plan §1 ("animate only when the underlying value actually changes, never on every
-  `GAME_UPDATE`"); `4b3228b639` kept initial hands, full refreshes and mulligans still.
-- Guard: `src/board/useDrawSlide.test.tsx` · `src/board/useTokenPop.test.tsx` · `src/board/useUntapWave.test.tsx`
+  `GAME_UPDATE`"); `4b3228b639` kept initial hands, full refreshes and mulligans still. A new
+  permanent with no known origin was flown in from the hand, so a token rose like a played card
+  and then popped on top of that (user report, 26-nov-2026).
+- Guard: `src/board/useDrawSlide.test.tsx` · `src/board/useTokenPop.test.tsx` · `src/board/useUntapWave.test.tsx` · `src/board/gameTransitionEngine.test.ts`
 
 ### FX-6 · A hit shows when it lands
 Combat strikes start when combat damage is dealt, never while attackers or blockers are being
