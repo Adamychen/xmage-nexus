@@ -171,7 +171,9 @@ Ordering simultaneous triggers uses a full-screen Arena overlay laid out like th
 one draggable horizontal fan of source cards with `Last` on the left (bottom of the stack, sent
 first) and `First` on the right (top of the stack, resolves first), a stack-style speech bubble
 on the right showing the active trigger's text and targets without shifting the fan height, and
-`Done` underneath to confirm and chain the engine's one-pick-at-a-time prompts. Each trigger shows the live source card
+`Done` underneath to confirm and chain the engine's one-pick-at-a-time prompts. No card and no
+bubble carries a `#N` rank: `Last` and `First` at the ends of the fan say the order, and a trigger
+already placed carries only a check. Each trigger shows the live source card
 (right click opens the live permanent in the inspector) and, when it points at objects
 (`CardView.targets`: chosen targets or the card its effect follows, like Tergrid's "that card"),
 each of those cards in the bubble named with the zone it is in now ("in Rival's graveyard").
@@ -186,7 +188,8 @@ overlay.
 - Why: with Tergrid, God of Fright and several opponents discarding at once, the dialog listed three
   identical Tergrid rows whose only difference was a card name in small print, and that card, already
   in a graveyard, could not be looked at (reported 2026-11-11). The Swing client shows the trigger as
-  a card and repeats the related object only as text.
+  a card and repeats the related object only as text. The `#N` ranks on the fan and in the bubble
+  went at the user's request (26-nov-2026), as they did on the stack (STK-11).
 - Guard: `src/game/TriggerOrderDialog.test.tsx` · `src/game/triggerOrder.test.ts` · `e2e/trigger-order.spec.ts`
 
 ### PRM-15 · Every card a prompt shows can be looked at without choosing it

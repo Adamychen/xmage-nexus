@@ -442,7 +442,6 @@ export default function StackZone({
         {shownGroups.map((group, gi) => {
           const [id, card] = group.items[0]
           const count = group.items.length
-          const idx = group.start
           const isTop = gi === 0
           const isAbility = isStackAbility(card)
           const isCopy = isCopyCard(card)
@@ -476,7 +475,7 @@ export default function StackZone({
                 <StackCardFace card={card} rendered={cardRender === 'rendered'} />
               </div>
             </RecordedStackEntry>
-            {openGroup && group.items.map(([subId, subCard], k) => (
+            {openGroup && group.items.map(([subId, subCard]) => (
               <RecordedStackEntry
                 key={subId}
                 id={subId}
@@ -485,7 +484,6 @@ export default function StackZone({
                 onMouseEnter={(e) => handleHover(subCard, e.currentTarget.getBoundingClientRect())}
                 onMouseLeave={() => handleHover(null)}
               >
-                <span className="stack-tl-pos">#{idx + k + 1}</span>
                 <StackEntryCardName card={subCard} />
               </RecordedStackEntry>
             ))}

@@ -242,20 +242,20 @@ export default function TriggerOrderDialog({ prompt, sendNow, busy }: TriggerOrd
   const sentCount = planActive && plan ? plan.sent.length : 0
   const totalCount = planActive && plan ? plan.picks.length : 0
 
-  const renderOverlay = (card: CardView, order: number) => {
+  const renderOverlay = (card: CardView) => {
     const id = card.id as string
     const entry = entryById.get(id)
     if (!entry) return null
-    const resolutionIndex = visibleCards.length - order
-    const isFirst = resolutionIndex === 1
     const sibling = (sourceCounts.get(triggerSourceKey(entry.card)) ?? 0) > 1
     const objects = sibling ? triggerObjects(entry.card, game, names) : []
     const isActive = activeEntry?.card.id === id
     return (
       <>
-        <span className={`trigger-fan-rank${isFirst ? ' is-first' : ''}${isActive ? ' is-active' : ''}${entry.sent ? ' is-sent' : ''}`}>
-          {entry.sent ? <Icon name="check" size={11} /> : `#${resolutionIndex}`}
-        </span>
+        {entry.sent && (
+          <span className={`trigger-fan-rank is-sent${isActive ? ' is-active' : ''}`}>
+            <Icon name="check" size={11} />
+          </span>
+        )}
         {sibling && objects.length > 0 && (
           <span className="trigger-fan-target" title={objects.map((o) => o.name).join(', ')}>
             → {objects[0].name}
@@ -274,7 +274,6 @@ export default function TriggerOrderDialog({ prompt, sendNow, busy }: TriggerOrd
     const extras = objects.length > 0 && objects.every((object) => object.card || object.isPlayer) ? [] : triggerExtraRules(card)
     const savedKind = saved[card.id]
     const activeFanIndex = displayEntries.findIndex((e) => e.card.id === card.id)
-    const resolutionNumber = displayEntries.length - activeFanIndex
     const canMoveLeft = !busy && !planActive && activeFanIndex > 0
     const canMoveRight = !busy && !planActive && activeFanIndex >= 0 && activeFanIndex < displayEntries.length - 1
 
@@ -285,9 +284,6 @@ export default function TriggerOrderDialog({ prompt, sendNow, busy }: TriggerOrd
             <span className="trigger-bubble-title">
               <Icon name="zap" size={12} aria-hidden />
               <span className="trigger-bubble-name">{name}</span>
-              <span className={`trigger-bubble-rank${resolutionNumber === 1 ? ' is-first' : ''}`}>
-                #{resolutionNumber}
-              </span>
             </span>
             {planActive && (sent || nextUp) ? (
               <span className={`trigger-state${sent ? ' is-sent' : ' is-next'}`}>

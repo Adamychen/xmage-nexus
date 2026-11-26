@@ -59,14 +59,14 @@ describe('a11y contrast minimums (C.15, inspection-backed)', () => {
   const feed = css('./game/ActionFeedCard.css')
 
   it('stack timeline small text is >= 0.687rem', () => {
-    for (const sel of ['.stack-tl-pos', '.stack-controller-pill', '.stack-tl-type-badge', '.stack-tl-subtype', '.stack-tl-copy-badge']) {
+    for (const sel of ['.stack-controller-pill', '.stack-tl-type-badge', '.stack-tl-subtype', '.stack-tl-copy-badge']) {
       expect(fontSizeRem(block(stack, sel)), sel).toBeGreaterThanOrEqual(0.687)
     }
   })
 
   it('stack timeline greys meet 4.5:1 on dark backgrounds', () => {
     const lightestSurface = tokenValue('--ink-4')
-    for (const sel of ['.stack-tl-pos', '.stack-tl-subtype']) {
+    for (const sel of ['.stack-tl-subtype']) {
       expect(contrast(colorOf(block(stack, sel)), lightestSurface), sel).toBeGreaterThanOrEqual(4.5)
     }
   })

@@ -75,11 +75,11 @@ beforeEach(() => {
 })
 
 describe('TriggerOrderDialog', () => {
-  it('renders one fan card per trigger ordered Last to First with the active trigger in the bubble', () => {
+  it('PRM-14: renders one fan card per trigger ordered Last to First, with no #N rank, and the active trigger in the bubble', () => {
     const { container } = renderDialog(prompt())
     const cards = [...container.querySelectorAll('[data-arena-card]')]
     expect(cards.map((el) => el.getAttribute('data-arena-card'))).toEqual([T2, T1])
-    expect([...container.querySelectorAll('.trigger-fan-rank')].map((el) => el.textContent)).toEqual(['#2', '#1'])
+    expect(container.textContent).not.toMatch(/#\d/)
     const bubble = container.querySelector('[data-testid="trigger-bubble"]') as Element
     expect(bubble.textContent).toContain('Soul Warden')
     expect(bubble.textContent).toContain('Whenever another creature enters')
