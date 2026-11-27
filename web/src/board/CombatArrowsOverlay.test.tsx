@@ -464,6 +464,64 @@ describe('CombatArrowsOverlay', () => {
   })
 })
 
+describe('CMB-18: a chosen attacker with no defender named', () => {
+  const rect = (left: number, top: number, width: number, height: number) =>
+    ({ left, top, width, height, right: left + width, bottom: top + height, x: left, y: top, toJSON: () => {} }) as DOMRect
+
+  const table = (seats: string[]) => {
+    const boardDiv = document.createElement('div')
+    document.body.appendChild(boardDiv)
+    boardDiv.getBoundingClientRect = () => rect(0, 0, 1000, 800)
+
+    const attCard = document.createElement('div')
+    attCard.setAttribute('data-card-id', 'att-1')
+    attCard.getBoundingClientRect = () => rect(100, 400, 100, 140)
+    boardDiv.appendChild(attCard)
+
+    seats.forEach((id, i) => {
+      const zone = document.createElement('div')
+      zone.setAttribute('data-player-id', id)
+      zone.getBoundingClientRect = () => rect(i * 300, 0, 300, 200)
+      const avatar = document.createElement('div')
+      avatar.setAttribute('data-player-anchor', id)
+      avatar.getBoundingClientRect = () => rect(100 + i * 300, 50, 60, 60)
+      zone.appendChild(avatar)
+      boardDiv.appendChild(zone)
+    })
+
+    const game = {
+      step: 'DECLARE_ATTACKERS',
+      turn: 3,
+      activePlayerId: 'p-me',
+      myPlayerId: 'p-me',
+      combat: [],
+      players: [
+        { playerId: 'p-me', name: 'me', life: 20, controlled: true, battlefield: { 'att-1': {} } },
+        ...seats.map((id) => ({ playerId: id, name: id, life: 20, controlled: false, battlefield: {} })),
+      ],
+    }
+    return { boardRef: { current: boardDiv }, game }
+  }
+
+  it('CMB-18: with more than one seat to attack, the marked creature draws no arrow at a guessed one', () => {
+    const { boardRef, game } = table(['p-a', 'p-b'])
+    const { container, unmount } = render(
+      <CombatArrowsOverlay game={game as never} boardRef={boardRef} combatMode="attack" combatChosen={['att-1']} />,
+    )
+    expect(container.querySelector('.arrow-path.arrow-attack')).toBeNull()
+    unmount()
+  })
+
+  it('CMB-18: with one seat to attack there is nothing to guess, so the arrow is drawn', () => {
+    const { boardRef, game } = table(['p-a'])
+    const { container, unmount } = render(
+      <CombatArrowsOverlay game={game as never} boardRef={boardRef} combatMode="attack" combatChosen={['att-1']} />,
+    )
+    expect(container.querySelector('.arrow-path.arrow-attack')).not.toBeNull()
+    unmount()
+  })
+})
+
 describe('CombatArrowsOverlay — stacking', () => {
   const css = (file: string) => readFileSync(new URL(file, import.meta.url), 'utf8')
 

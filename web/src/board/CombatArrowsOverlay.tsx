@@ -301,7 +301,11 @@ export default function CombatArrowsOverlay({
     // 3. Attack arrows from combatChosen during DECLARE_ATTACKERS
     if (game.step === 'DECLARE_ATTACKERS' && combatMode === 'attack' && combatChosen.length > 0) {
       const activePlayer = game.players?.find((p) => p.playerId === game.activePlayerId)
-      const defendingPlayer = game.players?.find((p) => p.playerId !== game.activePlayerId)
+      // CMB-18: the beam a marked attacker gets before the server pairs it is a guess, and with
+      // more than one seat left to attack the guess is wrong as often as it is right. Only a table
+      // where a single seat can be attacked has nothing to guess.
+      const canBeAttacked = (game.players ?? []).filter((p) => p.playerId !== game.activePlayerId && !isPlayerOut(p))
+      const defendingPlayer = canBeAttacked.length === 1 ? canBeAttacked[0] : undefined
       if (activePlayer && defendingPlayer) {
         const defCenter = getCenter(defendingPlayer.playerId)
         if (defCenter) {

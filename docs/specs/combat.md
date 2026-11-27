@@ -250,3 +250,18 @@ to one attacker (CMB-4) and has to stay its own card for that tie to mean anythi
   a pile of attackers is drawn before the creatures sorted into their combat columns, not inside
   its own column, so with attacks on two seats the two piles sit together at the front of the row.
 - Guard: `src/board/combatColumns.test.ts`, `src/board/BoardZone.pileCards.test.tsx`
+
+### CMB-18 · A marked attacker points at nobody until somebody is named
+Between marking a creature as an attacker and the server pairing it with a defender, the board
+draws the creature as chosen (CMB-15, CMB-16) and draws no beam: who it attacks is not known yet.
+The one table where there is nothing to guess is the one with a single seat left to attack, and
+there the beam is drawn as soon as the creature is marked. A seat out of the game is not one of
+those seats.
+
+- Why: the preview beam aimed at the first seat that was not the active player, which in a duel is
+  the only answer and at a four-player table is a coin toss. The player hit it the first time a
+  commander game asked him who to attack: "solo pulsando una criatura para seleccionarla como
+  atacante me salió flecha directamente a un jugador, y al pulsar otro jugador se movió la flecha"
+  (26-nov-2026). CMB-16 made it easy to see, since the creature is now marked on the first click,
+  but the guess was already there for every attacker.
+- Guard: `src/board/CombatArrowsOverlay.test.tsx`
