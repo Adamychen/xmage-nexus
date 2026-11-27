@@ -138,3 +138,11 @@ has left unread.
   function now answers both questions, so the two cannot drift apart again.
 - Guard: `src/game/GameChat.test.tsx`
 
+### PNL-14 · A talkative game does not wipe the chat
+The log is capped, and the chat shares that list. The cap is spent on the game's own lines first:
+a chat line is dropped only once far more of them are held than anybody scrolls back through.
+
+- Why: the cap was a flat "keep the last 300 entries" over the shared log, and a crowded game
+  writes dozens of engine lines per turn, so everything the players had said to each other was
+  pushed out and the Chat tab came back empty: "y a veces se borra el chat también" (26-nov-2026).
+- Guard: `src/state/logTrim.test.ts`
