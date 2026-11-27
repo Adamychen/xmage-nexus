@@ -44,6 +44,19 @@ export function stripHtml(html: string): string {
   return html.replace(/<[^>]*>/g, '')
 }
 
+/**
+ * PRM-22: `HumanPlayer.chooseMode` builds its question as `message + "<br>" + obj.getLogName()`,
+ * so the card that asks is the tail of the string and not a field of its own. Split there: the
+ * question keeps its own words and the card is named as every other ability prompt names it.
+ */
+export function splitBreakSuffix(message: string): { message: string; sourceName?: string } {
+  const parts = message.split(/<br\s*\/?>/i)
+  if (parts.length < 2) return { message }
+  const sourceName = stripHtml(parts[parts.length - 1]).trim()
+  if (!sourceName) return { message }
+  return { message: parts.slice(0, -1).join(' ').trim(), sourceName }
+}
+
 export function chosenTargetsOf(data: JsonRecord): string[] | undefined {
   const targets = stringList(asRecord(data.options).chosenTargets)
   return targets.length ? targets : undefined

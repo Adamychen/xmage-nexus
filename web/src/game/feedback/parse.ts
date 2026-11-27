@@ -35,6 +35,7 @@ import {
   optionEntries,
   secondMessageOf,
   splitSourceSuffix,
+  splitBreakSuffix,
   stringValue,
   subMessageOf,
   targetOptions,
@@ -266,7 +267,8 @@ export function parseFeedback(
     case 'GAME_CHOOSE_MODE': {
       const abilities = asRecord(raw)
       const rawChoices = abilities.choices ?? (Array.isArray(abilities.options) ? abilities.options : cleanChoices(abilities.options))
-      return prompt(method, gameId, t('game', 'choose_mode'), stringValue(abilities.message) ?? message, 'uuid', optionEntries(rawChoices), bounds)
+      const { message: modeMessage, sourceName } = splitBreakSuffix(stringValue(abilities.message) ?? message)
+      return prompt(method, gameId, t('game', 'choose_mode'), modeMessage, 'uuid', optionEntries(rawChoices), bounds, undefined, undefined, true, sourceName)
     }
     case 'GAME_CHOOSE_ONE': {
       const choices = optionEntries(data.choices ?? (Array.isArray(data.options) ? data.options : cleanChoices(data.options)))

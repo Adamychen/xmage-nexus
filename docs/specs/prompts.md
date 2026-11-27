@@ -332,3 +332,18 @@ is still pointing at that card once it has risen, and nothing flickers.
   (`HandBar.css`); the opening-hand fan lifts instead, which is the pose it was designed with, so
   what changes here is the hit area and not the movement.
 - Guard: `e2e/mulligan.spec.ts`
+
+### PRM-22 · A mode question names the card that asks it
+A `GAME_CHOOSE_MODE` is drawn like every other ability prompt: the card asking is named and shown
+beside the options, and the question keeps only its own words. The engine does not send the card
+as a field; it glues it to the end of the message after a `<br>`, with the colours of its log name,
+so the client splits it there.
+
+- Why: the player chose between two modes of a trigger with nothing on screen saying whose trigger
+  it was ("el trigger de jin sakai que me daba a elegir inbloqueable o double strike y no me decía
+  quién era el target de la habilidad", 26-nov-2026). Known limit, and not ours to fix here: a mode
+  of that card reads "It gains double strike until end of turn", where "it" is the attacking
+  creature the ability points at with a `FixedTarget`. A target pointer is engine state that never
+  reaches a `mage.view.*` DTO, so no remote client can name that creature, the desktop one
+  included; naming the source is what the wire allows.
+- Guard: `src/game/feedback/detect.test.ts`

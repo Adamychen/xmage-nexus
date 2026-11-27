@@ -83,6 +83,22 @@ describe('parseFeedback with injected display strings (no i18n)', () => {
     expect(prompt).toMatchObject({ mode: 'uuid', title: '[game.choose_mode]', message: 'Choose a mode' })
   })
 
+  it('PRM-22: a mode question names the card that asks it', () => {
+    // HumanPlayer.chooseMode builds `message + "<br>" + obj.getLogName()`, and the log name comes
+    // coloured: "Choose mode (selected 0 of 1, min 1)<br><font color="#C0C0C0">Jin Sakai…</font>".
+    const prompt = parseFeedback(
+      'GAME_CHOOSE_MODE',
+      'game-7',
+      {
+        message: 'Choose mode (selected 0 of 1, min 1)<br><font color="#C0C0C0">Jin Sakai, Ghost of Tsushima</font>',
+        choices: { 'm-1': '1. It gains double strike until end of turn.', 'm-2': "2. It can't be blocked this turn." },
+      },
+      stub,
+    )
+    expect(prompt?.sourceName).toBe('Jin Sakai, Ghost of Tsushima')
+    expect(prompt?.message).toBe('Choose mode (selected 0 of 1, min 1)')
+  })
+
   it('routes voting/mulligan flags without the translator', () => {
     const voting = parseFeedback('GAME_ASK', 'g', { message: 'Vote now', options: { a: 'A' } }, stub)
     expect(voting?.isVoting).toBe(true)
