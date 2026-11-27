@@ -1691,6 +1691,7 @@ export const ru: TranslationSchema = {
     mulligan_concede: 'Сдаться',
     mulligan_view_board: 'Посмотреть поле битвы',
     arena_view_battlefield: 'Посмотреть поле битвы',
+    arena_back_to_prompt: 'Вернуться к вопросу',
     arena_surveil_title: 'Слежка',
     arena_scry_title: 'Предвидение',
     arena_surveil_hint: 'Перетащите карты, чтобы положить их на верх библиотеки или на кладбище.',

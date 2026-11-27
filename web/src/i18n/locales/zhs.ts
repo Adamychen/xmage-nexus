@@ -1691,6 +1691,7 @@ export const zhs: TranslationSchema = {
     mulligan_concede: '认输',
     mulligan_view_board: '查看战场',
     arena_view_battlefield: '查看战场',
+    arena_back_to_prompt: '返回提问',
     arena_surveil_title: '探查',
     arena_scry_title: '占卜',
     arena_surveil_hint: '拖动牌，将其置于你的牌库顶或你的坟墓场。',

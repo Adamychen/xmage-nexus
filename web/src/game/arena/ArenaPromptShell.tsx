@@ -1,4 +1,4 @@
-import { useId, useState, type KeyboardEvent, type ReactNode } from 'react'
+import { useEffect, useId, useState, type ReactNode } from 'react'
 import Modal from '../../ui/Modal'
 import { useTranslation } from '../../i18n'
 import './ArenaPromptShell.css'
@@ -17,8 +17,6 @@ interface ArenaPromptShellProps {
   describedBy?: string
 }
 
-const PEEK_KEYS = new Set([' ', 'Enter'])
-
 export default function ArenaPromptShell({
   title,
   instruction,
@@ -36,17 +34,30 @@ export default function ArenaPromptShell({
   const titleId = useId()
   const [peek, setPeek] = useState(false)
 
-  const onPeekKeyDown = (e: KeyboardEvent<HTMLButtonElement>) => {
-    if (!PEEK_KEYS.has(e.key)) return
-    e.preventDefault()
-    setPeek(true)
-  }
-
-  const onPeekKeyUp = (e: KeyboardEvent<HTMLButtonElement>) => {
-    if (!PEEK_KEYS.has(e.key)) return
-    e.preventDefault()
-    setPeek(false)
-  }
+  // DLG-14: while the question is set aside the board takes the pointer, so its cards answer a
+  // hover and the stack can be read, but no click of that pass reaches the game: a look is a look.
+  // Escape comes back to the question instead of reaching the prompt's own cancel.
+  useEffect(() => {
+    if (!peek) return
+    const swallow = (e: Event) => {
+      if ((e.target as HTMLElement | null)?.closest('.arena-prompt-peek')) return
+      e.preventDefault()
+      e.stopPropagation()
+    }
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return
+      e.preventDefault()
+      e.stopPropagation()
+      setPeek(false)
+    }
+    const types = ['pointerdown', 'mousedown', 'mouseup', 'click', 'dblclick', 'contextmenu']
+    for (const type of types) window.addEventListener(type, swallow, true)
+    window.addEventListener('keydown', onKeyDown, true)
+    return () => {
+      for (const type of types) window.removeEventListener(type, swallow, true)
+      window.removeEventListener('keydown', onKeyDown, true)
+    }
+  }, [peek])
 
   return (
     <Modal
@@ -70,15 +81,11 @@ export default function ArenaPromptShell({
       <button
         type="button"
         className="arena-prompt-peek"
-        onPointerDown={() => setPeek(true)}
-        onPointerUp={() => setPeek(false)}
-        onPointerLeave={() => setPeek(false)}
-        onPointerCancel={() => setPeek(false)}
-        onKeyDown={onPeekKeyDown}
-        onKeyUp={onPeekKeyUp}
-        onBlur={() => setPeek(false)}
+        data-testid="arena-prompt-peek"
+        aria-pressed={peek}
+        onClick={() => setPeek((on) => !on)}
       >
-        {t('dialogs', 'arena_view_battlefield')}
+        {t('dialogs', peek ? 'arena_back_to_prompt' : 'arena_view_battlefield')}
       </button>
     </Modal>
   )

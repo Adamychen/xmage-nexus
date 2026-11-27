@@ -1691,6 +1691,7 @@ export const ja: TranslationSchema = {
     mulligan_concede: '投了',
     mulligan_view_board: '戦場を見る',
     arena_view_battlefield: '戦場を見る',
+    arena_back_to_prompt: '質問に戻る',
     arena_surveil_title: '諜報',
     arena_scry_title: '占術',
     arena_surveil_hint: 'カードをドラッグして、ライブラリーの一番上か墓地に置きます。',

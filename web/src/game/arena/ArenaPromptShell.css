@@ -24,6 +24,18 @@
   backdrop-filter: none;
 }
 
+/* DLG-14: the question set aside hands the pointer to the board, so its cards answer a hover and
+   the stack can be read. Only the way back keeps taking the pointer; the clicks that fall on the
+   board are swallowed by the shell, not by this layer. The Alt peek of DLG-5 is not this: it holds
+   its backdrop in front and takes the clicks itself. */
+.arena-prompt.is-peek {
+  pointer-events: none;
+}
+
+.arena-prompt.is-peek .arena-prompt-peek {
+  pointer-events: auto;
+}
+
 .arena-prompt-dialog {
   position: absolute;
   inset: 0;

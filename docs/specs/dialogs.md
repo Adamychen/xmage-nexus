@@ -118,3 +118,20 @@ answer is read off the board, and often discussed in the chat first.
   vote he was being asked about was a change to the game he had just played (user, 2026-11-26).
   The modal's Alt-peek shows the board but takes no clicks, so it did not answer this.
 - Guard: `src/game/RollbackVoteDialog.test.tsx` · `src/ui/Modal.test.tsx`
+
+### DLG-14 · A question can be set aside to read the board, and stays aside
+The button a full-screen question offers for reading the board (`View battlefield`) is a switch,
+not something to hold down: one press puts the question aside, the button becomes the way back and
+nothing else ends the peek, so the player can take as long as they need. While the question is
+aside the board takes the pointer, so a card answers a hover and the stack can be read with its
+arrows, and every click that falls on the board is swallowed: a look is a look, never a play.
+Escape comes back to the question instead of reaching the prompt's own cancel.
+
+- Why: the button was held down (`onPointerDown`/`onPointerUp`), so the board came back the moment
+  the pointer moved off it and the question returned over whatever the player was reading. Asked
+  for after a trigger's mode question covered the stack: "al pulsar lo de ver el campo de batalla
+  tampoco me dejaba ver la pila y mirar la flecha porque al mover el ratón volvía a salir la
+  pantalla de la pregunta" (27-nov-2026). The mulligan screen already worked this way (PRM-2),
+  which is where the shape comes from; the Alt peek of DLG-5 is the other thing and is unchanged,
+  held down and holding its backdrop in front.
+- Guard: `src/game/arena/ArenaPromptShell.test.tsx`

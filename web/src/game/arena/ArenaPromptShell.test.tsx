@@ -41,21 +41,41 @@ describe('ArenaPromptShell', () => {
     expect(screen.queryByTestId('arena-shell')).not.toBeNull()
   })
 
-  it('hides the prompt while View Battlefield is held and shows it again on release', () => {
+  it('DLG-14: View Battlefield stays pressed until the player asks for the question back', () => {
     const { container } = renderShell()
     const backdrop = container.querySelector('.arena-prompt')!
-    const peek = screen.getByRole('button', { name: t('dialogs', 'arena_view_battlefield') })
-    fireEvent.pointerDown(peek)
+    const peek = screen.getByTestId('arena-prompt-peek')
+    fireEvent.click(peek)
     expect(backdrop.classList.contains('is-peek')).toBe(true)
-    fireEvent.pointerUp(peek)
-    expect(backdrop.classList.contains('is-peek')).toBe(false)
-    fireEvent.pointerDown(peek)
+    expect(peek.getAttribute('aria-pressed')).toBe('true')
+    expect(peek.textContent).toBe(t('dialogs', 'arena_back_to_prompt'))
+    // the pointer leaving the button is what used to end the peek; now nothing but asking does
     fireEvent.pointerLeave(peek)
-    expect(backdrop.classList.contains('is-peek')).toBe(false)
-    fireEvent.keyDown(peek, { key: ' ' })
+    fireEvent.pointerUp(peek)
     expect(backdrop.classList.contains('is-peek')).toBe(true)
-    fireEvent.keyUp(peek, { key: ' ' })
+    fireEvent.click(peek)
     expect(backdrop.classList.contains('is-peek')).toBe(false)
+    expect(peek.textContent).toBe(t('dialogs', 'arena_view_battlefield'))
+  })
+
+  it('DLG-14: a click on the board while the question is aside reaches nothing, and Escape brings it back', () => {
+    const { container } = renderShell()
+    const backdrop = container.querySelector('.arena-prompt')!
+    const board = document.createElement('button')
+    const clicks: string[] = []
+    board.addEventListener('click', () => clicks.push('board'))
+    document.body.appendChild(board)
+
+    fireEvent.click(screen.getByTestId('arena-prompt-peek'))
+    fireEvent.click(board)
+    expect(clicks, 'a look at the board is a look, never a play').toEqual([])
+
+    fireEvent.keyDown(window, { key: 'Escape' })
+    expect(backdrop.classList.contains('is-peek')).toBe(false)
+    expect(screen.queryByTestId('arena-shell'), 'Escape came back to the question, it did not answer it').not.toBeNull()
+    fireEvent.click(board)
+    expect(clicks).toEqual(['board'])
+    board.remove()
   })
 
   it('Alt peeks through the shared modal', () => {

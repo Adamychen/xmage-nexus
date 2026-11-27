@@ -1691,6 +1691,7 @@ export const it: TranslationSchema = {
     mulligan_concede: 'Concedi',
     mulligan_view_board: 'Vedi il campo di battaglia',
     arena_view_battlefield: 'Vedi il campo di battaglia',
+    arena_back_to_prompt: 'Torna alla domanda',
     arena_surveil_title: 'Sorvegliare',
     arena_scry_title: 'Profetizzare',
     arena_surveil_hint: 'Trascina le carte per metterle in cima al tuo grimorio o nel tuo cimitero.',

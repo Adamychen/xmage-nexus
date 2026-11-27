@@ -1691,6 +1691,7 @@ export const fr: TranslationSchema = {
     mulligan_concede: 'Concéder',
     mulligan_view_board: 'Voir le champ de bataille',
     arena_view_battlefield: 'Voir le champ de bataille',
+    arena_back_to_prompt: 'Revenir à la question',
     arena_surveil_title: 'Surveiller',
     arena_scry_title: 'Regard',
     arena_surveil_hint: 'Faites glisser des cartes pour les mettre au-dessus de votre bibliothèque ou dans votre cimetière.',

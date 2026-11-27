@@ -1689,6 +1689,7 @@ export const en = {
     mulligan_concede: 'Concede',
     mulligan_view_board: 'View Battlefield',
     arena_view_battlefield: 'View Battlefield',
+    arena_back_to_prompt: 'Back to the question',
     arena_surveil_title: 'Surveil',
     arena_scry_title: 'Scry',
     arena_surveil_hint: 'Drag cards to put them on the top of your library or into your graveyard.',
