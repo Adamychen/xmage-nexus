@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { awaitImageUrl, resetCardImageCache, cardKey, hasVigilance, hiddenFaceDownName, largeImageUrl } from './cardImages'
+import { awaitImageUrl, resetCardImageCache, cardKey, hasVigilance, hiddenFaceDownName, largeImageUrl, stableCardName, visibleCardName } from './cardImages'
 import { resetCardArtPreferences, setCardArtPreference } from './artPreferences'
 import { noteGameForArt } from './foreignCards'
 import type { CardView, GameView } from '../net/types'
@@ -118,11 +118,36 @@ describe('face-down and engine-owned images', () => {
     expect(cardKey({ name: 'Night', expansionSetCode: 'XMAGE', imageFileName: 'Night', imageNumber: 1, isToken: true } as unknown as CardView)).toBe('tvow/21#back')
   })
 
-  it('exposes the real name the engine reveals to the controller', () => {
+  it('BRD-69: exposes the real name only where the game lets the player look', () => {
+    // The engine labels a face-down card with how it got there (TokenRepository's six names) and
+    // hands the owner the real name after it: "Morph: Den Protector".
     expect(hiddenFaceDownName(faceDown())).toBe('Den Protector')
     expect(hiddenFaceDownName(faceDown({ name: 'Disguise: Unyielding Gatekeeper' }))).toBe('Unyielding Gatekeeper')
+    expect(hiddenFaceDownName(faceDown({ name: 'Manifest: Hidden Gem' }))).toBe('Hidden Gem')
+    expect(hiddenFaceDownName(faceDown({ name: 'Cloak: Hidden Gem' }))).toBe('Hidden Gem')
+    expect(hiddenFaceDownName(faceDown({ name: 'Foretell: Saw It Coming' }))).toBe('Saw It Coming')
     expect(hiddenFaceDownName(faceDown({ name: '' }))).toBeNull()
     expect(hiddenFaceDownName(faceDown({ faceDown: false }))).toBeNull()
+  })
+
+  it('BRD-69: the name on screen is the label, never the card, while the game hides it', () => {
+    expect(visibleCardName(faceDown({ name: 'Face Down: Lightning Bolt', imageFileName: 'Face Down' }))).toBe('Face Down')
+    expect(visibleCardName(faceDown({ name: 'Morph: Den Protector', imageFileName: 'Morph' }))).toBe('Morph: Den Protector')
+    expect(visibleCardName({ name: 'Lightning Bolt' } as never)).toBe('Lightning Bolt')
+    // a card with nothing to call it by is not named after what it is either
+    expect(visibleCardName(faceDown({ name: 'Hidden Gem', imageFileName: '' }))).toBe('?')
+    // the stable English name the slot keeps for readers follows the same decision
+    expect(stableCardName(faceDown({ name: 'Face Down: Lightning Bolt', imageFileName: 'Face Down' }))).toBe('Face Down')
+    expect(stableCardName({ name: 'Invasion of Zendikar', displayName: 'Invasion de Zendikar' } as never)).toBe('Invasion of Zendikar')
+  })
+
+  it('BRD-69: a card the engine only calls face down keeps its name to itself', () => {
+    // "Face Down" is the engine's generic label (XMAGE_IMAGE_NAME_FACE_DOWN_MANUAL): a card an
+    // opponent exiled face down, a creature turned face down by a spell. The owner is told what it
+    // is because `canShowAsControlled` is owner-or-controller, and nothing in the game says they
+    // may look at it.
+    expect(hiddenFaceDownName(faceDown({ name: 'Face Down: Lightning Bolt' }))).toBeNull()
+    expect(hiddenFaceDownName(faceDown({ name: 'Face Down' }))).toBeNull()
   })
 })
 

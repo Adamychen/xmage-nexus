@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import type { CardView, PermanentView } from '../net/types'
-import { cardName, hiddenFaceDownName } from '../cards/cardImages'
+import { cardName, hiddenFaceDownName, stableCardName, visibleCardName } from '../cards/cardImages'
 import { useCardImageUrl } from '../cards/useCardImageUrl'
 import RenderedCard from '../cards/rendered/RenderedCard'
 import { getPreviousCardPosition, getPreviousCardSize, getPreviousCardZone, recordCardPosition } from './cardPositionRegistry'
@@ -540,7 +540,7 @@ const showPtBadge =
         handleCastAnimationEnd(e)
       }}
       {...clickableProps(handleClick)}
-      aria-label={onClick ? cardName(card) : undefined}
+      aria-label={onClick ? visibleCardName(card) : undefined}
       aria-pressed={onClick && ariaPressed !== undefined ? ariaPressed : undefined}
       onMouseEnter={onHover ? (e) => onHover(card, e.currentTarget.getBoundingClientRect()) : undefined}
       onMouseLeave={onHover ? () => onHover(null) : undefined}
@@ -558,13 +558,13 @@ const showPtBadge =
       ) : renderedFace ? (
         <>
           <RenderedCard card={card} />
-          <span className="visually-hidden">{card.name || card.alternateName || '?'}</span>
+          <span className="visually-hidden">{stableCardName(card)}</span>
         </>
       ) : imgUrl ? (
         <>
           <img
             src={compact && tileArt ? tileArt : imgUrl}
-            alt={cardName(card)}
+            alt={visibleCardName(card)}
             className={compact ? (tileArt ? 'card-image card-art-crop' : 'card-image card-art-fallback') : 'card-image'}
             draggable={false}
             onError={tileArt ? () => setCropFailed(tileArt) : undefined}
@@ -572,11 +572,11 @@ const showPtBadge =
           {/* Nombre siempre presente como texto (a11y + selectores estables):
               con arte no hay .card-placeholder-name y el nombre visible puede
               estar localizado; este span oculto conserva el inglés estable. */}
-          <span className="visually-hidden">{card.name || card.alternateName || '?'}</span>
+          <span className="visually-hidden">{stableCardName(card)}</span>
         </>
       ) : (
         <div className="card-placeholder">
-          {!compact && <span className="card-placeholder-name">{cardName(card)}</span>}
+          {!compact && <span className="card-placeholder-name">{visibleCardName(card)}</span>}
         </div>
       )}
 
@@ -598,7 +598,7 @@ const showPtBadge =
             </BadgeTip>
           )}
           <div className={`compact-plate${hasCornerStat ? ' has-stat' : ''}`} aria-hidden="true">
-            <span className="compact-name">{cardName(card)}</span>
+            <span className="compact-name">{visibleCardName(card)}</span>
             {tileType && !hasCornerStat && (
               <span className="compact-type">{t('game', `type_${tileType}`)}</span>
             )}

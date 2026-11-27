@@ -116,11 +116,18 @@ export function tokenTableKey(card: CardView, isBack: boolean): string | null {
   return back !== undefined || isBack ? `${hit}#back` : hit
 }
 
-const HIDDEN_FACE_DOWN = /^(?:Morph|Manifest|Disguise|Cloak|Face Down|Foretell)\b[^:]*:\s*(.+)$/i
+/**
+ * BRD-69: the engine labels a face-down card with how it got there and, for its owner or
+ * controller, puts the real name after it ("Morph: Den Protector"). These are the labels that come
+ * with a permission to look at the card: a face-down permanent you control, and a card you
+ * foretold. The engine's generic label, `Face Down`, carries no such permission and is left out on
+ * purpose (`TokenRepository.XMAGE_IMAGE_NAME_FACE_DOWN_*`).
+ */
+const HIDDEN_FACE_DOWN = /^(?:Morph|Manifest|Disguise|Cloak|Foretell)\b[^:]*:\s*(.+)$/i
 
 /**
- * Nombre real de un permanente boca abajo que el motor deja ver a su
- * controlador ("Morph: Den Protector"); null para el rival o si no hay.
+ * The real name of a face-down card the player is allowed to look at ("Morph: Den Protector");
+ * null for anybody else's, and for one the game keeps hidden from its owner too.
  */
 export function hiddenFaceDownName(card: CardView): string | null {
   if (card.faceDown !== true) return null
@@ -463,6 +470,26 @@ export function resetCardImageCache() {
   tokenPins.clear()
   loadQueue.length = 0
   activeLoads = 0
+}
+
+/**
+ * BRD-69: the name to put on screen, or anywhere a reader can reach, for a card the game keeps
+ * hidden. The engine hands the owner the real name of their own face-down card wherever it is
+ * (`CardUtil.canShowAsControlled` is owner-or-controller), so what the player may know is decided
+ * here and not by what arrived: a card they are allowed to look at keeps its name, any other
+ * face-down card is called by how it got there ("Face Down"), never by what it is.
+ */
+/** The same decision for the stable English name the slot keeps for readers and selectors. */
+export function stableCardName(card: CardView): string {
+  if (card.faceDown === true && !hiddenFaceDownName(card)) return card.imageFileName?.trim() || '?'
+  return card.name || card.alternateName || '?'
+}
+
+export function visibleCardName(card: CardView): string {
+  if (card.faceDown === true && !hiddenFaceDownName(card)) {
+    return card.imageFileName?.trim() || '?'
+  }
+  return cardName(card)
 }
 
 export function cardName(card: CardView): string {

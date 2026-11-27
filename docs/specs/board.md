@@ -1297,3 +1297,24 @@ its footprint (BRD-20).
   margins then answer to two card sizes at once; with no animation they always answer to the same
   one, so the pile's footprint is right in whatever frame it is drawn.
 - Guard: `src/board/CardSlot.css.test.ts`
+
+### BRD-69 · A card the game hides is not named by the client, whoever owns it
+What the player may know about a face-down card is decided by this client, not by what the server
+sends. The engine hands the owner or controller the real name of their own face-down card wherever
+it is, exile included, labelled with how it got there ("Morph: Den Protector", "Face Down:
+Lightning Bolt"). The client reveals it only for the labels that come with a permission to look:
+a face-down permanent you control (`Morph`, `Manifest`, `Disguise`, `Cloak`) and a card you
+foretold. Under the engine's generic label, `Face Down`, the card is drawn, previewed, inspected
+and read aloud as what it is on the table: a card that is face down. Known gap: the
+`data-card-name` attribute the board and the tests look cards up by still carries the name the
+server sent.
+
+- Why: an opponent exiled one of the player's cards face down and hovering it showed which card it
+  was ("me han exiliado una carta boca abajo pero el hover sí funcionaba y era yo capaz de ver qué
+  carta era", 27-nov-2026). `ExileView` builds every card with
+  `CardUtil.canShowAsControlled(card, viewer)`, which is true for the owner, so `CardView` fills
+  the visible name with `getCardNameForGUI` and the real name arrives; the desktop client shows it
+  too. Nothing in the view says whether the player may look, so the label is all the client has to
+  go on, and under the generic one the answer is no. A rare effect that does let its owner look at
+  a card exiled face down will be hidden by this too, which is the side to err on.
+- Guard: `src/cards/cardImages.test.ts`
