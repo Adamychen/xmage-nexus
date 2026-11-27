@@ -43,6 +43,8 @@
   position: fixed;
   z-index: 900;
   width: 264px;
+  /* PNL-12: the panel never grows past the screen; a table with many commanders scrolls instead. */
+  overflow-y: auto;
   padding: var(--sp-2h) var(--sp-3);
   border-radius: var(--r-lg);
   background: rgb(var(--ink-2-rgb) / 0.96);

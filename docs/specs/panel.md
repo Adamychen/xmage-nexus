@@ -113,3 +113,17 @@ crown button and `CommanderDamageMatrix` are removed.
   forced players to look away from the seat they were attacking or defending (step 2 of
   `docs/plans/2026-11-23-arena-only-design.md`, 2026-11-25).
 - Guard: `src/game/CommanderDamageDropdown.test.tsx` · `src/game/GameDrawer.test.tsx`
+### PNL-12 · The commander damage panel opens where it fits, and never off the screen
+The panel of PNL-11 opens away from the board: the own seat's upwards, an opponent's downwards.
+That is a preference, not a rule about the screen. When the chosen side has no room for the panel
+it turns over to the other one, and when neither side has room the panel is held on screen and its
+list scrolls, so a table with many commanders can still be read.
+
+- Why: the own panel was anchored by its bottom edge to the top of its button with nothing checking
+  that it fitted, so on a board where the button sits high (the side panel open, a short window, a
+  long list of commanders) it grew upwards past the top of the screen and the player saw a strip of
+  it or nothing: "el daño de commander de mi tablero en modo panel lateral se despliega hacia
+  arriba y no se ve" (26-nov-2026). The placement is a pure function of the button's box, the
+  panel's height and the viewport, so it is decided once and tested without a browser.
+- Guard: `src/game/damagePanelPlacement.test.ts`
+

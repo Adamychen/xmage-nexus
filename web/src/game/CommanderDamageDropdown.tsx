@@ -4,6 +4,7 @@ import type { CardView, GameView, PlayerView } from '../net/types'
 import { commanderDamageDealt, syncCommanderMemory, type MatrixCommander } from '../board/commanders'
 import Icon from '../ui/Icon'
 import { useTranslation } from '../i18n'
+import { placeDamagePanel } from './damagePanelPlacement'
 import './CommanderDamageDropdown.css'
 
 export const COMMANDER_LETHAL = 21
@@ -21,7 +22,6 @@ interface CommanderDamageDropdownProps {
   onHoverCard?: (card: CardView | null, rect?: DOMRect) => void
 }
 
-const VIEWPORT_MARGIN = 10
 const PANEL_WIDTH = 264
 
 export default function CommanderDamageDropdown({
@@ -61,16 +61,14 @@ export default function CommanderDamageDropdown({
       const btn = triggerRef.current
       if (!btn) return
       const r = btn.getBoundingClientRect()
-      const vw = window.innerWidth
-      const left = Math.max(
-        VIEWPORT_MARGIN,
-        Math.min(r.left + r.width / 2 - PANEL_WIDTH / 2, vw - PANEL_WIDTH - VIEWPORT_MARGIN),
-      )
-      if (side === 'my') {
-        setPos({ left, bottom: Math.max(VIEWPORT_MARGIN, window.innerHeight - r.top + 6) })
-      } else {
-        setPos({ left, top: Math.max(VIEWPORT_MARGIN, r.bottom + 6) })
-      }
+      const { left, top, maxHeight } = placeDamagePanel({
+        trigger: { left: r.left, right: r.right, top: r.top, bottom: r.bottom },
+        panelHeight: panelRef.current?.getBoundingClientRect().height ?? 0,
+        panelWidth: PANEL_WIDTH,
+        viewport: { width: window.innerWidth, height: window.innerHeight },
+        side,
+      })
+      setPos({ left, top, maxHeight })
     }
     update()
     window.addEventListener('resize', update)
