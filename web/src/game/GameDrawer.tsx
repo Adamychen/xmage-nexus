@@ -5,7 +5,7 @@ import { useTranslation } from '../i18n'
 import IconButton from '../ui/IconButton'
 import CloseButton from '../ui/CloseButton'
 import type { IconName } from '../ui/Icon'
-import { isGameChatEntry } from './GameChat'
+import { loadShowLobby, visibleChatEntries } from './GameChat'
 import MechanicsTray from './MechanicsTray'
 import { DrawerHeadSlotContext } from './drawerHeadSlot'
 import './GameDrawer.css'
@@ -22,7 +22,12 @@ interface DrawerTabDef {
 }
 
 export function useChatUnread(chatOpen: boolean): number {
-  const total = useStore((s) => s.log.reduce((n, e) => n + (isGameChatEntry(e) ? 1 : 0), 0))
+  // PNL-13: the badge counts what the tab shows, lobby filter included; the preference is read
+  // again whenever the tab is opened or closed, which is the only moment it can have changed.
+  const [showLobby, setShowLobby] = useState(loadShowLobby)
+  useEffect(() => { setShowLobby(loadShowLobby()) }, [chatOpen])
+  const myName = useStore((s) => s.conn?.username)
+  const total = useStore((s) => visibleChatEntries(s.log, myName, showLobby).length)
   const [seen, setSeen] = useState(total)
   useEffect(() => {
     if (chatOpen || total < seen) setSeen(total)

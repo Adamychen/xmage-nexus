@@ -1,7 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { cleanup, render } from '@testing-library/react'
-import GameChat, { isGameChatEntry } from './GameChat'
+import { act, cleanup, render } from '@testing-library/react'
+import GameChat, { isGameChatEntry, loadShowLobby, visibleChatEntries } from './GameChat'
 import { DrawerHeadSlotContext } from './drawerHeadSlot'
+import { useChatUnread } from './GameDrawer'
 import { setState, type LogEntry } from '../state/store'
 import { makeGameView, makePlayer } from '../__fixtures__/gameViews'
 
@@ -113,5 +114,52 @@ describe('GameChat bubbles', () => {
     const tobias = entryOf(container, 'Tobias').style.getPropertyValue('--seat')
     expect(mira).not.toBe(tobias)
     expect(entryOf(container, 'Spectator').style.getPropertyValue('--seat')).toBe('var(--fg-2)')
+  })
+})
+
+describe('PNL-13: the unread badge counts what the Chat tab shows', () => {
+  afterEach(() => {
+    try { localStorage.removeItem('nexus.gameChat.showLobby') } catch { /* private window */ }
+    setState({ log: [], game: null, conn: null })
+    cleanup()
+  })
+
+  const lobbyLine = (id: number, from: string): LogEntry => ({ id, time: Date.now(), from, text: 'hola sala', channel: 'chat', fromRoom: true })
+
+  it('PNL-13: a lobby message the tab filters out is not announced as unread', () => {
+    const log: LogEntry[] = [lobbyLine(1, 'Mira')]
+    setState({ game: seatedGame() as never, conn: { username: 'Adam' } as never, log })
+    const { container } = render(
+      <DrawerHeadSlotContext.Provider value={null}>
+        <GameChat />
+      </DrawerHeadSlotContext.Provider>,
+    )
+    expect(container.querySelectorAll('.game-chat-entry')).toHaveLength(0)
+    expect(visibleChatEntries(log, 'Adam', loadShowLobby())).toHaveLength(0)
+  })
+
+  function Badge({ open }: { open: boolean }) {
+    return <span data-testid="unread">{useChatUnread(open)}</span>
+  }
+
+  it('PNL-13: a lobby message that arrives while the tab is closed raises no badge', () => {
+    setState({ game: seatedGame() as never, conn: { username: 'Adam' } as never, log: [] })
+    const { getByTestId } = render(<Badge open={false} />)
+    act(() => { setState({ log: [lobbyLine(1, 'Mira')] }) })
+    expect(getByTestId('unread').textContent).toBe('0')
+    act(() => { setState({ log: [lobbyLine(1, 'Mira'), line(2, 'Mira', 'gg')] }) })
+    expect(getByTestId('unread').textContent).toBe('1')
+  })
+
+  it('PNL-13: a message the tab does show is counted', () => {
+    const log: LogEntry[] = [line(1, 'Mira', 'gg')]
+    setState({ game: seatedGame() as never, conn: { username: 'Adam' } as never, log })
+    const { container } = render(
+      <DrawerHeadSlotContext.Provider value={null}>
+        <GameChat />
+      </DrawerHeadSlotContext.Provider>,
+    )
+    expect(container.querySelectorAll('.game-chat-entry')).toHaveLength(1)
+    expect(visibleChatEntries(log, 'Adam', loadShowLobby())).toHaveLength(1)
   })
 })

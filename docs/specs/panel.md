@@ -127,3 +127,14 @@ list scrolls, so a table with many commanders can still be read.
   panel's height and the viewport, so it is decided once and tested without a browser.
 - Guard: `src/game/damagePanelPlacement.test.ts`
 
+### PNL-13 · The chat badge counts the messages the chat shows
+The unread mark on the Chat tab counts the entries the tab would draw, with the same filters the
+tab applies, the lobby one included. A message the tab does not show is not a message the player
+has left unread.
+
+- Why: the badge counted every chat entry in the log while the tab hides lobby chat from other
+  people unless the player asks for it, so a message in the room's chat raised a +1 that opened
+  onto nothing: "a veces me sale en el chat un +1 pero al abrirlo no hay nada" (26-nov-2026). One
+  function now answers both questions, so the two cannot drift apart again.
+- Guard: `src/game/GameChat.test.tsx`
+

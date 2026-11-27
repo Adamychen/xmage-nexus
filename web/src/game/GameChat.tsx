@@ -34,8 +34,21 @@ export function isGameChatEntry(e: { channel?: string | null; from?: string | nu
 const LOBBY_PREF_KEY = 'nexus.gameChat.showLobby'
 const NEUTRAL_SENDER = 'var(--fg-2)'
 
-function loadShowLobby(): boolean {
+export function loadShowLobby(): boolean {
   try { return localStorage.getItem(LOBBY_PREF_KEY) === '1' } catch { return false }
+}
+
+/**
+ * PNL-13: the entries the Chat tab shows. The unread badge counts this same list, so a message
+ * that is filtered out here can never be announced as one the player has not read.
+ */
+export function visibleChatEntries<T extends { channel?: string | null; from?: string | null; fromRoom?: boolean }>(
+  log: readonly T[],
+  myName: string | null | undefined,
+  showLobby: boolean,
+): T[] {
+  const mine = myName?.toLowerCase()
+  return log.filter((e) => isGameChatEntry(e) && (showLobby || !e.fromRoom || (!!mine && e.from?.toLowerCase() === mine)))
 }
 
 export default function GameChat() {
@@ -70,10 +83,7 @@ export default function GameChat() {
 
   // Only show real player/user chat messages in the Chat tab (not engine inform
   // lines, lobby join/leave, or game-log lines — those are routed to other channels).
-  const chatEntries = useMemo(() => {
-    const mine = myName?.toLowerCase()
-    return log.filter((e) => isGameChatEntry(e) && (showLobby || !e.fromRoom || (!!mine && e.from?.toLowerCase() === mine)))
-  }, [log, showLobby, myName])
+  const chatEntries = useMemo(() => visibleChatEntries(log, myName, showLobby), [log, showLobby, myName])
 
   const toggleLobby = (next: boolean) => {
     setShowLobby(next)
