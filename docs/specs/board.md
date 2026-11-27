@@ -115,7 +115,7 @@ battlefield bands, command zone, piles) laid out at the size of the main area an
 one piece, so it keeps the main area's proportions and its cards never wrap or clip differently
 from the same board in the main area. Every copy spans the panel's width and takes the main area's
 proportions, its height following from that width, so its box never stretches past the board drawn
-in it; when the copies do not fit the panel's height the panel scrolls vertically, never sideways. Every board, main or copy, is laid out the way the own board
+in it; when the copies do not fit the panel's height the panel scrolls vertically, never sideways. The room the list keeps for that scrollbar stays reserved whether or not it scrolls, because a bar that comes and goes changes the width the copies size from and the panel never settles; what it costs is the bar itself, drawn at the panel's own width for it, and not a wider band of air beside every copy. Every board, main or copy, is laid out the way the own board
 is (status row at the bottom, creatures above lands), so each kind of permanent sits in the same
 place on every board. An opponent's hand, in the main area or a copy, is a stack of backs with its
 count beside their portrait (a click opens the known cards), so it never sits under the own hand. A

@@ -207,6 +207,17 @@ for (const vp of VIEWPORTS) {
       }
     })
 
+    test('BRD-6: the room kept for the panel scrollbar is the bar itself, not a band of air @spotlight', async ({ page }) => {
+      await loadSpotlight(page)
+      const list = page.getByTestId('spotlight-panel-list')
+      const kept = await list.evaluate((el) => ({
+        reserved: el.offsetWidth - el.clientWidth,
+        bar: parseFloat(getComputedStyle(el).getPropertyValue('--panel-scroll-w')),
+      }))
+      expect(kept.bar, 'the panel declares how wide its scrollbar is drawn').toBeGreaterThan(0)
+      expect(kept.reserved, 'the gutter costs what the bar costs').toBe(kept.bar)
+    })
+
     test('BRD-6: with the switch off the opponents row is drawn @spotlight', async ({ page }) => {
       await loadSpotlight(page, { spotlight: false })
       await expect(page.getByTestId('arena-board')).toBeVisible()

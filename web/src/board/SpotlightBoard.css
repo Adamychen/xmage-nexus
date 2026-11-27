@@ -114,11 +114,29 @@
   gap: var(--sp-1);
 }
 
+/* BRD-6: the gutter stays reserved, because a scrollbar that comes and goes changes the width the
+   copies size from and the panel never settles. What it costs is the width of the bar drawn in it,
+   and `scrollbar-width: thin` spends 10 px of a narrow panel on nothing while the list fits. The
+   bar is drawn at `--panel-scroll-w` instead, so the air at the right of a copy is the bar itself.
+   `scrollbar-width` is left unset on purpose: where it is honoured it overrides this width. */
 .spotlight-panel.has-copy-ratio .spotlight-panel-list {
+  --panel-scroll-w: 4px;
   overflow-x: hidden;
   overflow-y: auto;
   scrollbar-gutter: stable;
-  scrollbar-width: thin;
+}
+
+.spotlight-panel.has-copy-ratio .spotlight-panel-list::-webkit-scrollbar {
+  width: var(--panel-scroll-w);
+}
+
+.spotlight-panel.has-copy-ratio .spotlight-panel-list::-webkit-scrollbar-thumb {
+  background: var(--line-2);
+  border-radius: var(--r-2xs);
+}
+
+.spotlight-panel.has-copy-ratio .spotlight-panel-list::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 .spotlight-panel.has-copy-ratio .spotlight-copy-item {
