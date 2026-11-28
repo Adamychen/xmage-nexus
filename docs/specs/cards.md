@@ -59,7 +59,7 @@ rules, with the same glossary the hover preview uses.
   The costs were then drawn as a flat badge of their own invention while the dialog that activates
   the very same ability drew the printed shield, so the player asked for the icons he knew
   (28-nov-2026).
-- Guard: `src/board/cardInspectorModel.test.ts` · `e2e/card-inspector.spec.ts`
+- Guard: `src/board/cardInspectorModel.test.ts` · `src/board/cardState.css.test.ts` · `e2e/card-inspector.spec.ts`
 
 ### CRD-5 · The header names the card the way a player reads it
 Under the name and mana cost come the type line, the rarity (with its color) and the printing (set

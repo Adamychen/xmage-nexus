@@ -434,9 +434,11 @@
 .card-inspector-cost.has-plate.is-minus .loyalty-cost-plate path { stroke: rgb(var(--err-rgb) / 0.85); }
 .card-inspector-cost.has-plate.is-minus .loyalty-cost-val { fill: var(--err); }
 
-.card-inspector-cost.is-plus { background: var(--fg-1); color: var(--ink-1); }
-.card-inspector-cost.is-zero { background: var(--fg-3); color: var(--ink-1); }
-.card-inspector-cost.is-minus { background: var(--ink-4); color: var(--fg-hi); box-shadow: inset 0 0 0 1px var(--veil-4); }
+/* The flat slot, for a cost with no number to put in a shield. `:not(.has-plate)` so the three
+   backgrounds do not land back under a plate: they sit after it in this file and would win. */
+.card-inspector-cost:not(.has-plate).is-plus { background: var(--fg-1); color: var(--ink-1); }
+.card-inspector-cost:not(.has-plate).is-zero { background: var(--fg-3); color: var(--ink-1); }
+.card-inspector-cost:not(.has-plate).is-minus { background: var(--ink-4); color: var(--fg-hi); box-shadow: inset 0 0 0 1px var(--veil-4); }
 
 .card-inspector-ability-text {
   flex: 1;

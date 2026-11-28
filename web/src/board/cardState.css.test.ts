@@ -10,6 +10,7 @@ const auras = read('./KeywordAura.css')
 const band = read('./BoardZone.css')
 const zones = read('./targetZone.css')
 const chip = read('../game/PlayerInfoBar.css')
+const inspector = read('./CardInspector.css')
 
 /** The declarations of one rule, found by the line its selector starts on. */
 function block(css: string, selector: string): string {
@@ -56,6 +57,16 @@ describe('BRD-70: the state of a card is marked outside it, and only outside', (
     expect(bar).toContain('cursor: pointer')
     expect(block(chip, '.player-info-bar.targetable .avatar-image')).toContain('var(--gold-500)')
     expect(chip, 'the three-beat pulse is gone').not.toContain('playerTargetPulse')
+  })
+
+  it('CRD-4: nothing of the flat slot is painted under the printed shield', () => {
+    // The three backgrounds sit after the shield's own block in the file, so without the
+    // `:not(.has-plate)` they win on source order and draw a square behind every shield.
+    for (const sign of ['is-plus', 'is-zero', 'is-minus']) {
+      const rule = inspector.indexOf(`.card-inspector-cost:not(.has-plate).${sign}`)
+      expect(rule, `${sign} keeps the flat slot to itself`).toBeGreaterThan(-1)
+      expect(inspector).not.toContain(`.card-inspector-cost.${sign} {`)
+    }
   })
 
   it('BRD-70: the battlefield rows no longer paint themselves', () => {
