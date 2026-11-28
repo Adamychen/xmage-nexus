@@ -467,7 +467,10 @@ export default function SpectatorStagingScreen({
           </div>
         </div>
 
-        <Button variant="soft-danger"
+        {/* LBY-34: the colour says what the button does. For a player this one only closes the
+            waiting room and keeps the seat, so it is quiet; for a spectator it does leave the
+            room, and there it is the red one. */}
+        <Button variant={mode === 'player' ? 'subtle' : 'soft-danger'}
           onClick={handleLeave}
           data-testid="staging-back"
           title={mode === 'player' ? t('lobby', 'staging_back_hint') : t('lobby', 'staging_leave_hint')}>
@@ -684,7 +687,7 @@ export default function SpectatorStagingScreen({
               <div className="staging-actions-secondary">
                 <Button
                   variant="subtle"
-                  className="staging-action-btn"
+                  className="staging-action-btn danger"
                   data-testid="staging-leave"
                   title={t('lobby', 'staging_leave_table')}
                   aria-label={t('lobby', 'staging_leave_table')}

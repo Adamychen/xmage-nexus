@@ -135,6 +135,24 @@ describe('SpectatorStagingScreen', () => {
     expect(getByText(/MODO JUGADOR/)).not.toBeNull()
   })
 
+  it('LBY-34: the red button is the one that leaves the table, the quiet one only closes the room', () => {
+    setState({
+      phase: 'staging',
+      stagingTableId: MOCK_COMMANDER_TABLE.tableId,
+      lobby: { type: 'lobby', tables: [MOCK_COMMANDER_TABLE] } as never,
+    } as never)
+    const { getByTestId } = render(<SpectatorStagingScreen mode="player" />)
+    // Leaving the table is the destructive one: it gives up the seat.
+    expect(getByTestId('staging-leave').className, 'leave the table').toContain('danger')
+    // Back to the lobby keeps the seat for a player, so it carries no alarm.
+    expect(getByTestId('staging-back').className, 'back to the lobby').not.toContain('danger')
+  })
+
+  it('LBY-34: for a spectator the same button does leave the room, and says so in red', () => {
+    const { getByTestId } = render(<SpectatorStagingScreen table={MOCK_DUEL_TABLE} />)
+    expect(getByTestId('staging-back').className).toContain('danger')
+  })
+
   it('modo jugador: reconoce al dueño cuando controllerName concatena jugadores con comas (formato real del servidor XMage)', () => {
     const tableWithJoinedPlayers: TableView = {
       ...MOCK_COMMANDER_TABLE,

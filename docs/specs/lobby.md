@@ -404,3 +404,16 @@ seats nobody reported. A table of two Commander seats is still a pod, not a duel
   already held, which `GameController.watch` refuses, so a bare "Command failed" sat over that room
   while no game view ever came.
 - Guard: `src/lobby/SpectatorStagingScreen.test.tsx` · `src/state/events/game.test.ts` · `e2e/spectate-staging.spec.ts`
+
+### LBY-34 · In the waiting room the red button is the one that gives up the seat
+Of the two ways out of a table's waiting room, only one is destructive, and that is the one drawn
+in red: `Leave the table`, which gives up the seat. `Back to the lobby` only closes the waiting
+room for a player, who keeps their seat and can come back to it, so for a player it is a quiet
+button. For a spectator that same button does leave the room, and there it is the red one.
+
+- Why: they were the other way round, the quiet grey one taking the seat away and the red one
+  doing nothing worse than closing a screen: "tengo un botón abajo de salir de la mesa en gris que
+  me saca de la mesa, y uno en rojo arriba volver al lobby que me lleva al lobby pero no me expulsa
+  de la mesa, creo que los colores están al revés" (28-nov-2026). Each button's own tooltip already
+  said what it did; the colour said the opposite.
+- Guard: `src/lobby/SpectatorStagingScreen.test.tsx`
