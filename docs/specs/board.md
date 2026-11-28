@@ -113,9 +113,9 @@ switching boards never shuffles the cells under the pointer. The panel takes the
 the right one, and a panel there covered it. What belongs to the board being played on is laid out
 over the main area rather than over the whole board: the own hand's fan takes the main area as its
 band (so the panel is outside it instead of eating the fan's width) and the order line is centred
-on it (PRM-18). Above each cell sits its head: the life first, then the turn badge, then the name centred in what
-is left, because the column is narrow and a long name used to push the number off a tidy edge
-(BRD-31); the boards themselves keep the name first. A copy is the whole board of that seat (status
+on it (PRM-18). Above each cell sits its head: the life first, then the turn badge, then the name, which starts
+where they end and runs to the right (BRD-31). The life leads because the column is narrow and a
+long name used to push the number off a tidy edge; the boards themselves keep the name first. A copy is the whole board of that seat (status
 row, battlefield bands, command zone, piles) laid out at the size of the main area and scaled down
 as one piece, so it keeps the main area's proportions and its cards never wrap or clip differently
 from the same board in the main area. Every copy spans the panel's width and takes the main area's
