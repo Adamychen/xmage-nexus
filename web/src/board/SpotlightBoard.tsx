@@ -133,13 +133,25 @@ function CopyHead({ player, players, active, onSelect }: { player: PlayerView; p
       aria-label={`${player.name} · ${lifeLabel}: ${player.life}`}
       onClick={onSelect}
     >
-      {active && <span className="spotlight-copy-head-turn">{t('board', 'turn_active_badge')}</span>}
-      <span className="spotlight-copy-head-name">{player.name}</span>
+      {/* BRD-31: in the panel the life leads and the name follows, centred in what is left: the
+          column is narrow and a long name used to push the number out of a tidy edge. */}
       <span className="spotlight-copy-head-life" title={lifeLabel}>
         <Icon name="heart" size={12} />
         {player.life}
       </span>
+      {active && <span className="spotlight-copy-head-turn">{t('board', 'turn_active_badge')}</span>}
+      <span className="spotlight-copy-head-name">{player.name}</span>
     </button>
+  )
+}
+
+/** BRD-6: the place a seat keeps in the panel while its board is the one drawn at full size. */
+function MainSeatMark() {
+  const { t } = useTranslation()
+  return (
+    <div className="spotlight-copy-slot is-main-slot" role="img" aria-label={t('board', 'spotlight_seat_in_main')}>
+      <Icon name="eye" size={22} />
+    </div>
   )
 }
 
@@ -269,8 +281,8 @@ export default function SpotlightBoard({
   const players = useMemo(() => game?.players ?? [], [game?.players])
   const playerById = useMemo(() => new Map(players.map((p) => [p.playerId, p])), [players])
   const order = useMemo(
-    () => panelSeatIds(turnOrderSeats(players).map((p) => p.playerId), homeId, mainId),
-    [players, homeId, mainId],
+    () => panelSeatIds(turnOrderSeats(players).map((p) => p.playerId), homeId),
+    [players, homeId],
   )
   const pickable = useMemo(
     () => new Set([...targetIdSet, ...playableIdSet, ...combatSelectable, ...combatChosen]),
@@ -427,13 +439,31 @@ export default function SpotlightBoard({
               const player = playerById.get(id)
               if (player && !player.controlled && isPlayerOut(player)) {
                 return (
-                  <div key={id} className="spotlight-copy-item is-out">
+                  <div key={id} className="spotlight-copy-item is-out" data-seat-id={id}>
                     <CopyHead player={player} players={players} active={false} onSelect={() => {}} />
                   </div>
                 )
               }
+              if (id === mainId) {
+                // BRD-6: the seat already drawn at full size keeps its place in the panel, with the
+                // mark that says where it is instead of a second copy of the same board.
+                return (
+                  <div
+                    key={id}
+                    className="spotlight-copy-item is-main"
+                    data-seat-id={id}
+                    data-testid={`spotlight-main-seat-${id}`}
+                    style={{ '--seat': seatColorVar(seatIndexOf(players, id)) } as CSSProperties}
+                  >
+                    {player && (
+                      <CopyHead player={player} players={players} active={game?.activePlayerId === id} onSelect={() => {}} />
+                    )}
+                    <MainSeatMark />
+                  </div>
+                )
+              }
               return (
-                <div key={id} className="spotlight-copy-item">
+                <div key={id} className="spotlight-copy-item" data-seat-id={id}>
                   {player && (
                     <CopyHead player={player} players={players} active={game?.activePlayerId === id} onSelect={() => pickOrSwap(id)} />
                   )}

@@ -2226,6 +2226,7 @@ export const zhs: TranslationSchema = {
     designation_room_title: '已解锁的门 ({sides})',
     turn_order_label: '回合顺序',
     turn_active_badge: '进行中',
+    spotlight_seat_in_main: '该座位正是放大显示的牌桌',
     turn_active_suffix: ' — 当前回合',
     turn_priority_suffix: '（优先权）',
     seat_focus: '聚焦此战场',

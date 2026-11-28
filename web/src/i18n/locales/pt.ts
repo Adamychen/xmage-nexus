@@ -2226,6 +2226,7 @@ export const pt: TranslationSchema = {
     designation_room_title: 'Portas desbloqueadas ({sides})',
     turn_order_label: 'Ordem de turnos',
     turn_active_badge: 'Ativo',
+    spotlight_seat_in_main: 'Este lugar é o tabuleiro em tamanho grande',
     turn_active_suffix: ' — turno ativo',
     turn_priority_suffix: ' (prioridade)',
     seat_focus: 'Ver este tabuleiro',

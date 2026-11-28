@@ -2224,6 +2224,7 @@ export const en = {
     designation_room_title: 'Room doors unlocked ({sides})',
     turn_order_label: 'Turn order',
     turn_active_badge: 'Active',
+    spotlight_seat_in_main: 'This seat is the board shown large',
     turn_active_suffix: ' — active turn',
     turn_priority_suffix: ' (priority)',
     seat_focus: 'Focus this board',

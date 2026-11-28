@@ -2226,6 +2226,7 @@ export const ja: TranslationSchema = {
     designation_room_title: '解錠済みのドア ({sides})',
     turn_order_label: '手番順',
     turn_active_badge: '手番',
+    spotlight_seat_in_main: 'この席は大きく表示されている盤面です',
     turn_active_suffix: ' — 手番',
     turn_priority_suffix: '（優先権）',
     seat_focus: 'このボードを表示',

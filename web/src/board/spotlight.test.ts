@@ -65,21 +65,21 @@ describe('spotlight', () => {
   })
 
   it('BRD-6: a spectator\'s panel lists every other seat in turn order after the home seat', () => {
-    expect(panelSeatIds(SEATS, 'p3', 'p3')).toEqual(['p4', 'p1', 'p2'])
-    expect(panelSeatIds(SEATS, 'p3', 'p1')).toEqual(['p4', 'p2', 'p3'])
-    expect(panelSeatIds(SEATS, 'p1', 'p2')).toEqual(['p3', 'p4', 'p1'])
+    expect(panelSeatIds(SEATS, 'p3')).toEqual(['p4', 'p1', 'p2', 'p3'])
+    expect(panelSeatIds(['p2', 'p3', 'p1'], 'p3')).toEqual(['p1', 'p2', 'p3'])
   })
 
-  it('BRD-6: the panel lists every other seat in turn order after the player, the own seat last when it is not main', () => {
-    expect(panelSeatIds(SEATS, ME, ME)).toEqual(['p2', 'p3', 'p4'])
-    expect(panelSeatIds(SEATS, ME, 'p3')).toEqual(['p2', 'p4', 'p1'])
-    expect(panelSeatIds(['p2', 'p3', 'p1'], 'p3', 'p2')).toEqual(['p1', 'p3'])
+  it('BRD-6: the panel lists every seat of the table, the home seat last, and which one is drawn large moves none of them', () => {
+    expect(panelSeatIds(SEATS, ME)).toEqual(['p2', 'p3', 'p4', 'p1'])
+    expect(panelSeatIds(SEATS, ME)).toContain(ME)
+    // The order is a function of the home seat alone: switching boards cannot reshuffle the column.
+    expect(panelSeatIds(SEATS, 'p3')).toEqual(['p4', 'p1', 'p2', 'p3'])
   })
 
   it('BRD-6: a defeated seat keeps its place in the panel', () => {
     const withDefeated = ['p1', 'p2', 'p3', 'p4']
-    expect(panelSeatIds(withDefeated, ME, ME)).toContain('p2')
-    expect(panelSeatIds(withDefeated, ME, ME)).toEqual(['p2', 'p3', 'p4'])
+    expect(panelSeatIds(withDefeated, ME)).toContain('p2')
+    expect(panelSeatIds(withDefeated, ME)).toEqual(['p2', 'p3', 'p4', 'p1'])
   })
 
   it('BRD-7: the own board is the main board until a seat is picked', () => {

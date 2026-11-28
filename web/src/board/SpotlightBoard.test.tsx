@@ -158,7 +158,11 @@ describe('SpotlightBoard', () => {
       expect(head.closest('[data-copy-player]')).toBeNull()
       expect(panel.contains(head)).toBe(true)
     }
-    expect(panel.querySelector('[data-testid="spotlight-head-p2"]')).toBeNull()
+    // BRD-6: the seat drawn large keeps its head and its place; what it does not keep is a second
+    // copy of the board already on screen.
+    expect(panel.querySelector('[data-testid="spotlight-head-p2"]')).not.toBeNull()
+    expect(panel.querySelector('[data-testid="spotlight-copy-p2"]'), 'no second copy of the main board').toBeNull()
+    expect(panel.querySelector('[data-testid="spotlight-main-seat-p2"] .is-main-slot')).not.toBeNull()
   })
 
   it('BRD-31: the head follows the life in each new game view and marks the player whose turn it is', () => {

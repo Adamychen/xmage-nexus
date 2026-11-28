@@ -41,12 +41,15 @@ export function chooseMainSeat(clicked: string, declaration: string | null): Spo
   return { playerId: clicked, pickedIn: declaration }
 }
 
-export function panelSeatIds(playerIds: readonly string[], homeId: string, mainId: string): string[] {
+/**
+ * BRD-6: every seat of the table, in turn order after the player's own, which goes last. The seat
+ * drawn in the main area is in the list too: its place in the panel is its place for the whole
+ * game, so switching boards never shuffles the column under the pointer.
+ */
+export function panelSeatIds(playerIds: readonly string[], homeId: string): string[] {
   const index = playerIds.indexOf(homeId)
-  const ordered = index === -1
-    ? [...playerIds]
-    : [...playerIds.slice(index + 1), ...playerIds.slice(0, index + 1)]
-  return ordered.filter((id) => id !== mainId)
+  if (index === -1) return [...playerIds]
+  return [...playerIds.slice(index + 1), ...playerIds.slice(0, index + 1)]
 }
 
 export function choiceForGame(

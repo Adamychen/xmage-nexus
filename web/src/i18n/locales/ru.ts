@@ -2226,6 +2226,7 @@ export const ru: TranslationSchema = {
     designation_room_title: 'Открытые двери ({sides})',
     turn_order_label: 'Порядок ходов',
     turn_active_badge: 'Активен',
+    spotlight_seat_in_main: 'Это место показано как большой стол',
     turn_active_suffix: ' — активный ход',
     turn_priority_suffix: ' (приоритет)',
     seat_focus: 'Показать это поле',

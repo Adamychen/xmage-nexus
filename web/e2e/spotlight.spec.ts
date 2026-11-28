@@ -165,11 +165,17 @@ for (const vp of VIEWPORTS) {
       const ring = await ringOrder(page)
       const me = ring.indexOf('p1')
       const expected = [...ring.slice(me + 1), ...ring.slice(0, me)]
-      const copies = await page.locator('[data-testid^="spotlight-copy-"]').evaluateAll((els) =>
+      // BRD-6: every seat has a cell, the player's own last, and the one drawn large holds the eye
+      // instead of a second copy of the board already on screen.
+      const seats = await page.locator('.spotlight-copy-item').evaluateAll((els) =>
+        els.map((el) => el.getAttribute('data-seat-id')),
+      )
+      expect(seats).toEqual([...expected, 'p1'])
+      const copies = await page.locator('[data-testid^="spotlight-copy-p"]').evaluateAll((els) =>
         els.map((el) => el.getAttribute('data-copy-player')),
       )
       expect(copies).toEqual(expected)
-      expect(copies).toHaveLength(3)
+      await expect(page.getByTestId('spotlight-main-seat-p1').locator('.is-main-slot')).toBeVisible()
       for (const id of copies) expect(await copyScale(page, id!)).toBeLessThan(1)
       const body = await rect(page, '.spotlight-body')
       const main = await rect(page, '[data-testid="spotlight-main"]')
@@ -260,10 +266,10 @@ for (const vp of VIEWPORTS) {
       await loadSpotlight(page, { spectator: true })
       await expect(page.getByTestId('hand-bar')).toHaveCount(0)
       expect(await mainSeat(page)).toBe('p4')
-      const copies = await page.locator('[data-testid^="spotlight-copy-"]').evaluateAll((els) =>
-        els.map((el) => el.getAttribute('data-copy-player')),
-      )
-      expect(copies).toEqual(['p3', 'p2', 'p1'])
+      const seats = () => page.locator('.spotlight-copy-item').evaluateAll((els) => els.map((el) => el.getAttribute('data-seat-id')))
+      const column = await seats()
+      expect(column.length, 'every seat of the table has its cell').toBe(4)
+      expect(column).toContain('p4')
       await clickCopy(page, 'p2')
       await expect(page.getByTestId('spotlight-main')).toHaveAttribute('data-main-seat', 'p2')
       await expect(page.getByTestId('spotlight-copy-p4')).toBeVisible()
@@ -271,6 +277,8 @@ for (const vp of VIEWPORTS) {
       await expect(page.getByTestId('spotlight-main')).toHaveAttribute('data-main-seat', 'p3')
       await expect(page.getByTestId('tor-seat-p3')).toHaveAttribute('aria-pressed', 'true')
       await expect(page.getByTestId('spotlight-copy-p3')).toHaveCount(0)
+      // BRD-6: two changes of main board, and not one seat has moved in the column.
+      expect(await seats()).toEqual(column)
     })
 
     test('BRD-7: the own hand stays centred under the main area whatever board is main @spotlight', async ({ page }) => {

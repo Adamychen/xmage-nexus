@@ -185,6 +185,19 @@
   border-right-color: rgb(var(--gold-rgb) / 0.6);
 }
 
+/* BRD-6: the seat whose board is drawn at full size keeps its place in the panel, marked with the
+   eye instead of a second copy of what is already on screen. Its cell takes that seat's own colour,
+   so the place you are looking at is told apart at a glance from the boards you could switch to. */
+.spotlight-copy-slot.is-main-slot {
+  display: grid;
+  place-items: center;
+  cursor: default;
+  border-style: dashed;
+  border-color: color-mix(in srgb, var(--seat, var(--line-2)) 65%, transparent);
+  background: color-mix(in srgb, var(--seat, transparent) 8%, var(--ink-1));
+  color: color-mix(in srgb, var(--seat, var(--fg-2)) 85%, transparent);
+}
+
 /* BRD-30: an opponent out of the game keeps its place folded to its head, with no board under it. */
 .spotlight-copy-item.is-out,
 .spotlight-panel.has-copy-ratio .spotlight-copy-item.is-out {
@@ -222,6 +235,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  text-align: center;
   font-family: var(--font-display);
   font-size: var(--fs-sm);
   font-weight: 700;

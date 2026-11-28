@@ -2226,6 +2226,7 @@ export const fr: TranslationSchema = {
     designation_room_title: 'Portes déverrouillées ({sides})',
     turn_order_label: 'Ordre des tours',
     turn_active_badge: 'Actif',
+    spotlight_seat_in_main: 'Ce siège est le plateau affiché en grand',
     turn_active_suffix: ' — tour actif',
     turn_priority_suffix: ' (priorité)',
     seat_focus: 'Afficher ce plateau',

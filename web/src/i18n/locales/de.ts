@@ -2226,6 +2226,7 @@ export const de: TranslationSchema = {
     designation_room_title: 'Türen entriegelt ({sides})',
     turn_order_label: 'Zugreihenfolge',
     turn_active_badge: 'Aktiv',
+    spotlight_seat_in_main: 'Dieser Spieler ist das große Spielfeld',
     turn_active_suffix: ' — aktiver Zug',
     turn_priority_suffix: ' (Priorität)',
     seat_focus: 'Dieses Spielfeld anzeigen',

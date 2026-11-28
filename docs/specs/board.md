@@ -105,14 +105,19 @@ Settings → Board has a **Main board with side panel** switch (`boardSpotlight`
 With it on, a player (not a spectator) with at least one opponent
 still in the game — a duel, a game that started as one, or a pod down to two — sees one board at
 full size in the main area — their own when the game starts —
-and every other seat in a panel on the left edge of the board, one copy per seat, top to bottom
-in turn order starting after the player. The panel takes the left edge because the stack rises on
+and every seat of the table in a panel on the left edge of the board, one cell per seat, top to
+bottom in turn order starting after the player, with the player's own seat last. The seat drawn in
+the main area keeps its cell: instead of a second copy of the board already on screen, the cell
+holds an eye in that seat's own colour. So a seat is always in the same place in the column, and
+switching boards never shuffles the cells under the pointer. The panel takes the left edge because the stack rises on
 the right one, and a panel there covered it. What belongs to the board being played on is laid out
 over the main area rather than over the whole board: the own hand's fan takes the main area as its
 band (so the panel is outside it instead of eating the fan's width) and the order line is centred
-on it (PRM-18). A copy is the whole board of that seat (status row,
-battlefield bands, command zone, piles) laid out at the size of the main area and scaled down as
-one piece, so it keeps the main area's proportions and its cards never wrap or clip differently
+on it (PRM-18). Above each cell sits its head: the life first, then the turn badge, then the name centred in what
+is left, because the column is narrow and a long name used to push the number off a tidy edge
+(BRD-31); the boards themselves keep the name first. A copy is the whole board of that seat (status
+row, battlefield bands, command zone, piles) laid out at the size of the main area and scaled down
+as one piece, so it keeps the main area's proportions and its cards never wrap or clip differently
 from the same board in the main area. Every copy spans the panel's width and takes the main area's
 proportions, its height following from that width, so its box never stretches past the board drawn
 in it; when the copies do not fit the panel's height the panel scrolls vertically, never sideways. The room the list keeps for that scrollbar stays reserved whether or not it scrolls, because a bar that comes and goes changes the width the copies size from and the panel never settles; what it costs is the bar itself, drawn at the panel's own width for it, and not a wider band of air beside every copy. Every board, main or copy, is laid out the way the own board
