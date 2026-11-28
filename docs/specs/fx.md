@@ -158,11 +158,15 @@ FX colours come from `web/src/ui/tokens.css` (`--mana-*-rgb`, `--ember-rgb`, …
 literals; the app-wide style ratchet (`styleTokens.test.ts`) refuses new literal colours. Effects
 animate `transform` and `opacity` only, and on a card they use the independent `translate` and
 `scale` properties, so a tapped card stays tapped through every hover and effect. A looping status
-effect lives on a child element, never on the card slot.
+effect lives on a child element, never on the card slot. The same holds while a cost is being
+paid: a land tapped by clicking it reads 90° from the frame the view reports the tap, through the
+regrouping that follows.
 
 - Why: `docs/lessons.md`, Web client: the tap rotation lives in `transform`, so an effect writing
   `transform` straightened tapped cards; an infinite animation on the slot froze the hover lift or
-  erased the target glow.
+  erased the target glow. The payment case was added after a report of a land that stayed drawn
+  straight until the board was redrawn (28-nov-2026); it does not reproduce, so the spec pins the
+  behaviour that holds instead of describing a defect.
 - Guard: `src/board/KeywordAura.css.test.ts` · `e2e/tapped-rotation.spec.ts` (the colour part is
   held by the app-wide `styleTokens.test.ts` ratchet, which does not carry the id)
 

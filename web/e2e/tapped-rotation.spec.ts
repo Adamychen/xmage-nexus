@@ -3,6 +3,7 @@ import { fakeOnly } from './support/fake-mode'
 import { withFakeServer } from './support/fake-backend'
 import { quickStartGame } from './support/start-game'
 import { tokensScenario } from '../fixtures/scenarios/tokens'
+import { manaTapPaintScenario } from '../fixtures/scenarios/manaTapPaint'
 fakeOnly()
 
 const ROT_90 = 'matrix(0, 1, -1, 0, 0, 0)'
@@ -69,6 +70,40 @@ test.describe('Rotación de cartas giradas', () => {
       expect(
         angles.filter((a) => a !== 90),
         `la animación de aparición enderezó la carta en ${angles.filter((a) => a !== 90).length} muestras (${angles.join(',')})`,
+      ).toEqual([])
+
+      expect(pageErrors).toEqual([])
+    })
+  })
+
+  test('FX-11: a land tapped to pay mana is drawn rotated from the moment the view says so @tapped', async ({ page }) => {
+    await withFakeServer(manaTapPaintScenario, async () => {
+      const { pageErrors } = await quickStartGame(page, { prefix: 'tappaint', skipAsks: true })
+
+      // The last card of a fanned group is the one on top, so it is the one a player can click.
+      const forest = page.locator('[data-card-id="mountain-2"]')
+      await expect(forest).toBeVisible({ timeout: 30_000 })
+      await forest.click()
+      await expect(forest).toHaveAttribute('data-tapped', '1', { timeout: 10_000 })
+
+      // From the first frame the view reports the tap, the card must read 90° and stay there
+      // while the lands regroup: a regrouping animation that writes `transform` would wipe the
+      // rotation and leave the land drawn straight until something remounts it.
+      const angles = await page.evaluate(async () => {
+        const el = document.querySelector('[data-card-id="mountain-2"]')
+        if (!el) return [-1]
+        const out: number[] = []
+        for (let i = 0; i < 40; i++) {
+          const m = /matrix\(([^)]+)\)/.exec(getComputedStyle(el).transform)
+          const [a, b] = m ? m[1].split(',').map(Number) : [1, 0]
+          out.push(Math.round(Math.abs((Math.atan2(b, a) * 180) / Math.PI)))
+          await new Promise((r) => setTimeout(r, 25))
+        }
+        return out
+      })
+      expect(
+        angles.filter((a) => a !== 90),
+        `the tapped land straightened in ${angles.filter((a) => a !== 90).length} of ${angles.length} samples (${angles.join(',')})`,
       ).toEqual([])
 
       expect(pageErrors).toEqual([])

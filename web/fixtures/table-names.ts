@@ -65,4 +65,5 @@ export const TABLE = {
   cardInspector: 'card-inspector-test',
   learn: 'learn-test',
   cardOverlays: 'card-overlays-test',
+  manaTapPaint: 'mana-tap-paint-test',
 } as const
