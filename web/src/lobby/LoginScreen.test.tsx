@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import LoginScreen from './LoginScreen'
+import LoginScreen, { contributorsByWork } from './LoginScreen'
 import { doConnect } from '../state/gateway'
 import { setState } from '../state/state'
 import { saveConn, loadConn } from '../state/persistence'
@@ -84,6 +84,21 @@ describe('LoginScreen contributors', () => {
     expect(box.querySelector('h2')?.textContent).toBeTruthy()
     const names = Array.from(box.querySelectorAll('li')).map((li) => li.textContent)
     expect(names).toEqual(['NovaGlow', 'DarioBarrabinoDev'])
+  })
+
+  it('LBY-16: the names are listed by how much each one has worked on the client', () => {
+    expect(contributorsByWork([
+      { name: 'Few', commits: 3 },
+      { name: 'Most', commits: 300 },
+      { name: 'Some', commits: 30 },
+    ])).toEqual(['Most', 'Some', 'Few'])
+    // A tie reads in alphabetical order, so the list never depends on where a name was typed.
+    expect(contributorsByWork([
+      { name: 'Zoe', commits: 10 },
+      { name: 'Ada', commits: 10 },
+    ])).toEqual(['Ada', 'Zoe'])
+    // And the real list is already in that order on screen.
+    expect(contributorsByWork()).toEqual(['NovaGlow', 'DarioBarrabinoDev'])
   })
 })
 

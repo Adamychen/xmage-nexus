@@ -74,7 +74,20 @@ function parsePort(raw: string): number | null {
 const presetOf = (host: string): ServerPreset =>
   host === 'beta.xmage.today' ? 'official' : host === XDHS_SERVER_HOST ? 'xdhs' : isLoopbackHost(host) ? 'local' : 'custom'
 
-const CONTRIBUTORS = ['NovaGlow', 'DarioBarrabinoDev']
+/**
+ * LBY-16: who has worked on the client, with the commits each one has in this repository. The
+ * numbers come from the repository itself and are a snapshot, taken with
+ * `git shortlog -sn -- web Mage.Proxy scripts docs site` and adding up the names a person commits
+ * under; refresh them the same way when somebody joins. The list is drawn in that order, so a name
+ * appended at the end still lands where it belongs.
+ */
+const CONTRIBUTORS: ReadonlyArray<{ name: string; commits: number }> = [
+  { name: 'NovaGlow', commits: 746 },
+  { name: 'DarioBarrabinoDev', commits: 83 },
+]
+
+export const contributorsByWork = (people: ReadonlyArray<{ name: string; commits: number }> = CONTRIBUTORS): string[] =>
+  [...people].sort((a, b) => b.commits - a.commits || a.name.localeCompare(b.name)).map((p) => p.name)
 
 export default function LoginScreen() {
   const { t, tError, lang } = useTranslation()
@@ -440,7 +453,7 @@ export default function LoginScreen() {
         <aside className="login-contributors panel" data-testid="login-contributors">
           <h2 className="login-contributors-title">{t('login.contributors_title')}</h2>
           <ul className="login-contributors-list">
-            {CONTRIBUTORS.map((name) => (
+            {contributorsByWork().map((name) => (
               <li key={name}>{name}</li>
             ))}
           </ul>

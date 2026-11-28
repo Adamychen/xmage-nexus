@@ -185,12 +185,16 @@ no life, so the server's own default always wins; the table only mirrors it
 ### LBY-16 · The contributors are credited in a box beside the login card
 The login screen names its contributors in a panel to the right of the login card, vertically
 centred on the card's right edge, under the heading "Contributors" in the player's language. The
-panel is a list of names, never a sentence, and it stays out of the card's way: below 1100 px of
-width it moves under the card instead of beside it, centred with it. It does not take focus or clicks.
+panel is a list of names, never a sentence, ordered by how much each one has worked on the client,
+most first, and it stays out of the card's way: below 1100 px of width it moves under the card
+instead of beside it, centred with it. It does not take focus or clicks.
 
 - Why: the first credit was one sentence pinned to the corner, which read as a footnote and was
   hard to extend. A list in its own box grows by adding a name to `CONTRIBUTORS`
-  (`LoginScreen.tsx`) and needs no translation per name.
+  (`LoginScreen.tsx`) and needs no translation per name. Each entry carries the commits that person
+  has in the repository, a snapshot taken with `git shortlog -sn -- web Mage.Proxy scripts docs
+  site`, and the screen sorts by it, so a name appended at the end of the list still lands where it
+  belongs and nobody has to keep the file in order by hand (asked for on 28-nov-2026).
 - Guard: `src/lobby/LoginScreen.test.tsx`
 
 ### LBY-17 · The account password is never saved on the device
