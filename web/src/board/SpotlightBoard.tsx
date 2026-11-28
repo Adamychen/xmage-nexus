@@ -133,9 +133,9 @@ function CopyHead({ player, players, active, onSelect }: { player: PlayerView; p
       aria-label={`${player.name} · ${lifeLabel}: ${player.life}`}
       onClick={onSelect}
     >
-      {/* BRD-31: in the panel the life leads, the turn badge follows, and the name takes the rest
-          from the left, where a name is read from. The column is narrow and a long name used to
-          push the number off a tidy edge, which is why the life goes first. */}
+      {/* BRD-31: in the panel the life leads, the turn badge follows, and the name ends at the
+          right edge. The column is narrow and a long name used to push the number off a tidy
+          edge, which is why the life goes first. */}
       <span className="spotlight-copy-head-life" title={lifeLabel}>
         <Icon name="heart" size={12} />
         {player.life}

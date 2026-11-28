@@ -113,8 +113,8 @@ switching boards never shuffles the cells under the pointer. The panel takes the
 the right one, and a panel there covered it. What belongs to the board being played on is laid out
 over the main area rather than over the whole board: the own hand's fan takes the main area as its
 band (so the panel is outside it instead of eating the fan's width) and the order line is centred
-on it (PRM-18). Above each cell sits its head: the life first, then the turn badge, then the name, which starts
-where they end and runs to the right (BRD-31). The life leads because the column is narrow and a
+on it (PRM-18). Above each cell sits its head: the life first, then the turn badge, then the name, which ends at
+the right edge of the cell (BRD-31). The life leads because the column is narrow and a
 long name used to push the number off a tidy edge; the boards themselves keep the name first. A copy is the whole board of that seat (status
 row, battlefield bands, command zone, piles) laid out at the size of the main area and scaled down
 as one piece, so it keeps the main area's proportions and its cards never wrap or clip differently
@@ -576,7 +576,9 @@ who only lost the connection is still in the game for the server until it drops 
 ### BRD-31 · Each copy in the side panel shows its player's name and life
 In the main board mode (BRD-6) every copy in the panel has a head above it, drawn at full size and
 not scaled with the board: the player's name (cut with an ellipsis when it does not fit) and their
-life with a heart, updated with every game view. No bar of the seat colour beside the name: the
+life with a heart, updated with every game view. The life opens the head on the left and the name
+closes it on the right, with the air between them; a name too long for what is left is cut at its
+tail, never at its start. No bar of the seat colour beside the name: the
 board under the head already carries that colour, and a second copy of it only drew a line. The head of the player whose turn
 it is carries a turn badge and a gold edge. A click on the head brings that seat to the main area,
 as a click on the copy does (BRD-7). The board in the main area has no head: its own status row is
@@ -585,7 +587,7 @@ already readable.
 - Why: a scaled copy is a few hundred pixels wide, so its own status row is too small to tell whose
   board it is or how much life they have; the user asked for the name and life on each box, as
   EDHPlay shows them (user report, 2026-11-12). The look follows the panel, not EDHPlay's.
-- Guard: `src/board/SpotlightBoard.test.tsx`
+- Guard: `src/board/SpotlightBoard.test.tsx` · `e2e/spotlight.spec.ts`
 
 ### BRD-32 · The board at the bottom is framed around the hand
 The board drawn at the bottom, with or without the side panel (BRD-6), keeps the battlefield clear

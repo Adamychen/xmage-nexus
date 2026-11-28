@@ -241,6 +241,35 @@ for (const vp of VIEWPORTS) {
       expect(clipped).toEqual([])
     })
 
+    test('BRD-31: in every panel head the life opens the row on the left and the name closes it on the right @spotlight', async ({ page }) => {
+      await loadSpotlight(page)
+      await expect(page.locator('.spotlight-copy-head-name').first()).toBeVisible()
+      const heads = await page.locator('[data-testid^="spotlight-head-"]').evaluateAll((els) =>
+        els
+          .filter((el) => el.querySelector('.spotlight-copy-head-name') && el.querySelector('.spotlight-copy-head-life'))
+          .map((el) => {
+            const style = getComputedStyle(el)
+            const box = el.getBoundingClientRect()
+            const life = el.querySelector('.spotlight-copy-head-life')!.getBoundingClientRect()
+            // The painted text, not its box: a box that fills the row is flush right while its
+            // name still starts on the left.
+            const range = document.createRange()
+            range.selectNodeContents(el.querySelector('.spotlight-copy-head-name')!)
+            const name = range.getBoundingClientRect()
+            return {
+              seat: el.getAttribute('data-testid'),
+              lifeInset: Math.round(life.left - (box.left + (parseFloat(style.paddingLeft) || 0))),
+              nameInset: Math.round(box.right - (parseFloat(style.paddingRight) || 0) - name.right),
+            }
+          }),
+      )
+      expect(heads.length, 'the panel draws heads').toBeGreaterThan(1)
+      for (const head of heads) {
+        expect(head.lifeInset, `${head.seat}: the life opens the row`).toBeLessThanOrEqual(1)
+        expect(head.nameInset, `${head.seat}: the name closes it on the right`).toBeLessThanOrEqual(1)
+      }
+    })
+
     test('BRD-7: clicking a copy brings that board to the main area and the old main board to the panel @spotlight', async ({ page }) => {
       await loadSpotlight(page)
       await clickCopy(page, 'p2')

@@ -230,7 +230,10 @@
 }
 
 .spotlight-copy-head-name {
-  flex: 1 1 auto;
+  /* BRD-31: the name ends at the right edge of the head. It does not grow to fill the row, so a
+     name that does not fit is cut at its tail and not at its start. */
+  flex: 0 1 auto;
+  margin-left: auto;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
