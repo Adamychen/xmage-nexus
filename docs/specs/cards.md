@@ -48,13 +48,17 @@ footer action pinned to the bottom, 44 px tall. No label in it is clipped.
 - Guard: `e2e/card-inspector.spec.ts`
 
 ### CRD-4 · The rules text reads as abilities
-Each ability is its own paragraph. A planeswalker's loyalty abilities are rows with the cost as a
-badge (light for +, grey for 0, dark for −); an ability the current loyalty cannot pay for is dimmed.
-The keyword abilities the card has are explained under the rules, with the same glossary the hover
-preview uses.
+Each ability is its own paragraph. A planeswalker's loyalty abilities are rows whose cost wears the
+printed shield, the same one the activation dialog draws: pointing up for a plus in green, down for
+a minus in red, flat for a zero. A cost with no number (an X) keeps a plain slot. An ability the
+current loyalty cannot pay for is dimmed. The keyword abilities the card has are explained under the
+rules, with the same glossary the hover preview uses.
 
 - Why: the text was one block with the loyalty costs as plain "+2:" prefixes and no space between
   abilities, and a new player had no way to learn what a keyword means without leaving the game.
+  The costs were then drawn as a flat badge of their own invention while the dialog that activates
+  the very same ability drew the printed shield, so the player asked for the icons he knew
+  (28-nov-2026).
 - Guard: `src/board/cardInspectorModel.test.ts` · `e2e/card-inspector.spec.ts`
 
 ### CRD-5 · The header names the card the way a player reads it

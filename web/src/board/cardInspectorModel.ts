@@ -39,6 +39,8 @@ export interface InspectorState {
 export interface LoyaltyRow {
   cost: string
   sign: 'plus' | 'zero' | 'minus'
+  /** The cost as a number (+1, 0, -3), so the row can wear the printed shield; null for `X`. */
+  delta: number | null
   text: string
   affordable: boolean
 }
@@ -154,11 +156,11 @@ export function loyaltyRows(card: CardView, rules: string[], loyalty: number | n
   const rows: RuleRow[] = parseRows(rules, LOYALTY_ROW)
   if (!rows.some((r) => r.label != null)) return null
   return rows.map((r) => {
-    if (r.label == null) return { cost: '', sign: 'zero', text: r.text, affordable: true }
+    if (r.label == null) return { cost: '', sign: 'zero', delta: null, text: r.text, affordable: true }
     const cost = r.label.replace(/[–-]/g, '−')
     const sign = cost.startsWith('+') ? 'plus' : cost.startsWith('−') ? 'minus' : 'zero'
     const amount = toInt(cost.replace('−', '-').replace('+', ''))
     const affordable = sign !== 'minus' || loyalty == null || amount == null || loyalty + amount >= 0
-    return { cost, sign, text: r.text, affordable }
+    return { cost, sign, delta: amount, text: r.text, affordable }
   })
 }

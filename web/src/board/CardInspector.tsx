@@ -22,6 +22,7 @@ import {
   type InspectorState,
 } from './cardInspectorModel'
 import { KeywordCoin } from './KeywordGlyph'
+import { LoyaltyCostPlate } from './StatPlate'
 import FormattedText from '../game/FormattedText'
 import { ManaCost } from '../decks/ArenaManaSymbols'
 import { counterName } from './counterName'
@@ -285,7 +286,14 @@ export default function CardInspector() {
                           className={`card-inspector-ability${row.affordable ? '' : ' is-unaffordable'}`}
                           title={row.affordable ? undefined : t('dialogs', 'card_inspect_loyalty_short')}
                         >
-                          {row.cost && <span className={`card-inspector-cost is-${row.sign}`}>{row.cost}</span>}
+                          {/* CRD-4: the same shield the activation dialog uses, so a loyalty cost
+                              is read the same way wherever it is printed. A cost with no number
+                              (an X) keeps the plain slot. */}
+                          {row.cost && (
+                            <span className={`card-inspector-cost is-${row.sign}${row.delta != null ? ' has-plate' : ''}`}>
+                              {row.delta != null ? <LoyaltyCostPlate delta={row.delta} /> : row.cost}
+                            </span>
+                          )}
                           <span className="card-inspector-ability-text">
                             <FormattedText text={row.text} cardName={displayName} />
                           </span>

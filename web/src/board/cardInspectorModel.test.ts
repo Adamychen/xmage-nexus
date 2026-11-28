@@ -104,6 +104,12 @@ describe('card inspector rules text', () => {
     expect(rows[0].text).toBe('Look.')
   })
 
+  it('CRD-4: every loyalty cost carries its number, so the row can wear the printed shield', () => {
+    expect(loyaltyRows(jace, rules, 5)!.map((r) => r.delta)).toEqual([2, 0, -1, -12])
+    // An X cost has no number to put in a shield; it keeps its text.
+    expect(loyaltyRows(jace, ['X: Do a thing.'], 5)![0].delta).toBeNull()
+  })
+
   it('CRD-4: keeps every row payable when the loyalty is unknown', () => {
     expect(loyaltyRows(jace, rules, null)!.every((r) => r.affordable)).toBe(true)
   })

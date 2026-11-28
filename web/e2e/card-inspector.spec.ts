@@ -162,7 +162,9 @@ test.describe('Card inspector (right click)', { tag: '@game' }, () => {
 
       const inspector = await inspect(page, 'Jace, the Mind Sculptor')
       await expect(inspector.locator('[data-stat="loyalty"]')).toContainText('5')
-      await expect(inspector.locator('.card-inspector-cost')).toHaveText(['+2', '0', '\u22121', '\u221212'])
+      // CRD-4: the cost wears the printed shield, the same one the activation dialog draws.
+      await expect(inspector.locator('.loyalty-cost-plate .loyalty-cost-val')).toHaveText(['+2', '0', '\u22121', '\u221212'])
+      await expect(inspector.locator('.card-inspector-cost.has-plate')).toHaveCount(4)
       await expect(inspector.locator('.card-inspector-ability.is-unaffordable')).toHaveCount(1)
       await expect(inspector.locator('.card-inspector-ability.is-unaffordable')).toContainText('Exile all cards')
       expect(pageErrors, `pageerrors: ${pageErrors.map(String).join(' | ')}`).toEqual([])
