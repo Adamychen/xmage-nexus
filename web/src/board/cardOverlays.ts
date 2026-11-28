@@ -73,6 +73,11 @@ export function normalizeBoardSpotlight(value: unknown): boolean {
   return value === true
 }
 
+/** BRD-71: whether the turn brings the active player's board to the main area, off unless asked. */
+export function normalizeSpotlightFollowTurn(value: unknown): boolean {
+  return value === true
+}
+
 export const SPOTLIGHT_PANEL_MIN = 15
 export const SPOTLIGHT_PANEL_MAX = 35
 export const SPOTLIGHT_PANEL_DEFAULT = 22

@@ -269,6 +269,16 @@ function LayoutTab() {
           value={settings.boardFill} onChange={(v) => setSetting('boardFill', v)} />
         <OptionSwitch id="board-spotlight" kind="boardSpotlight" label={t('lobby', 'board_spotlight_show')} hint={t('lobby', 'board_spotlight_show_hint')}
           value={settings.boardSpotlight} onChange={(v) => setSetting('boardSpotlight', v)} />
+        {/* BRD-71: only worth asking about while the side panel is the mode in use. */}
+        {settings.boardSpotlight && (
+          <SwitchRow
+            id="spotlight-follow-turn"
+            label={t('lobby', 'spotlight_follow_turn')}
+            hint={t('lobby', 'spotlight_follow_turn_hint')}
+            checked={settings.spotlightFollowTurn}
+            onChange={(v) => setSetting('spotlightFollowTurn', v)}
+          />
+        )}
       </SettingsGroup>
       {/* SET-5: a picker is a section of its own, like every other one. Nested in the group above,
           its title and its hint fell inside that card, glued to the row before them. */}

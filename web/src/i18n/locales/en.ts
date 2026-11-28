@@ -828,6 +828,8 @@ export const en = {
     board_fill_show_hint: 'Make the cards as large as the free space allows: few permanents get big cards, a crowded board shrinks them',
     board_spotlight_show: 'Main board with side panel',
     board_spotlight_show_hint: 'In multiplayer games on the Arena and Table layouts, show one board at full size and the other players\' boards as small copies in a panel on the left. Click a copy to bring it to the main area.',
+    spotlight_follow_turn: 'Follow the turn',
+    spotlight_follow_turn_hint: "Each new turn brings the active player's board to the main area",
     stack_caption_show: 'Show the effect over the top stack card',
     stack_caption_show_hint: 'Shows the kind (triggered ability, spell, creature…) and its rules text over the top stack card in image mode. Turn it off when the art makes the text hard to read.',
     hand_layout_title: 'How your hand is drawn',

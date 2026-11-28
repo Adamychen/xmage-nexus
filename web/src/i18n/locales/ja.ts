@@ -830,6 +830,8 @@ export const ja: TranslationSchema = {
     board_fill_show_hint: '空きスペースの許す限りカードを大きくします。パーマネントが少ないと大きく、多いと小さくなります',
     board_spotlight_show: 'メイン盤面とサイドパネル',
     board_spotlight_show_hint: 'アリーナとテーブルのレイアウトのマルチプレイヤー戦で、1つの盤面を大きく表示し、他のプレイヤーの盤面を左側のパネルに小さなコピーとして表示します。コピーをクリックすると、メイン表示に切り替わります。',
+    spotlight_follow_turn: 'ターンを追う',
+    spotlight_follow_turn_hint: "新しいターンごとに、アクティブなプレイヤーの盤面をメイン領域に出します",
     stack_caption_show: 'スタックの一番上のカードに種類と効果を表示',
     stack_caption_show_hint: '画像モードでは、スタック最上部のカードの上に種類（誘発型能力、呪文、クリーチャーなど）とルール文を表示します。絵柄で文字が読みにくい場合はオフにしてください。',
     hand_layout_title: '手札の表示方法',

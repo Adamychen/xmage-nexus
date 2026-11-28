@@ -830,6 +830,8 @@ export const es: TranslationSchema = {
     board_fill_show_hint: 'Hace las cartas tan grandes como permita el espacio libre: con pocos permanentes salen grandes, con muchos se reducen',
     board_spotlight_show: 'Tablero principal con panel lateral',
     board_spotlight_show_hint: 'En partidas multijugador con los diseños Arena y Mesa, muestra un tablero a tamaño completo y los tableros de los demás jugadores como copias pequeñas en un panel a la izquierda. Al hacer clic en una copia, pasa al área principal.',
+    spotlight_follow_turn: 'Seguir el turno',
+    spotlight_follow_turn_hint: "Cada turno nuevo trae el tablero del jugador activo al área principal",
     stack_caption_show: 'Mostrar el tipo y el efecto sobre la carta del stack',
     stack_caption_show_hint: 'Muestra el tipo (habilidad disparada, hechizo, criatura…) y su texto de reglas encima de la carta superior del stack con render desactivado. Desactívalo si el arte no deja leer el texto.',
     hand_layout_title: 'Cómo se ve tu mano',

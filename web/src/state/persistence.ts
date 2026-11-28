@@ -868,7 +868,7 @@ import { ZOOM_DEFAULT, normalizeZoom } from '../appearance/zoom'
 import { normalizeAppearanceChoice, type AppearanceChoice } from '../appearance/appearanceChoice'
 import { normalizeCardStyle, normalizeTapStyle, type CardStyle, type TapStyle } from '../board/compactCard'
 import { CARD_PREVIEW_SCALE_DEFAULT, normalizeCardPreviewScale } from '../board/cardPreviewScale'
-import { normalizeBoardSpotlight, normalizeBoardSpotlightPanel, normalizeBoardFill, normalizeStackCaption, normalizeCardRender, normalizeHandRail, normalizeHandRailWidth, normalizeHandRow, normalizePtBadgeMode, normalizeShowHandCost, normalizeShowManaSource, normalizeSicknessStyle, normalizeKeywordAuraMode, type CardRender, type KeywordAuraMode, type PtBadgeMode, type SicknessStyle } from '../board/cardOverlays'
+import { normalizeBoardSpotlight, normalizeBoardSpotlightPanel, normalizeSpotlightFollowTurn, normalizeBoardFill, normalizeStackCaption, normalizeCardRender, normalizeHandRail, normalizeHandRailWidth, normalizeHandRow, normalizePtBadgeMode, normalizeShowHandCost, normalizeShowManaSource, normalizeSicknessStyle, normalizeKeywordAuraMode, type CardRender, type KeywordAuraMode, type PtBadgeMode, type SicknessStyle } from '../board/cardOverlays'
 
 export type ZoomLevel = number
 
@@ -893,12 +893,13 @@ export interface AppearanceSettings {
   boardFill?: boolean
   boardSpotlight?: boolean
   boardSpotlightPanel?: number
+  spotlightFollowTurn?: boolean
   stackCaption?: boolean
   cardPreviewScale?: number
 }
 
 export const APPEARANCE_KEY = 'mage-web-appearance'
-export const DEFAULT_APPEARANCE: AppearanceSettings = { sleeveId: 'classic', appearance: 'dark', uiScale: ZOOM_DEFAULT, cjkBoost: true, transparentDialogs: false, showHandCost: true, showManaSource: false, ptBadgeMode: 'always', sicknessStyle: 'badge', keywordAura: 'subtle', cardRender: 'image', handRail: false, handRailWidth: 260, handRow: false, boardFill: true, boardSpotlight: false, boardSpotlightPanel: 22, stackCaption: true, cardPreviewScale: CARD_PREVIEW_SCALE_DEFAULT }
+export const DEFAULT_APPEARANCE: AppearanceSettings = { sleeveId: 'classic', appearance: 'dark', uiScale: ZOOM_DEFAULT, cjkBoost: true, transparentDialogs: false, showHandCost: true, showManaSource: false, ptBadgeMode: 'always', sicknessStyle: 'badge', keywordAura: 'subtle', cardRender: 'image', handRail: false, handRailWidth: 260, handRow: false, boardFill: true, boardSpotlight: false, boardSpotlightPanel: 22, spotlightFollowTurn: false, stackCaption: true, cardPreviewScale: CARD_PREVIEW_SCALE_DEFAULT }
 
 export function loadAppearanceSettings(): AppearanceSettings {
   const parsed = readJson<Partial<AppearanceSettings>>(APPEARANCE_KEY)
@@ -908,7 +909,7 @@ export function loadAppearanceSettings(): AppearanceSettings {
     const cjkBoost = typeof parsed.cjkBoost === 'boolean' ? parsed.cjkBoost : DEFAULT_APPEARANCE.cjkBoost
     const playmatId = typeof parsed.playmatId === 'string' ? parsed.playmatId : undefined
     const transparentDialogs = parsed.transparentDialogs === true
-    return { sleeveId: sid, appearance: normalizeAppearanceChoice(parsed.appearance), uiScale: scale, cjkBoost, cardStyle: normalizeCardStyle(parsed.cardStyle), tapStyle: normalizeTapStyle(parsed.tapStyle), transparentDialogs, showHandCost: normalizeShowHandCost(parsed.showHandCost), showManaSource: normalizeShowManaSource(parsed.showManaSource), ptBadgeMode: normalizePtBadgeMode(parsed.ptBadgeMode), sicknessStyle: normalizeSicknessStyle(parsed.sicknessStyle), keywordAura: normalizeKeywordAuraMode(parsed.keywordAura), cardRender: normalizeCardRender(parsed.cardRender), handRail: normalizeHandRail(parsed.handRail), handRailWidth: normalizeHandRailWidth(parsed.handRailWidth), handRow: normalizeHandRow(parsed.handRow), boardFill: normalizeBoardFill(parsed.boardFill), boardSpotlight: normalizeBoardSpotlight(parsed.boardSpotlight), boardSpotlightPanel: normalizeBoardSpotlightPanel(parsed.boardSpotlightPanel), stackCaption: normalizeStackCaption(parsed.stackCaption), cardPreviewScale: normalizeCardPreviewScale(parsed.cardPreviewScale), ...(playmatId ? { playmatId } : null) }
+    return { sleeveId: sid, appearance: normalizeAppearanceChoice(parsed.appearance), uiScale: scale, cjkBoost, cardStyle: normalizeCardStyle(parsed.cardStyle), tapStyle: normalizeTapStyle(parsed.tapStyle), transparentDialogs, showHandCost: normalizeShowHandCost(parsed.showHandCost), showManaSource: normalizeShowManaSource(parsed.showManaSource), ptBadgeMode: normalizePtBadgeMode(parsed.ptBadgeMode), sicknessStyle: normalizeSicknessStyle(parsed.sicknessStyle), keywordAura: normalizeKeywordAuraMode(parsed.keywordAura), cardRender: normalizeCardRender(parsed.cardRender), handRail: normalizeHandRail(parsed.handRail), handRailWidth: normalizeHandRailWidth(parsed.handRailWidth), handRow: normalizeHandRow(parsed.handRow), boardFill: normalizeBoardFill(parsed.boardFill), boardSpotlight: normalizeBoardSpotlight(parsed.boardSpotlight), boardSpotlightPanel: normalizeBoardSpotlightPanel(parsed.boardSpotlightPanel), spotlightFollowTurn: normalizeSpotlightFollowTurn(parsed.spotlightFollowTurn), stackCaption: normalizeStackCaption(parsed.stackCaption), cardPreviewScale: normalizeCardPreviewScale(parsed.cardPreviewScale), ...(playmatId ? { playmatId } : null) }
   }
   return { ...DEFAULT_APPEARANCE }
 }

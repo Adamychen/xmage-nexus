@@ -6,7 +6,7 @@ import type { AutoAnswerRule } from '../../game/autoAnswers'
 import type { ChoiceMemoryRule } from '../../game/choiceMemory'
 import { normalizePlaymat, type PlaymatId } from '../../appearance/playmats'
 import { normalizeCardStyle, normalizeTapStyle, type CardStyle, type TapStyle } from '../../board/compactCard'
-import { normalizeBoardSpotlight, normalizeBoardSpotlightPanel, normalizeBoardFill, normalizeStackCaption, normalizeCardRender, normalizeHandRail, normalizeHandRailWidth, normalizeHandRow, normalizePtBadgeMode, normalizeShowHandCost, normalizeShowManaSource, normalizeSicknessStyle, normalizeKeywordAuraMode, type CardRender, type KeywordAuraMode, type PtBadgeMode, type SicknessStyle } from '../../board/cardOverlays'
+import { normalizeBoardSpotlight, normalizeSpotlightFollowTurn, normalizeBoardSpotlightPanel, normalizeBoardFill, normalizeStackCaption, normalizeCardRender, normalizeHandRail, normalizeHandRailWidth, normalizeHandRow, normalizePtBadgeMode, normalizeShowHandCost, normalizeShowManaSource, normalizeSicknessStyle, normalizeKeywordAuraMode, type CardRender, type KeywordAuraMode, type PtBadgeMode, type SicknessStyle } from '../../board/cardOverlays'
 import { normalizeAppearanceChoice, type AppearanceChoice } from '../../appearance/appearanceChoice'
 import { normalizeCardPreviewScale } from '../../board/cardPreviewScale'
 import { gameplayPreset, isGameplayPresetId, type GameplayPresetId } from '../../settings/gameplayPresets'
@@ -57,6 +57,7 @@ export interface SettingsState {
   boardFill: boolean
   boardSpotlight: boolean
   boardSpotlightPanel: number
+  spotlightFollowTurn: boolean
   stackCaption: boolean
   cardPreviewScale: number
   sicknessStyle: SicknessStyle
@@ -89,6 +90,7 @@ export function loadAppearanceSlice() {
     boardFill: normalizeBoardFill(appearance.boardFill),
     boardSpotlight: normalizeBoardSpotlight(appearance.boardSpotlight),
     boardSpotlightPanel: normalizeBoardSpotlightPanel(appearance.boardSpotlightPanel),
+    spotlightFollowTurn: normalizeSpotlightFollowTurn(appearance.spotlightFollowTurn),
     stackCaption: normalizeStackCaption(appearance.stackCaption),
     cardPreviewScale: normalizeCardPreviewScale(appearance.cardPreviewScale),
     sicknessStyle: normalizeSicknessStyle(appearance.sicknessStyle),

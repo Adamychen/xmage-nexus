@@ -1,5 +1,6 @@
 import type { GameView } from '../net/types'
 import { isPlayerOut, MAX_BOARD_PLAYERS } from './boardShared'
+import { useEffect } from 'react'
 import { useStore, setSpotlight } from '../state/store'
 
 export interface SpotlightChoice {
@@ -62,6 +63,7 @@ export function choiceForGame(
 export function useSpotlight(game: GameView | null, homeId: string | undefined, liveOppIds: readonly string[], combatMode: 'attack' | 'block' | null) {
   const spotlight = useStore((s) => s.spotlight)
   const gameId = useStore((s) => s.gameId)
+  const followTurn = useStore((s) => s.settings.spotlightFollowTurn)
   const declaration = declarationKey(game?.turn ?? 0, combatMode)
   const homeOut = isPlayerOut(game?.players?.find((p) => p.playerId === homeId))
   const mainId = homeId
@@ -73,5 +75,19 @@ export function useSpotlight(game: GameView | null, homeId: string | undefined, 
     if (playerId === homeId ? homeOut : !liveOppIds.includes(playerId)) return
     setSpotlight({ gameId, ...chooseMainSeat(playerId, declaration) })
   }
+
+  // BRD-71: with the setting on, every new turn brings the active player's board to the main area,
+  // as if the player had clicked its copy. It runs on the turn and not on every view, so a pick
+  // made during the turn stands until the next one.
+  const activeId = game?.activePlayerId ?? null
+  const turn = game?.turn ?? 0
+  useEffect(() => {
+    if (!followTurn || gameId === null || !activeId || !homeId) return
+    if (activeId === homeId ? homeOut : !liveOppIds.includes(activeId)) return
+    setSpotlight({ gameId, ...chooseMainSeat(activeId, null) })
+    // The turn is what triggers this; the rest is read when it fires.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [followTurn, gameId, turn, activeId])
+
   return { mainId, select }
 }

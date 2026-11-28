@@ -1357,3 +1357,16 @@ and simply carries no ring.
   hexproof is `--ok` and lifelink is `--gold`, the very colours of playable and target
   (27-nov-2026).
 - Guard: `src/board/cardState.css.test.ts` · `src/board/CardSlot.test.tsx` · `src/board/OpponentZone.test.tsx`
+
+### BRD-71 · The main board can follow the turn
+With the side panel on (BRD-6), a setting under its switch makes every new turn bring the active
+player's board to the main area, as if the player had clicked that seat's copy. It is off until
+asked for. What it changes is the same choice a click makes, so a board picked during the turn
+stands until the next one, and a seat out of the game is never followed. With the setting off
+nothing moves on its own: the board stays where the player left it, which is how it worked before.
+
+- Why: at a full table the player was clicking the copy of whoever was playing, turn after turn,
+  and asked for the client to do it (28-nov-2026). It is a setting and not the default because the
+  other half of the time what you want is to watch one board while the turn goes round, which is
+  what the panel is for.
+- Guard: `src/board/spotlight.test.ts`

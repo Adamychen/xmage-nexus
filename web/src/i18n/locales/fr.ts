@@ -830,6 +830,8 @@ export const fr: TranslationSchema = {
     board_fill_show_hint: 'Agrandit les cartes autant que l\'espace libre le permet : peu de permanents donnent de grandes cartes, un champ chargé les réduit',
     board_spotlight_show: 'Plateau principal avec panneau latéral',
     board_spotlight_show_hint: 'Dans les parties multijoueurs des dispositions Arène et Table, affiche un plateau en grand et ceux des autres joueurs en petites copies dans un panneau à gauche. Un clic sur une copie la place dans la zone principale.',
+    spotlight_follow_turn: 'Suivre le tour',
+    spotlight_follow_turn_hint: "À chaque nouveau tour, le plateau du joueur actif passe dans la zone principale",
     stack_caption_show: 'Afficher le type et l\'effet sur la carte du dessus de la pile',
     stack_caption_show_hint: 'Affiche le type (capacité déclenchée, sort, créature…) et le texte des règles sur la carte du dessus de la pile en mode image. Désactivez-le si l\'illustration rend le texte illisible.',
     hand_layout_title: 'Affichage de votre main',

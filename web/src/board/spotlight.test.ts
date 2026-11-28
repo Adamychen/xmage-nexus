@@ -152,6 +152,39 @@ describe('spotlight', () => {
     const gameOf = (...players: Array<[string, boolean]>) =>
       ({ players: players.map(([playerId, hasLeft]) => ({ playerId, name: playerId, hasLeft })) } as GameView)
 
+    const turnOf = (activePlayerId: string, turn: number) =>
+      ({ turn, activePlayerId, players: SEATS.map((playerId) => ({ playerId, name: playerId, hasLeft: false })) } as GameView)
+
+    it('BRD-71: with the setting off, a new turn leaves the main board where it was', () => {
+      setState({ settings: { ...getState().settings, spotlightFollowTurn: false } } as never)
+      const { result, rerender } = renderHook(({ game }) => useSpotlight(game, ME, LIVE, null), {
+        initialProps: { game: turnOf('p2', 4) },
+      })
+      expect(result.current.mainId).toBe(ME)
+      rerender({ game: turnOf('p3', 5) })
+      expect(result.current.mainId).toBe(ME)
+    })
+
+    it('BRD-71: with the setting on, each turn brings the active player to the main area', () => {
+      setState({ settings: { ...getState().settings, spotlightFollowTurn: true } } as never)
+      const { result, rerender } = renderHook(({ game }) => useSpotlight(game, ME, LIVE, null), {
+        initialProps: { game: turnOf('p2', 4) },
+      })
+      expect(result.current.mainId).toBe('p2')
+      // A pick inside the turn stands: the turn is what moves the board, not every view.
+      act(() => result.current.select('p4'))
+      rerender({ game: turnOf('p2', 4) })
+      expect(result.current.mainId).toBe('p4')
+      rerender({ game: turnOf('p3', 5) })
+      expect(result.current.mainId).toBe('p3')
+    })
+
+    it('BRD-71: a seat out of the game is never followed', () => {
+      setState({ settings: { ...getState().settings, spotlightFollowTurn: true } } as never)
+      const { result } = renderHook(() => useSpotlight(turnOf('p9', 6), ME, LIVE, null))
+      expect(result.current.mainId).toBe(ME)
+    })
+
     it('BRD-7: useSpotlight stores the pick for the current game and returns it as the main seat', () => {
       const { result } = renderHook(() => useSpotlight(null, ME, LIVE, null))
       expect(result.current.mainId).toBe(ME)
