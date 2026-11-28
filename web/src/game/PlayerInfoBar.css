@@ -600,30 +600,25 @@ html.fx-off .badge-dungeon.fx-dungeon-advance {
 }
 
 /* Targeting pulse on player */
-@keyframes playerTargetPulse {
-  0%, 100% {
-    border-color: var(--gold-300);
-    box-shadow: 0 0 16px 2px rgb(var(--gold-rgb) / 0.5), 0 8px 24px var(--shade-3);
-  }
-  50% {
-    border-color: var(--line-3);
-    box-shadow: 0 0 32px 6px rgb(var(--gold-rgb) / 0.95), 0 8px 24px var(--shade-3);
-  }
-}
 
+/* BRD-70: a seat you can aim at takes the mark on its photo, which is the one solid thing the chip
+   has. Colouring the chip's border made a box appear around a player who in rest has no frame
+   drawn at all, and the three-beat pulse was a language of its own, out of step with the cards. */
 .player-info-bar.targetable {
-  animation: playerTargetPulse 1.2s ease-in-out 3;
   cursor: pointer;
-  border-color: var(--gold-300);
   z-index: 30;
 }
 
+.player-info-bar.targetable .avatar-image {
+  border-color: var(--gold-500);
+  box-shadow: 0 0 0 3px var(--gold-500), 0 0 12px rgb(var(--gold-rgb) / 0.7);
+}
+
+.player-info-bar.targetable:hover .avatar-image {
+  box-shadow: 0 0 0 3px var(--gold-300), 0 0 18px rgb(var(--gold-rgb) / 0.95);
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .player-info-bar.targetable {
-    animation: none;
-    border-color: var(--gold-300);
-    box-shadow: 0 0 16px 2px rgb(var(--gold-rgb) / 0.5), 0 8px 24px var(--shade-3);
-  }
   .life-counter.low-life,
   .life-counter.low-life.critical {
     animation: none;
@@ -656,10 +651,7 @@ html.fx-off .player-info-bar.active-glow {
   }
 }
 
-.player-info-bar.targetable:hover {
-  border-color: var(--line-3);
-  box-shadow: 0 0 36px 8px rgb(var(--gold-rgb) / 1), 0 8px 24px var(--shade-4);
-}
+
 
 /* Defeated / Left status */
 .player-info-bar.player-defeated {

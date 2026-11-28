@@ -508,6 +508,8 @@ const showPtBadge =
       data-recap={recapMark}
       data-entered={enteredThisTurn ? 'turn' : undefined}
       data-counters={showCounters && counters.length > 0 ? counters.map((c) => `${c.name}:${c.count}`).join('|') : undefined}
+      /* BRD-70: one state at a time, decided here and not by the order of the stylesheet. */
+      data-state={isChosen ? 'chosen' : isTarget ? 'target' : isPlayable ? 'playable' : undefined}
       className={[
         'card-slot',
         tapped ? 'tapped' : '',

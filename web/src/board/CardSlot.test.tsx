@@ -516,6 +516,17 @@ describe('CardSlot target feedback (C1)', () => {
     expect(slot.classList.contains('target-optional')).toBe(false)
   })
 
+  it('BRD-70: a card in several states paints one, in a declared order', () => {
+    setState({ feedback: choice(true) })
+    const stateOf = (props: Record<string, boolean>) =>
+      render(<CardSlot card={target} {...props} />).container.querySelector('.card-slot')!.getAttribute('data-state')
+    expect(stateOf({ isPlayable: true }), 'playable on its own').toBe('playable')
+    expect(stateOf({ isTarget: true }), 'a target on its own').toBe('target')
+    expect(stateOf({ isTarget: true, isPlayable: true }), 'the question wins over what you could cast').toBe('target')
+    expect(stateOf({ isChosen: true, isTarget: true, isPlayable: true }), 'your own answer wins over both').toBe('chosen')
+    expect(stateOf({}), 'a card at rest carries no state at all').toBeNull()
+  })
+
   it('TGT-2: an optional target keeps the static border: no beacon', () => {
     setState({ feedback: choice(false) })
     const slot = render(<CardSlot card={target} isTarget />).container.querySelector('.card-slot')!

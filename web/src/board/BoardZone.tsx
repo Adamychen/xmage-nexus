@@ -490,17 +490,6 @@ export default function BoardZone({
   const marqueeIds = new Set(marqueeEntries.map(([id]) => id))
   const restOthers = others.filter(([id]) => !marqueeIds.has(id))
 
-  // Target zone on the battlefield: highlight the row holding the pointed
-  // card (or both when the server declares BATTLEFIELD and nothing resolved).
-  const battlefieldFallback = targetZone === 'battlefield' && !targetZones.has('battlefield')
-  const permanentsRowTargeted =
-    battlefieldFallback ||
-    lands.some(([id]) => targetIds.has(id)) ||
-    restOthers.some(([id]) => targetIds.has(id))
-  const creaturesRowTargeted =
-    battlefieldFallback ||
-    creatures.some(([id]) => targetIds.has(id)) ||
-    marqueeEntries.some(([id]) => targetIds.has(id))
 
   const renderCardItem = (id: string, perm: PermanentView, isCreature: boolean, noPreview = false, extraClass = '') => {
     const isSelectable = combatSelectableSet.has(id)
@@ -982,7 +971,7 @@ export default function BoardZone({
     <div
       key="permanents-row"
       ref={setPermanentsRowEl}
-      className={`bz-row bz-permanents-row oz-permanents-row pz-permanents-row${permanentsRowTargeted ? ' target-zone' : ''}${pileCornerReach ? ' pile-corner-reach' : ''}`}
+      className={`bz-row bz-permanents-row oz-permanents-row pz-permanents-row${pileCornerReach ? ' pile-corner-reach' : ''}`}
     >
       {kindColumns ? (
         <>
@@ -1022,7 +1011,7 @@ export default function BoardZone({
     <div
       key="creatures-row"
       ref={setCreaturesRowEl}
-      className={`bz-row bz-creatures-row oz-creatures-row pz-creatures-row${creaturesRowTargeted ? ' target-zone' : ''}`}
+      className="bz-row bz-creatures-row oz-creatures-row pz-creatures-row"
     >
       {showCommandZone && !arenaBottom && !oppCommanderInRow && (
         <div ref={setCommanderEl} className="bz-commander oz-commander pz-commander">

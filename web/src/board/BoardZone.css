@@ -225,7 +225,9 @@
   flex-wrap: nowrap;
   gap: var(--sp-2h);
   row-gap: var(--sp-0h);
-  padding: var(--sp-0h) var(--sp-2);
+  /* BRD-70: the vertical padding is the room the state ring of a card needs. The band has to clip
+     (it scrolls sideways), so what must not reach the edge is the mark. */
+  padding: var(--sp-1h) var(--sp-2);
   overflow-x: auto;
   overflow-y: hidden;
   border-radius: var(--r-md);

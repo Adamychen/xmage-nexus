@@ -99,10 +99,12 @@ backs out of the spell or ability being played, where the same button says Cance
 - Guard: `src/game/CardGrid.test.tsx` · `src/game/feedbackModes/promptBars.test.tsx`
 
 ### PRM-8 · The board shows where the choice lives
-During a target choice the board rings the zone the candidates live in (graveyard, exile, library,
-either hand, either battlefield), resolved per owner from the game view, with the prompt's
+During a target choice the board rings the zone the candidates live in when that zone is one the
+player cannot see into: a graveyard, an exile, a library, either hand, and a seat drawn too small
+to read (BRD-4, BRD-8). It is resolved per owner from the game view, with the prompt's
 `targetZone` as fallback. A graveyard, exile or library pile holding the real target opens by
-itself and closes when the targeting ends.
+itself and closes when the targeting ends. The battlefield is never ringed: its cards are in plain
+sight and each one carries its own mark (BRD-70).
 
 - Why: many prompts never say where the card comes from, and players read them as bugs.
 - Guard: `src/board/targetZones.test.ts` · `e2e/graveyard-target.spec.ts`

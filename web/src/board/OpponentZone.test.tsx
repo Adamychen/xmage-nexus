@@ -432,7 +432,7 @@ describe('OpponentZone', () => {
     expect(container.querySelector('.hand-zone')?.classList.contains('target-zone')).toBe(false)
   })
 
-  it('highlights only the battlefield row that contains the targeted permanent', () => {
+  it('BRD-70: a targeted permanent marks itself and leaves its row alone', () => {
     const oppPlayer: Partial<PlayerView> = {
       playerId: 'p-opp',
       name: 'Computer',
@@ -443,18 +443,17 @@ describe('OpponentZone', () => {
         'rock-1': { id: 'rock-1', name: 'Sol Ring', cardTypes: ['Artifact'] } as any,
       },
     }
-    const { container, rerender } = render(
+    const { container } = render(
       <OpponentZone player={oppPlayer as PlayerView} targetIds={new Set(['bear-1'])} />
     )
-    expect(container.querySelector('.bz-creatures-row')?.classList.contains('target-zone')).toBe(true)
-    expect(container.querySelector('.bz-permanents-row')?.classList.contains('target-zone')).toBe(false)
-
-    rerender(<OpponentZone player={oppPlayer as PlayerView} targetIds={new Set(['rock-1'])} />)
-    expect(container.querySelector('.bz-creatures-row')?.classList.contains('target-zone')).toBe(false)
-    expect(container.querySelector('.bz-permanents-row')?.classList.contains('target-zone')).toBe(true)
+    expect(container.querySelector('[data-card-id="bear-1"]')?.getAttribute('data-state')).toBe('target')
+    expect(container.querySelector('[data-card-id="rock-1"]')?.getAttribute('data-state')).toBeNull()
+    for (const row of ['.bz-creatures-row', '.bz-permanents-row']) {
+      expect(container.querySelector(row)?.classList.contains('target-zone'), `${row} stays as it was`).toBe(false)
+    }
   })
 
-  it('highlights both battlefield rows only on the declared-zone fallback', () => {
+  it('BRD-70: a battlefield the server only declares by zone is not washed either', () => {
     const oppPlayer: Partial<PlayerView> = {
       playerId: 'p-opp',
       name: 'Computer',
@@ -472,7 +471,7 @@ describe('OpponentZone', () => {
         targetZones={new Set()}
       />,
     )
-    expect(container.querySelector('.bz-creatures-row')?.classList.contains('target-zone')).toBe(true)
-    expect(container.querySelector('.bz-permanents-row')?.classList.contains('target-zone')).toBe(true)
+    expect(container.querySelector('.bz-creatures-row')?.classList.contains('target-zone')).toBe(false)
+    expect(container.querySelector('.bz-permanents-row')?.classList.contains('target-zone')).toBe(false)
   })
 })

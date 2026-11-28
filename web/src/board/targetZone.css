@@ -72,31 +72,15 @@
   }
 }
 
-/* ── Filas del campo de batalla (BoardZone) ────────────────────────── */
-
-.bz-row.target-zone {
-  position: relative;
-  border-radius: var(--r-base);
-  background: linear-gradient(180deg, rgb(var(--gold-rgb) / 0.03), rgb(var(--gold-rgb) / 0.09));
-}
-
-.bz-row.target-zone::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border: 2px solid var(--gold-300);
-  border-radius: inherit;
-  pointer-events: none;
-  z-index: 5;
-  animation: targetZoneRing 1.2s ease-in-out infinite;
-}
+/* BRD-70: the battlefield rows do not paint themselves any more. Their cards are in plain sight
+   and each one carries its own ring, so washing the row in gold only drowned them: one card of one
+   opponent lit a band that runs the width of the table, with every other seat inside it. */
 
 @media (prefers-reduced-motion: reduce) {
   .resource-stack.target-zone::after,
   .resource-chip.target-zone::after,
   .hand-zone.target-zone::after,
-  .hand-bar.target-zone::after,
-  .bz-row.target-zone::after {
+  .hand-bar.target-zone::after {
     animation: none;
     border-color: var(--gold-300);
     box-shadow: 0 0 14px rgb(var(--gold-rgb) / 0.5);

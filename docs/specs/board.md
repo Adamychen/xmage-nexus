@@ -1318,3 +1318,30 @@ server sent.
   go on, and under the generic one the answer is no. A rare effect that does let its owner look at
   a card exiled face down will be hidden by this too, which is the side to err on.
 - Guard: `src/cards/cardImages.test.ts`
+
+### BRD-70 · What you can do with a card is marked outside it, one state at a time
+Inside a card belongs to the card: the keyword auras draw their rings and glows inwards, in the
+colour of the ability (`KeywordAura.css`). So what the player can do with it is marked outside: the
+card's own edge ring takes the colour of its state and a short glow sits around it, close enough
+that the bands, which clip (they scroll sideways), keep it whole. Those bands reserve the room for
+it in their padding.
+
+A card carries one state at a time, decided in `CardSlot` and not by the order of the stylesheet:
+the answer you have already given (`chosen`, red), then the question on screen (`target`, gold),
+then what you could cast or activate (`playable`, green). Red on a card is not an error, it is
+committed: the attacker and the blocker wear it too, and damage is a flash of brightness, never
+this ring. A required choice adds a second ring just outside the first, fading in and out; an
+optional one does not move.
+
+A seat you can aim at is marked on its photo, which is the one solid thing a chip has. Nothing
+else on the board changes while a question is open: what is not a legal answer keeps its own light
+and simply carries no ring.
+
+- Why: the player asked for the whole thing to be redone, and the three faults behind it were
+  measured. The green of a playable card was a `box-shadow` spilling 14 px, which every band cuts
+  (`overflow-y: hidden`) and which reaches the neighbours of the hand's fan. Each state wrote the
+  whole shadow, so a card in two states took the colour of whichever rule sat lower in the file.
+  And an inner ring, which is what this rule first proposed, is exactly what an aura draws:
+  hexproof is `--ok` and lifelink is `--gold`, the very colours of playable and target
+  (27-nov-2026).
+- Guard: `src/board/cardState.css.test.ts` · `src/board/CardSlot.test.tsx` · `src/board/OpponentZone.test.tsx`

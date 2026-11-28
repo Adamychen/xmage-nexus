@@ -517,22 +517,49 @@ html.fx-off .card-slot.stack-source-pulse {
   }
 }
 
-/* Playable glow (green) */
-.card-slot.playable {
+/* BRD-70: what you can do with a card is a ring on its own edge, in one colour at a time. Which
+   colour is decided in `CardSlot` (chosen, then target, then playable) and not by the order of
+   this sheet, which is what used to decide it. The glow around it is short on purpose: the 14 px
+   spill this used to carry was cut by every band (`overflow-y: hidden`) and bled over the
+   neighbours of the hand's fan. Inwards nothing is painted: that is where the keyword auras of
+   `KeywordAura.css` live, and two of them (hexproof in --ok, lifelink in --gold) are these very
+   colours. */
+.card-slot[data-state='playable'] {
   --slot-ring: var(--ok);
-  box-shadow: 0 0 14px 2px rgb(var(--ok-rgb) / 0.65), 0 4px 12px var(--shade-2);
+  --slot-state-rgb: var(--ok-rgb);
   cursor: pointer;
 }
 
-.card-slot.playable:hover {
-  box-shadow: 0 0 20px 4px rgb(var(--ok-rgb) / 0.9), 0 10px 24px var(--shade-3);
+.card-slot[data-state='target'] {
+  --slot-ring: var(--gold-500);
+  --slot-state-rgb: var(--gold-rgb);
+  cursor: crosshair;
+}
+
+/* Red on a card is not an error: it is committed. The same colour marks the attacker and the
+   blocker, and damage is a flash of brightness, never this ring. */
+.card-slot[data-state='chosen'] {
+  --slot-ring: var(--err);
+  --slot-state-rgb: var(--err-rgb);
+  cursor: pointer;
+}
+
+.card-slot[data-state] {
+  box-shadow: 0 0 8px -1px rgb(var(--slot-state-rgb) / 0.8), 0 4px 12px var(--shade-2);
+}
+
+.card-slot[data-state]:hover {
+  box-shadow: 0 0 12px -1px rgb(var(--slot-state-rgb) / 0.95), 0 10px 24px var(--shade-3);
+}
+
+.card-slot[data-state]::after {
+  border-width: 2px;
 }
 
 .card-slot.clickable:focus-visible,
-.card-slot.playable:focus-visible {
-  outline: 2px solid var(--ok);
+.card-slot[data-state]:focus-visible {
+  outline: 2px solid var(--slot-ring);
   outline-offset: 2px;
-  box-shadow: 0 0 20px 4px rgb(var(--ok-rgb) / 0.9), 0 10px 24px var(--shade-3);
 }
 
 /* Cast press on a playable card: an 80 ms squeeze, then a spring pop back.
@@ -581,30 +608,30 @@ html.fx-off .card-slot.casting-pop {
    the static border and never animates. A chosen target (`.chosen`) drops the
    beacon and keeps its static error border (below). */
 @keyframes targetBeacon {
-  0%, 50%, 100% {
-    box-shadow: 0 0 12px 2px rgb(var(--gold-rgb) / 0.6), 0 4px 12px var(--shade-2);
-  }
-  20% {
-    box-shadow: 0 0 26px 8px rgb(var(--gold-rgb) / 0.95), 0 4px 12px var(--shade-2);
-  }
+  0%, 55%, 100% { opacity: 0.25; }
+  22% { opacity: 1; }
 }
 
-.card-slot.targetable {
-  box-shadow: 0 0 12px 2px rgb(var(--gold-rgb) / 0.6), 0 4px 12px var(--shade-2);
-  cursor: crosshair;
-  --slot-ring: var(--gold-500);
-}
-
-.card-slot.target-beacon {
-  animation: targetBeacon 1.5s ease-out infinite;
+/* BRD-70: the beacon of a required choice is a second ring just outside the first, fading in and
+   out. It used to animate the box-shadow, which the bands cut along with the glow. */
+.card-slot.target-beacon::before {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border: 2px solid rgb(var(--gold-rgb) / 0.95);
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 3;
+  animation: targetBeacon 1.6s ease-out infinite;
 }
 
 /* Infinite beacon: reduced motion keeps the static gold glow. */
 @media (prefers-reduced-motion: reduce) {
-  .card-slot.target-beacon,
+  .card-slot.target-beacon::before,
   .sickness-badge,
   .sickness-veil {
     animation: none;
+    opacity: 1;
   }
 }
 
@@ -613,7 +640,7 @@ html.fx-off .card-slot.casting-pop {
    so the list composes; the shorthand on .card-slot.target-beacon would otherwise
    drop the shake. */
 .card-slot.target-beacon.took-damage {
-  animation: targetBeacon 1.5s ease-out infinite, shakeHit 300ms ease-in-out, damageFlash 120ms var(--ease-out);
+  animation: shakeHit 300ms ease-in-out, damageFlash 120ms var(--ease-out);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -622,17 +649,7 @@ html.fx-off .card-slot.casting-pop {
   }
 }
 
-/* Chosen / Attacking / Blocking glow (crimson / cyan) */
-.card-slot.chosen {
-  --slot-ring: var(--err);
-  box-shadow: 0 0 18px 4px rgb(var(--err-rgb) / 0.8), 0 4px 12px var(--shade-3);
-}
-
-.card-slot.tapped.chosen {
-  --slot-ring: var(--err);
-  box-shadow: 0 0 18px 4px rgb(var(--err-rgb) / 0.8), 0 4px 12px var(--shade-3);
-  cursor: pointer;
-}
+/* Attacking / Blocking (cyan); the chosen one takes its red from `[data-state='chosen']`. */
 
 /* Optimistic ack (<100 ms) while the server echo has not arrived: scale 0.98
    and opacity 0.85 (`scale`, not `transform`, so it composes with the `.tapped`
