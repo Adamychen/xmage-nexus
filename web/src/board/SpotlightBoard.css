@@ -158,7 +158,10 @@
   flex: 0 0 auto;
   box-sizing: border-box;
   height: var(--copy-head-h);
-  display: flex;
+  /* BRD-31: three tracks, the outer two the same width, so the name sits on the cell's centre
+     however much the life and the turn badge take on the left. */
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
   gap: var(--sp-1h);
   min-width: 0;
@@ -229,8 +232,14 @@
   font-size: var(--fs-2xs);
 }
 
+.spotlight-copy-head-side {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+  min-width: 0;
+}
+
 .spotlight-copy-head-name {
-  flex: 1 1 auto;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;

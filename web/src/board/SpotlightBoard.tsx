@@ -133,14 +133,18 @@ function CopyHead({ player, players, active, onSelect }: { player: PlayerView; p
       aria-label={`${player.name} · ${lifeLabel}: ${player.life}`}
       onClick={onSelect}
     >
-      {/* BRD-31: in the panel the life leads and the name follows, centred in what is left: the
-          column is narrow and a long name used to push the number out of a tidy edge. */}
-      <span className="spotlight-copy-head-life" title={lifeLabel}>
-        <Icon name="heart" size={12} />
-        {player.life}
+      {/* BRD-31: in the panel the life leads and the name is centred on the cell, not on what the
+          life leaves: with the turn badge in play the name used to slide right as it appeared. The
+          empty side balances the left one so the centre is the cell's own. */}
+      <span className="spotlight-copy-head-side">
+        <span className="spotlight-copy-head-life" title={lifeLabel}>
+          <Icon name="heart" size={12} />
+          {player.life}
+        </span>
+        {active && <span className="spotlight-copy-head-turn">{t('board', 'turn_active_badge')}</span>}
       </span>
-      {active && <span className="spotlight-copy-head-turn">{t('board', 'turn_active_badge')}</span>}
       <span className="spotlight-copy-head-name">{player.name}</span>
+      <span className="spotlight-copy-head-side" aria-hidden="true" />
     </button>
   )
 }
