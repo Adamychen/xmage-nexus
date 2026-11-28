@@ -22,6 +22,9 @@ import CardInspector from '../board/CardInspector'
 import InfoWindows from './InfoWindows'
 import SideboardScreen from './SideboardScreen'
 import GameMenu from './GameMenu'
+import SettingsModal from '../settings/SettingsModal'
+import HelpWikiModal from './HelpWikiModal'
+import ReportDialog from './ReportDialog'
 import PhaseLadder from './PhaseLadder'
 import ActionButton from './ActionButton'
 import GameDock, { OrderSlot, PromptSlotProvider, useDockOffset } from './GameDock'
@@ -355,6 +358,8 @@ export default function GameScreen() {
   const closeChatLog = useCallback(() => setChatLogTab(null), [])
   const chatLogOpen = chatLogTab !== null
   const chromeActions = useMemo(() => ({ sidePanelOpen: chatLogOpen }), [chatLogOpen])
+  const gameModal = useStore((s) => s.gameModal)
+  const closeGameModal = useCallback(() => setState({ gameModal: null }), [])
   const activeDrawerTab = drawerTab
 
   const stripCenter = (
@@ -523,6 +528,12 @@ export default function GameScreen() {
             onTargetClick={onTargetClick}
           />
           <SideboardScreen />
+          {/* DLG-11: the windows the game menu opens hang from the screen, not from the menu: the
+              menu lives in the board's strip, and turning the side panel on or off swaps the whole
+              board, which used to take the open window with it. */}
+          {gameModal === 'settings' && <SettingsModal initialSection="gameplay" onClose={closeGameModal} />}
+          {gameModal === 'help' && <HelpWikiModal onClose={closeGameModal} />}
+          {gameModal === 'report' && <ReportDialog kind="bug" onClose={closeGameModal} />}
         </div>
       </DividerSlotContext.Provider>
       </ChromeActionsContext.Provider>

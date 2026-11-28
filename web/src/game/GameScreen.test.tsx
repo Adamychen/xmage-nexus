@@ -1,7 +1,7 @@
 import { act, cleanup, render } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import GameScreen from './GameScreen'
-import { initialState, setState } from '../state/state'
+import { getState, initialState, setState } from '../state/state'
 import { makePlayer, playerGameView, spectatorGameView } from '../__fixtures__/gameViews'
 import type { GameView } from '../net/types'
 
@@ -82,6 +82,24 @@ describe('GameScreen', () => {
     expect(container.querySelector('[data-testid="spotlight-board"]')).not.toBeNull()
     expect(container.querySelector('[data-testid="spotlight-panel"]')).not.toBeNull()
     expect(container.querySelector('.arena-opp-row')).toBeNull()
+  })
+
+  it('DLG-11: a window opened from the game menu survives turning the side panel on and off', () => {
+    const { container } = show({
+      game: fourPlayerArena(),
+      myPlayerId: 'p1',
+      settings: { ...initialState.settings, boardSpotlight: false },
+      gameModal: 'settings',
+    })
+    expect(document.body.querySelector('[data-testid="settings-modal"]'), 'the window is open').not.toBeNull()
+    expect(container.querySelector('[data-testid="spotlight-board"]')).toBeNull()
+
+    // The switch swaps the whole board under it; the window is not part of that board.
+    act(() => {
+      setState({ settings: { ...getState().settings, boardSpotlight: true } } as never)
+    })
+    expect(container.querySelector('[data-testid="spotlight-board"]'), 'the board did swap').not.toBeNull()
+    expect(document.body.querySelector('[data-testid="settings-modal"]'), 'and the window is still open').not.toBeNull()
   })
 
   it('BRD-6: a spectator with the switch on watching four players gets the main board', () => {

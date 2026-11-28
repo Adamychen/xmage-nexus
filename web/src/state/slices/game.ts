@@ -109,6 +109,9 @@ export interface GameSlice {
   viewer: CardViewerState | null
   playerMenu: PlayerMenuState | null
   inspectedCard: CardView | PermanentView | null
+  /** DLG-11: the window the game menu has open. It lives here and not in the menu because turning
+   *  the side panel on or off swaps the whole board, and with it the menu that held the flag. */
+  gameModal: 'settings' | 'help' | 'report' | null
   /** Dungeon room progress by `dungeonProgressKey(gameId, dungeon)` (visit order). */
   dungeonProgress: Record<string, string[]>
   /** Speed level 1-4 by `speedLevelKey(gameId, player)` (chat sniff, engine field not in DTO). */
@@ -151,6 +154,7 @@ export const initialGame: GameSlice = {
   viewer: null,
   playerMenu: null,
   inspectedCard: null,
+  gameModal: null,
   dungeonProgress: {},
   speedLevels: {},
   roomDoors: {},

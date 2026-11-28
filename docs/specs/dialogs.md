@@ -91,11 +91,14 @@ Every dialog and popup is capped at `--dlg-max-h: 70vh`; longer content scrolls 
 The game menu (⋯) opens Settings, Help and Report on the body, not inside the top bar. The top
 bar and the dock are stacking contexts (z-index 36 and 29), so an inline dialog is ranked as a
 whole at their level and the board's zone overlays (z-index 30, for example "X has left the
-game") paint over it. A dialog opened from there stays above the board.
+game") paint over it. A dialog opened from there stays above the board. Which one is open is the
+game screen's, not the menu's: the menu lives in the board's strip, and a setting that swaps the
+board, the side panel's switch, takes the menu with it. Opening one closes the menu behind it.
 
 - Why: the "has left the game" overlay of an eliminated seat covered the lower half of Settings
-  opened mid-game from ⋯ (Gameplay section).
-- Guard: `src/game/GameMenu.test.tsx` · `e2e/game-menu-settings-overlay.spec.ts`
+  opened mid-game from ⋯ (Gameplay section). Turning the side panel on or off from that very
+  window then closed it, because the board it hung from was replaced underneath (28-nov-2026).
+- Guard: `src/game/GameMenu.test.tsx` · `src/game/GameScreen.test.tsx` · `e2e/game-menu-settings-overlay.spec.ts`
 
 ### DLG-12 · A destructive confirmation starts on Cancel; any other confirmation starts on its action
 When a confirmation asks for something destructive (delete, leave, concede, clear), the focus starts on

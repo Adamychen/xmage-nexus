@@ -1,5 +1,4 @@
 import { useCallback, useRef, useState } from 'react'
-import { createPortal } from 'react-dom'
 import MenuItem from '../ui/MenuItem'
 import CloseButton from '../ui/CloseButton'
 import Checkbox from '../ui/Checkbox'
@@ -11,6 +10,7 @@ import {
   useGame,
   useSettings,
   setSetting,
+  setState,
   useStore,
 } from '../state/store'
 import { useFullscreen } from '../utils/fullscreen'
@@ -23,9 +23,6 @@ import type { ManaPaymentAction } from '../net/commands'
 import type { ManaPaymentStored } from '../state/persistence'
 import { clearAutoAnswers, removeAutoAnswer } from './autoAnswers'
 import { clearChoiceMemory, removeChoiceMemory } from './choiceMemory'
-import SettingsModal from '../settings/SettingsModal'
-import HelpWikiModal from './HelpWikiModal'
-import ReportDialog from './ReportDialog'
 import { confirmDialog } from '../ui/confirmDialog'
 import { useEscape } from '../ui/useEscape'
 import { menuKeyDown, useMenuFocus } from '../ui/anchoredPanel'
@@ -38,9 +35,6 @@ export default function GameMenu() {
   const settings = useSettings()
   const [open, setOpen] = useState(false)
   const [openedByKey, setOpenedByKey] = useState(false)
-  const [showSettings, setShowSettings] = useState(false)
-  const [showHelp, setShowHelp] = useState(false)
-  const [showReport, setShowReport] = useState(false)
   const [isFullscreenActive, toggleFullscreen] = useFullscreen()
 
   const me = game?.players?.find((p) => p.controlled)
@@ -274,7 +268,7 @@ export default function GameMenu() {
             <MenuItem
               data-testid="game-menu-settings"
               onClick={() => {
-                setShowSettings(true)
+                setState({ gameModal: 'settings' })
                 close()
               }}
             >
@@ -283,7 +277,10 @@ export default function GameMenu() {
             <MenuItem
               data-testid="game-menu-help"
               title={t('game', 'help_wiki')}
-              onClick={() => setShowHelp(true)}
+              onClick={() => {
+                setState({ gameModal: 'help' })
+                close()
+              }}
             >
               <Icon name="bookOpen" size={13} /> {t('game', 'help_wiki')}
             </MenuItem>
@@ -291,7 +288,7 @@ export default function GameMenu() {
               data-testid="game-menu-report"
               title={t('system', 'report_title')}
               onClick={() => {
-                setShowReport(true)
+                setState({ gameModal: 'report' })
                 close()
               }}
             >
@@ -306,14 +303,6 @@ export default function GameMenu() {
             </MenuItem>
           </div>
         </>
-      )}
-      {createPortal(
-        <>
-          {showSettings && <SettingsModal initialSection="gameplay" onClose={() => setShowSettings(false)} />}
-          {showHelp && <HelpWikiModal onClose={() => setShowHelp(false)} />}
-          {showReport && <ReportDialog kind="bug" onClose={() => setShowReport(false)} />}
-        </>,
-        document.body,
       )}
     </div>
   )

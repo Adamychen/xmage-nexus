@@ -76,22 +76,18 @@ describe('GameMenu', () => {
     expect(menu!.querySelector('.rollback-game-btn')).not.toBeNull()
   })
 
-  it('opens the full settings modal on the gameplay section', () => {
+  it('DLG-11: the menu asks for a window and closes, and draws none of them itself', () => {
     const { container } = render(<GameMenu />)
-    const menu = openMenu(container)
-    fireEvent.click(menu!.querySelector('[data-testid="game-menu-settings"]')!)
-    expect(container.querySelector('[data-testid="game-menu"]')).toBeNull()
-    expect(document.body.querySelector('[data-testid="settings-modal"]')).not.toBeNull()
-    expect(document.body.querySelector('[data-testid="settings-phase-stops"]')).not.toBeNull()
-  })
-
-  it('DLG-11: the settings modal opened from the menu is mounted on the body, outside the top bar', () => {
-    const { container } = render(<GameMenu />)
-    const menu = openMenu(container)
-    fireEvent.click(menu!.querySelector('[data-testid="game-menu-settings"]')!)
-    const modal = document.body.querySelector('[data-testid="settings-modal"]')
-    expect(modal).not.toBeNull()
-    expect(container.contains(modal)).toBe(false)
+    for (const [item, modal] of [['settings', 'settings'], ['help', 'help'], ['report', 'report']] as const) {
+      setState({ gameModal: null })
+      const menu = openMenu(container)
+      fireEvent.click(menu!.querySelector(`[data-testid="game-menu-${item}"]`)!)
+      expect(getState().gameModal, item).toBe(modal)
+      expect(container.querySelector('[data-testid="game-menu"]'), 'the menu closes behind it').toBeNull()
+      // The window hangs from the screen, never from the menu: the board swaps under it when the
+      // side panel is switched, and it used to take the open window with it.
+      expect(document.body.querySelector('[data-testid="settings-modal"]')).toBeNull()
+    }
   })
 
   it('CTL-5: the arrows open the menu on its first item, a click leaves the focus where it was, and Escape closes it', () => {
