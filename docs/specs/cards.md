@@ -118,3 +118,17 @@ the URL asks for it.
   there was nothing to read it from either. The caption answers it from a screenshot of a real
   game, and the same caption answers the next question of this kind.
 - Guard: `src/cards/artDebug.test.ts`
+
+### CRD-10 · A card is drawn as the printing it has on the table
+The client remembers, from every view it receives, the printing each card on the table came with,
+by its id and by its name. A view that arrives without one, which is how a triggered ability
+reaches the stack, is drawn with the printing its source has on the table instead of by name
+alone. Face-down cards and tokens teach nothing, and a view that carries its own printing keeps
+it.
+
+- Why: a player had the Secret Lair printing of his card on the battlefield and the trigger of
+  that same card showed an older frame on the stack; with `?artdebug=1` (CRD-9) the stack read
+  `named:The Warring Triad · -/0` while the battlefield read `FIC/193`, so the engine had sent the
+  ability's source with no printing and the name alone fetched whatever Scryfall answers with
+  (28-nov-2026). The table is the authority: the card is right there, with its printing.
+- Guard: `src/cards/seenPrints.test.ts`

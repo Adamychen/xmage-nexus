@@ -1,5 +1,6 @@
 import type { SessionSlice } from './slices/session'
 import { noteGameForArt } from '../cards/foreignCards'
+import { rememberPrints } from '../cards/seenPrints'
 import { initialSession } from './slices/session'
 import type { LobbySlice, LogChannel } from './slices/lobby'
 import { initialLobby } from './slices/lobby'
@@ -35,7 +36,11 @@ let logSeq = 0
 
 export function setState(partial: Partial<AppState>) {
   _state = { ..._state, ...partial }
-  if ('game' in partial) noteGameForArt(_state.game)
+  if ('game' in partial) {
+    noteGameForArt(_state.game)
+    // CRD-10: every view teaches the client which printing each card on the table has.
+    rememberPrints(_state.game)
+  }
   listeners.forEach((l) => l())
 }
 

@@ -4,6 +4,7 @@ import { extractOwnedKeywords } from '../data/keywordExtractor'
 import { scryfallJson } from './scryfallClient'
 import { cardArtPreference } from './artPreferences'
 import { isForeignCard } from './foreignCards'
+import { seenPrintOf } from './seenPrints'
 import tokenImageData from '../data/tokenImages.generated.json'
 
 const memory = new Map<string, string | null>()
@@ -172,14 +173,20 @@ export function cardKey(card: CardView): string | null {
 
   const isAbility = isAbilityCard(card)
   if (isAbility) {
-    const src = card.sourceCard || card.ability
+    const src = (card.sourceCard || card.ability) as CardView | undefined
     if (src) {
       const srcKey = cardKey(src)
+      // CRD-10: `named:` means the view carried no printing. The source is on the table, where it
+      // was seen with one, and that is the card the player is looking at.
+      if (srcKey && !srcKey.startsWith('named:')) return srcKey
+      const seen = seenPrintOf(src)
+      if (seen) return `${seen}${backSuffix}`
       if (srcKey) return srcKey
     }
     const sourceName = getSourceCardName(card)
     if (sourceName && !/^habilidad$/i.test(sourceName) && !/^ability$/i.test(sourceName)) {
-      return `named:${sourceName}${backSuffix}`
+      const seen = seenPrintOf({ name: sourceName } as CardView)
+      return seen ? `${seen}${backSuffix}` : `named:${sourceName}${backSuffix}`
     }
     return null
   }
@@ -218,7 +225,9 @@ export function cardKey(card: CardView): string | null {
   // Card with only a name (e.g. from game log feed or action history or reminder tokens)
   const name = card.displayName || card.name
   if (name && name.trim()) {
-    return `named:${name.trim()}${backSuffix}`
+    // CRD-10: if this card has been seen on the table, it is drawn as it is there.
+    const seen = seenPrintOf(card)
+    return seen ? `${seen}${backSuffix}` : `named:${name.trim()}${backSuffix}`
   }
 
   return null
