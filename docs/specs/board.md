@@ -976,12 +976,19 @@ between them stays white whatever happens, so a creature with a +1/+0 until end 
 green power beside a white toughness. The printed values are the ones the server sends with the
 card (`originalPower`, `originalToughness`), not a count of its +1/+1 counters, so an anthem, an
 aura or a pump spell colours the badge just as counters do, and the badge names the printed pair in
-its tooltip. A card the server sends no printed value for is left white.
+its tooltip. The printed value is the `baseValue` of what the engine sends, which never moves, and
+not the `cardValue` string beside it, which the engine overwrites whenever an effect gives the
+permanent a new base. A card the server sends no printed value for is left white, and so is one
+whose printed value is a `*`, where there is nothing to compare against.
 
 - Why: the badge showed what the creature ends up with and nothing said whether that was its own
   size, so a 5/5 Champion of Lambholt read like a printed 5/5; the user asked for the changed half
   to stand out and for the slash to stay out of it (14-nov-2026). The dev tables sent no printed
-  value, which is why the colours never showed there.
+  value, which is why the colours never showed there. Reading the `cardValue` string instead of the
+  base made a whole class of effects invisible: "creatures your opponents control have base
+  toughness 1" (Maha, Its Feathers Night) reaches the client with that 1 already written into the
+  printed field, so a 2/3 stood at 2/1 with both numbers white (28-nov-2026), and a printed `*`
+  arrived as a 0 that made every Tarmogoyf look grown.
 - Guard: `src/board/ptTrend.test.tsx`
 
 ### BRD-50 · A band with fewer lines grows into the room it leaves

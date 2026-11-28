@@ -15,10 +15,27 @@ describe('ptTrend', () => {
 
   it('BRD-49: reads the printed value from MageInt objects and plain strings', () => {
     expect(basePtValue(mageInt('2', 2))).toBe(2)
-    expect(basePtValue(mageInt('*', 0))).toBe(0)
     expect(basePtValue('3')).toBe(3)
     expect(basePtValue(null)).toBeNull()
     expect(basePtValue('*')).toBeNull()
+  })
+
+  it('BRD-49: the printed value is the one the card was made with, not the one an effect left behind', () => {
+    // Maha, Its Feathers Night gives "base toughness 1" through MageInt.setModifiedBaseValue,
+    // which also overwrites cardValue, so the string the engine sends is already the new base and
+    // a 2/3 under it looked unchanged at 2/1.
+    const mahaed = { baseValue: 3, modifiedBaseValue: 1, boostedValue: 1, cardValue: '1' }
+    expect(basePtValue(mahaed)).toBe(3)
+    expect(ptTrend({ power: '2', toughness: '1', originalPower: mageInt('2', 2), originalToughness: mahaed } as never))
+      .toEqual({ power: 'same', toughness: 'down' })
+  })
+
+  it('BRD-49: a printed P/T that is not a number is nothing to compare against', () => {
+    // Tarmogoyf prints `*`/`1+*`: the engine sends cardValue '*' with baseValue 0, and reading
+    // that 0 as the printed value marked every one of them as grown.
+    expect(basePtValue(mageInt('*', 0))).toBeNull()
+    expect(ptTrend({ power: '4', toughness: '5', originalPower: mageInt('*', 0), originalToughness: mageInt('*', 0) } as never))
+      .toEqual({ power: 'same', toughness: 'same' })
   })
 
   it('BRD-49: compares current P/T with the printed one per component', () => {

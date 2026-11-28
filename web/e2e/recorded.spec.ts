@@ -46,8 +46,20 @@ test.describe('Recorded real frames (anti-drift smoke)', { tag: '@recorded' }, (
           // con el primero gratis: 7 − 1 carta al fondo) y el comandante
           // dibujado con la mano (BRD-34).
           await expect(page.locator('[data-testid="game-status"]')).toBeVisible()
-          await expect(page.getByTestId('hand-bar')).toHaveAttribute('data-hand-count', '6')
-          await expect(page.locator('[data-testid="hand-bar"] [data-card-name="Krenko, Mob Boss"]')).toHaveCount(1)
+          // HND-14: this frame is the one the server sends between the mulligan and the first
+          // step, and replayed cold it carries no opening-hand question, so the bar holds the
+          // cards back. What the frame proves is the hand it ended with, which is read where it
+          // lives: six cards, the commander among them (BRD-34).
+          const { hand, commanders } = await page.evaluate(() => {
+            const st = (globalThis as unknown as { __mageStore?: { getState: () => Record<string, any> } }).__mageStore?.getState()
+            const me = (st?.game?.players ?? []).find((p: any) => p.controlled)
+            return {
+              hand: Object.values(st?.game?.myHand ?? {}).map((c: any) => String(c.name)),
+              commanders: (me?.commandList ?? []).map((c: any) => String(c.name)),
+            }
+          })
+          expect(hand).toHaveLength(6)
+          expect(commanders, 'the commander the bar draws beside the hand (BRD-34)').toContain('Krenko, Mob Boss')
         } else if (entry.assert === 'hasKarnRestart' || entry.assert === 'hasLandDropWindow') {
           // Reinicio de Karn / primera ventana con tierra: mesa vacía pero mano llena.
           await expect(page.locator('.hand-zone .card-slot').first()).toBeVisible()
@@ -263,9 +275,12 @@ test.describe('Recorded real frames (anti-drift smoke)', { tag: '@recorded' }, (
           await expect(dropdown.locator(`.cmd-dmg-row[data-commander-id="${cmd?.id}"][data-damage="${dmg}"]`)).toHaveCount(1)
         }
         if (entry.assert === 'hasFfaSix') {
-          // BRD-6: five or more players always get the main board with every other seat in the panel.
+          // BRD-6: five or more players always get the main board, with every seat of the table in
+          // the panel, the one drawn large included (its cell holds the eye, not a second copy).
           await expect(page.getByTestId('spotlight-board')).toBeVisible()
-          await expect(page.locator('[data-testid^="spotlight-head-"]')).toHaveCount(5)
+          await expect(page.locator('[data-testid^="spotlight-head-"]')).toHaveCount(6)
+          await expect(page.locator('[data-testid^="spotlight-main-seat-"]')).toHaveCount(1)
+          await expect(page.locator('[data-testid^="spotlight-copy-"]')).toHaveCount(5)
           await expect(page.locator('[data-testid^="tor-seat-"]')).toHaveCount(6)
         }
         if (entry.assert === 'hasCascade') {

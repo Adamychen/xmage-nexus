@@ -8,11 +8,19 @@ function toInt(value: unknown): number | null {
   return null
 }
 
+/**
+ * BRD-49: the value the card was printed with, read from the engine's `MageInt`. It is
+ * `baseValue`, which is final: `cardValue` is the string the object shows, and
+ * `setModifiedBaseValue` overwrites it whenever an effect gives the permanent a new base ("base
+ * toughness 1"), so reading it would compare the new base against itself and call it unchanged.
+ * A `cardValue` that is not a number is a printed `*`, where there is nothing to compare against.
+ */
 export function basePtValue(original: unknown): number | null {
   if (original == null) return null
   if (typeof original === 'object') {
     const mage = original as { cardValue?: unknown; baseValue?: unknown }
-    return toInt(mage.cardValue) ?? toInt(mage.baseValue)
+    if (typeof mage.cardValue === 'string' && mage.cardValue.trim() !== '' && toInt(mage.cardValue) == null) return null
+    return toInt(mage.baseValue) ?? toInt(mage.cardValue)
   }
   return toInt(original)
 }
