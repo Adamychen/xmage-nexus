@@ -127,6 +127,38 @@ test('arena layout: mi campo a ancho completo, rivales en columnas, mano overlay
 })
 
 /**
+ * BRD-32: the piles are part of the floor of the board, not a box floating above it. Their row and
+ * the hand bar share one bottom inset, so an empty graveyard and an empty exile leave no band of
+ * nothing between them and the edge of the window. Measured against the hand's own padding, never
+ * against a number: a different safe-area inset moves both together.
+ */
+test('BRD-32: the empty piles stand on the same floor as the hand @arena', async ({ page }) => {
+  await page.setViewportSize({ width: 1180, height: 820 })
+  await page.goto('/')
+  await dismissSetupWizard(page)
+  await expect(page.locator('body')).toBeVisible({ timeout: 10_000 })
+  await page.evaluate((gameView) => {
+    const store = (globalThis as unknown as { __mageStore?: { getState: () => Record<string, any>; setState: (s: unknown) => void } }).__mageStore
+    const st = store?.getState() as { settings: Record<string, unknown> }
+    store?.setState({ phase: 'game', settings: { ...st.settings, boardLayout: 'arena' }, game: gameView })
+  }, commanderGame())
+  await expect(page.locator('[data-testid="arena-board"]')).toBeVisible({ timeout: 10_000 })
+  await expect(page.getByTestId('arena-own-piles')).toBeVisible()
+
+  const floors = await page.evaluate(() => {
+    const piles = document.querySelector('[data-testid="arena-own-piles"]') as HTMLElement | null
+    const hand = document.querySelector('[data-testid="hand-bar"]') as HTMLElement | null
+    if (!piles || !hand) throw new Error('arena-own-piles or hand-bar not found')
+    const handFloor = window.innerHeight - hand.getBoundingClientRect().bottom + (parseFloat(getComputedStyle(hand).paddingBottom) || 0)
+    return { piles: Math.round(window.innerHeight - piles.getBoundingClientRect().bottom), hand: Math.round(handFloor) }
+  })
+  expect(
+    Math.abs(floors.piles - floors.hand),
+    `piles sit ${floors.piles}px above the edge, the hand's floor is ${floors.hand}px`,
+  ).toBeLessThanOrEqual(2)
+})
+
+/**
  * BRD-36 + BRD-54: a rival's status row holds the chip, the hand, the commander and the piles, and
  * it may not break. What gives way inside it is the chip, which hangs its clock and its counters
  * under the photo; what may never happen is the piles dropping onto the battlefield or the name

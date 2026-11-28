@@ -161,7 +161,10 @@
   justify-content: flex-start;
   gap: var(--sp-3);
   min-height: var(--hand-reserve, 120px);
-  padding: 0 calc(var(--arena-dock-w) + var(--arena-edge) * 2) var(--arena-edge) var(--arena-edge);
+  /* BRD-32: the piles sit on the same floor as the hand, which is the other thing at the bottom of
+     the board: both leave the window edge by the hand's own bottom padding. With the row's side
+     edge down there instead, the empty graveyard and exile boxes floated over a band of nothing. */
+  padding: 0 calc(var(--arena-dock-w) + var(--arena-edge) * 2) max(var(--sp-2), env(safe-area-inset-bottom)) var(--arena-edge);
   box-sizing: border-box;
 }
 

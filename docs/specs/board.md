@@ -601,7 +601,9 @@ hand keeps more room), under a caption with its name and count, and opens the sa
 viewer as before. Next comes the floating mana: its symbols with their counts, no box, right
 under the lands and only while there is mana. The hand fans between them. The action button sits
 in the bottom-right corner. The chip, the piles and the button stay 20 px inside the board's gold
-edge. Nothing draws a line between the creatures and the other permanents. Lands start at the
+edge at the sides; at the bottom the piles' row stops on the same floor as the hand bar, the
+hand's own bottom inset, so an empty graveyard and an empty exile leave no band of nothing
+between them and the edge of the window. Nothing draws a line between the creatures and the other permanents. Lands start at the
 bottom-left and two identical lands already pile up, the other non-creature permanents sit flush
 with the right edge, and the two zones keep 48 px between them. The creatures stay on one line
 while that keeps their cards at least 75% of the size more lines would give, and only then wrap
@@ -617,7 +619,7 @@ bottom row and the planeswalker zone do not fit there.
   EDHPlay. Before, the action button covered enchantments, the chips sat in boxes, the hand covered
   the bottom of the board with the side panel open (its reserve did not reach `.spotlight-seat`) and
   hid the floating mana there.
-- Guard: `src/board/BoardZone.arenaOwn.test.tsx` · `src/board/chipReserve.test.ts` · `src/board/layout/solveRow.test.ts` · `src/board/stackGroups.test.ts` · `e2e/spotlight.spec.ts` · `src/game/GameScreen.test.tsx`
+- Guard: `src/board/BoardZone.arenaOwn.test.tsx` · `src/board/chipReserve.test.ts` · `src/board/layout/solveRow.test.ts` · `src/board/stackGroups.test.ts` · `e2e/spotlight.spec.ts` · `e2e/arena-board.spec.ts` · `src/game/GameScreen.test.tsx`
 
 ### BRD-33 · The own planeswalkers take the right edge of both rows, as in MTG Arena
 On the own board of the Arena layout (BRD-32) planeswalkers, sagas and battles (BRD-2) take a zone
