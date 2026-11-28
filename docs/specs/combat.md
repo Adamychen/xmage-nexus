@@ -191,8 +191,11 @@ groups nothing blocks come first, so the beams that leave them stay on one side 
 ties of the groups that are blocked. The gap a column opens is part of the
 width the board's solver measures (BRD-25), so a seat's cards never run past its frame.
 
-A group whose defender the view does not name takes no column, because nothing in the view says where
-it belongs and the board never guesses it from whose turn it is.
+A group whose defender the view does not name takes no column and draws no beam, because nothing in
+the view says where it belongs and the board never guesses it from whose turn it is. That is not a
+corner case: it is what the view sends the moment the defender leaves the battlefield, a
+planeswalker sacrificed to an annihilator trigger among others, and the beam has to go out with it
+rather than move to the player behind it.
 
 - Why: an arrow per relation crossed the table four or five times in a multiple block and the
   blocker's curve looped over half the board; of the five arrangements studied, position is the only
@@ -203,7 +206,7 @@ it belongs and the board never guesses it from whose turn it is.
   a position at the table, and for the pairing to be told by a tie rather than by position alone
   (CMB-4, 25-nov-2026). The gap went into the solver's width model after the last blocker of a
   three-card row ran 53 px past its seat's frame.
-- Guard: `src/board/combatColumns.test.ts` · `src/board/layout/itemModel.test.ts`
+- Guard: `src/board/combatColumns.test.ts` · `src/board/layout/itemModel.test.ts` · `src/board/CombatArrowsOverlay.test.tsx`
 
 ### CMB-15 · A pile picks its attackers one at a time
 While the game is asking which creatures attack or block, a pile of identical creatures stays a

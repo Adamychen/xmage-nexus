@@ -464,6 +464,58 @@ describe('CombatArrowsOverlay', () => {
   })
 })
 
+describe('CMB-14: a group whose defender the view does not name', () => {
+  const rect = (left: number, top: number, width: number, height: number) =>
+    ({ left, top, width, height, right: left + width, bottom: top + height, x: left, y: top, toJSON: () => {} }) as DOMRect
+
+  function board(defenderId: string | undefined) {
+    const boardDiv = document.createElement('div')
+    document.body.appendChild(boardDiv)
+    boardDiv.getBoundingClientRect = () => rect(0, 0, 1000, 800)
+    const att = document.createElement('div')
+    att.setAttribute('data-card-id', 'att-1')
+    att.getBoundingClientRect = () => rect(100, 400, 100, 140)
+    boardDiv.appendChild(att)
+    for (const id of ['p-me', 'p-opp']) {
+      const zone = document.createElement('div')
+      zone.setAttribute('data-player-id', id)
+      zone.getBoundingClientRect = () => rect(0, 0, 400, 200)
+      const avatar = document.createElement('div')
+      avatar.setAttribute('data-player-anchor', id)
+      avatar.getBoundingClientRect = () => rect(100, 50, 60, 60)
+      zone.appendChild(avatar)
+      boardDiv.appendChild(zone)
+    }
+    const game = {
+      step: 'DECLARE_BLOCKERS',
+      turn: 4,
+      activePlayerId: 'p-me',
+      myPlayerId: 'p-me',
+      combat: [{ attackers: { 'att-1': {} }, blockers: {}, ...(defenderId ? { defenderId } : null) }],
+      players: [
+        { playerId: 'p-me', name: 'me', life: 20, controlled: true, battlefield: { 'att-1': {} } },
+        { playerId: 'p-opp', name: 'opp', life: 20, controlled: false, battlefield: {} },
+      ],
+    }
+    return { boardRef: { current: boardDiv }, game }
+  }
+
+  it('CMB-14: draws no beam, instead of sending it to the other player', () => {
+    // What happens when a planeswalker under attack leaves: the group stops naming a defender.
+    const { boardRef, game } = board(undefined)
+    const { container, unmount } = render(<CombatArrowsOverlay game={game as never} boardRef={boardRef} />)
+    expect(container.querySelector('.arrow-path.arrow-attack')).toBeNull()
+    unmount()
+  })
+
+  it('CMB-14: a group that does name its defender keeps its beam', () => {
+    const { boardRef, game } = board('p-opp')
+    const { container, unmount } = render(<CombatArrowsOverlay game={game as never} boardRef={boardRef} />)
+    expect(container.querySelector('.arrow-path.arrow-attack')).not.toBeNull()
+    unmount()
+  })
+})
+
 describe('CMB-18: a chosen attacker with no defender named', () => {
   const rect = (left: number, top: number, width: number, height: number) =>
     ({ left, top, width, height, right: left + width, bottom: top + height, x: left, y: top, toJSON: () => {} }) as DOMRect

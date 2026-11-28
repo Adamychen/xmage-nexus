@@ -255,21 +255,12 @@ export default function CombatArrowsOverlay({
         const blockedGroup = record.isBlocked === true || blockerIds.length > 0
         attackerIds.forEach((attId) => {
           if (blockedGroup) return
-          let defenderId = (record.defenderId as string) || null
-
-          if (!defenderId) {
-            // If attacker is controlled by me, target opponent; if controlled by opponent, target me
-            const isMyAttacker = me && String(attId) in (me.battlefield ?? {})
-            const isOppAttacker = opp && String(attId) in (opp.battlefield ?? {})
-            if (isMyAttacker) {
-              defenderId = opp ? opp.playerId : null
-            } else if (isOppAttacker) {
-              defenderId = me ? me.playerId : null
-            } else {
-              const isMyTurn = game.activePlayerId === me?.playerId
-              defenderId = isMyTurn ? (opp ? opp.playerId : null) : (me ? me.playerId : null)
-            }
-          }
+          // CMB-14: the beam goes where the view says and nowhere else. This used to fall back to
+          // "the other player" when the group named no defender, and the one time that happens in
+          // a real game is when the defender has just left the battlefield (a planeswalker
+          // sacrificed to an annihilator trigger): the arrow jumped from the planeswalker that was
+          // gone to the player, as if the attack had been redirected, which it had not.
+          const defenderId = (record.defenderId as string) || null
 
           if (defenderId) {
             const defCenter = getCenter(defenderId)
