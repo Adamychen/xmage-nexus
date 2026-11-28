@@ -26,6 +26,17 @@ describe('the thumbnail beside a board setting', () => {
     expect(turns.some((t) => !t.startsWith('-') && !t.startsWith('0')), 'and some the other').toBe(true)
   })
 
+  it('SET-16: the column thumbnail makes room for the column instead of drawing it over the table', () => {
+    const { container } = render(<OptionPreview kind="handRail" on />)
+    const mat = container.querySelector('.opt-preview-mat')!
+    expect(mat.classList.contains('opt-preview-with-rail'), 'the board steps aside for the rail').toBe(true)
+    expect(mat.querySelector('.opt-preview-rail')).not.toBeNull()
+    cleanup()
+    // Off, there is no column and nothing to make room for.
+    const off = render(<OptionPreview kind="handRail" on={false} />)
+    expect(off.container.querySelector('.opt-preview-mat')!.classList.contains('opt-preview-with-rail')).toBe(false)
+  })
+
   it('SET-16: the three hand thumbnails are three different drawings', () => {
     const drawn: string[] = []
     for (const kind of ['handFan', 'handRail', 'handRow'] as const) {

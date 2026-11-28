@@ -269,7 +269,10 @@ function LayoutTab() {
           value={settings.boardFill} onChange={(v) => setSetting('boardFill', v)} />
         <OptionSwitch id="board-spotlight" kind="boardSpotlight" label={t('lobby', 'board_spotlight_show')} hint={t('lobby', 'board_spotlight_show_hint')}
           value={settings.boardSpotlight} onChange={(v) => setSetting('boardSpotlight', v)} />
-        <Picker
+      </SettingsGroup>
+      {/* SET-5: a picker is a section of its own, like every other one. Nested in the group above,
+          its title and its hint fell inside that card, glued to the row before them. */}
+      <Picker
           settingId="hand-layout"
           title={t('lobby', 'hand_layout_title')}
           hint={t('lobby', 'hand_layout_hint')}
@@ -283,7 +286,8 @@ function LayoutTab() {
             testId: `settings-hand-layout-${id}`,
           }))}
         />
-        {(settings.handRail || settings.handRow) && (
+      {(settings.handRail || settings.handRow) && (
+        <SettingsGroup>
           <SettingsRow id="hand-rail-width" label={t('lobby', 'hand_rail_width')}>
             {({ controlId }) => (
               <>
@@ -302,8 +306,8 @@ function LayoutTab() {
               </>
             )}
           </SettingsRow>
-        )}
-      </SettingsGroup>
+        </SettingsGroup>
+      )}
     </>
   )
 }

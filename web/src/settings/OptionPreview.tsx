@@ -105,8 +105,10 @@ function SpotlightPreview({ on }: { on: boolean }) {
 }
 
 function HandRailPreview({ on }: { on: boolean }) {
+  // SET-16: with the rail on, the board makes room for it. Without this the column was drawn over
+  // the battlefield tiles and the miniature read as a row of cards lying on the table.
   return (
-    <span className="opt-preview-mat" aria-hidden="true">
+    <span className={`opt-preview-mat${on ? ' opt-preview-with-rail' : ''}`} aria-hidden="true">
       <span className="playmat-layer" data-playmat="abyss" />
       {on && (
         <span className="opt-preview-rail">

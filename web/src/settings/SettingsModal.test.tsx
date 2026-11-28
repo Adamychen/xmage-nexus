@@ -95,6 +95,18 @@ describe('SettingsModal', () => {
     expect(document.querySelectorAll('.fx-popover-row')).toHaveLength(0)
   })
 
+  it('SET-5: a picker is a section of its own, never nested inside another group card', () => {
+    render(<SettingsModal onClose={() => {}} />)
+    fireEvent.click(screen.getByTestId('settings-nav-board'))
+    const section = screen.getByTestId('settings-section-board')
+    const pickers = Array.from(section.querySelectorAll('.settings-picker'))
+    expect(pickers.length, 'the board section has its pickers').toBeGreaterThan(0)
+    for (const picker of pickers) {
+      const inside = picker.parentElement?.closest('.settings-group-body')
+      expect(inside, `${picker.getAttribute('data-setting')} hangs from the section, not from a card`).toBeNull()
+    }
+  })
+
   it('SET-1: the interface section has a card preview size slider that sets cardPreviewScale and resets to 100%', () => {
     setSetting('cardPreviewScale', 1)
     render(<SettingsModal onClose={() => {}} />)
