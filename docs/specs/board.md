@@ -547,7 +547,7 @@ under it aligned with the label.
 - Guard: `e2e/action-bar-waiting.spec.ts`
 
 ### BRD-30 · A seat out of the game folds to its head in the side panel
-In the main board mode (BRD-6) an opponent who is out of the game (`hasLeft` in the current game
+In the main board mode (BRD-6) a player who is out of the game (`hasLeft` in the current game
 view: they conceded, lost on life, poison or an effect, or quit the match) keeps its turn-order place
 in the panel folded to its head (BRD-31): the seat colour, the name and why they are out, greyed
 out, with no copy of their board under it. The reason comes from the game log, since the view only
@@ -558,7 +558,10 @@ reason wins, and a player already out keeps the reason they had (a dead player w
 table stays dead). Without a log line (the game was opened after they left), 0 life reads as a death
 and anything else as leaving. It folds as soon as a game view marks the player out. The folded head is not a
 button: it never brings the seat to the main area. The copies of the players still in the game keep
-the size they had (it follows the panel's width). The player's own seat is never folded. A player
+the size they had (it follows the panel's width). The player's own seat folds the same way once they are out, since
+the server empties it too and the main area has already moved to a seat still playing (BRD-57);
+the one cell that never folds is the board drawn at full size, which keeps its mark (BRD-6) even
+when nobody is left in the game. A player
 who only lost the connection is still in the game for the server until it drops them
 (`PlayerView` carries no connection state), so the seat stays a copy until then.
 
@@ -570,7 +573,10 @@ who only lost the connection is still in the game for the server until it drops 
   asked for it to stay folded, saying whether they died, conceded or left (2026-11-12). There is
   nothing to unfold: when a player leaves, the
   server empties their hand, library and graveyard and removes what they own from the battlefield
-  (CR 800.4a).
+  (CR 800.4a). The own seat was left out of this at first, as a precaution; the user was eliminated
+  in a four-player game and his own cell went on holding a full-size copy of that emptied board
+  (user report, 2026-11-28), which is the same thing the rule was written against, so the
+  exception went.
 - Guard: `src/board/SpotlightBoard.test.tsx` · `src/board/outReason.test.ts`
 
 ### BRD-31 · Each copy in the side panel shows its player's name and life
@@ -1136,7 +1142,7 @@ board. When nobody is left in the game the home seat stays, because there is not
   where that player had already lost opened on their empty board (user report, 2026-11-22). The
   fallback had the same hole from the other side: a chosen seat that died fell back to the home
   seat without asking whether the home seat was still playing.
-- Guard: `src/board/spotlight.test.ts`
+- Guard: `src/board/spotlight.test.ts` · `src/board/SpotlightBoard.test.tsx`
 
 ### BRD-58 · A seat in a game carries no rank
 The chip of a player in a game shows who they are and what they hold, never how the server rates

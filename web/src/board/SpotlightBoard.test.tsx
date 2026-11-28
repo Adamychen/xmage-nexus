@@ -131,11 +131,20 @@ describe('SpotlightBoard', () => {
     expect(picked).toEqual([])
   })
 
-  it('BRD-30: the own seat stays a copy even when the player is out', () => {
+  it('BRD-30: the own seat folds like any other once the player is out', () => {
     const game = withCarol({})
     const meOut = { ...game, players: game.players!.map((p) => (p.playerId === 'p1' ? { ...p, hasLeft: true } : p)) }
-    const { queryByTestId } = render(<SpotlightBoard game={meOut} homeId="p1" mainId="p2" onSelectSeat={() => {}} />)
-    expect(queryByTestId('spotlight-copy-p1')).not.toBeNull()
+    const { getByTestId, queryByTestId } = render(<SpotlightBoard game={meOut} homeId="p1" mainId="p2" onSelectSeat={() => {}} />)
+    expect(queryByTestId('spotlight-copy-p1'), 'no copy of an empty board kept at full size').toBeNull()
+    expect(getByTestId('spotlight-head-p1').classList.contains('is-out')).toBe(true)
+  })
+
+  it('BRD-30, BRD-57: with every seat out the board in the main area keeps its mark instead of folding', () => {
+    const game = withCarol({})
+    const allOut = { ...game, players: game.players!.map((p) => ({ ...p, hasLeft: true })) }
+    const { queryByTestId } = render(<SpotlightBoard game={allOut} homeId="p1" mainId="p1" onSelectSeat={() => {}} />)
+    expect(queryByTestId('spotlight-main-seat-p1')).not.toBeNull()
+    expect(queryByTestId('spotlight-copy-p1')).toBeNull()
   })
 
   it('BRD-30: the seat folds as soon as a new game view marks the player out', () => {

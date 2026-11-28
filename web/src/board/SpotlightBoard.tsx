@@ -106,8 +106,9 @@ function CopyHead({ player, players, active, onSelect }: { player: PlayerView; p
   const lifeLabel = t('board', 'turn_life_label')
   const reason = useOutReason(player)
   const seat = { '--seat': seatColorVar(seatIndexOf(players, player.playerId)) } as CSSProperties
-  if (isPlayerOut(player) && !player.controlled) {
-    // BRD-30: an opponent out of the game folds to its head; there is no board left to show. Why
+  if (isPlayerOut(player)) {
+    // BRD-30: a seat out of the game folds to its head, the player's own included; there is no
+    // board left to show, the server having emptied it. Why
     // they left is read for every board the same way (BRD-65).
     const status = t('game', OUT_STATUS[reason])
     return (
@@ -438,7 +439,10 @@ export default function SpotlightBoard({
           <div className="spotlight-panel-list" data-testid="spotlight-panel-list">
             {order.map((id) => {
               const player = playerById.get(id)
-              if (player && !player.controlled && isPlayerOut(player)) {
+              if (player && isPlayerOut(player) && id !== mainId) {
+                // BRD-30: out of the game, own seat included. It stays ahead of nothing but the
+                // main area: with every seat out the home seat still holds it (BRD-57), and a
+                // board drawn at full size keeps its mark in the panel.
                 return (
                   <div key={id} className="spotlight-copy-item is-out" data-seat-id={id}>
                     <CopyHead player={player} players={players} active={false} onSelect={() => {}} />
