@@ -100,6 +100,20 @@ board, the side panel's switch, takes the menu with it. Opening one closes the m
   window then closed it, because the board it hung from was replaced underneath (28-nov-2026).
 - Guard: `src/game/GameMenu.test.tsx` · `src/game/GameScreen.test.tsx` · `e2e/game-menu-settings-overlay.spec.ts`
 
+### DLG-15 · The menu of the top strip opens over the stack and closes on a click anywhere
+The dropdown of the game menu (⋯) and the drawer that opens beside it are read over everything the
+board draws, the stack included, and the sheet that closes them on a click outside covers the
+window. While one of them is open the strip rises above the stack and above that sheet; closed, it
+goes back under the stack, which rises over the board's chrome on purpose when it is tall.
+
+- Why: the pill that holds the strip's buttons blurs its backdrop, which makes it a stacking
+  context and the containing block of anything fixed inside it. So the panel's own `z-index` never
+  left the strip (ranked at 30, under the stack's 38) and the stack painted over the open menu
+  (user report, 2026-11-28); the sheet meant to cover the window came out 129×32, the size of the
+  pill, so a click on the board did not close the menu either. The sheet is drawn on the body now,
+  and the strip rises over it while something is open in it.
+- Guard: `e2e/game-menu-settings-overlay.spec.ts`
+
 ### DLG-12 · A destructive confirmation starts on Cancel; any other confirmation starts on its action
 When a confirmation asks for something destructive (delete, leave, concede, clear), the focus starts on
 Cancel, so Return cancels. Any other confirmation starts its action button focused, so Return

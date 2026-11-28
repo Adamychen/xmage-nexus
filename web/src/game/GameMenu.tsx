@@ -1,4 +1,5 @@
 import { useCallback, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import MenuItem from '../ui/MenuItem'
 import CloseButton from '../ui/CloseButton'
 import Checkbox from '../ui/Checkbox'
@@ -114,7 +115,12 @@ export default function GameMenu() {
       </button>
       {open && (
         <>
-          <div className="game-menu-overlay" onClick={close} />
+          {/* DLG-15: the strip's pill blurs its backdrop, which makes it the containing block of
+              anything fixed inside it, so this sheet came out the size of the pill and a click on
+              the board never reached it. It belongs to the window, so it is drawn on the body. */}
+          {typeof document === 'undefined'
+            ? <div className="game-menu-overlay" onClick={close} />
+            : createPortal(<div className="game-menu-overlay" data-testid="game-menu-overlay" onClick={close} />, document.body)}
           <div ref={panelRef} className="ui-popover ui-menu-panel game-menu-panel" role="menu" data-testid="game-menu" onKeyDown={(e) => menuKeyDown(e, panelRef.current, close)}>
             {me && (
               <MenuItem

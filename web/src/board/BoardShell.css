@@ -55,6 +55,17 @@
   pointer-events: none;
 }
 
+/* DLG-15: while a dropdown of the strip is open it is the top layer of the board. The strip sits
+   under the stack (z 38), which is deliberate: a tall stack rises over the board's chrome. A menu
+   is not chrome, it is what the player is reading, and its own `z-index` cannot escape the strip's
+   own stacking context, so the strip is what rises, and only while something is open in it. It
+   goes over the sheet that catches the click outside (z 198) as well, since that sheet is drawn
+   on the body and would otherwise swallow every click on the menu itself. */
+.board-shell-top-strip:has(.ui-popover),
+.board-shell-top-strip:has(.game-drawer) {
+  z-index: 199;
+}
+
 /* ── Divisor horizontal unificado (diamante púrpura/dorado) ───────────── */
 .board-shell-divider {
   height: 18px;
