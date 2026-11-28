@@ -74,14 +74,28 @@ const TAP_ADD_RE = /^\{T\}:\s*Add\s+(.+)$/i
 const SPEND_ONLY_RE = /\bSpend this mana only\b/i
 /** A run of symbols with no separator: `{G}`, and `{C}{C}` for the two mana of a Sol Ring. */
 const SYMBOL_RUN_RE = /^(?:\{[WUBRGC]\})+$/i
+/** Exotic Orchard, Fellwar Stone and Reflecting Pool, as `AnyColorLandsProduceManaEffect` writes
+ *  them. "color" leaves colourless out, "type" keeps it; only the plain "land" form is read, not
+ *  the filtered ones ("a Swamp an opponent controls"). */
+const REFLECT_RE = /^one mana of any (color|type) that a land (an opponent controls|you control) could produce$/i
 
 /** The engine writes a plain apostrophe, but a rule can reach the view escaped or curled. */
 const normalize = (text: string) =>
   text.replace(/&(?:apos|#0*39|rsquo|#8217);/gi, "'").replace(/[‘’ʼ]/g, "'")
 
-export interface ManaContext {
+/** What the board as a whole tells a mana wording. Built once per solve. */
+export interface BoardManaContext {
   /** Colours of the player's commanders, for "in your commander's color identity". */
   commanderIdentity: ManaColor[]
+  /** Mana the lands this player controls could produce, for Reflecting Pool. */
+  ownLandColors: ManaColor[]
+  /** Mana the lands the other players control could produce, for Exotic Orchard. */
+  opponentLandColors: ManaColor[]
+}
+
+const NO_BOARD: BoardManaContext = { commanderIdentity: [], ownLandColors: [], opponentLandColors: [] }
+
+interface ManaContext extends BoardManaContext {
   /** The permanent's own colours, for "any of this creature's colors" (Katilda). */
   ownColors: ManaColor[]
 }
@@ -97,6 +111,11 @@ function producedMana(rule: string, ctx: ManaContext): { colors: ManaColor[]; am
   if (/^one mana of any color$/i.test(clause)) return pick([...COLORED])
   if (/^one mana of any color in your commander's color identity$/i.test(clause)) return pick(ctx.commanderIdentity)
   if (/^one mana of any of this creature's colors$/i.test(clause)) return pick(ctx.ownColors)
+  const reflect = REFLECT_RE.exec(clause)
+  if (reflect) {
+    const pool = /you control/i.test(reflect[2]) ? ctx.ownLandColors : ctx.opponentLandColors
+    return pick(/^color$/i.test(reflect[1]) ? pool.filter((c) => c !== 'C') : pool)
+  }
   const compact = clause.replace(/\s+/g, '')
   if (SYMBOL_RUN_RE.test(compact)) {
     const symbols = [...compact.matchAll(/\{([WUBRGC])\}/gi)].map((s) => s[1].toUpperCase() as ManaColor)
@@ -144,10 +163,43 @@ export function commanderIdentityOf(player: PlayerView | undefined): ManaColor[]
   return [...out]
 }
 
+const isLand = (perm: PermanentView) => (perm.cardTypes ?? []).some((t) => t.toUpperCase() === 'LAND')
+
+/** Mana the lands these players control could produce. "Could produce" is about the abilities, not
+ *  about being untapped (CR 106.7), so a tapped land counts. The wordings that ask this question
+ *  back are read with an empty board, which is the engine's own `inManaTypeCalculation` guard: two
+ *  Reflecting Pools do not make each other produce anything. */
+function landProducedColors(players: PlayerView[]): ManaColor[] {
+  const out = new Set<ManaColor>()
+  for (const player of players) {
+    const base: BoardManaContext = { ...NO_BOARD, commanderIdentity: commanderIdentityOf(player) }
+    for (const [, perm] of battlefieldEntries(player)) {
+      if (!isLand(perm)) continue
+      for (const rule of perm.rules ?? []) {
+        for (const color of producedMana(rule, { ...base, ownColors: ownColorsOf(perm) })?.colors ?? []) {
+          out.add(color)
+        }
+      }
+    }
+  }
+  return [...out]
+}
+
+/** Everything the board tells this seat's mana wordings. Without a `game` the land sets are empty,
+ *  so a Reflecting Pool or an Exotic Orchard stays unreadable and is only counted (MNA-13). */
+export function boardManaContext(player: PlayerView, game?: GameView | null): BoardManaContext {
+  const others = (game?.players ?? []).filter((p) => p.playerId !== player.playerId)
+  return {
+    commanderIdentity: commanderIdentityOf(player),
+    ownLandColors: landProducedColors([player]),
+    opponentLandColors: landProducedColors(others),
+  }
+}
+
 /** What one tap of `perm` can produce, and how much of it. */
-function tapManaOf(perm: PermanentView, identity: ManaColor[]): { colors: ManaColor[]; amount: number } | null {
+function tapManaOf(perm: PermanentView, board: BoardManaContext): { colors: ManaColor[]; amount: number } | null {
   if (!canTap(perm)) return null
-  const ctx: ManaContext = { commanderIdentity: identity, ownColors: ownColorsOf(perm) }
+  const ctx: ManaContext = { ...board, ownColors: ownColorsOf(perm) }
   const colors = new Set<ManaColor>()
   let amount = 0
   for (const rule of perm.rules ?? []) {
@@ -159,8 +211,8 @@ function tapManaOf(perm: PermanentView, identity: ManaColor[]): { colors: ManaCo
   return colors.size > 0 ? { colors: [...colors], amount } : null
 }
 
-function tapColorsOf(perm: PermanentView, identity: ManaColor[] = []): ManaColor[] {
-  return tapManaOf(perm, identity)?.colors ?? []
+function tapColorsOf(perm: PermanentView, board: BoardManaContext = NO_BOARD): ManaColor[] {
+  return tapManaOf(perm, board)?.colors ?? []
 }
 
 const PAIN_TO_YOU_RE = /deals?\s+\d*\s*damage to you|lose[sd]?\s+(\d+\s+)?life/i
@@ -182,16 +234,19 @@ function battlefieldEntries(player: PlayerView): [string, PermanentView][] {
   return Object.entries((bf ?? {}) as Record<string, PermanentView>)
 }
 
-export function ownManaSources(me: PlayerView, pool: Record<PoolKey, number>): ManaSource[] {
+export function ownManaSources(
+  me: PlayerView,
+  pool: Record<PoolKey, number>,
+  board: BoardManaContext = boardManaContext(me),
+): ManaSource[] {
   const sources: ManaSource[] = []
   for (const color of Object.keys(POOL_LETTER) as PoolKey[]) {
     for (let i = 0; i < (pool[color] ?? 0); i++) {
       sources.push({ key: `pool:${color}:${i}`, kind: 'pool', poolColor: color, produces: [POOL_LETTER[color]], amount: 1, painful: false })
     }
   }
-  const identity = commanderIdentityOf(me)
   for (const [id, perm] of battlefieldEntries(me)) {
-    const produced = tapManaOf(perm, identity)
+    const produced = tapManaOf(perm, board)
     if (!produced) continue
     sources.push({ key: `tap:${id}`, kind: 'tap', id, produces: produced.colors, amount: produced.amount, painful: tapPainOf(perm) })
   }
@@ -201,12 +256,11 @@ export function ownManaSources(me: PlayerView, pool: Record<PoolKey, number>): M
 /** MNA-13: untapped permanents that announce a tap-for-mana ability the solver could not read.
  *  They are never spent, they only keep an unreadable wording from making a payable cost look
  *  hopeless. */
-export function unknownManaSourceCount(me: PlayerView): number {
-  const identity = commanderIdentityOf(me)
+export function unknownManaSourceCount(me: PlayerView, board: BoardManaContext = boardManaContext(me)): number {
   let count = 0
   for (const [, perm] of battlefieldEntries(me)) {
     if (!canTap(perm)) continue
-    if (tapManaOf(perm, identity)) continue
+    if (tapManaOf(perm, board)) continue
     if ((perm.rules ?? []).some((r) => TAP_ADD_LOOSE.test(normalize(r).trim()))) count++
   }
   return count
@@ -216,8 +270,8 @@ export function opponentOpenManaCount(game: GameView): number {
   let count = 0
   for (const player of game.players ?? []) {
     if (player.controlled) continue
-    const identity = commanderIdentityOf(player)
-    for (const [, perm] of battlefieldEntries(player)) if (tapColorsOf(perm, identity).length > 0) count++
+    const board = boardManaContext(player, game)
+    for (const [, perm] of battlefieldEntries(player)) if (tapColorsOf(perm, board).length > 0) count++
   }
   return count
 }
@@ -318,11 +372,12 @@ export function computeNextManaAction(
 export function nextSmartManaAction(game: GameView, message: string, pool: Record<PoolKey, number>): ManaAction | null {
   const me = (game.players ?? []).find((p) => p.controlled)
   if (!me) return null
+  const board = boardManaContext(me, game)
   return computeNextManaAction(
     parseRemainingManaCost(message),
-    ownManaSources(me, pool),
+    ownManaSources(me, pool, board),
     reservedColorsForInstants(game.myHand ?? {}),
     opponentOpenManaCount(game),
-    unknownManaSourceCount(me),
+    unknownManaSourceCount(me, board),
   )
 }

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  boardManaContext,
   commanderIdentityOf,
   computeNextManaAction,
   nextSmartManaAction,
@@ -21,6 +22,13 @@ const land = (name: string, rule: string, extra: Partial<PermanentView> = {}) =>
 
 const forest = (extra: Partial<PermanentView> = {}) => land('Forest', '{T}: Add {G}.', extra)
 const island = (extra: Partial<PermanentView> = {}) => land('Island', '{T}: Add {U}.', extra)
+const swamp = (extra: Partial<PermanentView> = {}) => land('Swamp', '{T}: Add {B}.', extra)
+
+/** `AnyColorLandsProduceManaEffect` writes these two: "color" drops colourless, "type" keeps it. */
+const ORCHARD_RULE = '{T}: Add one mana of any color that a land an opponent controls could produce.'
+const POOL_RULE = '{T}: Add one mana of any type that a land you control could produce.'
+const orchard = (extra: Partial<PermanentView> = {}) => land('Exotic Orchard', ORCHARD_RULE, extra)
+const reflectingPool = (extra: Partial<PermanentView> = {}) => land('Reflecting Pool', POOL_RULE, extra)
 
 /** The printed wording of Arcane Signet, Command Tower, Commander's Sphere, Path of Ancestry and
  *  Hidden Hideout, as `CommanderIdentityManaEffect` writes it. */
@@ -124,6 +132,35 @@ describe('ownManaSources', () => {
   it('MNA-8: keeps reading it after the commander has been cast and left the command zone', () => {
     const sources = sourcesOf({ sig: signet(), cmd: commanderOnBoard('{B}{G}') }, {}, [])
     expect(sources.find((s) => s.id === 'sig')?.produces).toEqual(['B', 'G'])
+  })
+
+  it('MNA-8: Exotic Orchard is read from the lands the opponents control', () => {
+    const game = makeGameView({
+      players: [
+        me({ o: orchard() }),
+        makePlayer({ playerId: 'p2', name: 'Opp', battlefield: { s: swamp({ tapped: true }), i: island() } }),
+      ],
+    })
+    const mine = game.players!.find((p) => p.controlled)!
+    expect(ownManaSources(mine, EMPTY_POOL, boardManaContext(mine, game)).find((s) => s.id === 'o')?.produces).toEqual(['B', 'U'])
+  })
+
+  it('MNA-8: Reflecting Pool reads your own lands and keeps colorless, which "any color" drops', () => {
+    const board = { pool: reflectingPool(), w: land('Wastes', '{T}: Add {C}.'), f1: forest(), o: orchard() }
+    const game = makeGameView({
+      players: [me(board), makePlayer({ playerId: 'p2', name: 'Opp', battlefield: { w2: land('Wastes', '{T}: Add {C}.') } })],
+    })
+    const mine = game.players!.find((p) => p.controlled)!
+    const sources = ownManaSources(mine, EMPTY_POOL, boardManaContext(mine, game))
+    expect(sources.find((s) => s.id === 'pool')?.produces).toEqual(['C', 'G'])
+    // The opponent's only land is colourless, and Exotic Orchard says "color", not "type".
+    expect(sources.find((s) => s.id === 'o')).toBeUndefined()
+  })
+
+  it('MNA-8: two Reflecting Pools do not feed each other', () => {
+    const game = makeGameView({ players: [me({ p1: reflectingPool(), p2: reflectingPool() })] })
+    const mine = game.players!.find((p) => p.controlled)!
+    expect(ownManaSources(mine, EMPTY_POOL, boardManaContext(mine, game))).toEqual([])
   })
 
   it('MNA-8: Command Tower is read from the wording the card really has', () => {
@@ -246,11 +283,11 @@ describe('unknownManaSourceCount', () => {
     expect(
       unknownManaSourceCount(
         me({
-          orchard: land('Exotic Orchard', '{T}: Add one mana of any color that a land an opponent controls could produce.'),
+          orchard: orchard(),
           treasure: makePermanent({ name: 'Treasure', cardTypes: ['ARTIFACT'], rules: ['{T}, Sacrifice this artifact: Add one mana of any color.'] }),
           f1: forest(),
           bear: makePermanent({ name: 'Grizzly Bears', cardTypes: ['CREATURE'], rules: [] }),
-          spent: land('Exotic Orchard', '{T}: Add one mana of any color that a land an opponent controls could produce.', { tapped: true }),
+          spent: orchard({ tapped: true }),
         }),
       ),
     ).toBe(2)
@@ -404,9 +441,15 @@ describe('the whole payment loop', () => {
   })
 
   it('MNA-13: a wording it cannot read is left to the player after the rest is tapped', () => {
-    const orchard = land('Exotic Orchard', '{T}: Add one mana of any color that a land an opponent controls could produce.')
-    const tapped = playOut({ f1: forest(), f2: forest(), o: orchard }, ['Pay {2}{G}', 'Pay {2}', 'Pay {1}'])
+    // No opponent in this view, so nothing says what the Orchard makes.
+    const tapped = playOut({ f1: forest(), f2: forest(), o: orchard() }, ['Pay {2}{G}', 'Pay {2}', 'Pay {1}'])
     expect(tapped).toEqual(['f1', 'f2'])
+  })
+
+  it('MNA-13: the Orchard is spent once the opponents\' lands say what it makes', () => {
+    const opponent = makePlayer({ playerId: 'p2', name: 'Opp', battlefield: { s: swamp() } })
+    const game = makeGameView({ players: [me({ o: orchard(), f1: forest({ tapped: true }) }), opponent] })
+    expect(nextSmartManaAction(game, 'Pay {B} Jin-Gitaxias [9c1]', EMPTY_POOL)).toEqual({ kind: 'tapPermanent', id: 'o' })
   })
 })
 

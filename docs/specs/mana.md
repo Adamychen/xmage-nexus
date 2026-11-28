@@ -99,9 +99,16 @@ creatures, not phased out; nothing that costs more than the tap, nothing whose m
 spent on something else) and spends floating mana first. The wordings it reads are the symbol runs
 (`{G}`, and `{C}{C}` for the two mana of a Sol Ring, whose count it records), the lists of symbols
 (`{W} or {U}`), "one mana of any color", "one mana of any color in your commander's color
-identity" and "one mana of any of this creature's colors"; a sentence after the mana clause is a
-bonus, not a restriction, so Path of Ancestry is read and Cavern of Souls is not. The commander's
-identity comes from `commandersOf` and `originalColorIdentity`, with partners united. It matches
+identity", "one mana of any of this creature's colors" and the two that ask the board back,
+"one mana of any color that a land an opponent controls could produce" (Exotic Orchard, Fellwar
+Stone) and "one mana of any type that a land you control could produce" (Reflecting Pool); a
+sentence after the mana clause is a bonus, not a restriction, so Path of Ancestry is read and
+Cavern of Souls is not. The commander's identity comes from `commandersOf` and
+`originalColorIdentity`, with partners united. The two board questions are answered from the
+lands in the view, tapped ones included, because "could produce" is about the abilities and not
+about being untapped (CR 106.7); "color" drops colourless and "type" keeps it, and while
+answering them those same wordings read as nothing, so two Reflecting Pools do not feed each
+other. It matches
 coloured and hybrid pips, reassigning sources when a greedy pick would strand a later pip;
 colourless sources pay generic before coloured ones and any-colour sources are kept for last.
 Among equal choices it keeps open the last producer of a colour an instant or flash card in your
@@ -118,7 +125,12 @@ mana.
   own `staticText` and no card text is ever localised, server side or client side
   (25-nov-2026). The commander's identity is not read from `PlayerView.commandList`: that list
   holds a commander only while it waits in the command zone, so the Signet would have stopped
-  working the moment the commander was cast.
+  working the moment the commander was cast. The two board questions were left unread at first,
+  on the grounds that their answer moves with what the opponents play and a source that is
+  sometimes spent on its own is harder to explain than one that never is; the user asked for them
+  to be read anyway, after an Exotic Orchard was the only untapped source left for a black pip and
+  had to be tapped by hand (28-nov-2026). The shape copies the engine's own
+  `AnyColorLandsProduceManaEffect`, down to its `inManaTypeCalculation` loop guard.
 - Guard: `src/game/smartManaPayment.test.ts`
 
 ### MNA-9 · Smart payment never spends a pain land on generic while a painless source is open
