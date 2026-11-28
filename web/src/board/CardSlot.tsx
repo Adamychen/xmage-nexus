@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import type { CardView, PermanentView } from '../net/types'
-import { cardName, hiddenFaceDownName, stableCardName, visibleCardName } from '../cards/cardImages'
+import { cardKey, cardName, hiddenFaceDownName, stableCardName, visibleCardName } from '../cards/cardImages'
+import { artDebugOn, printedAs } from '../cards/artDebug'
 import { useCardImageUrl } from '../cards/useCardImageUrl'
 import RenderedCard from '../cards/rendered/RenderedCard'
 import { getPreviousCardPosition, getPreviousCardSize, getPreviousCardZone, recordCardPosition } from './cardPositionRegistry'
@@ -581,6 +582,8 @@ const showPtBadge =
           {!compact && <span className="card-placeholder-name">{visibleCardName(card)}</span>}
         </div>
       )}
+
+      {artDebugOn() && <span className="art-debug" data-art-where="board">{cardKey(card) ?? 'none'} · {printedAs(card)}</span>}
 
       {showManaPill && (
         <div className="compact-mana-source" data-badge-zone="mana" data-testid="compact-mana-source" data-mana={manaSymbols.join('')}>

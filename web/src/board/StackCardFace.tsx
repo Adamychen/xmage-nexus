@@ -4,6 +4,8 @@ import { useLocalizedCardName } from '../cards/cardLocalization'
 import RenderedCard from '../cards/rendered/RenderedCard'
 import Icon from '../ui/Icon'
 import { isStackAbility } from './stackEntries'
+import { artDebugOn, printedAs } from '../cards/artDebug'
+import { cardKey } from '../cards/cardImages'
 
 /** STK-1: the face of one object on the stack, drawn as the card it is. */
 export function StackCardFace({ card, rendered }: { card: CardView; rendered: boolean }) {
@@ -11,6 +13,7 @@ export function StackCardFace({ card, rendered }: { card: CardView; rendered: bo
   if (rendered) return <RenderedCard card={card} className="stack-thumb-img" />
   return (
     <div className="stack-thumb">
+      {artDebugOn() && <span className="art-debug" data-art-where="stack">{cardKey(card) ?? 'none'} · {printedAs(card)}</span>}
       {imgUrl ? (
         /* The whole card, not a crop of its art: the one in front is the one you read, and its
            own printed title is the name, so nothing above it repeats that name. */

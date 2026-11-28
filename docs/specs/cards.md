@@ -104,3 +104,17 @@ with no translation of its own, a creature type or a number, is left exactly as 
   (user report, 25-nov-2026).
 - Guard: `src/data/keywordI18n.test.ts`
 
+
+### CRD-9 · The art key can be read on screen when a printing looks wrong
+With `?artdebug=1` in the URL, every card drawn carries a caption with the key its art was resolved
+with and the printing the server sent for it, on the board and on the stack alike. It is off unless
+the URL asks for it.
+
+- Why: a player saw his own Reconnaissance, the Secret Lair printing on the battlefield, drawn on
+  the stack as an older one (28-nov-2026). Both places resolve art through the same function, from
+  the same `SET/number`, and both apply the player's art preference and uploaded images, so the
+  difference has to be in what each one is given; a screenshot of the art cannot tell which. No
+  recorded frame holds a permanent spell on the stack, which is the shape this happened in, so
+  there was nothing to read it from either. The caption answers it from a screenshot of a real
+  game, and the same caption answers the next question of this kind.
+- Guard: `src/cards/artDebug.test.ts`

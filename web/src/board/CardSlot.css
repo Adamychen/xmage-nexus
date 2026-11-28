@@ -2043,3 +2043,23 @@ html.fx-off .card-slot.fx-behold {
 .saga-track [data-chapter-state='now'] text {
   fill: var(--ink-0);
 }
+
+/* CRD-9: the caption `?artdebug=1` draws over a card, on the board and on the stack alike. It is
+   the only thing in the client that prints the art key, and it is off unless the URL asks. */
+.art-debug {
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  bottom: 2px;
+  z-index: 40;
+  padding: 1px 3px;
+  border-radius: 3px;
+  background: rgb(0 0 0 / 0.78);
+  color: #7cf3c6;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 9px;
+  line-height: 1.25;
+  text-align: center;
+  overflow-wrap: anywhere;
+  pointer-events: none;
+}
